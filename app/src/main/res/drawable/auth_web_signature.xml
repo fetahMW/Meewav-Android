@@ -3,6 +3,6 @@
     android:viewportWidth="31" android:viewportHeight="21">
     <group android:translateX="-105" android:translateY="-3">
         <path android:pathData="M106.75,22.0844C106.75,22.0844 109.74,18.3119 112.684,11.5627C115.996,3.97318 114.33,22.5971 115.875,19.6707C119.577,12.6589 119.823,4.51723 121.428,9.15285C123.46,15.0211 122.877,22.3987 124.262,18.7178C125.647,15.0369 125.59,6.78716 127.263,15.4913C128.937,24.1954 134.73,5.24531 134.73,5.24531"
-            android:strokeColor="#5137A1" android:strokeWidth="2" android:strokeLineCap="round" />
+            android:strokeColor="#6046B3" android:strokeWidth="2" android:strokeLineCap="round" />
     </group>
 </vector>
