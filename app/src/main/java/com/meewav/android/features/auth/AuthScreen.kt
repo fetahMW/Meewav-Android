@@ -148,7 +148,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                         CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally).padding(28.dp), color = Violet)
                     } else {
                         if (state.page == AuthPage.Register) {
-                            AccountHeader(state.profile)
+                            AccountHeader()
                         } else {
                         WaveMark()
                         Spacer(Modifier.height(4.dp))
@@ -208,8 +208,9 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                                 }
                                 if (state.page in setOf(AuthPage.Register, AuthPage.NewPassword)) {
                                     Spacer(Modifier.height(12.dp))
-                                    AuthField("Confirmer le mot de passe", state.confirmation, actions.confirmation, Icons.Outlined.Lock,
-                                        secret = true, enabled = !state.busy, ime = ImeAction.Done, onDone = submit)
+                                    AuthField("Confirmer mot de passe", state.confirmation, actions.confirmation, Icons.Outlined.Lock,
+                                        secret = true, enabled = !state.busy, ime = ImeAction.Done, onDone = submit,
+                                        singleLineLabel = true)
                                 }
                                 if (state.page == AuthPage.Login) {
                                     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
@@ -306,10 +307,12 @@ internal fun AuthField(
     label: String, value: String, onValue: (String) -> Unit, icon: ImageVector,
     secret: Boolean = false, type: KeyboardType = KeyboardType.Text,
     enabled: Boolean = true, ime: ImeAction = ImeAction.Next, onDone: () -> Unit = {},
+    singleLineLabel: Boolean = false,
 ) {
     var visible by rememberSaveable { mutableStateOf(false) }
     OutlinedTextField(value, onValue, modifier = Modifier.fillMaxWidth().then(rememberKeyboardFieldModifier()), enabled = enabled,
-        label = { Text(label, fontSize = 13.sp) }, singleLine = true,
+        label = { Text(label, fontSize = 13.sp, maxLines = if (singleLineLabel) 1 else Int.MAX_VALUE,
+            softWrap = !singleLineLabel) }, singleLine = true,
         shape = RoundedCornerShape(15.dp),
         leadingIcon = { Icon(icon, null, Modifier.size(20.dp), tint = Muted) },
         trailingIcon = if (secret) { {

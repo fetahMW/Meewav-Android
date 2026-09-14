@@ -45,7 +45,8 @@ data class AuthUiState(
 )
 
 class AuthViewModel(private val repository: MeewavAuthRepository) : ViewModel() {
-    private val mutable = MutableStateFlow(AuthUiState(configured = repository.configured, initializing = repository.configured))
+    private val mutable = MutableStateFlow(AuthUiState(configured = repository.configured,
+        initializing = repository.configured && !BuildConfig.DEBUG, localPreview = BuildConfig.DEBUG))
     val state = mutable.asStateFlow()
     private var recoveryInProgress = false
 
@@ -125,6 +126,7 @@ class AuthViewModel(private val repository: MeewavAuthRepository) : ViewModel() 
         if (draft.localPreview) {
             if (!BuildConfig.DEBUG) return
             val next = when (draft.page) {
+                AuthPage.Login -> AuthPage.Avatar
                 AuthPage.Avatar -> AuthPage.Register
                 AuthPage.Register -> AuthPage.Location
                 AuthPage.Location -> AuthPage.Preview

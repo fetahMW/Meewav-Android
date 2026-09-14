@@ -224,11 +224,11 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
 }
 
 @Composable
-internal fun AccountHeader(profile: ProfileDraft) {
-    val avatar = AvatarCatalog.find(profile.avatarIcon)
+internal fun AccountHeader() {
     Row(Modifier.fillMaxWidth().padding(bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-        Image(painterResource(avatar.image), avatar.name, Modifier.size(42.dp, 48.dp), contentScale = ContentScale.Fit)
+        // Conserve la position du titre ; l'avatar est désormais ancré au bouton Apple.
+        Spacer(Modifier.size(42.dp, 48.dp))
         Spacer(Modifier.width(8.dp))
         Text("Ton compte Meewav", fontSize = 19.sp, lineHeight = 23.sp,
             fontWeight = FontWeight.SemiBold, color = Color.White,
@@ -243,18 +243,26 @@ internal fun AccountSocialOptions(state: AuthUiState, onContinue: (SocialAuthPro
     Row(Modifier.fillMaxWidth().height(48.dp), horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically) {
         listOf(SocialAuthProvider.Apple, SocialAuthProvider.Google).forEach { provider ->
+            Box(Modifier.weight(1f).height(48.dp), contentAlignment = Alignment.Center) {
             OutlinedButton(onClick = { onContinue(provider) },
                 enabled = !state.busy && !state.initializing && !state.localPreview,
-                modifier = Modifier.weight(1f).height(40.dp), shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().height(40.dp), shape = RoundedCornerShape(12.dp),
                 border = BorderStroke(.75.dp, Violet.copy(alpha = .85f)),
                 colors = ButtonDefaults.outlinedButtonColors(containerColor = Color(0xFF08080B), contentColor = Color.White),
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)) {
-                Image(painterResource(if (provider == SocialAuthProvider.Apple) R.drawable.auth_apple else R.drawable.auth_google_round),
+                Image(painterResource(if (provider == SocialAuthProvider.Apple) R.drawable.auth_apple else R.drawable.auth_google),
                     null, Modifier.size(22.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(if (provider == SocialAuthProvider.Apple) "Apple" else "Google",
                     fontSize = 12.sp, lineHeight = 15.sp, fontWeight = FontWeight.SemiBold,
                     maxLines = 1, softWrap = false)
+            }
+            if (provider == SocialAuthProvider.Apple) {
+                val avatar = AvatarCatalog.find(state.profile.avatarIcon)
+                Image(painterResource(avatar.image), avatar.name,
+                    Modifier.align(Alignment.TopStart).offset(x = 16.dp, y = (-44).dp).size(42.dp, 48.dp),
+                    alignment = Alignment.BottomCenter, contentScale = ContentScale.Fit)
+            }
             }
         }
     }

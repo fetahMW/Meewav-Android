@@ -197,3 +197,11 @@ Dernier ajustement de la signature : la rotation est retirée. Le MW reste de fa
 
 
 Zone sociale Compte : « S’inscrire avec » est désormais un libellé commun au-dessus de deux boutons rectangulaires de même largeur. Chaque bouton affiche uniquement son logo et Apple ou Google sur une ligne ; surface de 40 dp dans une rangée tactile de 48 dp. Le séparateur ou est compacté pour conserver le budget vertical de cette zone. Aucun autre élément de la fenêtre n’est modifié.
+
+
+L’avatar de Compte est déplacé du titre vers le bord supérieur du bouton Apple, avec un alignement bas de l’image. La taille de 42 × 48 dp, la position du titre et la hauteur de la zone sociale sont conservées ; le personnage se trouve sur la partie gauche du bouton pour laisser S’inscrire avec dégagé.
+
+
+La confirmation porte le libellé court « Confirmer mot de passe » sur une ligne. Le bouton Google utilise maintenant le G seul de 22 dp, sans pastille ni contour circulaire.
+
+Pendant la finition de l’authentification, les builds DEBUG démarrent par défaut en aperçu sans compte sur la page Connexion. Se connecter ouvre Avatar, puis Suivant parcourt Compte et Localisation sans exiger d’identifiants ni créer un compte. Aucun lien Explorer sans compte n’est réintroduit. Les builds de production ne reçoivent pas ce réglage ; les boutons OAuth restent neutralisés pendant l’aperçu. Cette préférence temporaire doit être retirée lorsque les essais réels d’authentification débuteront.
