@@ -47,6 +47,7 @@ import kotlin.math.sign
 import kotlin.math.sin
 import kotlin.math.cos
 import kotlin.math.PI
+import kotlin.math.hypot
 
 internal val AuthWindowLowerExtension = 28.dp
 internal val AuthStageOverlap = 22.dp
@@ -91,7 +92,6 @@ internal fun IosStageBackdrop(modifier: Modifier, light: () -> Float = { .14f },
                     if (fourSpotOrbit) {
                         val whitePhase = phase + index * 2.6f
                         rotate(4.8f * sin(whitePhase), origin)
-                        this.scale(1f, 1f + .05f * cos(whitePhase), origin)
                     } else rotate(angle, origin)
                 }) {
                     drawImage(washes[index], alpha = intensity)
@@ -326,14 +326,40 @@ private fun renderRearProjector(width: Float, height: Float, side: Int, lensOnly
         canvas.drawOval(RectF(x - 2.4f, y - 1.9f, x + 2.4f, y - .2f), stagePaint(Color.parseColor("#F0FFFFFF")))
         return bitmap
     }
-    val length = (y - 14f).coerceIn(56f, if (welcome) 90f else 130f)
-    val targetX = x + side * if (welcome) 48f else 10f
+    if (welcome) {
+        // Un axe droit depuis la lentille : les deux bords s'écartent régulièrement,
+        // perpendiculairement à cet axe. Aucun point de contrôle ne courbe le cône.
+        val targetX = x + side * 48f
+        val targetY = y - (y - 14f).coerceIn(56f, 90f)
+        val axisX = targetX - x
+        val axisY = targetY - y
+        val distance = hypot(axisX, axisY)
+        val normalX = -axisY / distance
+        val normalY = axisX / distance
+        val cone = Path().apply {
+            moveTo(x - normalX * 1.4f, y - normalY * 1.4f)
+            lineTo(targetX - normalX * 18f, targetY - normalY * 18f)
+            lineTo(targetX + normalX * 18f, targetY + normalY * 18f)
+            lineTo(x + normalX * 1.4f, y + normalY * 1.4f)
+            close()
+        }
+        val falloff = LinearGradient(x, y, targetX, targetY,
+            intArrayOf(Color.parseColor("#60FFFFFF"), Color.parseColor("#3AFFFFFF"),
+                Color.parseColor("#20FFFFFF"), Color.TRANSPARENT),
+            floatArrayOf(0f, .18f, .58f, 1f), Shader.TileMode.CLAMP)
+        // La brume reste contenue autour du faisceau ; pas de tache ovale sur le mur.
+        canvas.drawPath(cone, stagePaint(shader = falloff, blur = 6f).apply { alpha = 48 })
+        canvas.drawPath(cone, stagePaint(shader = falloff, blur = 1.8f))
+        return bitmap
+    }
+    val length = (y - 14f).coerceIn(56f, 130f)
+    val targetX = x + side * 10f
     val targetY = y - length
-    val wallCenterY = targetY + if (welcome) 24f else 34f
-    val wallRadiusY = minOf(if (welcome) 36f else 56f, wallCenterY - 4f)
+    val wallCenterY = targetY + 34f
+    val wallRadiusY = minOf(56f, wallCenterY - 4f)
     canvas.save()
     canvas.translate(targetX, wallCenterY)
-    canvas.scale(if (welcome) .8f else 1f, wallRadiusY / 38f)
+    canvas.scale(1f, wallRadiusY / 38f)
     canvas.drawCircle(0f, 0f, 38f, stagePaint(shader = RadialGradient(0f, 0f, 38f,
         intArrayOf(Color.parseColor("#36FFFFFF"), Color.parseColor("#16FFFFFF"), Color.TRANSPARENT),
         floatArrayOf(0f, .45f, 1f), Shader.TileMode.CLAMP)))
