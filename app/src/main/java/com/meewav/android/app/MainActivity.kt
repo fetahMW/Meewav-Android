@@ -1,6 +1,7 @@
 package com.meewav.android.app
 
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -10,9 +11,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.meewav.android.core.design.MeewavTheme
 import com.meewav.android.features.auth.AuthScreen
 import com.meewav.android.features.auth.AuthViewModel
+import com.meewav.android.features.auth.AuthPage
 
 class MainActivity : ComponentActivity() {
     private lateinit var authViewModel: AuthViewModel
@@ -31,7 +37,24 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState == null) handleAuthIntent(intent)
         setContent {
             val state by authViewModel.state.collectAsStateWithLifecycle()
+            val inGlobe = state.page == AuthPage.Globe
+            LaunchedEffect(inGlobe) { applyDisplayMode(inGlobe) }
             MeewavTheme { AuthScreen(state, authViewModel) }
+        }
+    }
+
+    private fun applyDisplayMode(inGlobe: Boolean) {
+        val orientation = if (inGlobe) ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+            else ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        if (requestedOrientation != orientation) requestedOrientation = orientation
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            if (inGlobe) {
+                systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                hide(WindowInsetsCompat.Type.systemBars())
+            } else {
+                systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
+                show(WindowInsetsCompat.Type.systemBars())
+            }
         }
     }
 

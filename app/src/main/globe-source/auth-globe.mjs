@@ -17,6 +17,7 @@ let previousFrameAt = performance.now();
 let texture = null;
 let recordRotation = 0;
 let fittedDistance = 9;
+let renderStatus = 'loading';
 
 const renderer = new THREE.WebGLRenderer({
   canvas, alpha: true, antialias: true, premultipliedAlpha: false,
@@ -94,6 +95,7 @@ function draw() {
   if (disposed || renderer.getContext().isContextLost()) return;
   rim.rotation.copy(globe.rotation);
   renderer.render(scene, camera);
+  if (texture) renderStatus = 'ready';
 }
 
 function resize() {
@@ -104,7 +106,7 @@ function resize() {
   camera.aspect = width / height;
   // The square CTA keeps the Web's camera exactly. The full-screen viewer
   // fits the complete record at entry, including narrow portrait windows.
-  const nextDistance = interactive ? 9 / Math.min(1, camera.aspect) : 9;
+  const nextDistance = interactive ? 7.2 / Math.min(1, camera.aspect) : 9;
   camera.position.multiplyScalar(nextDistance / fittedDistance);
   fittedDistance = nextDistance;
   controls.maxDistance = Math.max(24, fittedDistance * 2.5);
@@ -179,16 +181,19 @@ resize();
 new THREE.ImageLoader().load(earthMaskUrl, (image) => {
   if (disposed) return;
   texture = createGlobeMap(image);
-  if (!texture) return;
+  if (!texture) { renderStatus = 'error'; return; }
   globeMaterial.color.set(0xffffff);
   globeMaterial.map = texture;
   globeMaterial.needsUpdate = true;
   draw();
+}, undefined, () => {
+  renderStatus = 'error';
 });
 
 // Native-to-page lifecycle/controls only: no JavaScript interface, credentials,
 // network endpoint or callback into Android is exposed to this local document.
 window.meewavAuthGlobe = Object.freeze({
+  get status() { return renderStatus; },
   setActive(value) { nativeActive = value === true; updateActivity(); },
   setInteractive(value) {
     const next = value === true;
