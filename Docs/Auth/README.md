@@ -33,16 +33,25 @@ Le compte est créé à la dernière étape, après le choix d’avatar, les ide
 
 Le choix d’une ville est manuel ; aucun bouton ne prétend activer un GPS non raccordé. Les conditions sont le texte `demoTerms` iOS affiché comme démonstration, avec une acceptation locale nécessaire pour cette version de test. Il reste à faire valider les conditions publiques et leur éventuelle traçabilité serveur avant diffusion. En absence de session après inscription, l’Android affiche la confirmation e-mail ; il ne reproduit pas la tentative de connexion immédiate du service iOS.
 
-Le futur lot doit achever le profil avec les véritables contrats déployés avant d’ouvrir le globe public. L’écran actuel après connexion est un état d’attente explicite, pas un faux globe fonctionnel. Les boutons Google/Apple ne sont pas proposés dans ce premier lot.
+Le futur lot doit achever le profil avec les véritables contrats déployés avant d’ouvrir le globe public. L’écran actuel après connexion est un état d’attente explicite, pas un faux globe fonctionnel. Les boutons Google/Apple, absents du premier lot, sont désormais raccordés côté client au parcours OAuth décrit ci-dessous.
 
-## Liens d’e-mail
+## Liens d’e-mail et retour OAuth
 
-Le client utilise PKCE. Seuls les codes reçus sur les deux adresses suivantes sont acceptés :
+Le client utilise PKCE. Seuls les codes reçus sur les trois adresses suivantes sont acceptés :
 
 - `meewav-android://auth-callback/signup`
 - `meewav-android://auth-callback/recovery`
+- `meewav-android://auth-callback/oauth`
 
-Ces deux valeurs doivent figurer dans la liste autorisée des redirections Supabase. Cette autorisation distante n’est pas configurée ni supposée acquise par ce commit. La connexion e-mail/mot de passe ne dépend pas de ces redirections. Sans leur activation, Supabase peut utiliser sa redirection Web par défaut pour les e-mails ; ne pas annoncer le retour natif comme validé.
+Ces trois valeurs doivent figurer dans la liste autorisée des redirections Supabase. Cette autorisation distante n’est pas configurée ni supposée acquise par ce commit. La connexion e-mail/mot de passe ne dépend pas de ces redirections. Sans leur activation, Supabase peut utiliser sa redirection Web par défaut ; ne pas annoncer le retour natif comme validé.
+
+### Google et Apple — 14 septembre 2026
+
+La connexion propose deux boutons ronds de 48 dp dans la même ligne que Créer un compte, sans ajouter de hauteur ni réduire les 20 dp réservés sous cette ligne. Le bouton Google utilise l’image officielle et Apple le symbole déjà présent dans le Web ; les deux possèdent un libellé accessible.
+
+`MeewavAuthRepository.signInSocial` appelle `auth.signInWith(Google/Apple, redirectUrl = AuthPolicy.OAUTH_REDIRECT)` dans le SDK 3.2.6 déjà installé. Le fournisseur s’ouvre dans le navigateur via le SDK ; le code PKCE revient par le lien Android existant puis passe par `exchangeCodeForSession`. Aucun jeton de session dans un fragment n’est accepté, aucune session n’est simulée et les boutons ne sont pas utilisés dans l’aperçu sans compte. Le succès suit l’état connecté existant, sans prétendre achever un profil ou ouvrir le globe. Une création via fournisseur ne collecte pas les métadonnées du formulaire manuel : sa finalisation de profil reste un travail distinct.
+
+Prérequis non vérifiés et non modifiés par ce lot : activation des fournisseurs Google/Apple dans Supabase, configuration de leurs applications OAuth et autorisation de la redirection Android. Aucun secret fournisseur n’est embarqué. La compilation est réussie ; aucun compte ni connexion sociale n’a été créé pendant ce travail. L’annulation du navigateur, le retour PKCE sur téléphone et la connexion avec chacun des deux fournisseurs restent à essayer par l’utilisateur. Référence : [OAuth Kotlin Supabase](https://supabase.com/docs/reference/kotlin/auth-signinwithoauth).
 
 Les fragments contenant directement des jetons, les hôtes ressemblants, les ports, les chemins différents et les codes dupliqués sont refusés. Un lien PKCE est destiné au téléphone qui a initié le parcours.
 

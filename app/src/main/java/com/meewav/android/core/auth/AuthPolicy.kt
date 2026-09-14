@@ -6,6 +6,7 @@ import java.net.URLDecoder
 object AuthPolicy {
     const val SIGNUP_REDIRECT = "meewav-android://auth-callback/signup"
     const val RECOVERY_REDIRECT = "meewav-android://auth-callback/recovery"
+    const val OAUTH_REDIRECT = "meewav-android://auth-callback/oauth"
 
     fun emailError(email: String): String? =
         if (Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$").matches(email.trim())) null
@@ -34,7 +35,7 @@ object AuthPolicy {
         val uri = URI(raw)
         if (uri.scheme != "meewav-android" || uri.host != "auth-callback" ||
             uri.port != -1 || uri.userInfo != null || uri.fragment != null ||
-            uri.path !in setOf("/signup", "/recovery")) return null
+            uri.path !in setOf("/signup", "/recovery", "/oauth")) return null
         val parameters = uri.rawQuery.orEmpty().split("&").map {
             val pair = it.split("=", limit = 2)
             URLDecoder.decode(pair[0], "UTF-8") to URLDecoder.decode(pair.getOrElse(1) { "" }, "UTF-8")

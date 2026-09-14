@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import com.meewav.android.R
 import com.meewav.android.BuildConfig
 import com.meewav.android.core.design.*
+import com.meewav.android.core.auth.SocialAuthProvider
 
 data class AuthActions(
     val navigate: (AuthPage) -> Unit = {},
@@ -61,13 +62,14 @@ data class AuthActions(
     val signOut: () -> Unit = {},
     val startPreview: () -> Unit = {},
     val exitPreview: () -> Unit = {},
+    val social: (SocialAuthProvider) -> Unit = {},
 )
 
 @Composable
 fun AuthScreen(state: AuthUiState, viewModel: AuthViewModel) {
     AuthContent(state, AuthActions(viewModel::navigate, viewModel::back, viewModel::email,
         viewModel::username, viewModel::password, viewModel::confirmation, viewModel::profile,
-        viewModel::submit, viewModel::signOut, viewModel::startPreview, viewModel::exitPreview))
+        viewModel::submit, viewModel::signOut, viewModel::startPreview, viewModel::exitPreview, viewModel::signInSocial))
 }
 
 @Composable

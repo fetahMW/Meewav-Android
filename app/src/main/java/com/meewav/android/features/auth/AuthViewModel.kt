@@ -6,6 +6,7 @@ import com.meewav.android.BuildConfig
 import com.meewav.android.core.auth.AuthPolicy
 import com.meewav.android.core.auth.MeewavAuthRepository
 import com.meewav.android.core.auth.RegistrationProfile
+import com.meewav.android.core.auth.SocialAuthProvider
 import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -208,6 +209,16 @@ class AuthViewModel(private val repository: MeewavAuthRepository) : ViewModel() 
                 throw error
             }
         }
+    }
+
+    fun signInSocial(provider: SocialAuthProvider) {
+        if (state.value.busy || state.value.initializing || state.value.localPreview || state.value.page != AuthPage.Login) return
+        if (!repository.configured) {
+            mutable.update { it.copy(error = "La connexion n’est pas disponible dans cette version de l’application.") }
+            return
+        }
+        recoveryInProgress = false
+        execute { repository.signInSocial(provider) }
     }
 
     fun signOut() = execute {

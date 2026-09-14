@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -35,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import com.meewav.android.R
 import com.meewav.android.core.design.Muted
 import com.meewav.android.core.design.Violet
+import com.meewav.android.core.auth.SocialAuthProvider
 
 /** Même enveloppe, même vitre et même plateau que l'étape Avatar. */
 @Composable
@@ -51,12 +53,26 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
                 Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("Nouveau ici ?", fontSize = 11.sp, lineHeight = 14.sp, color = Muted)
                     Spacer(Modifier.height(4.dp))
-                    OutlinedButton(onClick = { actions.navigate(AuthPage.Avatar) }, enabled = !state.busy,
-                        modifier = Modifier.height(48.dp), shape = RoundedCornerShape(50),
-                        border = BorderStroke(1.dp, Color(0xFF5137A1)),
-                        colors = ButtonDefaults.outlinedButtonColors(containerColor = Color(0xFF0C0914)),
-                        contentPadding = PaddingValues(horizontal = 26.dp)) {
-                        Text("Créer un compte", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = { actions.social(SocialAuthProvider.Google) },
+                            enabled = !state.busy, modifier = Modifier.size(48.dp)) {
+                            Image(painterResource(R.drawable.auth_google_round), "Se connecter avec Google", Modifier.size(48.dp))
+                        }
+                        OutlinedIconButton(onClick = { actions.social(SocialAuthProvider.Apple) },
+                            enabled = !state.busy, modifier = Modifier.size(48.dp), shape = CircleShape,
+                            border = BorderStroke(1.dp, Color(0xFF8E918F)),
+                            colors = IconButtonDefaults.outlinedIconButtonColors(containerColor = Color(0xFF08080A))) {
+                            Image(painterResource(R.drawable.auth_apple), "Se connecter avec Apple", Modifier.size(23.dp))
+                        }
+                        OutlinedButton(onClick = { actions.navigate(AuthPage.Avatar) }, enabled = !state.busy,
+                            modifier = Modifier.weight(1f).height(48.dp), shape = RoundedCornerShape(50),
+                            border = BorderStroke(1.dp, Color(0xFF5137A1)),
+                            colors = ButtonDefaults.outlinedButtonColors(containerColor = Color(0xFF0C0914)),
+                            contentPadding = PaddingValues(horizontal = 12.dp)) {
+                            Text("Créer un compte", fontSize = 12.sp, maxLines = 1,
+                                fontWeight = FontWeight.Bold, color = Color.White)
+                        }
                     }
                 }
                 // Réaffecte la hauteur de l'ancienne onde à l'espace sous la capsule.

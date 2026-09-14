@@ -9,6 +9,8 @@ import io.github.jan.supabase.auth.SignOutScope
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.exception.AuthRestException
 import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.auth.providers.Google
+import io.github.jan.supabase.auth.providers.Apple
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.serialization.json.buildJsonObject
@@ -57,6 +59,13 @@ class MeewavAuthRepository(context: Context) {
     }
 
     suspend fun requestRecovery(email: String) = auth.resetPasswordForEmail(email.trim(), redirectUrl = AuthPolicy.RECOVERY_REDIRECT)
+    suspend fun signInSocial(provider: SocialAuthProvider) {
+        auth.awaitInitialization()
+        when (provider) {
+            SocialAuthProvider.Google -> auth.signInWith(Google, redirectUrl = AuthPolicy.OAUTH_REDIRECT)
+            SocialAuthProvider.Apple -> auth.signInWith(Apple, redirectUrl = AuthPolicy.OAUTH_REDIRECT)
+        }
+    }
     suspend fun updatePassword(password: String) { auth.updateUser { this.password = password } }
     suspend fun exchangeCode(code: String) { auth.exchangeCodeForSession(code) }
     suspend fun signOut() { auth.signOut(scope = SignOutScope.LOCAL) }
@@ -83,3 +92,5 @@ class MeewavAuthRepository(context: Context) {
         }
     }
 }
+
+enum class SocialAuthProvider { Google, Apple }
