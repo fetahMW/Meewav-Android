@@ -269,3 +269,5 @@ Sur précision utilisateur, les cônes violets de Bienvenue visent désormais ch
 Dans le même réglage, les violets orientés vers l’extérieur décrivent une petite orbite en 16 secondes : variation angulaire de ±4,2° et variation de hauteur de ±5,5 %, déphasées d’un quart de tour. Les deux faisceaux sont déphasés entre eux. Leurs origines et les corps restent fixes, et l’ouverture vers l’extérieur est conservée durant le mouvement. Cette animation est réservée aux violets de Bienvenue ; aucun mouvement blanc ni mécanisme Avatar n’est modifié.
 
 Essai demandé de grands cercles : les amplitudes des violets de Bienvenue sont triplées (±12,6° et ±16,5 % en hauteur), avec le même cycle lent de 16 secondes, le même déphasage et les mêmes origines fixes. L’orientation reste vers l’extérieur. Les blancs et Avatar sont inchangés ; rendu laissé à l’appréciation de l’utilisateur.
+
+Annulation des cercles demandée : Bienvenue retrouve le léger balayage angulaire précédent, sans variation de hauteur ni orbite circulaire. Les cônes restent orientés vers l’extérieur, les blancs éteints et la mécanique Avatar inchangée.
