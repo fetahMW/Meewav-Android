@@ -12,7 +12,6 @@ import android.os.Looper
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -104,7 +103,7 @@ internal fun LocationRegistration(state: AuthUiState, onProfile: (ProfileDraft) 
         if (grants.values.any { it }) findNearby()
         else message = "Position non partagée. Choisis simplement une commune et un quartier."
     }
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         OutlinedButton(onClick = {
             if (context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) findNearby()
             else permissions.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION))
@@ -126,25 +125,13 @@ internal fun LocationRegistration(state: AuthUiState, onProfile: (ProfileDraft) 
             Icons.Outlined.Search, !state.busy && !locating && !loadingCities && cities.isNotEmpty()) { query = ""; picker = "city" }
         ScenePickerButton(state.profile.musicScene?.label ?: if (loadingScenes) "Chargement des quartiers…" else "Quartier / scène musicale",
             Icons.Outlined.MusicNote, !state.busy && !locating && selectedCity != null && !loadingScenes) { query = ""; picker = "scene" }
-        Row(Modifier.fillMaxWidth().background(Color(0xFF191225), RoundedCornerShape(14.dp)).padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Icon(if (state.profile.musicScene != null) Icons.Outlined.MusicNote else Icons.Outlined.Shield,
-                null, tint = Violet, modifier = Modifier.size(20.dp))
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Text(if (state.profile.musicScene != null) "Ta scène musicale" else "Localisation respectueuse", color = Muted, fontSize = 10.sp)
-                Text(state.profile.musicScene?.label ?: "Aucune adresse précise demandée", color = Color.White,
-                    fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                Text(if (state.profile.musicScene != null) "${state.profile.city} · découvertes, rooms et battles locales"
-                    else "Ton profil rejoint un quartier musical, jamais une adresse.", color = Muted, fontSize = 10.sp, lineHeight = 14.sp)
-            }
-        }
         Column {
             Text("Visibilité sur la scène", color = Muted, fontSize = 10.sp)
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Outlined.PersonOutline, null, tint = Violet, modifier = Modifier.size(20.dp))
                 Column(Modifier.weight(1f).padding(horizontal = 8.dp)) {
                     Text("Afficher mon avatar", color = Color.White, fontSize = 12.sp)
-                    Text("Ton adresse n’est jamais affichée.", color = Muted, fontSize = 10.sp)
+                    Text("Ton adresse reste privée.", color = Muted, fontSize = 10.sp)
                 }
                 Switch(state.profile.visibleOnScene, { onProfile(state.profile.copy(visibleOnScene = it)) }, enabled = !state.busy,
                     colors = SwitchDefaults.colors(checkedTrackColor = Color(0xFF5137A1)))

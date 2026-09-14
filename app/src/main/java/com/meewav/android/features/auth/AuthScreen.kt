@@ -96,7 +96,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
             val availableHeight = maxHeight
             val isAvatarPage = state.page == AuthPage.Avatar
             val isIosEntry = isAvatarPage || state.page == AuthPage.Login
-            val fixedStep = isIosEntry || state.page == AuthPage.Register
+            val fixedStep = isIosEntry || state.page in setOf(AuthPage.Register, AuthPage.Location)
             // Au repos : enveloppe fixe. Pendant la saisie : place disponible au-dessus du clavier.
             val basePanelHeight = (availableHeight - 170.dp).coerceIn(320.dp, 640.dp)
             val panelHeight = if (typingLayout) (availableHeight - 24.dp).coerceAtLeast(0.dp)
@@ -186,7 +186,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                         }, color = Muted, style = MaterialTheme.typography.bodyMedium,
                             textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                         }
-                        if (state.page != AuthPage.Register) SubtitleDivider(compact = isAvatarPage)
+                        if (state.page != AuthPage.Register) SubtitleDivider(compact = isAvatarPage || state.page == AuthPage.Location)
                         state.error?.let { Message(it, true); Spacer(Modifier.height(14.dp)) }
                         state.notice?.let { Message(it, false); Spacer(Modifier.height(14.dp)) }
                         when (state.page) {
