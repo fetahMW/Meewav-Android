@@ -30,12 +30,15 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Dp
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.exp
@@ -49,43 +52,32 @@ internal val AuthStageOverlap = 22.dp
 internal fun authStageHeight(panelHeight: Dp) = ((panelHeight - AuthWindowLowerExtension) * .28f).coerceIn(120.dp, 180.dp)
 
 @Composable
-internal fun IosStageBackdrop(modifier: Modifier, light: () -> Float = { .14f }, showBeams: Boolean = false,
-                              sweepPhase: (() -> Float)? = null) {
+internal fun IosStageBackdrop(modifier: Modifier, light: () -> Float = { .14f },
+                              sweepPhase: (() -> Float)? = null,
+                              leftLight: () -> Float = light, rightLight: () -> Float = light) {
     Box(modifier.drawWithCache {
-        val beams = if (showBeams) renderStageLayer(size.width, size.height, 0).asImageBitmap() else null
         val platform = renderStageLayer(size.width, size.height, 1).asImageBitmap()
         val rim = renderStageLayer(size.width, size.height, 2).asImageBitmap()
+        val washes = listOf(-1, 1).map { renderRearProjector(size.width, size.height, it, lensOnly = false).asImageBitmap() }
+        val lenses = listOf(-1, 1).map { renderRearProjector(size.width, size.height, it, lensOnly = true).asImageBitmap() }
         onDrawBehind {
             val scale = size.width / 375f
-            val phase = sweepPhase?.invoke()
-            val spots = if (phase == null) emptyList() else List(4) { index ->
-                val side = if (index % 2 == 0) -1f else 1f
-                val rear = index >= 2
-                Offset(size.width / 2f + side * 185f * (if (rear) .24f else .32f) * scale,
-                    size.height - 26f * scale + (if (rear) 5f else -82f * .06f) * scale)
-            }
-            spots.forEachIndexed { index, origin ->
-                // Balayage souple : chaque cône s'ouvre avec un léger déphasage.
-                val sweep = (phase ?: 0f) * PI.toFloat() / 180f * 2f + index * .65f
-                val opening = .5f + .5f * sin(sweep)
-                val spread = .25f + 1.15f * opening
-                val halfWidth = (11f + 5f * opening) * scale
-                val top = Offset(size.width / 2f + (origin.x - size.width / 2f) * spread,
-                    origin.y - 74f * scale)
-                val beam = androidx.compose.ui.graphics.Path().apply {
-                    moveTo(origin.x - 2f * scale, origin.y)
-                    lineTo(top.x - halfWidth, top.y)
-                    lineTo(top.x + halfWidth, top.y)
-                    lineTo(origin.x + 2f * scale, origin.y)
-                    close()
+            for (index in 0..1) {
+                val side = if (index == 0) -1f else 1f
+                val origin = Offset(size.width / 2f + side * 185f * .32f * scale,
+                    size.height - (26f + 82f * .06f) * scale)
+                val phase = (sweepPhase?.invoke() ?: 0f) * PI.toFloat() / 180f
+                val angle = side * (1.8f + 2.2f * sin(phase + index * .8f))
+                val intensity = (if (index == 0) leftLight() else rightLight()).coerceIn(0f, 1f)
+                // Seul le faisceau balaie doucement le mur ; les deux corps restent fixes.
+                withTransform({ rotate(angle, origin) }) {
+                    drawImage(washes[index], alpha = intensity)
                 }
-                drawPath(beam, Brush.linearGradient(listOf(ComposeColor(0x668F55FF), ComposeColor.Transparent),
-                    start = origin, end = top), alpha = light().coerceIn(0f, 1f))
             }
-            beams?.let { drawImage(it, alpha = light().coerceIn(0f, 1f)) }
             drawImage(platform)
             drawImage(rim, alpha = (.24f + .76f * light()).coerceIn(0f, 1f))
-
+            drawImage(lenses[0], alpha = leftLight().coerceIn(0f, 1f))
+            drawImage(lenses[1], alpha = rightLight().coerceIn(0f, 1f))
         }
     })
 }
@@ -96,16 +88,31 @@ internal fun IosStageBackdrop(modifier: Modifier, light: () -> Float = { .14f },
 @Composable
 internal fun IosAvatarStage(pager: PagerState, modifier: Modifier = Modifier, enabled: Boolean = true,
                             confirmation: () -> Float = { 0f }) {
-    var lightTarget by remember { mutableFloatStateOf(.14f) }
-    LaunchedEffect(pager.isScrollInProgress) {
-        if (pager.isScrollInProgress) lightTarget = .14f
-        else {
-            lightTarget = 1.08f
-            delay(160)
-            lightTarget = 1f
+    val plateLight = remember { Animatable(.14f) }
+    val leftLight = remember { Animatable(0f) }
+    val rightLight = remember { Animatable(0f) }
+    // Chaque nouveau geste annule la séquence précédente, sans flash ni retard accumulé.
+    LaunchedEffect(pager.isScrollInProgress, pager.settledPage) {
+        coroutineScope {
+            if (pager.isScrollInProgress) {
+                launch { plateLight.animateTo(.14f, tween(100)) }
+                launch { leftLight.animateTo(0f, tween(100)) }
+                launch { rightLight.animateTo(0f, tween(100)) }
+            } else {
+                launch { plateLight.animateTo(1f, tween(140, easing = LinearOutSlowInEasing)) }
+                launch {
+                    leftLight.animateTo(0f, tween(60))
+                    delay(15)
+                    leftLight.animateTo(.94f, tween(170, easing = LinearOutSlowInEasing))
+                }
+                launch {
+                    rightLight.animateTo(0f, tween(60))
+                    delay(90)
+                    rightLight.animateTo(.94f, tween(180, easing = LinearOutSlowInEasing))
+                }
+            }
         }
     }
-    val light = animateFloatAsState(lightTarget, tween(220), label = "Projecteurs du plateau")
     val motion = rememberInfiniteTransition(label = "Faisceaux Avatar")
     val sweep = motion.animateFloat(0f, 360f,
         infiniteRepeatable(tween(16000, easing = LinearEasing)), label = "Balayage des faisceaux")
@@ -115,8 +122,10 @@ internal fun IosAvatarStage(pager: PagerState, modifier: Modifier = Modifier, en
         val firstGap = 108.5.dp * railScale
         val avatarSize = minOf(144.dp * railScale, maxHeight - 32.dp)
         IosStageBackdrop(Modifier.fillMaxSize(), light = {
-            light.value + .22f * confirmationPulse(confirmation())
-        }, sweepPhase = { sweep.value })
+            plateLight.value + .12f * confirmationPulse(confirmation())
+        }, sweepPhase = { sweep.value },
+            leftLight = { leftLight.value + .06f * confirmationPulse(confirmation()) },
+            rightLight = { rightLight.value + .06f * confirmationPulse(confirmation()) })
         HorizontalPager(pager, pageSize = PageSize.Fixed(firstGap),
             beyondViewportPageCount = 2, overscrollEffect = null, userScrollEnabled = enabled,
             contentPadding = PaddingValues(horizontal = (maxWidth - firstGap) / 2),
@@ -217,29 +226,13 @@ private fun avatarConfirmationMotion(progress: Float, offset: Float): AvatarConf
 }
 
 // Repère commun 375 dp ; le plateau iOS est dessiné dans son repère 185 × 82.
-private fun renderStageLayer(width: Float, height: Float, layer: Int, staticSpots: Boolean = true): Bitmap {
+private fun renderStageLayer(width: Float, height: Float, layer: Int): Bitmap {
     val bitmap = Bitmap.createBitmap(ceil(width).toInt().coerceAtLeast(1),
         ceil(height).toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
     val scale = width / 375f
     canvas.scale(scale, scale)
     val floor = height / scale - 26f
-    if (layer == 0) {
-        // Les deux projecteurs longs sont désormais sur l'ellipse, pas sur le formulaire.
-        for (side in listOf(-1, 1)) {
-            val originX = 187.5f + side * 185f * .24f
-            canvas.save()
-            canvas.translate(originX, floor + 5f)
-            canvas.rotate(side * 12.6f)
-            val ray = Path().apply {
-                moveTo(-3f, 0f); lineTo(-25f, -166f)
-                quadTo(0f, -190f, 25f, -166f); lineTo(3f, 0f); close()
-            }
-            canvas.drawPath(ray, stagePaint(shader = stageGradient(0f, 0f, 0f, -180f,
-                "#77FFFFFF", "#25FFFFFF", "#00FFFFFF"), blur = 9f))
-            canvas.restore()
-        }
-    }
     canvas.save()
     canvas.translate((375f - 185f) / 2, floor - 82f * .68f)
     val w = 185f
@@ -247,20 +240,6 @@ private fun renderStageLayer(width: Float, height: Float, layer: Int, staticSpot
     val main = RectF(w * .09f, h * .555f, w * .91f, h * .805f)
     val inner = RectF(w * .14f, h * .588f, w * .86f, h * .748f)
     when (layer) {
-        0 -> {
-            for (side in listOf(-1, 1)) {
-                val originX = w * if (side < 0) .18f else .82f
-                val targetX = w * if (side < 0) .4f else .6f
-                val ray = Path().apply {
-                    moveTo(originX - 3f, h * .62f)
-                    lineTo(targetX - w * .10f, -h * .5f)
-                    quadTo(targetX, -h * .65f, targetX + w * .10f, -h * .5f)
-                    lineTo(originX + 3f, h * .62f); close()
-                }
-                canvas.drawPath(ray, stagePaint(shader = stageGradient(originX, h * .62f, targetX, -h * .65f,
-                    "#808D45FF", "#298D45FF", "#008D45FF"), blur = 2.6f))
-            }
-        }
         1 -> {
             canvas.drawOval(main, stagePaint(shader = stageGradient(0f, main.top, 0f, main.bottom,
                 "#17171B", "#08080B", "#020204")))
@@ -284,22 +263,54 @@ private fun renderStageLayer(width: Float, height: Float, layer: Int, staticSpot
         }
     }
     canvas.restore()
-    if (staticSpots && (layer == 1 || layer == 2)) {
+    if (layer == 1) {
         for (side in listOf(-1, 1)) {
-            for (rear in listOf(false, true)) {
-                val x = 187.5f + side * 185f * if (rear) .24f else .32f
-                val y = floor + if (rear) 5f else -82f * .06f
-                val rect = RectF(x - 6f, y - 3f, x + 6f, y + 3f)
-                if (layer == 1) canvas.drawRoundRect(rect, 3f, 3f,
-                    stagePaint(shader = stageGradient(x, y - 3f, x, y + 3f, "#40304E", "#0A0710")))
-                else {
-                    canvas.drawCircle(x, y - 1f, 8f, stagePaint(shader = RadialGradient(x, y - 1f, 8f,
-                        intArrayOf(Color.parseColor("#DDBC8AFF"), Color.TRANSPARENT), null, Shader.TileMode.CLAMP)))
-                    canvas.drawOval(RectF(x - 3f, y - 2f, x + 3f, y), stagePaint(Color.parseColor("#F2E5FF")))
-                }
-            }
+            val x = 187.5f + side * 185f * .32f
+            val y = floor - 82f * .06f
+            canvas.drawRoundRect(RectF(x - 4.5f, y - 3f, x + 4.5f, y + 2.5f), 2.5f, 2.5f,
+                stagePaint(shader = stageGradient(x, y - 3f, x, y + 3f, "#38383F", "#07070A")))
+            canvas.drawOval(RectF(x - 2.8f, y - 2f, x + 2.8f, y), stagePaint(Color.parseColor("#35353A")))
         }
     }
+    return bitmap
+}
+
+/** Projection blanche diffuse, calculée une fois ; la texture du mur reste visible dessous. */
+private fun renderRearProjector(width: Float, height: Float, side: Int, lensOnly: Boolean): Bitmap {
+    val bitmap = Bitmap.createBitmap(ceil(width).toInt().coerceAtLeast(1),
+        ceil(height).toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    val scale = width / 375f
+    canvas.scale(scale, scale)
+    val x = 187.5f + side * 185f * .32f
+    val y = height / scale - 26f - 82f * .06f
+    if (lensOnly) {
+        canvas.drawCircle(x, y - 1f, 8f, stagePaint(shader = RadialGradient(x, y - 1f, 8f,
+            intArrayOf(Color.parseColor("#72FFFFFF"), Color.TRANSPARENT), null, Shader.TileMode.CLAMP)))
+        canvas.drawOval(RectF(x - 2.4f, y - 1.9f, x + 2.4f, y - .2f), stagePaint(Color.parseColor("#F0FFFFFF")))
+        return bitmap
+    }
+    val length = (y - 14f).coerceIn(56f, 130f)
+    val targetX = x + side * 10f
+    val targetY = y - length
+    val wallCenterY = targetY + 34f
+    val wallRadiusY = minOf(56f, wallCenterY - 4f)
+    canvas.save()
+    canvas.translate(targetX, wallCenterY)
+    canvas.scale(1f, wallRadiusY / 38f)
+    canvas.drawCircle(0f, 0f, 38f, stagePaint(shader = RadialGradient(0f, 0f, 38f,
+        intArrayOf(Color.parseColor("#36FFFFFF"), Color.parseColor("#16FFFFFF"), Color.TRANSPARENT),
+        floatArrayOf(0f, .45f, 1f), Shader.TileMode.CLAMP)))
+    canvas.restore()
+    val haze = Path().apply {
+        moveTo(x - 1.5f, y - 1f)
+        cubicTo(x - 8f, y - length * .45f, targetX - 22f, targetY + 22f, targetX - 27f, targetY + 8f)
+        quadTo(targetX, targetY - 6f, targetX + 27f, targetY + 8f)
+        cubicTo(targetX + 22f, targetY + 22f, x + 8f, y - length * .45f, x + 1.5f, y - 1f)
+        close()
+    }
+    canvas.drawPath(haze, stagePaint(shader = stageGradient(x, y, targetX, targetY,
+        "#48FFFFFF", "#1CFFFFFF", "#00FFFFFF"), blur = 7f))
     return bitmap
 }
 
