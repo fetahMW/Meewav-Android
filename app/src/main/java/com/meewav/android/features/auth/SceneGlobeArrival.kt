@@ -17,7 +17,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.meewav.android.R
@@ -29,41 +28,41 @@ internal fun SceneGlobeArrival(state: AuthUiState, onBack: () -> Unit, onEnter: 
     val sceneLabel = listOfNotNull(state.profile.musicScene?.label, state.profile.city.takeIf { it.isNotBlank() })
         .distinct().joinToString(" · ")
     if (interactive) {
-        Box(Modifier.fillMaxSize().safeDrawingPadding()) {
+        Box(Modifier.fillMaxSize().background(Color(0xFF08090D)).safeDrawingPadding()) {
             AuthCompletionGlobe(Modifier.fillMaxSize(), interactive = true, onClick = onEnter)
-            Row(Modifier.align(Alignment.TopCenter).padding(horizontal = 12.dp, vertical = 8.dp)
-                .fillMaxWidth().height(48.dp).background(Color(0x66080710), RoundedCornerShape(16.dp)),
-                verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) { Icon(Icons.Outlined.ChevronLeft, "Retour", tint = Color.White) }
-                Column(Modifier.weight(1f)) {
-                    Text("Mon Globe", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                    if (sceneLabel.isNotBlank()) Text(sceneLabel, color = Muted, fontSize = 11.sp,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
-                Image(painterResource(R.drawable.meewav_logo), "Meewav",
-                    Modifier.padding(horizontal = 14.dp).width(96.dp).height(26.dp), contentScale = ContentScale.Fit)
+            // The full Web scene already provides its own branding and controls.
+            IconButton(onClick = onBack, modifier = Modifier.align(Alignment.TopStart)
+                .padding(start = 10.dp, top = 10.dp).size(42.dp)
+                .background(Color(0xB3100B1D), RoundedCornerShape(14.dp))) {
+                Icon(Icons.Outlined.ChevronLeft, "Retour à ta scène", tint = Color.White)
             }
         }
         return
     }
-    Column(Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 22.dp, vertical = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(Modifier.fillMaxWidth().height(48.dp), contentAlignment = Alignment.Center) {
+    BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding().padding(12.dp)) {
+        val landscape = maxWidth > maxHeight
+        // Fit the preview to the remaining height, including during rotation.
+        // Its square viewport never takes the whole landscape screen width.
+        val globeSize = minOf(maxWidth - 32.dp, (maxHeight - 102.dp).coerceAtLeast(80.dp), 390.dp)
+        Box(Modifier.fillMaxWidth().height(42.dp), contentAlignment = Alignment.Center) {
             IconButton(onClick = onBack, modifier = Modifier.align(Alignment.CenterStart)) {
                 Icon(Icons.Outlined.ChevronLeft, "Retour", tint = Color.White)
             }
-            Image(painterResource(R.drawable.meewav_logo), "Meewav", Modifier.height(40.dp).padding(horizontal = 48.dp),
+            Image(painterResource(R.drawable.meewav_logo), "Meewav",
+                Modifier.then(if (landscape) Modifier.align(Alignment.CenterEnd) else Modifier)
+                    .padding(horizontal = 16.dp).width(124.dp).height(34.dp),
                 contentScale = ContentScale.Fit)
         }
-        Spacer(Modifier.weight(1f))
-        Text("Ta scène est prête", color = Color.White,
-            fontSize = 23.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(8.dp))
-        Text(sceneLabel,
-            color = Muted, fontSize = 13.sp, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(16.dp))
-        AuthCompletionGlobe(modifier = Modifier.fillMaxWidth(), onClick = onEnter)
-        Text("Touche le globe pour entrer", color = Color.White, fontSize = 14.sp)
-        Spacer(Modifier.weight(1f))
+        Column(Modifier.fillMaxSize().padding(top = if (landscape) 8.dp else 52.dp),
+            horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+            Text("Ta scène est prête", color = Color.White,
+                fontSize = 23.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            if (sceneLabel.isNotBlank()) {
+                Spacer(Modifier.height(4.dp))
+                Text(sceneLabel, color = Muted, fontSize = 12.sp, textAlign = TextAlign.Center, maxLines = 1)
+            }
+            AuthCompletionGlobe(modifier = Modifier.size(globeSize), onClick = onEnter)
+            Text("Touche le globe pour entrer", color = Color.White, fontSize = 14.sp)
+        }
     }
 }

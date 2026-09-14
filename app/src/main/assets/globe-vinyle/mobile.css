@@ -1,0 +1,39 @@
+/* Android landscape viewport. Rendering and materials stay in the Web engine. */
+html, body, #root { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+.immersive-globe { position: fixed; inset: 0; width: 100%; height: 100%; }
+.globe-stage canvas { position: absolute; inset: 0; }
+@media (orientation: landscape) and (max-height: 600px) {
+  .immersive-globe { --globe-search-left: 76px; }
+  .reference-search-dock { top: 10px; left: 76px; width: calc(100% - 310px); height: 40px; }
+  .reference-search-dock .meewav-search-filter-bar.is-flow { width: 100%; height: 40px; min-width: 0; }
+  .reference-search-dock .meewav-search-filter-bar__shortcut { display: none; }
+  .reference-city-strip.filter-chips { top: 57px; left: 76px; max-width: calc(100% - 316px); overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+  .reference-city-strip::-webkit-scrollbar { display: none; }
+  .reference-city-strip .filter-chip { min-height: 32px; padding: 0 10px; font-size: 12px; }
+  .reference-search-results.france-search-dropdown { top: 54px; left: 76px; width: calc(100% - 310px); max-height: calc(100dvh - 110px); overflow-y: auto; }
+  .reference-rail .globe-navigation-pole { top: 66px; left: 10px; bottom: 10px; width: 52px; height: auto; padding: 6px 4px; gap: 3px; border-radius: 22px; }
+  .reference-rail .globe-navigation-pole > .meewav-primary-nav__item.is-map { width: 42px; height: 36px; flex-basis: 36px; margin-top: 0; }
+  .reference-rail .globe-navigation-pole .meewav-primary-nav__item:not(.is-map) { width: 42px; height: 36px; min-height: 36px; flex-basis: 36px; }
+  .reference-rail .globe-navigation-pole .meewav-primary-nav__pillars { flex: 1; padding: 0; gap: 2px; min-height: 0; overflow-y: auto; scrollbar-width: none; }
+  .reference-rail .globe-navigation-pole .meewav-primary-nav__account { margin: 0; padding: 4px 0 0; }
+  .reference-rail .globe-navigation-pole .meewav-primary-nav__account::before { top: 0; }
+  .reference-rail .globe-navigation-pole .meewav-primary-nav__globe { width: 31px; height: 31px; }
+  .globe-honors-dock { --honors-top: 10px; top: 10px; right: 12px; width: 210px; gap: 8px; }
+  .globe-honors-dock .globe-brand-logo-shell.globe-brand-compact { width: 100px; }
+  .immersive-globe .national-top-ten__toggle { min-height: 42px; padding: 8px 10px; gap: 7px; font-size: 11px; }
+  .national-top-ten__heading small { font-size: 9px; }
+  .national-top-ten { max-height: calc(100dvh - 76px); }
+  .ring-explore-button { top: auto; bottom: 62px; left: 76px; width: 192px; height: 40px; padding: 0 10px; }
+  .immersive-globe .ring-explore-button.ring-key-surface { font-size: 12px; }
+  .ring-explore-detail { display: none; }
+  .reference-view-switch.map-mode-switch { bottom: 10px; max-width: calc(100vw - 170px); }
+  .reference-view-switch .map-mode-switch__button { height: 36px; padding: 0 9px; min-width: 0; font-size: 12px; }
+  .reference-controls.map-control-stack { right: 14px; bottom: 12px; gap: 6px; }
+  .reference-controls .map-control-button { width: 38px; height: 38px; }
+  .reference-selection { left: 76px; bottom: 56px; font-size: 11px; }
+  .ring-return-button { top: 12px; left: 76px; }
+  .ring-visit-panel { top: 60px; width: 350px; padding: 10px 12px; }
+  .ring-visit-copy h2 { font-size: 14px; }
+  .ring-visit-hints { display: none; }
+  .reference-destination { max-height: calc(100dvh - 28px); overflow-y: auto; }
+}

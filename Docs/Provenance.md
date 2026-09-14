@@ -1,5 +1,7 @@
 # Provenance des ressources
 
+Le [globe complet](Globe/README.md) reprend les sources, données, modèles et médias de `Meewav-Web` au commit `32a5e5fea7f6eebb3867c22a27e8b62230bb8d21`. Les chemins et empreintes sont dans `app/src/main/globe-source/web-globe-provenance.json`. Les notices existantes et les licences des dépendances compilées accompagnent le nouveau bundle. La réutilisation demandée dans Android ne crée pas une attribution supplémentaire ni une licence publique du produit.
+
 ## Identité Meewav
 
 Les ressources suivantes proviennent de la version Web validée par l’utilisateur, au commit `32a5e5fea7f6eebb3867c22a27e8b62230bb8d21` :

@@ -37,18 +37,18 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState == null) handleAuthIntent(intent)
         setContent {
             val state by authViewModel.state.collectAsStateWithLifecycle()
-            val inGlobe = state.page == AuthPage.Globe
-            LaunchedEffect(inGlobe) { applyDisplayMode(inGlobe) }
+            val landscape = state.page == AuthPage.Preview || state.page == AuthPage.Globe
+            LaunchedEffect(landscape) { applyDisplayMode(landscape) }
             MeewavTheme { AuthScreen(state, authViewModel) }
         }
     }
 
-    private fun applyDisplayMode(inGlobe: Boolean) {
-        val orientation = if (inGlobe) ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+    private fun applyDisplayMode(landscape: Boolean) {
+        val orientation = if (landscape) ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
             else ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         if (requestedOrientation != orientation) requestedOrientation = orientation
         WindowCompat.getInsetsController(window, window.decorView).apply {
-            if (inGlobe) {
+            if (landscape) {
                 systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                 hide(WindowInsetsCompat.Type.systemBars())
             } else {

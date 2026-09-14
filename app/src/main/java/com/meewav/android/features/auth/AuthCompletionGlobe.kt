@@ -52,6 +52,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import java.io.ByteArrayInputStream
 import java.io.IOException
+import org.json.JSONObject
 
 /** Only the globe is rendered in the local WebView; navigation and CTA remain native. */
 @Composable
@@ -60,7 +61,7 @@ internal fun AuthCompletionGlobe(
     interactive: Boolean = false,
     onClick: () -> Unit,
 ) {
-    val controller = remember { AuthGlobeController() }
+    val controller = remember(interactive) { AuthGlobeController(interactive) }
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner, controller) {
         val lifecycle = lifecycleOwner.lifecycle
@@ -109,7 +110,7 @@ internal fun AuthCompletionGlobe(
                 )
                 TextButton(onClick = controller::reload) { Text("Réessayer", color = Color.White) }
             }
-        } else if (!controller.ready) {
+        } else if (!controller.ready && !interactive) {
             CircularProgressIndicator(Modifier.size(28.dp), color = Color(0xFF8B5CF6), strokeWidth = 2.dp)
         }
         if (!interactive && controller.ready) {
@@ -138,7 +139,9 @@ private val GlobeAssets = mapOf(
     "/earth_specular.jpg" to "image/jpeg",
 )
 
-private class AuthGlobeController {
+private class AuthGlobeController(private val fullScene: Boolean) {
+    private val page = if (fullScene) "$GlobeOrigin/globe-vinyle/index.html" else GlobePage
+    private val api = if (fullScene) "meewavFullGlobe" else "meewavAuthGlobe"
     private var view: AuthGlobeWebView? = null
     private var resumed = false
     private var inViewport = false
@@ -165,9 +168,10 @@ private class AuthGlobeController {
             globeView.layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT,
             )
-            globeView.alpha = 0f
-            globeView.setBackgroundColor(AndroidColor.TRANSPARENT)
-            globeView.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+            globeView.alpha = if (fullScene) 1f else 0f
+            globeView.setBackgroundColor(if (fullScene) AndroidColor.rgb(8, 9, 13) else AndroidColor.TRANSPARENT)
+            globeView.importantForAccessibility = if (fullScene) View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
+                else View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
             globeView.isVerticalScrollBarEnabled = false
             globeView.isHorizontalScrollBarEnabled = false
             globeView.overScrollMode = View.OVER_SCROLL_NEVER
@@ -197,9 +201,11 @@ private class AuthGlobeController {
             globeView.webChromeClient = object : WebChromeClient() {
                 override fun onPermissionRequest(request: PermissionRequest) { request.deny() }
             }
+            val fullAssets = if (fullScene) JSONObject(context.assets.open("globe-vinyle/asset-manifest.json")
+                .bufferedReader().use { it.readText() }) else null
             globeView.webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest) =
-                    request.method != "GET" || request.url.toString() != GlobePage
+                    request.method != "GET" || request.url.toString() != page
 
                 override fun onReceivedError(webView: WebView, request: WebResourceRequest, error: WebResourceError) {
                     if (view === webView && request.isForMainFrame) showLoadFailure(webView)
@@ -210,6 +216,7 @@ private class AuthGlobeController {
                 }
 
                 override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse {
+                    if (fullAssets != null) return fullGlobeAsset(context, request, fullAssets)
                     val asset = permittedAsset(request.url)
                     if (request.method != "GET" || asset == null) return denied()
                     return try {
@@ -224,7 +231,7 @@ private class AuthGlobeController {
                 }
 
                 override fun onPageFinished(webView: WebView, url: String) {
-                    if (view !== webView || url != GlobePage || unavailable) return
+                    if (view !== webView || url != page || unavailable) return
                     awaitFirstFrame(webView, loadGeneration)
                 }
             }
@@ -241,23 +248,23 @@ private class AuthGlobeController {
         ready = false
         unavailable = false
         lastActive = null
-        globeView.alpha = 0f
+        globeView.alpha = if (fullScene) 1f else 0f
         globeView.onResume()
-        globeView.loadUrl(GlobePage)
+        globeView.loadUrl(page)
     }
 
     private fun awaitFirstFrame(webView: WebView, generation: Int, attempt: Int = 0) {
         if (view !== webView || generation != loadGeneration || unavailable) return
-        webView.evaluateJavascript("window.meewavAuthGlobe?.status ?? 'error'") { status ->
+        webView.evaluateJavascript("window.$api?.status ?? 'loading'") { status ->
             if (view !== webView || generation != loadGeneration || unavailable) return@evaluateJavascript
             when (status) {
                 "\"ready\"" -> {
                     ready = true
                     webView.alpha = 1f
-                    webView.evaluateJavascript("window.meewavAuthGlobe.setInteractive($interactive);", null)
+                    webView.evaluateJavascript("window.$api.setInteractive($interactive);", null)
                     refreshActivity()
                 }
-                "\"loading\"" -> if (attempt < 40) {
+                "\"loading\"" -> if (attempt < if (fullScene) 150 else 40) {
                     readinessHandler.postDelayed({ awaitFirstFrame(webView, generation, attempt + 1) }, 200L)
                 } else showLoadFailure(webView)
                 else -> showLoadFailure(webView)
@@ -270,7 +277,7 @@ private class AuthGlobeController {
         ready = false
         unavailable = true
         webView.alpha = 0f
-        webView.evaluateJavascript("window.meewavAuthGlobe?.setActive(false);", null)
+        webView.evaluateJavascript("window.$api?.setActive(false);", null)
     }
 
     fun setLifecycleActive(active: Boolean) {
@@ -286,13 +293,13 @@ private class AuthGlobeController {
     fun setInteractive(value: Boolean) {
         if (interactive == value) return
         interactive = value
-        if (ready) view?.evaluateJavascript("window.meewavAuthGlobe.setInteractive($value);", null)
+        if (ready) view?.evaluateJavascript("window.$api.setInteractive($value);", null)
     }
 
     fun action(name: String) {
         // Fixed native actions only; never interpolate user content into JS.
         if (ready && interactive && name in setOf("zoomIn", "zoomOut", "rotateLeft", "rotateRight", "resetView")) {
-            view?.evaluateJavascript("window.meewavAuthGlobe.$name();", null)
+            view?.evaluateJavascript("window.$api.$name();", null)
         }
     }
 
@@ -305,7 +312,7 @@ private class AuthGlobeController {
         if (lastActive == active) return
         lastActive = active
         if (active) globeView.onResume()
-        globeView.evaluateJavascript("window.meewavAuthGlobe.setActive($active);", null)
+        globeView.evaluateJavascript("window.$api.setActive($active);", null)
         if (!active) globeView.onPause()
     }
 
@@ -332,11 +339,31 @@ private class AuthGlobeController {
             }
         }
         mainHandler.postDelayed(destroy, 250L)
-        globeView.evaluateJavascript("window.meewavAuthGlobe?.dispose();") {
+        globeView.evaluateJavascript("window.$api?.dispose();") {
             mainHandler.removeCallbacks(destroy)
             destroy.run()
         }
     }
+}
+
+/** Only manifest-listed files in the bundled full scene can be fetched, including workers. */
+private fun fullGlobeAsset(context: Context, request: WebResourceRequest, manifest: JSONObject): WebResourceResponse {
+    val uri = request.url
+    if (request.method != "GET" || uri.scheme != "https" || uri.host != "appassets.androidplatform.net" ||
+        uri.port != -1 || uri.userInfo != null || uri.encodedQuery != null || uri.encodedFragment != null) return denied()
+    val path = uri.path ?: return denied()
+    if (!path.startsWith("/globe-vinyle/")) return denied()
+    val asset = path.removePrefix("/globe-vinyle/")
+    if (asset.split('/').any { it.isBlank() || it == "." || it == ".." } || '\\' in asset || '\u0000' in asset) return denied()
+    val record = manifest.optJSONObject(asset) ?: return denied()
+    val mime = record.getString("mime")
+    return try {
+        WebResourceResponse(mime,
+            if (mime.startsWith("text/") || mime in setOf("application/javascript", "application/json", "image/svg+xml")) "utf-8" else null,
+            200, "OK", mapOf("Cache-Control" to "no-store", "X-Content-Type-Options" to "nosniff",
+                "Content-Length" to record.getLong("bytes").toString()),
+            context.assets.open("globe-vinyle/$asset"))
+    } catch (_: IOException) { denied() }
 }
 
 private class AuthGlobeWebView(context: Context) : WebView(context) {

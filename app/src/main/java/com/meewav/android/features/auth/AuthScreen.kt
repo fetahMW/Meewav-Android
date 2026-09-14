@@ -86,8 +86,10 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
         if (!state.busy) actions.back()
     }
     Box(Modifier.fillMaxSize().background(Ink)) {
-        Image(painterResource(R.drawable.auth_ios_background), null,
-            Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+        if (state.page != AuthPage.Globe) {
+            Image(painterResource(R.drawable.auth_ios_background), null,
+                Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+        }
         if (state.page == AuthPage.Login) {
             LoginEntryLayout(state, actions, submit)
             return@Box

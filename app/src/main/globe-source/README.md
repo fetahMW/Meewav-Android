@@ -1,5 +1,7 @@
 # Globe d’authentification Android
 
+La miniature décrite ci-dessous est désormais limitée à **Ta scène est prête**, en paysage dès Terminer. Le vrai globe utilise son propre bundle, issu de la scène complète du Web : voir [l’audit et l’intégration Android](../../../../Docs/Globe/README.md).
+
 La scène reprend `Meewav-Web/src/components/auth/HolographicOrbCTA.tsx` à la référence Web `32a5e5fea7f6eebb3867c22a27e8b62230bb8d21` du 14 septembre 2026. La caméra carrée, les deux vitesses de rotation, la carte gris/noir, le halo violet et les reflets solidaires du vinyle sont conservés. Les fichiers sous `vendor/globe-vinyle` et `vendor/meewav-vinyl` sont copiés sans transformation depuis cette référence. `earth_specular.jpg` vient de `vendor/globe-vinyle/assets/ui/images/earth_specular.jpg` ; la provenance existante n’est pas une nouvelle attribution d’auteur ni une licence publique Meewav.
 
 Le bundle embarque Three.js 0.184.0 et son OrbitControls. Leur licence MIT intégrale est dans `../assets/auth-globe/THREE-LICENSE.txt`. La copie locale du contrôle reste dans `vendor/three/OrbitControls.js`.

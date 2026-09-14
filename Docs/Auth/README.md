@@ -1,5 +1,7 @@
 # Authentification Android — premier lot
 
+Le parcours d’arrivée au globe est décrit dans [Globe/README.md](../Globe/README.md) : Terminer bascule en paysage sur le fond acoustique, puis le clic sur la miniature ouvre la scène complète du Web avec son décor spatial. Les réglages historiques ci-dessous ne définissent plus la vue d’exploration actuelle. Le bypass DEBUG reste conservé.
+
 ## Sources de référence
 
 - Meewav-Web, référence applicative locale `32a5e5fea7f6eebb3867c22a27e8b62230bb8d21` : `src/pages/AuthPage.tsx`, `src/styles/auth.css`, `src/features/auth/signupCredentialValidation.ts`, `src/features/auth/auth.service.ts` et `AuthRecoveryPage.tsx`.
