@@ -117,7 +117,6 @@ internal fun IosAvatarStage(pager: PagerState, modifier: Modifier = Modifier, en
         IosStageBackdrop(Modifier.fillMaxSize(), light = {
             light.value + .22f * confirmationPulse(confirmation())
         }, sweepPhase = { sweep.value })
-        IosStageConfirmationPulse(Modifier.fillMaxSize(), confirmation)
         HorizontalPager(pager, pageSize = PageSize.Fixed(firstGap),
             beyondViewportPageCount = 2, overscrollEffect = null, userScrollEnabled = enabled,
             contentPadding = PaddingValues(horizontal = (maxWidth - firstGap) / 2),
@@ -172,6 +171,16 @@ internal fun IosAvatarStage(pager: PagerState, modifier: Modifier = Modifier, en
 internal fun confirmationPulse(progress: Float): Float =
     (easeOut(interval(progress, .02f, .18f)) - easeOut(interval(progress, .18f, .52f))).coerceAtLeast(0f)
 
+/** Compression brève, expansion ample et retour amorti ; le bord supérieur reste au plateau. */
+internal fun confirmationWindowScale(progress: Float): Float {
+    fun smooth(t: Float): Float = t * t * (3f - 2f * t)
+    return when {
+        progress < .08f -> 1f - .01f * smooth(interval(progress, 0f, .08f))
+        progress < .24f -> .99f + .035f * smooth(interval(progress, .08f, .24f))
+        else -> 1.025f - .025f * smooth(interval(progress, .24f, .70f))
+    }
+}
+
 private fun interval(value: Float, from: Float, to: Float) = ((value - from) / (to - from)).coerceIn(0f, 1f)
 private fun easeOut(value: Float) = 1f - (1f - value).pow(3)
 
@@ -205,23 +214,6 @@ private fun avatarConfirmationMotion(progress: Float, offset: Float): AvatarConf
     return AvatarConfirmationMotion(x = side * (14f + distance.coerceAtMost(4.5f) * 3.2f) * fall,
         y = 840f * fall, rotation = side * .42f * local * 180f / Math.PI.toFloat(),
         alpha = 1f - .36f * easeOut(interval(local, .70f, .98f)))
-}
-
-@Composable
-private fun IosStageConfirmationPulse(modifier: Modifier, progress: () -> Float) {
-    ComposeCanvas(modifier) {
-        val p = progress()
-        if (p > .001f && p < .72f) {
-            val s = size.width / 375f
-            val expansion = easeOut(interval(p, .03f, .42f))
-            val fade = 1f - easeOut(interval(p, .18f, .64f))
-            val width = (152f + 58f * expansion) * s
-            val height = (22f + 22f * expansion) * s
-            drawOval(Brush.horizontalGradient(listOf(ComposeColor(0xFF5137A1), ComposeColor.White, ComposeColor(0xFF8162B7))),
-                topLeft = Offset((size.width - width) / 2, size.height - 26f * s - height / 2),
-                size = Size(width, height), alpha = .55f * fade, style = Stroke(1.8f * s))
-        }
-    }
 }
 
 // Repère commun 375 dp ; le plateau iOS est dessiné dans son repère 185 × 82.
@@ -312,7 +304,7 @@ private fun renderStageLayer(width: Float, height: Float, layer: Int, staticSpot
 }
 
 /** Contour de LoginWindowChromeView, même repère et mêmes courbes que le main iOS. */
-internal fun renderIosStageWindow(width: Float, height: Float, margin: Int): Bitmap {
+internal fun renderIosStageWindow(width: Float, height: Float, margin: Int, illuminationOnly: Boolean = false): Bitmap {
     val bitmap = Bitmap.createBitmap(ceil(width).toInt().coerceAtLeast(1) + margin * 2,
         ceil(height).toInt().coerceAtLeast(1) + margin * 2, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
@@ -338,6 +330,17 @@ internal fun renderIosStageWindow(width: Float, height: Float, margin: Int): Bit
         cubicTo(96f, 453f, 77f, 451f, 57f, 451f)
         cubicTo(24f, 451f, 1f, 431f, 1f, 395f)
         close()
+    }
+    if (illuminationOnly) {
+        // Lumière diffuse sur la surface et autour de son vrai contour, sans anneau ajouté.
+        canvas.drawPath(shape, stagePaint(Color.parseColor("#706E43C2"), stroke = 10f, blur = 12f))
+        canvas.save()
+        canvas.clipPath(shape)
+        canvas.drawPaint(stagePaint(shader = RadialGradient(168.5f, 160f, 360f,
+            intArrayOf(Color.parseColor("#357F59CC"), Color.parseColor("#145137A1"), Color.TRANSPARENT),
+            floatArrayOf(0f, .65f, 1f), Shader.TileMode.CLAMP)))
+        canvas.restore()
+        return bitmap
     }
     canvas.drawPath(shape, stagePaint(shader = stageGradient(30f, 40f, 310f, 475f,
         "#2B1B5C", "#19122F", "#0B0816", "#080610", "#1A1234")))

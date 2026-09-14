@@ -116,3 +116,5 @@ Sur retour utilisateur, la palette du CTA et de la vitre est adaptée du poteau 
 - `auth_apple.xml` : transcription en VectorDrawable du chemin du symbole Apple déjà utilisé par `Meewav-Web/src/pages/AuthPage.tsx`, sous forme blanche. Cette provenance ne transfère aucun droit sur les marques Google ou Apple et n’atteste pas une validation de publication par ces fournisseurs.
 
 - `auth_google.xml` : silhouette G extraite du chemin de masque du SVG officiel `Android + Web/SVG/Dark/Theme=Dark, Show text=No, Shape=Square, Platform=Android+Web.svg` du même paquet Google. Transcription vectorielle monochrome blanche, sans fond ni contour de bouton, cadrée sur le G ; ce n’est pas une reproduction inchangée du bouton officiel. L’ancien PNG reste conservé.
+
+- `auth_google_color.png` : copie sans retouche du [G multicolore officiel Google](https://www.gstatic.com/images/branding/product/1x/googleg_48dp.png), PNG de 48 × 48 pixels. Affiché à 18 dp dans Compte, sans fond circulaire ni recoloration. Il remplace visuellement le G monochrome ; les ressources précédentes restent conservées.

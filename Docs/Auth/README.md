@@ -205,3 +205,10 @@ L’avatar de Compte est déplacé du titre vers le bord supérieur du bouton Ap
 La confirmation porte le libellé court « Confirmer mot de passe » sur une ligne. Le bouton Google utilise maintenant le G seul de 22 dp, sans pastille ni contour circulaire.
 
 Pendant la finition de l’authentification, les builds DEBUG démarrent par défaut en aperçu sans compte sur la page Connexion. Se connecter ouvre Avatar, puis Suivant parcourt Compte et Localisation sans exiger d’identifiants ni créer un compte. Aucun lien Explorer sans compte n’est réintroduit. Les builds de production ne reçoivent pas ce réglage ; les boutons OAuth restent neutralisés pendant l’aperçu. Cette préférence temporaire doit être retirée lorsque les essais réels d’authentification débuteront.
+
+
+## Proportions des logos et impulsion de la vitre — 14 septembre 2026
+
+Le bouton Google reprend le G multicolore officiel à 18 dp, face à la pomme de 22 dp pour équilibrer leurs surfaces visibles. L’avatar sur Apple grandit exactement de 20 %, de 42 × 48 à 50,4 × 57,6 dp ; son centre horizontal et le contact des pieds avec le bouton restent conservés.
+
+La confirmation Avatar retire l’anneau elliptique du plateau. La grande vitre entière, son contenu et le CTA effectuent une compression de 1 %, une expansion de 2,5 %, puis un retour souple à leur taille initiale, autour de leur bord supérieur. Une lumière diffuse suit la surface et le vrai contour de la vitre ; son bitmap est mis en cache et seule son intensité varie. Le plateau et les corps des projecteurs restent fixes. La chute des avatars, la durée de confirmation et les garde-fous pendant cette transition restent conservés. Aucun scénario ni contrôle visuel automatique exécuté.

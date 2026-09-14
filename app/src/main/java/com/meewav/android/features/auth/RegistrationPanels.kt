@@ -37,6 +37,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -85,12 +86,14 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
     // Enveloppe fixe : le plateau est extérieur à la vitre, pas dans le formulaire.
     Box(modifier.height(panelHeight)) {
         AuthWindowPanel(Modifier.fillMaxWidth().padding(top = stageHeight - 14.dp).graphicsLayer {
-                val pulse = confirmationPulse(confirmation.value)
-                scaleX = 1f + .008f * pulse
-                scaleY = 1f + .008f * pulse
+                val scale = confirmationWindowScale(confirmation.value)
+                transformOrigin = TransformOrigin(.5f, 0f)
+                scaleX = scale
+                scaleY = scale
             },
             panelHeight = panelHeight - stageHeight + 14.dp, compact = true,
             iosStageWindow = true, allowScroll = false,
+            illumination = { confirmationPulse(confirmation.value) },
             footer = {
                 IosAuthDivider()
                 Spacer(Modifier.height(12.dp))
@@ -250,8 +253,8 @@ internal fun AccountSocialOptions(state: AuthUiState, onContinue: (SocialAuthPro
                 border = BorderStroke(.75.dp, Violet.copy(alpha = .85f)),
                 colors = ButtonDefaults.outlinedButtonColors(containerColor = Color(0xFF08080B), contentColor = Color.White),
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)) {
-                Image(painterResource(if (provider == SocialAuthProvider.Apple) R.drawable.auth_apple else R.drawable.auth_google),
-                    null, Modifier.size(22.dp))
+                Image(painterResource(if (provider == SocialAuthProvider.Apple) R.drawable.auth_apple else R.drawable.auth_google_color),
+                    null, Modifier.size(if (provider == SocialAuthProvider.Apple) 22.dp else 18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(if (provider == SocialAuthProvider.Apple) "Apple" else "Google",
                     fontSize = 12.sp, lineHeight = 15.sp, fontWeight = FontWeight.SemiBold,
@@ -260,7 +263,7 @@ internal fun AccountSocialOptions(state: AuthUiState, onContinue: (SocialAuthPro
             if (provider == SocialAuthProvider.Apple) {
                 val avatar = AvatarCatalog.find(state.profile.avatarIcon)
                 Image(painterResource(avatar.image), avatar.name,
-                    Modifier.align(Alignment.TopStart).offset(x = 16.dp, y = (-44).dp).size(42.dp, 48.dp),
+                    Modifier.align(Alignment.TopStart).offset(x = 11.8.dp, y = (-53.6).dp).size(50.4.dp, 57.6.dp),
                     alignment = Alignment.BottomCenter, contentScale = ContentScale.Fit)
             }
             }

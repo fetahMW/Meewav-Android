@@ -37,6 +37,7 @@ internal fun AuthWindowPanel(modifier: Modifier = Modifier, panelHeight: Dp = 64
                              footer: (@Composable () -> Unit)? = null,
                              allowScroll: Boolean = true,
                              iosStageWindow: Boolean = false,
+                             illumination: (() -> Float)? = null,
                              content: @Composable ColumnScope.() -> Unit) {
     val scroll = rememberScrollState()
     LaunchedEffect(scrollKey) { scroll.scrollTo(0) }
@@ -47,7 +48,13 @@ internal fun AuthWindowPanel(modifier: Modifier = Modifier, panelHeight: Dp = 64
                 // Les flous sont peints une fois à la taille d'affichage, pas à chaque image.
                 val chrome = (if (iosStageWindow) renderIosStageWindow(size.width, size.height, margin)
                     else renderWebPanel(size.width, size.height, margin)).asImageBitmap()
-                onDrawBehind { drawImage(chrome, Offset(-margin.toFloat(), -margin.toFloat())) }
+                val glow = if (iosStageWindow && illumination != null)
+                    renderIosStageWindow(size.width, size.height, margin, illuminationOnly = true).asImageBitmap() else null
+                onDrawBehind {
+                    val origin = Offset(-margin.toFloat(), -margin.toFloat())
+                    drawImage(chrome, origin)
+                    glow?.let { drawImage(it, origin, alpha = illumination?.invoke()?.coerceIn(0f, 1f) ?: 0f) }
+                }
             }
             .padding(start = 28.dp, end = 28.dp,
                 top = if (compact) 30.dp else 38.dp,
