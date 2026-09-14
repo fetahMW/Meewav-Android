@@ -54,12 +54,14 @@ internal fun authStageHeight(panelHeight: Dp) = ((panelHeight - AuthWindowLowerE
 @Composable
 internal fun IosStageBackdrop(modifier: Modifier, light: () -> Float = { .14f },
                               sweepPhase: (() -> Float)? = null,
-                              leftLight: () -> Float = light, rightLight: () -> Float = light) {
+                              leftLight: () -> Float = light, rightLight: () -> Float = light,
+                              violetLight: () -> Float = { 0f }) {
     Box(modifier.drawWithCache {
         val platform = renderStageLayer(size.width, size.height, 1).asImageBitmap()
         val rim = renderStageLayer(size.width, size.height, 2).asImageBitmap()
         val washes = listOf(-1, 1).map { renderRearProjector(size.width, size.height, it, lensOnly = false).asImageBitmap() }
         val lenses = listOf(-1, 1).map { renderRearProjector(size.width, size.height, it, lensOnly = true).asImageBitmap() }
+        val violets = listOf(-1, 1).map { renderCrossedVioletBeam(size.width, size.height, it).asImageBitmap() }
         onDrawBehind {
             val scale = size.width / 375f
             for (index in 0..1) {
@@ -69,6 +71,9 @@ internal fun IosStageBackdrop(modifier: Modifier, light: () -> Float = { .14f },
                 val phase = (sweepPhase?.invoke() ?: 0f) * PI.toFloat() / 180f
                 val angle = side * (1.8f + 2.2f * sin(phase + index * .8f))
                 val intensity = (if (index == 0) leftLight() else rightLight()).coerceIn(0f, 1f)
+                withTransform({ rotate(-side * (1f + .9f * sin(phase + index * .8f)), origin) }) {
+                    drawImage(violets[index], alpha = violetLight().coerceIn(0f, 1f))
+                }
                 // Seul le faisceau balaie doucement le mur ; les deux corps restent fixes.
                 withTransform({ rotate(angle, origin) }) {
                     drawImage(washes[index], alpha = intensity)
@@ -91,6 +96,7 @@ internal fun IosAvatarStage(pager: PagerState, modifier: Modifier = Modifier, en
     val plateLight = remember { Animatable(.14f) }
     val leftLight = remember { Animatable(0f) }
     val rightLight = remember { Animatable(0f) }
+    val violetLight = remember { Animatable(0f) }
     // Chaque nouveau geste annule la séquence précédente, sans flash ni retard accumulé.
     LaunchedEffect(pager.isScrollInProgress, pager.settledPage) {
         coroutineScope {
@@ -98,6 +104,7 @@ internal fun IosAvatarStage(pager: PagerState, modifier: Modifier = Modifier, en
                 launch { plateLight.animateTo(.14f, tween(100)) }
                 launch { leftLight.animateTo(0f, tween(100)) }
                 launch { rightLight.animateTo(0f, tween(100)) }
+                launch { violetLight.animateTo(0f, tween(100)) }
             } else {
                 launch { plateLight.animateTo(1f, tween(140, easing = LinearOutSlowInEasing)) }
                 launch {
@@ -109,6 +116,11 @@ internal fun IosAvatarStage(pager: PagerState, modifier: Modifier = Modifier, en
                     rightLight.animateTo(0f, tween(60))
                     delay(90)
                     rightLight.animateTo(.94f, tween(180, easing = LinearOutSlowInEasing))
+                }
+                launch {
+                    violetLight.animateTo(0f, tween(60))
+                    delay(290)
+                    violetLight.animateTo(.85f, tween(160, easing = LinearOutSlowInEasing))
                 }
             }
         }
@@ -125,7 +137,8 @@ internal fun IosAvatarStage(pager: PagerState, modifier: Modifier = Modifier, en
             plateLight.value + .12f * confirmationPulse(confirmation())
         }, sweepPhase = { sweep.value },
             leftLight = { leftLight.value + .06f * confirmationPulse(confirmation()) },
-            rightLight = { rightLight.value + .06f * confirmationPulse(confirmation()) })
+            rightLight = { rightLight.value + .06f * confirmationPulse(confirmation()) },
+            violetLight = { violetLight.value })
         HorizontalPager(pager, pageSize = PageSize.Fixed(firstGap),
             beyondViewportPageCount = 2, overscrollEffect = null, userScrollEnabled = enabled,
             contentPadding = PaddingValues(horizontal = (maxWidth - firstGap) / 2),
@@ -311,6 +324,31 @@ private fun renderRearProjector(width: Float, height: Float, side: Int, lensOnly
     }
     canvas.drawPath(haze, stagePaint(shader = stageGradient(x, y, targetX, targetY,
         "#48FFFFFF", "#1CFFFFFF", "#00FFFFFF"), blur = 7f))
+    return bitmap
+}
+
+/** Deux accents courts se croisent derrière les personnages, depuis les spots arrière existants. */
+private fun renderCrossedVioletBeam(width: Float, height: Float, side: Int): Bitmap {
+    val bitmap = Bitmap.createBitmap(ceil(width).toInt().coerceAtLeast(1),
+        ceil(height).toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    val scale = width / 375f
+    canvas.scale(scale, scale)
+    val x = 187.5f + side * 185f * .32f
+    val y = height / scale - 26f - 82f * .06f
+    val targetX = 187.5f - side * 25f
+    val targetY = y - (y - 18f).coerceIn(48f, 108f)
+    val midX = (x + targetX) / 2f
+    val midY = (y + targetY) / 2f
+    val beam = Path().apply {
+        moveTo(x - 1.5f, y - 1f)
+        quadTo(midX - 8f, midY, targetX - 14f, targetY)
+        quadTo(targetX, targetY - 5f, targetX + 14f, targetY)
+        quadTo(midX + 8f, midY, x + 1.5f, y - 1f)
+        close()
+    }
+    canvas.drawPath(beam, stagePaint(shader = stageGradient(x, y, targetX, targetY,
+        "#6A9B63FF", "#429B63FF", "#009B63FF"), blur = 4f))
     return bitmap
 }
 
