@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
@@ -46,6 +47,7 @@ import com.meewav.android.core.design.Violet
 @Composable
 internal fun LoginEntryLayout(state: AuthUiState, actions: AuthActions, submit: () -> Unit) {
     val density = LocalDensity.current
+    var formHeightPx by remember { mutableIntStateOf(0) }
     val hostView = LocalView.current
     SideEffect {
         hostView.isVerticalScrollBarEnabled = false
@@ -68,7 +70,15 @@ internal fun LoginEntryLayout(state: AuthUiState, actions: AuthActions, submit: 
         val topSpace = ((maxHeight - baseHeight - 132.dp) / 2).coerceAtLeast(0.dp)
         val restTop = 12.dp + topSpace + 48.dp + 12.dp
         val glassInset = stageHeight - 14.dp
-        val sceneTop = restTop + (12.dp - restTop - glassInset) * progress
+        // Garder seulement la place nécessaire au formulaire au-dessus du clavier.
+        // La vitre entière se translate : sa hauteur et son dessin restent fixes.
+        val formHeight = with(density) { formHeightPx.toDp() }
+        val typingHeight = if (formHeightPx > 0)
+            (formHeight + 30.dp + 12.dp + 48.dp + 8.dp).coerceAtMost(panelHeight - glassInset)
+            else panelHeight - glassInset
+        val keyboardGlassTop = (maxHeight - with(density) { extent.toDp() } - 4.dp - typingHeight)
+            .coerceAtLeast(12.dp)
+        val sceneTop = restTop + (keyboardGlassTop - restTop - glassInset) * progress
         val viewport = (maxHeight - with(density) { overlap.toDp() } - sceneTop - glassInset - 4.dp)
             .coerceIn(0.dp, panelHeight - glassInset)
         Box(Modifier.align(Alignment.TopCenter).padding(horizontal = 22.dp)
@@ -81,7 +91,8 @@ internal fun LoginEntryLayout(state: AuthUiState, actions: AuthActions, submit: 
             Modifier.align(Alignment.TopCenter).padding(horizontal = 22.dp)
                 .widthIn(max = 440.dp).fillMaxWidth().offset(y = sceneTop),
             typingLayout = typing, contentViewportHeight = if (typing) viewport else null,
-            decorationAlpha = 1f - progress)
+            decorationAlpha = 1f - progress,
+            onFormHeightChanged = { formHeightPx = it })
     }
 }
 
@@ -89,7 +100,8 @@ internal fun LoginEntryLayout(state: AuthUiState, actions: AuthActions, submit: 
 @Composable
 internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () -> Unit,
                           panelHeight: Dp, modifier: Modifier = Modifier, typingLayout: Boolean = false,
-                          contentViewportHeight: Dp? = null, decorationAlpha: Float = 1f) {
+                          contentViewportHeight: Dp? = null, decorationAlpha: Float = 1f,
+                          onFormHeightChanged: (Int) -> Unit = {}) {
     val stageHeight = authStageHeight(panelHeight)
     val motion = rememberInfiniteTransition(label = "Signature suspendue")
     val levitation = motion.animateFloat(-3f, 3f,
@@ -130,6 +142,9 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
             if (state.initializing) {
                 CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally).padding(28.dp), color = Violet)
             } else {
+                // Mesurer le bloc réel, avec sa police et ses éventuels messages,
+                // indépendamment du CTA et de l'ouverture du clavier.
+                Column(Modifier.fillMaxWidth().onSizeChanged { onFormHeightChanged(it.height) }) {
                 Text("Bienvenue", fontSize = 23.sp, lineHeight = 28.sp, fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().semantics { heading() })
                 Spacer(Modifier.height(4.dp))
@@ -149,6 +164,7 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
                 TextButton(onClick = { actions.navigate(AuthPage.Forgot) }, enabled = !state.busy,
                     modifier = Modifier.align(Alignment.End).height(32.dp), contentPadding = PaddingValues(0.dp)) {
                     Text("Mot de passe oublié ?", color = Muted, fontSize = 10.sp)
+                }
                 }
                 if (!typingLayout) IosAuthAction("Se connecter", state.busy, submit)
             }
