@@ -238,29 +238,30 @@ internal fun AccountHeader(profile: ProfileDraft) {
 
 @Composable
 internal fun AccountSocialOptions(state: AuthUiState, onContinue: (SocialAuthProvider) -> Unit) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Text("S’inscrire avec", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
+        color = Muted, fontSize = 11.sp, lineHeight = 14.sp)
+    Row(Modifier.fillMaxWidth().height(48.dp), horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically) {
         listOf(SocialAuthProvider.Apple, SocialAuthProvider.Google).forEach { provider ->
             OutlinedButton(onClick = { onContinue(provider) },
                 enabled = !state.busy && !state.initializing && !state.localPreview,
-                modifier = Modifier.weight(1f).height(48.dp), shape = RoundedCornerShape(14.dp),
-                border = BorderStroke(.75.dp, Violet.copy(alpha = .7f)),
+                modifier = Modifier.weight(1f).height(40.dp), shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(.75.dp, Violet.copy(alpha = .85f)),
                 colors = ButtonDefaults.outlinedButtonColors(containerColor = Color(0xFF08080B), contentColor = Color.White),
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)) {
                 Image(painterResource(if (provider == SocialAuthProvider.Apple) R.drawable.auth_apple else R.drawable.auth_google_round),
-                    null, Modifier.size(24.dp))
-                Spacer(Modifier.width(6.dp))
-                Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Continuer avec", fontSize = 10.sp, lineHeight = 13.sp, maxLines = 1)
-                    Text(if (provider == SocialAuthProvider.Apple) "Apple" else "Google",
-                        fontSize = 12.sp, lineHeight = 15.sp, fontWeight = FontWeight.SemiBold)
-                }
+                    null, Modifier.size(22.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(if (provider == SocialAuthProvider.Apple) "Apple" else "Google",
+                    fontSize = 12.sp, lineHeight = 15.sp, fontWeight = FontWeight.SemiBold,
+                    maxLines = 1, softWrap = false)
             }
         }
     }
-    Row(Modifier.fillMaxWidth().height(26.dp), verticalAlignment = Alignment.CenterVertically,
+    Row(Modifier.fillMaxWidth().height(12.dp), verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         HorizontalDivider(Modifier.weight(1f), thickness = .5.dp, color = Color(0x665C4B79))
-        Text("ou", fontSize = 11.sp, color = Muted)
+        Text("ou", fontSize = 10.sp, lineHeight = 12.sp, color = Muted)
         HorizontalDivider(Modifier.weight(1f), thickness = .5.dp, color = Color(0x665C4B79))
     }
 }

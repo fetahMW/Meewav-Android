@@ -194,3 +194,6 @@ Les quatre corps de projecteurs restent désormais aux emplacements fixes du pla
 
 
 Dernier ajustement de la signature : la rotation est retirée. Le MW reste de face et conserve uniquement son oscillation verticale douce de ±3 dp. Les faisceaux et le placement du plateau sont inchangés.
+
+
+Zone sociale Compte : « S’inscrire avec » est désormais un libellé commun au-dessus de deux boutons rectangulaires de même largeur. Chaque bouton affiche uniquement son logo et Apple ou Google sur une ligne ; surface de 40 dp dans une rangée tactile de 48 dp. Le séparateur ou est compacté pour conserver le budget vertical de cette zone. Aucun autre élément de la fenêtre n’est modifié.
