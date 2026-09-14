@@ -1,0 +1,10 @@
+.gradle/
+.kotlin/
+.idea/
+**/build/
+local.properties
+meewav.local.properties
+*.jks
+*.keystore
+.meewav-launch-route
+.DS_Store

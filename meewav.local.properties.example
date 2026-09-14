@@ -1,0 +1,4 @@
+# Copier vers meewav.local.properties (ignore par Git).
+# Uniquement l'URL du projet et une cle PUBLISHABLE publique. Jamais de cle serveur.
+SUPABASE_URL=
+SUPABASE_PUBLISHABLE_KEY=
