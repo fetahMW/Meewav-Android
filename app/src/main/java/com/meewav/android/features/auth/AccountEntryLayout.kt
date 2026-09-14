@@ -56,7 +56,7 @@ internal fun AccountEntryLayout(state: AuthUiState, actions: AuthActions, submit
             .coerceAtLeast(12.dp)
         val restPanelTop = restHeaderTop + headerHeight
         val panelTop = restPanelTop + (12.dp - restPanelTop) * progress
-        val viewport = (maxHeight - with(density) { overlap.toDp() } - panelTop - 12.dp)
+        val viewport = (maxHeight - with(density) { overlap.toDp() } - panelTop - 4.dp)
             .coerceIn(0.dp, panelHeight)
 
         Column(Modifier.align(Alignment.TopCenter).padding(horizontal = 22.dp)
@@ -80,6 +80,7 @@ internal fun AccountEntryLayout(state: AuthUiState, actions: AuthActions, submit
             .widthIn(max = 440.dp).fillMaxWidth().offset(y = panelTop),
             panelHeight = panelHeight, compact = true, scrollKey = state.page,
             allowScroll = typing, contentViewportHeight = if (typing) viewport else null,
+            contentBottomPadding = if (typing) 8.dp else null,
             footer = if (state.initializing) null else { { PrimaryAction("Suivant", state.busy, submit) } }) {
             if (state.initializing) {
                 CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally).padding(28.dp), color = Violet)

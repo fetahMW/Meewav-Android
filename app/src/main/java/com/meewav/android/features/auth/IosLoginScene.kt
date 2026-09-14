@@ -69,7 +69,7 @@ internal fun LoginEntryLayout(state: AuthUiState, actions: AuthActions, submit: 
         val restTop = 12.dp + topSpace + 48.dp + 12.dp
         val glassInset = stageHeight - 14.dp
         val sceneTop = restTop + (12.dp - restTop - glassInset) * progress
-        val viewport = (maxHeight - with(density) { overlap.toDp() } - sceneTop - glassInset - 12.dp)
+        val viewport = (maxHeight - with(density) { overlap.toDp() } - sceneTop - glassInset - 4.dp)
             .coerceIn(0.dp, panelHeight - glassInset)
         Box(Modifier.align(Alignment.TopCenter).padding(horizontal = 22.dp)
             .widthIn(max = 440.dp).fillMaxWidth().offset(y = 12.dp + topSpace).height(48.dp)
@@ -103,7 +103,13 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
             panelHeight = panelHeight - stageHeight + 14.dp,
             compact = true, iosStageWindow = true, scrollKey = state.page, allowScroll = typingLayout,
             contentViewportHeight = contentViewportHeight,
-            footer = if (state.initializing || typingLayout) null else { {
+            contentBottomPadding = if (typingLayout) 8.dp else null,
+            bottomAlignContent = typingLayout,
+            footer = if (state.initializing) null else if (typingLayout) { {
+                // Le CTA reste à 12 dp du clavier ; le formulaire utilise
+                // l'espace juste au-dessus, sans remonter inutilement les champs.
+                IosAuthAction("Se connecter", state.busy, submit)
+            } } else { {
                 IosAuthDivider()
                 Spacer(Modifier.height(6.dp))
                 Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -144,7 +150,7 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
                     modifier = Modifier.align(Alignment.End).height(32.dp), contentPadding = PaddingValues(0.dp)) {
                     Text("Mot de passe oublié ?", color = Muted, fontSize = 10.sp)
                 }
-                IosAuthAction("Se connecter", state.busy, submit)
+                if (!typingLayout) IosAuthAction("Se connecter", state.busy, submit)
             }
         }
         if (decorationAlpha > 0f) Box(Modifier.fillMaxWidth().height(stageHeight + AuthStageOverlap)

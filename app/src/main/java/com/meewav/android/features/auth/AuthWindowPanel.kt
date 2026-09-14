@@ -18,11 +18,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asImageBitmap
@@ -40,9 +42,13 @@ internal fun AuthWindowPanel(modifier: Modifier = Modifier, panelHeight: Dp = 64
                              iosStageWindow: Boolean = false,
                              illumination: (() -> Float)? = null,
                              contentViewportHeight: Dp? = null,
+                             contentBottomPadding: Dp? = null,
+                             bottomAlignContent: Boolean = false,
                              content: @Composable ColumnScope.() -> Unit) {
     val scroll = rememberScrollState()
     LaunchedEffect(scrollKey) { scroll.scrollTo(0) }
+    val bottomPadding = contentBottomPadding
+        ?: if (iosStageWindow) 32.dp else if (compact) 40.dp else 52.dp
     // Le cadre reste fixe ; seuls les formulaires longs défilent dans sa zone intérieure.
     Box(modifier.height(panelHeight)
             .drawWithCache {
@@ -60,14 +66,16 @@ internal fun AuthWindowPanel(modifier: Modifier = Modifier, panelHeight: Dp = 64
             }
             .padding(start = 28.dp, end = 28.dp,
                 top = if (compact) 30.dp else 38.dp,
-                bottom = if (iosStageWindow) 32.dp else if (compact) 40.dp else 52.dp)) {
+                bottom = bottomPadding)) {
         // Le clavier réduit la zone utile du formulaire, jamais la vitre dessinée.
         val contentModifier = if (contentViewportHeight == null) Modifier.fillMaxSize() else
             Modifier.fillMaxWidth().height((contentViewportHeight -
                 (if (compact) 30.dp else 38.dp) -
-                (if (iosStageWindow) 32.dp else if (compact) 40.dp else 52.dp)).coerceAtLeast(0.dp))
+                bottomPadding).coerceAtLeast(0.dp))
         Column(contentModifier) {
-            Column(Modifier.weight(1f).then(if (allowScroll) Modifier.verticalScroll(scroll) else Modifier), content = content)
+            Column(Modifier.weight(1f)
+                .then(if (bottomAlignContent) Modifier.wrapContentHeight(Alignment.Bottom) else Modifier)
+                .then(if (allowScroll) Modifier.verticalScroll(scroll) else Modifier), content = content)
             if (footer != null) {
                 Spacer(Modifier.height(12.dp))
                 footer()
