@@ -85,11 +85,11 @@ internal fun IosStageBackdrop(modifier: Modifier, light: () -> Float = { .14f },
                         rotate(4.5f * sin(violetPhase), violetOrigin)
                         this.scale(1f, 1f + .055f * cos(violetPhase), violetOrigin)
                     } else if (violetOutward) {
-                        // Pan et élévation déphasés d'un quart de tour : petite orbite
+                        // Pan et élévation déphasés d'un quart de tour : orbite ample
                         // lumineuse vers l'extérieur, avec une origine toujours fixe.
                         val outwardPhase = phase + index * 2.1f
-                        rotate(side * (1f + 4.2f * sin(outwardPhase)), origin)
-                        this.scale(1f, 1f + .055f * cos(outwardPhase), origin)
+                        rotate(side * (1f + 12.6f * sin(outwardPhase)), origin)
+                        this.scale(1f, 1f + .165f * cos(outwardPhase), origin)
                     } else rotate(-side * (1f + 2.2f * sin(phase + index * .8f)), origin)
                 }) {
                     drawImage(violets[index], alpha = violetLight().coerceIn(0f, 1f))
