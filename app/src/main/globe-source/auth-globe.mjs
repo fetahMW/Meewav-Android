@@ -3,6 +3,7 @@ import { OrbitControls } from './vendor/three/OrbitControls.js';
 import { NAVBAR_GLOBE_PALETTE } from './vendor/globe-vinyle/shared/src/globe-palette.mjs';
 import { vinylRecordLayout, createVinylRecordGeometry } from './vendor/globe-vinyle/shared/src/vinyl-record-geometry.mjs';
 import { createVinylRecordMaterial } from './vendor/globe-vinyle/shared/src/vinyl-record-material.mjs';
+import earthMaskUrl from 'meewav:earth-mask';
 
 // Scene ported from the current Web HolographicOrbCTA.tsx. Its camera,
 // geometry, pigments, optical shader and two rotation rates are preserved.
@@ -175,7 +176,7 @@ canvas.addEventListener('webglcontextlost', contextLost);
 canvas.addEventListener('webglcontextrestored', contextRestored);
 resize();
 
-new THREE.ImageLoader().load('./earth_specular.jpg', (image) => {
+new THREE.ImageLoader().load(earthMaskUrl, (image) => {
   if (disposed) return;
   texture = createGlobeMap(image);
   if (!texture) return;

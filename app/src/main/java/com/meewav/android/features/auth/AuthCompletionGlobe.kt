@@ -11,6 +11,7 @@ import android.view.View
 import android.webkit.PermissionRequest
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceError
 import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
@@ -19,6 +20,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -87,7 +89,7 @@ internal fun AuthCompletionGlobe(
     ) {
         AndroidView(
             factory = { context -> controller.create(context, interactive) },
-            modifier = Modifier.matchParentSize(),
+            modifier = Modifier.fillMaxSize(),
             update = { controller.setInteractive(interactive) },
             onRelease = { controller.release(it) },
         )
@@ -177,6 +179,10 @@ private class AuthGlobeController {
             globeView.webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest) = true
 
+                override fun onReceivedError(webView: WebView, request: WebResourceRequest, error: WebResourceError) {
+                    if (view === webView && request.isForMainFrame) unavailable = true
+                }
+
                 override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse {
                     val asset = permittedAsset(request.url)
                     if (request.method != "GET" || asset == null) return denied()
@@ -204,7 +210,11 @@ private class AuthGlobeController {
                     }
                 }
             }
-            globeView.loadUrl(GlobePage)
+            // Supply the bundled document directly, with a stable HTTPS origin.
+            // Its script, style and Earth mask are embedded; no request to the
+            // fictitious host is needed, and network loads remain disabled.
+            val document = context.assets.open("auth-globe/index.html").bufferedReader().use { it.readText() }
+            globeView.loadDataWithBaseURL(GlobePage, document, "text/html", "utf-8", GlobePage)
         }
     }
 
@@ -292,6 +302,11 @@ private class AuthGlobeWebView(context: Context) : WebView(context) {
 
     override fun onVisibilityAggregated(isVisible: Boolean) {
         super.onVisibilityAggregated(isVisible)
+        visibilityChanged?.invoke()
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
         visibilityChanged?.invoke()
     }
 }
