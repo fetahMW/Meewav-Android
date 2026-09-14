@@ -27,12 +27,29 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.exp
 import kotlin.math.pow
 import kotlin.math.sign
+
+internal fun authStageHeight(panelHeight: Dp) = (panelHeight * .28f).coerceIn(120.dp, 180.dp)
+
+@Composable
+internal fun IosStageBackdrop(modifier: Modifier, light: () -> Float = { .14f }, showBeams: Boolean = false) {
+    Box(modifier.drawWithCache {
+        val beams = if (showBeams) renderStageLayer(size.width, size.height, 0).asImageBitmap() else null
+        val platform = renderStageLayer(size.width, size.height, 1).asImageBitmap()
+        val rim = renderStageLayer(size.width, size.height, 2).asImageBitmap()
+        onDrawBehind {
+            beams?.let { drawImage(it, alpha = light().coerceIn(0f, 1f)) }
+            drawImage(platform)
+            drawImage(rim, alpha = (.24f + .76f * light()).coerceIn(0f, 1f))
+        }
+    })
+}
 
 /** Port natif de SaturnCarouselLayout et StagePlatformRenderer (iOS main aea7251).
  * Les 28 PNG HD Android restent utilisés ; aucun moteur Web ni minuterie de rendu continue.
@@ -53,18 +70,7 @@ internal fun IosAvatarStage(pager: PagerState, modifier: Modifier = Modifier, en
         val railScale = (maxWidth / 375.dp).coerceAtMost(1.15f)
         val firstGap = 108.5.dp * railScale
         val avatarSize = minOf(144.dp * railScale, maxHeight - 32.dp)
-        Box(Modifier.fillMaxSize().drawWithCache {
-            // Trois textures natives mises en cache à la résolution réelle de l'écran.
-            // Seule leur intensité est animée : pas de reconstruction des flous à chaque frame.
-            val beams = renderStageLayer(size.width, size.height, 0).asImageBitmap()
-            val platform = renderStageLayer(size.width, size.height, 1).asImageBitmap()
-            val rim = renderStageLayer(size.width, size.height, 2).asImageBitmap()
-            onDrawBehind {
-                drawImage(beams, alpha = light.value.coerceIn(0f, 1f))
-                drawImage(platform)
-                drawImage(rim, alpha = (.24f + .76f * light.value).coerceIn(0f, 1f))
-            }
-        })
+        IosStageBackdrop(Modifier.fillMaxSize(), light = { light.value }, showBeams = true)
         HorizontalPager(pager, pageSize = PageSize.Fixed(firstGap),
             beyondViewportPageCount = 2, overscrollEffect = null, userScrollEnabled = enabled,
             contentPadding = PaddingValues(horizontal = (maxWidth - firstGap) / 2),

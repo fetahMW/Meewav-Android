@@ -48,6 +48,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Unit, onContinue: () -> Unit,
+                            onBack: () -> Unit,
                             panelHeight: Dp = 600.dp, modifier: Modifier = Modifier) {
     val entries = AvatarCatalog.profiles
     // Rail circulaire comme SaturnCarouselView ; la sélection backend reste l'un des 28 identifiants.
@@ -66,38 +67,55 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
     }
     val selectedIndex = pager.settledPage % entries.size
     val avatar = entries[selectedIndex]
-    val stageHeight = (panelHeight * .28f).coerceIn(120.dp, 180.dp)
+    val stageHeight = authStageHeight(panelHeight)
     // Enveloppe fixe : le plateau est extérieur à la vitre, pas dans le formulaire.
     Box(modifier.height(panelHeight)) {
         AuthWindowPanel(Modifier.fillMaxWidth().padding(top = stageHeight - 14.dp),
             panelHeight = panelHeight - stageHeight + 14.dp, compact = true,
             iosStageWindow = true, allowScroll = false,
-            footer = { PrimaryAction("Suivant", busy = state.busy) {
-                if (!pager.isScrollInProgress) onContinue()
-            } }) {
-        Text("Choisis ton avatar", style = MaterialTheme.typography.titleLarge,
-            textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-        Spacer(Modifier.height(4.dp))
-        Text("Il représentera ton rôle sur Meewav.", color = Muted, fontSize = 12.sp,
-            textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-        Spacer(Modifier.height(12.dp))
+            footer = {
+                IosAuthDivider()
+                Spacer(Modifier.height(12.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    OutlinedButton(onClick = onBack, enabled = !state.busy,
+                        modifier = Modifier.weight(1f).height(48.dp), shape = RoundedCornerShape(15.dp),
+                        border = BorderStroke(1.dp, Color(0xFF554079))) {
+                        Text("Retour", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
+                    Box(Modifier.weight(1f)) {
+                        IosAuthAction("Suivant", state.busy) {
+                            if (!pager.isScrollInProgress) onContinue()
+                        }
+                    }
+                }
+            }) {
         OutlinedButton(onClick = { pickerPage = selectedIndex / 6; showPicker = true }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-            border = BorderStroke(1.dp, Color(0xFF463557)), shape = RoundedCornerShape(14.dp)) {
+            colors = ButtonDefaults.outlinedButtonColors(containerColor = Color(0xFF09090B)),
+            border = BorderStroke(.5.dp, Color(0xFF29262F)), shape = RoundedCornerShape(14.dp)) {
             Text(avatar.name, color = Color.White, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
             Text("${selectedIndex + 1}/${entries.size}", color = Violet, fontSize = 12.sp)
             Icon(Icons.Outlined.ExpandMore, "Choisir un avatar", Modifier.padding(start = 6.dp).size(20.dp), tint = Violet)
         }
-        Spacer(Modifier.height(6.dp))
-        // La première ligne résume le rôle ; le descriptif source complet reste dans le catalogue.
-        Text(avatar.description.substringBefore('\n'), color = Muted, fontSize = 12.sp, lineHeight = 17.sp,
-            textAlign = TextAlign.Center, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
+        Spacer(Modifier.height(12.dp))
+        Text(avatar.description.lineSequence().take(2).joinToString("\n"), color = Muted, fontSize = 12.sp, lineHeight = 17.sp,
+            textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.weight(.5f))
+        HorizontalDivider(Modifier.align(Alignment.CenterHorizontally).width(120.dp), color = Color(0x22FFFFFF))
+        Spacer(Modifier.height(12.dp))
+        Text(if (state.profile.realArtist)
+            "Choisis Artiste réel si tu crées ou travailles ta musique toi-même : chant, rap, instruments, production, mixage, écriture, composition, etc."
+            else "Choisis Créateur IA si tu crées principalement ta musique à l’aide de l’intelligence artificielle.",
+            color = Muted, fontSize = 10.sp, lineHeight = 15.sp, textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.weight(1f))
         state.error?.let { Text(it, color = Color(0xFFFFBBC4), fontSize = 11.sp) }
         state.notice?.let { Text(it, color = Muted, fontSize = 11.sp) }
-        Text("TYPE DE PROFIL", color = Muted, fontSize = 10.sp, letterSpacing = 1.6.sp)
+        Text("Type de profil", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+        Spacer(Modifier.height(6.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            listOf(true to "Artiste réel", false to "Créateur IA").forEach { (real, title) ->
+            listOf(false to "Créateur IA", true to "Artiste réel").forEach { (real, title) ->
                 FilterChip(state.profile.realArtist == real, { onProfile(state.profile.copy(realArtist = real)) },
                     label = { Text(title, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
                     modifier = Modifier.weight(1f).heightIn(min = 48.dp),
@@ -106,9 +124,6 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
                         selectedContainerColor = Color(0xFF291B40), selectedLabelColor = Color.White))
             }
         }
-        Text(if (state.profile.realArtist) "Tu crées ou travailles ta musique toi-même."
-            else "Tu crées principalement à l’aide de l’IA.",
-            color = Muted, fontSize = 11.sp, textAlign = TextAlign.Center)
         }
         IosAvatarStage(pager, Modifier.fillMaxWidth().height(stageHeight), enabled = !state.busy && !showPicker)
     }

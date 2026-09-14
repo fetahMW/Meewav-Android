@@ -86,6 +86,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
         BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
             val availableHeight = maxHeight
             val isAvatarPage = state.page == AuthPage.Avatar
+            val isIosEntry = isAvatarPage || state.page == AuthPage.Login
             val fixedStep = isAvatarPage || state.page == AuthPage.Register
             // Même hauteur à chaque étape, indépendante du contenu et de l'ouverture du clavier.
             val panelHeight = (availableHeight - 170.dp).coerceIn(320.dp, 640.dp)
@@ -95,7 +96,10 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                 .padding(horizontal = 22.dp, vertical = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center) {
-                Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                if (isIosEntry) {
+                    Image(painterResource(R.drawable.meewav_logo), "Meewav",
+                        Modifier.widthIn(max = 310.dp).fillMaxWidth(.86f).height(86.dp), contentScale = ContentScale.Fit)
+                } else Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
                         if (state.page !in setOf(AuthPage.Login, AuthPage.SignedIn)) {
                             IconButton(onClick = actions.back, enabled = !state.busy) {
@@ -109,12 +113,15 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                 }
                 Spacer(Modifier.height(12.dp))
                 val step = when (state.page) { AuthPage.Avatar -> 0; AuthPage.Register -> 1; AuthPage.Location -> 2; else -> -1 }
-                Box(Modifier.height(38.dp).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+                if (!isIosEntry) Box(Modifier.height(38.dp).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
                     if (step >= 0) RegistrationSteps(step)
                 }
                 if (isAvatarPage && !state.initializing) {
-                    AvatarSelection(state, actions.profile, submit, panelHeight = panelHeight,
+                    AvatarSelection(state, actions.profile, submit, onBack = actions.back, panelHeight = panelHeight,
                         modifier = Modifier.widthIn(max = 440.dp).fillMaxWidth())
+                } else if (state.page == AuthPage.Login) {
+                    IosLoginScene(state, actions, submit, panelHeight,
+                        Modifier.widthIn(max = 440.dp).fillMaxWidth())
                 } else GlassPanel(Modifier.widthIn(max = 440.dp).fillMaxWidth(), panelHeight = panelHeight,
                     compact = fixedStep, scrollKey = state.page, allowScroll = !fixedStep,
                     footer = if (state.page == AuthPage.Register && !state.initializing) {
@@ -354,7 +361,7 @@ private fun SubtitleDivider(compact: Boolean = false) {
 }
 
 @Composable
-private fun DividerWithWave() {
+internal fun DividerWithWave() {
     Row(verticalAlignment = Alignment.CenterVertically) {
         val line = Brush.horizontalGradient(listOf(Color(0x0D8B5CF6), Color(0x618B5CF6), Color(0x0D8B5CF6)))
         Box(Modifier.weight(1f).height(1.dp).background(line))
