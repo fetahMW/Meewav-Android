@@ -64,13 +64,18 @@ internal fun IosStageBackdrop(modifier: Modifier, light: () -> Float = { .14f },
                 Offset(size.width / 2f + cos(angle) * 59f * scale,
                     size.height - 26f * scale + sin(angle) * 7f * scale)
             }
-            spots.forEach { origin ->
-                val top = Offset(size.width / 2f + (origin.x - size.width / 2f) * .35f,
+            spots.forEachIndexed { index, origin ->
+                // Balayage souple : chaque cône s'ouvre avec un léger déphasage.
+                val sweep = (phase ?: 0f) * PI.toFloat() / 180f * 2f + index * .65f
+                val opening = .5f + .5f * sin(sweep)
+                val spread = .25f + 1.15f * opening
+                val halfWidth = (11f + 5f * opening) * scale
+                val top = Offset(size.width / 2f + (origin.x - size.width / 2f) * spread,
                     origin.y - 74f * scale)
                 val beam = androidx.compose.ui.graphics.Path().apply {
                     moveTo(origin.x - 2f * scale, origin.y)
-                    lineTo(top.x - 13f * scale, top.y)
-                    lineTo(top.x + 13f * scale, top.y)
+                    lineTo(top.x - halfWidth, top.y)
+                    lineTo(top.x + halfWidth, top.y)
                     lineTo(origin.x + 2f * scale, origin.y)
                     close()
                 }

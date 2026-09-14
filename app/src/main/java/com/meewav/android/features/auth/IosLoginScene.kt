@@ -103,7 +103,8 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
             Image(painterResource(R.drawable.auth_web_signature), null,
                 Modifier.align(Alignment.BottomCenter).padding(bottom = 48.dp).size(54.dp)
                     .graphicsLayer {
-                        rotationZ = rotation.value
+                        rotationY = rotation.value
+                        cameraDistance = 12f * density
                         translationY = levitation.value * density
                     })
         }
