@@ -148,8 +148,8 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
 internal fun SelectedAvatar(profile: ProfileDraft, onEdit: () -> Unit) {
     val avatar = AvatarCatalog.find(profile.avatarIcon)
     Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color(0xFF1B1623))
-        .clickable(onClick = onEdit, role = Role.Button).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-        Image(painterResource(avatar.image), null, Modifier.size(52.dp), contentScale = ContentScale.Fit)
+        .clickable(onClick = onEdit, role = Role.Button).padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Image(painterResource(avatar.image), null, Modifier.size(40.dp), contentScale = ContentScale.Fit)
         Column(Modifier.weight(1f).padding(horizontal = 10.dp)) {
             Text(avatar.name, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
             Text(if (profile.realArtist) "Artiste réel" else "Créateur IA", color = Muted, fontSize = 12.sp)

@@ -111,7 +111,10 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                     if (step >= 0) RegistrationSteps(step)
                 }
                 GlassPanel(Modifier.widthIn(max = 440.dp).fillMaxWidth(), panelHeight = panelHeight,
-                    compact = isAvatarPage, scrollKey = state.page) {
+                    compact = isAvatarPage || state.page == AuthPage.Register, scrollKey = state.page,
+                    footer = if (state.page == AuthPage.Register && !state.initializing) {
+                        { PrimaryAction("Suivant", state.busy, submit) }
+                    } else null) {
                     if (state.initializing) {
                         CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally).padding(28.dp), color = Violet)
                     } else {
@@ -142,7 +145,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                             AuthPage.Preview -> "Mode aperçu · aucun compte créé."
                         }, color = Muted, style = MaterialTheme.typography.bodyMedium,
                             textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                        SubtitleDivider(compact = isAvatarPage)
+                        SubtitleDivider(compact = isAvatarPage || state.page == AuthPage.Register)
                         state.error?.let { Message(it, true); Spacer(Modifier.height(14.dp)) }
                         state.notice?.let { Message(it, false); Spacer(Modifier.height(14.dp)) }
                         when (state.page) {
@@ -151,7 +154,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                             AuthPage.Login, AuthPage.Register, AuthPage.Forgot, AuthPage.NewPassword -> {
                                 if (state.page == AuthPage.Register) {
                                     SelectedAvatar(state.profile, onEdit = { actions.navigate(AuthPage.Avatar) })
-                                    Spacer(Modifier.height(14.dp))
+                                    Spacer(Modifier.height(8.dp))
                                 }
                                 if (state.page != AuthPage.NewPassword) {
                                     AuthField(if (state.page == AuthPage.Login) "E-mail ou nom d’utilisateur" else "Adresse e-mail",
@@ -162,10 +165,6 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                                 }
                                 if (state.page == AuthPage.Register) {
                                     AuthField("Nom d’utilisateur", state.username, actions.username, Icons.Outlined.PersonOutline, enabled = !state.busy)
-                                    Spacer(Modifier.height(12.dp))
-                                    AuthField("Naissance · JJ/MM/AAAA (facultatif)", state.profile.birthDate,
-                                        { actions.profile(state.profile.copy(birthDate = it)) }, Icons.Outlined.CalendarMonth,
-                                        enabled = !state.busy)
                                     Spacer(Modifier.height(12.dp))
                                 }
                                 if (state.page != AuthPage.Forgot) {
@@ -184,13 +183,14 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                                             Text("Mot de passe oublié ?", color = Muted, fontSize = 12.sp)
                                         }
                                     }
-                                } else Spacer(Modifier.height(22.dp))
-                                PrimaryAction(when (state.page) {
-                                    AuthPage.Login -> "Se connecter"
-                                    AuthPage.Register -> "Suivant"
-                                    AuthPage.Forgot -> "Recevoir le lien"
-                                    else -> "Enregistrer"
-                                }, state.busy, submit)
+                                } else if (state.page != AuthPage.Register) Spacer(Modifier.height(22.dp))
+                                if (state.page != AuthPage.Register) {
+                                    PrimaryAction(when (state.page) {
+                                        AuthPage.Login -> "Se connecter"
+                                        AuthPage.Forgot -> "Recevoir le lien"
+                                        else -> "Enregistrer"
+                                    }, state.busy, submit)
+                                }
                                 if (state.page == AuthPage.Login) {
                                     Spacer(Modifier.height(24.dp)); DividerWithWave(); Spacer(Modifier.height(12.dp))
                                     Text("NOUVEAU ICI ?", fontSize = 10.sp, fontWeight = FontWeight.SemiBold,
@@ -268,8 +268,10 @@ private fun RegistrationSteps(current: Int) {
 
 @Composable
 internal fun GlassPanel(modifier: Modifier = Modifier, panelHeight: Dp = 640.dp, compact: Boolean = false,
-                       scrollKey: Any? = null, content: @Composable ColumnScope.() -> Unit) {
-    AuthWindowPanel(modifier, panelHeight = panelHeight, compact = compact, scrollKey = scrollKey, content = content)
+                       scrollKey: Any? = null, footer: (@Composable () -> Unit)? = null,
+                       content: @Composable ColumnScope.() -> Unit) {
+    AuthWindowPanel(modifier, panelHeight = panelHeight, compact = compact, scrollKey = scrollKey,
+        footer = footer, content = content)
 }
 
 @Composable

@@ -29,7 +29,7 @@ La déconnexion demande uniquement la clôture de la session courante (`LOCAL`) 
 
 ## Inscription et lots suivants
 
-Le compte est créé à la dernière étape, après le choix d’avatar, les identifiants et la ville. Le formulaire collecte une naissance facultative, refuse les dates impossibles ou futures, et ne modifie pas les espaces du mot de passe. Les métadonnées reprennent `AuthSignUpPayload` iOS : `username`, `artist_type` (`REEL`/`IA`), `avatar_url` (nom d’asset), `avatar_name`, naissance facultative, ville, code postal facultatif et pays. Le client ajoute `onboarding_completed=false`, demande `is_ghost_mode=true` et `show_on_public_profile=false`, ne fabrique aucune coordonnée et n’appelle pas encore `complete_onboarding`.
+Le compte est créé à la dernière étape, après le choix d’avatar, les identifiants et la ville. À la demande de l’utilisateur, l’écran Compte ne collecte plus la date de naissance. Le contrat de données conserve son champ facultatif, laissé vide par ce parcours. Le formulaire ne modifie pas les espaces du mot de passe. Les métadonnées reprennent `AuthSignUpPayload` iOS : `username`, `artist_type` (`REEL`/`IA`), `avatar_url` (nom d’asset), `avatar_name`, ville, code postal facultatif et pays. Le client ajoute `onboarding_completed=false`, demande `is_ghost_mode=true` et `show_on_public_profile=false`, ne fabrique aucune coordonnée et n’appelle pas encore `complete_onboarding`.
 
 Le choix d’une ville est manuel ; aucun bouton ne prétend activer un GPS non raccordé. Les conditions sont le texte `demoTerms` iOS affiché comme démonstration, avec une acceptation locale nécessaire pour cette version de test. Il reste à faire valider les conditions publiques et leur éventuelle traçabilité serveur avant diffusion. En absence de session après inscription, l’Android affiche la confirmation e-mail ; il ne reproduit pas la tentative de connexion immédiate du service iOS.
 
@@ -100,3 +100,7 @@ Le bouton **Explorer sans compte** est réservé aux builds de développement (`
 La dernière étape d’aperçu annonce explicitement qu’aucun compte n’a été créé. Elle ne présente pas la messagerie, le globe ou les Rooms Android comme déjà implémentés. L’authentification réelle et ses validations restent actives hors aperçu.
 
 Compilation `:app:assembleDebug`, installation et relance réussies sur les deux émulateurs de la session. Aucun scénario d’interface, test applicatif ou contrôle visuel automatique exécuté ; aucun compte créé pour ce lot.
+
+## Étape Compte lisible — 14 septembre 2026
+
+Le champ naissance est retiré ; restent l’e-mail, le nom d’utilisateur, le mot de passe et sa confirmation. Le récapitulatif de l’avatar et les marges de l’étape sont compactés. Le bouton **Suivant** occupe un pied fixe dans la fenêtre, séparé de la zone de formulaire défilante, afin de rester accessible avec des textes longs ou agrandis. La hauteur du cadre, le parcours réel et le mode aperçu sans compte sont conservés.

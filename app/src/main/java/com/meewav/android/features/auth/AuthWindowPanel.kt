@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -33,6 +34,7 @@ import kotlin.math.roundToInt
 @Composable
 internal fun AuthWindowPanel(modifier: Modifier = Modifier, panelHeight: Dp = 640.dp,
                              compact: Boolean = false, scrollKey: Any? = null,
+                             footer: (@Composable () -> Unit)? = null,
                              content: @Composable ColumnScope.() -> Unit) {
     val scroll = rememberScrollState()
     LaunchedEffect(scrollKey) { scroll.scrollTo(0) }
@@ -47,7 +49,13 @@ internal fun AuthWindowPanel(modifier: Modifier = Modifier, panelHeight: Dp = 64
             .padding(start = 28.dp, end = 28.dp,
                 top = if (compact) 30.dp else 38.dp,
                 bottom = if (compact) 40.dp else 52.dp)) {
-        Column(Modifier.fillMaxSize().verticalScroll(scroll), content = content)
+        Column(Modifier.fillMaxSize()) {
+            Column(Modifier.weight(1f).verticalScroll(scroll), content = content)
+            if (footer != null) {
+                Spacer(Modifier.height(12.dp))
+                footer()
+            }
+        }
     }
 }
 
