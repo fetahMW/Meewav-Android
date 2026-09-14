@@ -41,21 +41,51 @@ import kotlin.math.ceil
 import kotlin.math.exp
 import kotlin.math.pow
 import kotlin.math.sign
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.PI
 
 internal val AuthWindowLowerExtension = 28.dp
 internal val AuthStageOverlap = 22.dp
 internal fun authStageHeight(panelHeight: Dp) = ((panelHeight - AuthWindowLowerExtension) * .28f).coerceIn(120.dp, 180.dp)
 
 @Composable
-internal fun IosStageBackdrop(modifier: Modifier, light: () -> Float = { .14f }, showBeams: Boolean = false) {
+internal fun IosStageBackdrop(modifier: Modifier, light: () -> Float = { .14f }, showBeams: Boolean = false,
+                              orbit: (() -> Float)? = null) {
     Box(modifier.drawWithCache {
         val beams = if (showBeams) renderStageLayer(size.width, size.height, 0).asImageBitmap() else null
-        val platform = renderStageLayer(size.width, size.height, 1).asImageBitmap()
-        val rim = renderStageLayer(size.width, size.height, 2).asImageBitmap()
+        val platform = renderStageLayer(size.width, size.height, 1, staticSpots = orbit == null).asImageBitmap()
+        val rim = renderStageLayer(size.width, size.height, 2, staticSpots = orbit == null).asImageBitmap()
         onDrawBehind {
+            val scale = size.width / 375f
+            val phase = orbit?.invoke()
+            val spots = if (phase == null) emptyList() else List(4) { index ->
+                val angle = (phase + index * 90f) * PI.toFloat() / 180f
+                Offset(size.width / 2f + cos(angle) * 59f * scale,
+                    size.height - 26f * scale + sin(angle) * 7f * scale)
+            }
+            spots.forEach { origin ->
+                val top = Offset(size.width / 2f + (origin.x - size.width / 2f) * .35f,
+                    origin.y - 74f * scale)
+                val beam = androidx.compose.ui.graphics.Path().apply {
+                    moveTo(origin.x - 2f * scale, origin.y)
+                    lineTo(top.x - 13f * scale, top.y)
+                    lineTo(top.x + 13f * scale, top.y)
+                    lineTo(origin.x + 2f * scale, origin.y)
+                    close()
+                }
+                drawPath(beam, Brush.linearGradient(listOf(ComposeColor(0x668F55FF), ComposeColor.Transparent),
+                    start = origin, end = top))
+            }
             beams?.let { drawImage(it, alpha = light().coerceIn(0f, 1f)) }
             drawImage(platform)
             drawImage(rim, alpha = (.24f + .76f * light()).coerceIn(0f, 1f))
+            spots.forEach { origin ->
+                drawCircle(Brush.radialGradient(listOf(ComposeColor(0xBBAA76FF), ComposeColor.Transparent),
+                    center = origin, radius = 9f * scale), radius = 9f * scale, center = origin)
+                drawOval(ComposeColor(0xFFF0E6FF), topLeft = origin - Offset(2.5f * scale, 1.3f * scale),
+                    size = Size(5f * scale, 2.6f * scale))
+            }
         }
     })
 }
@@ -192,7 +222,7 @@ private fun IosStageConfirmationPulse(modifier: Modifier, progress: () -> Float)
 }
 
 // Repère commun 375 dp ; le plateau iOS est dessiné dans son repère 185 × 82.
-private fun renderStageLayer(width: Float, height: Float, layer: Int): Bitmap {
+private fun renderStageLayer(width: Float, height: Float, layer: Int, staticSpots: Boolean = true): Bitmap {
     val bitmap = Bitmap.createBitmap(ceil(width).toInt().coerceAtLeast(1),
         ceil(height).toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
@@ -259,7 +289,7 @@ private fun renderStageLayer(width: Float, height: Float, layer: Int): Bitmap {
         }
     }
     canvas.restore()
-    if (layer == 1 || layer == 2) {
+    if (staticSpots && (layer == 1 || layer == 2)) {
         for (side in listOf(-1, 1)) {
             for (rear in listOf(false, true)) {
                 val x = 187.5f + side * 185f * if (rear) .24f else .32f

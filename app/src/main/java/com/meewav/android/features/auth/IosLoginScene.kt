@@ -1,6 +1,7 @@
 package com.meewav.android.features.auth
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -17,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
@@ -41,6 +43,13 @@ import com.meewav.android.core.design.Violet
 internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () -> Unit,
                           panelHeight: Dp, modifier: Modifier = Modifier) {
     val stageHeight = authStageHeight(panelHeight)
+    val motion = rememberInfiniteTransition(label = "Signature suspendue")
+    val rotation = motion.animateFloat(0f, 360f,
+        infiniteRepeatable(tween(32000, easing = LinearEasing)), label = "Rotation horaire MW")
+    val orbit = motion.animateFloat(0f, 360f,
+        infiniteRepeatable(tween(16000, easing = LinearEasing)), label = "Lumières du podium")
+    val levitation = motion.animateFloat(-3f, 3f,
+        infiniteRepeatable(tween(2800, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "Lévitation MW")
     Box(modifier.height(panelHeight)) {
         AuthWindowPanel(Modifier.fillMaxWidth().padding(top = stageHeight - 14.dp),
             panelHeight = panelHeight - stageHeight + 14.dp,
@@ -60,14 +69,12 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
                                 fontWeight = FontWeight.Bold, color = Color.White)
                         }
                 }
-                // Réaffecte la hauteur de l'ancienne onde à l'espace sous la capsule.
-                Spacer(Modifier.height(20.dp))
+                // La signature libère 20 dp, réaffectés sous la capsule.
+                Spacer(Modifier.height(40.dp))
             } }) {
             if (state.initializing) {
                 CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally).padding(28.dp), color = Violet)
             } else {
-                Image(painterResource(R.drawable.auth_web_signature), null,
-                    Modifier.align(Alignment.CenterHorizontally).size(30.dp, 20.dp))
                 Text("Bienvenue", fontSize = 23.sp, lineHeight = 28.sp, fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().semantics { heading() })
                 Spacer(Modifier.height(4.dp))
@@ -91,8 +98,15 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
                 IosAuthAction("Se connecter", state.busy, submit)
             }
         }
-        // Au repos : anneau discret et spots éteints, comme l'écran de connexion iOS.
-        IosStageBackdrop(Modifier.fillMaxWidth().height(stageHeight + AuthStageOverlap))
+        Box(Modifier.fillMaxWidth().height(stageHeight + AuthStageOverlap)) {
+            IosStageBackdrop(Modifier.fillMaxSize(), light = { 1f }, orbit = { orbit.value })
+            Image(painterResource(R.drawable.auth_web_signature), null,
+                Modifier.align(Alignment.BottomCenter).padding(bottom = 48.dp).size(54.dp)
+                    .graphicsLayer {
+                        rotationZ = rotation.value
+                        translationY = levitation.value * density
+                    })
+        }
     }
 }
 

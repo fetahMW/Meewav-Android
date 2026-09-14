@@ -174,3 +174,8 @@ Les choix Créateur IA / Artiste réel ont une surface de 36 dp dans une cible t
 Google et Apple sont retirés de Connexion et proposés uniquement après Avatar, à l’étape Compte. L’avatar réduit accompagne le titre sur une même ligne ; deux boutons sombres de 48 dp présentent « Continuer avec » puis le fournisseur. Un séparateur fin « ou » précède les champs existants. La fenêtre reste fixe et sans défilement, et la connexion retrouve sa capsule Créer un compte seule. Le lien extérieur Explorer sans compte est retiré, sans déplacer la fenêtre. Le mode aperçu existant reste dans le code, mais cette entrée visible ne le lance plus.
 
 Les boutons réutilisent le démarrage OAuth existant, désormais autorisé depuis Compte. L’activation des fournisseurs, les redirections distantes et la finalisation du profil choisi après OAuth restent à vérifier/raccorder ; cette retouche de composition ne les valide pas et ne modifie aucun service distant.
+
+
+## Signature sur le podium de connexion — 14 septembre 2026
+
+La signature MW quitte l’intérieur de la vitre pour flotter au-dessus du plateau : rotation horaire dans le plan de l’écran en 32 secondes et oscillation verticale de 3 dp. Quatre lumières parcourent l’ellipse en 16 secondes, avec leurs faisceaux dirigés vers la signature. Les spots fixes sont remplacés uniquement dans cette composition de connexion ; le plateau Avatar conserve son comportement. Les animations sont lues dans les phases de dessin/composition des calques et les textures du plateau restent en cache. Les 20 dp retirés au-dessus de Bienvenue sont réaffectés sous la capsule Créer un compte. Aucun défilement ajouté ; le rendu est laissé à l’appréciation de l’utilisateur.
