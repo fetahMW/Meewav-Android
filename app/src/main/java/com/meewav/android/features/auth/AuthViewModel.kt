@@ -2,6 +2,7 @@ package com.meewav.android.features.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.meewav.android.BuildConfig
 import com.meewav.android.core.auth.AuthPolicy
 import com.meewav.android.core.auth.MeewavAuthRepository
 import com.meewav.android.core.auth.RegistrationProfile
@@ -14,7 +15,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.JsonPrimitive
 
-enum class AuthPage { Login, Avatar, Register, Location, Forgot, CheckEmail, NewPassword, SignedIn }
+enum class AuthPage { Login, Avatar, Register, Location, Forgot, CheckEmail, NewPassword, SignedIn, Preview }
 
 data class ProfileDraft(
     val avatarIcon: String = "UserFIcon",
@@ -38,6 +39,7 @@ data class AuthUiState(
     val error: String? = null,
     val notice: String? = null,
     val connectedName: String = "",
+    val localPreview: Boolean = false,
     val profile: ProfileDraft = ProfileDraft(),
 )
 
@@ -49,6 +51,7 @@ class AuthViewModel(private val repository: MeewavAuthRepository) : ViewModel() 
     init {
         if (repository.configured) viewModelScope.launch {
             repository.auth.sessionStatus.collect { status ->
+                if (state.value.localPreview) return@collect
                 when (status) {
                     is SessionStatus.Authenticated -> mutable.update {
                         it.copy(initializing = false,
@@ -79,8 +82,24 @@ class AuthViewModel(private val repository: MeewavAuthRepository) : ViewModel() 
         if (!state.value.busy) mutable.update { it.copy(profile = value, error = null) }
     }
 
+    fun startPreview() {
+        if (!BuildConfig.DEBUG || state.value.busy) return
+        mutable.update {
+            it.copy(localPreview = true, initializing = false, error = null, notice = null,
+                email = "", username = "", password = "", confirmation = "", connectedName = "",
+                page = if (it.page in setOf(AuthPage.Avatar, AuthPage.Register, AuthPage.Location)) it.page else AuthPage.Avatar)
+        }
+    }
+
+    fun exitPreview() {
+        if (!state.value.localPreview) return
+        mutable.update { AuthUiState(initializing = false, configured = repository.configured) }
+    }
+
     fun navigate(page: AuthPage) {
         if (state.value.busy) return
+        if (page == AuthPage.Preview && !(BuildConfig.DEBUG && state.value.localPreview)) return
+        if (page == AuthPage.Login && state.value.localPreview) { exitPreview(); return }
         mutable.update {
             val preserve = it.page in setOf(AuthPage.Avatar, AuthPage.Register, AuthPage.Location) &&
                 page in setOf(AuthPage.Avatar, AuthPage.Register, AuthPage.Location)
@@ -102,6 +121,17 @@ class AuthViewModel(private val repository: MeewavAuthRepository) : ViewModel() 
     fun submit() {
         val draft = state.value
         if (draft.busy || draft.initializing) return
+        if (draft.localPreview) {
+            if (!BuildConfig.DEBUG) return
+            val next = when (draft.page) {
+                AuthPage.Avatar -> AuthPage.Register
+                AuthPage.Register -> AuthPage.Location
+                AuthPage.Location -> AuthPage.Preview
+                else -> return
+            }
+            navigate(next)
+            return
+        }
         if (draft.page == AuthPage.Avatar) { navigate(AuthPage.Register); return }
         if (!draft.configured && draft.page != AuthPage.Register) {
             mutable.update { it.copy(error = "La connexion n’est pas disponible dans cette version de l’application.") }
@@ -164,7 +194,7 @@ class AuthViewModel(private val repository: MeewavAuthRepository) : ViewModel() 
     }
 
     fun handleCallback(raw: String) {
-        if (state.value.busy) return
+        if (state.value.busy || state.value.localPreview) return
         val callback = AuthPolicy.callback(raw)
         if (callback == null) { mutable.update { it.copy(error = "Ce lien de connexion est invalide ou a expiré.") }; return }
         execute {
@@ -187,7 +217,7 @@ class AuthViewModel(private val repository: MeewavAuthRepository) : ViewModel() 
     }
 
     private fun execute(action: suspend () -> Unit) {
-        if (state.value.busy) return
+        if (state.value.busy || state.value.localPreview) return
         mutable.update { it.copy(busy = true, error = null, notice = null) }
         viewModelScope.launch {
             try { action() }

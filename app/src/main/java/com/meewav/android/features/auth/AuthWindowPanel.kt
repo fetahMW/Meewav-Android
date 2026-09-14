@@ -10,34 +10,44 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RadialGradient
 import android.graphics.Shader
-import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 /** Tracé et dégradés de Meewav-Web / src/components/auth/AuthPanelChrome.tsx. */
 @Composable
-internal fun AuthWindowPanel(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    BoxWithConstraints(modifier) {
-        // Le formulaire peut grandir avec la police système, les erreurs ou l'inscription.
-        Column(Modifier.fillMaxWidth().heightIn(min = maxWidth * (600f / 413f))
+internal fun AuthWindowPanel(modifier: Modifier = Modifier, panelHeight: Dp = 640.dp,
+                             compact: Boolean = false, scrollKey: Any? = null,
+                             content: @Composable ColumnScope.() -> Unit) {
+    val scroll = rememberScrollState()
+    LaunchedEffect(scrollKey) { scroll.scrollTo(0) }
+    // Le cadre reste fixe ; seuls les formulaires longs défilent dans sa zone intérieure.
+    Box(modifier.height(panelHeight)
             .drawWithCache {
                 val margin = ceil(32f * size.width / 413f).toInt()
                 // Les flous sont peints une fois à la taille d'affichage, pas à chaque image.
                 val chrome = renderWebPanel(size.width, size.height, margin).asImageBitmap()
                 onDrawBehind { drawImage(chrome, Offset(-margin.toFloat(), -margin.toFloat())) }
             }
-            .padding(start = 28.dp, end = 28.dp, top = 38.dp, bottom = 52.dp), content = content)
+            .padding(start = 28.dp, end = 28.dp,
+                top = if (compact) 30.dp else 38.dp,
+                bottom = if (compact) 40.dp else 52.dp)) {
+        Column(Modifier.fillMaxSize().verticalScroll(scroll), content = content)
     }
 }
 

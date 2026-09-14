@@ -25,6 +25,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -39,6 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import com.meewav.android.core.design.Muted
 import com.meewav.android.core.design.Violet
@@ -47,7 +49,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Unit, onContinue: () -> Unit) {
+internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Unit, onContinue: () -> Unit,
+                            stageHeight: Dp = 160.dp) {
     val entries = AvatarCatalog.profiles
     val pager = rememberPagerState(initialPage = entries.indexOfFirst { it.icon == state.profile.avatarIcon }) { entries.size }
     val currentProfile by rememberUpdatedState(state.profile)
@@ -67,13 +70,15 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
             Text("${pager.settledPage + 1}/${entries.size}", color = Violet, fontSize = 12.sp)
             Icon(Icons.Outlined.ExpandMore, "Choisir un avatar", Modifier.padding(start = 6.dp).size(20.dp), tint = Violet)
         }
-        BoxWithConstraints(Modifier.fillMaxWidth().height(232.dp)) {
-            val pageWidth = maxWidth * .63f
-            Canvas(Modifier.align(Alignment.BottomCenter).fillMaxWidth(.85f).height(48.dp)) {
+        BoxWithConstraints(Modifier.fillMaxWidth().height(stageHeight).clipToBounds()) {
+            val pageWidth = maxWidth * .56f
+            val avatarHeight = maxHeight - 12.dp
+            val pedestalWidth = (pageWidth * .72f).coerceAtMost(112.dp)
+            Canvas(Modifier.align(Alignment.BottomCenter).width(pedestalWidth).height(22.dp)) {
                 drawOval(Brush.radialGradient(listOf(Color(0xFF47306F), Color(0xFF15101F))))
-                drawOval(Color(0xFF8251D0), style = Stroke(1.3.dp.toPx()))
-                drawOval(Color(0x404F347C), Offset(6.dp.toPx(), 5.dp.toPx()),
-                    Size(size.width - 12.dp.toPx(), size.height - 10.dp.toPx()), style = Stroke(1.dp.toPx()))
+                drawOval(Color(0xFF8251D0), style = Stroke(.8.dp.toPx()))
+                drawOval(Color(0x404F347C), Offset(4.dp.toPx(), 3.dp.toPx()),
+                    Size(size.width - 8.dp.toPx(), size.height - 6.dp.toPx()), style = Stroke(.6.dp.toPx()))
             }
             HorizontalPager(pager, pageSize = PageSize.Fixed(pageWidth),
                 contentPadding = PaddingValues(horizontal = (maxWidth - pageWidth) / 2),
@@ -81,15 +86,15 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
                     // All avatars remain fully opaque, including the lateral previews.
                     Image(painterResource(entries[index].image), entries[index].name,
-                        Modifier.padding(bottom = 12.dp).fillMaxWidth()
-                            .height(if (index == pager.currentPage) 216.dp else 176.dp),
+                        Modifier.padding(bottom = 8.dp).width(pageWidth * .85f)
+                            .height(if (index == pager.currentPage) avatarHeight else avatarHeight * .78f),
                         contentScale = ContentScale.Fit)
                 }
             }
         }
-        Spacer(Modifier.height(14.dp))
-        Text(avatar.description, color = Muted, fontSize = 12.sp, lineHeight = 19.sp, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(8.dp))
+        Text(avatar.description, color = Muted, fontSize = 12.sp, lineHeight = 17.sp, textAlign = TextAlign.Center)
+        Spacer(Modifier.height(10.dp))
         Text("TYPE DE PROFIL", color = Muted, fontSize = 10.sp, letterSpacing = 1.6.sp)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             listOf(true to "Artiste réel", false to "Créateur IA").forEach { (real, title) ->
@@ -104,7 +109,7 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
         Text(if (state.profile.realArtist) "Tu crées ou travailles ta musique toi-même."
             else "Tu crées principalement à l’aide de l’IA.",
             color = Muted, fontSize = 11.sp, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(12.dp))
         PrimaryAction("Suivant", busy = state.busy) {
             if (!pager.isScrollInProgress) onContinue()
         }
@@ -175,7 +180,7 @@ internal fun LocationRegistration(state: AuthUiState, onProfile: (ProfileDraft) 
         TextButton(onClick = { showTerms = true }, modifier = Modifier.fillMaxWidth()) {
             Text("Lire les conditions", color = Violet)
         }
-        PrimaryAction("Créer mon compte", state.busy, onSubmit)
+        PrimaryAction(if (state.localPreview) "Terminer l’aperçu" else "Créer mon compte", state.busy, onSubmit)
     }
     if (showTerms) {
         AlertDialog(onDismissRequest = { showTerms = false }, containerColor = Color(0xFF15121C),

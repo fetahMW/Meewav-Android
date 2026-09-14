@@ -10,7 +10,7 @@ Les ressources suivantes proviennent de la version Web validée par l’utilisat
 | `app/src/main/res/drawable/meewav_logo.xml` | `public/assets/meewav-logo.svg` | Conversion des tracés SVG en VectorDrawable, couleurs et géométrie conservées |
 | `app/src/main/res/drawable/auth_web_signature.xml` | Signature SVG de `src/pages/AuthPage.tsx` | Tracé et couleur conservés en VectorDrawable |
 
-Sur demande de l’utilisateur, la fenêtre Android reprend maintenant le tracé SVG, les dégradés et les couches de contour de `src/components/auth/AuthPanelChrome.tsx`, dans `AuthWindowPanel.kt`. Les effets sont dessinés et mis en cache à la résolution d’affichage. Les styles du bouton et des séparateurs viennent de `src/styles/auth.css` et `src/components/auth/auth-panel.css`. La largeur est adaptée au téléphone et la hauteur peut grandir pour le contenu natif ou la police système ; les champs et actions restent des composants Android.
+Sur demande de l’utilisateur, la fenêtre Android reprend maintenant le tracé SVG, les dégradés et les couches de contour de `src/components/auth/AuthPanelChrome.tsx`, dans `AuthWindowPanel.kt`. Les effets sont dessinés et mis en cache à la résolution d’affichage. Les styles du bouton et des séparateurs viennent de `src/styles/auth.css` et `src/components/auth/auth-panel.css`. La largeur est adaptée au téléphone ; la hauteur reste identique entre les étapes et les contenus longs défilent à l’intérieur. Les champs et actions restent des composants Android.
 
 Le fond correspond au choix graphique transmis par l’utilisateur le 13 septembre 2026. La réutilisation dans son application Android est autorisée par la mission. Cette provenance ne constitue pas une nouvelle attribution d’auteur ni une licence publique du logo ou du fond.
 

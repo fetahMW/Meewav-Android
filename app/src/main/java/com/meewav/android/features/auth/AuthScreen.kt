@@ -43,8 +43,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import com.meewav.android.R
+import com.meewav.android.BuildConfig
 import com.meewav.android.core.design.*
 
 data class AuthActions(
@@ -57,13 +59,15 @@ data class AuthActions(
     val profile: (ProfileDraft) -> Unit = {},
     val submit: () -> Unit = {},
     val signOut: () -> Unit = {},
+    val startPreview: () -> Unit = {},
+    val exitPreview: () -> Unit = {},
 )
 
 @Composable
 fun AuthScreen(state: AuthUiState, viewModel: AuthViewModel) {
     AuthContent(state, AuthActions(viewModel::navigate, viewModel::back, viewModel::email,
         viewModel::username, viewModel::password, viewModel::confirmation, viewModel::profile,
-        viewModel::submit, viewModel::signOut))
+        viewModel::submit, viewModel::signOut, viewModel::startPreview, viewModel::exitPreview))
 }
 
 @Composable
@@ -79,10 +83,14 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
     Box(Modifier.fillMaxSize().background(Ink)) {
         Image(painterResource(R.drawable.auth_ios_background), null,
             Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-        BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {
+        BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
             val availableHeight = maxHeight
-            Column(Modifier.fillMaxSize().verticalScroll(scroll).heightIn(min = availableHeight)
-                .padding(horizontal = 22.dp, vertical = 24.dp),
+            val isAvatarPage = state.page == AuthPage.Avatar
+            // Même hauteur à chaque étape, indépendante du contenu et de l'ouverture du clavier.
+            val panelHeight = (availableHeight - 170.dp).coerceIn(320.dp, 640.dp)
+            val avatarStageHeight = (panelHeight * .25f).coerceIn(112.dp, 160.dp)
+            Column(Modifier.fillMaxSize().imePadding().verticalScroll(scroll).heightIn(min = availableHeight)
+                .padding(horizontal = 22.dp, vertical = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center) {
                 Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -94,16 +102,16 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                         }
                     }
                     Image(painterResource(R.drawable.meewav_logo), "Meewav",
-                        Modifier.weight(1f).height(52.dp), contentScale = ContentScale.Fit)
+                        Modifier.weight(1f).height(40.dp), contentScale = ContentScale.Fit)
                     Spacer(Modifier.size(48.dp))
                 }
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(12.dp))
                 val step = when (state.page) { AuthPage.Avatar -> 0; AuthPage.Register -> 1; AuthPage.Location -> 2; else -> -1 }
-                if (step >= 0) {
-                    RegistrationSteps(step)
-                    Spacer(Modifier.height(18.dp))
+                Box(Modifier.height(38.dp).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+                    if (step >= 0) RegistrationSteps(step)
                 }
-                GlassPanel(Modifier.widthIn(max = 440.dp).fillMaxWidth()) {
+                GlassPanel(Modifier.widthIn(max = 440.dp).fillMaxWidth(), panelHeight = panelHeight,
+                    compact = isAvatarPage, scrollKey = state.page) {
                     if (state.initializing) {
                         CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally).padding(28.dp), color = Violet)
                     } else {
@@ -118,6 +126,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                             AuthPage.NewPassword -> "Nouveau mot de passe"
                             AuthPage.CheckEmail -> "Vérifie tes e-mails"
                             AuthPage.SignedIn -> "Bienvenue${state.connectedName.takeIf { it.isNotBlank() }?.let { ", $it" }.orEmpty()}"
+                            AuthPage.Preview -> "Ton aperçu est prêt"
                         }, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth().semantics { heading() })
                         Spacer(Modifier.height(4.dp))
@@ -130,13 +139,14 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                             AuthPage.NewPassword -> "Choisis un mot de passe rien qu’à toi."
                             AuthPage.CheckEmail -> state.email
                             AuthPage.SignedIn -> "Ton compte Meewav est connecté."
+                            AuthPage.Preview -> "Mode aperçu · aucun compte créé."
                         }, color = Muted, style = MaterialTheme.typography.bodyMedium,
                             textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                        SubtitleDivider()
+                        SubtitleDivider(compact = isAvatarPage)
                         state.error?.let { Message(it, true); Spacer(Modifier.height(14.dp)) }
                         state.notice?.let { Message(it, false); Spacer(Modifier.height(14.dp)) }
                         when (state.page) {
-                            AuthPage.Avatar -> AvatarSelection(state, actions.profile, submit)
+                            AuthPage.Avatar -> AvatarSelection(state, actions.profile, submit, stageHeight = avatarStageHeight)
                             AuthPage.Location -> LocationRegistration(state, actions.profile, submit)
                             AuthPage.Login, AuthPage.Register, AuthPage.Forgot, AuthPage.NewPassword -> {
                                 if (state.page == AuthPage.Register) {
@@ -212,6 +222,27 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                                     else Text("Se déconnecter de cet appareil")
                                 }
                             }
+                            AuthPage.Preview -> {
+                                Image(painterResource(AvatarCatalog.find(state.profile.avatarIcon).image), null,
+                                    Modifier.align(Alignment.CenterHorizontally).size(128.dp), contentScale = ContentScale.Fit)
+                                Spacer(Modifier.height(16.dp))
+                                Text("Tu peux parcourir les étapes sans e-mail ni mot de passe. Les prochains écrans Android seront ajoutés ici.",
+                                    color = Muted, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                                Spacer(Modifier.height(20.dp))
+                                PrimaryAction("Revoir mon avatar", false) { actions.navigate(AuthPage.Avatar) }
+                                TextButton(onClick = actions.exitPreview, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                                    Text("Revenir à la connexion", color = Violet)
+                                }
+                            }
+                        }
+                    }
+                }
+                Box(Modifier.height(48.dp).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    if (BuildConfig.DEBUG && (state.localPreview || state.page in setOf(AuthPage.Login, AuthPage.Avatar, AuthPage.Register, AuthPage.Location))) {
+                        TextButton(onClick = if (state.localPreview) actions.exitPreview else actions.startPreview,
+                            enabled = !state.busy) {
+                            Text(if (state.localPreview) "Aperçu sans compte · quitter" else "Explorer sans compte",
+                                color = Color(0xFFCFB8FF), fontSize = 12.sp)
                         }
                     }
                 }
@@ -236,8 +267,9 @@ private fun RegistrationSteps(current: Int) {
 }
 
 @Composable
-internal fun GlassPanel(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    AuthWindowPanel(modifier, content)
+internal fun GlassPanel(modifier: Modifier = Modifier, panelHeight: Dp = 640.dp, compact: Boolean = false,
+                       scrollKey: Any? = null, content: @Composable ColumnScope.() -> Unit) {
+    AuthWindowPanel(modifier, panelHeight = panelHeight, compact = compact, scrollKey = scrollKey, content = content)
 }
 
 @Composable
@@ -302,8 +334,9 @@ private fun WaveMark() {
 }
 
 @Composable
-private fun SubtitleDivider() {
-    Box(Modifier.fillMaxWidth().padding(top = 14.dp, bottom = 22.dp), contentAlignment = Alignment.Center) {
+private fun SubtitleDivider(compact: Boolean = false) {
+    Box(Modifier.fillMaxWidth().padding(top = if (compact) 8.dp else 14.dp, bottom = if (compact) 12.dp else 22.dp),
+        contentAlignment = Alignment.Center) {
         Box(Modifier.width(132.dp).height(1.dp).background(Brush.horizontalGradient(
             0f to Color.Transparent, .2f to Color(0x408B5CF6), .42f to Color(0xD98B5CF6),
             .5f to Color(0xF2FFFFFF), .58f to Color(0xD98B5CF6), .8f to Color(0x408B5CF6),

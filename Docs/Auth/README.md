@@ -88,3 +88,13 @@ L’utilisateur a écarté la fenêtre iOS et demandé celle du site. Le panneau
 Le panneau s’adapte à la largeur disponible et laisse grandir le formulaire pour la police système, les messages et les étapes longues ; le défilement et les marges clavier restent natifs. Aucun nouvel essai fonctionnel ou contrôle visuel automatique n’est demandé pour cette retouche.
 
 `:app:assembleDebug` réussi. APK installé et `MainActivity` relancée sur les deux émulateurs ouverts, `Medium_Phone_API_36.1` et `Meewav_Galaxy_S22_Ultra`. Le rendu est laissé à l’appréciation de l’utilisateur.
+
+## Cadre fixe, avatar compact et aperçu sans compte — 14 septembre 2026
+
+Après retour utilisateur, la hauteur du cadre est désormais calculée une fois selon l’espace de l’écran (maximum 640 dp), sans dépendre de l’étape, des messages, du contenu ou du clavier. Les formulaires longs défilent à l’intérieur. Le carrousel est ramené à 112–160 dp selon la place disponible, avec avatars entièrement opaques et socle limité à 112 × 22 dp. Les marges de l’étape avatar sont resserrées ; le tracé et les couleurs Web du cadre sont conservés.
+
+Le bouton **Explorer sans compte** est réservé aux builds de développement (`BuildConfig.DEBUG`). Il active un aperçu en mémoire du parcours avatar → compte → localisation → fin d’aperçu. Les champs peuvent rester vides ; aucune inscription, résolution de nom, récupération de mot de passe ou session fictive n’est envoyée au backend par ce parcours. Les identifiants saisis avant l’entrée sont effacés de l’état local. Les événements de session et les liens d’authentification ne remplacent pas l’aperçu tant qu’il est actif. Quitter ou relancer l’application rétablit le comportement normal ; aucune préférence de contournement n’est persistée.
+
+La dernière étape d’aperçu annonce explicitement qu’aucun compte n’a été créé. Elle ne présente pas la messagerie, le globe ou les Rooms Android comme déjà implémentés. L’authentification réelle et ses validations restent actives hors aperçu.
+
+Compilation `:app:assembleDebug`, installation et relance réussies sur les deux émulateurs de la session. Aucun scénario d’interface, test applicatif ou contrôle visuel automatique exécuté ; aucun compte créé pour ce lot.
