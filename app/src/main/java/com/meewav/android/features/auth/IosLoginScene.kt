@@ -46,7 +46,7 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
             panelHeight = panelHeight - stageHeight + 14.dp,
             compact = true, iosStageWindow = true, scrollKey = state.page, allowScroll = false,
             footer = if (state.initializing) null else { {
-                IosAuthDivider()
+                HorizontalDivider(thickness = .5.dp, color = Color(0x335137A1))
                 Spacer(Modifier.height(6.dp))
                 Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("Nouveau ici ?", fontSize = 11.sp, lineHeight = 14.sp, color = Muted)
@@ -59,6 +59,8 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
                         Text("Créer un compte", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 }
+                // Réaffecte la hauteur de l'ancienne onde à l'espace sous la capsule.
+                Spacer(Modifier.height(20.dp))
             } }) {
             if (state.initializing) {
                 CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally).padding(28.dp), color = Violet)
