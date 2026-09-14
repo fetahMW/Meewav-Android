@@ -75,8 +75,16 @@ Historique du premier essai, avant l’adaptation mobile iOS :
 
 ## Correction de l’habillage et relance — 14 septembre 2026
 
-Le premier portage avait conservé le fond Web et un panneau arrondi générique. Après le retour utilisateur, l’écran reprend le fond iOS, les courbes et couleurs de sa fenêtre, ainsi qu’une adaptation du socle. La couleur du contenu est explicitement fournie au thème pour éviter les titres noirs sur fond sombre. `:app:assembleDebug` réussit ; aucun nouveau test fonctionnel n’est lancé pour cette retouche visuelle.
+Le premier portage avait conservé le fond Web et un panneau arrondi générique. Un essai a ensuite repris le fond iOS, les courbes et couleurs de sa fenêtre, ainsi qu’une adaptation du socle. La couleur du contenu est explicitement fournie au thème pour éviter les titres noirs sur fond sombre. `:app:assembleDebug` réussit ; aucun nouveau test fonctionnel n’est lancé pour cette retouche visuelle.
 
 Le cadre Samsung est un habillage de l’émulateur local, séparé des ressources de l’application. Il ne change ni le backend ni le système Android en firmware Samsung.
 
 Installation de l’APK et démarrage de `MainActivity` réussis sur l’émulateur déjà ouvert `Medium_Phone_API_36.1` et sur `Meewav_Galaxy_S22_Ultra` (1440 × 3088, cadre externe). Le téléphone physique n’est pas concerné. Aucune navigation automatisée dans le parcours d’authentification après lancement.
+
+## Fenêtre Web adaptée au téléphone — 14 septembre 2026
+
+L’utilisateur a écarté la fenêtre iOS et demandé celle du site. Le panneau reprend donc les coordonnées SVG et les dégradés de `AuthPanelChrome.tsx` : sommet arrondi, côtés bombés, verre noir, contour violet fin et arc inférieur lumineux. Le socle est retiré. La signature, les séparateurs et le bouton reprennent également la référence Web. Le fond iOS et les contrats du parcours mobile sont conservés.
+
+Le panneau s’adapte à la largeur disponible et laisse grandir le formulaire pour la police système, les messages et les étapes longues ; le défilement et les marges clavier restent natifs. Aucun nouvel essai fonctionnel ou contrôle visuel automatique n’est demandé pour cette retouche.
+
+`:app:assembleDebug` réussi. APK installé et `MainActivity` relancée sur les deux émulateurs ouverts, `Medium_Phone_API_36.1` et `Meewav_Galaxy_S22_Ultra`. Le rendu est laissé à l’appréciation de l’utilisateur.

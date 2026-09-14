@@ -3,6 +3,7 @@ package com.meewav.android.features.auth
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -13,7 +14,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -108,7 +108,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                         CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally).padding(28.dp), color = Violet)
                     } else {
                         WaveMark()
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(4.dp))
                         Text(when (state.page) {
                             AuthPage.Login -> "Bienvenue"
                             AuthPage.Avatar -> "Choisis ton avatar"
@@ -120,7 +120,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                             AuthPage.SignedIn -> "Bienvenue${state.connectedName.takeIf { it.isNotBlank() }?.let { ", $it" }.orEmpty()}"
                         }, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth().semantics { heading() })
-                        Spacer(Modifier.height(8.dp))
+                        Spacer(Modifier.height(4.dp))
                         Text(when (state.page) {
                             AuthPage.Login -> "Entrez dans votre univers sonore."
                             AuthPage.Avatar -> "Il représentera ton rôle sur Meewav."
@@ -132,7 +132,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                             AuthPage.SignedIn -> "Ton compte Meewav est connecté."
                         }, color = Muted, style = MaterialTheme.typography.bodyMedium,
                             textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                        Spacer(Modifier.height(24.dp))
+                        SubtitleDivider()
                         state.error?.let { Message(it, true); Spacer(Modifier.height(14.dp)) }
                         state.notice?.let { Message(it, false); Spacer(Modifier.height(14.dp)) }
                         when (state.page) {
@@ -186,9 +186,12 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                                     Text("NOUVEAU ICI ?", fontSize = 10.sp, fontWeight = FontWeight.SemiBold,
                                         letterSpacing = 1.6.sp, color = Muted,
                                         modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-                                    TextButton(onClick = { actions.navigate(AuthPage.Avatar) }, enabled = !state.busy,
-                                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
-                                        Text("Créer un compte", color = Violet, fontWeight = FontWeight.Bold)
+                                    Spacer(Modifier.height(8.dp))
+                                    OutlinedButton(onClick = { actions.navigate(AuthPage.Avatar) }, enabled = !state.busy,
+                                        border = BorderStroke(1.dp, Color(0xFF37224F)),
+                                        shape = RoundedCornerShape(50),
+                                        modifier = Modifier.align(Alignment.CenterHorizontally).heightIn(min = 48.dp)) {
+                                        Text("Créer un compte", color = Color.White, fontWeight = FontWeight.SemiBold)
                                     }
                                 }
                             }
@@ -212,7 +215,6 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                         }
                     }
                 }
-                if (state.page == AuthPage.Login) LoginStage()
             }
         }
     }
@@ -271,15 +273,14 @@ internal fun PrimaryAction(label: String, busy: Boolean, onClick: () -> Unit) {
     val shape = RoundedCornerShape(16.dp)
     Button(onClick = onClick, enabled = !busy,
         modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp).clip(shape)
-            .background(Brush.verticalGradient(listOf(Color(0xFF8150DC), Color(0xFF592DA5), Color(0xFF47228A))))
-            .border(1.dp, Brush.verticalGradient(listOf(Color(0xFFA580F0), Color(0xFF5D349B))), shape),
+            .background(Brush.verticalGradient(listOf(Color(0xFF4C3398), Color(0xFF3F2A7E))))
+            .border(.5.dp, Brush.verticalGradient(listOf(Color(0xFF7763AF), Color(0xFF3F2A7E))), shape),
         shape = shape, contentPadding = PaddingValues(horizontal = 16.dp, vertical = 15.dp),
         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, disabledContainerColor = Color.Transparent,
             contentColor = Color.White, disabledContentColor = Color.White)) {
         if (busy) CircularProgressIndicator(Modifier.size(22.dp), color = Color.White, strokeWidth = 2.dp)
         else {
             Text(label, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-            Icon(Icons.AutoMirrored.Outlined.ArrowForward, null, Modifier.size(18.dp))
         }
     }
 }
@@ -295,20 +296,34 @@ private fun Message(text: String, error: Boolean) {
 
 @Composable
 private fun WaveMark() {
-    Row(Modifier.fillMaxWidth().height(23.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-        listOf(8, 17, 23, 13, 20, 8).forEach {
-            Box(Modifier.padding(horizontal = 2.dp).width(3.dp).height(it.dp)
-                .clip(RoundedCornerShape(3.dp)).background(Violet))
-        }
+    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        Image(painterResource(R.drawable.auth_web_signature), null, Modifier.size(34.dp, 22.dp))
+    }
+}
+
+@Composable
+private fun SubtitleDivider() {
+    Box(Modifier.fillMaxWidth().padding(top = 14.dp, bottom = 22.dp), contentAlignment = Alignment.Center) {
+        Box(Modifier.width(132.dp).height(1.dp).background(Brush.horizontalGradient(
+            0f to Color.Transparent, .2f to Color(0x408B5CF6), .42f to Color(0xD98B5CF6),
+            .5f to Color(0xF2FFFFFF), .58f to Color(0xD98B5CF6), .8f to Color(0x408B5CF6),
+            1f to Color.Transparent)))
     }
 }
 
 @Composable
 private fun DividerWithWave() {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        HorizontalDivider(Modifier.weight(1f), color = Color(0xFF302139))
-        Icon(Icons.Outlined.GraphicEq, null, Modifier.padding(horizontal = 14.dp).size(22.dp), tint = Color(0xFFA499B7))
-        HorizontalDivider(Modifier.weight(1f), color = Color(0xFF302139))
+        val line = Brush.horizontalGradient(listOf(Color(0x0D8B5CF6), Color(0x618B5CF6), Color(0x0D8B5CF6)))
+        Box(Modifier.weight(1f).height(1.dp).background(line))
+        Row(Modifier.padding(horizontal = 18.dp).height(21.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+            listOf(7, 11, 17, 21, 17, 11, 7).forEach {
+                Box(Modifier.width(3.dp).height(it.dp).clip(RoundedCornerShape(3.dp))
+                    .background(Brush.verticalGradient(listOf(Color(0xEBFFFFFF), Color(0xF5E6D6FF), Color(0xEBFFFFFF)))))
+            }
+        }
+        Box(Modifier.weight(1f).height(1.dp).background(line))
     }
 }
 

@@ -8,6 +8,9 @@ Les ressources suivantes proviennent de la version Web validée par l’utilisat
 | --- | --- | --- |
 | `app/src/main/res/drawable-nodpi/auth_acoustic_background.png` | `public/images/auth-acoustic-background-trial.png` | Copie sans modification de l’image |
 | `app/src/main/res/drawable/meewav_logo.xml` | `public/assets/meewav-logo.svg` | Conversion des tracés SVG en VectorDrawable, couleurs et géométrie conservées |
+| `app/src/main/res/drawable/auth_web_signature.xml` | Signature SVG de `src/pages/AuthPage.tsx` | Tracé et couleur conservés en VectorDrawable |
+
+Sur demande de l’utilisateur, la fenêtre Android reprend maintenant le tracé SVG, les dégradés et les couches de contour de `src/components/auth/AuthPanelChrome.tsx`, dans `AuthWindowPanel.kt`. Les effets sont dessinés et mis en cache à la résolution d’affichage. Les styles du bouton et des séparateurs viennent de `src/styles/auth.css` et `src/components/auth/auth-panel.css`. La largeur est adaptée au téléphone et la hauteur peut grandir pour le contenu natif ou la police système ; les champs et actions restent des composants Android.
 
 Le fond correspond au choix graphique transmis par l’utilisateur le 13 septembre 2026. La réutilisation dans son application Android est autorisée par la mission. Cette provenance ne constitue pas une nouvelle attribution d’auteur ni une licence publique du logo ou du fond.
 
@@ -27,7 +30,7 @@ Aucune licence générale du produit Meewav n’est créée par ce premier lot.
 
 Le fond actif de l’authentification est désormais `app/src/main/res/drawable-nodpi/auth_ios_background.png`, copie sans transformation de `Meewav/Assets.xcassets/AuthBackground.imageset/auth_background.png` au commit iOS ci-dessous. Le fond Web du premier essai est conservé dans les ressources mais n’est plus utilisé par cet écran.
 
-`AuthWindowPanel.kt` adapte en Compose les courbes de `AuthLoginWindowShape` et les couleurs de `LoginWindowChromeView.swift`. Le socle est une adaptation native simplifiée ; les animations de projection et de chute iOS ne sont pas reproduites à l’identique.
+La fenêtre iOS et son socle ont été essayés puis retirés à la demande de l’utilisateur, au profit de la fenêtre du site Web décrite ci-dessus. Le fond et le parcours d’inscription restent issus de la référence iOS.
 
 Source : dépôt `sipiyou39/Meewav`, commit `aea7251a60a2b61d775901fcf39a62036fd108c4`. Les 28 avatars PNG sont copiés sans modification depuis les imagesets ci-dessous ; libellés, descriptions et ordre viennent de `Meewav/Features/Auth/Models/AvatarProfile.swift`. La réutilisation dans Android est demandée par l’utilisateur. Cette copie ne vaut pas attribution d’auteur ni nouvelle licence publique.
 
