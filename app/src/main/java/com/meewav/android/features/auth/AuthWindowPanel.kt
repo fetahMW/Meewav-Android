@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.Dp
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
-/** Base Web AuthPanelChrome : sommet abaissé et coins inférieurs adoucis pour le mobile. */
+/** Base Web AuthPanelChrome : sommet abaissé et courbe inférieure moins profonde. */
 @Composable
 internal fun AuthWindowPanel(modifier: Modifier = Modifier, panelHeight: Dp = 640.dp,
                              compact: Boolean = false, scrollKey: Any? = null,
@@ -69,7 +69,7 @@ private fun renderWebPanel(width: Float, height: Float, margin: Int): Bitmap {
     canvas.translate(margin.toFloat(), margin.toFloat())
     canvas.scale(width / 413f, height / 600f)
 
-    // Flancs du SVG Web ; relief supérieur réduit de moitié et coins bas de rayon 18.
+    // Flancs du SVG Web ; relief supérieur réduit de moitié et arc bas de profondeur 18.
     val shape = Path().apply {
         moveTo(4f, 56.7774f)
         cubicTo(4f, 42.6659f, 16.1072f, 31.5421f, 30.2028f, 32.2135f)
@@ -79,17 +79,15 @@ private fun renderWebPanel(width: Float, height: Float, margin: Int): Bitmap {
         cubicTo(330.577f, 33.7889f, 361.221f, 33.2412f, 382.797f, 32.2135f)
         cubicTo(396.893f, 31.5421f, 409f, 42.6659f, 409f, 56.7774f)
         cubicTo(415.5f, 183f, 415.5f, 435f, 409f, 562f)
-        cubicTo(409f, 571.94f, 400.94f, 580f, 391f, 580f)
-        lineTo(22f, 580f)
-        cubicTo(12.06f, 580f, 4f, 571.94f, 4f, 562f)
+        cubicTo(409f, 572.08f, 322f, 580f, 206.5f, 580f)
+        cubicTo(91f, 580f, 4f, 572.08f, 4f, 562f)
         cubicTo(-2.5f, 435f, -2.5f, 183f, 4f, 56.7774f)
         close()
     }
     val bottomArc = Path().apply {
         moveTo(409f, 562f)
-        cubicTo(409f, 571.94f, 400.94f, 580f, 391f, 580f)
-        lineTo(22f, 580f)
-        cubicTo(12.06f, 580f, 4f, 571.94f, 4f, 562f)
+        cubicTo(409f, 572.08f, 322f, 580f, 206.5f, 580f)
+        cubicTo(91f, 580f, 4f, 572.08f, 4f, 562f)
     }
     val fill = RadialGradient(0f, 0f, 1f,
         colors("#16082C", "#0B0319", "#020105", "#020105", "#0C0317", "#17072F"),

@@ -105,4 +105,4 @@ Compilation `:app:assembleDebug`, installation et relance réussies sur les deux
 
 Le champ naissance est retiré ; restent l’e-mail, le nom d’utilisateur, le mot de passe et sa confirmation. Le récapitulatif de l’avatar et les marges de l’étape sont compactés. Le bouton **Suivant** occupe un pied fixe dans la fenêtre, séparé de la zone de formulaire défilante, afin de rester accessible avec des textes longs ou agrandis. La hauteur du cadre, le parcours réel et le mode aperçu sans compte sont conservés.
 
-Le contour est ensuite ajusté sur demande : relief supérieur réduit de moitié et bas presque droit, avec coins de rayon 18 dans le repère SVG 413 × 600. Le trait lumineux suit cette nouvelle courbe ; la hauteur de mise en page reste inchangée.
+Le contour est ensuite ajusté sur demande : relief supérieur réduit de moitié et courbe douce sur toute la largeur du bas, sans segment plat. L’arc inférieur conserve la forme Web avec une profondeur de 18 au lieu de 50 dans le repère SVG 413 × 600. L’essai intermédiaire de fond plat à coins arrondis a été écarté par l’utilisateur. Le trait lumineux suit la courbe ; la hauteur de mise en page reste inchangée.
