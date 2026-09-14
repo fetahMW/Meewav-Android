@@ -58,13 +58,14 @@ internal fun authStageHeight(panelHeight: Dp) = ((panelHeight - AuthWindowLowerE
 internal fun IosStageBackdrop(modifier: Modifier, light: () -> Float = { .14f },
                               sweepPhase: (() -> Float)? = null,
                               leftLight: () -> Float = light, rightLight: () -> Float = light,
-                              violetLight: () -> Float = { 0f }, fourSpotOrbit: Boolean = false) {
+                              violetLight: () -> Float = { 0f }, fourSpotOrbit: Boolean = false,
+                              violetOutward: Boolean = false) {
     Box(modifier.drawWithCache {
         val platform = renderStageLayer(size.width, size.height, 1, welcome = fourSpotOrbit).asImageBitmap()
         val rim = renderStageLayer(size.width, size.height, 2).asImageBitmap()
         val washes = listOf(-1, 1).map { renderRearProjector(size.width, size.height, it, lensOnly = false, welcome = fourSpotOrbit).asImageBitmap() }
         val lenses = listOf(-1, 1).map { renderRearProjector(size.width, size.height, it, lensOnly = true, welcome = fourSpotOrbit).asImageBitmap() }
-        val violets = listOf(-1, 1).map { renderCrossedVioletBeam(size.width, size.height, it, front = fourSpotOrbit).asImageBitmap() }
+        val violets = listOf(-1, 1).map { renderVioletBeam(size.width, size.height, it, front = fourSpotOrbit, outward = violetOutward).asImageBitmap() }
         val frontBodies = if (fourSpotOrbit) renderFrontVioletSpots(size.width, size.height, false).asImageBitmap() else null
         val frontLenses = if (fourSpotOrbit) renderFrontVioletSpots(size.width, size.height, true).asImageBitmap() else null
         onDrawBehind {
@@ -83,6 +84,12 @@ internal fun IosStageBackdrop(modifier: Modifier, light: () -> Float = { .14f },
                     if (fourSpotOrbit) {
                         rotate(4.5f * sin(violetPhase), violetOrigin)
                         this.scale(1f, 1f + .055f * cos(violetPhase), violetOrigin)
+                    } else if (violetOutward) {
+                        // Pan et élévation déphasés d'un quart de tour : petite orbite
+                        // lumineuse vers l'extérieur, avec une origine toujours fixe.
+                        val outwardPhase = phase + index * 2.1f
+                        rotate(side * (1f + 4.2f * sin(outwardPhase)), origin)
+                        this.scale(1f, 1f + .055f * cos(outwardPhase), origin)
                     } else rotate(-side * (1f + 2.2f * sin(phase + index * .8f)), origin)
                 }) {
                     drawImage(violets[index], alpha = violetLight().coerceIn(0f, 1f))
@@ -386,8 +393,9 @@ private fun renderRearProjector(width: Float, height: Float, side: Int, lensOnly
     return bitmap
 }
 
-/** Deux accents courts se croisent derrière les personnages, depuis les spots arrière existants. */
-private fun renderCrossedVioletBeam(width: Float, height: Float, side: Int, front: Boolean = false): Bitmap {
+/** Accents croisés derrière les avatars ; Bienvenue les dirige vers l'extérieur. */
+private fun renderVioletBeam(width: Float, height: Float, side: Int, front: Boolean = false,
+                            outward: Boolean = false): Bitmap {
     val bitmap = Bitmap.createBitmap(ceil(width).toInt().coerceAtLeast(1),
         ceil(height).toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
@@ -395,7 +403,7 @@ private fun renderCrossedVioletBeam(width: Float, height: Float, side: Int, fron
     canvas.scale(scale, scale)
     val x = 187.5f + side * if (front) WelcomeVioletSpotOffset else 185f * .32f
     val y = height / scale - 26f + if (front) 5f else -82f * .06f
-    val targetX = 187.5f - side * 25f
+    val targetX = if (outward) x + side * 48f else 187.5f - side * 25f
     val targetY = y - (y - 18f).coerceIn(48f, 108f)
     val midX = (x + targetX) / 2f
     val midY = (y + targetY) / 2f
