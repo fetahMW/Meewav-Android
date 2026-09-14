@@ -125,7 +125,7 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
             }
         }
         }
-        IosAvatarStage(pager, Modifier.fillMaxWidth().height(stageHeight), enabled = !state.busy && !showPicker)
+        IosAvatarStage(pager, Modifier.fillMaxWidth().height(stageHeight + AuthStageOverlap), enabled = !state.busy && !showPicker)
     }
     if (showPicker) {
         // Un sélecteur fixe et paginé : ni panneau glissant, ni liste verticale.

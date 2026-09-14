@@ -136,3 +136,9 @@ Connexion et Avatar utilisent désormais le même calcul de hauteur, le même co
 La connexion reprend les champs noirs, la signature, Bienvenue, le bouton de connexion et le lien Créer un compte sous le séparateur. La récupération de mot de passe et le mode aperçu de développement restent accessibles. Les contrats d’authentification ne changent pas. La compilation a réussi ; aucun test applicatif ni contrôle visuel automatique n’a été exécuté. Le S22 physique étant toujours absent d’ADB/mDNS, cette mise à jour n’y est pas encore installée.
 
 Correction utilisateur suivante : le grand logo des captures est écarté. Connexion et Avatar retrouvent la taille précédente, 40 dp de haut dans un emplacement de 48 dp, avec la même largeur utile qu’avant. Les dimensions de la fenêtre et du plateau ne changent pas.
+
+## Connexion fixe et violet du poteau Web — 14 septembre 2026
+
+Sur retour du S22, le défilement est retiré de Connexion, à la fois dans la vitre et autour de l’écran. Connexion et Avatar sont prolongés de 28 dp vers le bas ; leur sommet reste au même emplacement. La marge intérieure basse est resserrée de 8 dp. Créer un compte redevient un bouton capsule sombre à contour violet, sous Nouveau ici et le séparateur. Le logo reste compact. La gestion du clavier des écrans fixes reste identique à Compte ; Localisation conserve son défilement.
+
+Le plateau et les avatars sont descendus ensemble de 22 dp pour que l’ellipse repose sur le bord supérieur de la fenêtre. Le plateau reçoit un remplissage noir, un reflet fin et un contour moins lumineux ; le voile violet couvrant sa surface est retiré. Le CTA utilise `#5137A1`, `#4E349F`, `#372574`, issus du remplissage du châssis Rooms dans `Meewav-Web/src/features/globe/components/MeewavPrimaryNav.tsx`. La vitre reprend cette famille avec `#2B1B5C` et un intérieur sombre. Il s’agit d’une adaptation native de cette palette, pas d’un rendu CSS ou d’une mesure de couleur sur capture.

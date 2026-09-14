@@ -87,15 +87,17 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
             val availableHeight = maxHeight
             val isAvatarPage = state.page == AuthPage.Avatar
             val isIosEntry = isAvatarPage || state.page == AuthPage.Login
-            val fixedStep = isAvatarPage || state.page == AuthPage.Register
+            val fixedStep = isIosEntry || state.page == AuthPage.Register
             // Même hauteur à chaque étape, indépendante du contenu et de l'ouverture du clavier.
-            val panelHeight = (availableHeight - 170.dp).coerceIn(320.dp, 640.dp)
+            val basePanelHeight = (availableHeight - 170.dp).coerceIn(320.dp, 640.dp)
+            val panelHeight = basePanelHeight + if (isIosEntry) AuthWindowLowerExtension else 0.dp
             Column(Modifier.fillMaxSize()
                 .then(if (fixedStep) Modifier else Modifier.imePadding().verticalScroll(scroll))
                 .heightIn(min = availableHeight)
                 .padding(horizontal = 22.dp, vertical = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center) {
+                verticalArrangement = if (isIosEntry) Arrangement.Top else Arrangement.Center) {
+                if (isIosEntry) Spacer(Modifier.height(((availableHeight - basePanelHeight - 132.dp) / 2).coerceAtLeast(0.dp)))
                 if (isIosEntry) {
                     // Même largeur utile et même hauteur que l'ancien en-tête avec deux réserves de 48 dp.
                     Box(Modifier.widthIn(max = 440.dp).fillMaxWidth().height(48.dp)

@@ -44,16 +44,19 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
     Box(modifier.height(panelHeight)) {
         AuthWindowPanel(Modifier.fillMaxWidth().padding(top = stageHeight - 14.dp),
             panelHeight = panelHeight - stageHeight + 14.dp,
-            compact = true, iosStageWindow = true, scrollKey = state.page,
+            compact = true, iosStageWindow = true, scrollKey = state.page, allowScroll = false,
             footer = if (state.initializing) null else { {
                 IosAuthDivider()
                 Spacer(Modifier.height(6.dp))
-                TextButton(onClick = { actions.navigate(AuthPage.Avatar) }, enabled = !state.busy,
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                    contentPadding = PaddingValues(0.dp)) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Nouveau ici ?", fontSize = 11.sp, color = Muted)
-                        Text("Créer un compte", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Violet)
+                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Nouveau ici ?", fontSize = 11.sp, lineHeight = 14.sp, color = Muted)
+                    Spacer(Modifier.height(4.dp))
+                    OutlinedButton(onClick = { actions.navigate(AuthPage.Avatar) }, enabled = !state.busy,
+                        modifier = Modifier.height(48.dp), shape = RoundedCornerShape(50),
+                        border = BorderStroke(1.dp, Color(0xFF5137A1)),
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = Color(0xFF0C0914)),
+                        contentPadding = PaddingValues(horizontal = 26.dp)) {
+                        Text("Créer un compte", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 }
             } }) {
@@ -67,7 +70,7 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
                 Spacer(Modifier.height(4.dp))
                 Text("Entrez dans votre univers sonore.", color = Muted, fontSize = 12.sp, lineHeight = 18.sp,
                     textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(10.dp))
                 state.error?.let {
                     Text(it, color = Color(0xFFFFBBC4), fontSize = 11.sp,
                         modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
@@ -86,7 +89,7 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
             }
         }
         // Au repos : anneau discret et spots éteints, comme l'écran de connexion iOS.
-        IosStageBackdrop(Modifier.fillMaxWidth().height(stageHeight))
+        IosStageBackdrop(Modifier.fillMaxWidth().height(stageHeight + AuthStageOverlap))
     }
 }
 
@@ -124,8 +127,8 @@ internal fun IosAuthAction(label: String, busy: Boolean, onClick: () -> Unit) {
     val shape = RoundedCornerShape(15.dp)
     Button(onClick = onClick, enabled = !busy, shape = shape,
         modifier = Modifier.fillMaxWidth().height(48.dp).clip(shape)
-            .background(Brush.horizontalGradient(listOf(Color(0xFF59407D), Color(0xFF392C4B)))),
-        border = BorderStroke(.5.dp, Color(0xFF665278)),
+            .background(Brush.verticalGradient(listOf(Color(0xFF5137A1), Color(0xFF4E349F), Color(0xFF372574)))),
+        border = BorderStroke(.5.dp, Color(0xFF7960B2)),
         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent,
             disabledContainerColor = Color.Transparent, contentColor = Color.White)) {
         if (busy) CircularProgressIndicator(Modifier.size(21.dp), color = Color.White, strokeWidth = 2.dp)

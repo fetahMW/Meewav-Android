@@ -51,7 +51,7 @@ internal fun AuthWindowPanel(modifier: Modifier = Modifier, panelHeight: Dp = 64
             }
             .padding(start = 28.dp, end = 28.dp,
                 top = if (compact) 30.dp else 38.dp,
-                bottom = if (compact) 40.dp else 52.dp)) {
+                bottom = if (iosStageWindow) 32.dp else if (compact) 40.dp else 52.dp)) {
         Column(Modifier.fillMaxSize()) {
             Column(Modifier.weight(1f).then(if (allowScroll) Modifier.verticalScroll(scroll) else Modifier), content = content)
             if (footer != null) {

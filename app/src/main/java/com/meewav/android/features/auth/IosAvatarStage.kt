@@ -35,7 +35,9 @@ import kotlin.math.exp
 import kotlin.math.pow
 import kotlin.math.sign
 
-internal fun authStageHeight(panelHeight: Dp) = (panelHeight * .28f).coerceIn(120.dp, 180.dp)
+internal val AuthWindowLowerExtension = 28.dp
+internal val AuthStageOverlap = 22.dp
+internal fun authStageHeight(panelHeight: Dp) = ((panelHeight - AuthWindowLowerExtension) * .28f).coerceIn(120.dp, 180.dp)
 
 @Composable
 internal fun IosStageBackdrop(modifier: Modifier, light: () -> Float = { .14f }, showBeams: Boolean = false) {
@@ -157,26 +159,24 @@ private fun renderStageLayer(width: Float, height: Float, layer: Int): Bitmap {
         }
         1 -> {
             canvas.drawOval(main, stagePaint(shader = stageGradient(0f, main.top, 0f, main.bottom,
-                "#1C1725", "#0A0710", "#030204")))
+                "#17171B", "#08080B", "#020204")))
             canvas.drawOval(inner, stagePaint(shader = stageGradient(0f, inner.top, 0f, inner.bottom,
-                "#16111E", "#050408")))
+                "#0D0D11", "#030305")))
             canvas.drawOval(main, stagePaint(Color.parseColor("#514265"), stroke = .8f))
         }
         2 -> {
-            canvas.drawOval(RectF(w * .07f, h * .59f, w * .93f, h * .87f),
-                stagePaint(Color.parseColor("#608D45FF"), blur = 9f))
             val rim = stageGradient(main.left, main.top, main.right, main.bottom,
-                "#9A3DFF", "#C27AFF", "#E4C4FF", "#C7FFFFFF")
-            canvas.drawOval(main, stagePaint(shader = rim, stroke = 4f, blur = 2.8f))
-            canvas.drawOval(main, stagePaint(shader = rim, stroke = 1.3f))
-            canvas.drawOval(inner, stagePaint(Color.parseColor("#80FFFFFF"), stroke = .7f))
+                "#5137A1", "#7960B2", "#BEB4D5", "#A6FFFFFF")
+            canvas.drawOval(main, stagePaint(shader = rim, stroke = 2f, blur = 2.2f))
+            canvas.drawOval(main, stagePaint(shader = rim, stroke = .9f))
+            canvas.drawOval(inner, stagePaint(Color.parseColor("#60FFFFFF"), stroke = .6f))
             val lip = Path().apply {
                 moveTo(w * .11f, h * .69f)
                 quadTo(w * .5f, h * .87f, w * .89f, h * .69f)
             }
-            val lipColor = stageGradient(0f, 0f, w, 0f, "#008D45FF", "#C78D45FF", "#D1FFFFFF", "#008D45FF")
-            canvas.drawPath(lip, stagePaint(shader = lipColor, stroke = 5f, blur = 4f))
-            canvas.drawPath(lip, stagePaint(shader = lipColor, stroke = 1.5f))
+            val lipColor = stageGradient(0f, 0f, w, 0f, "#005137A1", "#805137A1", "#A6FFFFFF", "#005137A1")
+            canvas.drawPath(lip, stagePaint(shader = lipColor, stroke = 3f, blur = 3f))
+            canvas.drawPath(lip, stagePaint(shader = lipColor, stroke = 1f))
         }
     }
     canvas.restore()
@@ -228,18 +228,18 @@ internal fun renderIosStageWindow(width: Float, height: Float, margin: Int): Bit
         close()
     }
     canvas.drawPath(shape, stagePaint(shader = stageGradient(30f, 40f, 310f, 475f,
-        "#1C1824", "#16161D", "#0B0811", "#08060D", "#0A0910")))
+        "#2B1B5C", "#19122F", "#0B0816", "#080610", "#1A1234")))
     canvas.save()
     canvas.clipPath(shape)
     canvas.drawPaint(stagePaint(shader = RadialGradient(168.5f, 4.75f, 251.25f,
-        intArrayOf(Color.parseColor("#6B9B57FF"), Color.parseColor("#297844D7"), Color.TRANSPARENT),
+        intArrayOf(Color.parseColor("#995137A1"), Color.parseColor("#404E349F"), Color.TRANSPARENT),
         floatArrayOf(0f, .5f, 1f), Shader.TileMode.CLAMP)))
     canvas.drawPaint(stagePaint(shader = RadialGradient(222.1f, 465.67f, 184.25f,
-        intArrayOf(Color.parseColor("#61A65CFF"), Color.TRANSPARENT), null, Shader.TileMode.CLAMP)))
+        intArrayOf(Color.parseColor("#80372574"), Color.TRANSPARENT), null, Shader.TileMode.CLAMP)))
     canvas.restore()
-    canvas.drawPath(shape, stagePaint(Color.parseColor("#5C9A5CFF"), stroke = 3.2f, blur = 5f))
+    canvas.drawPath(shape, stagePaint(Color.parseColor("#665137A1"), stroke = 3.2f, blur = 5f))
     canvas.drawPath(shape, stagePaint(shader = stageGradient(0f, 7.24f, 334.8f, 490.4f,
-        "#EFE5FF", "#B068FF", "#8850FF", "#D470FF"), stroke = 1.1f))
+        "#BDA3E5", "#7960B2", "#5137A1", "#8162B7"), stroke = 1.1f))
     return bitmap
 }
 
