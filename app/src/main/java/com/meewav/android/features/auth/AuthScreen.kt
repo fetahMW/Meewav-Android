@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -75,30 +76,34 @@ fun AuthScreen(state: AuthUiState, viewModel: AuthViewModel) {
 @Composable
 internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
     val keyboard = LocalSoftwareKeyboardController.current
+    val keyboardOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+    val typingLayout = keyboardOpen && state.page in setOf(AuthPage.Login, AuthPage.Register)
     val focus = LocalFocusManager.current
     val scroll = rememberScrollState()
     val submit = { keyboard?.hide(); focus.clearFocus(); actions.submit() }
     LaunchedEffect(state.page) { scroll.scrollTo(0) }
-    BackHandler(enabled = state.page !in setOf(AuthPage.Login, AuthPage.SignedIn)) {
+    BackHandler(enabled = !keyboardOpen && state.page !in setOf(AuthPage.Login, AuthPage.SignedIn)) {
         if (!state.busy) actions.back()
     }
     Box(Modifier.fillMaxSize().background(Ink)) {
         Image(painterResource(R.drawable.auth_ios_background), null,
             Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-        BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
+        BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {
             val availableHeight = maxHeight
             val isAvatarPage = state.page == AuthPage.Avatar
             val isIosEntry = isAvatarPage || state.page == AuthPage.Login
             val fixedStep = isIosEntry || state.page == AuthPage.Register
-            // Même hauteur à chaque étape, indépendante du contenu et de l'ouverture du clavier.
+            // Au repos : enveloppe fixe. Pendant la saisie : place disponible au-dessus du clavier.
             val basePanelHeight = (availableHeight - 170.dp).coerceIn(320.dp, 640.dp)
-            val panelHeight = basePanelHeight + if (isIosEntry) AuthWindowLowerExtension else 0.dp
+            val panelHeight = if (typingLayout) (availableHeight - 24.dp).coerceAtLeast(0.dp)
+                else basePanelHeight + if (isIosEntry) AuthWindowLowerExtension else 0.dp
             Column(Modifier.fillMaxSize()
                 .then(if (fixedStep) Modifier else Modifier.imePadding().verticalScroll(scroll))
                 .heightIn(min = availableHeight)
                 .padding(horizontal = 22.dp, vertical = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = if (isIosEntry) Arrangement.Top else Arrangement.Center) {
+                if (!typingLayout) {
                 if (isIosEntry) Spacer(Modifier.height(((availableHeight - basePanelHeight - 132.dp) / 2).coerceAtLeast(0.dp)))
                 if (isIosEntry) {
                     // Même largeur utile et même hauteur que l'ancien en-tête avec deux réserves de 48 dp.
@@ -127,14 +132,15 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                 if (!isIosEntry) Box(Modifier.height(38.dp).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
                     if (step >= 0) RegistrationSteps(step)
                 }
+                }
                 if (isAvatarPage && !state.initializing) {
                     AvatarSelection(state, actions.profile, submit, panelHeight = panelHeight,
                         modifier = Modifier.widthIn(max = 440.dp).fillMaxWidth())
                 } else if (state.page == AuthPage.Login) {
                     IosLoginScene(state, actions, submit, panelHeight,
-                        Modifier.widthIn(max = 440.dp).fillMaxWidth())
+                        Modifier.widthIn(max = 440.dp).fillMaxWidth(), typingLayout = typingLayout)
                 } else GlassPanel(Modifier.widthIn(max = 440.dp).fillMaxWidth(), panelHeight = panelHeight,
-                    compact = fixedStep, scrollKey = state.page, allowScroll = !fixedStep,
+                    compact = fixedStep, scrollKey = state.page, allowScroll = !fixedStep || typingLayout,
                     footer = if (state.page == AuthPage.Register && !state.initializing) {
                         { PrimaryAction("Suivant", state.busy, submit) }
                     } else null) {
@@ -265,7 +271,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                         }
                     }
                 }
-                Spacer(Modifier.height(48.dp))
+                if (!typingLayout) Spacer(Modifier.height(48.dp))
             }
         }
     }
@@ -302,7 +308,7 @@ internal fun AuthField(
     enabled: Boolean = true, ime: ImeAction = ImeAction.Next, onDone: () -> Unit = {},
 ) {
     var visible by rememberSaveable { mutableStateOf(false) }
-    OutlinedTextField(value, onValue, modifier = Modifier.fillMaxWidth(), enabled = enabled,
+    OutlinedTextField(value, onValue, modifier = Modifier.fillMaxWidth().then(rememberKeyboardFieldModifier()), enabled = enabled,
         label = { Text(label, fontSize = 13.sp) }, singleLine = true,
         shape = RoundedCornerShape(15.dp),
         leadingIcon = { Icon(icon, null, Modifier.size(20.dp), tint = Muted) },

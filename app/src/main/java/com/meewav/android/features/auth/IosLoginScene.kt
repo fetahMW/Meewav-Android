@@ -41,8 +41,8 @@ import com.meewav.android.core.design.Violet
 /** Même enveloppe, même vitre et même plateau que l'étape Avatar. */
 @Composable
 internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () -> Unit,
-                          panelHeight: Dp, modifier: Modifier = Modifier) {
-    val stageHeight = authStageHeight(panelHeight)
+                          panelHeight: Dp, modifier: Modifier = Modifier, typingLayout: Boolean = false) {
+    val stageHeight = if (typingLayout) 0.dp else authStageHeight(panelHeight)
     val motion = rememberInfiniteTransition(label = "Signature suspendue")
     val rotation = motion.animateFloat(0f, 360f,
         infiniteRepeatable(tween(32000, easing = LinearEasing)), label = "Rotation horaire MW")
@@ -51,10 +51,10 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
     val levitation = motion.animateFloat(-3f, 3f,
         infiniteRepeatable(tween(2800, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "Lévitation MW")
     Box(modifier.height(panelHeight)) {
-        AuthWindowPanel(Modifier.fillMaxWidth().padding(top = stageHeight - 14.dp),
-            panelHeight = panelHeight - stageHeight + 14.dp,
-            compact = true, iosStageWindow = true, scrollKey = state.page, allowScroll = false,
-            footer = if (state.initializing) null else { {
+        AuthWindowPanel(Modifier.fillMaxWidth().padding(top = if (typingLayout) 0.dp else stageHeight - 14.dp),
+            panelHeight = if (typingLayout) panelHeight else panelHeight - stageHeight + 14.dp,
+            compact = true, iosStageWindow = true, scrollKey = state.page, allowScroll = typingLayout,
+            footer = if (state.initializing || typingLayout) null else { {
                 IosAuthDivider()
                 Spacer(Modifier.height(6.dp))
                 Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -98,7 +98,7 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
                 IosAuthAction("Se connecter", state.busy, submit)
             }
         }
-        Box(Modifier.fillMaxWidth().height(stageHeight + AuthStageOverlap)) {
+        if (!typingLayout) Box(Modifier.fillMaxWidth().height(stageHeight + AuthStageOverlap)) {
             IosStageBackdrop(Modifier.fillMaxSize(), light = { 1f }, orbit = { orbit.value })
             Image(painterResource(R.drawable.auth_web_signature), null,
                 Modifier.align(Alignment.BottomCenter).padding(bottom = 48.dp).size(54.dp)
@@ -116,7 +116,7 @@ private fun IosLoginField(label: String, value: String, onValue: (String) -> Uni
                           secret: Boolean = false, enabled: Boolean = true, onDone: () -> Unit = {}) {
     var visible by rememberSaveable { mutableStateOf(false) }
     TextField(value = value, onValueChange = onValue, singleLine = true, enabled = enabled,
-        modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(15.dp),
+        modifier = Modifier.fillMaxWidth().then(rememberKeyboardFieldModifier()), shape = RoundedCornerShape(15.dp),
         placeholder = { Text(label, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         leadingIcon = { Icon(if (secret) Icons.Outlined.Lock else Icons.Outlined.PersonOutline, null,
             Modifier.size(21.dp), tint = Muted) },
