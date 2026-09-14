@@ -7,6 +7,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.rememberPagerState
@@ -29,6 +36,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -45,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import com.meewav.android.core.design.Muted
 import com.meewav.android.core.design.Violet
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,7 +69,8 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
     val changeProfile by rememberUpdatedState(onProfile)
     val scope = rememberCoroutineScope()
     var showPicker by rememberSaveable { mutableStateOf(false) }
-    var pickerPage by rememberSaveable { mutableIntStateOf(0) }
+    var confirming by remember { mutableStateOf(false) }
+    val confirmation = remember { Animatable(0f) }
     LaunchedEffect(pager) {
         snapshotFlow { pager.settledPage }.distinctUntilChanged().collect { index ->
             changeProfile(currentProfile.copy(avatarIcon = entries[index % entries.size].icon))
@@ -71,18 +81,30 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
     val stageHeight = authStageHeight(panelHeight)
     // Enveloppe fixe : le plateau est extérieur à la vitre, pas dans le formulaire.
     Box(modifier.height(panelHeight)) {
-        AuthWindowPanel(Modifier.fillMaxWidth().padding(top = stageHeight - 14.dp),
+        AuthWindowPanel(Modifier.fillMaxWidth().padding(top = stageHeight - 14.dp).graphicsLayer {
+                val pulse = confirmationPulse(confirmation.value)
+                scaleX = 1f + .008f * pulse
+                scaleY = 1f + .008f * pulse
+            },
             panelHeight = panelHeight - stageHeight + 14.dp, compact = true,
             iosStageWindow = true, allowScroll = false,
             footer = {
                 IosAuthDivider()
                 Spacer(Modifier.height(12.dp))
-                IosAuthAction("Suivant", state.busy) {
-                    if (!pager.isScrollInProgress) onContinue()
+                IosAuthAction("Suivant", state.busy || confirming) {
+                    if (!pager.isScrollInProgress && !confirming) {
+                        confirming = true
+                        scope.launch {
+                            confirmation.animateTo(1f, tween(920, easing = LinearEasing))
+                            delay(100)
+                            onContinue()
+                        }
+                    }
                 }
                 Spacer(Modifier.height(20.dp))
             }) {
-        OutlinedButton(onClick = { pickerPage = selectedIndex / 6; showPicker = true }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+        OutlinedButton(onClick = { showPicker = true }, enabled = !state.busy && !confirming,
+            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
             colors = ButtonDefaults.outlinedButtonColors(containerColor = Color(0xFF09090B)),
             border = BorderStroke(.5.dp, Color(0xFF29262F)), shape = RoundedCornerShape(14.dp)) {
             Text(avatar.name, color = Color.White, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
@@ -111,7 +133,7 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
             listOf(false to "Créateur IA", true to "Artiste réel").forEach { (real, title) ->
                 val chosen = state.profile.realArtist == real
                 FilterChip(chosen, { onProfile(state.profile.copy(realArtist = real)) },
-                    enabled = !state.busy, shape = RoundedCornerShape(12.dp),
+                    enabled = !state.busy && !confirming, shape = RoundedCornerShape(12.dp),
                     label = { Text(title, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
                     modifier = Modifier.weight(1f).heightIn(min = 48.dp).drawBehind {
                         if (chosen) {
@@ -134,54 +156,60 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
             }
         }
         }
-        IosAvatarStage(pager, Modifier.fillMaxWidth().height(stageHeight + AuthStageOverlap), enabled = !state.busy && !showPicker)
+        IosAvatarStage(pager, Modifier.fillMaxWidth().height(stageHeight + AuthStageOverlap),
+            enabled = !state.busy && !showPicker && !confirming, confirmation = { confirmation.value })
     }
     if (showPicker) {
-        // Un sélecteur fixe et paginé : ni panneau glissant, ni liste verticale.
-        val pageCount = (entries.size + 5) / 6
-        AlertDialog(onDismissRequest = { showPicker = false }, containerColor = Color(0xFF101014),
-            title = { Text("Choisis ton avatar", style = MaterialTheme.typography.titleMedium) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    repeat(2) { row ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            repeat(3) { column ->
-                                val item = entries.getOrNull(pickerPage * 6 + row * 3 + column)
-                                if (item == null) Spacer(Modifier.weight(1f))
-                                else {
-                                    val isSelected = item.icon == avatar.icon
-                                    Column(Modifier.weight(1f).clip(RoundedCornerShape(12.dp))
-                                        .background(if (isSelected) Color(0xFF281B3D) else Color(0xFF19171F))
-                                        .border(1.dp, if (isSelected) Violet else Color(0xFF302B38), RoundedCornerShape(12.dp))
-                                        .semantics { selected = isSelected }
-                                        .clickable(role = Role.RadioButton) {
-                                            showPicker = false
-                                            scope.launch {
-                                                val delta = entries.indexOf(item) - selectedIndex
-                                                pager.scrollToPage(pager.settledPage + delta)
-                                            }
-                                        }.padding(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Image(painterResource(item.image), null, Modifier.fillMaxWidth().height(72.dp), contentScale = ContentScale.Fit)
-                                        Text(item.name, fontSize = 10.sp, lineHeight = 13.sp,
-                                            minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis,
-                                            textAlign = TextAlign.Center)
-                                    }
-                                }
-                            }
-                        }
+        val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        val grid = rememberLazyGridState(initialFirstVisibleItemIndex = selectedIndex)
+        ModalBottomSheet(onDismissRequest = { showPicker = false }, sheetState = sheet,
+            containerColor = Color(0xFF0C0A12), contentColor = Color.White,
+            scrimColor = Color.Black.copy(alpha = .7f), tonalElevation = 0.dp,
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)) {
+            Column(Modifier.fillMaxWidth().fillMaxHeight(.85f).padding(horizontal = 20.dp)) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Choisis ton avatar", fontSize = 21.sp, fontWeight = FontWeight.Bold)
+                        Text("${entries.size} façons de représenter ton rôle", color = Muted, fontSize = 12.sp)
                     }
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween) {
-                        IconButton(onClick = { pickerPage-- }, enabled = pickerPage > 0) {
-                            Icon(Icons.Outlined.ChevronLeft, "Page précédente")
-                        }
-                        Text("${pickerPage + 1} / $pageCount", color = Muted, fontSize = 12.sp)
-                        IconButton(onClick = { pickerPage++ }, enabled = pickerPage < pageCount - 1) {
-                            Icon(Icons.Outlined.ChevronRight, "Page suivante")
+                    IconButton(onClick = { showPicker = false }) {
+                        Icon(Icons.Outlined.Close, "Fermer", tint = Muted)
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+                IosAuthDivider()
+                LazyVerticalGrid(columns = GridCells.Fixed(3), state = grid, modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(top = 18.dp, bottom = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    items(entries, key = { it.icon }) { item ->
+                        val isSelected = item.icon == avatar.icon
+                        Box(Modifier.clip(RoundedCornerShape(18.dp))
+                            .background(Brush.verticalGradient(listOf(Color(0xFF17121F), Color(0xFF08080B))))
+                            .border(if (isSelected) 1.dp else .5.dp,
+                                if (isSelected) Violet else Color(0xFF302A3C), RoundedCornerShape(18.dp))
+                            .semantics { selected = isSelected }
+                            .clickable(role = Role.RadioButton) {
+                                scope.launch {
+                                    pager.scrollToPage(pager.settledPage + entries.indexOf(item) - selectedIndex)
+                                    sheet.hide()
+                                    showPicker = false
+                                }
+                            }.padding(8.dp)) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Image(painterResource(item.image), null, Modifier.fillMaxWidth().height(92.dp), contentScale = ContentScale.Fit)
+                                Spacer(Modifier.height(8.dp))
+                                Text(item.name, fontSize = 11.sp, lineHeight = 15.sp, minLines = 2, maxLines = 2,
+                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                    overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+                            }
+                            if (isSelected) Icon(Icons.Outlined.CheckCircle, null,
+                                Modifier.align(Alignment.TopEnd).size(18.dp), tint = Violet)
                         }
                     }
                 }
-            }, confirmButton = { TextButton(onClick = { showPicker = false }) { Text("Fermer") } })
+            }
+        }
     }
 }
 

@@ -13,6 +13,7 @@ import android.graphics.Shader
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.Canvas as ComposeCanvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
@@ -24,6 +25,12 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color as ComposeColor
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -57,7 +64,8 @@ internal fun IosStageBackdrop(modifier: Modifier, light: () -> Float = { .14f },
  * Les 28 PNG HD Android restent utilisés ; aucun moteur Web ni minuterie de rendu continue.
  */
 @Composable
-internal fun IosAvatarStage(pager: PagerState, modifier: Modifier = Modifier, enabled: Boolean = true) {
+internal fun IosAvatarStage(pager: PagerState, modifier: Modifier = Modifier, enabled: Boolean = true,
+                            confirmation: () -> Float = { 0f }) {
     var lightTarget by remember { mutableFloatStateOf(.14f) }
     LaunchedEffect(pager.isScrollInProgress) {
         if (pager.isScrollInProgress) lightTarget = .14f
@@ -68,18 +76,26 @@ internal fun IosAvatarStage(pager: PagerState, modifier: Modifier = Modifier, en
         }
     }
     val light = animateFloatAsState(lightTarget, tween(220), label = "Projecteurs du plateau")
-    BoxWithConstraints(modifier.clipToBounds()) {
+    // Les images ne sont pas des enfants du pager : son viewport ne doit pas les découper.
+    BoxWithConstraints(modifier) {
         val railScale = (maxWidth / 375.dp).coerceAtMost(1.15f)
         val firstGap = 108.5.dp * railScale
         val avatarSize = minOf(144.dp * railScale, maxHeight - 32.dp)
-        IosStageBackdrop(Modifier.fillMaxSize(), light = { light.value }, showBeams = true)
+        IosStageBackdrop(Modifier.fillMaxSize(), light = {
+            light.value + .22f * confirmationPulse(confirmation())
+        }, showBeams = true)
+        IosStageConfirmationPulse(Modifier.fillMaxSize(), confirmation)
         HorizontalPager(pager, pageSize = PageSize.Fixed(firstGap),
             beyondViewportPageCount = 2, overscrollEffect = null, userScrollEnabled = enabled,
             contentPadding = PaddingValues(horizontal = (maxWidth - firstGap) / 2),
-            modifier = Modifier.fillMaxSize()) { page ->
+            modifier = Modifier.fillMaxSize()) { _ -> Box(Modifier.fillMaxSize()) }
+        for (relativePage in -3..3) {
+            val page = pager.currentPage + relativePage
+            if (page !in 0 until pager.pageCount) continue
+            key(page) {
             val avatar = AvatarCatalog.profiles[page % AvatarCatalog.profiles.size]
             val stageHeight = maxHeight
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Box(Modifier.fillMaxSize().zIndex(10f - abs(relativePage)), contentAlignment = Alignment.Center) {
                 Image(painterResource(avatar.image), avatar.name,
                     Modifier.requiredSize(avatarSize).graphicsLayer {
                         val offset = (page - pager.currentPage).toFloat() - pager.currentPageOffsetFraction
@@ -96,18 +112,81 @@ internal fun IosAvatarStage(pager: PagerState, modifier: Modifier = Modifier, en
                             distance <= 2 -> 108.5f + 73.5f * (distance - 1)
                             else -> 182f + 66f * (distance - 2)
                         }
-                        translationX = (railX * sign(offset) - 108.5f * offset) * railScale * density
+                        translationX = railX * sign(offset) * railScale * density
                         val railY = if (distance <= 1) 26f * distance
                             else 26f + 24f * (distance - 1).coerceAtMost(1f)
                         // Les pieds centraux reposent sur l'ellipse ; les voisins suivent le rail iOS.
                         translationY = (stageHeight.toPx() / 2 - 26.dp.toPx() * railScale - avatarSize.toPx() / 2) +
-                            railY * railScale * density
+                            (railY + 6f * (distance / 2f).coerceIn(0f, 1f)) * railScale * density
                         rotationZ = sign(offset) * 22.92f * exp(-((distance - .75f) / .45f).pow(2)) *
                             (distance / .2f).coerceIn(0f, 1f)
                         // Les trois personnages centraux restent pleinement opaques.
                         alpha = if (distance <= 2.35f) 1f else (1f - (distance - 2.35f) / .95f).coerceIn(0f, 1f)
+                        val motion = avatarConfirmationMotion(confirmation(), offset)
+                        translationX += motion.x * railScale * density
+                        translationY += motion.y * railScale * density
+                        rotationZ += motion.rotation
+                        scaleX *= motion.scale
+                        scaleY *= motion.scale
+                        alpha *= motion.alpha
                     }, contentScale = ContentScale.Fit)
             }
+            }
+        }
+    }
+}
+
+internal fun confirmationPulse(progress: Float): Float =
+    (easeOut(interval(progress, .02f, .18f)) - easeOut(interval(progress, .18f, .52f))).coerceAtLeast(0f)
+
+private fun interval(value: Float, from: Float, to: Float) = ((value - from) / (to - from)).coerceIn(0f, 1f)
+private fun easeOut(value: Float) = 1f - (1f - value).pow(3)
+
+private data class AvatarConfirmationMotion(val x: Float = 0f, val y: Float = 0f,
+    val rotation: Float = 0f, val scale: Float = 1f, val alpha: Float = 1f)
+
+/** Trajectoires de SaturnAvatarSlotView : impulsion latérale, puis chute accélérée. */
+private fun avatarConfirmationMotion(progress: Float, offset: Float): AvatarConfirmationMotion {
+    val p = progress.coerceIn(0f, 1f)
+    if (p == 0f) return AvatarConfirmationMotion()
+    val distance = abs(offset)
+    if (distance < .18f) {
+        val lock = easeOut(interval(p, .05f, .28f))
+        val settle = easeOut(interval(p, .28f, .56f))
+        return AvatarConfirmationMotion(y = -1.6f * lock + 1.4f * settle,
+            scale = (1f + .026f * lock - .018f * settle).coerceAtLeast(1f))
+    }
+    val side = sign(offset)
+    if (distance < 1.5f) {
+        val kick = easeOut(interval(p, 0f, .24f))
+        val fall = interval(p, .24f, 1f).pow(5)
+        val rotation = if (p <= .34f) .16f * p / .34f else .16f + .42f * (p - .34f) / .66f
+        val compression = easeOut(interval(p, .20f, .34f)) - easeOut(interval(p, .34f, .52f))
+        return AvatarConfirmationMotion(
+            x = side * (31f * kick + 53f * fall), y = -9f * kick + 879f * fall,
+            rotation = side * rotation * 180f / Math.PI.toFloat(), scale = 1f - .055f * compression,
+            alpha = 1f - .42f * easeOut(interval(p, .72f, .96f)))
+    }
+    val local = interval(p, ((distance - 1.5f) * .025f).coerceIn(0f, .09f), 1f)
+    val fall = local.pow(2)
+    return AvatarConfirmationMotion(x = side * (14f + distance.coerceAtMost(4.5f) * 3.2f) * fall,
+        y = 840f * fall, rotation = side * .42f * local * 180f / Math.PI.toFloat(),
+        alpha = 1f - .36f * easeOut(interval(local, .70f, .98f)))
+}
+
+@Composable
+private fun IosStageConfirmationPulse(modifier: Modifier, progress: () -> Float) {
+    ComposeCanvas(modifier) {
+        val p = progress()
+        if (p > .001f && p < .72f) {
+            val s = size.width / 375f
+            val expansion = easeOut(interval(p, .03f, .42f))
+            val fade = 1f - easeOut(interval(p, .18f, .64f))
+            val width = (152f + 58f * expansion) * s
+            val height = (22f + 22f * expansion) * s
+            drawOval(Brush.horizontalGradient(listOf(ComposeColor(0xFF5137A1), ComposeColor.White, ComposeColor(0xFF8162B7))),
+                topLeft = Offset((size.width - width) / 2, size.height - 26f * s - height / 2),
+                size = Size(width, height), alpha = .55f * fade, style = Stroke(1.8f * s))
         }
     }
 }
@@ -121,11 +200,11 @@ private fun renderStageLayer(width: Float, height: Float, layer: Int): Bitmap {
     canvas.scale(scale, scale)
     val floor = height / scale - 26f
     if (layer == 0) {
-        // Projecteurs arrière du sommet de LoginWindowChromeView (90/337 et 247/337).
+        // Les deux projecteurs longs sont désormais sur l'ellipse, pas sur le formulaire.
         for (side in listOf(-1, 1)) {
-            val originX = 187.5f + side * 87.35f
+            val originX = 187.5f + side * 185f * .24f
             canvas.save()
-            canvas.translate(originX, floor + 23f)
+            canvas.translate(originX, floor + 5f)
             canvas.rotate(side * 12.6f)
             val ray = Path().apply {
                 moveTo(-3f, 0f); lineTo(-25f, -166f)
@@ -148,12 +227,12 @@ private fun renderStageLayer(width: Float, height: Float, layer: Int): Bitmap {
                 val originX = w * if (side < 0) .18f else .82f
                 val targetX = w * if (side < 0) .4f else .6f
                 val ray = Path().apply {
-                    moveTo(originX - 3f, h * .58f)
+                    moveTo(originX - 3f, h * .62f)
                     lineTo(targetX - w * .10f, -h * .5f)
                     quadTo(targetX, -h * .65f, targetX + w * .10f, -h * .5f)
-                    lineTo(originX + 3f, h * .58f); close()
+                    lineTo(originX + 3f, h * .62f); close()
                 }
-                canvas.drawPath(ray, stagePaint(shader = stageGradient(originX, h * .58f, targetX, -h * .65f,
+                canvas.drawPath(ray, stagePaint(shader = stageGradient(originX, h * .62f, targetX, -h * .65f,
                     "#808D45FF", "#298D45FF", "#008D45FF"), blur = 2.6f))
             }
         }
@@ -183,8 +262,8 @@ private fun renderStageLayer(width: Float, height: Float, layer: Int): Bitmap {
     if (layer == 1 || layer == 2) {
         for (side in listOf(-1, 1)) {
             for (rear in listOf(false, true)) {
-                val x = 187.5f + side * if (rear) 87.35f else 185f * .32f
-                val y = floor + if (rear) 23f else -82f * .10f
+                val x = 187.5f + side * 185f * if (rear) .24f else .32f
+                val y = floor + if (rear) 5f else -82f * .06f
                 val rect = RectF(x - 6f, y - 3f, x + 6f, y + 3f)
                 if (layer == 1) canvas.drawRoundRect(rect, 3f, 3f,
                     stagePaint(shader = stageGradient(x, y - 3f, x, y + 3f, "#40304E", "#0A0710")))

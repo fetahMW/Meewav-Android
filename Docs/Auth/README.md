@@ -146,3 +146,11 @@ Le plateau et les avatars sont descendus ensemble de 22 dp pour que l’ellipse 
 Sur Connexion, le séparateur sonore est ensuite remplacé par un trait de 0,5 dp. Les 20 dp libérés sont réservés sous la capsule Créer un compte : le bloc Nouveau ici / Créer un compte remonte, sans réduire sa zone tactile ni modifier la hauteur de la fenêtre.
 
 La même retouche s’applique ensuite à Avatar : séparateur fin partagé, Suivant sur toute la largeur et 20 dp d’espace supplémentaire en dessous. Le retour devient un chevron dans une cible tactile de 48 dp à gauche du logo, dont la taille et le centrage restent conservés. Le choix de type de profil garde un fond noir dans les deux états ; seul le contour violet et son léger halo indiquent la sélection. Les choix sont désactivés pendant une opération en cours.
+
+## Rail libre, confirmation et panneau de sélection — 14 septembre 2026
+
+Les images ne sont plus découpées par le viewport du pager : celui-ci reçoit le geste horizontal, tandis que les personnages sont dessinés séparément au-dessus de la vitre. L’abaissement progresse jusqu’à 6 dp pour les avatars des extrémités. Les quatre spots et les origines de leurs faisceaux sont sur le disque.
+
+Suivant déclenche une impulsion lumineuse puis la chute des personnages latéraux, d’après le code iOS ; le personnage central reste visible. Le passage à Compte attend la fin de l’animation. Le carrousel, le choix du rôle et le sélecteur sont neutralisés pendant cette confirmation ; une sortie de l’écran annule son animation.
+
+Sur nouvelle demande utilisateur, le sélecteur paginé est remplacé par un grand panneau inférieur à grille défilante de 28 vignettes HD. Fond noir, coins arrondis, contour violet sur le choix courant, fermeture par croix ou geste natif. Connexion et Avatar restent sans défilement vertical en dehors de ce panneau. Compilation réussie ; aucun scénario applicatif ni contrôle visuel automatique exécuté.
