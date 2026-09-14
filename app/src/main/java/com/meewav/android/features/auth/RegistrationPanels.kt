@@ -51,7 +51,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Unit, onContinue: () -> Unit,
-                            stageHeight: Dp = 192.dp) {
+                            stageHeight: Dp = 192.dp, modifier: Modifier = Modifier) {
     val entries = AvatarCatalog.profiles
     val pager = rememberPagerState(initialPage = entries.indexOfFirst { it.icon == state.profile.avatarIcon }) { entries.size }
     val currentProfile by rememberUpdatedState(state.profile)
@@ -64,7 +64,7 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
         }
     }
     val avatar = entries[pager.settledPage]
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         OutlinedButton(onClick = { showPicker = true }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
             border = BorderStroke(1.dp, Color(0xFF463557)), shape = RoundedCornerShape(14.dp)) {
             Text(avatar.name, color = Color.White, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
@@ -76,9 +76,9 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
         Text(avatar.description.substringBefore('\n'), color = Muted, fontSize = 12.sp, lineHeight = 17.sp,
             textAlign = TextAlign.Center, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
             modifier = Modifier.fillMaxWidth())
-        BoxWithConstraints(Modifier.fillMaxWidth().height(stageHeight).clipToBounds()) {
+        BoxWithConstraints(Modifier.fillMaxWidth().weight(1f).clipToBounds()) {
             val pageWidth = maxWidth * .64f
-            val avatarHeight = maxHeight - 12.dp
+            val avatarHeight = (minOf(maxHeight, stageHeight) - 12.dp).coerceAtLeast(0.dp)
             val pedestalWidth = (pageWidth * .72f).coerceAtMost(112.dp)
             Canvas(Modifier.align(Alignment.BottomCenter).width(pedestalWidth).height(22.dp)) {
                 drawOval(Brush.radialGradient(listOf(Color(0xFF47306F), Color(0xFF15101F))))

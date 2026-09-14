@@ -35,6 +35,7 @@ import kotlin.math.roundToInt
 internal fun AuthWindowPanel(modifier: Modifier = Modifier, panelHeight: Dp = 640.dp,
                              compact: Boolean = false, scrollKey: Any? = null,
                              footer: (@Composable () -> Unit)? = null,
+                             allowScroll: Boolean = true,
                              content: @Composable ColumnScope.() -> Unit) {
     val scroll = rememberScrollState()
     LaunchedEffect(scrollKey) { scroll.scrollTo(0) }
@@ -50,7 +51,7 @@ internal fun AuthWindowPanel(modifier: Modifier = Modifier, panelHeight: Dp = 64
                 top = if (compact) 30.dp else 38.dp,
                 bottom = if (compact) 40.dp else 52.dp)) {
         Column(Modifier.fillMaxSize()) {
-            Column(Modifier.weight(1f).verticalScroll(scroll), content = content)
+            Column(Modifier.weight(1f).then(if (allowScroll) Modifier.verticalScroll(scroll) else Modifier), content = content)
             if (footer != null) {
                 Spacer(Modifier.height(12.dp))
                 footer()

@@ -106,3 +106,11 @@ Compilation `:app:assembleDebug`, installation et relance réussies sur les deux
 Le champ naissance est retiré ; restent l’e-mail, le nom d’utilisateur, le mot de passe et sa confirmation. Le récapitulatif de l’avatar et les marges de l’étape sont compactés. Le bouton **Suivant** occupe un pied fixe dans la fenêtre, séparé de la zone de formulaire défilante, afin de rester accessible avec des textes longs ou agrandis. La hauteur du cadre, le parcours réel et le mode aperçu sans compte sont conservés.
 
 Le contour est ensuite ajusté sur demande : relief supérieur réduit de moitié et courbe douce sur toute la largeur du bas, sans segment plat. L’arc inférieur conserve la forme Web avec une profondeur de 18 au lieu de 50 dans le repère SVG 413 × 600. L’essai intermédiaire de fond plat à coins arrondis a été écarté par l’utilisateur. Le trait lumineux suit la courbe ; la hauteur de mise en page reste inchangée.
+
+## Avatars sources et étapes sans défilement — 14 septembre 2026
+
+Les miniatures de 180 pixels sont remplacées par les 28 sources PNG correspondantes du Web, copiées sans transformation. Voir la correspondance et les limites de résolution dans [la provenance](../Provenance.md#avatars-en-résolution-source--14-septembre-2026).
+
+La phrase sous le titre de l’étape Compte est retirée. Compte et Avatar n’utilisent plus de conteneur de défilement vertical, ni dans le cadre ni autour. La zone du carrousel prend l’espace restant après les textes et les commandes, avec une hauteur d’image plafonnée ; le glissement horizontal et le sélecteur d’avatars restent disponibles. Le cadre garde la même hauteur. Le comportement de Localisation n’est pas changé. Le clavier peut recouvrir une partie de ces écrans fixes ; sa touche de validation permet de poursuivre sans introduire de défilement.
+
+Compilation réussie, APK installé et application relancée par Wi-Fi sur le S22 Ultra physique désigné. Les dimensions des images sources et quelques correspondances de personnages ont été examinées à la demande de l’utilisateur ; aucun scénario applicatif ni capture automatique du téléphone n’a été exécuté.

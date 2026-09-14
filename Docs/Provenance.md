@@ -68,3 +68,38 @@ Source : dépôt `sipiyou39/Meewav`, commit `aea7251a60a2b61d775901fcf39a62036fd
 | `avatar_instr_vent.png` | `Meewav/Assets.xcassets/InstrVentIcon.imageset/InstrVentIcon@3x.png` |
 
 `PreviewTerms.kt` reprend intégralement `TermsDetailsView.demoTerms`, identifié comme texte de démonstration dans le code iOS. Il est présenté comme tel et ne vaut pas validation juridique des conditions publiques.
+
+## Avatars en résolution source — 14 septembre 2026
+
+Les 28 miniatures iOS de 179–180 pixels ont été remplacées par les PNG correspondants de `Meewav-Web/public/images/avatar/`, référence Web `32a5e5fea7f6eebb3867c22a27e8b62230bb8d21`. Copies sans transformation ; aucune génération ni accentuation artificielle. Les identifiants iOS, l’ordre du catalogue et les fichiers de provenance historiques ci-dessus sont conservés. Les sources font 466 à 1478 pixels de haut (la majorité dépasse 1000 pixels) ; le piano et la guitare acoustique restent moins définis que les autres.
+
+| Ressource Android dans `drawable-nodpi/` | Nouvelle source dans `public/images/avatar/` |
+| --- | --- |
+| `avatar_accordeon.png` | `ACCORDEON.png` |
+| `avatar_bassiste.png` | `BASSISTE.png` |
+| `avatar_batteur.png` | `BATTEUR.png` |
+| `avatar_beatboxer.png` | `BEATBOXER.png` |
+| `avatar_beatmaker.png` | `BEATMAKER.png` |
+| `avatar_clippeur.png` | `CLIPPEUR.png` |
+| `avatar_compositeur.png` | `COMPOSITEUR.png` |
+| `avatar_dansseur.png` | `DANSSEUR.png` |
+| `avatar_dansseuse2.png` | `DANSSEUSE (2).png` |
+| `avatar_dj.png` | `DJ.png` |
+| `avatar_guitare_elec.png` | `GUITARE ELECTRIQUE.png` |
+| `avatar_guitare.png` | `guitare.png` |
+| `avatar_inge_son.png` | `INGE SON.png` |
+| `avatar_instr_cordes.png` | `INSTRUMENT A CORDE.png` |
+| `avatar_instr_cuivre.png` | `INSTRUMENT CUIVRE.png` |
+| `avatar_instr_vent.png` | `INSTRUMENT A VENT.png` |
+| `avatar_label.png` | `LABEL.png` |
+| `avatar_manager.png` | `MANAGER.png` |
+| `avatar_micro.png` | `MICRO.png` |
+| `avatar_orga_event.png` | `ORGANISATEUR D'ÉVÉNEMENTS.png` |
+| `avatar_percussion.png` | `PERCUSSION.png` |
+| `avatar_pianiste.png` | `PIANO.png` |
+| `avatar_proffesseur.png` | `PROFFESSEUR.png` |
+| `avatar_studio.png` | `STUDIO ENREGISTREMENT.png` |
+| `avatar_synthetiseur.png` | `SYNTHETISEUR.png` |
+| `avatar_user.png` | `UTILISATEUR LAMBDA.png` |
+| `avatar_user_f.png` | `UTILISATRICE LAMBDA.png` |
+| `avatar_violon.png` | `VIOLON.png` |

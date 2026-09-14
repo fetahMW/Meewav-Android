@@ -86,10 +86,13 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
         BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
             val availableHeight = maxHeight
             val isAvatarPage = state.page == AuthPage.Avatar
+            val fixedStep = isAvatarPage || state.page == AuthPage.Register
             // Même hauteur à chaque étape, indépendante du contenu et de l'ouverture du clavier.
             val panelHeight = (availableHeight - 170.dp).coerceIn(320.dp, 640.dp)
             val avatarStageHeight = (panelHeight * .30f).coerceIn(136.dp, 192.dp)
-            Column(Modifier.fillMaxSize().imePadding().verticalScroll(scroll).heightIn(min = availableHeight)
+            Column(Modifier.fillMaxSize()
+                .then(if (fixedStep) Modifier else Modifier.imePadding().verticalScroll(scroll))
+                .heightIn(min = availableHeight)
                 .padding(horizontal = 22.dp, vertical = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center) {
@@ -111,7 +114,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                     if (step >= 0) RegistrationSteps(step)
                 }
                 GlassPanel(Modifier.widthIn(max = 440.dp).fillMaxWidth(), panelHeight = panelHeight,
-                    compact = isAvatarPage || state.page == AuthPage.Register, scrollKey = state.page,
+                    compact = fixedStep, scrollKey = state.page, allowScroll = !fixedStep,
                     footer = if (state.page == AuthPage.Register && !state.initializing) {
                         { PrimaryAction("Suivant", state.busy, submit) }
                     } else null) {
@@ -132,11 +135,12 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                             AuthPage.Preview -> "Ton aperçu est prêt"
                         }, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth().semantics { heading() })
-                        Spacer(Modifier.height(4.dp))
-                        Text(when (state.page) {
+                        if (state.page != AuthPage.Register) {
+                            Spacer(Modifier.height(4.dp))
+                            Text(when (state.page) {
                             AuthPage.Login -> "Entrez dans votre univers sonore."
                             AuthPage.Avatar -> "Il représentera ton rôle sur Meewav."
-                            AuthPage.Register -> "Un compte pour tout l’univers Meewav."
+                            AuthPage.Register -> ""
                             AuthPage.Location -> "Rejoins la musique près de toi."
                             AuthPage.Forgot -> "Un lien pour retrouver ton espace."
                             AuthPage.NewPassword -> "Choisis un mot de passe rien qu’à toi."
@@ -145,11 +149,13 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                             AuthPage.Preview -> "Mode aperçu · aucun compte créé."
                         }, color = Muted, style = MaterialTheme.typography.bodyMedium,
                             textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                        }
                         SubtitleDivider(compact = isAvatarPage || state.page == AuthPage.Register)
                         state.error?.let { Message(it, true); Spacer(Modifier.height(14.dp)) }
                         state.notice?.let { Message(it, false); Spacer(Modifier.height(14.dp)) }
                         when (state.page) {
-                            AuthPage.Avatar -> AvatarSelection(state, actions.profile, submit, stageHeight = avatarStageHeight)
+                            AuthPage.Avatar -> AvatarSelection(state, actions.profile, submit, stageHeight = avatarStageHeight,
+                                modifier = Modifier.weight(1f).fillMaxWidth())
                             AuthPage.Location -> LocationRegistration(state, actions.profile, submit)
                             AuthPage.Login, AuthPage.Register, AuthPage.Forgot, AuthPage.NewPassword -> {
                                 if (state.page == AuthPage.Register) {
@@ -269,9 +275,10 @@ private fun RegistrationSteps(current: Int) {
 @Composable
 internal fun GlassPanel(modifier: Modifier = Modifier, panelHeight: Dp = 640.dp, compact: Boolean = false,
                        scrollKey: Any? = null, footer: (@Composable () -> Unit)? = null,
+                       allowScroll: Boolean = true,
                        content: @Composable ColumnScope.() -> Unit) {
     AuthWindowPanel(modifier, panelHeight = panelHeight, compact = compact, scrollKey = scrollKey,
-        footer = footer, content = content)
+        footer = footer, allowScroll = allowScroll, content = content)
 }
 
 @Composable
