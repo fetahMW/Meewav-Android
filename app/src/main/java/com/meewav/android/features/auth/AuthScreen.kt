@@ -77,7 +77,7 @@ fun AuthScreen(state: AuthUiState, viewModel: AuthViewModel) {
 internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
     val keyboard = LocalSoftwareKeyboardController.current
     val keyboardOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
-    val typingLayout = keyboardOpen && state.page in setOf(AuthPage.Login, AuthPage.Register)
+    val typingLayout = keyboardOpen && state.page == AuthPage.Login
     val focus = LocalFocusManager.current
     val scroll = rememberScrollState()
     val submit = { keyboard?.hide(); focus.clearFocus(); actions.submit() }
@@ -92,6 +92,10 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
             LoginEntryLayout(state, actions, submit)
             return@Box
         }
+        if (state.page == AuthPage.Register) {
+            AccountEntryLayout(state, actions, submit)
+            return@Box
+        }
         if (state.page == AuthPage.Preview || state.page == AuthPage.Globe) {
             SceneGlobeArrival(state, onBack = actions.back, onEnter = submit)
             return@Box
@@ -100,7 +104,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
             val availableHeight = maxHeight
             val isAvatarPage = state.page == AuthPage.Avatar
             val isIosEntry = isAvatarPage || state.page == AuthPage.Login
-            val fixedStep = isIosEntry || state.page in setOf(AuthPage.Register, AuthPage.Location)
+            val fixedStep = isIosEntry || state.page == AuthPage.Location
             // Au repos : enveloppe fixe. Pendant la saisie : place disponible au-dessus du clavier.
             val basePanelHeight = (availableHeight - 170.dp).coerceIn(320.dp, 640.dp)
             val panelHeight = if (typingLayout) (availableHeight - 24.dp).coerceAtLeast(0.dp)
@@ -149,15 +153,12 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                         Modifier.widthIn(max = 440.dp).fillMaxWidth(), typingLayout = typingLayout)
                 } else GlassPanel(Modifier.widthIn(max = 440.dp).fillMaxWidth(), panelHeight = panelHeight,
                     compact = fixedStep || state.page == AuthPage.Location, scrollKey = state.page, allowScroll = !fixedStep || typingLayout,
-                    footer = if (state.page in setOf(AuthPage.Register, AuthPage.Location) && !state.initializing) {
-                        { PrimaryAction(if (state.page == AuthPage.Location) "Terminer" else "Suivant", state.busy, submit) }
+                    footer = if (state.page == AuthPage.Location && !state.initializing) {
+                        { PrimaryAction("Terminer", state.busy, submit) }
                     } else null) {
                     if (state.initializing) {
                         CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally).padding(28.dp), color = Violet)
                     } else {
-                        if (state.page == AuthPage.Register) {
-                            AccountHeader()
-                        } else {
                         WaveMark()
                         Spacer(Modifier.height(4.dp))
                         Text(when (state.page) {
@@ -173,8 +174,6 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                             AuthPage.Globe -> "Mon Globe"
                         }, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth().semantics { heading() })
-                        }
-                        if (state.page != AuthPage.Register) {
                             Spacer(Modifier.height(4.dp))
                             Text(when (state.page) {
                             AuthPage.Login -> "Entrez dans votre univers sonore."
@@ -189,18 +188,14 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                             AuthPage.Globe -> ""
                         }, color = Muted, style = MaterialTheme.typography.bodyMedium,
                             textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                        }
-                        if (state.page != AuthPage.Register) SubtitleDivider(compact = isAvatarPage || state.page == AuthPage.Location)
+                        SubtitleDivider(compact = isAvatarPage || state.page == AuthPage.Location)
                         state.error?.let { Message(it, true); Spacer(Modifier.height(14.dp)) }
                         state.notice?.let { Message(it, false); Spacer(Modifier.height(14.dp)) }
                         when (state.page) {
-                            AuthPage.Avatar -> Unit // La scène d'avatars est composée au-dessus de sa vitre.
+                            AuthPage.Avatar, AuthPage.Register -> Unit // Ces étapes ont leur propre disposition.
                             AuthPage.Location -> LocationRegistration(state, actions.profile)
                             AuthPage.Globe -> Unit
-                            AuthPage.Login, AuthPage.Register, AuthPage.Forgot, AuthPage.NewPassword -> {
-                                if (state.page == AuthPage.Register) {
-                                    AccountSocialOptions(state, actions.social)
-                                }
+                            AuthPage.Login, AuthPage.Forgot, AuthPage.NewPassword -> {
                                 if (state.page != AuthPage.NewPassword) {
                                     AuthField(if (state.page == AuthPage.Login) "E-mail ou nom d’utilisateur" else "Adresse e-mail",
                                         state.email, actions.email, Icons.Outlined.AlternateEmail,
@@ -208,16 +203,12 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                                         enabled = !state.busy, ime = if (state.page == AuthPage.Forgot) ImeAction.Done else ImeAction.Next, onDone = submit)
                                     Spacer(Modifier.height(12.dp))
                                 }
-                                if (state.page == AuthPage.Register) {
-                                    AuthField("Nom d’utilisateur", state.username, actions.username, Icons.Outlined.PersonOutline, enabled = !state.busy)
-                                    Spacer(Modifier.height(12.dp))
-                                }
                                 if (state.page != AuthPage.Forgot) {
                                     AuthField("Mot de passe", state.password, actions.password, Icons.Outlined.Lock,
                                         secret = true, enabled = !state.busy,
                                         ime = if (state.page == AuthPage.Login) ImeAction.Done else ImeAction.Next, onDone = submit)
                                 }
-                                if (state.page in setOf(AuthPage.Register, AuthPage.NewPassword)) {
+                                if (state.page == AuthPage.NewPassword) {
                                     Spacer(Modifier.height(12.dp))
                                     AuthField("Confirmer mot de passe", state.confirmation, actions.confirmation, Icons.Outlined.Lock,
                                         secret = true, enabled = !state.busy, ime = ImeAction.Done, onDone = submit,
@@ -229,14 +220,12 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                                             Text("Mot de passe oublié ?", color = Muted, fontSize = 12.sp)
                                         }
                                     }
-                                } else if (state.page != AuthPage.Register) Spacer(Modifier.height(22.dp))
-                                if (state.page != AuthPage.Register) {
+                                } else Spacer(Modifier.height(22.dp))
                                     PrimaryAction(when (state.page) {
                                         AuthPage.Login -> "Se connecter"
                                         AuthPage.Forgot -> "Recevoir le lien"
                                         else -> "Enregistrer"
                                     }, state.busy, submit)
-                                }
                                 if (state.page == AuthPage.Login) {
                                     Spacer(Modifier.height(24.dp)); DividerWithWave(); Spacer(Modifier.height(12.dp))
                                     Text("NOUVEAU ICI ?", fontSize = 10.sp, fontWeight = FontWeight.SemiBold,
@@ -290,7 +279,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
 }
 
 @Composable
-private fun RegistrationSteps(current: Int) {
+internal fun RegistrationSteps(current: Int) {
     Row(Modifier.widthIn(max = 340.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         listOf("Avatar", "Compte", "Localisation").forEachIndexed { index, title ->
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -319,9 +308,10 @@ internal fun AuthField(
     secret: Boolean = false, type: KeyboardType = KeyboardType.Text,
     enabled: Boolean = true, ime: ImeAction = ImeAction.Next, onDone: () -> Unit = {},
     singleLineLabel: Boolean = false,
+    modifier: Modifier = Modifier, onNext: (() -> Unit)? = null,
 ) {
     var visible by rememberSaveable { mutableStateOf(false) }
-    OutlinedTextField(value, onValue, modifier = Modifier.fillMaxWidth().then(rememberKeyboardFieldModifier()), enabled = enabled,
+    OutlinedTextField(value, onValue, modifier = modifier.fillMaxWidth().then(rememberKeyboardFieldModifier()), enabled = enabled,
         label = { Text(label, fontSize = 13.sp, maxLines = if (singleLineLabel) 1 else Int.MAX_VALUE,
             softWrap = !singleLineLabel) }, singleLine = true,
         shape = RoundedCornerShape(15.dp),
@@ -335,7 +325,8 @@ internal fun AuthField(
         visualTransformation = if (secret && !visible) PasswordVisualTransformation() else VisualTransformation.None,
         keyboardOptions = KeyboardOptions(keyboardType = if (secret) KeyboardType.Password else type,
             imeAction = ime, autoCorrectEnabled = !secret && type != KeyboardType.Email),
-        keyboardActions = KeyboardActions(onDone = { onDone() }),
+        keyboardActions = KeyboardActions(onDone = { onDone() },
+            onNext = { if (onNext != null) onNext() else defaultKeyboardAction(ImeAction.Next) }),
         colors = OutlinedTextFieldDefaults.colors(
             unfocusedContainerColor = Color(0xFF0E0D15), focusedContainerColor = Color(0xFF100D18),
             unfocusedBorderColor = Color(0xFF373240), focusedBorderColor = Violet,
@@ -361,7 +352,7 @@ internal fun PrimaryAction(label: String, busy: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun Message(text: String, error: Boolean) {
+internal fun Message(text: String, error: Boolean) {
     Text(text, color = if (error) Color(0xFFFFBBC4) else Color(0xFFCEB9F9),
         style = MaterialTheme.typography.bodySmall,
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))

@@ -98,7 +98,9 @@ class AuthViewModel(private val repository: MeewavAuthRepository) : ViewModel() 
 
     fun exitPreview() {
         if (!state.value.localPreview) return
-        mutable.update { AuthUiState(initializing = false, configured = repository.configured) }
+        // Revenir à Bienvenue ne quitte pas le bypass du parcours de fabrication.
+        mutable.update { AuthUiState(initializing = false, configured = repository.configured,
+            localPreview = BuildConfig.DEBUG) }
     }
 
     fun navigate(page: AuthPage) {
