@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import com.meewav.android.R
 import com.meewav.android.core.design.Muted
 import com.meewav.android.core.design.Violet
+import kotlinx.coroutines.delay
 
 /** Même enveloppe, même vitre et même plateau que l'étape Avatar. */
 @Composable
@@ -48,6 +49,14 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
         infiniteRepeatable(tween(16000, easing = LinearEasing)), label = "Balayage des faisceaux")
     val levitation = motion.animateFloat(-3f, 3f,
         infiniteRepeatable(tween(2800, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "Lévitation MW")
+    val violetLight = remember { Animatable(0f) }
+    LaunchedEffect(typingLayout) {
+        if (typingLayout) violetLight.snapTo(0f)
+        else {
+            delay(350)
+            violetLight.animateTo(.70f, tween(160, easing = LinearOutSlowInEasing))
+        }
+    }
     Box(modifier.height(panelHeight)) {
         AuthWindowPanel(Modifier.fillMaxWidth().padding(top = if (typingLayout) 0.dp else stageHeight - 14.dp),
             panelHeight = if (typingLayout) panelHeight else panelHeight - stageHeight + 14.dp,
@@ -97,7 +106,8 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
             }
         }
         if (!typingLayout) Box(Modifier.fillMaxWidth().height(stageHeight + AuthStageOverlap)) {
-            IosStageBackdrop(Modifier.fillMaxSize(), light = { 1f }, sweepPhase = { sweep.value })
+            IosStageBackdrop(Modifier.fillMaxSize(), light = { 1f }, sweepPhase = { sweep.value },
+                violetLight = { violetLight.value })
             Image(painterResource(R.drawable.auth_web_signature), null,
                 Modifier.align(Alignment.BottomCenter).padding(bottom = 36.dp).size(54.dp)
                     .graphicsLayer {

@@ -69,9 +69,9 @@ internal fun IosStageBackdrop(modifier: Modifier, light: () -> Float = { .14f },
                 val origin = Offset(size.width / 2f + side * 185f * .32f * scale,
                     size.height - (26f + 82f * .06f) * scale)
                 val phase = (sweepPhase?.invoke() ?: 0f) * PI.toFloat() / 180f
-                val angle = side * (1.8f + 2.2f * sin(phase + index * .8f))
+                val angle = side * (1.8f + 3.2f * sin(phase + index * .8f))
                 val intensity = (if (index == 0) leftLight() else rightLight()).coerceIn(0f, 1f)
-                withTransform({ rotate(-side * (1f + .9f * sin(phase + index * .8f)), origin) }) {
+                withTransform({ rotate(-side * (1f + 2.2f * sin(phase + index * .8f)), origin) }) {
                     drawImage(violets[index], alpha = violetLight().coerceIn(0f, 1f))
                 }
                 // Seul le faisceau balaie doucement le mur ; les deux corps restent fixes.
