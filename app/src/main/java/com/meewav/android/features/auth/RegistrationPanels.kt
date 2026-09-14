@@ -228,14 +228,12 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
 
 @Composable
 internal fun AccountHeader() {
-    Row(Modifier.fillMaxWidth().padding(bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-        // Conserve la position du titre ; l'avatar est désormais ancré au bouton Apple.
-        Spacer(Modifier.size(42.dp, 48.dp))
-        Spacer(Modifier.width(8.dp))
-        Text("Ton compte Meewav", fontSize = 19.sp, lineHeight = 23.sp,
+    Box(Modifier.fillMaxWidth().padding(bottom = 8.dp).height(48.dp),
+        contentAlignment = Alignment.Center) {
+        Text("Ton compte", fontSize = 19.sp, lineHeight = 23.sp,
             fontWeight = FontWeight.SemiBold, color = Color.White,
-            modifier = Modifier.weight(1f, fill = false).semantics { heading() })
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth().semantics { heading() })
     }
 }
 
@@ -263,7 +261,7 @@ internal fun AccountSocialOptions(state: AuthUiState, onContinue: (SocialAuthPro
             if (provider == SocialAuthProvider.Apple) {
                 val avatar = AvatarCatalog.find(state.profile.avatarIcon)
                 Image(painterResource(avatar.image), avatar.name,
-                    Modifier.align(Alignment.TopStart).offset(x = 11.8.dp, y = (-53.6).dp).size(50.4.dp, 57.6.dp),
+                    Modifier.align(Alignment.TopStart).offset(x = 11.8.dp, y = (-44).dp).size(50.4.dp, 57.6.dp),
                     alignment = Alignment.BottomCenter, contentScale = ContentScale.Fit)
             }
             }
