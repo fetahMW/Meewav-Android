@@ -87,74 +87,80 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
                 scaleY = 1f + .008f * pulse
             },
             panelHeight = panelHeight - stageHeight + 14.dp, compact = true,
-            iosStageWindow = true, allowScroll = false,
-            footer = {
-                IosAuthDivider()
-                Spacer(Modifier.height(12.dp))
-                IosAuthAction("Suivant", state.busy || confirming) {
-                    if (!pager.isScrollInProgress && !confirming) {
-                        confirming = true
-                        scope.launch {
-                            confirmation.animateTo(1f, tween(920, easing = LinearEasing))
-                            delay(100)
-                            onContinue()
-                        }
-                    }
-                }
-                Spacer(Modifier.height(20.dp))
-            }) {
+            iosStageWindow = true, allowScroll = false) {
         OutlinedButton(onClick = { showPicker = true }, enabled = !state.busy && !confirming,
             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
             colors = ButtonDefaults.outlinedButtonColors(containerColor = Color(0xFF09090B)),
             border = BorderStroke(.5.dp, Color(0xFF29262F)), shape = RoundedCornerShape(14.dp)) {
-            Text(avatar.name, color = Color.White, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
+            Text(avatar.name, color = Color.White, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold,
+                maxLines = 2, lineHeight = 18.sp)
             Text("${selectedIndex + 1}/${entries.size}", color = Violet, fontSize = 12.sp)
             Icon(Icons.Outlined.ExpandMore, "Choisir un avatar", Modifier.padding(start = 6.dp).size(20.dp), tint = Violet)
         }
-        Spacer(Modifier.height(12.dp))
-        Text(avatar.description.lineSequence().take(2).joinToString("\n"), color = Muted, fontSize = 12.sp, lineHeight = 17.sp,
+        Spacer(Modifier.height(10.dp))
+        Text(avatar.description.lineSequence().take(2).joinToString("\n"), color = Muted, fontSize = 12.sp, lineHeight = 16.sp,
             textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis,
             modifier = Modifier.fillMaxWidth())
-        Spacer(Modifier.weight(.5f))
+        Spacer(Modifier.height(8.dp))
         HorizontalDivider(Modifier.align(Alignment.CenterHorizontally).width(120.dp), color = Color(0x22FFFFFF))
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(8.dp))
         Text(if (state.profile.realArtist)
-            "Choisis Artiste réel si tu crées ou travailles ta musique toi-même : chant, rap, instruments, production, mixage, écriture, composition, etc."
+            "Tu crées ou travailles ta musique toi-même : chant, instruments, production, mixage, écriture ou composition."
             else "Choisis Créateur IA si tu crées principalement ta musique à l’aide de l’intelligence artificielle.",
-            color = Muted, fontSize = 10.sp, lineHeight = 15.sp, textAlign = TextAlign.Center,
+            color = Muted, fontSize = 10.sp, lineHeight = 14.sp, textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth())
-        Spacer(Modifier.weight(1f))
+        Spacer(Modifier.height(10.dp))
         state.error?.let { Text(it, color = Color(0xFFFFBBC4), fontSize = 11.sp) }
         state.notice?.let { Text(it, color = Muted, fontSize = 11.sp) }
         Text("Type de profil", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
             modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(4.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             listOf(false to "Créateur IA", true to "Artiste réel").forEach { (real, title) ->
                 val chosen = state.profile.realArtist == real
+                // Une surface fine dans une cible tactile de 48 dp.
+                Box(Modifier.weight(1f).height(48.dp), contentAlignment = Alignment.Center) {
                 FilterChip(chosen, { onProfile(state.profile.copy(realArtist = real)) },
                     enabled = !state.busy && !confirming, shape = RoundedCornerShape(12.dp),
-                    label = { Text(title, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
-                    modifier = Modifier.weight(1f).heightIn(min = 48.dp).drawBehind {
+                    label = { Text(title, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
+                        fontSize = 12.sp, fontWeight = FontWeight.Medium) },
+                    modifier = Modifier.fillMaxWidth().height(36.dp).drawBehind {
                         if (chosen) {
                             // Halo gradué limité au contour ; le fond du bouton reste opaque et noir.
-                            for (spread in 3 downTo 1) {
+                            for (spread in 2 downTo 1) {
                                 val inset = spread.dp.toPx()
-                                drawRoundRect(Violet.copy(alpha = .035f * (4 - spread)),
+                                drawRoundRect(Violet.copy(alpha = .018f * (3 - spread)),
                                     topLeft = Offset(-inset, -inset),
                                     size = Size(size.width + inset * 2, size.height + inset * 2),
                                     cornerRadius = CornerRadius(12.dp.toPx() + inset),
-                                    style = Stroke(2.dp.toPx()))
+                                    style = Stroke(1.dp.toPx()))
                             }
                         }
                     },
-                    border = BorderStroke(if (chosen) 1.dp else .5.dp, if (chosen) Violet else Color(0xFF373040)),
+                    border = BorderStroke(if (chosen) .75.dp else .5.dp,
+                        if (chosen) Violet.copy(alpha = .8f) else Color(0xFF373040)),
                     colors = FilterChipDefaults.filterChipColors(
                         containerColor = Color(0xFF08080B), labelColor = Muted,
                         selectedContainerColor = Color(0xFF08080B), selectedLabelColor = Color.White,
                         disabledContainerColor = Color(0xFF08080B), disabledSelectedContainerColor = Color(0xFF08080B)))
+                }
             }
         }
+        Spacer(Modifier.height(8.dp))
+        IosAuthDivider()
+        Spacer(Modifier.height(10.dp))
+        IosAuthAction("Suivant", state.busy || confirming) {
+            if (!pager.isScrollInProgress && !confirming) {
+                confirming = true
+                scope.launch {
+                    confirmation.animateTo(1f, tween(920, easing = LinearEasing))
+                    delay(100)
+                    onContinue()
+                }
+            }
+        }
+        // Le surplus d'espace reste sous l'action, sans étirer les blocs du formulaire.
+        Spacer(Modifier.height(12.dp))
         }
         IosAvatarStage(pager, Modifier.fillMaxWidth().height(stageHeight + AuthStageOverlap),
             enabled = !state.busy && !showPicker && !confirming, confirmation = { confirmation.value })

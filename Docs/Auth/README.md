@@ -163,3 +163,7 @@ Les images ne sont plus découpées par le viewport du pager : celui-ci reçoit 
 Suivant déclenche une impulsion lumineuse puis la chute des personnages latéraux, d’après le code iOS ; le personnage central reste visible. Le passage à Compte attend la fin de l’animation. Le carrousel, le choix du rôle et le sélecteur sont neutralisés pendant cette confirmation ; une sortie de l’écran annule son animation.
 
 Sur nouvelle demande utilisateur, le sélecteur paginé est remplacé par un grand panneau inférieur à grille défilante de 28 vignettes HD. Fond noir, coins arrondis, contour violet sur le choix courant, fermeture par croix ou geste natif. Connexion et Avatar restent sans défilement vertical en dehors de ce panneau. Compilation réussie ; aucun scénario applicatif ni contrôle visuel automatique exécuté.
+
+## Hiérarchie du choix de profil — 14 septembre 2026
+
+Les choix Créateur IA / Artiste réel ont une surface de 36 dp dans une cible tactile de 48 dp, avec un texte de 12 sp, un contour sélectionné de 0,75 dp et un halo atténué. Leur intérieur reste noir. Les espaces extensibles au milieu sont remplacés par des intervalles fixes ; l’explication est raccourcie et le bouton Suivant suit directement les choix et le séparateur fin. L’espace restant se trouve sous l’action, dans la fenêtre de hauteur inchangée. Le sélecteur conserve sa hauteur minimale et accepte deux lignes. Aucun défilement vertical n’est ajouté à l’étape ; le rendu reste à apprécier par l’utilisateur.
