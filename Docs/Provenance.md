@@ -103,3 +103,7 @@ Les 28 miniatures iOS de 179–180 pixels ont été remplacées par les PNG corr
 | `avatar_user.png` | `UTILISATEUR LAMBDA.png` |
 | `avatar_user_f.png` | `UTILISATRICE LAMBDA.png` |
 | `avatar_violon.png` | `VIOLON.png` |
+
+## Plateau et fenêtre de sélection iOS — 14 septembre 2026
+
+`IosAvatarStage.kt` adapte les tracés et la disposition de `Meewav/Features/Auth/Components/StagePlatformRenderer.swift`, `AvatarStageOverlayView.swift`, `SaturnCarouselLayout.swift`, `SaturnCarouselView.swift` et `LoginWindowChromeView.swift` du dépôt `sipiyou39/Meewav`, `main`, commit `aea7251a60a2b61d775901fcf39a62036fd108c4`. La récupération de `main` pour ce lot confirme cette même révision. Le portage est réalisé en Kotlin/Compose et Canvas Android ; aucune nouvelle image ni ressource externe n’est générée. Les avatars HD et leur provenance restent ceux du tableau précédent. Cette référence de code ne constitue pas une attribution à un auteur distinct ni une nouvelle licence.

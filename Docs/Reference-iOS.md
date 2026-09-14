@@ -9,7 +9,7 @@ SwiftUI reste spécifique à Apple. Android reprend les règles métier, identif
 Sources : `Meewav/Features/Auth/State/AuthState.swift`, `Views/SignInPanelView.swift`, `Views/AvatarSelectionPanelView.swift`, `Views/SignUpFormView.swift`, `ViewModels/AuthViewModel+SignUp.swift`, `Services/SupabaseAuthService.swift` et `Models/AvatarProfile.swift`.
 
 - Entrée centrée sur la connexion ; création de compte en trois étapes : avatar, identifiants, localisation.
-- Les 28 avatars, leur ordre, leurs descriptions et leurs identifiants iOS sont conservés. Sur Android, le rail tactile et son sélecteur utilisent Compose ; tous les avatars restent opaques. Les animations de projection et de chute SwiftUI ne sont pas portées à l’identique.
+- Les 28 avatars, leur ordre, leurs descriptions et leurs identifiants iOS sont conservés. Le rail tactile utilise Compose et les PNG HD ; les personnages centraux et les voisins restent opaques, seuls les éléments quittant les bords s'effacent. Le plateau, les projecteurs et leur variation d'intensité sont désormais adaptés de l'iOS (voir ci-dessous). La chute de confirmation SwiftUI n'est pas portée.
 - Connexion e-mail ou nom via `resolve_profile_email_for_username(p_username)`, puis Supabase Auth. Le résultat de la résolution n’est pas affiché dans l’interface.
 - Métadonnées communes : `username`, `artist_type` (`REEL`/`IA`), `avatar_url` (identifiant d’asset historique), `avatar_name`, naissance facultative, ville, code postal facultatif, pays et confidentialité par défaut.
 - L’Android conserve la confirmation e-mail explicite, la récupération du mot de passe, PKCE et le stockage chiffré de la session. Contrairement au service iOS lu, il ne tente pas une connexion immédiate lorsqu’une inscription ne fournit pas de session.
@@ -20,6 +20,14 @@ Limites constatées dans la référence et traitement Android :
 - `TermsDetailsView.demoTerms` contient un texte de démonstration. Il est repris intégralement et signalé dans la fenêtre Android ; une acceptation locale ne constitue pas un enregistrement serveur d’un consentement versionné.
 - Google iOS possède une intégration propre à Apple ; ses identifiants OAuth ne sont pas réutilisés comme configuration Android. Aucun bouton Google ou Apple inactif n’est ajouté.
 - `onboarding_completed=false` reste explicite tant que la scène musicale et l’achèvement du profil partagé ne sont pas raccordés. Ni `complete_onboarding` ni l’ouverture du globe ne sont simulés.
+
+## Plateau supérieur et carrousel iOS — 14 septembre 2026
+
+À la demande de l’utilisateur, `origin/main` a été récupéré à nouveau : la référence reste `aea7251a60a2b61d775901fcf39a62036fd108c4`. Le modèle recherché est la composition de `AuthView.swift`, `Components/AuthStagePlatformOverlayView.swift`, `StagePlatformRenderer.swift`, `AvatarStageOverlayView.swift`, `SaturnCarouselLayout.swift`, `SaturnCarouselView.swift` et `LoginWindowChromeView.swift`.
+
+L’étape Avatar Android reprend la fenêtre sous un plateau elliptique, le rail circulaire au-dessus, les écarts et réductions progressives des personnages, les projecteurs arrière et les petits spots du plateau. Le contour de cette fenêtre reprend les courbes iOS ; les autres étapes gardent leur cadre Web ajusté. Les proportions verticales sont adaptées à l’espace disponible sur Android : l’enveloppe complète reste de hauteur fixe, le plateau occupe sa partie supérieure et la vitre sa partie inférieure. Cela remplace la disposition antérieure avec le carrousel à l’intérieur du formulaire.
+
+L’intensité descend à 0,14 pendant le geste, remonte à l’arrêt puis se stabilise, selon la mécanique iOS. Le rendu des surfaces et faisceaux est mis en cache à la résolution de l’écran ; l’animation ne reconstruit pas ces textures à chaque image. Ce mécanisme n’est pas une mesure de fréquence d’affichage. Le sélecteur paginé sans défilement vertical, les identifiants backend et l’aperçu sans compte Android sont conservés. Ni la chute de confirmation, ni l’authentification sociale iOS, ni de nouvelles fonctions backend ne sont ajoutées par ce portage visuel.
 
 ## Messagerie : prochain portage
 

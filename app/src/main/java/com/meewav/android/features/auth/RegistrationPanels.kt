@@ -48,9 +48,12 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Unit, onContinue: () -> Unit,
-                            stageHeight: Dp = 192.dp, modifier: Modifier = Modifier) {
+                            panelHeight: Dp = 600.dp, modifier: Modifier = Modifier) {
     val entries = AvatarCatalog.profiles
-    val pager = rememberPagerState(initialPage = entries.indexOfFirst { it.icon == state.profile.avatarIcon }) { entries.size }
+    // Rail circulaire comme SaturnCarouselView ; la sélection backend reste l'un des 28 identifiants.
+    val middlePage = Int.MAX_VALUE / 2 - (Int.MAX_VALUE / 2) % entries.size
+    val pager = rememberPagerState(initialPage = middlePage +
+        entries.indexOfFirst { it.icon == state.profile.avatarIcon }.coerceAtLeast(0)) { Int.MAX_VALUE }
     val currentProfile by rememberUpdatedState(state.profile)
     val changeProfile by rememberUpdatedState(onProfile)
     val scope = rememberCoroutineScope()
@@ -58,15 +61,30 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
     var pickerPage by rememberSaveable { mutableIntStateOf(0) }
     LaunchedEffect(pager) {
         snapshotFlow { pager.settledPage }.distinctUntilChanged().collect { index ->
-            changeProfile(currentProfile.copy(avatarIcon = entries[index].icon))
+            changeProfile(currentProfile.copy(avatarIcon = entries[index % entries.size].icon))
         }
     }
-    val avatar = entries[pager.settledPage]
-    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        OutlinedButton(onClick = { pickerPage = pager.settledPage / 6; showPicker = true }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+    val selectedIndex = pager.settledPage % entries.size
+    val avatar = entries[selectedIndex]
+    val stageHeight = (panelHeight * .28f).coerceIn(120.dp, 180.dp)
+    // Enveloppe fixe : le plateau est extérieur à la vitre, pas dans le formulaire.
+    Box(modifier.height(panelHeight)) {
+        AuthWindowPanel(Modifier.fillMaxWidth().padding(top = stageHeight - 14.dp),
+            panelHeight = panelHeight - stageHeight + 14.dp, compact = true,
+            iosStageWindow = true, allowScroll = false,
+            footer = { PrimaryAction("Suivant", busy = state.busy) {
+                if (!pager.isScrollInProgress) onContinue()
+            } }) {
+        Text("Choisis ton avatar", style = MaterialTheme.typography.titleLarge,
+            textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(4.dp))
+        Text("Il représentera ton rôle sur Meewav.", color = Muted, fontSize = 12.sp,
+            textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(12.dp))
+        OutlinedButton(onClick = { pickerPage = selectedIndex / 6; showPicker = true }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
             border = BorderStroke(1.dp, Color(0xFF463557)), shape = RoundedCornerShape(14.dp)) {
             Text(avatar.name, color = Color.White, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
-            Text("${pager.settledPage + 1}/${entries.size}", color = Violet, fontSize = 12.sp)
+            Text("${selectedIndex + 1}/${entries.size}", color = Violet, fontSize = 12.sp)
             Icon(Icons.Outlined.ExpandMore, "Choisir un avatar", Modifier.padding(start = 6.dp).size(20.dp), tint = Violet)
         }
         Spacer(Modifier.height(6.dp))
@@ -74,30 +92,9 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
         Text(avatar.description.substringBefore('\n'), color = Muted, fontSize = 12.sp, lineHeight = 17.sp,
             textAlign = TextAlign.Center, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
             modifier = Modifier.fillMaxWidth())
-        BoxWithConstraints(Modifier.fillMaxWidth().weight(1f).clipToBounds()) {
-            val pageWidth = maxWidth * .64f
-            val avatarHeight = (minOf(maxHeight, stageHeight) - 12.dp).coerceAtLeast(0.dp)
-            val pedestalWidth = (pageWidth * .72f).coerceAtMost(112.dp)
-            Canvas(Modifier.align(Alignment.BottomCenter).width(pedestalWidth).height(22.dp)) {
-                drawOval(Brush.radialGradient(listOf(Color(0xFF47306F), Color(0xFF15101F))))
-                drawOval(Color(0xFF8251D0), style = Stroke(.8.dp.toPx()))
-                drawOval(Color(0x404F347C), Offset(4.dp.toPx(), 3.dp.toPx()),
-                    Size(size.width - 8.dp.toPx(), size.height - 6.dp.toPx()), style = Stroke(.6.dp.toPx()))
-            }
-            HorizontalPager(pager, pageSize = PageSize.Fixed(pageWidth),
-                overscrollEffect = null,
-                contentPadding = PaddingValues(horizontal = (maxWidth - pageWidth) / 2),
-                modifier = Modifier.fillMaxSize()) { index ->
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
-                    // All avatars remain fully opaque, including the lateral previews.
-                    Image(painterResource(entries[index].image), entries[index].name,
-                        Modifier.padding(bottom = 8.dp).width(pageWidth * .90f)
-                            .height(if (index == pager.currentPage) avatarHeight else avatarHeight * .78f),
-                        contentScale = ContentScale.Fit)
-                }
-            }
-        }
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.weight(1f))
+        state.error?.let { Text(it, color = Color(0xFFFFBBC4), fontSize = 11.sp) }
+        state.notice?.let { Text(it, color = Muted, fontSize = 11.sp) }
         Text("TYPE DE PROFIL", color = Muted, fontSize = 10.sp, letterSpacing = 1.6.sp)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             listOf(true to "Artiste réel", false to "Créateur IA").forEach { (real, title) ->
@@ -112,10 +109,8 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
         Text(if (state.profile.realArtist) "Tu crées ou travailles ta musique toi-même."
             else "Tu crées principalement à l’aide de l’IA.",
             color = Muted, fontSize = 11.sp, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(12.dp))
-        PrimaryAction("Suivant", busy = state.busy) {
-            if (!pager.isScrollInProgress) onContinue()
         }
+        IosAvatarStage(pager, Modifier.fillMaxWidth().height(stageHeight), enabled = !state.busy && !showPicker)
     }
     if (showPicker) {
         // Un sélecteur fixe et paginé : ni panneau glissant, ni liste verticale.
@@ -137,7 +132,10 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
                                         .semantics { selected = isSelected }
                                         .clickable(role = Role.RadioButton) {
                                             showPicker = false
-                                            scope.launch { pager.scrollToPage(entries.indexOf(item)) }
+                                            scope.launch {
+                                                val delta = entries.indexOf(item) - selectedIndex
+                                                pager.scrollToPage(pager.settledPage + delta)
+                                            }
                                         }.padding(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                                         Image(painterResource(item.image), null, Modifier.fillMaxWidth().height(72.dp), contentScale = ContentScale.Fit)
                                         Text(item.name, fontSize = 10.sp, lineHeight = 13.sp,

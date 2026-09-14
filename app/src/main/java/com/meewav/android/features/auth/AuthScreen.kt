@@ -89,7 +89,6 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
             val fixedStep = isAvatarPage || state.page == AuthPage.Register
             // Même hauteur à chaque étape, indépendante du contenu et de l'ouverture du clavier.
             val panelHeight = (availableHeight - 170.dp).coerceIn(320.dp, 640.dp)
-            val avatarStageHeight = (panelHeight * .30f).coerceIn(136.dp, 192.dp)
             Column(Modifier.fillMaxSize()
                 .then(if (fixedStep) Modifier else Modifier.imePadding().verticalScroll(scroll))
                 .heightIn(min = availableHeight)
@@ -113,7 +112,10 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                 Box(Modifier.height(38.dp).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
                     if (step >= 0) RegistrationSteps(step)
                 }
-                GlassPanel(Modifier.widthIn(max = 440.dp).fillMaxWidth(), panelHeight = panelHeight,
+                if (isAvatarPage && !state.initializing) {
+                    AvatarSelection(state, actions.profile, submit, panelHeight = panelHeight,
+                        modifier = Modifier.widthIn(max = 440.dp).fillMaxWidth())
+                } else GlassPanel(Modifier.widthIn(max = 440.dp).fillMaxWidth(), panelHeight = panelHeight,
                     compact = fixedStep, scrollKey = state.page, allowScroll = !fixedStep,
                     footer = if (state.page == AuthPage.Register && !state.initializing) {
                         { PrimaryAction("Suivant", state.busy, submit) }
@@ -154,8 +156,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                         state.error?.let { Message(it, true); Spacer(Modifier.height(14.dp)) }
                         state.notice?.let { Message(it, false); Spacer(Modifier.height(14.dp)) }
                         when (state.page) {
-                            AuthPage.Avatar -> AvatarSelection(state, actions.profile, submit, stageHeight = avatarStageHeight,
-                                modifier = Modifier.weight(1f).fillMaxWidth())
+                            AuthPage.Avatar -> Unit // La scène d'avatars est composée au-dessus de sa vitre.
                             AuthPage.Location -> LocationRegistration(state, actions.profile, submit)
                             AuthPage.Login, AuthPage.Register, AuthPage.Forgot, AuthPage.NewPassword -> {
                                 if (state.page == AuthPage.Register) {

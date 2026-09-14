@@ -120,3 +120,11 @@ Compilation réussie, APK installé et application relancée par Wi-Fi sur le S2
 Dans Compte, le récapitulatif encadré, les libellés de profil et le crayon sont retirés. Seul l’avatar apparaît debout au-dessus du champ e-mail, aligné sur son contour supérieur. Le séparateur situé au-dessus de ce bloc est supprimé pour remonter le formulaire ; le bouton retour conserve son rôle de retour au choix d’avatar et Suivant reste fixé dans le pied.
 
 Avatar et Compte restent dépourvus de défilement vertical. Le sélecteur d’avatars, qui utilisait encore un panneau coulissant et une grille verticale, devient une fenêtre fixe de six choix par page avec boutons précédent/suivant. Le carrousel conserve uniquement son mouvement horizontal, sans effet de dépassement. Localisation conserve le défilement de son formulaire et les marges du clavier.
+
+## Retour au plateau supérieur de l’iOS — 14 septembre 2026
+
+Nouvelle direction demandée après ces ajustements : reprendre le modèle actuellement présent dans le `main` iOS, avec la vitre sous le plateau, le carrousel d’avatars au-dessus et les petits projecteurs. La [référence précise et les adaptations Android](../Reference-iOS.md#plateau-supérieur-et-carrousel-ios--14-septembre-2026) distinguent ce portage des animations encore absentes.
+
+L’enveloppe de l’étape conserve la hauteur disponible ; le plateau et la vitre se partagent désormais cet espace. Le carrousel est circulaire, avec interpolation de taille, position et inclinaison pendant le geste. Les trois avatars centraux restent opaques et les PNG HD ne sont pas remplacés par les miniatures iOS. Les faisceaux baissent pendant le défilement puis se rallument à l’arrêt. Le rôle, son compteur et le sélecteur sont dans la vitre, avec le type de profil et Suivant. Aucun défilement vertical n’est ajouté à Avatar ou Compte ; les corrections de Compte, Localisation et l’aperçu sans compte sont conservés.
+
+Compilation `:app:assembleDebug` réussie. Installation non effectuée : le S22 Ultra physique désigné est absent de la liste ADB et de la découverte mDNS au moment de la livraison. Aucun autre appareil n’a été choisi à sa place. Aucun scénario applicatif ni contrôle visuel automatique exécuté ; le rendu reste à apprécier sur le téléphone après reconnexion.
