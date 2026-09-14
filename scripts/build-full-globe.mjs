@@ -33,6 +33,9 @@ const result = await build({
   external: ['/globe-vinyle/ui/*'],
   plugins: [{ name: 'android-local-host', setup(context) {
     context.onResolve({ filter: /^\.\/host-bridge$/ }, () => ({ path: join(source, 'full-globe-bridge.ts') }));
+    context.onResolve({ filter: /^\.\/reference\/features\/globe\/components\/NavGlobeTexture$/ }, () => ({
+      path: join(source, 'full-globe-nav-texture.tsx'),
+    }));
     context.onResolve({ filter: /^(\.\.\/)+assets\/ui\// }, args => ({
       path: join(output, 'ui', args.path.split('assets/ui/')[1]),
     }));
