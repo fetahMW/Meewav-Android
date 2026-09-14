@@ -19,6 +19,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
@@ -37,30 +40,65 @@ import androidx.compose.ui.unit.sp
 import com.meewav.android.R
 import com.meewav.android.core.design.Muted
 import com.meewav.android.core.design.Violet
-import kotlinx.coroutines.delay
+
+/** Le clavier translate la scène fixe ; il ne redimensionne plus son contour violet. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun LoginEntryLayout(state: AuthUiState, actions: AuthActions, submit: () -> Unit) {
+    val density = LocalDensity.current
+    val hostView = LocalView.current
+    SideEffect {
+        hostView.isVerticalScrollBarEnabled = false
+        hostView.isHorizontalScrollBarEnabled = false
+        hostView.scrollIndicators = 0
+    }
+    val safeInsets = WindowInsets.systemBars.union(WindowInsets.displayCutout)
+    val safeBottom = safeInsets.getBottom(density)
+    val ime = WindowInsets.ime.getBottom(density)
+    val source = WindowInsets.imeAnimationSource.getBottom(density)
+    val target = WindowInsets.imeAnimationTarget.getBottom(density)
+    val extent = (maxOf(source, target, ime) - safeBottom).coerceAtLeast(0)
+    val overlap = (ime - safeBottom).coerceAtLeast(0)
+    val progress = if (extent > 0) (overlap.toFloat() / extent).coerceIn(0f, 1f) else 0f
+    val typing = ime > 0 || target > 0
+    BoxWithConstraints(Modifier.fillMaxSize().windowInsetsPadding(safeInsets)) {
+        val baseHeight = (maxHeight - 170.dp).coerceIn(320.dp, 640.dp)
+        val panelHeight = baseHeight + AuthWindowLowerExtension
+        val stageHeight = authStageHeight(panelHeight)
+        val topSpace = ((maxHeight - baseHeight - 132.dp) / 2).coerceAtLeast(0.dp)
+        val restTop = 12.dp + topSpace + 48.dp + 12.dp
+        val glassInset = stageHeight - 14.dp
+        val sceneTop = restTop + (12.dp - restTop - glassInset) * progress
+        val viewport = (maxHeight - with(density) { overlap.toDp() } - sceneTop - glassInset - 12.dp)
+            .coerceIn(0.dp, panelHeight - glassInset)
+        Box(Modifier.align(Alignment.TopCenter).padding(horizontal = 22.dp)
+            .widthIn(max = 440.dp).fillMaxWidth().offset(y = 12.dp + topSpace).height(48.dp)
+            .graphicsLayer { alpha = 1f - progress }, contentAlignment = Alignment.Center) {
+            Image(painterResource(R.drawable.meewav_logo), "Meewav",
+                Modifier.fillMaxWidth().padding(horizontal = 48.dp).height(40.dp), contentScale = ContentScale.Fit)
+        }
+        IosLoginScene(state, actions, submit, panelHeight,
+            Modifier.align(Alignment.TopCenter).padding(horizontal = 22.dp)
+                .widthIn(max = 440.dp).fillMaxWidth().offset(y = sceneTop),
+            typingLayout = typing, contentViewportHeight = if (typing) viewport else null,
+            decorationAlpha = 1f - progress)
+    }
+}
 
 /** Même enveloppe, même vitre et même plateau que l'étape Avatar. */
 @Composable
 internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () -> Unit,
-                          panelHeight: Dp, modifier: Modifier = Modifier, typingLayout: Boolean = false) {
-    val stageHeight = if (typingLayout) 0.dp else authStageHeight(panelHeight)
+                          panelHeight: Dp, modifier: Modifier = Modifier, typingLayout: Boolean = false,
+                          contentViewportHeight: Dp? = null, decorationAlpha: Float = 1f) {
+    val stageHeight = authStageHeight(panelHeight)
     val motion = rememberInfiniteTransition(label = "Signature suspendue")
-    val sweep = motion.animateFloat(0f, 360f,
-        infiniteRepeatable(tween(16000, easing = LinearEasing)), label = "Balayage des faisceaux")
     val levitation = motion.animateFloat(-3f, 3f,
         infiniteRepeatable(tween(2800, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "Lévitation MW")
-    val violetLight = remember { Animatable(0f) }
-    LaunchedEffect(typingLayout) {
-        if (typingLayout) violetLight.snapTo(0f)
-        else {
-            delay(350)
-            violetLight.animateTo(.70f, tween(160, easing = LinearOutSlowInEasing))
-        }
-    }
     Box(modifier.height(panelHeight)) {
-        AuthWindowPanel(Modifier.fillMaxWidth().padding(top = if (typingLayout) 0.dp else stageHeight - 14.dp),
-            panelHeight = if (typingLayout) panelHeight else panelHeight - stageHeight + 14.dp,
+        AuthWindowPanel(Modifier.fillMaxWidth().padding(top = stageHeight - 14.dp),
+            panelHeight = panelHeight - stageHeight + 14.dp,
             compact = true, iosStageWindow = true, scrollKey = state.page, allowScroll = typingLayout,
+            contentViewportHeight = contentViewportHeight,
             footer = if (state.initializing || typingLayout) null else { {
                 IosAuthDivider()
                 Spacer(Modifier.height(6.dp))
@@ -105,11 +143,11 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
                 IosAuthAction("Se connecter", state.busy, submit)
             }
         }
-        if (!typingLayout) Box(Modifier.fillMaxWidth().height(stageHeight + AuthStageOverlap)) {
-            IosStageBackdrop(Modifier.fillMaxSize(), light = { 1f }, sweepPhase = { sweep.value },
-                violetLight = { violetLight.value })
+        if (decorationAlpha > 0f) Box(Modifier.fillMaxWidth().height(stageHeight + AuthStageOverlap)
+            .graphicsLayer { alpha = decorationAlpha }) {
+            IosStageBackdrop(Modifier.fillMaxSize(), light = { .14f }, leftLight = { 0f }, rightLight = { 0f })
             Image(painterResource(R.drawable.auth_web_signature), null,
-                Modifier.align(Alignment.BottomCenter).padding(bottom = 36.dp).size(54.dp)
+                Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp).size(54.dp)
                     .graphicsLayer {
                         translationY = levitation.value * density
                     })

@@ -104,7 +104,7 @@ class AuthViewModel(private val repository: MeewavAuthRepository) : ViewModel() 
     fun navigate(page: AuthPage) {
         if (state.value.busy) return
         if (page == AuthPage.Preview && !(BuildConfig.DEBUG && state.value.localPreview)) return
-        if (page == AuthPage.Globe && !(BuildConfig.DEBUG && state.value.localPreview && state.value.profile.musicScene != null)) return
+        if (page == AuthPage.Globe && !(BuildConfig.DEBUG && state.value.localPreview)) return
         if (page == AuthPage.Login && state.value.localPreview) { exitPreview(); return }
         mutable.update {
             val preserve = it.page in setOf(AuthPage.Avatar, AuthPage.Register, AuthPage.Location) &&
@@ -131,10 +131,6 @@ class AuthViewModel(private val repository: MeewavAuthRepository) : ViewModel() 
         if (draft.busy || draft.initializing) return
         if (draft.localPreview) {
             if (!BuildConfig.DEBUG) return
-            if (draft.page == AuthPage.Location && (draft.profile.communeCode.isBlank() || draft.profile.musicScene == null)) {
-                mutable.update { it.copy(error = "Choisis la scène musicale que tu veux rejoindre.") }
-                return
-            }
             val next = when (draft.page) {
                 AuthPage.Login -> AuthPage.Avatar
                 AuthPage.Avatar -> AuthPage.Register

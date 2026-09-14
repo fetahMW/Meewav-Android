@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Spacer
@@ -38,6 +39,7 @@ internal fun AuthWindowPanel(modifier: Modifier = Modifier, panelHeight: Dp = 64
                              allowScroll: Boolean = true,
                              iosStageWindow: Boolean = false,
                              illumination: (() -> Float)? = null,
+                             contentViewportHeight: Dp? = null,
                              content: @Composable ColumnScope.() -> Unit) {
     val scroll = rememberScrollState()
     LaunchedEffect(scrollKey) { scroll.scrollTo(0) }
@@ -59,7 +61,12 @@ internal fun AuthWindowPanel(modifier: Modifier = Modifier, panelHeight: Dp = 64
             .padding(start = 28.dp, end = 28.dp,
                 top = if (compact) 30.dp else 38.dp,
                 bottom = if (iosStageWindow) 32.dp else if (compact) 40.dp else 52.dp)) {
-        Column(Modifier.fillMaxSize()) {
+        // Le clavier réduit la zone utile du formulaire, jamais la vitre dessinée.
+        val contentModifier = if (contentViewportHeight == null) Modifier.fillMaxSize() else
+            Modifier.fillMaxWidth().height((contentViewportHeight -
+                (if (compact) 30.dp else 38.dp) -
+                (if (iosStageWindow) 32.dp else if (compact) 40.dp else 52.dp)).coerceAtLeast(0.dp))
+        Column(contentModifier) {
             Column(Modifier.weight(1f).then(if (allowScroll) Modifier.verticalScroll(scroll) else Modifier), content = content)
             if (footer != null) {
                 Spacer(Modifier.height(12.dp))

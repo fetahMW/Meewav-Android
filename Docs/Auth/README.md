@@ -243,3 +243,11 @@ Sur demande utilisateur et d’après sa capture iOS, les deux spots avant sont 
 Ajout demandé ensuite sur Avatar : deux petits faisceaux violets diffus se croisent derrière les personnages, depuis les deux spots arrière existants. Ils commencent leur allumage à 350 ms, juste après les blancs, et montent progressivement en 160 ms. Ils s’éteignent avec les blancs pendant le défilement ; un nouveau geste annule également leur attente. Les lumières blanches restent allumées. Aucun nouveau projecteur n’est ajouté et Connexion reste inchangée.
 
 Sur précision suivante, le mouvement des faisceaux est légèrement amplifié : oscillation de ±3,2° pour les blancs et ±2,2° pour les violets, sur 16 secondes avec déphasage gauche/droite. Connexion reçoit aussi les accents violets croisés, à intensité plus faible, autour et derrière le MW ; ils s’allument après les blancs. La signature conserve uniquement sa lévitation verticale. Les corps des projecteurs et le plateau ne tournent pas. Le podium est toujours retiré pendant la saisie au clavier.
+
+## Bienvenue fixe, clavier et aperçu intégral — 14 septembre 2026
+
+Nouvelle direction utilisateur : les projecteurs de Bienvenue restent éteints. Le MW seul garde sa lévitation, 12 dp plus bas ; les faisceaux blancs puis violets croisés restent actifs dans Avatar.
+
+La première page calcule désormais sa vitre depuis l’espace stable hors clavier. Pendant l’ouverture ou la fermeture de celui-ci, la scène est translatée selon l’animation native des insets, sans modifier la hauteur du contour violet. La zone intérieure du formulaire se limite à l’espace visible et peut défiler pendant la saisie pour conserver l’accès aux champs ; au repos, il n’y a aucun défilement de page ou de vitre. Les indicateurs de défilement de la vue Android hôte sont explicitement désactivés. Le logo et le podium s’estompent pendant la saisie, puis reviennent avec le clavier ; aucun scénario ni contrôle visuel automatique n’est exécuté.
+
+À la demande de l’utilisateur, l’aperçu DEBUG permet maintenant de passer également Localisation sans commune ni scène. Suivant/Terminer conduit donc jusqu’au globe avec tous les champs vides, sans inventer de quartier ni créer de compte. Les validations du parcours réel hors aperçu restent en place.

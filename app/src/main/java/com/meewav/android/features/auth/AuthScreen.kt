@@ -88,6 +88,10 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
     Box(Modifier.fillMaxSize().background(Ink)) {
         Image(painterResource(R.drawable.auth_ios_background), null,
             Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+        if (state.page == AuthPage.Login) {
+            LoginEntryLayout(state, actions, submit)
+            return@Box
+        }
         if (state.page == AuthPage.Preview || state.page == AuthPage.Globe) {
             SceneGlobeArrival(state, onBack = actions.back, onEnter = submit)
             return@Box
