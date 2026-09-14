@@ -191,3 +191,6 @@ Connexion et Compte utilisent une composition dédiée quand les insets du clavi
 ## Projecteurs fixes et espacement Avatar — 14 septembre 2026
 
 Les quatre corps de projecteurs restent désormais aux emplacements fixes du plateau sur Connexion et Avatar. Seule la direction et l’ouverture des faisceaux oscillent ; Avatar reprend ce mouvement en conservant la modulation lumineuse du carrousel. La signature MW descend de 12 dp, avec sa rotation Y et sa lévitation conservées. Sur Avatar, Suivant revient dans le pied réservé de la vitre, avec le même composant de 48 dp que Se connecter et une marge basse supplémentaire de 20 dp. Deux espaces extensibles répartissent l’air entre les blocs du formulaire ; ils ne compriment plus le CTA. Aucun défilement ajouté à Avatar, ni changement au comportement du clavier. Le rendu reste à apprécier sur le téléphone.
+
+
+Dernier ajustement de la signature : la rotation est retirée. Le MW reste de face et conserve uniquement son oscillation verticale douce de ±3 dp. Les faisceaux et le placement du plateau sont inchangés.

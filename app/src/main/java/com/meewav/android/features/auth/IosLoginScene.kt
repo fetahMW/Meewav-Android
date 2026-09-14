@@ -44,8 +44,6 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
                           panelHeight: Dp, modifier: Modifier = Modifier, typingLayout: Boolean = false) {
     val stageHeight = if (typingLayout) 0.dp else authStageHeight(panelHeight)
     val motion = rememberInfiniteTransition(label = "Signature suspendue")
-    val rotation = motion.animateFloat(0f, 360f,
-        infiniteRepeatable(tween(32000, easing = LinearEasing)), label = "Rotation horaire MW")
     val sweep = motion.animateFloat(0f, 360f,
         infiniteRepeatable(tween(16000, easing = LinearEasing)), label = "Balayage des faisceaux")
     val levitation = motion.animateFloat(-3f, 3f,
@@ -103,8 +101,6 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
             Image(painterResource(R.drawable.auth_web_signature), null,
                 Modifier.align(Alignment.BottomCenter).padding(bottom = 36.dp).size(54.dp)
                     .graphicsLayer {
-                        rotationY = rotation.value
-                        cameraDistance = 12f * density
                         translationY = levitation.value * density
                     })
         }
