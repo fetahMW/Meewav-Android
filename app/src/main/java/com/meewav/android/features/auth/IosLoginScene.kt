@@ -95,7 +95,7 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
     val levitation = motion.animateFloat(-3f, 3f,
         infiniteRepeatable(tween(2800, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "Lévitation MW")
     val orbit = motion.animateFloat(0f, 360f,
-        infiniteRepeatable(tween(16000, easing = LinearEasing)), label = "Cercles des lumières MW")
+        infiniteRepeatable(tween(16000, easing = LinearEasing)), label = "Balayage violet MW")
     val lighting = remember { Animatable(0f) }
     LaunchedEffect(Unit) { lighting.animateTo(1f, tween(360, easing = LinearOutSlowInEasing)) }
     Box(modifier.height(panelHeight)) {
@@ -149,9 +149,10 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
         }
         if (decorationAlpha > 0f) Box(Modifier.fillMaxWidth().height(stageHeight + AuthStageOverlap)
             .graphicsLayer { alpha = decorationAlpha }) {
-            IosStageBackdrop(Modifier.fillMaxSize(), light = { .14f + .7f * lighting.value },
-                leftLight = { .92f * lighting.value }, rightLight = { .92f * lighting.value },
-                violetLight = { .75f * lighting.value }, sweepPhase = { orbit.value }, fourSpotOrbit = true)
+            // Même disposition et même balayage qu'Avatar ; seuls les violets sont allumés ici.
+            IosStageBackdrop(Modifier.fillMaxSize(), light = { .14f + .86f * lighting.value },
+                leftLight = { 0f }, rightLight = { 0f },
+                violetLight = { .85f * lighting.value }, sweepPhase = { orbit.value })
             Image(painterResource(R.drawable.auth_web_signature), null,
                 Modifier.align(Alignment.BottomCenter).padding(bottom = 30.dp).size(54.dp)
                     .graphicsLayer {
