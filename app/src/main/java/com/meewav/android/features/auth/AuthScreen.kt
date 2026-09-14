@@ -88,6 +88,10 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
     Box(Modifier.fillMaxSize().background(Ink)) {
         Image(painterResource(R.drawable.auth_ios_background), null,
             Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+        if (state.page == AuthPage.Preview || state.page == AuthPage.Globe) {
+            SceneGlobeArrival(state, onBack = actions.back, onEnter = submit)
+            return@Box
+        }
         BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {
             val availableHeight = maxHeight
             val isAvatarPage = state.page == AuthPage.Avatar
@@ -140,9 +144,9 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                     IosLoginScene(state, actions, submit, panelHeight,
                         Modifier.widthIn(max = 440.dp).fillMaxWidth(), typingLayout = typingLayout)
                 } else GlassPanel(Modifier.widthIn(max = 440.dp).fillMaxWidth(), panelHeight = panelHeight,
-                    compact = fixedStep, scrollKey = state.page, allowScroll = !fixedStep || typingLayout,
-                    footer = if (state.page == AuthPage.Register && !state.initializing) {
-                        { PrimaryAction("Suivant", state.busy, submit) }
+                    compact = fixedStep || state.page == AuthPage.Location, scrollKey = state.page, allowScroll = !fixedStep || typingLayout,
+                    footer = if (state.page in setOf(AuthPage.Register, AuthPage.Location) && !state.initializing) {
+                        { PrimaryAction(if (state.page == AuthPage.Location) "Terminer" else "Suivant", state.busy, submit) }
                     } else null) {
                     if (state.initializing) {
                         CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally).padding(28.dp), color = Violet)
@@ -156,12 +160,13 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                             AuthPage.Login -> "Bienvenue"
                             AuthPage.Avatar -> "Choisis ton avatar"
                             AuthPage.Register -> "Ton compte Meewav"
-                            AuthPage.Location -> "Ta scène locale"
+                            AuthPage.Location -> "Choisis ta scène"
                             AuthPage.Forgot -> "Mot de passe oublié"
                             AuthPage.NewPassword -> "Nouveau mot de passe"
                             AuthPage.CheckEmail -> "Vérifie tes e-mails"
                             AuthPage.SignedIn -> "Bienvenue${state.connectedName.takeIf { it.isNotBlank() }?.let { ", $it" }.orEmpty()}"
                             AuthPage.Preview -> "Ton aperçu est prêt"
+                            AuthPage.Globe -> "Mon Globe"
                         }, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth().semantics { heading() })
                         }
@@ -171,12 +176,13 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                             AuthPage.Login -> "Entrez dans votre univers sonore."
                             AuthPage.Avatar -> "Il représentera ton rôle sur Meewav."
                             AuthPage.Register -> ""
-                            AuthPage.Location -> "Rejoins la musique près de toi."
+                            AuthPage.Location -> "Rejoins un quartier musical. Ton adresse reste privée."
                             AuthPage.Forgot -> "Un lien pour retrouver ton espace."
                             AuthPage.NewPassword -> "Choisis un mot de passe rien qu’à toi."
                             AuthPage.CheckEmail -> state.email
                             AuthPage.SignedIn -> "Ton compte Meewav est connecté."
                             AuthPage.Preview -> "Mode aperçu · aucun compte créé."
+                            AuthPage.Globe -> ""
                         }, color = Muted, style = MaterialTheme.typography.bodyMedium,
                             textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                         }
@@ -185,7 +191,8 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                         state.notice?.let { Message(it, false); Spacer(Modifier.height(14.dp)) }
                         when (state.page) {
                             AuthPage.Avatar -> Unit // La scène d'avatars est composée au-dessus de sa vitre.
-                            AuthPage.Location -> LocationRegistration(state, actions.profile, submit)
+                            AuthPage.Location -> LocationRegistration(state, actions.profile)
+                            AuthPage.Globe -> Unit
                             AuthPage.Login, AuthPage.Register, AuthPage.Forgot, AuthPage.NewPassword -> {
                                 if (state.page == AuthPage.Register) {
                                     AccountSocialOptions(state, actions.social)

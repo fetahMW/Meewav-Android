@@ -6,7 +6,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.ResolverStyle
 
-/** Mirrors AuthSignUpPayload and SupabaseAuthService.metadata in the native iOS client. */
+/** iOS account metadata extended with the current Web musical-scene identifiers. */
 data class RegistrationProfile(
     val username: String,
     val avatarIcon: String,
@@ -16,6 +16,13 @@ data class RegistrationProfile(
     val city: String,
     val postalCode: String,
     val country: String,
+    val communeCode: String = "",
+    val zoneId: String = "",
+    val sceneName: String = "",
+    val sceneSource: String = "",
+    val sceneLongitude: Double? = null,
+    val sceneLatitude: Double? = null,
+    val visibleOnScene: Boolean = false,
 ) {
     fun metadata() = buildJsonObject {
         put("username", username.trim())
@@ -26,9 +33,19 @@ data class RegistrationProfile(
         put("city", city.trim())
         postalCode.trim().takeIf { it.isNotEmpty() }?.let { put("postal_code", it) }
         put("country", country.trim())
-        put("is_ghost_mode", true)
-        put("show_on_public_profile", false)
-        // Shared Web onboarding still needs a resolved musical scene and profile completion.
+        put("is_ghost_mode", !visibleOnScene)
+        put("show_on_public_profile", visibleOnScene)
+        if (communeCode.isNotBlank() && zoneId.isNotBlank()) {
+            put("commune_code", communeCode)
+            put("zone_id", zoneId)
+            put("district_id", zoneId)
+            put("district_name", sceneName)
+            put("scene_name", sceneName)
+            put("scene_source", sceneSource)
+            sceneLongitude?.let { put("longitude", it) }
+            sceneLatitude?.let { put("latitude", it) }
+        }
+        // Selecting a scene locally does not complete the shared server onboarding.
         put("onboarding_completed", false)
     }
 

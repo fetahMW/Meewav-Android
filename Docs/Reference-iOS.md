@@ -6,6 +6,8 @@ SwiftUI reste spécifique à Apple. Android reprend les règles métier, identif
 
 ## Authentification adaptée dans Android
 
+Les éléments ci-dessous décrivent le portage initial de la référence iOS. La demande suivante du 14 septembre remplace sa localisation manuelle et son texte de conditions de démonstration par le choix de commune/quartier musical du Web. Le texte historique reste conservé dans les sources, mais n’apparaît plus dans cette étape. Le globe s’ouvre désormais dans l’aperçu local ; la finalisation du profil côté serveur reste distincte. Voir le [parcours Android actuel](Auth/README.md#localisation-par-scène-musicale-et-globe-de-fin--14-septembre-2026).
+
 Sources : `Meewav/Features/Auth/State/AuthState.swift`, `Views/SignInPanelView.swift`, `Views/AvatarSelectionPanelView.swift`, `Views/SignUpFormView.swift`, `ViewModels/AuthViewModel+SignUp.swift`, `Services/SupabaseAuthService.swift` et `Models/AvatarProfile.swift`.
 
 - Entrée centrée sur la connexion ; création de compte en trois étapes : avatar, identifiants, localisation.

@@ -215,3 +215,17 @@ La confirmation Avatar retire l’anneau elliptique du plateau. La grande vitre 
 
 
 Le titre Compte est raccourci en « Ton compte » et centré sur toute la vitre. L’ancrage de l’avatar sur Apple tient compte de sa hauteur effectivement affichée, limitée à 48 dp par son conteneur : son décalage passe de −53,6 à −44 dp pour poser ses pieds sur le bord supérieur du bouton sans changer sa taille visuelle validée. Les signatures MW, sur le podium comme dans le logo de tête et au-dessus des titres, utilisent `#5137A1`, première couleur du CTA Se connecter. Le lettrage Meewav reste blanc.
+
+## Localisation par scène musicale et globe de fin — 14 septembre 2026
+
+À la demande de l’utilisateur, Localisation suit maintenant la pop-up actuelle du Web : « Choisis ta scène », recherche d’une ville ou commune, puis quartier / scène musicale. Le catalogue embarqué reprend les identifiants et centres canoniques du Web ; aucun nom de scène n’est inventé. Le choix d’une commune efface la scène précédente et une scène unique est sélectionnée automatiquement. Les listes sont proposées dans des panneaux inférieurs avec recherche ; le formulaire Localisation conserve son défilement et Terminer reste dans le pied de la vitre. Connexion, Avatar et Compte ne changent pas de composition.
+
+« Trouver ma scène autour de moi » demande une autorisation Android uniquement à l’appui. La position sert momentanément à rechercher une zone dans les polygones locaux ; elle n’est ni conservée dans le brouillon ni envoyée par ce composant. Une position approximative invite à vérifier la commune et à choisir le quartier. Une saisie manuelle reste possible sans autorisation. Le profil retient le centre canonique du quartier, jamais l’adresse ou les coordonnées GPS du téléphone. « Afficher mon avatar » est activé initialement, comme sur le Web.
+
+Dans le parcours DEBUG d’exploration sans compte, Terminer exige une commune et une scène, retire entièrement la pop-up et le stepper, puis affiche au centre le globe vinyle du Web. Le globe est un bouton natif accessible. L’appui ouvre une vue 3D locale avec rotation et zoom ; Retour permet de revenir à la sélection. Ce visualiseur n’intègre pas encore les villes, comptes, Rooms ni autres fonctionnalités du Globe produit. Il ne simule aucune création de compte ni transaction serveur.
+
+Seul le renderer du globe utilise une WebView : assets locaux, aucun accès réseau du renderer, aucune interface JavaScript vers Android. Les géométries, matériaux, texture et rotation des reflets proviennent du Web. WebGL 2 doit être disponible dans la WebView système. Le reste du parcours est natif Compose. L’animation est suspendue hors écran et les ressources GPU sont libérées à la sortie.
+
+Hors aperçu, les métadonnées d’inscription comprennent les identifiants de commune/scène, son centre public et les réglages de visibilité. `onboarding_completed` reste `false` : le raccordement des RPC de finalisation et la persistance publique réelle restent à réaliser/vérifier. Le parcours de confirmation e-mail existant est conservé. Aucune opération distante, aucun test applicatif ni inspection visuelle automatique n’accompagne ce portage. [Provenance des ressources](../Provenance.md).
+
+Compilation `:app:assembleDebug` réussie ; APK installé par Wi-Fi et application relancée sur le S22 Ultra physique désigné. Le rendu, la sélection et les gestes restent à apprécier par l’utilisateur sur son téléphone.

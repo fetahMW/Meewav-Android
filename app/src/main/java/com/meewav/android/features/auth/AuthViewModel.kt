@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.JsonPrimitive
 
-enum class AuthPage { Login, Avatar, Register, Location, Forgot, CheckEmail, NewPassword, SignedIn, Preview }
+enum class AuthPage { Login, Avatar, Register, Location, Forgot, CheckEmail, NewPassword, SignedIn, Preview, Globe }
 
 data class ProfileDraft(
     val avatarIcon: String = "UserFIcon",
@@ -26,6 +26,9 @@ data class ProfileDraft(
     val postalCode: String = "",
     val country: String = "France",
     val acceptsTerms: Boolean = false,
+    val communeCode: String = "",
+    val musicScene: MusicScene? = null,
+    val visibleOnScene: Boolean = true,
 )
 
 data class AuthUiState(
@@ -101,6 +104,7 @@ class AuthViewModel(private val repository: MeewavAuthRepository) : ViewModel() 
     fun navigate(page: AuthPage) {
         if (state.value.busy) return
         if (page == AuthPage.Preview && !(BuildConfig.DEBUG && state.value.localPreview)) return
+        if (page == AuthPage.Globe && !(BuildConfig.DEBUG && state.value.localPreview && state.value.profile.musicScene != null)) return
         if (page == AuthPage.Login && state.value.localPreview) { exitPreview(); return }
         mutable.update {
             val preserve = it.page in setOf(AuthPage.Avatar, AuthPage.Register, AuthPage.Location) &&
@@ -113,6 +117,8 @@ class AuthViewModel(private val repository: MeewavAuthRepository) : ViewModel() 
 
     fun back() {
         when (state.value.page) {
+            AuthPage.Globe -> navigate(AuthPage.Preview)
+            AuthPage.Preview -> navigate(AuthPage.Location)
             AuthPage.Location -> navigate(AuthPage.Register)
             AuthPage.Register -> navigate(AuthPage.Avatar)
             AuthPage.NewPassword -> signOut()
@@ -125,11 +131,16 @@ class AuthViewModel(private val repository: MeewavAuthRepository) : ViewModel() 
         if (draft.busy || draft.initializing) return
         if (draft.localPreview) {
             if (!BuildConfig.DEBUG) return
+            if (draft.page == AuthPage.Location && (draft.profile.communeCode.isBlank() || draft.profile.musicScene == null)) {
+                mutable.update { it.copy(error = "Choisis la scène musicale que tu veux rejoindre.") }
+                return
+            }
             val next = when (draft.page) {
                 AuthPage.Login -> AuthPage.Avatar
                 AuthPage.Avatar -> AuthPage.Register
                 AuthPage.Register -> AuthPage.Location
                 AuthPage.Location -> AuthPage.Preview
+                AuthPage.Preview -> AuthPage.Globe
                 else -> return
             }
             navigate(next)
@@ -162,8 +173,7 @@ class AuthViewModel(private val repository: MeewavAuthRepository) : ViewModel() 
         if (draft.page == AuthPage.Register) { navigate(AuthPage.Location); return }
         if (draft.page == AuthPage.Location) {
             val locationError = when {
-                draft.profile.city.isBlank() || draft.profile.country.isBlank() -> "Indique ta ville et ton pays."
-                !draft.profile.acceptsTerms -> "Consulte et accepte les conditions de cette version de test."
+                draft.profile.communeCode.isBlank() || draft.profile.musicScene == null -> "Choisis la scène musicale que tu veux rejoindre."
                 else -> null
             }
             if (locationError != null) { mutable.update { it.copy(error = locationError) }; return }
@@ -175,7 +185,14 @@ class AuthViewModel(private val repository: MeewavAuthRepository) : ViewModel() 
                     val avatar = AvatarCatalog.find(draft.profile.avatarIcon)
                     repository.signUp(RegistrationProfile(draft.username, avatar.icon, avatar.name,
                         draft.profile.realArtist, draft.profile.birthDate, draft.profile.city,
-                        draft.profile.postalCode, draft.profile.country), draft.email, draft.password)
+                        draft.profile.postalCode, draft.profile.country,
+                        communeCode = draft.profile.communeCode,
+                        zoneId = draft.profile.musicScene?.zoneId.orEmpty(),
+                        sceneName = draft.profile.musicScene?.label.orEmpty(),
+                        sceneSource = draft.profile.musicScene?.source.orEmpty(),
+                        sceneLongitude = draft.profile.musicScene?.center?.getOrNull(0),
+                        sceneLatitude = draft.profile.musicScene?.center?.getOrNull(1),
+                        visibleOnScene = draft.profile.visibleOnScene), draft.email, draft.password)
                     if (repository.auth.currentSessionOrNull() == null) mutable.update {
                         it.copy(page = AuthPage.CheckEmail, password = "", confirmation = "", profile = ProfileDraft(),
                             notice = "Vérifie tes e-mails pour confirmer ton adresse, puis connecte-toi.")
