@@ -88,7 +88,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
             val isAvatarPage = state.page == AuthPage.Avatar
             // Même hauteur à chaque étape, indépendante du contenu et de l'ouverture du clavier.
             val panelHeight = (availableHeight - 170.dp).coerceIn(320.dp, 640.dp)
-            val avatarStageHeight = (panelHeight * .25f).coerceIn(112.dp, 160.dp)
+            val avatarStageHeight = (panelHeight * .30f).coerceIn(136.dp, 192.dp)
             Column(Modifier.fillMaxSize().imePadding().verticalScroll(scroll).heightIn(min = availableHeight)
                 .padding(horizontal = 22.dp, vertical = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
