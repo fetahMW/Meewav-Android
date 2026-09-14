@@ -100,10 +100,13 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                 if (isIosEntry) Spacer(Modifier.height(((availableHeight - basePanelHeight - 132.dp) / 2).coerceAtLeast(0.dp)))
                 if (isIosEntry) {
                     // Même largeur utile et même hauteur que l'ancien en-tête avec deux réserves de 48 dp.
-                    Box(Modifier.widthIn(max = 440.dp).fillMaxWidth().height(48.dp)
-                        .padding(horizontal = 48.dp), contentAlignment = Alignment.Center) {
+                    Box(Modifier.widthIn(max = 440.dp).fillMaxWidth().height(48.dp), contentAlignment = Alignment.Center) {
+                    if (isAvatarPage) IconButton(onClick = actions.back, enabled = !state.busy,
+                        modifier = Modifier.align(Alignment.CenterStart).size(48.dp)) {
+                        Icon(Icons.Outlined.ChevronLeft, "Retour", tint = Color.White)
+                    }
                     Image(painterResource(R.drawable.meewav_logo), "Meewav",
-                        Modifier.fillMaxWidth().height(40.dp), contentScale = ContentScale.Fit)
+                        Modifier.fillMaxWidth().padding(horizontal = 48.dp).height(40.dp), contentScale = ContentScale.Fit)
                     }
                 } else Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
@@ -123,7 +126,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                     if (step >= 0) RegistrationSteps(step)
                 }
                 if (isAvatarPage && !state.initializing) {
-                    AvatarSelection(state, actions.profile, submit, onBack = actions.back, panelHeight = panelHeight,
+                    AvatarSelection(state, actions.profile, submit, panelHeight = panelHeight,
                         modifier = Modifier.widthIn(max = 440.dp).fillMaxWidth())
                 } else if (state.page == AuthPage.Login) {
                     IosLoginScene(state, actions, submit, panelHeight,

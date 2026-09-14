@@ -23,6 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -48,7 +50,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Unit, onContinue: () -> Unit,
-                            onBack: () -> Unit,
                             panelHeight: Dp = 600.dp, modifier: Modifier = Modifier) {
     val entries = AvatarCatalog.profiles
     // Rail circulaire comme SaturnCarouselView ; la sélection backend reste l'un des 28 identifiants.
@@ -76,18 +77,10 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
             footer = {
                 IosAuthDivider()
                 Spacer(Modifier.height(12.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                    OutlinedButton(onClick = onBack, enabled = !state.busy,
-                        modifier = Modifier.weight(1f).height(48.dp), shape = RoundedCornerShape(15.dp),
-                        border = BorderStroke(1.dp, Color(0xFF554079))) {
-                        Text("Retour", color = Color.White, fontWeight = FontWeight.Bold)
-                    }
-                    Box(Modifier.weight(1f)) {
-                        IosAuthAction("Suivant", state.busy) {
-                            if (!pager.isScrollInProgress) onContinue()
-                        }
-                    }
+                IosAuthAction("Suivant", state.busy) {
+                    if (!pager.isScrollInProgress) onContinue()
                 }
+                Spacer(Modifier.height(20.dp))
             }) {
         OutlinedButton(onClick = { pickerPage = selectedIndex / 6; showPicker = true }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
             colors = ButtonDefaults.outlinedButtonColors(containerColor = Color(0xFF09090B)),
@@ -116,12 +109,28 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
         Spacer(Modifier.height(6.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             listOf(false to "Créateur IA", true to "Artiste réel").forEach { (real, title) ->
-                FilterChip(state.profile.realArtist == real, { onProfile(state.profile.copy(realArtist = real)) },
+                val chosen = state.profile.realArtist == real
+                FilterChip(chosen, { onProfile(state.profile.copy(realArtist = real)) },
+                    enabled = !state.busy, shape = RoundedCornerShape(12.dp),
                     label = { Text(title, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
-                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                    modifier = Modifier.weight(1f).heightIn(min = 48.dp).drawBehind {
+                        if (chosen) {
+                            // Halo gradué limité au contour ; le fond du bouton reste opaque et noir.
+                            for (spread in 3 downTo 1) {
+                                val inset = spread.dp.toPx()
+                                drawRoundRect(Violet.copy(alpha = .035f * (4 - spread)),
+                                    topLeft = Offset(-inset, -inset),
+                                    size = Size(size.width + inset * 2, size.height + inset * 2),
+                                    cornerRadius = CornerRadius(12.dp.toPx() + inset),
+                                    style = Stroke(2.dp.toPx()))
+                            }
+                        }
+                    },
+                    border = BorderStroke(if (chosen) 1.dp else .5.dp, if (chosen) Violet else Color(0xFF373040)),
                     colors = FilterChipDefaults.filterChipColors(
-                        containerColor = Color(0xFF111016), labelColor = Muted,
-                        selectedContainerColor = Color(0xFF291B40), selectedLabelColor = Color.White))
+                        containerColor = Color(0xFF08080B), labelColor = Muted,
+                        selectedContainerColor = Color(0xFF08080B), selectedLabelColor = Color.White,
+                        disabledContainerColor = Color(0xFF08080B), disabledSelectedContainerColor = Color(0xFF08080B)))
             }
         }
         }

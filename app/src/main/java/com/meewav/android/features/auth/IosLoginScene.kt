@@ -46,7 +46,7 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
             panelHeight = panelHeight - stageHeight + 14.dp,
             compact = true, iosStageWindow = true, scrollKey = state.page, allowScroll = false,
             footer = if (state.initializing) null else { {
-                HorizontalDivider(thickness = .5.dp, color = Color(0x335137A1))
+                IosAuthDivider()
                 Spacer(Modifier.height(6.dp))
                 Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("Nouveau ici ?", fontSize = 11.sp, lineHeight = 14.sp, color = Muted)
@@ -122,7 +122,7 @@ private fun IosLoginField(label: String, value: String, onValue: (String) -> Uni
 }
 
 @Composable
-internal fun IosAuthDivider() = DividerWithWave()
+internal fun IosAuthDivider() = HorizontalDivider(thickness = .5.dp, color = Color(0x335137A1))
 
 @Composable
 internal fun IosAuthAction(label: String, busy: Boolean, onClick: () -> Unit) {
