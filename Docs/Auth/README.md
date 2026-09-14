@@ -104,3 +104,5 @@ Compilation `:app:assembleDebug`, installation et relance réussies sur les deux
 ## Étape Compte lisible — 14 septembre 2026
 
 Le champ naissance est retiré ; restent l’e-mail, le nom d’utilisateur, le mot de passe et sa confirmation. Le récapitulatif de l’avatar et les marges de l’étape sont compactés. Le bouton **Suivant** occupe un pied fixe dans la fenêtre, séparé de la zone de formulaire défilante, afin de rester accessible avec des textes longs ou agrandis. La hauteur du cadre, le parcours réel et le mode aperçu sans compte sont conservés.
+
+Le contour est ensuite ajusté sur demande : relief supérieur réduit de moitié et bas presque droit, avec coins de rayon 18 dans le repère SVG 413 × 600. Le trait lumineux suit cette nouvelle courbe ; la hauteur de mise en page reste inchangée.

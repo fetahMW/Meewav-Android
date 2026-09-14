@@ -16,6 +16,8 @@ Le fond correspond au choix graphique transmis par l’utilisateur le 13 septemb
 
 L’icône de lancement est un tracé natif provisoire de l’onde Meewav. Elle doit faire l’objet d’une validation graphique avant diffusion publique.
 
+Adaptation mobile du contour demandée le 14 septembre : sommet abaissé (relief réduit de moitié), bas presque droit et coins inférieurs de rayon 18 dans le repère SVG. Les dégradés et les couches lumineuses conservent la palette de la référence Web.
+
 ## Police
 
 Inter variable est copiée depuis le dépôt officiel [Google Fonts / Inter](https://github.com/google/fonts/tree/main/ofl/inter). La notice SIL Open Font License est conservée intégralement dans [Inter-OFL.txt](Licences/Inter-OFL.txt). Aucune modification de la police.

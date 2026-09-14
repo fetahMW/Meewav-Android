@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.Dp
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
-/** Tracé et dégradés de Meewav-Web / src/components/auth/AuthPanelChrome.tsx. */
+/** Base Web AuthPanelChrome : sommet abaissé et coins inférieurs adoucis pour le mobile. */
 @Composable
 internal fun AuthWindowPanel(modifier: Modifier = Modifier, panelHeight: Dp = 640.dp,
                              compact: Boolean = false, scrollKey: Any? = null,
@@ -69,25 +69,27 @@ private fun renderWebPanel(width: Float, height: Float, margin: Int): Bitmap {
     canvas.translate(margin.toFloat(), margin.toFloat())
     canvas.scale(width / 413f, height / 600f)
 
-    // Coordonnées originales du SVG Web, y compris les flancs légèrement bombés.
+    // Flancs du SVG Web ; relief supérieur réduit de moitié et coins bas de rayon 18.
     val shape = Path().apply {
         moveTo(4f, 56.7774f)
         cubicTo(4f, 42.6659f, 16.1072f, 31.5421f, 30.2028f, 32.2135f)
         cubicTo(51.7791f, 33.2412f, 82.423f, 33.7889f, 105.25f, 30.5f)
-        cubicTo(146.124f, 24.6109f, 165.204f, 0f, 206.5f, 0f)
-        cubicTo(247.796f, 0f, 266.876f, 24.6109f, 307.75f, 30.5f)
+        cubicTo(146.124f, 27.6f, 165.204f, 16f, 206.5f, 16f)
+        cubicTo(247.796f, 16f, 266.876f, 27.6f, 307.75f, 30.5f)
         cubicTo(330.577f, 33.7889f, 361.221f, 33.2412f, 382.797f, 32.2135f)
         cubicTo(396.893f, 31.5421f, 409f, 42.6659f, 409f, 56.7774f)
-        cubicTo(415.5f, 175.4f, 415.5f, 411.3f, 409f, 530f)
-        cubicTo(409f, 558f, 322f, 580f, 206.5f, 580f)
-        cubicTo(91f, 580f, 4f, 558f, 4f, 530f)
-        cubicTo(-2.5f, 411.3f, -2.5f, 175.4f, 4f, 56.7774f)
+        cubicTo(415.5f, 183f, 415.5f, 435f, 409f, 562f)
+        cubicTo(409f, 571.94f, 400.94f, 580f, 391f, 580f)
+        lineTo(22f, 580f)
+        cubicTo(12.06f, 580f, 4f, 571.94f, 4f, 562f)
+        cubicTo(-2.5f, 435f, -2.5f, 183f, 4f, 56.7774f)
         close()
     }
     val bottomArc = Path().apply {
-        moveTo(409f, 530f)
-        cubicTo(409f, 558f, 322f, 580f, 206.5f, 580f)
-        cubicTo(91f, 580f, 4f, 558f, 4f, 530f)
+        moveTo(409f, 562f)
+        cubicTo(409f, 571.94f, 400.94f, 580f, 391f, 580f)
+        lineTo(22f, 580f)
+        cubicTo(12.06f, 580f, 4f, 571.94f, 4f, 562f)
     }
     val fill = RadialGradient(0f, 0f, 1f,
         colors("#16082C", "#0B0319", "#020105", "#020105", "#0C0317", "#17072F"),
