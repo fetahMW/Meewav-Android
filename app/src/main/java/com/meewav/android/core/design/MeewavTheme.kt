@@ -4,6 +4,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -41,6 +43,10 @@ fun MeewavTheme(content: @Composable () -> Unit) {
             titleMedium = TextStyle(fontFamily = MeewavFont, fontWeight = FontWeight.SemiBold, fontSize = 17.sp, lineHeight = 24.sp),
             labelLarge = TextStyle(fontFamily = MeewavFont, fontWeight = FontWeight.Bold, fontSize = 15.sp),
         ),
-        content = content,
+        content = {
+            // The auth backdrop is drawn on a Canvas/Box, not a Material Surface.
+            // Explicitly provide light foreground content for all uncoloured labels.
+            CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface, content = content)
+        },
     )
 }

@@ -72,3 +72,11 @@ Historique du premier essai, avant l’adaptation mobile iOS :
 - Compilation effectuée avec les réglages Gradle déjà modifiés dans la copie de travail avant cette passe : AGP 9.0.1 et Gradle 9.1.0. Ces trois fichiers de configuration préexistants sont conservés hors du commit d’adaptation mobile ; leurs options de compatibilité produisent des avertissements de dépréciation.
 - Les tests unitaires ne se connectent pas à Supabase. Aucune inscription ni connexion réelle, aucun e-mail envoyé, aucun live ouvert et aucune modification de service distant pendant cette adaptation.
 - Rendu, clavier, navigation, fluidité à 60 images/s et résultat sur le S22 Ultra restent à vérifier sur l’appareil. Le parcours d’authentification compilé ne constitue pas encore une messagerie, un globe ou des Rooms Android utilisables.
+
+## Correction de l’habillage et relance — 14 septembre 2026
+
+Le premier portage avait conservé le fond Web et un panneau arrondi générique. Après le retour utilisateur, l’écran reprend le fond iOS, les courbes et couleurs de sa fenêtre, ainsi qu’une adaptation du socle. La couleur du contenu est explicitement fournie au thème pour éviter les titres noirs sur fond sombre. `:app:assembleDebug` réussit ; aucun nouveau test fonctionnel n’est lancé pour cette retouche visuelle.
+
+Le cadre Samsung est un habillage de l’émulateur local, séparé des ressources de l’application. Il ne change ni le backend ni le système Android en firmware Samsung.
+
+Installation de l’APK et démarrage de `MainActivity` réussis sur l’émulateur déjà ouvert `Medium_Phone_API_36.1` et sur `Meewav_Galaxy_S22_Ultra` (1440 × 3088, cadre externe). Le téléphone physique n’est pas concerné. Aucune navigation automatisée dans le parcours d’authentification après lancement.

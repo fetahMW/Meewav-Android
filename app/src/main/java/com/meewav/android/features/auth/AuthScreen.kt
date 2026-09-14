@@ -77,7 +77,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
         if (!state.busy) actions.back()
     }
     Box(Modifier.fillMaxSize().background(Ink)) {
-        Image(painterResource(R.drawable.auth_acoustic_background), null,
+        Image(painterResource(R.drawable.auth_ios_background), null,
             Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {
             val availableHeight = maxHeight
@@ -212,9 +212,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                         }
                     }
                 }
-                Spacer(Modifier.height(24.dp))
-                Text("LA MUSIQUE NOUS RASSEMBLE", color = Muted, fontSize = 9.sp,
-                    letterSpacing = 2.sp, textAlign = TextAlign.Center)
+                if (state.page == AuthPage.Login) LoginStage()
             }
         }
     }
@@ -237,11 +235,7 @@ private fun RegistrationSteps(current: Int) {
 
 @Composable
 internal fun GlassPanel(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    val shape = RoundedCornerShape(28.dp)
-    Column(modifier.clip(shape)
-        .background(Brush.verticalGradient(listOf(Color(0xFF141219), Color(0xFF07070A), Color(0xFF10091E))))
-        .border(1.dp, Brush.verticalGradient(listOf(Color(0xFF655076), Color(0xFF28222F), Color(0xFF50327F))), shape)
-        .padding(22.dp), content = content)
+    AuthWindowPanel(modifier, content)
 }
 
 @Composable

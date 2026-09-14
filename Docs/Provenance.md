@@ -25,6 +25,10 @@ Aucune licence générale du produit Meewav n’est créée par ce premier lot.
 
 ## Ressources du parcours iOS
 
+Le fond actif de l’authentification est désormais `app/src/main/res/drawable-nodpi/auth_ios_background.png`, copie sans transformation de `Meewav/Assets.xcassets/AuthBackground.imageset/auth_background.png` au commit iOS ci-dessous. Le fond Web du premier essai est conservé dans les ressources mais n’est plus utilisé par cet écran.
+
+`AuthWindowPanel.kt` adapte en Compose les courbes de `AuthLoginWindowShape` et les couleurs de `LoginWindowChromeView.swift`. Le socle est une adaptation native simplifiée ; les animations de projection et de chute iOS ne sont pas reproduites à l’identique.
+
 Source : dépôt `sipiyou39/Meewav`, commit `aea7251a60a2b61d775901fcf39a62036fd108c4`. Les 28 avatars PNG sont copiés sans modification depuis les imagesets ci-dessous ; libellés, descriptions et ordre viennent de `Meewav/Features/Auth/Models/AvatarProfile.swift`. La réutilisation dans Android est demandée par l’utilisateur. Cette copie ne vaut pas attribution d’auteur ni nouvelle licence publique.
 
 | Ressource Android dans `drawable-nodpi/` | Source iOS |
