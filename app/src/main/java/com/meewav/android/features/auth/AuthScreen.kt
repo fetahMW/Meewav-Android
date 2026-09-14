@@ -141,6 +141,9 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                     if (state.initializing) {
                         CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally).padding(28.dp), color = Violet)
                     } else {
+                        if (state.page == AuthPage.Register) {
+                            AccountHeader(state.profile)
+                        } else {
                         WaveMark()
                         Spacer(Modifier.height(4.dp))
                         Text(when (state.page) {
@@ -155,6 +158,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                             AuthPage.Preview -> "Ton aperçu est prêt"
                         }, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth().semantics { heading() })
+                        }
                         if (state.page != AuthPage.Register) {
                             Spacer(Modifier.height(4.dp))
                             Text(when (state.page) {
@@ -178,7 +182,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                             AuthPage.Location -> LocationRegistration(state, actions.profile, submit)
                             AuthPage.Login, AuthPage.Register, AuthPage.Forgot, AuthPage.NewPassword -> {
                                 if (state.page == AuthPage.Register) {
-                                    AccountAvatar(state.profile)
+                                    AccountSocialOptions(state, actions.social)
                                 }
                                 if (state.page != AuthPage.NewPassword) {
                                     AuthField(if (state.page == AuthPage.Login) "E-mail ou nom d’utilisateur" else "Adresse e-mail",
@@ -261,15 +265,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                         }
                     }
                 }
-                Box(Modifier.height(48.dp).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    if (BuildConfig.DEBUG && (state.localPreview || state.page in setOf(AuthPage.Login, AuthPage.Avatar, AuthPage.Register, AuthPage.Location))) {
-                        TextButton(onClick = if (state.localPreview) actions.exitPreview else actions.startPreview,
-                            enabled = !state.busy) {
-                            Text(if (state.localPreview) "Aperçu sans compte · quitter" else "Explorer sans compte",
-                                color = Color(0xFFCFB8FF), fontSize = 12.sp)
-                        }
-                    }
-                }
+                Spacer(Modifier.height(48.dp))
             }
         }
     }

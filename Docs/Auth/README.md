@@ -167,3 +167,10 @@ Sur nouvelle demande utilisateur, le sélecteur paginé est remplacé par un gra
 ## Hiérarchie du choix de profil — 14 septembre 2026
 
 Les choix Créateur IA / Artiste réel ont une surface de 36 dp dans une cible tactile de 48 dp, avec un texte de 12 sp, un contour sélectionné de 0,75 dp et un halo atténué. Leur intérieur reste noir. Les espaces extensibles au milieu sont remplacés par des intervalles fixes ; l’explication est raccourcie et le bouton Suivant suit directement les choix et le séparateur fin. L’espace restant se trouve sous l’action, dans la fenêtre de hauteur inchangée. Le sélecteur conserve sa hauteur minimale et accepte deux lignes. Aucun défilement vertical n’est ajouté à l’étape ; le rendu reste à apprécier par l’utilisateur.
+
+
+## Fournisseurs à l’étape Compte — 14 septembre 2026
+
+Google et Apple sont retirés de Connexion et proposés uniquement après Avatar, à l’étape Compte. L’avatar réduit accompagne le titre sur une même ligne ; deux boutons sombres de 48 dp présentent « Continuer avec » puis le fournisseur. Un séparateur fin « ou » précède les champs existants. La fenêtre reste fixe et sans défilement, et la connexion retrouve sa capsule Créer un compte seule. Le lien extérieur Explorer sans compte est retiré, sans déplacer la fenêtre. Le mode aperçu existant reste dans le code, mais cette entrée visible ne le lance plus.
+
+Les boutons réutilisent le démarrage OAuth existant, désormais autorisé depuis Compte. L’activation des fournisseurs, les redirections distantes et la finalisation du profil choisi après OAuth restent à vérifier/raccorder ; cette retouche de composition ne les valide pas et ne modifie aucun service distant.

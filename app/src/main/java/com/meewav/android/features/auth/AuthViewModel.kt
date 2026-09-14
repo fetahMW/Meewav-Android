@@ -212,7 +212,7 @@ class AuthViewModel(private val repository: MeewavAuthRepository) : ViewModel() 
     }
 
     fun signInSocial(provider: SocialAuthProvider) {
-        if (state.value.busy || state.value.initializing || state.value.localPreview || state.value.page != AuthPage.Login) return
+        if (state.value.busy || state.value.initializing || state.value.localPreview || state.value.page != AuthPage.Register) return
         if (!repository.configured) {
             mutable.update { it.copy(error = "La connexion n’est pas disponible dans cette version de l’application.") }
             return

@@ -41,6 +41,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -52,6 +53,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import com.meewav.android.core.design.Muted
 import com.meewav.android.core.design.Violet
+import com.meewav.android.R
+import com.meewav.android.core.auth.SocialAuthProvider
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -220,13 +223,44 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
 }
 
 @Composable
-internal fun AccountAvatar(profile: ProfileDraft) {
+internal fun AccountHeader(profile: ProfileDraft) {
     val avatar = AvatarCatalog.find(profile.avatarIcon)
-    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.BottomCenter) {
-        // L'outline du champ commence 8 dp après son bord de mise en page.
-        Image(painterResource(avatar.image), avatar.name,
-            Modifier.size(width = 96.dp, height = 64.dp).offset(y = 8.dp),
-            alignment = Alignment.BottomCenter, contentScale = ContentScale.Fit)
+    Row(Modifier.fillMaxWidth().padding(bottom = 8.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+        Image(painterResource(avatar.image), avatar.name, Modifier.size(42.dp, 48.dp), contentScale = ContentScale.Fit)
+        Spacer(Modifier.width(8.dp))
+        Text("Ton compte Meewav", fontSize = 19.sp, lineHeight = 23.sp,
+            fontWeight = FontWeight.SemiBold, color = Color.White,
+            modifier = Modifier.weight(1f, fill = false).semantics { heading() })
+    }
+}
+
+@Composable
+internal fun AccountSocialOptions(state: AuthUiState, onContinue: (SocialAuthProvider) -> Unit) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        listOf(SocialAuthProvider.Apple, SocialAuthProvider.Google).forEach { provider ->
+            OutlinedButton(onClick = { onContinue(provider) },
+                enabled = !state.busy && !state.initializing && !state.localPreview,
+                modifier = Modifier.weight(1f).height(48.dp), shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(.75.dp, Violet.copy(alpha = .7f)),
+                colors = ButtonDefaults.outlinedButtonColors(containerColor = Color(0xFF08080B), contentColor = Color.White),
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)) {
+                Image(painterResource(if (provider == SocialAuthProvider.Apple) R.drawable.auth_apple else R.drawable.auth_google_round),
+                    null, Modifier.size(24.dp))
+                Spacer(Modifier.width(6.dp))
+                Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Continuer avec", fontSize = 10.sp, lineHeight = 13.sp, maxLines = 1)
+                    Text(if (provider == SocialAuthProvider.Apple) "Apple" else "Google",
+                        fontSize = 12.sp, lineHeight = 15.sp, fontWeight = FontWeight.SemiBold)
+                }
+            }
+        }
+    }
+    Row(Modifier.fillMaxWidth().height(26.dp), verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        HorizontalDivider(Modifier.weight(1f), thickness = .5.dp, color = Color(0x665C4B79))
+        Text("ou", fontSize = 11.sp, color = Muted)
+        HorizontalDivider(Modifier.weight(1f), thickness = .5.dp, color = Color(0x665C4B79))
     }
 }
 
