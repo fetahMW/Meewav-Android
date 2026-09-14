@@ -94,6 +94,10 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
     val motion = rememberInfiniteTransition(label = "Signature suspendue")
     val levitation = motion.animateFloat(-3f, 3f,
         infiniteRepeatable(tween(2800, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "Lévitation MW")
+    val orbit = motion.animateFloat(0f, 360f,
+        infiniteRepeatable(tween(16000, easing = LinearEasing)), label = "Cercles des lumières MW")
+    val lighting = remember { Animatable(0f) }
+    LaunchedEffect(Unit) { lighting.animateTo(1f, tween(360, easing = LinearOutSlowInEasing)) }
     Box(modifier.height(panelHeight)) {
         AuthWindowPanel(Modifier.fillMaxWidth().padding(top = stageHeight - 14.dp),
             panelHeight = panelHeight - stageHeight + 14.dp,
@@ -145,9 +149,11 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
         }
         if (decorationAlpha > 0f) Box(Modifier.fillMaxWidth().height(stageHeight + AuthStageOverlap)
             .graphicsLayer { alpha = decorationAlpha }) {
-            IosStageBackdrop(Modifier.fillMaxSize(), light = { .14f }, leftLight = { 0f }, rightLight = { 0f })
+            IosStageBackdrop(Modifier.fillMaxSize(), light = { .14f + .7f * lighting.value },
+                leftLight = { .92f * lighting.value }, rightLight = { .92f * lighting.value },
+                violetLight = { .75f * lighting.value }, sweepPhase = { orbit.value }, fourSpotOrbit = true)
             Image(painterResource(R.drawable.auth_web_signature), null,
-                Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp).size(54.dp)
+                Modifier.align(Alignment.BottomCenter).padding(bottom = 30.dp).size(54.dp)
                     .graphicsLayer {
                         translationY = levitation.value * density
                     })

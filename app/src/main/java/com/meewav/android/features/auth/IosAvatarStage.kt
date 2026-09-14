@@ -45,6 +45,7 @@ import kotlin.math.exp
 import kotlin.math.pow
 import kotlin.math.sign
 import kotlin.math.sin
+import kotlin.math.cos
 import kotlin.math.PI
 
 internal val AuthWindowLowerExtension = 28.dp
@@ -55,13 +56,15 @@ internal fun authStageHeight(panelHeight: Dp) = ((panelHeight - AuthWindowLowerE
 internal fun IosStageBackdrop(modifier: Modifier, light: () -> Float = { .14f },
                               sweepPhase: (() -> Float)? = null,
                               leftLight: () -> Float = light, rightLight: () -> Float = light,
-                              violetLight: () -> Float = { 0f }) {
+                              violetLight: () -> Float = { 0f }, fourSpotOrbit: Boolean = false) {
     Box(modifier.drawWithCache {
         val platform = renderStageLayer(size.width, size.height, 1).asImageBitmap()
         val rim = renderStageLayer(size.width, size.height, 2).asImageBitmap()
         val washes = listOf(-1, 1).map { renderRearProjector(size.width, size.height, it, lensOnly = false).asImageBitmap() }
         val lenses = listOf(-1, 1).map { renderRearProjector(size.width, size.height, it, lensOnly = true).asImageBitmap() }
-        val violets = listOf(-1, 1).map { renderCrossedVioletBeam(size.width, size.height, it).asImageBitmap() }
+        val violets = listOf(-1, 1).map { renderCrossedVioletBeam(size.width, size.height, it, front = fourSpotOrbit).asImageBitmap() }
+        val frontBodies = if (fourSpotOrbit) renderFrontVioletSpots(size.width, size.height, false).asImageBitmap() else null
+        val frontLenses = if (fourSpotOrbit) renderFrontVioletSpots(size.width, size.height, true).asImageBitmap() else null
         onDrawBehind {
             val scale = size.width / 375f
             for (index in 0..1) {
@@ -71,11 +74,26 @@ internal fun IosStageBackdrop(modifier: Modifier, light: () -> Float = { .14f },
                 val phase = (sweepPhase?.invoke() ?: 0f) * PI.toFloat() / 180f
                 val angle = side * (1.8f + 3.2f * sin(phase + index * .8f))
                 val intensity = (if (index == 0) leftLight() else rightLight()).coerceIn(0f, 1f)
-                withTransform({ rotate(-side * (1f + 2.2f * sin(phase + index * .8f)), origin) }) {
+                val violetOrigin = if (fourSpotOrbit) Offset(size.width / 2f + side * 185f * .24f * scale,
+                    size.height - 21f * scale) else origin
+                val violetPhase = -phase + index * 2.3f + 1.1f
+                withTransform({
+                    if (fourSpotOrbit) {
+                        rotate(4.5f * sin(violetPhase), violetOrigin)
+                        this.scale(1f, 1f + .055f * cos(violetPhase), violetOrigin)
+                    } else rotate(-side * (1f + 2.2f * sin(phase + index * .8f)), origin)
+                }) {
                     drawImage(violets[index], alpha = violetLight().coerceIn(0f, 1f))
                 }
-                // Seul le faisceau balaie doucement le mur ; les deux corps restent fixes.
-                withTransform({ rotate(angle, origin) }) {
+                // Pan + inclinaison déphasés : la lumière décrit une petite ellipse sur le mur.
+                // Le pivot reste la lentille ; ni le socle ni le corps ne tourne autour du plateau.
+                withTransform({
+                    if (fourSpotOrbit) {
+                        val whitePhase = phase + index * 2.6f
+                        rotate(4.8f * sin(whitePhase), origin)
+                        this.scale(1f, 1f + .05f * cos(whitePhase), origin)
+                    } else rotate(angle, origin)
+                }) {
                     drawImage(washes[index], alpha = intensity)
                 }
             }
@@ -83,6 +101,8 @@ internal fun IosStageBackdrop(modifier: Modifier, light: () -> Float = { .14f },
             drawImage(rim, alpha = (.24f + .76f * light()).coerceIn(0f, 1f))
             drawImage(lenses[0], alpha = leftLight().coerceIn(0f, 1f))
             drawImage(lenses[1], alpha = rightLight().coerceIn(0f, 1f))
+            frontBodies?.let { drawImage(it) }
+            frontLenses?.let { drawImage(it, alpha = violetLight().coerceIn(0f, 1f)) }
         }
     })
 }
@@ -328,14 +348,14 @@ private fun renderRearProjector(width: Float, height: Float, side: Int, lensOnly
 }
 
 /** Deux accents courts se croisent derrière les personnages, depuis les spots arrière existants. */
-private fun renderCrossedVioletBeam(width: Float, height: Float, side: Int): Bitmap {
+private fun renderCrossedVioletBeam(width: Float, height: Float, side: Int, front: Boolean = false): Bitmap {
     val bitmap = Bitmap.createBitmap(ceil(width).toInt().coerceAtLeast(1),
         ceil(height).toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
     val scale = width / 375f
     canvas.scale(scale, scale)
-    val x = 187.5f + side * 185f * .32f
-    val y = height / scale - 26f - 82f * .06f
+    val x = 187.5f + side * 185f * if (front) .24f else .32f
+    val y = height / scale - 26f + if (front) 5f else -82f * .06f
     val targetX = 187.5f - side * 25f
     val targetY = y - (y - 18f).coerceIn(48f, 108f)
     val midX = (x + targetX) / 2f
@@ -349,6 +369,28 @@ private fun renderCrossedVioletBeam(width: Float, height: Float, side: Int): Bit
     }
     canvas.drawPath(beam, stagePaint(shader = stageGradient(x, y, targetX, targetY,
         "#6A9B63FF", "#429B63FF", "#009B63FF"), blur = 4f))
+    return bitmap
+}
+
+/** Les deux lentilles violettes de Bienvenue reposent sur l'avant de l'ellipse. */
+private fun renderFrontVioletSpots(width: Float, height: Float, lit: Boolean): Bitmap {
+    val bitmap = Bitmap.createBitmap(ceil(width).toInt().coerceAtLeast(1),
+        ceil(height).toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    val scale = width / 375f
+    canvas.scale(scale, scale)
+    val y = height / scale - 21f
+    for (side in listOf(-1, 1)) {
+        val x = 187.5f + side * 185f * .24f
+        if (lit) {
+            canvas.drawCircle(x, y - 1f, 8f, stagePaint(shader = RadialGradient(x, y - 1f, 8f,
+                intArrayOf(Color.parseColor("#889B63FF"), Color.TRANSPARENT), null, Shader.TileMode.CLAMP)))
+            canvas.drawOval(RectF(x - 2.4f, y - 1.9f, x + 2.4f, y - .2f), stagePaint(Color.parseColor("#EBCFAAFF")))
+        } else {
+            canvas.drawRoundRect(RectF(x - 4.5f, y - 3f, x + 4.5f, y + 2.5f), 2.5f, 2.5f,
+                stagePaint(shader = stageGradient(x, y - 3f, x, y + 3f, "#38383F", "#07070A")))
+        }
+    }
     return bitmap
 }
 
