@@ -97,8 +97,12 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center) {
                 if (isIosEntry) {
+                    // Même largeur utile et même hauteur que l'ancien en-tête avec deux réserves de 48 dp.
+                    Box(Modifier.widthIn(max = 440.dp).fillMaxWidth().height(48.dp)
+                        .padding(horizontal = 48.dp), contentAlignment = Alignment.Center) {
                     Image(painterResource(R.drawable.meewav_logo), "Meewav",
-                        Modifier.widthIn(max = 310.dp).fillMaxWidth(.86f).height(86.dp), contentScale = ContentScale.Fit)
+                        Modifier.fillMaxWidth().height(40.dp), contentScale = ContentScale.Fit)
+                    }
                 } else Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
                         if (state.page !in setOf(AuthPage.Login, AuthPage.SignedIn)) {
