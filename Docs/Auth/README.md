@@ -114,3 +114,9 @@ Les miniatures de 180 pixels sont remplacées par les 28 sources PNG corresponda
 La phrase sous le titre de l’étape Compte est retirée. Compte et Avatar n’utilisent plus de conteneur de défilement vertical, ni dans le cadre ni autour. La zone du carrousel prend l’espace restant après les textes et les commandes, avec une hauteur d’image plafonnée ; le glissement horizontal et le sélecteur d’avatars restent disponibles. Le cadre garde la même hauteur. Le comportement de Localisation n’est pas changé. Le clavier peut recouvrir une partie de ces écrans fixes ; sa touche de validation permet de poursuivre sans introduire de défilement.
 
 Compilation réussie, APK installé et application relancée par Wi-Fi sur le S22 Ultra physique désigné. Les dimensions des images sources et quelques correspondances de personnages ont été examinées à la demande de l’utilisateur ; aucun scénario applicatif ni capture automatique du téléphone n’a été exécuté.
+
+## Avatar posé sur le champ et sélecteur fixe — 14 septembre 2026
+
+Dans Compte, le récapitulatif encadré, les libellés de profil et le crayon sont retirés. Seul l’avatar apparaît debout au-dessus du champ e-mail, aligné sur son contour supérieur. Le séparateur situé au-dessus de ce bloc est supprimé pour remonter le formulaire ; le bouton retour conserve son rôle de retour au choix d’avatar et Suivant reste fixé dans le pied.
+
+Avatar et Compte restent dépourvus de défilement vertical. Le sélecteur d’avatars, qui utilisait encore un panneau coulissant et une grille verticale, devient une fenêtre fixe de six choix par page avec boutons précédent/suivant. Le carrousel conserve uniquement son mouvement horizontal, sans effet de dépassement. Localisation conserve le défilement de son formulaire et les marges du clavier.

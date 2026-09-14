@@ -150,7 +150,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                         }, color = Muted, style = MaterialTheme.typography.bodyMedium,
                             textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                         }
-                        SubtitleDivider(compact = isAvatarPage || state.page == AuthPage.Register)
+                        if (state.page != AuthPage.Register) SubtitleDivider(compact = isAvatarPage)
                         state.error?.let { Message(it, true); Spacer(Modifier.height(14.dp)) }
                         state.notice?.let { Message(it, false); Spacer(Modifier.height(14.dp)) }
                         when (state.page) {
@@ -159,8 +159,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                             AuthPage.Location -> LocationRegistration(state, actions.profile, submit)
                             AuthPage.Login, AuthPage.Register, AuthPage.Forgot, AuthPage.NewPassword -> {
                                 if (state.page == AuthPage.Register) {
-                                    SelectedAvatar(state.profile, onEdit = { actions.navigate(AuthPage.Avatar) })
-                                    Spacer(Modifier.height(8.dp))
+                                    AccountAvatar(state.profile)
                                 }
                                 if (state.page != AuthPage.NewPassword) {
                                     AuthField(if (state.page == AuthPage.Login) "E-mail ou nom d’utilisateur" else "Adresse e-mail",

@@ -7,9 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.rememberPagerState
@@ -58,6 +55,7 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
     val changeProfile by rememberUpdatedState(onProfile)
     val scope = rememberCoroutineScope()
     var showPicker by rememberSaveable { mutableStateOf(false) }
+    var pickerPage by rememberSaveable { mutableIntStateOf(0) }
     LaunchedEffect(pager) {
         snapshotFlow { pager.settledPage }.distinctUntilChanged().collect { index ->
             changeProfile(currentProfile.copy(avatarIcon = entries[index].icon))
@@ -65,7 +63,7 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
     }
     val avatar = entries[pager.settledPage]
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        OutlinedButton(onClick = { showPicker = true }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+        OutlinedButton(onClick = { pickerPage = pager.settledPage / 6; showPicker = true }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
             border = BorderStroke(1.dp, Color(0xFF463557)), shape = RoundedCornerShape(14.dp)) {
             Text(avatar.name, color = Color.White, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
             Text("${pager.settledPage + 1}/${entries.size}", color = Violet, fontSize = 12.sp)
@@ -87,6 +85,7 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
                     Size(size.width - 8.dp.toPx(), size.height - 6.dp.toPx()), style = Stroke(.6.dp.toPx()))
             }
             HorizontalPager(pager, pageSize = PageSize.Fixed(pageWidth),
+                overscrollEffect = null,
                 contentPadding = PaddingValues(horizontal = (maxWidth - pageWidth) / 2),
                 modifier = Modifier.fillMaxSize()) { index ->
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
@@ -119,42 +118,59 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
         }
     }
     if (showPicker) {
-        ModalBottomSheet(onDismissRequest = { showPicker = false }, containerColor = Color(0xFF101014)) {
-            Text("Choisis ton avatar", style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(horizontal = 22.dp, vertical = 8.dp))
-            LazyVerticalGrid(GridCells.Adaptive(100.dp), modifier = Modifier.fillMaxWidth().heightIn(max = 440.dp),
-                contentPadding = PaddingValues(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(entries, key = { it.icon }) { item ->
-                    val isSelected = item.icon == avatar.icon
-                    Column(Modifier.clip(RoundedCornerShape(14.dp))
-                        .background(if (isSelected) Color(0xFF281B3D) else Color(0xFF19171F))
-                        .border(1.dp, if (isSelected) Violet else Color(0xFF302B38), RoundedCornerShape(14.dp))
-                        .semantics { selected = isSelected }
-                        .clickable(role = Role.RadioButton) {
-                            showPicker = false
-                            scope.launch { pager.scrollToPage(entries.indexOf(item)) }
-                        }.padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Image(painterResource(item.image), null, Modifier.size(84.dp), contentScale = ContentScale.Fit)
-                        Text(item.name, fontSize = 11.sp, textAlign = TextAlign.Center, lineHeight = 15.sp)
+        // Un sélecteur fixe et paginé : ni panneau glissant, ni liste verticale.
+        val pageCount = (entries.size + 5) / 6
+        AlertDialog(onDismissRequest = { showPicker = false }, containerColor = Color(0xFF101014),
+            title = { Text("Choisis ton avatar", style = MaterialTheme.typography.titleMedium) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    repeat(2) { row ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            repeat(3) { column ->
+                                val item = entries.getOrNull(pickerPage * 6 + row * 3 + column)
+                                if (item == null) Spacer(Modifier.weight(1f))
+                                else {
+                                    val isSelected = item.icon == avatar.icon
+                                    Column(Modifier.weight(1f).clip(RoundedCornerShape(12.dp))
+                                        .background(if (isSelected) Color(0xFF281B3D) else Color(0xFF19171F))
+                                        .border(1.dp, if (isSelected) Violet else Color(0xFF302B38), RoundedCornerShape(12.dp))
+                                        .semantics { selected = isSelected }
+                                        .clickable(role = Role.RadioButton) {
+                                            showPicker = false
+                                            scope.launch { pager.scrollToPage(entries.indexOf(item)) }
+                                        }.padding(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Image(painterResource(item.image), null, Modifier.fillMaxWidth().height(72.dp), contentScale = ContentScale.Fit)
+                                        Text(item.name, fontSize = 10.sp, lineHeight = 13.sp,
+                                            minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                                            textAlign = TextAlign.Center)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween) {
+                        IconButton(onClick = { pickerPage-- }, enabled = pickerPage > 0) {
+                            Icon(Icons.Outlined.ChevronLeft, "Page précédente")
+                        }
+                        Text("${pickerPage + 1} / $pageCount", color = Muted, fontSize = 12.sp)
+                        IconButton(onClick = { pickerPage++ }, enabled = pickerPage < pageCount - 1) {
+                            Icon(Icons.Outlined.ChevronRight, "Page suivante")
+                        }
                     }
                 }
-            }
-        }
+            }, confirmButton = { TextButton(onClick = { showPicker = false }) { Text("Fermer") } })
     }
 }
 
 @Composable
-internal fun SelectedAvatar(profile: ProfileDraft, onEdit: () -> Unit) {
+internal fun AccountAvatar(profile: ProfileDraft) {
     val avatar = AvatarCatalog.find(profile.avatarIcon)
-    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color(0xFF1B1623))
-        .clickable(onClick = onEdit, role = Role.Button).padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Image(painterResource(avatar.image), null, Modifier.size(40.dp), contentScale = ContentScale.Fit)
-        Column(Modifier.weight(1f).padding(horizontal = 10.dp)) {
-            Text(avatar.name, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-            Text(if (profile.realArtist) "Artiste réel" else "Créateur IA", color = Muted, fontSize = 12.sp)
-        }
-        Icon(Icons.Outlined.Edit, "Modifier mon avatar", Modifier.size(18.dp), tint = Violet)
+    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.BottomCenter) {
+        // L'outline du champ commence 8 dp après son bord de mise en page.
+        Image(painterResource(avatar.image), avatar.name,
+            Modifier.size(width = 96.dp, height = 64.dp).offset(y = 8.dp),
+            alignment = Alignment.BottomCenter, contentScale = ContentScale.Fit)
     }
 }
 
