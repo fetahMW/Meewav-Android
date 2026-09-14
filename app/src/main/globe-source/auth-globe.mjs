@@ -93,6 +93,11 @@ function createGlobeMap(image) {
 
 function draw() {
   if (disposed || renderer.getContext().isContextLost()) return;
+  // A successful render into a zero-height canvas is not a visible first frame.
+  if (canvas.clientWidth < 2 || canvas.clientHeight < 2) {
+    renderStatus = 'loading';
+    return;
+  }
   rim.rotation.copy(globe.rotation);
   renderer.render(scene, camera);
   if (texture) renderStatus = 'ready';
@@ -100,8 +105,12 @@ function draw() {
 
 function resize() {
   if (disposed) return;
-  const width = Math.max(1, canvas.clientWidth);
-  const height = Math.max(1, canvas.clientHeight);
+  const width = canvas.clientWidth;
+  const height = canvas.clientHeight;
+  if (width < 2 || height < 2) {
+    renderStatus = 'loading';
+    return;
+  }
   renderer.setSize(width, height, false);
   camera.aspect = width / height;
   // The square CTA keeps the Web's camera exactly. The full-screen viewer

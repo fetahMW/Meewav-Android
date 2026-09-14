@@ -14,4 +14,12 @@ Aucune session, aucun bridge JavaScript natif, aucun stockage Web ni accès gén
 
 La référence iOS `sipiyou39/Meewav`, `main` à `aea7251a60a2b61d775901fcf39a62036fd108c4`, a aussi été consultée : `Meewav/GlobeView.swift` dessine une projection orthographique dans un Canvas SwiftUI animé. Elle ne contient pas le vinyle et les matériaux Three.js du Web. Android conserve donc la scène Three.js finale, adaptée aux gestes, à la taille et au cycle de vie du téléphone, au lieu de porter ce dessin simplifié.
 
-Le renderer exige WebGL 2 dans la WebView système. La mise en pause suit la visibilité et le cycle de vie ; le départ de la composition détruit la WebView et libère sa scène. Aucun essai automatique ni vérification visuelle n’a été réalisé pour ce portage. Le rendu réel, les gestes et la fluidité restent à apprécier sur la cible Android désignée.
+Le renderer exige WebGL 2 dans la WebView système. La mise en pause suit la visibilité et le cycle de vie ; le départ de la composition détruit la WebView et libère sa scène.
+
+## Vérification autorisée sur S22 Ultra — 14 septembre 2026
+
+Le diagnostic du lecteur vide a mesuré un canvas de 340 × 0 pixels CSS, malgré une WebView native de 956 × 956 pixels et un statut JavaScript « ready ». La hauteur relative du document se repliait sur son contenu. La WebView reçoit désormais des `LayoutParams.MATCH_PARENT` explicites ; le canvas est ancré au viewport et le moteur refuse d’annoncer une première image avec une dimension nulle. Le comportement des hauteurs relatives en mode `WRAP_CONTENT` est décrit dans [le contrat Android WebView, section Layout size](https://android.googlesource.com/platform/frameworks/base/+/867d10944d7d2bcf38609629edfc7e75d68a0e34/core/java/android/webkit/WebView.java).
+
+Après reconstruction et installation, le parcours sans saisie a atteint la miniature visible : canvas 340 × 340, buffer 680 × 680. Le clic natif a ouvert le paysage : canvas 797 × 384, buffer 1594 × 768. Carte, vinyle et reflets apparaissent dans les captures du téléphone ; des appels de rendu continus et aucune erreur WebGL ont été relevés. Le glisser natif modifie la caméra. Le contrôle de pincement via DevTools n’a pas abouti et ne constitue pas une validation du geste physique. Les captures de diagnostic sont conservées localement dans `app/build/reports/globe-check/`, hors sources.
+
+Ces contrôles portent sur le visualiseur issu de la miniature d’inscription. Le retour utilisateur suivant demande la scène complète du site : skybox, cadrage, animation et navigation du véritable globe restent à reprendre depuis `vendor/globe-vinyle`, et ne sont pas validés par ce correctif d’affichage.

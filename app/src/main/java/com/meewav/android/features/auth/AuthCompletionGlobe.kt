@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.view.View
+import android.view.ViewGroup
 import android.webkit.PermissionRequest
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -159,6 +160,11 @@ private class AuthGlobeController {
         unavailable = false
         return AuthGlobeWebView(context).also { globeView ->
             view = globeView
+            // WebView must use the Compose viewport, not wrap its HTML content.
+            // WRAP_CONTENT collapses percentage/vh heights even when the native view is measured.
+            globeView.layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT,
+            )
             globeView.alpha = 0f
             globeView.setBackgroundColor(AndroidColor.TRANSPARENT)
             globeView.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
