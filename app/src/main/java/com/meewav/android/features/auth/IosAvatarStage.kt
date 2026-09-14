@@ -48,6 +48,7 @@ import kotlin.math.sin
 import kotlin.math.cos
 import kotlin.math.PI
 import kotlin.math.hypot
+import kotlin.math.atan2
 
 internal val AuthWindowLowerExtension = 28.dp
 internal val AuthStageOverlap = 22.dp
@@ -260,7 +261,7 @@ private fun avatarConfirmationMotion(progress: Float, offset: Float): AvatarConf
 
 // Repère commun 375 dp ; le plateau iOS est dessiné dans son repère 185 × 82.
 private const val WelcomeVioletSpotOffset = 54f
-private fun whiteSpotOffset(welcome: Boolean): Float = if (welcome) 24f else 185f * .32f
+private fun whiteSpotOffset(welcome: Boolean): Float = if (welcome) 64f else 185f * .32f
 
 private fun renderStageLayer(width: Float, height: Float, layer: Int, welcome: Boolean = false): Bitmap {
     val bitmap = Bitmap.createBitmap(ceil(width).toInt().coerceAtLeast(1),
@@ -329,27 +330,36 @@ private fun renderRearProjector(width: Float, height: Float, side: Int, lensOnly
     if (welcome) {
         // Un axe droit depuis la lentille : les deux bords s'écartent régulièrement,
         // perpendiculairement à cet axe. Aucun point de contrôle ne courbe le cône.
-        val targetX = x + side * 48f
-        val targetY = y - (y - 14f).coerceIn(56f, 90f)
+        val targetX = x + side * 28f
+        val targetY = y - (y - 20f).coerceIn(56f, 106f)
         val axisX = targetX - x
         val axisY = targetY - y
         val distance = hypot(axisX, axisY)
         val normalX = -axisY / distance
         val normalY = axisX / distance
+        // Éclaire le mur dans le prolongement du faisceau : halo allongé, diffus,
+        // sans bord visible. Son axe suit celui du projecteur, sans courber le cône.
+        canvas.save()
+        canvas.translate(x + axisX * .7f, y + axisY * .7f)
+        canvas.rotate((atan2(axisY, axisX) * 180f / PI.toFloat()))
+        canvas.scale(1f, .78f)
+        canvas.drawCircle(0f, 0f, 38f, stagePaint(shader = RadialGradient(0f, 0f, 38f,
+            intArrayOf(Color.parseColor("#40FFFFFF"), Color.parseColor("#20FFFFFF"),
+                Color.TRANSPARENT), floatArrayOf(0f, .38f, 1f), Shader.TileMode.CLAMP), blur = 9f))
+        canvas.restore()
         val cone = Path().apply {
             moveTo(x - normalX * 1.4f, y - normalY * 1.4f)
-            lineTo(targetX - normalX * 18f, targetY - normalY * 18f)
-            lineTo(targetX + normalX * 18f, targetY + normalY * 18f)
+            lineTo(targetX - normalX * 25f, targetY - normalY * 25f)
+            lineTo(targetX + normalX * 25f, targetY + normalY * 25f)
             lineTo(x + normalX * 1.4f, y + normalY * 1.4f)
             close()
         }
         val falloff = LinearGradient(x, y, targetX, targetY,
-            intArrayOf(Color.parseColor("#60FFFFFF"), Color.parseColor("#3AFFFFFF"),
-                Color.parseColor("#20FFFFFF"), Color.TRANSPARENT),
+            intArrayOf(Color.parseColor("#48FFFFFF"), Color.parseColor("#2CFFFFFF"),
+                Color.parseColor("#18FFFFFF"), Color.TRANSPARENT),
             floatArrayOf(0f, .18f, .58f, 1f), Shader.TileMode.CLAMP)
-        // La brume reste contenue autour du faisceau ; pas de tache ovale sur le mur.
-        canvas.drawPath(cone, stagePaint(shader = falloff, blur = 6f).apply { alpha = 48 })
-        canvas.drawPath(cone, stagePaint(shader = falloff, blur = 1.8f))
+        canvas.drawPath(cone, stagePaint(shader = falloff, blur = 12f).apply { alpha = 64 })
+        canvas.drawPath(cone, stagePaint(shader = falloff, blur = 7f))
         return bitmap
     }
     val length = (y - 14f).coerceIn(56f, 130f)
