@@ -22,3 +22,40 @@ Inter variable est copiée depuis le dépôt officiel [Google Fonts / Inter](htt
 Jetpack Compose et les Material Icons sont des dépendances AndroidX, sous Apache 2.0. Le SDK communautaire Supabase Kotlin est sous MIT ; Kotlin, kotlinx et Ktor suivent leurs licences distribuées. Les bibliothèques restent récupérées par Gradle. L’inventaire juridique de la distribution finale devra être généré avec les dépendances effectivement embarquées avant publication.
 
 Aucune licence générale du produit Meewav n’est créée par ce premier lot.
+
+## Ressources du parcours iOS
+
+Source : dépôt `sipiyou39/Meewav`, commit `aea7251a60a2b61d775901fcf39a62036fd108c4`. Les 28 avatars PNG sont copiés sans modification depuis les imagesets ci-dessous ; libellés, descriptions et ordre viennent de `Meewav/Features/Auth/Models/AvatarProfile.swift`. La réutilisation dans Android est demandée par l’utilisateur. Cette copie ne vaut pas attribution d’auteur ni nouvelle licence publique.
+
+| Ressource Android dans `drawable-nodpi/` | Source iOS |
+| --- | --- |
+| `avatar_user_f.png` | `Meewav/Assets.xcassets/UserFIcon.imageset/UserFIcon@3x.png` |
+| `avatar_accordeon.png` | `Meewav/Assets.xcassets/AccordeonIcon.imageset/AccordeonIcon@3x.png` |
+| `avatar_micro.png` | `Meewav/Assets.xcassets/MicroIcon.imageset/MicroIcon@3x.png` |
+| `avatar_inge_son.png` | `Meewav/Assets.xcassets/IngeSonIcon.imageset/IngeSonIcon@3x.png` |
+| `avatar_bassiste.png` | `Meewav/Assets.xcassets/BassisteIcon.imageset/BassisteIcon@3x.png` |
+| `avatar_beatboxer.png` | `Meewav/Assets.xcassets/BeatboxerIcon.imageset/BeatboxerIcon@3x.png` |
+| `avatar_beatmaker.png` | `Meewav/Assets.xcassets/BeatmakerIcon.imageset/BeatmakerIcon@3x.png` |
+| `avatar_instr_cuivre.png` | `Meewav/Assets.xcassets/InstrCuivreIcon.imageset/InstrCuivreIcon@3x.png` |
+| `avatar_compositeur.png` | `Meewav/Assets.xcassets/CompositeurIcon.imageset/CompositeurIcon@3x.png` |
+| `avatar_dansseur.png` | `Meewav/Assets.xcassets/DansseurIcon.imageset/DansseurIcon@3x.png` |
+| `avatar_dansseuse2.png` | `Meewav/Assets.xcassets/Dansseuse2Icon.imageset/Dansseuse2Icon@3x.png` |
+| `avatar_dj.png` | `Meewav/Assets.xcassets/DjIcon.imageset/DjIcon@3x.png` |
+| `avatar_batteur.png` | `Meewav/Assets.xcassets/BatteurIcon.imageset/BatteurIcon@3x.png` |
+| `avatar_guitare_elec.png` | `Meewav/Assets.xcassets/GuitareElecIcon.imageset/GuitareElecIcon@3x.png` |
+| `avatar_orga_event.png` | `Meewav/Assets.xcassets/OrgaEventIcon.imageset/OrgaEventIcon@3x.png` |
+| `avatar_guitare.png` | `Meewav/Assets.xcassets/GuitareIcon.imageset/GuitareIcon@3x.png` |
+| `avatar_manager.png` | `Meewav/Assets.xcassets/ManagerIcon.imageset/ManagerIcon@3x.png` |
+| `avatar_user.png` | `Meewav/Assets.xcassets/UserIcon.imageset/UserIcon@3x.png` |
+| `avatar_percussion.png` | `Meewav/Assets.xcassets/PercussionIcon.imageset/PercussionIcon@3x.png` |
+| `avatar_pianiste.png` | `Meewav/Assets.xcassets/PianisteIcon.imageset/PianisteIcon@3x.png` |
+| `avatar_label.png` | `Meewav/Assets.xcassets/LabelIcon.imageset/LabelIcon@3x.png` |
+| `avatar_studio.png` | `Meewav/Assets.xcassets/StudioIcon.imageset/StudioIcon@3x.png` |
+| `avatar_instr_cordes.png` | `Meewav/Assets.xcassets/InstrCordesIcon.imageset/InstrCordesIcon@3x.png` |
+| `avatar_synthetiseur.png` | `Meewav/Assets.xcassets/SynthetiseurIcon.imageset/SynthetiseurIcon@3x.png` |
+| `avatar_proffesseur.png` | `Meewav/Assets.xcassets/ProffesseurIcon.imageset/ProffesseurIcon@3x.png` |
+| `avatar_violon.png` | `Meewav/Assets.xcassets/ViolonIcon.imageset/ViolonIcon@3x.png` |
+| `avatar_clippeur.png` | `Meewav/Assets.xcassets/ClippeurIcon.imageset/ClippeurIcon@3x.png` |
+| `avatar_instr_vent.png` | `Meewav/Assets.xcassets/InstrVentIcon.imageset/InstrVentIcon@3x.png` |
+
+`PreviewTerms.kt` reprend intégralement `TermsDetailsView.demoTerms`, identifié comme texte de démonstration dans le code iOS. Il est présenté comme tel et ne vaut pas validation juridique des conditions publiques.

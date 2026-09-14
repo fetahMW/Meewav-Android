@@ -12,7 +12,7 @@ object AuthPolicy {
         else "Entre une adresse e-mail valide."
 
     fun signupError(name: String, email: String, password: String, confirmation: String): String? = when {
-        name.trim().isEmpty() -> "Choisis un nom d’utilisateur."
+        name.trim().codePointCount(0, name.trim().length) < 3 -> "Choisis un nom d’utilisateur d’au moins 3 caractères."
         name.trim().codePointCount(0, name.trim().length) > 20 -> "Le nom d’utilisateur est limité à 20 caractères."
         emailError(email) != null -> emailError(email)
         password.length < 6 -> "Choisis un mot de passe d’au moins 6 caractères."

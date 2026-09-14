@@ -47,192 +47,196 @@ import androidx.compose.ui.unit.sp
 import com.meewav.android.R
 import com.meewav.android.core.design.*
 
+data class AuthActions(
+    val navigate: (AuthPage) -> Unit = {},
+    val back: () -> Unit = {},
+    val email: (String) -> Unit = {},
+    val username: (String) -> Unit = {},
+    val password: (String) -> Unit = {},
+    val confirmation: (String) -> Unit = {},
+    val profile: (ProfileDraft) -> Unit = {},
+    val submit: () -> Unit = {},
+    val signOut: () -> Unit = {},
+)
+
 @Composable
 fun AuthScreen(state: AuthUiState, viewModel: AuthViewModel) {
-    AuthContent(state, viewModel::navigate, viewModel::email, viewModel::username,
-        viewModel::password, viewModel::confirmation, viewModel::submit, viewModel::signOut)
+    AuthContent(state, AuthActions(viewModel::navigate, viewModel::back, viewModel::email,
+        viewModel::username, viewModel::password, viewModel::confirmation, viewModel::profile,
+        viewModel::submit, viewModel::signOut))
 }
 
 @Composable
-private fun AuthContent(
-    state: AuthUiState,
-    navigate: (AuthPage) -> Unit,
-    onEmail: (String) -> Unit,
-    onUsername: (String) -> Unit,
-    onPassword: (String) -> Unit,
-    onConfirmation: (String) -> Unit,
-    onSubmit: () -> Unit,
-    onSignOut: () -> Unit,
-) {
+internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
     val keyboard = LocalSoftwareKeyboardController.current
     val focus = LocalFocusManager.current
-    val submit = { keyboard?.hide(); focus.clearFocus(); onSubmit() }
-    val showIntro = state.page == AuthPage.Login
+    val scroll = rememberScrollState()
+    val submit = { keyboard?.hide(); focus.clearFocus(); actions.submit() }
+    LaunchedEffect(state.page) { scroll.scrollTo(0) }
     BackHandler(enabled = state.page !in setOf(AuthPage.Login, AuthPage.SignedIn)) {
-        if (!state.busy) {
-            if (state.page == AuthPage.NewPassword) onSignOut() else navigate(AuthPage.Login)
-        }
+        if (!state.busy) actions.back()
     }
     Box(Modifier.fillMaxSize().background(Ink)) {
         Image(painterResource(R.drawable.auth_acoustic_background), null,
-            Modifier.fillMaxSize(), contentScale = ContentScale.Crop, alignment = Alignment.Center)
-        // A bottom fade supports scrolling content; the acoustic wall keeps its original brightness.
-        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color(0x5007060C), Ink))))
-        Column(
-            Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().imePadding()
-                .verticalScroll(rememberScrollState()).padding(horizontal = 22.dp, vertical = 14.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Row(Modifier.widthIn(max = 480.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Image(painterResource(R.drawable.meewav_logo), "Meewav", Modifier.width(155.dp).height(50.dp))
-                Spacer(Modifier.weight(1f))
-                Text("FR", color = Color(0xFFD0C7E4), fontSize = 11.sp, fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.clip(RoundedCornerShape(50)).background(Color(0x70130E22)).padding(horizontal = 13.dp, vertical = 8.dp))
-            }
-            Spacer(Modifier.height(if (showIntro) 23.dp else 32.dp))
-            if (showIntro) {
-                Column(Modifier.widthIn(max = 480.dp).fillMaxWidth()) {
-                    Text(buildAnnotatedString {
-                        append("Rejoignez\nl’écosystème ")
-                        withStyle(SpanStyle(color = Violet)) { append("musical") }
-                    }, fontFamily = MeewavFont, fontWeight = FontWeight.ExtraBold,
-                        fontSize = 33.sp, lineHeight = 37.sp, letterSpacing = (-1.1).sp,
-                        modifier = Modifier.semantics { heading() })
-                    Spacer(Modifier.height(12.dp))
-                    Text(buildAnnotatedString {
-                        append("Fondée par des ")
-                        withStyle(SpanStyle(color = Violet, fontWeight = FontWeight.SemiBold)) { append("artistes") }
-                        append(", pour les artistes et leur public.")
-                    }, color = Color(0xFFDDD8E6), style = MaterialTheme.typography.bodyMedium)
-                    Spacer(Modifier.height(23.dp))
-                    FeatureTiles()
+            Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+        BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {
+            val availableHeight = maxHeight
+            Column(Modifier.fillMaxSize().verticalScroll(scroll).heightIn(min = availableHeight)
+                .padding(horizontal = 22.dp, vertical = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center) {
+                Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+                        if (state.page !in setOf(AuthPage.Login, AuthPage.SignedIn)) {
+                            IconButton(onClick = actions.back, enabled = !state.busy) {
+                                Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Retour", tint = Color.White)
+                            }
+                        }
+                    }
+                    Image(painterResource(R.drawable.meewav_logo), "Meewav",
+                        Modifier.weight(1f).height(52.dp), contentScale = ContentScale.Fit)
+                    Spacer(Modifier.size(48.dp))
                 }
                 Spacer(Modifier.height(24.dp))
-            }
-
-            GlassPanel(Modifier.widthIn(max = 480.dp).fillMaxWidth().animateContentSize()) {
-                if (state.initializing) {
-                    Column(Modifier.fillMaxWidth().padding(vertical = 42.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        CircularProgressIndicator(Modifier.size(26.dp), color = Violet, strokeWidth = 2.dp)
-                        Spacer(Modifier.height(16.dp))
-                        Text("Retrouvons ton espace…", color = Muted)
-                    }
-                } else {
-                    if (state.page !in setOf(AuthPage.Login, AuthPage.SignedIn, AuthPage.NewPassword)) {
-                        TextButton(onClick = { navigate(AuthPage.Login) }, enabled = !state.busy,
-                            contentPadding = PaddingValues(0.dp)) {
-                            Icon(Icons.AutoMirrored.Outlined.ArrowBack, null, Modifier.size(17.dp))
-                            Spacer(Modifier.width(6.dp)); Text("Retour", fontSize = 12.sp)
-                        }
-                    }
-                    WaveMark()
-                    Spacer(Modifier.height(9.dp))
-                    Text(when (state.page) {
-                        AuthPage.Login -> "Bienvenue"
-                        AuthPage.Register -> "Crée ton compte"
-                        AuthPage.Forgot -> "Retrouve ton compte"
-                        AuthPage.NewPassword -> "Nouveau mot de passe"
-                        AuthPage.CheckEmail -> "Vérifie tes e-mails"
-                        AuthPage.SignedIn -> "Bienvenue${state.connectedName.takeIf { it.isNotBlank() }?.let { ", $it" }.orEmpty()}"
-                    }, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth().semantics { heading() })
-                    Spacer(Modifier.height(7.dp))
-                    Text(when (state.page) {
-                        AuthPage.Login -> "Entre dans ton univers sonore."
-                        AuthPage.Register -> "Un compte pour tout l’univers Meewav."
-                        AuthPage.Forgot -> "Un lien pour retrouver ton espace."
-                        AuthPage.NewPassword -> "Choisis un mot de passe rien qu’à toi."
-                        AuthPage.CheckEmail -> state.email
-                        AuthPage.SignedIn -> "Ton compte Meewav est connecté."
-                    }, color = Muted, style = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                    Spacer(Modifier.height(22.dp))
-
-                    if (state.error != null) {
-                        Message(state.error, error = true)
-                        Spacer(Modifier.height(14.dp))
-                    }
-                    if (state.notice != null) {
-                        Message(state.notice, error = false)
-                        Spacer(Modifier.height(14.dp))
-                    }
-                    when (state.page) {
-                        AuthPage.Login, AuthPage.Register, AuthPage.Forgot, AuthPage.NewPassword -> {
-                            if (state.page == AuthPage.Register) {
-                                AuthField("Nom d’utilisateur", state.username, onUsername, Icons.Outlined.PersonOutline, enabled = !state.busy)
-                                Spacer(Modifier.height(12.dp))
-                            }
-                            if (state.page != AuthPage.NewPassword) {
-                                AuthField("Adresse e-mail", state.email, onEmail, Icons.Outlined.AlternateEmail,
-                                    type = KeyboardType.Email, enabled = !state.busy,
-                                    ime = if (state.page == AuthPage.Forgot) ImeAction.Done else ImeAction.Next, onDone = submit)
-                                Spacer(Modifier.height(12.dp))
-                            }
-                            if (state.page != AuthPage.Forgot) {
-                                AuthField("Mot de passe", state.password, onPassword, Icons.Outlined.Lock,
-                                    secret = true, enabled = !state.busy,
-                                    ime = if (state.page == AuthPage.Login) ImeAction.Done else ImeAction.Next, onDone = submit)
-                            }
-                            if (state.page in setOf(AuthPage.Register, AuthPage.NewPassword)) {
-                                Spacer(Modifier.height(12.dp))
-                                AuthField("Confirmer le mot de passe", state.confirmation, onConfirmation, Icons.Outlined.Lock,
-                                    secret = true, enabled = !state.busy, ime = ImeAction.Done, onDone = submit)
-                            }
-                            if (state.page == AuthPage.Login) {
-                                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-                                    TextButton(onClick = { navigate(AuthPage.Forgot) }, enabled = !state.busy) {
-                                        Text("Mot de passe oublié ?", color = Muted, fontSize = 12.sp)
+                val step = when (state.page) { AuthPage.Avatar -> 0; AuthPage.Register -> 1; AuthPage.Location -> 2; else -> -1 }
+                if (step >= 0) {
+                    RegistrationSteps(step)
+                    Spacer(Modifier.height(18.dp))
+                }
+                GlassPanel(Modifier.widthIn(max = 440.dp).fillMaxWidth()) {
+                    if (state.initializing) {
+                        CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally).padding(28.dp), color = Violet)
+                    } else {
+                        WaveMark()
+                        Spacer(Modifier.height(12.dp))
+                        Text(when (state.page) {
+                            AuthPage.Login -> "Bienvenue"
+                            AuthPage.Avatar -> "Choisis ton avatar"
+                            AuthPage.Register -> "Ton compte Meewav"
+                            AuthPage.Location -> "Ta scène locale"
+                            AuthPage.Forgot -> "Mot de passe oublié"
+                            AuthPage.NewPassword -> "Nouveau mot de passe"
+                            AuthPage.CheckEmail -> "Vérifie tes e-mails"
+                            AuthPage.SignedIn -> "Bienvenue${state.connectedName.takeIf { it.isNotBlank() }?.let { ", $it" }.orEmpty()}"
+                        }, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().semantics { heading() })
+                        Spacer(Modifier.height(8.dp))
+                        Text(when (state.page) {
+                            AuthPage.Login -> "Entrez dans votre univers sonore."
+                            AuthPage.Avatar -> "Il représentera ton rôle sur Meewav."
+                            AuthPage.Register -> "Un compte pour tout l’univers Meewav."
+                            AuthPage.Location -> "Rejoins la musique près de toi."
+                            AuthPage.Forgot -> "Un lien pour retrouver ton espace."
+                            AuthPage.NewPassword -> "Choisis un mot de passe rien qu’à toi."
+                            AuthPage.CheckEmail -> state.email
+                            AuthPage.SignedIn -> "Ton compte Meewav est connecté."
+                        }, color = Muted, style = MaterialTheme.typography.bodyMedium,
+                            textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                        Spacer(Modifier.height(24.dp))
+                        state.error?.let { Message(it, true); Spacer(Modifier.height(14.dp)) }
+                        state.notice?.let { Message(it, false); Spacer(Modifier.height(14.dp)) }
+                        when (state.page) {
+                            AuthPage.Avatar -> AvatarSelection(state, actions.profile, submit)
+                            AuthPage.Location -> LocationRegistration(state, actions.profile, submit)
+                            AuthPage.Login, AuthPage.Register, AuthPage.Forgot, AuthPage.NewPassword -> {
+                                if (state.page == AuthPage.Register) {
+                                    SelectedAvatar(state.profile, onEdit = { actions.navigate(AuthPage.Avatar) })
+                                    Spacer(Modifier.height(14.dp))
+                                }
+                                if (state.page != AuthPage.NewPassword) {
+                                    AuthField(if (state.page == AuthPage.Login) "E-mail ou nom d’utilisateur" else "Adresse e-mail",
+                                        state.email, actions.email, Icons.Outlined.AlternateEmail,
+                                        type = if (state.page == AuthPage.Login) KeyboardType.Text else KeyboardType.Email,
+                                        enabled = !state.busy, ime = if (state.page == AuthPage.Forgot) ImeAction.Done else ImeAction.Next, onDone = submit)
+                                    Spacer(Modifier.height(12.dp))
+                                }
+                                if (state.page == AuthPage.Register) {
+                                    AuthField("Nom d’utilisateur", state.username, actions.username, Icons.Outlined.PersonOutline, enabled = !state.busy)
+                                    Spacer(Modifier.height(12.dp))
+                                    AuthField("Naissance · JJ/MM/AAAA (facultatif)", state.profile.birthDate,
+                                        { actions.profile(state.profile.copy(birthDate = it)) }, Icons.Outlined.CalendarMonth,
+                                        enabled = !state.busy)
+                                    Spacer(Modifier.height(12.dp))
+                                }
+                                if (state.page != AuthPage.Forgot) {
+                                    AuthField("Mot de passe", state.password, actions.password, Icons.Outlined.Lock,
+                                        secret = true, enabled = !state.busy,
+                                        ime = if (state.page == AuthPage.Login) ImeAction.Done else ImeAction.Next, onDone = submit)
+                                }
+                                if (state.page in setOf(AuthPage.Register, AuthPage.NewPassword)) {
+                                    Spacer(Modifier.height(12.dp))
+                                    AuthField("Confirmer le mot de passe", state.confirmation, actions.confirmation, Icons.Outlined.Lock,
+                                        secret = true, enabled = !state.busy, ime = ImeAction.Done, onDone = submit)
+                                }
+                                if (state.page == AuthPage.Login) {
+                                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+                                        TextButton(onClick = { actions.navigate(AuthPage.Forgot) }, enabled = !state.busy) {
+                                            Text("Mot de passe oublié ?", color = Muted, fontSize = 12.sp)
+                                        }
+                                    }
+                                } else Spacer(Modifier.height(22.dp))
+                                PrimaryAction(when (state.page) {
+                                    AuthPage.Login -> "Se connecter"
+                                    AuthPage.Register -> "Suivant"
+                                    AuthPage.Forgot -> "Recevoir le lien"
+                                    else -> "Enregistrer"
+                                }, state.busy, submit)
+                                if (state.page == AuthPage.Login) {
+                                    Spacer(Modifier.height(24.dp)); DividerWithWave(); Spacer(Modifier.height(12.dp))
+                                    Text("NOUVEAU ICI ?", fontSize = 10.sp, fontWeight = FontWeight.SemiBold,
+                                        letterSpacing = 1.6.sp, color = Muted,
+                                        modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                                    TextButton(onClick = { actions.navigate(AuthPage.Avatar) }, enabled = !state.busy,
+                                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                                        Text("Créer un compte", color = Violet, fontWeight = FontWeight.Bold)
                                     }
                                 }
-                            } else Spacer(Modifier.height(22.dp))
-                            PrimaryAction(when (state.page) {
-                                AuthPage.Login -> "Se connecter"
-                                AuthPage.Register -> "Créer mon compte"
-                                AuthPage.Forgot -> "Recevoir le lien"
-                                else -> "Enregistrer"
-                            }, state.busy, onClick = submit)
-                            if (state.page == AuthPage.Login) {
-                                Spacer(Modifier.height(23.dp)); DividerWithWave(); Spacer(Modifier.height(13.dp))
-                                Text("NOUVEAU ICI ?", fontSize = 10.sp, fontWeight = FontWeight.SemiBold,
-                                    letterSpacing = 1.6.sp, color = Muted,
-                                    modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-                                Spacer(Modifier.height(9.dp))
-                                OutlinedButton(onClick = { navigate(AuthPage.Register) }, enabled = !state.busy,
-                                    modifier = Modifier.fillMaxWidth().heightIn(min = 49.dp),
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF46345F)),
-                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                                    shape = RoundedCornerShape(16.dp)) { Text("Créer un compte") }
                             }
-                        }
-                        AuthPage.CheckEmail -> {
-                            Icon(Icons.Outlined.MarkEmailRead, null, Modifier.align(Alignment.CenterHorizontally).size(48.dp), tint = Violet)
-                            Spacer(Modifier.height(20.dp))
-                            PrimaryAction("Revenir à la connexion", false) { navigate(AuthPage.Login) }
-                        }
-                        AuthPage.SignedIn -> {
-                            Icon(Icons.Outlined.CheckCircleOutline, null, Modifier.align(Alignment.CenterHorizontally).size(52.dp), tint = Violet)
-                            Spacer(Modifier.height(18.dp))
-                            Text("L’expérience Android se prépare. Ton compte reste accessible sur les autres versions de Meewav.",
-                                color = Muted, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                            Spacer(Modifier.height(22.dp))
-                            OutlinedButton(onClick = onSignOut, enabled = !state.busy, modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp)) {
-                                if (state.busy) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-                                else Text("Se déconnecter de cet appareil")
+                            AuthPage.CheckEmail -> {
+                                Icon(Icons.Outlined.MarkEmailRead, null, Modifier.align(Alignment.CenterHorizontally).size(48.dp), tint = Violet)
+                                Spacer(Modifier.height(20.dp))
+                                PrimaryAction("Revenir à la connexion", false) { actions.navigate(AuthPage.Login) }
+                            }
+                            AuthPage.SignedIn -> {
+                                Icon(Icons.Outlined.CheckCircleOutline, null, Modifier.align(Alignment.CenterHorizontally).size(52.dp), tint = Violet)
+                                Spacer(Modifier.height(18.dp))
+                                Text("L’expérience Android se prépare. Ton compte reste accessible sur les autres versions de Meewav.",
+                                    color = Muted, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                                Spacer(Modifier.height(22.dp))
+                                OutlinedButton(onClick = actions.signOut, enabled = !state.busy,
+                                    modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp)) {
+                                    if (state.busy) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                                    else Text("Se déconnecter de cet appareil")
+                                }
                             }
                         }
                     }
                 }
+                Spacer(Modifier.height(24.dp))
+                Text("LA MUSIQUE NOUS RASSEMBLE", color = Muted, fontSize = 9.sp,
+                    letterSpacing = 2.sp, textAlign = TextAlign.Center)
             }
-            Spacer(Modifier.height(21.dp))
-            Text("LA MUSIQUE NOUS RASSEMBLE", color = Color(0xFFA7A0B6), fontSize = 9.sp,
-                letterSpacing = 2.sp, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
-            Spacer(Modifier.height(14.dp))
         }
     }
 }
 
 @Composable
-private fun GlassPanel(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+private fun RegistrationSteps(current: Int) {
+    Row(Modifier.widthIn(max = 340.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        listOf("Avatar", "Compte", "Localisation").forEachIndexed { index, title ->
+            Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("${index + 1} · $title", color = if (current == index) Color.White else Muted,
+                    fontSize = 11.sp, fontWeight = if (current == index) FontWeight.Bold else FontWeight.Normal)
+                Spacer(Modifier.height(8.dp))
+                Box(Modifier.fillMaxWidth().height(3.dp).clip(RoundedCornerShape(3.dp))
+                    .background(if (index <= current) Violet else Color(0xFF342A42)))
+            }
+        }
+    }
+}
+
+@Composable
+internal fun GlassPanel(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     val shape = RoundedCornerShape(28.dp)
     Column(modifier.clip(shape)
         .background(Brush.verticalGradient(listOf(Color(0xFF141219), Color(0xFF07070A), Color(0xFF10091E))))
@@ -241,37 +245,7 @@ private fun GlassPanel(modifier: Modifier = Modifier, content: @Composable Colum
 }
 
 @Composable
-private fun FeatureTiles() {
-    val features = listOf(
-        "Globe" to Icons.Outlined.Language,
-        "Messagerie" to Icons.Outlined.ChatBubbleOutline,
-        "Rooms" to Icons.Outlined.ViewInAr,
-        "La Scène" to Icons.Outlined.PlayArrow,
-        "Marketplace" to Icons.Outlined.Storefront,
-        "Tremplin" to Icons.Outlined.RocketLaunch,
-    )
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        features.chunked(3).forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                row.forEach { (label, icon) ->
-                    val shape = RoundedCornerShape(15.dp)
-                    Column(Modifier.weight(1f).clip(shape)
-                        .background(Brush.verticalGradient(listOf(Color(0xFF121016), Color(0xFF07070A), Color(0xFF1B102E))))
-                        .border(1.dp, Brush.verticalGradient(listOf(Color(0xFF66507F), Color(0xFF30213E), Color(0xFF65428E))), shape)
-                        .padding(horizontal = 5.dp, vertical = 13.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(icon, null, Modifier.size(23.dp), tint = Violet)
-                        Spacer(Modifier.height(7.dp))
-                        Text(label, color = Color(0xFFECE8F5), fontSize = 10.sp, lineHeight = 14.sp,
-                            fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun AuthField(
+internal fun AuthField(
     label: String, value: String, onValue: (String) -> Unit, icon: ImageVector,
     secret: Boolean = false, type: KeyboardType = KeyboardType.Text,
     enabled: Boolean = true, ime: ImeAction = ImeAction.Next, onDone: () -> Unit = {},
@@ -299,7 +273,7 @@ private fun AuthField(
 }
 
 @Composable
-private fun PrimaryAction(label: String, busy: Boolean, onClick: () -> Unit) {
+internal fun PrimaryAction(label: String, busy: Boolean, onClick: () -> Unit) {
     val shape = RoundedCornerShape(16.dp)
     Button(onClick = onClick, enabled = !busy,
         modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp).clip(shape)
@@ -344,14 +318,18 @@ private fun DividerWithWave() {
     }
 }
 
-@Preview(name = "S22 Ultra · Connexion", widthDp = 412, heightDp = 915, showBackground = true)
+@Preview(name = "S22 Ultra · Connexion mobile", widthDp = 412, heightDp = 915)
 @Composable
-private fun LoginPreview() = MeewavTheme {
-    AuthContent(AuthUiState(initializing = false), {}, {}, {}, {}, {}, {}, {})
+private fun LoginPreview() = MeewavTheme { AuthContent(AuthUiState(initializing = false), AuthActions()) }
+
+@Preview(name = "S22 Ultra · Avatar", widthDp = 412, heightDp = 915)
+@Composable
+private fun AvatarPreview() = MeewavTheme {
+    AuthContent(AuthUiState(page = AuthPage.Avatar, initializing = false), AuthActions())
 }
 
 @Preview(name = "Inscription · texte agrandi", widthDp = 412, heightDp = 915, fontScale = 1.3f)
 @Composable
 private fun RegisterPreview() = MeewavTheme {
-    AuthContent(AuthUiState(page = AuthPage.Register, initializing = false), {}, {}, {}, {}, {}, {}, {})
+    AuthContent(AuthUiState(page = AuthPage.Register, initializing = false), AuthActions())
 }

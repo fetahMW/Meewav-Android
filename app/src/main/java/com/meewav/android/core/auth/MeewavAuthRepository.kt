@@ -13,6 +13,7 @@ import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import kotlinx.serialization.Serializable
 import java.io.IOException
 import kotlin.time.Duration.Companion.seconds
 
@@ -31,25 +32,27 @@ class MeewavAuthRepository(context: Context) {
 
     val auth get() = checkNotNull(client) { "L’authentification n’est pas configurée dans cette version." }.auth
 
-    suspend fun signIn(email: String, password: String) {
-        auth.signInWith(Email) { this.email = email.trim(); this.password = password }
+    suspend fun signIn(identifier: String, password: String) {
+        val trimmed = identifier.trim()
+        val address = if (trimmed.contains('@')) trimmed else {
+            checkNotNull(client).postgrest.rpc("resolve_profile_email_for_username", buildJsonObject {
+                put("p_username", trimmed)
+            }).decodeList<ProfileEmail>().firstOrNull()?.email?.takeIf { it.isNotBlank() }
+                ?: throw UserMessageException("L’identifiant ou le mot de passe est incorrect.")
+        }
+        // Resolved addresses are never displayed or retained in the form state.
+        auth.signInWith(Email) { this.email = address; this.password = password }
     }
 
-    suspend fun signUp(name: String, email: String, password: String) {
+    suspend fun signUp(profile: RegistrationProfile, email: String, password: String) {
         val available = checkNotNull(client).postgrest.rpc("is_profile_username_available", buildJsonObject {
-            put("p_username", name.trim().lowercase())
+            put("p_username", profile.username.trim().lowercase())
         }).decodeAs<Boolean>()
         if (!available) throw UserMessageException("Ce nom d’utilisateur est déjà utilisé. Choisis-en un autre.")
         auth.signUpWith(Email, redirectUrl = AuthPolicy.SIGNUP_REDIRECT) {
             this.email = email.trim()
             this.password = password
-            data = buildJsonObject {
-                put("username", name.trim())
-                // Avatar and musical scene remain pending until their native onboarding exists.
-                put("onboarding_completed", false)
-                put("is_ghost_mode", true)
-                put("show_on_public_profile", false)
-            }
+            data = profile.metadata()
         }
     }
 
@@ -60,12 +63,14 @@ class MeewavAuthRepository(context: Context) {
 
     class UserMessageException(message: String) : Exception(message)
 
+    @Serializable private data class ProfileEmail(val email: String? = null)
+
     companion object {
         /** Never render raw provider payloads, URLs or credentials in UI/logs. */
         fun messageFor(error: Exception): String = when (error) {
             is UserMessageException -> error.message.orEmpty()
             is AuthRestException -> when (error.error) {
-                "invalid_credentials" -> "L’adresse e-mail ou le mot de passe est incorrect."
+                "invalid_credentials" -> "L’identifiant ou le mot de passe est incorrect."
                 "email_not_confirmed" -> "Confirme ton adresse e-mail avant de te connecter."
                 "user_already_exists", "email_exists" -> "Cette adresse est déjà utilisée. Essaie de te connecter."
                 "weak_password" -> "Choisis un mot de passe plus solide."

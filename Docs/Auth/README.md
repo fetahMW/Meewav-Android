@@ -3,6 +3,7 @@
 ## Sources de référence
 
 - Meewav-Web, référence applicative locale `32a5e5fea7f6eebb3867c22a27e8b62230bb8d21` : `src/pages/AuthPage.tsx`, `src/styles/auth.css`, `src/features/auth/signupCredentialValidation.ts`, `src/features/auth/auth.service.ts` et `AuthRecoveryPage.tsx`.
+- Référence mobile prioritaire : `sipiyou39/Meewav`, iOS `main`, commit `aea7251a60a2b61d775901fcf39a62036fd108c4`. Voir [les éléments repris et leurs limites](../Reference-iOS.md).
 - [Configuration du SDK Supabase Kotlin](https://supabase.com/docs/reference/kotlin/initializing).
 - [SDK supabase-kt 3.2.6](https://github.com/supabase-community/supabase-kt/releases/tag/3.2.6), avec Ktor 3.3.1 et Kotlin 2.2.21.
 - [Jetpack Compose](https://developer.android.com/develop/ui/compose/setup).
@@ -14,11 +15,11 @@
 - `app/.../core/design/` : couleurs et typographie communes.
 - `app/.../features/auth/` : interface Compose et état du parcours.
 
-L’identité visuelle reprend le fond acoustique, le logo, la typographie Inter, les surfaces noires et les accents violets. La disposition est native, défilable, compatible avec le clavier et les marges système. Les six tuiles présentent les fonctionnalités ; elles ne promettent pas de navigation vers des écrans non construits.
+L’identité visuelle reprend le fond acoustique, le logo, la typographie Inter, les surfaces noires et les accents violets. La disposition est native, défilable, compatible avec le clavier et les marges système. Le panneau de connexion mobile remplace l’introduction et les six tuiles Web du premier essai. L’inscription suit les étapes avatar, compte et localisation, avec navigation retour et conservation du brouillon en mémoire.
 
 ## Services et sécurité
 
-Le SDK Auth gère la connexion, l’inscription, le renouvellement de session et la déconnexion. La disponibilité du nom d’utilisateur est lue via `is_profile_username_available(p_username)` ; la contrainte du serveur reste l’autorité en cas de concurrence.
+Le SDK Auth gère la connexion, l’inscription, le renouvellement de session et la déconnexion. Un identifiant sans `@` est résolu par `resolve_profile_email_for_username(p_username)`, comme dans l’iOS ; l’adresse résolue n’est jamais présentée. La disponibilité du nom d’utilisateur est lue via `is_profile_username_available(p_username)` ; la contrainte du serveur reste l’autorité en cas de concurrence. Le formulaire exige au moins trois caractères comme l’iOS et conserve le plafond serveur de vingt caractères.
 
 La configuration publique est injectée au build depuis un fichier local ignoré ou les variables `SUPABASE_URL` et `SUPABASE_PUBLISHABLE_KEY`. Aucune clé privée, service-role, clé BytePlus ou information d’administration n’appartient à l’application.
 
@@ -28,7 +29,9 @@ La déconnexion demande uniquement la clôture de la session courante (`LOCAL`) 
 
 ## Inscription et lots suivants
 
-Ce lot crée les identifiants de connexion avant la future personnalisation native. Il envoie `username`, `onboarding_completed=false`, `is_ghost_mode=true` et `show_on_public_profile=false`. Il ne remplit pas de faux avatar ou de coordonnées fictives et n’appelle pas encore `complete_onboarding`.
+Le compte est créé à la dernière étape, après le choix d’avatar, les identifiants et la ville. Le formulaire collecte une naissance facultative, refuse les dates impossibles ou futures, et ne modifie pas les espaces du mot de passe. Les métadonnées reprennent `AuthSignUpPayload` iOS : `username`, `artist_type` (`REEL`/`IA`), `avatar_url` (nom d’asset), `avatar_name`, naissance facultative, ville, code postal facultatif et pays. Le client ajoute `onboarding_completed=false`, demande `is_ghost_mode=true` et `show_on_public_profile=false`, ne fabrique aucune coordonnée et n’appelle pas encore `complete_onboarding`.
+
+Le choix d’une ville est manuel ; aucun bouton ne prétend activer un GPS non raccordé. Les conditions sont le texte `demoTerms` iOS affiché comme démonstration, avec une acceptation locale nécessaire pour cette version de test. Il reste à faire valider les conditions publiques et leur éventuelle traçabilité serveur avant diffusion. En absence de session après inscription, l’Android affiche la confirmation e-mail ; il ne reproduit pas la tentative de connexion immédiate du service iOS.
 
 Le futur lot doit achever le profil avec les véritables contrats déployés avant d’ouvrir le globe public. L’écran actuel après connexion est un état d’attente explicite, pas un faux globe fonctionnel. Les boutons Google/Apple ne sont pas proposés dans ce premier lot.
 
@@ -45,8 +48,9 @@ Les fragments contenant directement des jetons, les hôtes ressemblants, les por
 
 ## Essais à réaliser sur le S22 Ultra
 
-- Lisibilité du premier écran, tuiles, clavier et défilement ; grande police système.
-- Connexion avec un compte existant, mauvais mot de passe, absence de réseau.
+- Lisibilité du panneau mobile, des 28 avatars, du clavier et du défilement ; grande police système.
+- Connexion e-mail et nom d’utilisateur avec un compte existant, mauvais mot de passe, absence de réseau.
+- Parcours avatar → compte → ville, retours sans perte du brouillon ; données de profil et confidentialité effectives côté serveur après inscription.
 - Inscription avec un compte de test autorisé, nom indisponible et confirmation e-mail.
 - Récupération du mot de passe, ouverture du lien sur ce téléphone, nouveau mot de passe.
 - Fermeture/réouverture, renouvellement de session et déconnexion locale.
@@ -55,7 +59,16 @@ Aucun compte réel n’est créé automatiquement pour ces vérifications. Le r�
 
 ## Vérification du premier lot — 14 septembre 2026
 
+Historique du premier essai, avant l’adaptation mobile iOS :
+
 - `:app:assembleDebug` : réussi, APK de développement produit.
 - `:app:testDebugUnitTest` : trois tests réussis (configuration publique/HTTPS, filtrage des redirections PKCE, validation des identifiants).
 - Le Samsung S22 Ultra est la cible explicitement désignée ; aucun appareil n’était détecté par ADB lors de la compilation. Installation et rendu sur téléphone non vérifiés.
 - Aucun test d’inscription, de connexion réelle, d’e-mail ou de session restaurée sur un appareil n’a été exécuté. Aucun changement distant dans Supabase, aucune intégration BytePlus et aucun déploiement public.
+
+## Adaptation iOS — 14 septembre 2026
+
+- `:app:assembleDebug` et `:app:testDebugUnitTest` réussis ; six tests unitaires, aucun échec. Les trois tests ajoutés portent sur les métadonnées compatibles iOS, la confidentialité et l’absence de coordonnées inventées, ainsi que les dates de naissance.
+- Compilation effectuée avec les réglages Gradle déjà modifiés dans la copie de travail avant cette passe : AGP 9.0.1 et Gradle 9.1.0. Ces trois fichiers de configuration préexistants sont conservés hors du commit d’adaptation mobile ; leurs options de compatibilité produisent des avertissements de dépréciation.
+- Les tests unitaires ne se connectent pas à Supabase. Aucune inscription ni connexion réelle, aucun e-mail envoyé, aucun live ouvert et aucune modification de service distant pendant cette adaptation.
+- Rendu, clavier, navigation, fluidité à 60 images/s et résultat sur le S22 Ultra restent à vérifier sur l’appareil. Le parcours d’authentification compilé ne constitue pas encore une messagerie, un globe ou des Rooms Android utilisables.
