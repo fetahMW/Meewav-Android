@@ -59,20 +59,20 @@ internal fun IosStageBackdrop(modifier: Modifier, light: () -> Float = { .14f },
                               sweepPhase: (() -> Float)? = null,
                               leftLight: () -> Float = light, rightLight: () -> Float = light,
                               violetLight: () -> Float = { 0f }, fourSpotOrbit: Boolean = false,
-                              violetOutward: Boolean = false) {
+                              violetOutward: Boolean = false, rearSpotInset: Float = 0f) {
     Box(modifier.drawWithCache {
-        val platform = renderStageLayer(size.width, size.height, 1, welcome = fourSpotOrbit).asImageBitmap()
+        val platform = renderStageLayer(size.width, size.height, 1, welcome = fourSpotOrbit, rearSpotInset = rearSpotInset).asImageBitmap()
         val rim = renderStageLayer(size.width, size.height, 2).asImageBitmap()
-        val washes = listOf(-1, 1).map { renderRearProjector(size.width, size.height, it, lensOnly = false, welcome = fourSpotOrbit).asImageBitmap() }
-        val lenses = listOf(-1, 1).map { renderRearProjector(size.width, size.height, it, lensOnly = true, welcome = fourSpotOrbit).asImageBitmap() }
-        val violets = listOf(-1, 1).map { renderVioletBeam(size.width, size.height, it, front = fourSpotOrbit, outward = violetOutward).asImageBitmap() }
+        val washes = listOf(-1, 1).map { renderRearProjector(size.width, size.height, it, lensOnly = false, welcome = fourSpotOrbit, rearSpotInset = rearSpotInset).asImageBitmap() }
+        val lenses = listOf(-1, 1).map { renderRearProjector(size.width, size.height, it, lensOnly = true, welcome = fourSpotOrbit, rearSpotInset = rearSpotInset).asImageBitmap() }
+        val violets = listOf(-1, 1).map { renderVioletBeam(size.width, size.height, it, front = fourSpotOrbit, outward = violetOutward, rearSpotInset = rearSpotInset).asImageBitmap() }
         val frontBodies = if (fourSpotOrbit) renderFrontVioletSpots(size.width, size.height, false).asImageBitmap() else null
         val frontLenses = if (fourSpotOrbit) renderFrontVioletSpots(size.width, size.height, true).asImageBitmap() else null
         onDrawBehind {
             val scale = size.width / 375f
             for (index in 0..1) {
                 val side = if (index == 0) -1f else 1f
-                val origin = Offset(size.width / 2f + side * whiteSpotOffset(fourSpotOrbit) * scale,
+                val origin = Offset(size.width / 2f + side * whiteSpotOffset(fourSpotOrbit, rearSpotInset) * scale,
                     size.height - (26f + 82f * .06f) * scale)
                 val phase = (sweepPhase?.invoke() ?: 0f) * PI.toFloat() / 180f
                 val angle = side * (1.8f + 3.2f * sin(phase + index * .8f))
@@ -262,9 +262,11 @@ private fun avatarConfirmationMotion(progress: Float, offset: Float): AvatarConf
 
 // Repère commun 375 dp ; le plateau iOS est dessiné dans son repère 185 × 82.
 private const val WelcomeVioletSpotOffset = 54f
-private fun whiteSpotOffset(welcome: Boolean): Float = if (welcome) 64f else 185f * .32f
+private fun whiteSpotOffset(welcome: Boolean, inset: Float = 0f): Float =
+    (if (welcome) 64f else 185f * .32f) - inset
 
-private fun renderStageLayer(width: Float, height: Float, layer: Int, welcome: Boolean = false): Bitmap {
+private fun renderStageLayer(width: Float, height: Float, layer: Int, welcome: Boolean = false,
+                             rearSpotInset: Float = 0f): Bitmap {
     val bitmap = Bitmap.createBitmap(ceil(width).toInt().coerceAtLeast(1),
         ceil(height).toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
@@ -303,7 +305,7 @@ private fun renderStageLayer(width: Float, height: Float, layer: Int, welcome: B
     canvas.restore()
     if (layer == 1) {
         for (side in listOf(-1, 1)) {
-            val x = 187.5f + side * whiteSpotOffset(welcome)
+            val x = 187.5f + side * whiteSpotOffset(welcome, rearSpotInset)
             val y = floor - 82f * .06f
             canvas.drawRoundRect(RectF(x - 4.5f, y - 3f, x + 4.5f, y + 2.5f), 2.5f, 2.5f,
                 stagePaint(shader = stageGradient(x, y - 3f, x, y + 3f, "#38383F", "#07070A")))
@@ -314,13 +316,14 @@ private fun renderStageLayer(width: Float, height: Float, layer: Int, welcome: B
 }
 
 /** Projection blanche diffuse, calculée une fois ; la texture du mur reste visible dessous. */
-private fun renderRearProjector(width: Float, height: Float, side: Int, lensOnly: Boolean, welcome: Boolean = false): Bitmap {
+private fun renderRearProjector(width: Float, height: Float, side: Int, lensOnly: Boolean, welcome: Boolean = false,
+                                rearSpotInset: Float = 0f): Bitmap {
     val bitmap = Bitmap.createBitmap(ceil(width).toInt().coerceAtLeast(1),
         ceil(height).toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
     val scale = width / 375f
     canvas.scale(scale, scale)
-    val x = 187.5f + side * whiteSpotOffset(welcome)
+    val x = 187.5f + side * whiteSpotOffset(welcome, rearSpotInset)
     val y = height / scale - 26f - 82f * .06f
     if (lensOnly) {
         canvas.drawCircle(x, y - 1f, 8f, stagePaint(shader = RadialGradient(x, y - 1f, 8f,
@@ -389,13 +392,13 @@ private fun renderRearProjector(width: Float, height: Float, side: Int, lensOnly
 
 /** Accents croisés derrière les avatars ; Bienvenue les dirige vers l'extérieur. */
 private fun renderVioletBeam(width: Float, height: Float, side: Int, front: Boolean = false,
-                            outward: Boolean = false): Bitmap {
+                            outward: Boolean = false, rearSpotInset: Float = 0f): Bitmap {
     val bitmap = Bitmap.createBitmap(ceil(width).toInt().coerceAtLeast(1),
         ceil(height).toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
     val scale = width / 375f
     canvas.scale(scale, scale)
-    val x = 187.5f + side * if (front) WelcomeVioletSpotOffset else 185f * .32f
+    val x = 187.5f + side * if (front) WelcomeVioletSpotOffset else whiteSpotOffset(false, rearSpotInset)
     val y = height / scale - 26f + if (front) 5f else -82f * .06f
     val targetX = if (outward) x + side * 48f else 187.5f - side * 25f
     val targetY = y - (y - 18f).coerceIn(48f, 108f)

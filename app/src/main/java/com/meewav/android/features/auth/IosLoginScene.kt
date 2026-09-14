@@ -149,10 +149,11 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
         }
         if (decorationAlpha > 0f) Box(Modifier.fillMaxWidth().height(stageHeight + AuthStageOverlap)
             .graphicsLayer { alpha = decorationAlpha }) {
-            // Mêmes spots qu'Avatar ; seuls les violets sont allumés, dirigés vers l'extérieur.
+            // Violets rapprochés du MW par translation, avec la même inclinaison vers l'extérieur.
             IosStageBackdrop(Modifier.fillMaxSize(), light = { .14f + .86f * lighting.value },
                 leftLight = { 0f }, rightLight = { 0f },
-                violetLight = { .85f * lighting.value }, sweepPhase = { orbit.value }, violetOutward = true)
+                violetLight = { .85f * lighting.value }, sweepPhase = { orbit.value },
+                violetOutward = true, rearSpotInset = 12f)
             Image(painterResource(R.drawable.auth_web_signature), null,
                 Modifier.align(Alignment.BottomCenter).padding(bottom = 30.dp).size(54.dp)
                     .graphicsLayer {
