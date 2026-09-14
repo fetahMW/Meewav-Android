@@ -46,8 +46,8 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
     val motion = rememberInfiniteTransition(label = "Signature suspendue")
     val rotation = motion.animateFloat(0f, 360f,
         infiniteRepeatable(tween(32000, easing = LinearEasing)), label = "Rotation horaire MW")
-    val orbit = motion.animateFloat(0f, 360f,
-        infiniteRepeatable(tween(16000, easing = LinearEasing)), label = "Lumières du podium")
+    val sweep = motion.animateFloat(0f, 360f,
+        infiniteRepeatable(tween(16000, easing = LinearEasing)), label = "Balayage des faisceaux")
     val levitation = motion.animateFloat(-3f, 3f,
         infiniteRepeatable(tween(2800, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "Lévitation MW")
     Box(modifier.height(panelHeight)) {
@@ -99,9 +99,9 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
             }
         }
         if (!typingLayout) Box(Modifier.fillMaxWidth().height(stageHeight + AuthStageOverlap)) {
-            IosStageBackdrop(Modifier.fillMaxSize(), light = { 1f }, orbit = { orbit.value })
+            IosStageBackdrop(Modifier.fillMaxSize(), light = { 1f }, sweepPhase = { sweep.value })
             Image(painterResource(R.drawable.auth_web_signature), null,
-                Modifier.align(Alignment.BottomCenter).padding(bottom = 48.dp).size(54.dp)
+                Modifier.align(Alignment.BottomCenter).padding(bottom = 36.dp).size(54.dp)
                     .graphicsLayer {
                         rotationY = rotation.value
                         cameraDistance = 12f * density

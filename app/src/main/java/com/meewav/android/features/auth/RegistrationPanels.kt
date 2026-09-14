@@ -90,7 +90,22 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
                 scaleY = 1f + .008f * pulse
             },
             panelHeight = panelHeight - stageHeight + 14.dp, compact = true,
-            iosStageWindow = true, allowScroll = false) {
+            iosStageWindow = true, allowScroll = false,
+            footer = {
+                IosAuthDivider()
+                Spacer(Modifier.height(12.dp))
+        IosAuthAction("Suivant", state.busy || confirming) {
+            if (!pager.isScrollInProgress && !confirming) {
+                confirming = true
+                scope.launch {
+                    confirmation.animateTo(1f, tween(920, easing = LinearEasing))
+                    delay(100)
+                    onContinue()
+                }
+            }
+        }
+                Spacer(Modifier.height(20.dp))
+            }) {
         OutlinedButton(onClick = { showPicker = true }, enabled = !state.busy && !confirming,
             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
             colors = ButtonDefaults.outlinedButtonColors(containerColor = Color(0xFF09090B)),
@@ -104,7 +119,7 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
         Text(avatar.description.lineSequence().take(2).joinToString("\n"), color = Muted, fontSize = 12.sp, lineHeight = 16.sp,
             textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis,
             modifier = Modifier.fillMaxWidth())
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.weight(1f))
         HorizontalDivider(Modifier.align(Alignment.CenterHorizontally).width(120.dp), color = Color(0x22FFFFFF))
         Spacer(Modifier.height(8.dp))
         Text(if (state.profile.realArtist)
@@ -112,12 +127,12 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
             else "Choisis Créateur IA si tu crées principalement ta musique à l’aide de l’intelligence artificielle.",
             color = Muted, fontSize = 10.sp, lineHeight = 14.sp, textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth())
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.weight(1f))
         state.error?.let { Text(it, color = Color(0xFFFFBBC4), fontSize = 11.sp) }
         state.notice?.let { Text(it, color = Muted, fontSize = 11.sp) }
         Text("Type de profil", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
             modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(6.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             listOf(false to "Créateur IA", true to "Artiste réel").forEach { (real, title) ->
                 val chosen = state.profile.realArtist == real
@@ -149,21 +164,7 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
                 }
             }
         }
-        Spacer(Modifier.height(8.dp))
-        IosAuthDivider()
-        Spacer(Modifier.height(10.dp))
-        IosAuthAction("Suivant", state.busy || confirming) {
-            if (!pager.isScrollInProgress && !confirming) {
-                confirming = true
-                scope.launch {
-                    confirmation.animateTo(1f, tween(920, easing = LinearEasing))
-                    delay(100)
-                    onContinue()
-                }
-            }
-        }
-        // Le surplus d'espace reste sous l'action, sans étirer les blocs du formulaire.
-        Spacer(Modifier.height(12.dp))
+
         }
         IosAvatarStage(pager, Modifier.fillMaxWidth().height(stageHeight + AuthStageOverlap),
             enabled = !state.busy && !showPicker && !confirming, confirmation = { confirmation.value })

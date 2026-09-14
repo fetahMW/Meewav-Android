@@ -10,7 +10,7 @@ import android.graphics.Path
 import android.graphics.RadialGradient
 import android.graphics.RectF
 import android.graphics.Shader
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.Canvas as ComposeCanvas
@@ -41,7 +41,6 @@ import kotlin.math.ceil
 import kotlin.math.exp
 import kotlin.math.pow
 import kotlin.math.sign
-import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.PI
 
@@ -51,18 +50,19 @@ internal fun authStageHeight(panelHeight: Dp) = ((panelHeight - AuthWindowLowerE
 
 @Composable
 internal fun IosStageBackdrop(modifier: Modifier, light: () -> Float = { .14f }, showBeams: Boolean = false,
-                              orbit: (() -> Float)? = null) {
+                              sweepPhase: (() -> Float)? = null) {
     Box(modifier.drawWithCache {
         val beams = if (showBeams) renderStageLayer(size.width, size.height, 0).asImageBitmap() else null
-        val platform = renderStageLayer(size.width, size.height, 1, staticSpots = orbit == null).asImageBitmap()
-        val rim = renderStageLayer(size.width, size.height, 2, staticSpots = orbit == null).asImageBitmap()
+        val platform = renderStageLayer(size.width, size.height, 1).asImageBitmap()
+        val rim = renderStageLayer(size.width, size.height, 2).asImageBitmap()
         onDrawBehind {
             val scale = size.width / 375f
-            val phase = orbit?.invoke()
+            val phase = sweepPhase?.invoke()
             val spots = if (phase == null) emptyList() else List(4) { index ->
-                val angle = (phase + index * 90f) * PI.toFloat() / 180f
-                Offset(size.width / 2f + cos(angle) * 59f * scale,
-                    size.height - 26f * scale + sin(angle) * 7f * scale)
+                val side = if (index % 2 == 0) -1f else 1f
+                val rear = index >= 2
+                Offset(size.width / 2f + side * 185f * (if (rear) .24f else .32f) * scale,
+                    size.height - 26f * scale + (if (rear) 5f else -82f * .06f) * scale)
             }
             spots.forEachIndexed { index, origin ->
                 // Balayage souple : chaque cône s'ouvre avec un léger déphasage.
@@ -80,23 +80,18 @@ internal fun IosStageBackdrop(modifier: Modifier, light: () -> Float = { .14f },
                     close()
                 }
                 drawPath(beam, Brush.linearGradient(listOf(ComposeColor(0x668F55FF), ComposeColor.Transparent),
-                    start = origin, end = top))
+                    start = origin, end = top), alpha = light().coerceIn(0f, 1f))
             }
             beams?.let { drawImage(it, alpha = light().coerceIn(0f, 1f)) }
             drawImage(platform)
             drawImage(rim, alpha = (.24f + .76f * light()).coerceIn(0f, 1f))
-            spots.forEach { origin ->
-                drawCircle(Brush.radialGradient(listOf(ComposeColor(0xBBAA76FF), ComposeColor.Transparent),
-                    center = origin, radius = 9f * scale), radius = 9f * scale, center = origin)
-                drawOval(ComposeColor(0xFFF0E6FF), topLeft = origin - Offset(2.5f * scale, 1.3f * scale),
-                    size = Size(5f * scale, 2.6f * scale))
-            }
+
         }
     })
 }
 
 /** Port natif de SaturnCarouselLayout et StagePlatformRenderer (iOS main aea7251).
- * Les 28 PNG HD Android restent utilisés ; aucun moteur Web ni minuterie de rendu continue.
+ * Les 28 PNG HD Android restent utilisés ; les textures du plateau sont mises en cache.
  */
 @Composable
 internal fun IosAvatarStage(pager: PagerState, modifier: Modifier = Modifier, enabled: Boolean = true,
@@ -111,6 +106,9 @@ internal fun IosAvatarStage(pager: PagerState, modifier: Modifier = Modifier, en
         }
     }
     val light = animateFloatAsState(lightTarget, tween(220), label = "Projecteurs du plateau")
+    val motion = rememberInfiniteTransition(label = "Faisceaux Avatar")
+    val sweep = motion.animateFloat(0f, 360f,
+        infiniteRepeatable(tween(16000, easing = LinearEasing)), label = "Balayage des faisceaux")
     // Les images ne sont pas des enfants du pager : son viewport ne doit pas les découper.
     BoxWithConstraints(modifier) {
         val railScale = (maxWidth / 375.dp).coerceAtMost(1.15f)
@@ -118,7 +116,7 @@ internal fun IosAvatarStage(pager: PagerState, modifier: Modifier = Modifier, en
         val avatarSize = minOf(144.dp * railScale, maxHeight - 32.dp)
         IosStageBackdrop(Modifier.fillMaxSize(), light = {
             light.value + .22f * confirmationPulse(confirmation())
-        }, showBeams = true)
+        }, sweepPhase = { sweep.value })
         IosStageConfirmationPulse(Modifier.fillMaxSize(), confirmation)
         HorizontalPager(pager, pageSize = PageSize.Fixed(firstGap),
             beyondViewportPageCount = 2, overscrollEffect = null, userScrollEnabled = enabled,
