@@ -6,7 +6,8 @@ export function createRingPlayback(canPlay: () => boolean) {
   let muted = false;
   try { muted = localStorage.getItem('meewav.ring-muted.v1') === 'true'; } catch { /* Optional preference. */ }
   audio.muted = muted;
-  let requested = false, playing = false, pending = false, disposed = false;
+  // Rotation and soundtrack have independent controls after the first Play.
+  let audioRequested = false, playing = false, pending = false, disposed = false;
   let generation = 0, error = '';
   let sourceReady = false, sourceLoading = false, sourceUrl = '';
   const sourceRequest = new AbortController();
@@ -22,23 +23,26 @@ export function createRingPlayback(canPlay: () => boolean) {
     lastState = detail;
     window.dispatchEvent(new CustomEvent('meewav:ring-playback', { detail }));
   };
-  const pause = () => {
-    generation++; requested = playing = pending = false;
-    audio?.pause(); publish();
+  const pauseRotation = () => { playing = false; publish(); };
+  const suspend = () => {
+    generation++; audioRequested = playing = pending = false;
+    audio.pause(); publish();
   };
   const onPlaying = () => {
     if (audio?.paused) return;
-    if (!requested || !canPlay() || disposed) { pause(); return; }
-    playing = true; pending = false; publish();
+    if (!audioRequested || !canPlay() || disposed) { suspend(); return; }
+    pending = false; publish();
   };
-  const onWaiting = () => { playing = false; pending = requested; publish(); };
+  const onWaiting = () => { pending = audioRequested; publish(); };
   const onPause = () => {
     if (audio && !audio.paused) return;
-    generation++; requested = playing = pending = false; publish();
+    generation++; audioRequested = pending = false; publish();
   };
-  const onError = () => { error = 'Le morceau ne peut pas être lu. Réessaie.'; pause(); };
-  const hidden = () => { if (document.hidden) pause(); else publish(); };
-  const otherMedia = (event: Event) => { if (event.target !== audio) pause(); };
+  const onError = () => {
+    error = 'Le morceau ne peut pas être lu. Réessaie.';
+    audioRequested = pending = false; publish();
+  };
+  const hidden = () => { if (document.hidden) suspend(); else publish(); };
   // Read the small bundled track once through the asset interceptor. The media
   // decoder then seeks inside a Blob, without WebView HTTP range reads.
   const prepareSource = async () => {
@@ -65,15 +69,14 @@ export function createRingPlayback(canPlay: () => boolean) {
   audio?.addEventListener('pause', onPause);
   audio?.addEventListener('error', onError);
   document.addEventListener('visibilitychange', hidden);
-  document.addEventListener('play', otherMedia, true);
-  window.addEventListener('pagehide', pause);
-  window.addEventListener('meewav:ring-portrait-select', pause);
+  window.addEventListener('pagehide', suspend);
+  window.addEventListener('meewav:ring-portrait-select', pauseRotation);
   void prepareSource();
   return {
     get playing() { return playing; },
     state,
-    refresh() { if (!canPlay() && requested) pause(); else publish(); },
-    pause,
+    refresh() { if (!canPlay() && (audioRequested || playing || pending)) suspend(); else publish(); },
+    suspend,
     toggleMuted() {
       if (disposed) return;
       muted = !muted; audio.muted = muted;
@@ -81,11 +84,14 @@ export function createRingPlayback(canPlay: () => boolean) {
       publish();
     },
     toggle() {
-      if (requested || playing || pending) { pause(); return; }
+      if (playing) { pauseRotation(); return; }
       if (disposed || !canPlay()) return;
       if (!sourceReady) { void prepareSource(); return; }
+      playing = true;
+      // Resume rotation without restarting, seeking or pausing the soundtrack.
+      if (audioRequested && !audio.paused) { publish(); return; }
       const attempt = ++generation;
-      error = ''; requested = pending = true; publish();
+      error = ''; audioRequested = pending = true; publish();
       if (audio.error) audio.load();
       // L’appel reste dans le tap utilisateur, requis par Android WebView.
       void audio.play().catch(() => {
@@ -94,12 +100,11 @@ export function createRingPlayback(canPlay: () => boolean) {
       });
     },
     dispose() {
-      pause(); disposed = true;
+      suspend(); disposed = true;
       sourceRequest.abort();
       document.removeEventListener('visibilitychange', hidden);
-      document.removeEventListener('play', otherMedia, true);
-      window.removeEventListener('pagehide', pause);
-      window.removeEventListener('meewav:ring-portrait-select', pause);
+      window.removeEventListener('pagehide', suspend);
+      window.removeEventListener('meewav:ring-portrait-select', pauseRotation);
       if (!audio) return;
       audio.removeEventListener('playing', onPlaying);
       audio.removeEventListener('waiting', onWaiting);

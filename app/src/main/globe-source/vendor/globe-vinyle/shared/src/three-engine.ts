@@ -712,7 +712,6 @@ export async function createThree(
     touchNavigation.cancel(settle); canvas.classList.remove('dragging');
   }
   function down(e: PointerEvent) {
-    if (ringNavigation.active) ringPlayback.pause();
     if (e.pointerType === 'touch' || e.pointerType === 'pen') {
       e.preventDefault(); canvas.focus({ preventScroll: true }); canvas.setPointerCapture(e.pointerId);
       touchNavigation.down(e); return;
@@ -853,7 +852,7 @@ export async function createThree(
   const wheel = (e: WheelEvent) => {
     e.preventDefault();
     cancelTouch();
-    if (ringNavigation.active) { ringPlayback.pause(); ringNavigation.wheel(e.deltaY); return; }
+    if (ringNavigation.active) { ringNavigation.wheel(e.deltaY); return; }
     if (gesture?.orbiting) return;
     if (!Number.isFinite(e.deltaY) || e.deltaY === 0) return;
     setBrandVisible(false);
@@ -952,7 +951,7 @@ export async function createThree(
     if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Escape', 'Home', '+', '=', '-'].includes(e.key)) cancelTouch();
     if (ringNavigation.active) {
       if (e.key === 'Escape' || e.key === 'Home') { e.preventDefault(); exitRing(); }
-      else if (ringNavigation.key(e.key)) { ringPlayback.pause(); e.preventDefault(); }
+      else if (ringNavigation.key(e.key)) { e.preventDefault(); }
       return;
     }
     const directions: any = {
@@ -1289,7 +1288,7 @@ export async function createThree(
   }
   function exitRing(target?: any, afterReturn?: () => void) {
     if (!ringNavigation.active || ringNavigation.returning) return;
-    ringPlayback.pause();
+    ringPlayback.suspend();
     cancelTouch();
     const overview = overviewTarget('globe', width, height);
     const destination = target
@@ -1465,7 +1464,7 @@ export async function createThree(
     },
     setActive(value: boolean) {
       if (active === value) return;
-      if (!value) ringPlayback.pause();
+      if (!value) ringPlayback.suspend();
       cancelTouch();
       ringNavigation.cancel();
       ringPortraits.cancel();

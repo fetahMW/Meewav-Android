@@ -260,10 +260,10 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
     {mode === 'ring' && <>
       <button className="ring-return-button ring-key-surface" onClick={goGlobe} disabled={ringReturning}><ArrowLeft size={17} aria-hidden="true" />{ringReturning ? 'Retour au globe…' : 'Retour au globe'}</button>
       {!ringReturning && <button className="ring-playback-button ring-key-surface" type="button"
-        aria-label={ringPlayback.playing || ringPlayback.pending ? 'Mettre le vinyle et la musique en pause' : 'Lire le vinyle et la musique'}
-        aria-pressed={ringPlayback.playing || ringPlayback.pending} aria-busy={ringPlayback.pending}
+        aria-label={ringPlayback.playing ? 'Mettre la rotation en pause' : 'Démarrer la rotation'}
+        aria-pressed={ringPlayback.playing} aria-busy={ringPlayback.pending}
         disabled={!ringPlayback.available} onClick={() => engine.current?.toggleRingPlayback()}>
-        {ringPlayback.playing || ringPlayback.pending ? <Pause size={21} fill="currentColor" aria-hidden="true" /> : <Play size={21} fill="currentColor" aria-hidden="true" />}
+        {ringPlayback.playing ? <Pause size={21} fill="currentColor" aria-hidden="true" /> : <Play size={21} fill="currentColor" aria-hidden="true" />}
       </button>}
       {!ringReturning && <button className="ring-mute-button ring-key-surface" type="button"
         aria-label={ringPlayback.muted ? 'Rétablir le son du vinyle' : 'Couper le son du vinyle'}

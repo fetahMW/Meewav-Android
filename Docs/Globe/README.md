@@ -133,9 +133,11 @@ Play/Pause de 46 pixels, centré horizontalement en haut de l’écran. Son bord
 et sa hauteur sont alignés avec Retour au globe, par les mêmes variables CSS.
 La manipulation manuelle reste disponible. Play entraîne
 le disque et ses portraits à raison d’un tour en quatre minutes ; la caméra ne
-tourne pas automatiquement. Pause garde exactement l’angle courant. Toucher le
-canvas, sélectionner un portrait, revenir au globe ou mettre l’application en
-arrière-plan met la lecture en pause ; elle ne repart que sur une nouvelle action.
+tourne pas automatiquement. Pause garde exactement l’angle courant sans arrêter
+la musique. Toucher ou manipuler le vinyle laisse tourner le disque et les
+portraits. Sélectionner un portrait suspend uniquement la rotation à l’ouverture
+du préprofil ; un nouveau Play la reprend. Sortir de l’exploration ou mettre
+l’application en arrière-plan suspend encore les deux pour libérer la lecture.
 
 Le disque et les portraits partageaient déjà le groupe tournant. Les reflets
 étaient compensés pour rester fixes dans l’espace, ce qui pouvait donner une
@@ -145,10 +147,11 @@ La phase lumineuse est conservée à la pause et au retour, sans saut ni réduct
 de qualité. Le rythme de quatre minutes par tour reste identique.
 
 `ring-playback.ts` commande une lecture audio locale : démarrage dans le geste
-utilisateur, rotation liée à l’état de lecture réel, pause/reprise sans remise à
-zéro du morceau, arrêt sur erreur et libération au démontage. La musique est
-en boucle pendant la rotation. La lecture d’un média de préprofil suspend
-celle du vinyle. `ring-audio.ts` référence `audio/ring-exploration.m4a`, copie sans
+utilisateur au premier Play, puis rotation et bande-son indépendantes. La musique
+boucle aussi pendant les pauses de rotation et l’ouverture ou la lecture d’un
+préprofil. Seul Muet coupe son volume pendant l’exploration, sans arrêter sa
+progression. Une erreur audio est affichée sans figer la rotation. Les ressources
+sont libérées au démontage. `ring-audio.ts` référence `audio/ring-exploration.m4a`, copie sans
 transcodage du fichier utilisateur `Untitled (2).m4a`. Son MIME est `audio/mp4`.
 Après des erreurs `PIPELINE_ERROR_READ` observées dans le journal du Samsung,
 le morceau (2,25 Mo) est préchargé une fois via fetch puis fourni au lecteur comme
