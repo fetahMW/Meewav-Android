@@ -280,3 +280,11 @@ nom puis contexte, mêmes marges, commandes sans boîtes et sous-onglets textuel
 44 px avec le même indicateur. Groupes conserve ses cinq destinations et son accès
 Options ; Projets en compte quatre. Le retour redondant des sous-vues de groupe est
 remplacé par l’onglet Chat déjà présent ; celui des étapes de création reste disponible.
+
+Le bandeau de contact du Tchat et des conversations Collabs est translucide avec
+un flou d’arrière-plan de 22 px. Il flotte sous les onglets, au-dessus des messages
+qui défilent derrière. Un espace de 64 px et une marge de lecture sont réservés au
+début de l’historique pour garder le premier message accessible. Nom, portrait,
+retour, recherche et informations conservent leurs actions. Les onglets principaux
+restent sur leur fond noir ; un fond opaque remplace le verre lorsque la transparence
+est réduite ou que le flou n’est pas pris en charge.
