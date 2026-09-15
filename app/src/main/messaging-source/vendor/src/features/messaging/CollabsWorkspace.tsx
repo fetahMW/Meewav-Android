@@ -783,15 +783,15 @@ export function CollabsWorkspace({
                   <span className="mw-collab-request__level"><MeewavGradeBadge className="mw-collab-request__grade" level={getCollabGradeLevel(detailCollab)} size="xs" variant="icon" /><small>Niveau {getCollabGradeLevel(detailCollab)}</small></span>
                   </div>
                   <p>{detailCollab.role}</p>
-                  <div className="mw-collab-request__profile-details">
-                  <dl aria-label="Statistiques du profil">
-                    <div><dt><Handshake aria-hidden="true" /><strong>{detailProfileStats?.collaborations ?? "—"}</strong></dt><dd>{compact ? "collabs" : "Collaborations"}</dd></div>
-                    <div><dt><AudioLines aria-hidden="true" /><strong>{detailProfileStats ? `${detailProfileStats.responseRate}%` : "—"}</strong></dt><dd>{compact ? "réponse" : "Taux de réponse"}</dd></div>
-                  </dl>
-                  <Link className="mw-collab-profile-link" to={profileHref(detailCollab)} state={{ from: "/messages?space=collabs" }}>{compact ? "Voir profil" : "Voir son profil"} <ChevronRight size={14} /></Link>
-                  </div>
                   </div>
                 </aside>
+                  <div className="mw-collab-request__profile-details">
+                  <dl aria-label="Statistiques du profil">
+                    <div><dt><Handshake aria-hidden="true" /><strong>{detailProfileStats?.collaborations ?? "—"}</strong></dt><dd>collabs</dd></div>
+                    <div><dt><AudioLines aria-hidden="true" /><strong>{detailProfileStats ? `${detailProfileStats.responseRate}%` : "—"}</strong></dt><dd>réponse</dd></div>
+                  </dl>
+                  <Link className="mw-collab-profile-link" to={profileHref(detailCollab)} state={{ from: "/messages?space=collabs" }}>Voir profil <ChevronRight size={14} /></Link>
+                  </div>
                 <p className="mw-collab-request__message"><MeeWavRichText>{detailCollab.message}</MeeWavRichText></p>
                 {detailMusicalFacts.length > 0 && (
                   <div className="mw-collab-card__chips" aria-label="Informations musicales">

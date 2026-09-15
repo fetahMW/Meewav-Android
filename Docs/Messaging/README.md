@@ -220,3 +220,13 @@ conteneur pour éviter leur superposition. Les membres, projets liés, titres et
 ont des colonnes et espacements adaptés au mobile. Les cartes Collab et les bulles du
 Tchat ne sont pas redessinées dans cette passe. Compilation et installation seulement ;
 la validation visuelle reste à effectuer par l’utilisateur.
+
+## Carte Collab adaptée à la capture mobile du 15 septembre
+
+La capture utilisateur montrait une identité étirée, un portrait désaligné, des
+statistiques empilées et un retour redondant rogné. La carte garde sa finition Web,
+avec une composition Android explicite : portrait/nom/badge, statistiques et lien,
+message, informations musicales, fichiers puis actions. Les lecteurs réservent une
+ligne au nom de fichier. La largeur utilise le panneau disponible, et le retour
+« Toutes les demandes » est masqué au profit du chevron contacts déjà présent.
+La liste, les réponses et la lecture des pièces jointes conservent leurs handlers.
