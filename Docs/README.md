@@ -13,7 +13,8 @@ Meewav**. « Notre violet » désigne la finition du bouton **Explorer les artis
 reprise de la fenêtre d’authentification native, et non l’ancien rose du globe.
 
 **Référence prioritaire pour les CTA de messagerie, confirmée le 15 septembre 2026 :**
-le bouton **Créer un groupe**, classe `.mw-chat-header__primary-action` du Web.
+le bouton **Groupes → Membres → Inviter**, classe `.agw-primary-button` dans
+la version Android. Cette précision remplace le repère « Créer un groupe ».
 Dégradé à 135° : `rgba(79,53,158,.96)` (`#4F359E`) vers
 `rgba(76,47,169,.94)` (`#4C2FA9`). Cette décision remplace l’essai mat
 `#484084 → #403976 → #2F2A57` et la référence d’authentification pour les CTA
@@ -21,6 +22,8 @@ de messagerie. L’authentification et le globe restent inchangés.
 La référence durable est [DESIGN-MEMORY.md](DESIGN-MEMORY.md).
 Les variables `--meewav-violet-urbain-*` dans `messaging-source/mobile.css`
 alimentent les CTA principaux et les boutons d’envoi des quatre espaces.
+Le rond d’envoi garde son violet à pleine opacité même avec un champ vide ;
+seule son icône s’atténue lorsqu’il est désactivé.
 **Exception explicitement demandée pour les bulles du Tchat : reprendre exactement les
 couleurs, dégradés, contours, reliefs et formes du chat Web**, y compris le lecteur audio.
 Leurs styles de référence sont les copies de `message-workspace.css`, `message-grammar.css`

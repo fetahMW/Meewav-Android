@@ -1224,7 +1224,6 @@ export default function ArtistGroupsWorkspace({
       <button type="button" className={activeView === "planning" ? "is-active" : ""} onClick={() => openPanel(group.id, "planning")}><CalendarClock size={17} /> Planning</button>
       <button type="button" className={activeView === "members" ? "is-active" : ""} onClick={() => openPanel(group.id, "members")}><Users size={17} /> Membres</button>
       <button type="button" className={activeView === "decisions" ? "is-active" : ""} onClick={() => openPanel(group.id, "decisions")}><Vote size={17} /> Décisions</button>
-      <button type="button" className={activeView === "projects" ? "is-active" : ""} onClick={() => openPanel(group.id, "projects")}><FolderKanban size={17} /> Projets liés</button>
     </nav>
   );
 

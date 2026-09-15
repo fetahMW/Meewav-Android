@@ -2,13 +2,15 @@
 
 ## Violet urbain Meewav — référence de messagerie
 
-Le 15 septembre 2026, l’utilisateur désigne explicitement le violet du CTA
-« Ajouter / Créer un groupe » comme **notre violet urbain**. Le rond d’envoi
+Le 15 septembre 2026, l’utilisateur précise la référence exacte :
+**Groupes → Membres → Inviter**, comme **notre violet urbain**. Le rond d’envoi
 (icône enveloppe/avion) et tous les CTA principaux de la messagerie doivent
 reprendre cette finition.
 
-Source : `.mw-chat-header__primary-action` dans
-`app/src/main/messaging-source/vendor/src/features/messaging/messaging-page.css`.
+Source visible prioritaire : le bouton `.agw-primary-button` « Inviter » de
+`ArtistGroupsWorkspace.tsx`, dans la vue Membres. Sa finition Android vient du
+jeton partagé dans `app/src/main/messaging-source/mobile.css`.
+Ne pas prendre une ancienne couleur de sa feuille Web avant les surcharges Android.
 
 - Dégradé : `linear-gradient(135deg, rgba(79,53,158,.96), rgba(76,47,169,.94))`.
 - Couleurs : **#4F359E → #4C2FA9** ; conserver l’angle et les opacités.
@@ -19,7 +21,9 @@ Source : `.mw-chat-header__primary-action` dans
 
 Cette décision remplace les références précédentes **pour les CTA de messagerie**.
 Ne pas réinventer un violet mat, rose ou prune à chaque modification.
-Les états interactifs gardent ce dégradé ; un bouton désactivé conserve sa sémantique
-et son atténuation. Les boutons secondaires restent neutres.
+Les états interactifs gardent ce dégradé. Le rond d’envoi conserve **une opacité de 1**,
+y compris avec un champ vide : l’ancienne opacité de 0,4 altérait son violet.
+Son icône seule passe à 0,45 quand il est désactivé ; l’envoi reste réellement
+désactivé, sans permettre de message vide. Les boutons secondaires restent neutres.
 Les bulles conservent les formes et couleurs du site demandées séparément.
 Le bandeau et le champ de saisie en verre restent inchangés.

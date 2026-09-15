@@ -359,3 +359,16 @@ le nom du membre afin de laisser une vraie cible de 44 px au menu. Les handlers,
 permissions et confirmations de gestion ne changent pas. Le bandeau translucide
 et les autres onglets restent conservés. Compilation/installation uniquement ;
 aucune validation visuelle ou fonctionnelle automatique.
+
+## Groupes : quatre outils et couleur du rond d’envoi
+
+Le sous-menu affiche Chat, Planning, Membres et Décisions sur quatre colonnes
+égales. « Projets liés » est retiré de cette navigation ; les données de liaison
+existantes ne sont pas effacées.
+
+La référence explicitement précisée est Groupes > Membres > Inviter, dans son
+rendu Android actuel. Le rond d’envoi partage déjà ce jeton, mais son état vide
+était affiché à 40 % d’opacité, ce qui altérait la couleur. Il garde désormais
+son fond à pleine opacité ; l’icône s’atténue seule à 45 % quand le bouton est
+désactivé. La validation des messages vides ne change pas. Référence enregistrée
+dans DESIGN-MEMORY.md. Compilation et installation seulement, sans QA automatique.
