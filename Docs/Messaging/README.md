@@ -160,5 +160,14 @@ ne valide pas les échanges Supabase, les envois de fichiers ou la capture vocal
 la messagerie en démo locale, via `OPEN_MESSAGING_WORKSHOP` dans `MainActivity.kt`.
 Passer cette constante à `false` à la fin du chantier pour rétablir l’entrée habituelle.
 La version release et les liens de callback d’authentification conservent leur parcours.
-Les bulles gardent leur géométrie et relief ; leurs accents violets utilisent désormais
-le dégradé exact du bouton « Se connecter » (`IosAuthAction`), documenté dans l’index Android.
+Après l’essai du dégradé « Se connecter » sur les bulles, l’utilisateur a demandé
+de reprendre exactement le chat Web. Les surcharges Android de couleurs, contours,
+arrondis et padding des bulles texte et audio sont retirées : les trois feuilles
+de style importées du chat Web portent directement leur apparence. La largeur
+maximale reste adaptée à l’écran mobile. L’accès direct au Tchat reste actif.
+
+Le chevron de l’en-tête ferme seulement l’activité Messagerie pour retrouver la
+fonctionnalité précédente dans la pile Android. Lors du lancement direct de chantier,
+il n’y a pas de fonctionnalité précédente : le retour quitte donc la messagerie.
+La croix retire la tâche Meewav et ouvre l’accueil du téléphone. Le retour système
+conserve la navigation interne (fermeture des panneaux, puis retour à la liste).

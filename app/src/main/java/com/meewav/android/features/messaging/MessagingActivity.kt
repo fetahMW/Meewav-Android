@@ -161,6 +161,12 @@ class MessagingActivity : ComponentActivity() {
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 if (!request.isForMainFrame) return true
                 if (request.url.toString() == "$ORIGIN/native/globe") { finish(); return true }
+                if (request.url.toString() == "$ORIGIN/native/close-app") {
+                    finishAndRemoveTask()
+                    startActivity(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                    return true
+                }
                 if (request.url.scheme == "https" && request.url.host == "appassets.androidplatform.net" && request.url.path == "/native/save") {
                     request.url.getQueryParameter("id")?.let(::offerSave)
                     return true

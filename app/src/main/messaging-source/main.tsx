@@ -1,13 +1,14 @@
 import React, { Component, useEffect, useLayoutEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Globe2, MessageCircle, Plus } from 'lucide-react';
+import { ChevronLeft, MessageCircle, Plus, X } from 'lucide-react';
 import { configure, previewEnabled, updateToken, type MobileConfig } from './runtime';
 
 const root = createRoot(document.getElementById('root')!);
 let started = false;
 let disposed = false;
 const returnToGlobe = () => location.assign('https://appassets.androidplatform.net/native/globe');
+const closeApplication = () => location.assign('https://appassets.androidplatform.net/native/close-app');
 
 class ErrorBoundary extends Component<{ children: React.ReactNode }, { failed: boolean }> {
   state = { failed: false };
@@ -64,10 +65,9 @@ function MobileShell({ Page }: { Page: React.ComponentType }) {
   }, [detail]);
   return <div className={`mobile-messaging${detail ? ' is-detail' : ''}`}>
     <header className="mobile-messaging-header">
-      <button aria-label={detail ? 'Revenir à la liste' : 'Retour au globe'} onClick={() => detail
-        ? window.dispatchEvent(new Event('meewav:messaging-list')) : returnToGlobe()}>{detail ? <ArrowLeft /> : <Globe2 />}</button>
+      <button aria-label="Retour à la fonctionnalité précédente" onClick={returnToGlobe}><ChevronLeft /></button>
       <div><strong>Messagerie</strong>{previewEnabled() && <small>Aperçu sans compte</small>}</div>
-      <button aria-label={space === 'groups' ? 'Créer un groupe' : space === 'projects' ? 'Nouveau projet' : 'Nouvelle conversation'} onClick={() => {
+      <span className="mobile-messaging-header__actions"><button aria-label={space === 'groups' ? 'Créer un groupe' : space === 'projects' ? 'Nouveau projet' : 'Nouvelle conversation'} onClick={() => {
         if (space === 'groups' || space === 'projects') {
           window.dispatchEvent(new CustomEvent('meewav:messaging-new-space', { detail: space }));
           setDetail(true);
@@ -76,6 +76,7 @@ function MobileShell({ Page }: { Page: React.ComponentType }) {
           window.dispatchEvent(new Event('meewav:messaging-compose'));
         }
       }}><Plus /></button>
+      <button aria-label="Fermer l’application et revenir à l’accueil Samsung" onClick={closeApplication}><X /></button></span>
     </header>
     <Page />
     {downloadError && <div className="mobile-download-error" role="alert">Ce fichier n’a pas pu être enregistré.<button aria-label="Fermer" onClick={() => setDownloadError(false)}>Fermer</button></div>}
