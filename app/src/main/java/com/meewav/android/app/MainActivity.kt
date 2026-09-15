@@ -23,15 +23,17 @@ import com.meewav.android.features.messaging.MessagingActivity
 import com.meewav.android.BuildConfig
 
 class MainActivity : ComponentActivity() {
-    private companion object {
+    companion object {
+        const val EXTRA_OPEN_GLOBE = "com.meewav.android.OPEN_GLOBE"
         // Temporary messaging workshop entry. Set false when restoring the normal journey.
-        const val OPEN_MESSAGING_WORKSHOP = true
+        private const val OPEN_MESSAGING_WORKSHOP = true
     }
     private lateinit var authViewModel: AuthViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (BuildConfig.DEBUG && OPEN_MESSAGING_WORKSHOP && intent.action != Intent.ACTION_VIEW) {
+        if (BuildConfig.DEBUG && OPEN_MESSAGING_WORKSHOP && intent.action != Intent.ACTION_VIEW
+            && !intent.getBooleanExtra(EXTRA_OPEN_GLOBE, false)) {
             startActivity(Intent(this, MessagingActivity::class.java).putExtra("preview", true))
             finish()
             return
@@ -77,6 +79,12 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleAuthIntent(intent: Intent?) {
+        // The debug workshop can open Messaging without an existing globe activity.
+        if (BuildConfig.DEBUG && intent?.getBooleanExtra(EXTRA_OPEN_GLOBE, false) == true) {
+            authViewModel.navigate(AuthPage.Globe)
+            intent.removeExtra(EXTRA_OPEN_GLOBE)
+            return
+        }
         if (intent?.action == Intent.ACTION_VIEW) intent.dataString?.let(authViewModel::handleCallback)
     }
 }

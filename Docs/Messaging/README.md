@@ -404,3 +404,16 @@ violets littéraux : Nouveau et Inviter référencent le même jeton violet urba
 Les cartes « Choix de la cover » et « Validation mixage », ainsi que le détail
 ouvert au toucher, passent en graphite noir/gris avec icônes et textes secondaires
 gris. Leurs interactions sont conservées. Compilation et installation uniquement.
+
+## Messagerie terminée — intégration demandée dans main
+
+L’utilisateur déclare le lot messagerie terminé et autorise son commit, sa fusion
+et son push GitHub. Cela consigne son accord de livraison, pas une QA automatique.
+
+Le chevron supérieur est explicitement « Retour au globe ». Depuis un globe déjà
+ouvert, il ferme la messagerie et retrouve l’activité existante. Depuis l’entrée
+atelier Debug, où la messagerie était seule dans la pile, il ouvre MainActivity
+avec EXTRA_OPEN_GLOBE pour rejoindre directement AuthPage.Globe en paysage, sans
+reboucler vers l’atelier messagerie. Ce raccourci reste limité au Debug ; il ne crée
+pas de contournement d’authentification en production. Le démarrage atelier reste
+actif pour l’instant, conformément au parcours de fabrication actuel.

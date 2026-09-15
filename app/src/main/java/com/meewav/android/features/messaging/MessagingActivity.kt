@@ -33,6 +33,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.meewav.android.BuildConfig
 import com.meewav.android.app.MeewavApplication
+import com.meewav.android.app.MainActivity
 import com.meewav.android.features.auth.localMediaAsset
 import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.launch
@@ -160,7 +161,14 @@ class MessagingActivity : ComponentActivity() {
         web.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 if (!request.isForMainFrame) return true
-                if (request.url.toString() == "$ORIGIN/native/globe") { finish(); return true }
+                if (request.url.toString() == "$ORIGIN/native/globe") {
+                    if (isTaskRoot && BuildConfig.DEBUG) {
+                        startActivity(Intent(this@MessagingActivity, MainActivity::class.java)
+                            .putExtra(MainActivity.EXTRA_OPEN_GLOBE, true))
+                    }
+                    finish()
+                    return true
+                }
                 if (request.url.toString() == "$ORIGIN/native/close-app") {
                     finishAndRemoveTask()
                     startActivity(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)

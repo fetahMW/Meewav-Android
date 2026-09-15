@@ -67,7 +67,7 @@ function MobileShell({ Page }: { Page: React.ComponentType }) {
   }, [detail]);
   return <div ref={surfaceRef} className={`mobile-messaging${detail ? ' is-detail' : ''}`}>
     <header className="mobile-messaging-header">
-      <button aria-label="Retour à la fonctionnalité précédente" onClick={returnToGlobe}><ChevronLeft /></button>
+      <button aria-label="Retour au globe" onClick={returnToGlobe}><ChevronLeft /></button>
       <div><strong>Messagerie</strong>{previewEnabled() && <small>Aperçu sans compte</small>}</div>
       <span className="mobile-messaging-header__actions"><button aria-label={space === 'groups' ? 'Créer un groupe' : space === 'projects' ? 'Nouveau projet' : 'Nouvelle conversation'} onClick={() => {
         if (space === 'groups' || space === 'projects') {
