@@ -727,7 +727,7 @@ html { scroll-padding-top: 120px; scroll-padding-bottom: 116px; }
 .profile-menu-options button:focus-visible { outline: 2px solid #bda3e5; outline-offset: -2px; }
 
 /* Library: search + import, one filter, then actual covers and titles. */
-#root .profile-media-view .profile-library-toolbar.is-compact { display: grid; gap: 8px; margin: 0 0 14px; }
+#root .profile-media-view .profile-library-toolbar.is-compact { display: grid; grid-template-columns: minmax(0,1fr); justify-content: stretch; gap: 8px; margin: 0 0 14px; }
 #root .profile-library-search-row { display: grid; grid-template-columns: minmax(0,1fr) 44px; gap: 10px; }
 #root .profile-media-view .profile-library-search { min-height: 44px; border: 0; border-bottom: 1px solid #ffffff28; border-radius: 0; background: transparent; padding: 0 4px; box-shadow: none; }
 #root .profile-library-import { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--mobile-cta-rim); }
@@ -769,3 +769,24 @@ html { scroll-padding-top: 120px; scroll-padding-bottom: 116px; }
 #root .profile-media-view .profile-recognition-card__progress i.is-filled { background: var(--recognition-accent); }
 #root .profile-media-view .profile-gift-catalog-card.is-selected { border-color: #ad8eee; background: linear-gradient(120deg,#5137a125,transparent 65%),#111318; box-shadow: inset 0 0 0 1px #9a7cdb38,0 0 16px #5137a117; }
 #root .profile-media-view .profile-gift-catalog-card__select { color: #d3baff; }
+#root .profile-media-view .profile-media-card::before { display: none; }
+#root .profile-media-view .profile-media-card__body { background: none; border-radius: 0; box-shadow: none; }
+#root .profile-media-view .profile-media-card__body::after { display: none; }
+#root .profile-media-view .profile-media-card__footer { margin: 0; min-height: 0; }
+#root .profile-media-view .profile-gift-catalog-card > .profile-gift-object { width: 56px !important; height: 56px !important; min-width: 0; margin: 0; align-self: center; }
+#root .profile-media-view .profile-gift-catalog-card__copy { min-width: 0; padding: 0; }
+#root .profile-media-view .profile-gift-catalog-card__meta { flex-wrap: wrap; gap: 5px; padding-right: 20px; }
+#root .profile-media-view .profile-gift-catalog-card__meta em { color: #a5a1b5; background: none; border: 0; padding: 0; font-size: 9px; }
+#root .profile-media-view .profile-gift-catalog-card__select { align-self: start; width: 24px; height: 24px; border-radius: 8px; }
+#root .profile-media-view .profile-studio-mode-heading { display: grid; grid-template-columns: minmax(0,1fr) 44px; align-items: center; gap: 12px; padding: 0 2px; border: 0; border-radius: 0; background: none; box-shadow: none; }
+#root .profile-media-view .profile-studio-mode-heading .profile-kicker { display: none; }
+#root .profile-media-view .profile-studio-mode-heading h3 { font-size: 18px; margin: 0 0 6px; }
+#root .profile-media-view .profile-studio-mode-heading p { font-size: 11px; margin: 0; }
+#root .profile-media-view .profile-studio-mode-heading > .profile-primary-button { width: 44px; min-width: 44px; height: 44px; min-height: 44px; padding: 0; display: grid; place-items: center; border-radius: 50%; font-size: 0; gap: 0; }
+#root .profile-media-view .profile-studio-mode-heading > .profile-primary-button svg { width: 19px; height: 19px; }
+#root .profile-gifts-inventory-disclosure { border-bottom: 1px solid #ffffff17; padding: 0 2px; }
+#root .profile-gifts-inventory-disclosure > summary { display: flex; align-items: center; gap: 8px; min-height: 44px; color: #b3adbf; font-size: 12px; list-style: none; cursor: pointer; }
+#root .profile-gifts-inventory-disclosure > summary::-webkit-details-marker { display: none; }
+#root .profile-gifts-inventory-disclosure > summary svg:last-child { margin-left: auto; transition: transform 180ms ease; }
+#root .profile-gifts-inventory-disclosure[open] > summary svg:last-child { transform: rotate(90deg); }
+#root .profile-gifts-catalog-section > header { position: sticky; top: 152px; z-index: 4; padding: 10px 0; background: #16171ded; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }

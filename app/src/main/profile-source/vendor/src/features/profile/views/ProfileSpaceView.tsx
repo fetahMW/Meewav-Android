@@ -1,7 +1,5 @@
 import {
-  ChevronRight,
   ClipboardSignature,
-  LayoutDashboard,
   ReceiptText,
   ShieldCheck,
   UsersRound,
@@ -69,12 +67,6 @@ type PrivateDashboardState =
   | { status: "ready"; dashboard: ProfilePrivateDashboard; error: null; isDemo: false }
   | { status: "demo"; dashboard: null; error: null; isDemo: true }
   | { status: "error"; dashboard: null; error: string; isDemo: false };
-
-const formatCompactCurrency = (value: number, currency = "EUR") => new Intl.NumberFormat("fr-FR", {
-  style: "currency",
-  currency,
-  maximumFractionDigits: Math.abs(value) < 100 ? 2 : 0,
-}).format(value);
 
 export default function ProfileSpaceView({
   profile,

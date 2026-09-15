@@ -209,13 +209,6 @@ export default function ProfileMediaView({
   const earnedBadgeCount = recognitionCatalog.filter((badge) => badge.status === "earned").length;
   const recognitionProgressCount = recognitionCatalog.filter((badge) => badge.status === "progress").length;
   const visibleRecognitions = recognitionCatalog.filter((badge) => recognitionFilter === "all" || badge.status === recognitionFilter);
-  const mediaWorkspaceMetrics: Record<MediaWorkspaceId, string> = {
-    library: String(items.length),
-    cage: "4",
-    setlist: "3",
-    gifts: "12",
-    badges: String(earnedBadgeCount),
-  };
 
   const visibleItems = useMemo(() => filterOwnerMedia(items, kind, query), [items, kind, query]);
 
