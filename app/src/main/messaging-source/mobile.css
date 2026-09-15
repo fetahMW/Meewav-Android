@@ -1,5 +1,5 @@
 @font-face { font-family: Inter; src: url('/fonts/inter.ttf') format('truetype'); font-display: swap; }
-:root { color-scheme: dark; font-family: Inter, system-ui, sans-serif; --mobile-violet: #5137a1; --mobile-line: #7960b266; --mobile-header: 62px; }
+:root { color-scheme: dark; font-family: Inter, system-ui, sans-serif; --mobile-violet: #5137a1; --mobile-violet-cta: linear-gradient(180deg,#5137a1 0%,#4e349f 50%,#372574 100%); --mobile-line: #7960b266; --mobile-header: 62px; }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body, #root { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #080810; color: #f5f4f8; }
 button, input, textarea, select { font: inherit; }
@@ -84,7 +84,7 @@ button:disabled { opacity: .4; cursor: default; }
 #root .mobile-messaging .mw-message.is-family-conversation { width: fit-content; }
 #root .mobile-messaging .mw-message.is-family-attachment, #root .mobile-messaging .mw-message.is-family-meewav { width: 88%; }
 #root .mobile-messaging .mw-bubble--text { font-size: 14px; line-height: 1.5; border-radius: 17px; padding: 11px 14px; }
-#root .mobile-messaging .mw-message.is-mine .mw-bubble--text { background: linear-gradient(140deg,#382267,#21183b); border-color: #7960b240; }
+#root .mobile-messaging .mw-message.is-mine .mw-bubble--text { background: var(--mobile-violet-cta); border-color: #7960b240; }
 #root .mobile-messaging .mw-composer-zone { width: 100%; max-width: 100%; margin: 0; padding: 8px 12px 10px; background: #0b0912; border-top: 1px solid #ffffff0b; }
 #root .mobile-messaging .mw-chat-scene > .mw-composer-zone { position: relative; inset: auto; transform: none; pointer-events: auto; padding: 8px 12px 10px; }
 #root .mobile-messaging .mw-composer { --control-size: 44px; --control-gap: 0px; height: auto; min-height: 54px; padding: 4px; border-radius: 19px; background: #14111e; border: 1px solid #7960b240; box-shadow: none; }
@@ -183,7 +183,19 @@ button:disabled { opacity: .4; cursor: default; }
 #root .mobile-messaging .mw-chat-header__identity { flex: 1; }
 #root .mobile-messaging .mw-chat-header__actions { flex-shrink: 0; }
 #root .mobile-messaging .mw-chat-timeline { scrollbar-width: none; scrollbar-gutter: auto; }
-/* Keep the original Web-derived text/audio bubbles: colours, relief and proportions. */
+/* Original bubble geometry and relief; violet comes from IosAuthAction, not a new palette. */
+#root .mobile-messaging .mw-message.is-mine .mw-bubble.mw-audio-capsule {
+  background: radial-gradient(ellipse at 95% 100%,#7960b226,transparent 45%),var(--mobile-violet-cta);
+  border-color: #7960b280;
+  box-shadow: inset 0 1px 3px #bda3e540,inset 0 -1px 5px #7960b226,0 10px 24px #0004;
+}
+#root .mobile-messaging .mw-audio-capsule > .mw-audio-capsule__play {
+  background: var(--mobile-violet-cta); border-color: #7960b2; color: white;
+  box-shadow: inset 0 1px 3px #bda3e566,inset 0 -2px 4px #37257466,0 3px 9px #00000040,0 0 12px #5137a133;
+}
+#root .mobile-messaging .mw-composer > button.mw-composer-send,
+#root .mobile-messaging .mw-composer > button.mw-composer-send:is(:hover,:active,:disabled),
+#root .mobile-messaging .mw-composer-row .is-send { background: var(--mobile-violet-cta); }
 #root .mobile-messaging .mw-composer-zone { flex-shrink: 0; }
 
 /* The contact picker keeps its actions visible, including with the IME open. */

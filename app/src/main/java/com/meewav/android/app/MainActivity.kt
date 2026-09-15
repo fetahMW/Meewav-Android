@@ -20,12 +20,22 @@ import com.meewav.android.features.auth.AuthScreen
 import com.meewav.android.features.auth.AuthViewModel
 import com.meewav.android.features.auth.AuthPage
 import com.meewav.android.features.messaging.MessagingActivity
+import com.meewav.android.BuildConfig
 
 class MainActivity : ComponentActivity() {
+    private companion object {
+        // Temporary messaging workshop entry. Set false when restoring the normal journey.
+        const val OPEN_MESSAGING_WORKSHOP = true
+    }
     private lateinit var authViewModel: AuthViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (BuildConfig.DEBUG && OPEN_MESSAGING_WORKSHOP && intent.action != Intent.ACTION_VIEW) {
+            startActivity(Intent(this, MessagingActivity::class.java).putExtra("preview", true))
+            finish()
+            return
+        }
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.rgb(8, 8, 13)),

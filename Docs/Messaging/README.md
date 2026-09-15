@@ -153,3 +153,12 @@ Captures et inspection effectuées dans la démo locale : liste du Tchat, conver
 clavier ouvert/replié, sélection des contacts, émoticônes, informations et menu des
 pièces jointes. Compilations et installation sur le Samsung effectuées. Cette passe
 ne valide pas les échanges Supabase, les envois de fichiers ou la capture vocale.
+
+## Accès temporaire pendant le chantier Tchat
+
+À la demande de l’utilisateur, les lancements de la version debug ouvrent directement
+la messagerie en démo locale, via `OPEN_MESSAGING_WORKSHOP` dans `MainActivity.kt`.
+Passer cette constante à `false` à la fin du chantier pour rétablir l’entrée habituelle.
+La version release et les liens de callback d’authentification conservent leur parcours.
+Les bulles gardent leur géométrie et relief ; leurs accents violets utilisent désormais
+le dégradé exact du bouton « Se connecter » (`IosAuthAction`), documenté dans l’index Android.

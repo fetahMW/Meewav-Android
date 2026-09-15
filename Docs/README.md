@@ -12,6 +12,12 @@ Nom retenu à la demande de l’utilisateur le 15 septembre 2026 : **Violet urba
 Meewav**. « Notre violet » désigne la finition du bouton **Explorer les artistes**,
 reprise de la fenêtre d’authentification native, et non l’ancien rose du globe.
 
+Pour les CTA et les accents du Tchat, la référence explicite est le bouton **Se connecter**
+de la page Bienvenue : `IosAuthAction` dans `features/auth/IosLoginScene.kt`.
+Reprendre son dégradé vertical **`#5137A1 → #4E349F → #372574`** (arrêts 0 %, 50 %, 100 %),
+avec bordure `#7960B2` : la première couleur seule ne reproduit pas son rendu.
+La messagerie l’expose par `--mobile-violet-cta`. Conserver les formes et reliefs des bulles.
+
 La couleur signature est `#5137A1`. Le rendu complet comprend le fond sombre
 `#2B1B5C` / `#19122F` / `#0B0816` / `#080610` / `#1A1234`, ses lumières diffuses
 et le contour `#BDA3E5` / `#7960B2` / `#5137A1` / `#8162B7`.
