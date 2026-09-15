@@ -782,11 +782,14 @@ html { scroll-padding-top: 120px; scroll-padding-bottom: 116px; }
 #root .profile-media-view .profile-studio-mode-heading .profile-kicker { display: none; }
 #root .profile-media-view .profile-studio-mode-heading h3 { font-size: 18px; margin: 0 0 6px; }
 #root .profile-media-view .profile-studio-mode-heading p { font-size: 11px; margin: 0; }
-#root .profile-media-view .profile-studio-mode-heading > .profile-primary-button { width: 44px; min-width: 44px; height: 44px; min-height: 44px; padding: 0; display: grid; place-items: center; border-radius: 50%; font-size: 0; gap: 0; }
+#root .profile-media-view .profile-studio-mode-heading > .profile-primary-button { width: 44px; min-width: 44px; height: 44px; min-height: 44px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 0; line-height: 0; gap: 0; }
 #root .profile-media-view .profile-studio-mode-heading > .profile-primary-button svg { width: 19px; height: 19px; }
 #root .profile-gifts-inventory-disclosure { border-bottom: 1px solid #ffffff17; padding: 0 2px; }
 #root .profile-gifts-inventory-disclosure > summary { display: flex; align-items: center; gap: 8px; min-height: 44px; color: #b3adbf; font-size: 12px; list-style: none; cursor: pointer; }
 #root .profile-gifts-inventory-disclosure > summary::-webkit-details-marker { display: none; }
 #root .profile-gifts-inventory-disclosure > summary svg:last-child { margin-left: auto; transition: transform 180ms ease; }
 #root .profile-gifts-inventory-disclosure[open] > summary svg:last-child { transform: rotate(90deg); }
-#root .profile-gifts-catalog-section > header { position: sticky; top: 152px; z-index: 4; padding: 10px 0; background: #16171ded; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+#root .profile-media-view .profile-gifts-catalog-section { padding: 0; border: 0; background: none; box-shadow: none; }
+#root .profile-gifts-catalog-section > header { position: relative; top: auto; margin: 0 0 10px; padding: 0 2px; background: none; }
+#root .profile-gifts-catalog-section > header .profile-kicker { display: none; }
+#root .profile-gifts-catalog-section > header h4 { margin: 0; font-size: 15px; }

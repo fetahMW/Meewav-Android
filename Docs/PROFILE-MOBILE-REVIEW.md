@@ -35,8 +35,20 @@ Corrections :
   L'inventaire affiché demeure celui du service ; la distribution reste contrôlée
   côté Room. Les brouillons d'aperçu utilisent une clé locale séparée du compte.
 
-Cette section décrit les corrections ; les contrôles de la passe précédente,
-ci-dessous, ne constituent pas une validation automatique de cette reprise.
+Contrôles ciblés sur le Samsung, terminés le 16 septembre : captures de la
+médiathèque, du sélecteur, des cadeaux, des reconnaissances, de l'espace privé et
+des statistiques. Les six cadeaux sont sélectionnables ; « Distinction Live »
+est sélectionné puis ouvre l'étape Destinataire via Préparer. Aucun cadeau envoyé.
+Le filtre Audio affiche deux pistes avec covers chargées ; sélection puis
+annulation d'un média vérifiées. Les six destinations privées sont accessibles
+et Transactions s'ouvre depuis le sélecteur.
+
+Les quatre courbes affichent bien leur date et valeur au tap (sur le point
+« 28 juin » de l'aperçu : 88 k, 12,1 %, 680 €, +5,2 %), avec leurs quatre couleurs
+distinctes et aucune rangée de readouts sous le graphe. Fermeture des panneaux
+et repli des courbes vérifiés. Les interfaces capturées ne débordent pas en largeur.
+Les sources de données réelles et les opérations serveur ne sont pas validées
+par ces essais locaux. Compilation et installation de l'APK effectuées.
 
 ## Changements
 
