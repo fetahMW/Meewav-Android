@@ -567,6 +567,12 @@ button:disabled { opacity: .4; cursor: default; }
 }
 #root .mobile-messaging-header > button:active,
 #root .mobile-messaging-header__actions > button:active { background: #ffffff0c; }
+/* User-supplied acoustic foam, fixed to the conversation rather than its messages. */
+#root .mobile-messaging .mw-chat-scene:has(> .mw-chat-timeline) {
+  background: #08090b url('./images/chat-acoustic-foam.png') center / cover no-repeat;
+}
+#root .mobile-messaging .mw-chat-scene > .mw-chat-timeline,
+#root .mobile-messaging .mw-chat-scene > .mw-chat-timeline > .mw-chat-timeline__inner { background: transparent; }
 #root .mobile-messaging .mw-mobile-workspace-header.mw-hub-chipbar {
   padding: 12px 16px 0;
   gap: 8px 12px;

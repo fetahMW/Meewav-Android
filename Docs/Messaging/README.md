@@ -288,3 +288,16 @@ début de l’historique pour garder le premier message accessible. Nom, portrai
 retour, recherche et informations conservent leurs actions. Les onglets principaux
 restent sur leur fond noir ; un fond opaque remplace le verre lorsque la transparence
 est réduite ou que le flou n’est pas pris en charge.
+
+## Essai du fond acoustique fourni par l’utilisateur
+
+`app/src/main/assets/messaging/images/chat-acoustic-foam.png` est la copie intégrale
+du fichier fourni `C:/Users/linkw/Downloads/ChatGPT Image 8 juin 2026, 09_37_32 1 (3).png`
+(464 515 octets), sans redimensionnement ni réencodage. Il est embarqué localement et
+référencé dans le manifeste des ressources. Cette provenance est distincte des médias
+importés du Web.
+
+Le fond remplit les conversations avec un cadrage centré qui conserve les proportions.
+Il reste immobile pendant le défilement des messages et se trouve derrière les surfaces
+en verre. Les bulles gardent leurs couleurs et leur forme. Cet essai visuel reste à
+apprécier sur le Samsung par l’utilisateur.
