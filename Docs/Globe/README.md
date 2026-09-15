@@ -111,7 +111,10 @@ ce déplacement des commandes n’ajoute pas de géolocalisation réelle. La rec
 est limitée à 312 × 36 pixels CSS en paysage ; le retour natif reste disponible
 vers « Ta scène est prête », centré sur le même axe que la navigation verticale.
 Le conteneur de navigation a un contour continu et accueille son petit globe
-fixe sans effet de creux. Les résolutions, les textures sources et la géométrie
+fixe sans effet de creux. Tous les boutons, du globe au profil, partagent une
+distribution verticale unique avec des intervalles égaux et des marges haute et
+basse identiques. Les groupes intermédiaires n’ajoutent plus d’espace propre.
+Les résolutions, les textures sources et la géométrie
 du globe ne sont pas réduites par ces adaptations.
 
 Le bundle et l’APK debug sont reconstruits pour livraison sur le S22 Ultra.

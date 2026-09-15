@@ -53,14 +53,15 @@ html, body, #root { width: 100%; height: 100%; margin: 0; overflow: hidden; }
   .reference-search-dock .search-submit-button { width: 28px; height: 28px; }
   .reference-search-dock .meewav-search-filter-bar__shortcut { display: none; }
   .reference-search-results.france-search-dropdown { top: 52px; left: 76px; width: min(312px, calc(100% - var(--mobile-artist-panel-width) - 112px)); max-height: calc(100dvh - 66px); overflow-y: auto; }
-  .reference-rail .globe-navigation-pole { top: 66px; left: 10px; bottom: 10px; width: 52px; height: auto; padding: 8px 4px 6px; gap: 3px; border-radius: 16px; clip-path: none; mask: none; }
+  .reference-rail .globe-navigation-pole { top: 66px; left: 10px; bottom: 10px; width: 52px; height: auto; padding: 8px 4px; justify-content: space-between; gap: 0; border-radius: 16px; clip-path: none; mask: none; }
   .reference-rail .globe-navigation-pole > .meewav-primary-nav__item.is-map { width: 42px; height: 36px; flex-basis: 36px; margin-top: 0; border-radius: 10px; background: none; box-shadow: none; }
   .reference-rail .globe-navigation-pole > .meewav-primary-nav__item.is-map::before,
   .reference-rail .globe-navigation-pole > .meewav-primary-nav__item.is-map::after { display: none; content: none; }
   .reference-rail .globe-navigation-pole .meewav-primary-nav__item:not(.is-map) { width: 42px; height: 36px; min-height: 36px; flex-basis: 36px; }
-  .reference-rail .globe-navigation-pole .meewav-primary-nav__pillars { flex: 1; padding: 0; gap: 2px; min-height: 0; overflow-y: auto; scrollbar-width: none; }
-  .reference-rail .globe-navigation-pole .meewav-primary-nav__account { margin: 0; padding: 4px 0 0; }
-  .reference-rail .globe-navigation-pole .meewav-primary-nav__account::before { top: 0; }
+  /* Une seule distribution : les groupes sémantiques ne créent plus de grands intervalles. */
+  .reference-rail .globe-navigation-pole .meewav-primary-nav__pillars,
+  .reference-rail .globe-navigation-pole .meewav-primary-nav__account { display: contents; margin: 0; padding: 0; }
+  .reference-rail .globe-navigation-pole .meewav-primary-nav__account::before { display: none; content: none; }
   .reference-rail .globe-navigation-pole.is-glass-chassis .meewav-primary-nav__globe { width: 31px; height: 31px; box-shadow: none; }
   .globe-honors-dock { --honors-top: 10px; top: 10px; right: var(--mobile-artist-panel-right); width: var(--mobile-artist-panel-width); gap: 8px; }
   .globe-honors-dock .globe-brand-logo-shell.globe-brand-compact { width: 100px; height: 32px; flex: 0 0 32px; }
