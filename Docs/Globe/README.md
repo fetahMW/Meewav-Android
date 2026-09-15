@@ -158,6 +158,11 @@ perte de capture provenant d’un contrôle enfant n’annule pas la capture de 
 
 ### Lecture du vinyle en exploration
 
+À l’arrivée depuis « Explorer les artistes », la caméra regarde à contre-sens du
+défilement : les portraits en lecture viennent de face, quel que soit le côté
+d’entrée. Le vol conserve son point d’arrivée et intègre cette orientation dans
+son approche ; le sens de rotation du disque et les gestes manuels sont conservés.
+
 L’aide textuelle et son pictogramme de main sont remplacés par un lecteur unique
 de 320 × 46 pixels au maximum, centré horizontalement en haut de l’écran. Il réunit
 Play/Pause, le portrait, une pastille « Top 1 Meewav France » avec couronne, le nom à côté du portrait, le titre et

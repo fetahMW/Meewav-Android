@@ -127,11 +127,11 @@ export function createRingNavigation(camera, ring, reducedMotion) {
       // Start on the innermost populated band, including after the visitor
       // previously moved across the disc. Other bands remain freely accessible.
       across = RING_PORTRAIT_LANES.centers[0];
-      // Enter the visible side of the ring, not the last visited point on its
-      // opposite side. Preserve the familiar forward-facing approach in front.
+      // Land on the visible side and face the oncoming portraits. The record's
+      // negative local-Y rotation moves them along surface.forward, so looking
+      // against that tangent keeps playback approaching from ahead on every side.
       angle = T.MathUtils.euclideanModulo(flight.angleAt(camera.position), Math.PI * 2);
-      const homeTurn = T.MathUtils.euclideanModulo(Math.PI / 2 - angle + Math.PI, Math.PI * 2) - Math.PI;
-      heading = flight.sectorAt(camera.position) === 0 || homeTurn >= 0 ? 0 : Math.PI;
+      heading = Math.PI;
       pose();
       flight.begin(target, 'enter');
       active = true; returning = false; onReturned = null;
