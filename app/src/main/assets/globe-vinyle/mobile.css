@@ -26,7 +26,7 @@ html, body, #root { width: 100%; height: 100%; margin: 0; overflow: hidden; }
   }
   .immersive-globe { --globe-search-left: 76px; }
   /* Palette de renderIosStageWindow (IosAvatarStage.kt), fenêtre d’authentification. */
-  .immersive-globe :is(.national-top-ten, .ring-explore-button, .ring-playback-button, .ring-mute-button, .ring-return-button).ring-key-surface {
+  .immersive-globe :is(.national-top-ten, .ring-explore-button, .ring-player, .ring-return-button).ring-key-surface {
     --ring-key-rgb: var(--meewav-violet-urbain-rgb);
     --ring-key-light: var(--meewav-violet-urbain-light);
     background: var(--meewav-violet-urbain-surface), var(--meewav-violet-urbain-contour) border-box;
@@ -35,28 +35,38 @@ html, body, #root { width: 100%; height: 100%; margin: 0; overflow: hidden; }
   .immersive-globe .national-top-ten__emblem,
   .immersive-globe .ring-return-button > svg,
   .immersive-globe .ring-explore-button .ring-explore-icon { color: var(--ring-key-light); }
-  .immersive-globe .ring-playback-button.ring-key-surface {
-    position: fixed; left: calc(50% - 23px); top: var(--mobile-ring-controls-top); bottom: auto; z-index: 16030;
-    display: grid; place-items: center; width: 46px; height: var(--mobile-ring-controls-height); padding: 0;
-    --ring-key-radius: 14px; color: var(--ring-key-light); touch-action: manipulation;
+  .immersive-globe .ring-player.ring-key-surface {
+    position:fixed; left:50%; transform:translateX(-50%); top:var(--mobile-ring-controls-top); z-index:16030;
+    box-sizing:border-box; display:flex; align-items:center; gap:6px;
+    width:min(320px, calc(100% - 176px)); height:var(--mobile-ring-controls-height); padding:0 3px;
+    --ring-key-radius:16px; user-select:none; -webkit-user-select:none;
   }
-  .ring-playback-button:disabled { opacity: .45; }
-  .immersive-globe .ring-mute-button.ring-key-surface {
-    position: fixed; left: calc(50% + 31px); top: var(--mobile-ring-controls-top); z-index: 16030;
-    display: grid; place-items: center; width: 46px; height: var(--mobile-ring-controls-height); padding: 0;
-    --ring-key-radius: 14px; color: var(--ring-key-light); touch-action: manipulation;
+  .ring-player :is(.ring-playback-button, .ring-mute-button) {
+    position:relative; display:grid; place-items:center; flex:0 0 44px; width:44px; height:44px;
+    padding:0; border:0; border-radius:12px; background:transparent;
+    color:var(--meewav-violet-urbain-light); cursor:pointer; touch-action:manipulation;
   }
-  .immersive-globe .ring-mute-button[aria-pressed="true"] { color: #fff; }
+  .ring-player .ring-playback-button { background:radial-gradient(ellipse, #5137a170, transparent 72%); color:#fff; }
+  .ring-player button:hover:not(:disabled) { background-color:#bda3e51a; }
+  .ring-player button:active:not(:disabled) { background-color:#5137a166; }
+  .ring-player button:focus-visible { outline:2px solid var(--meewav-violet-urbain-light); outline-offset:-3px; }
+  .ring-player .ring-playback-button:disabled { opacity:.45; cursor:wait; }
+  .ring-player .ring-mute-button::before { content:''; position:absolute; left:-3px; top:12px; bottom:12px; width:1px; background:#bda3e526; }
+  .ring-player .ring-mute-button[aria-pressed="true"] { color:#fff; background:#5137a14d; }
   .ring-track-info {
-    position:fixed; left:calc(50% + 86px); top:var(--mobile-ring-controls-top); z-index:16030;
-    display:flex; align-items:center; gap:8px; height:var(--mobile-ring-controls-height);
-    width:min(220px, calc(50% - 146px)); min-width:0; color:#fff; pointer-events:none;
+    display:flex; flex:1; align-items:center; gap:8px; min-width:0; color:#fff; pointer-events:none;
   }
-  .ring-track-info img { flex:none; width:36px; height:36px; object-fit:cover; border-radius:50%; border:1px solid var(--meewav-violet-urbain-light); }
-  .ring-track-info > div { min-width:0; display:flex; flex-direction:column; gap:3px; }
-  .ring-track-info span, .ring-track-info strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-shadow:0 1px 4px #000; }
-  .ring-track-info span { color:var(--meewav-violet-urbain-light); font:600 10px/1.2 Inter,sans-serif; }
-  .ring-track-info strong { font:600 12px/1.3 Inter,sans-serif; }
+  .ring-track-info img { box-sizing:border-box; flex:none; width:34px; height:34px; object-fit:cover; border-radius:10px; border:1px solid #bda3e54d; }
+  .ring-track-info__copy { min-width:0; display:flex; flex-direction:column; gap:3px; }
+  .ring-track-info__identity { display:flex; align-items:center; gap:5px; min-width:0; }
+  .ring-track-info__rank { display:inline-flex; flex:none; align-items:center; gap:3px; padding:2px 5px; border:1px solid #bda3e54d; border-radius:20px; background:#5137a14d; color:var(--meewav-violet-urbain-light); font:650 9px/12px Inter,sans-serif; white-space:nowrap; }
+  .ring-track-info__rank svg { flex:none; }
+  .ring-track-info__artist, .ring-track-info strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .ring-track-info__artist { color:#ddd1ed; font:500 9px/12px Inter,sans-serif; }
+  .ring-track-info strong { font:600 11px/14px Inter,sans-serif; }
+  /* Keep both controls reachable to the left of an open artist profile. */
+  .immersive-globe .ring-player[data-profile-open="true"] { left:calc(100% - var(--mobile-artist-panel-right) - var(--mobile-artist-panel-width) - 114px); transform:none; width:102px; }
+  .ring-player[data-profile-open="true"] .ring-track-info { display:none; }
   .ring-playback-error { position: fixed; left: calc(50% - 125px); top: calc(var(--mobile-ring-controls-top) + var(--mobile-ring-controls-height) + 8px); z-index: 16030; max-width: 250px; padding: 9px 12px; margin: 0; border-radius: 10px; background: #100a20ed; color: #eadcf7; font: 12px/1.35 Inter, sans-serif; }
   .reference-search-dock { top: 10px; left: 76px; width: min(264px, calc(100% - var(--mobile-artist-panel-width) - var(--mobile-artist-panel-right) - 100px)); height: 36px; }
   .reference-search-dock .meewav-search-filter-bar.is-flow { flex: 1 1 auto; width: 100%; height: 36px; min-width: 0; padding: 3px 5px; gap: 5px; border-radius: 13px; }

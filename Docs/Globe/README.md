@@ -145,9 +145,13 @@ perte de capture provenant d’un contrôle enfant n’annule pas la capture de 
 
 ### Lecture du vinyle en exploration
 
-L’aide textuelle et son pictogramme de main sont remplacés par un bouton fixe
-Play/Pause de 46 pixels, centré horizontalement en haut de l’écran. Son bord haut
-et sa hauteur sont alignés avec Retour au globe, par les mêmes variables CSS.
+L’aide textuelle et son pictogramme de main sont remplacés par un lecteur unique
+de 320 × 46 pixels au maximum, centré horizontalement en haut de l’écran. Il réunit
+Play/Pause, le portrait, une pastille « Top 1 » avec couronne, le nom, le titre et
+Muet dans la même surface Violet urbain Meewav. Les zones d’appui font 44 pixels.
+Son bord haut et sa hauteur sont alignés avec Retour au globe. Pendant l’ouverture
+d’un préprofil, il se compacte en deux commandes à gauche de la fiche pour garder
+Play/Pause et Muet accessibles sans couvrir son contenu.
 La manipulation manuelle reste disponible. Play entraîne
 le disque et ses portraits à raison d’un tour en quatre minutes ; la caméra ne
 tourne pas automatiquement. Pause garde exactement l’angle courant sans arrêter
@@ -177,11 +181,11 @@ WebView. Play attend la fin du préchargement et démarre toujours la lecture da
 le geste utilisateur. Le fichier AAC original reste intact ; le Blob est libéré
 au démontage. `LocalMediaAsset.kt` reste disponible pour les autres médias.
 
-Un bouton muet de 46 pixels, à droite de Play/Pause, coupe ou rétablit le son
+Le bouton muet à droite du lecteur coupe ou rétablit le son
 sans arrêter la rotation, sans changer la position de lecture et sans démarrer
 une lecture en pause. Le choix reste dans le contrôleur de session ; sa sauvegarde
 locale est facultative et dépend de la disponibilité du stockage WebView.
-À côté du lecteur, « Top 1 », le portrait et le nom viennent directement du premier
+Dans le lecteur, « Top 1 », le portrait et le nom viennent directement du premier
 artiste de la liste Top 10. Le titre « Minuit sur orbite » est fictif et accompagne
 le morceau utilisateur existant dans cette démonstration. La règle produit est de
 diffuser le morceau du premier du classement ; le classement actuel reste une

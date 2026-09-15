@@ -260,22 +260,30 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
     </button>}
     {mode === 'ring' && <>
       <button className="ring-return-button ring-key-surface" onClick={goGlobe} disabled={ringReturning}><ArrowLeft size={17} aria-hidden="true" />{ringReturning ? 'Retour au globe…' : 'Retour au globe'}</button>
-      {!ringReturning && <button className="ring-playback-button ring-key-surface" type="button"
+      {!ringReturning && <section className="ring-player ring-key-surface" data-profile-open={Boolean(ringPortrait)} aria-label="Lecteur du Top 1">
+      <button className="ring-playback-button" type="button"
         aria-label={ringPlayback.playing ? 'Mettre la rotation en pause' : 'Démarrer la rotation'}
         aria-pressed={ringPlayback.playing} aria-busy={ringPlayback.pending}
         disabled={!ringPlayback.available} onClick={() => engine.current?.toggleRingPlayback()}>
         {ringPlayback.playing ? <Pause size={21} fill="currentColor" aria-hidden="true" /> : <Play size={21} fill="currentColor" aria-hidden="true" />}
-      </button>}
-      {!ringReturning && <button className="ring-mute-button ring-key-surface" type="button"
+      </button>
+      {NATIONAL_TOP_ONE && <div className="ring-track-info"
+        aria-label={`Top 1 : ${NATIONAL_TOP_ONE.name}, ${RING_DEMO_TRACK_TITLE}. Morceau de démonstration.`}>
+        <img src={NATIONAL_TOP_ONE.portraitUrl} alt="" width={34} height={34} draggable={false} />
+        <div className="ring-track-info__copy">
+          <div className="ring-track-info__identity">
+            <span className="ring-track-info__rank"><Crown size={12} strokeWidth={1.8} aria-hidden="true" />Top 1</span>
+            <span className="ring-track-info__artist">{NATIONAL_TOP_ONE.name}</span>
+          </div>
+          <strong>{RING_DEMO_TRACK_TITLE}</strong>
+        </div>
+      </div>}
+      <button className="ring-mute-button" type="button"
         aria-label={ringPlayback.muted ? 'Rétablir le son du vinyle' : 'Couper le son du vinyle'}
         aria-pressed={ringPlayback.muted} onClick={() => engine.current?.toggleRingMuted()}>
         {ringPlayback.muted ? <VolumeX size={20} aria-hidden="true" /> : <Volume2 size={20} aria-hidden="true" />}
-      </button>}
-      {!ringReturning && NATIONAL_TOP_ONE && <div className="ring-track-info"
-        aria-label={`Top 1 : ${NATIONAL_TOP_ONE.name}, ${RING_DEMO_TRACK_TITLE}. Morceau de démonstration.`}>
-        <img src={NATIONAL_TOP_ONE.portraitUrl} alt="" width={36} height={36} draggable={false} />
-        <div><span>Top 1 · {NATIONAL_TOP_ONE.name}</span><strong>{RING_DEMO_TRACK_TITLE}</strong></div>
-      </div>}
+      </button>
+      </section>}
       {ringPlayback.error && <p className="ring-playback-error" role="status">{ringPlayback.error}</p>}
       {!ringReturning && ringPortrait && <RingPreProfileBoundary key={ringPortrait.instanceId} onClose={closeRingPortrait}>
           <RingArtistPreProfile selection={ringPortrait} onClose={closeRingPortrait} />
