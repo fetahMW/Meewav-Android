@@ -290,8 +290,11 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
         <img src={NATIONAL_TOP_ONE.portraitUrl} alt="" width={34} height={34} draggable={false} />
         <div className="ring-track-info__copy">
           <span className="ring-track-info__rank"><Crown size={11} strokeWidth={1.8} aria-hidden="true" />Top 1 Meewav France</span>
-          <span className="ring-track-info__artist">{NATIONAL_TOP_ONE.name}</span>
-          <strong>{RING_DEMO_TRACK_TITLE}</strong>
+          <div className="ring-track-info__song">
+            <span className="ring-track-info__artist">{NATIONAL_TOP_ONE.name}</span>
+            <span className="ring-track-info__separator" aria-hidden="true">·</span>
+            <strong>{RING_DEMO_TRACK_TITLE}</strong>
+          </div>
         </div>
       </div>}
       <button className="ring-mute-button" type="button"

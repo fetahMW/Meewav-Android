@@ -159,6 +159,8 @@ L’aide textuelle et son pictogramme de main sont remplacés par un lecteur uni
 de 320 × 46 pixels au maximum, centré horizontalement en haut de l’écran. Il réunit
 Play/Pause, le portrait, une pastille « Top 1 Meewav France » avec couronne, le nom à côté du portrait, le titre et
 Muet dans la même surface Violet urbain Meewav. Les zones d’appui font 44 pixels.
+À côté du portrait, la pastille occupe la première ligne ; le nom et le titre
+partagent la seconde, séparés par un point médian, avec 5 pixels entre les lignes.
 Son bord haut et sa hauteur sont alignés avec Retour au globe. Pendant l’ouverture
 d’un préprofil, il se compacte en deux commandes à gauche de la fiche pour garder
 Play/Pause et Muet accessibles sans couvrir son contenu.
