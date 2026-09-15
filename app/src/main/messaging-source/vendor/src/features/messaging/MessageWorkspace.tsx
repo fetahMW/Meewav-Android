@@ -2886,7 +2886,7 @@ export default function MessageWorkspace({
           ariaLabel="Espaces de la messagerie"
           onSelect={(space) => onSpaceChange?.(space)}
         />
-        {(isMessageContent || (contentSpace === "groups" && onCreateGroup)) && (
+        {isMessageContent && (
           <nav className="mw-chat-header__utility" aria-label={isMessageContent ? "Actions et contact de la conversation" : "Actions des groupes"}>
             {isMessageContent && <button type="button" className="mw-chat-contact-back" aria-label="Revenir aux contacts" onClick={() => window.dispatchEvent(new Event('meewav:messaging-list'))}><ChevronLeft size={22} /></button>}
             {isMessageContent && (

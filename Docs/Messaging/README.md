@@ -315,3 +315,21 @@ Les compteurs non lus reprennent les violets du poteau Web actif dans
 `MeewavPrimaryNav.tsx` (`isRoomsLandingChrome = true`) : `#4E349F`, `#5137A1`
 et `#372574`, plutôt qu’une nouvelle couleur. Le bandeau de contact et le champ
 de saisie translucides validés par l’utilisateur sont conservés.
+
+## Bandeaux Projets / Groupes et outils mobiles
+
+Les deux espaces reprennent le bandeau de contact translucide : chevron vers leur
+liste, couverture ronde, nom et informations de l’entité. Le contenu passe derrière
+le flou ; son premier élément garde une réserve de hauteur pour rester accessible.
+Le chevron ne ferme pas l’application et ne remplace pas les outils internes.
+
+La comparaison avec `Meewav-Web/src/features/messaging/ArtistGroupsWorkspace.tsx`
+a retrouvé les cinq outils existants : Chat, Planning, Membres, Décisions et Projets
+liés, ainsi que les paramètres du groupe. Ils conservent leurs données et handlers.
+La contrainte Web de 56 px sur le bandeau et de 28 px sur ses boutons écrasait la
+présentation mobile sur deux lignes : le bandeau fait désormais 64 + 44 px, avec
+cinq zones tactiles de même largeur pour Groupes, quatre pour Projets. Les
+informations membres/style restent visibles dans tous les outils du groupe.
+
+Compilation et installation autorisées ; aucun test ou contrôle visuel automatique.
+L’appréciation du rendu et les vérifications fonctionnelles restent à l’utilisateur.

@@ -5,6 +5,7 @@ import {
   CalendarClock,
   Check,
   CheckCircle2,
+  ChevronLeft,
   ChevronRight,
   Clock3,
   FileAudio,
@@ -410,6 +411,7 @@ function PanelShell({
   sideActions,
   className,
   identityIcon,
+  groupIdentity,
   hideClose = false,
   children,
 }: {
@@ -421,6 +423,7 @@ function PanelShell({
   sideActions?: ReactNode;
   className?: string;
   identityIcon?: ReactNode;
+  groupIdentity?: ArtistGroup;
   hideClose?: boolean;
   children: ReactNode;
 }) {
@@ -428,9 +431,11 @@ function PanelShell({
     <section className={`agw-panel${className ? ` ${className}` : ""}`} role="dialog" aria-modal="true" aria-label={title}>
       <header className={`agw-panel__bar${toolbar ? " has-toolbar is-workspace-subbar mw-hub-chipbar mw-mobile-workspace-header" : ""}`}>
         <div className="agw-panel__identity">
+          {toolbar && <button type="button" className="mw-workspace-contact-back" aria-label="Revenir aux groupes" onClick={() => window.dispatchEvent(new Event('meewav:messaging-list'))}><ChevronLeft size={22} /></button>}
+          {toolbar && groupIdentity && <img className="mw-workspace-contact-cover" src={groupIdentity.cover} alt="" />}
           {onBack && !toolbar && <button type="button" className={`agw-icon-button${identityIcon ? " agw-panel__identity-back" : ""}`} onClick={onBack} aria-label="Retour"><ArrowLeft size={19} /></button>}
           {identityIcon && !toolbar && <span className="agw-panel__identity-mark" aria-hidden="true">{identityIcon}</span>}
-          <span><strong>{title}</strong><small>{eyebrow}</small></span>
+          <span><strong>{title}</strong><small>{toolbar && groupIdentity ? `${groupIdentity.members.length} membres · ${groupIdentity.style}` : eyebrow}</small></span>
         </div>
         {toolbar && <div className="agw-panel__toolbar">{toolbar}</div>}
         {((toolbar && sideActions) || (onClose && !hideClose)) && (

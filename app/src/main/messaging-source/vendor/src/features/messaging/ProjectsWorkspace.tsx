@@ -2833,6 +2833,8 @@ function ProjectDetail({
     <section className="mw-project-detail mwp-project-detail" data-project-tab={tab} aria-label={"Projet " + project.name}>
       <div className="mwp-project-floating-controls mw-hub-chipbar mw-mobile-workspace-header">
         <div className="agw-panel__identity">
+          <button type="button" className="mw-workspace-contact-back" aria-label="Revenir aux projets" onClick={() => window.dispatchEvent(new Event('meewav:messaging-list'))}><ChevronLeft size={22} /></button>
+          <img className="mw-workspace-contact-cover" src={project.cover} alt="" />
           <span><strong>{project.name}</strong><small>{project.members} membre{project.members > 1 ? "s" : ""} · {statusLabel(project.status)}</small></span>
         </div>
         <div className="agw-panel__toolbar">
