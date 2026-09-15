@@ -154,7 +154,7 @@ export default function ProfileSpaceView({
     const startViewTransition = (document as Document & {
       startViewTransition?: (callback: () => void) => void;
     }).startViewTransition;
-    if (startViewTransition) startViewTransition.call(document, () => navigate(path));
+    if (startViewTransition && window.matchMedia("(min-width: 768px)").matches) startViewTransition.call(document, () => navigate(path));
     else navigate(path);
     window.requestAnimationFrame(() => {
       if (window.matchMedia("(min-width: 768px)").matches) window.scrollTo({ top: 0, left: 0, behavior: "auto" });

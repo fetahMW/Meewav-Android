@@ -251,6 +251,182 @@ html { scroll-padding-top: 120px; scroll-padding-bottom: 116px; }
 #root .profile-media-view .profile-setlist-detail__metrics { grid-template-columns: repeat(3,minmax(0,1fr)); }
 #root .profile-media-view .profile-setlist-detail__metrics > span { border-color: #ffffff1c; background: #17191f; padding: 10px; }
 
+/* Private tools: six visible destinations, one scroll owner, compact record cards. */
+#root .profile-space-view { --private-mobile-card: linear-gradient(135deg,#ffffff07,transparent 48%),linear-gradient(165deg,#1b1d23f5,#0d0f13f5); }
+#root .profile-main:has(.profile-space-view) { scroll-padding-top: 220px; }
+#root .profile-space-view > .profile-private-shell-header { display: none; }
+#root .profile-space-view .profile-private-module-rail { position: fixed; z-index: 25; top: 100px; left: 0; right: 0; width: 100%; height: 104px; padding: 3px 10px; margin: 0; border: 0; border-bottom: 1px solid #d3d9e020; border-radius: 0; background: var(--profile-mobile-glass); box-shadow: 0 5px 14px #0002; }
+#root .profile-space-view .profile-private-module-rail nav { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); grid-template-rows: repeat(2,48px); gap: 2px 0; overflow: visible; }
+#root .profile-space-view .profile-private-module-rail nav > button { min-width: 0; min-height: 48px; height: 48px; padding: 5px 0; gap: 4px; }
+#root .profile-space-view .profile-private-module-rail nav > button strong { font-size: 10px; line-height: 13px; color: inherit; }
+#root .profile-space-view .profile-private-module-rail nav > button svg { width: 17px; height: 17px; color: inherit; }
+#root .profile-space-view :is(.profile-private-content-stage,.profile-private-master-detail,.profile-private-master-detail__surface,.profile-private-master-detail__transition,.profile-private-route,.profile-private-route__scroll-region) { min-width: 0; width: 100%; min-height: 0; height: auto; max-height: none; overflow: visible; padding: 0; margin: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; backdrop-filter: none; animation: none; transform: none; }
+#root .profile-space-view .profile-private-master-detail { display: block; padding-top: 104px; }
+#root .profile-space-view .profile-private-route { --private-route-accent: #9274d8 !important; }
+#root .profile-space-view .profile-private-module-command { display: flex; flex-direction: row; align-items: center; gap: 12px; min-height: 44px; padding: 0; margin-bottom: 14px; border: 0; background: transparent; }
+#root .profile-space-view .profile-private-module-command__identity { flex: 1; min-width: 0; }
+#root .profile-space-view .profile-private-module-command__identity h2 { font-size: 20px; line-height: 1.2; margin: 0; }
+#root .profile-space-view .profile-private-module-command .profile-private-route__action { width: auto; min-width: 0; max-width: 55%; min-height: 44px; padding: 8px 12px; font-size: 11px; line-height: 15px; border-radius: 13px; }
+#root .profile-space-view :is(.profile-primary-button,.profile-soft-button,.profile-inline-action) { min-height: 44px; font-size: 12px; border-radius: 12px; line-height: 1.3; }
+#root .profile-space-view .profile-soft-button { background: #15181e; border-color: #ffffff24; color: #d7d9df; box-shadow: inset 0 1px #ffffff09; }
+#root .profile-space-view :is(.profile-private-wallet-workspace,.profile-private-contracts-workspace,.profile-private-equipment-workspace,.profile-private-security-workspace,.profile-private-organization-workspace) { display: grid; grid-template-columns: minmax(0,1fr); gap: 12px; border: 0; padding: 0; min-width: 0; background: transparent; box-shadow: none; }
+#root .profile-space-view :is(.profile-private-wallet-balance,.profile-private-wallet-account,.profile-private-wallet-activity,.profile-private-contract-list,.profile-private-contract-detail,.profile-private-equipment-detail,.profile-private-equipment-list,.profile-private-security-score,.profile-private-security-settings,.profile-private-security-devices,.profile-private-security-history,.profile-private-security-identity,.profile-private-organization-members,.profile-private-organization-detail) { padding: 14px; min-width: 0; min-height: 0; border: 1px solid #c5cbd326; border-radius: 19px; background: var(--private-mobile-card); box-shadow: inset 0 1px #ffffff0b,0 8px 20px #0003; backdrop-filter: none; }
+#root .profile-space-view .profile-kicker { font-size: 9px; letter-spacing: .6px; color: #b5b9c4; }
+#root .profile-space-view .profile-private-module-section-title { min-height: 0; padding: 0; margin: 0 0 12px; gap: 8px; align-items: center; }
+#root .profile-space-view .profile-private-module-section-title h3 { margin: 4px 0 0; font-size: 17px; line-height: 1.25; }
+#root .profile-space-view .profile-private-module-section-title > button { min-height: 44px; padding: 0 8px; font-size: 10px; }
+#root .profile-space-view .profile-private-wallet-balance__heading { display: grid; grid-template-columns: 36px minmax(0,1fr); gap: 10px; }
+#root .profile-space-view .profile-private-wallet-balance__heading > span { width: 36px; height: 36px; border-radius: 12px; color: #b5a0d7; border-color: #ffffff20; background: #ffffff05; }
+#root .profile-space-view .profile-private-wallet-balance__heading small { font-size: 10px; line-height: 1.4; }
+#root .profile-space-view .profile-private-wallet-balance__heading strong { font-size: 30px; line-height: 1.25; letter-spacing: -.8px; }
+#root .profile-space-view .profile-private-wallet-balance__heading p { font-size: 10px; margin: 4px 0 0; }
+#root .profile-space-view .profile-private-wallet-balance__heading > em { grid-column: 2; justify-self: start; margin: 0; font-size: 10px; padding: 4px 7px; }
+#root .profile-space-view .profile-private-wallet-balance__flow { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 0; padding: 12px 0; margin: 12px 0 0; }
+#root .profile-space-view .profile-private-wallet-balance__flow > div { min-width: 0; padding: 0 8px; }
+#root .profile-space-view .profile-private-wallet-balance__flow > div:first-child { padding-left: 0; }
+#root .profile-space-view .profile-private-wallet-balance__flow span { font-size: 9px; line-height: 1.4; }
+#root .profile-space-view .profile-private-wallet-balance__flow strong { font-size: 14px; line-height: 1.4; }
+#root .profile-space-view .profile-private-wallet-balance__actions { margin: 12px 0 0; }
+#root .profile-space-view .profile-private-wallet-balance__actions > .profile-primary-button { width: 100%; }
+#root .profile-space-view .profile-private-wallet-balance__actions > .profile-soft-button { display: none; }
+#root .profile-space-view .profile-private-wallet-account > strong { font-size: 17px; margin-top: 12px; }
+#root .profile-space-view .profile-private-wallet-account > p { font-size: 12px; line-height: 1.4; }
+#root .profile-space-view .profile-private-wallet-account > div:nth-of-type(2) { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+#root .profile-space-view .profile-private-wallet-account small { font-size: 10px; }
+#root .profile-space-view .profile-private-wallet-account .profile-inline-action { margin-top: 6px; }
+#root .profile-space-view .profile-private-wallet-activity { padding: 0; overflow: hidden; }
+#root .profile-space-view .profile-private-wallet-activity > .profile-private-module-section-title { padding: 12px; margin: 0; }
+#root .profile-space-view .profile-private-wallet-activity > .profile-private-wallet-activity__table { overflow: visible; }
+#root .profile-space-view .profile-private-wallet-activity__head { display: none; }
+#root .profile-space-view .profile-private-wallet-activity > .profile-private-wallet-activity__table > button { width: 100%; min-width: 0; display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 6px 10px; padding: 12px; min-height: 88px; color: #b4b8c2; }
+#root .profile-space-view .profile-private-wallet-activity__table > button > .profile-private-wallet-activity__identity { grid-column: 1; grid-row: 1; min-width: 0; gap: 8px; }
+#root .profile-space-view .profile-private-wallet-activity__identity > i { width: 28px; height: 28px; background: #ffffff05; border: 0; color: #b6a5d0; }
+#root .profile-space-view .profile-private-wallet-activity__identity strong { font-size: 12px; white-space: normal; line-height: 1.35; }
+#root .profile-space-view .profile-private-wallet-activity__identity small { font-size: 10px; }
+#root .profile-space-view .profile-private-wallet-activity__table > button > strong { grid-column: 2; grid-row: 1; font-size: 14px; }
+#root .profile-space-view .profile-private-wallet-activity__table > button > span:nth-child(4) { grid-column: 1; grid-row: 2; font-size: 9px; }
+#root .profile-space-view .profile-private-wallet-activity__table > button > span:nth-child(2) { grid-column: 2; grid-row: 2; font-size: 9px; text-align: right; }
+#root .profile-space-view .profile-private-wallet-activity__table > button > :is(span:nth-child(3),svg) { display: none; }
+/* Each transaction keeps its reference, date, type and status without horizontal panning. */
+#root .profile-space-view .profile-private-transactions-workspace { display: grid; gap: 12px; }
+#root .profile-space-view .profile-private-transactions-metrics { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }
+#root .profile-space-view .profile-private-transactions-metrics > button { min-width: 0; min-height: 92px; padding: 12px; border: 1px solid #ffffff24; border-radius: 16px; background: var(--private-mobile-card); box-shadow: inset 0 1px #ffffff0b; }
+#root .profile-space-view .profile-private-transactions-metrics > button.is-active { border-color: #9274d8a0; }
+#root .profile-space-view .profile-private-transactions-metrics :is(span,small) { font-size: 10px; color: #b3b7c2; }
+#root .profile-space-view .profile-private-transactions-metrics strong { font-size: 23px; line-height: 1.25; color: #f0f1f5; }
+#root .profile-space-view .profile-private-transactions-toolbar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: transparent; border: 0; padding: 0; }
+#root .profile-space-view .profile-private-transactions-toolbar > :is(label,.profile-private-filter-group) { grid-column: 1 / -1 !important; width: 100%; min-width: 0; }
+#root .profile-space-view .profile-private-transactions-toolbar > select { grid-column: auto !important; }
+#root .profile-space-view :is(.profile-private-transactions-toolbar > label,.profile-private-list-search,.profile-private-equipment-toolbar > label) { min-height: 44px; border: 1px solid #ffffff26; border-radius: 12px; padding: 0 12px; background: #12151c99; color: #a9adb7; }
+#root .profile-space-view input { font-size: 12px; min-width: 0; }
+#root .profile-space-view input::placeholder { color: #a0a4af; }
+#root .profile-space-view select { min-width: 0; max-width: 100%; min-height: 44px; font-size: 11px; border-radius: 12px; border-color: #ffffff24; background: #16181f; color: #d5d8e0; }
+#root .profile-space-view .profile-private-filter-group { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 4px; }
+#root .profile-space-view .profile-private-filter-group button { min-height: 40px; border: 1px solid #ffffff1c; border-radius: 11px; color: #c1c5ce; font-size: 11px; background: #15171dcc; }
+#root .profile-space-view .profile-private-filter-group button.is-active { background: #24202f; border-color: #9274d880; color: #fff; }
+#root .profile-space-view .profile-private-transactions-table { width: 100%; min-width: 0; overflow: visible; border: 1px solid #ffffff24; border-radius: 18px; background: var(--private-mobile-card); }
+#root .profile-space-view .profile-private-transactions-table__header { display: none; }
+#root .profile-space-view .profile-private-transactions-table > button { display: grid; grid-template-columns: minmax(0,1fr) auto; width: 100%; min-width: 0; padding: 12px; gap: 6px 10px; font-size: 10px; min-height: 106px; }
+#root .profile-space-view .profile-private-transactions-table > button > span:nth-child(4) { grid-area: 1 / 1; min-width: 0; }
+#root .profile-space-view .profile-private-transactions-table > button > span:nth-child(4) strong { white-space: normal; font-size: 13px; line-height: 1.35; }
+#root .profile-space-view .profile-private-transactions-table > button > span:nth-child(4) small { font-size: 10px; }
+#root .profile-space-view .profile-private-transactions-table > button > span:nth-child(5) { grid-area: 1 / 2; font-size: 15px; text-align: right; }
+#root .profile-space-view .profile-private-transactions-table > button > span:nth-child(1) { grid-area: 2 / 1; font-size: 10px; }
+#root .profile-space-view .profile-private-transactions-table > button > span:nth-child(2) { grid-area: 3 / 1; font-size: 9px; color: #9a9fab; }
+#root .profile-space-view .profile-private-transactions-table > button > span:nth-child(3) { grid-area: 3 / 2; text-align: right; }
+#root .profile-space-view .profile-private-transactions-table > button > span:nth-child(6) { grid-area: 2 / 2; text-align: right; }
+#root .profile-space-view .profile-private-transactions-table > button > svg { display: none; }
+#root .profile-space-view .profile-private-transactions-table :is(em,i) { font-size: 9px; }
+/* Master lists and detail panels keep readable identity and status columns. */
+#root .profile-space-view :is(.profile-private-contract-list,.profile-private-equipment-list,.profile-private-organization-members) { max-height: none; overflow: visible; }
+#root .profile-space-view :is(.profile-private-contract-list > div:last-child,.profile-private-organization-members > div:nth-of-type(2)) { max-height: none; overflow: visible; }
+#root .profile-space-view :is(.profile-private-contract-list > div > button,.profile-private-equipment-list > button,.profile-private-organization-members > div > button) { display: grid; grid-template-columns: 32px minmax(0,1fr) auto; gap: 8px; min-height: 76px; padding: 10px 8px; border-radius: 12px; background: transparent; border-color: transparent; }
+#root .profile-space-view :is(.profile-private-contract-list > div > button,.profile-private-equipment-list > button,.profile-private-organization-members > div > button).is-active { background: #ffffff06; border-color: #9274d873; }
+#root .profile-space-view :is(.profile-private-contract-list > div > button,.profile-private-equipment-list > button,.profile-private-organization-members > div > button) > span:first-child { width: 32px; height: 32px; background: #ffffff05; color: #b9aad3; border: 1px solid #ffffff19; border-radius: 10px; }
+#root .profile-space-view :is(.profile-private-contract-list,.profile-private-equipment-list,.profile-private-organization-members) button strong { font-size: 13px; white-space: normal; line-height: 1.3; }
+#root .profile-space-view :is(.profile-private-contract-list,.profile-private-equipment-list,.profile-private-organization-members) button :is(small,em) { font-size: 10px; line-height: 1.4; white-space: normal; }
+#root .profile-space-view :is(.profile-private-contract-list,.profile-private-equipment-list,.profile-private-organization-members) button > i { font-size: 9px; padding: 3px 5px; max-width: 66px; white-space: normal; text-align: center; background: #ffffff05; border-color: #ffffff20; color: #c5c9d0; }
+#root .profile-space-view :is(.profile-private-contract-list,.profile-private-equipment-list,.profile-private-organization-members) button > svg:last-child { display: none; }
+#root .profile-space-view :is(.profile-private-contract-detail__heading,.profile-private-equipment-detail__hero,.profile-private-organization-detail__person) { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 10px; padding: 0; margin-bottom: 12px; min-width: 0; }
+#root .profile-space-view :is(.profile-private-contract-detail__heading,.profile-private-equipment-detail__hero,.profile-private-organization-detail__person) h3 { font-size: 20px; line-height: 1.25; margin: 4px 0; }
+#root .profile-space-view :is(.profile-private-contract-detail__heading,.profile-private-equipment-detail__hero,.profile-private-organization-detail__person) p { font-size: 12px; line-height: 1.5; color: #aeb3bd; }
+#root .profile-space-view :is(.profile-private-equipment-detail__hero,.profile-private-organization-detail__person) { grid-template-columns: 40px minmax(0,1fr); }
+#root .profile-space-view :is(.profile-private-equipment-detail__hero,.profile-private-organization-detail__person) > span:first-child { width: 40px; height: 40px; background: #ffffff05; border-color: #ffffff24; color: #c7badb; font-size: 13px; }
+#root .profile-space-view :is(.profile-private-equipment-detail__hero,.profile-private-organization-detail__person) > em { grid-column: 2; justify-self: start; margin: 0; }
+#root .profile-space-view .profile-private-contract-document { padding: 16px; border-radius: 12px; min-height: 0; }
+#root .profile-space-view .profile-private-contract-document h4 { font-size: 18px; }
+#root .profile-space-view .profile-private-contract-document p { font-size: 12px; line-height: 1.5; }
+#root .profile-space-view .profile-private-contract-document__terms { grid-template-columns: 1fr 1fr; gap: 12px; }
+#root .profile-space-view .profile-private-contract-document__terms strong { font-size: 12px; }
+#root .profile-space-view .profile-private-contract-detail__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+#root .profile-space-view .profile-private-contract-detail__actions > button { flex: 1 1 90px; padding: 10px; }
+#root .profile-space-view .profile-private-equipment-toolbar { display: grid; grid-template-columns: 1fr; gap: 8px; padding: 0; border: 0; background: transparent; }
+#root .profile-space-view .profile-private-equipment-toolbar > button { display: none; }
+#root .profile-space-view .profile-private-equipment-toolbar > span { font-size: 11px; color: #b2b7c2; }
+#root .profile-space-view :is(.profile-private-detail__facts,.profile-private-organization-role) { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px 0; margin: 0; }
+#root .profile-space-view :is(.profile-private-detail__facts,.profile-private-organization-role) > :is(div,span) { padding: 0; background: transparent; border: 0; }
+#root .profile-space-view :is(.profile-private-detail__facts,.profile-private-organization-role) :is(span,small) { font-size: 10px; color: #a5abb6; }
+#root .profile-space-view :is(.profile-private-detail__facts,.profile-private-organization-role) strong { font-size: 12px; line-height: 1.45; color: #e2e4ea; }
+#root .profile-space-view .profile-private-availability { padding: 12px 0; border-color: #ffffff1c; }
+#root .profile-space-view .profile-private-availability > div:last-child { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 3px; }
+#root .profile-space-view .profile-private-availability > div:last-child > span { min-width: 0; padding: 8px 2px; border-color: #ffffff1c; background: #ffffff03; }
+#root .profile-space-view .profile-private-availability strong { font-size: 9px; color: #d2d5de; }
+#root .profile-space-view .profile-private-availability small { font-size: 8px; white-space: normal; }
+#root .profile-space-view .profile-private-detail__actions { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 12px; }
+#root .profile-space-view .profile-private-detail__actions > button { flex: 1 1 120px; padding: 10px; }
+#root .profile-space-view .profile-private-organization-members > .profile-primary-button { display: none; }
+#root .profile-space-view .profile-private-permission-matrix { padding: 12px; border: 1px solid #ffffff1c; border-radius: 14px; background: #111318; }
+#root .profile-space-view .profile-private-permission-matrix > div { min-height: 36px; font-size: 12px; }
+#root .profile-space-view .profile-private-security-score { display: grid; grid-template-columns: 68px minmax(0,1fr); gap: 12px; }
+#root .profile-space-view .profile-private-security-score > div { width: 68px; height: 68px; margin: 0; }
+#root .profile-space-view .profile-private-security-score h3 { margin: 4px 0; font-size: 19px; }
+#root .profile-space-view .profile-private-security-score p { margin: 0; font-size: 12px; line-height: 1.45; }
+#root .profile-space-view .profile-private-security-score > button { display: none; }
+#root .profile-space-view .profile-private-security-settings > button,
+#root .profile-space-view .profile-private-security-identity__visibility > button { min-height: 66px; gap: 12px; padding: 10px 0; }
+#root .profile-space-view .profile-private-security-settings > button strong,
+#root .profile-space-view .profile-private-security-identity__visibility > button strong { font-size: 13px; line-height: 1.4; }
+#root .profile-space-view .profile-private-security-settings > button small,
+#root .profile-space-view .profile-private-security-identity__visibility > button small { font-size: 11px; line-height: 1.4; white-space: normal; color: #a6acb7; }
+#root .profile-space-view .profile-switch { flex: 0 0 38px; width: 38px; height: 23px; }
+#root .profile-space-view .profile-switch.is-on { background: var(--mobile-violet-cta); border-color: #9274d870; }
+#root .profile-space-view .profile-private-security-identity__hero { flex-wrap: wrap; gap: 10px; }
+#root .profile-space-view .profile-private-security-identity__visibility { display: grid; grid-template-columns: 1fr; }
+#root .profile-space-view .profile-private-security-devices > div:last-child > div { grid-template-columns: 30px minmax(0,1fr) auto; gap: 8px; padding: 12px 0; }
+#root .profile-space-view .profile-private-security-devices strong { font-size: 13px; }
+#root .profile-space-view .profile-private-security-devices small { font-size: 11px; line-height: 1.45; white-space: normal; }
+#root .profile-space-view .profile-private-security-history li { display: grid; grid-template-columns: 8px minmax(0,1fr); gap: 5px 10px; padding: 10px 0; }
+#root .profile-space-view .profile-private-security-history li > span { grid-column: 2; }
+#root .profile-space-view .profile-private-security-history time { font-size: 10px; }
+#root .profile-space-view .profile-private-security-history strong { font-size: 13px; }
+#root .profile-space-view .profile-private-security-history small { font-size: 11px; line-height: 1.4; }
+#root .profile-space-view .profile-private-detail-back { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0; margin-bottom: 6px; background: transparent; border: 0; color: #c1b0db; font-size: 12px; }
+#root .profile-space-view :is(.profile-private-contract-list,.profile-private-equipment-list,.profile-private-organization-members) button :is(small,em) { color: #a9afba; }
+#root .profile-space-view :is(.profile-private-wallet-account > p,.profile-private-wallet-balance__heading p,.profile-private-security-score p,.profile-private-security-score small) { color: #a9afba; }
+#root .profile-space-view .profile-private-permission-matrix { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+#root .profile-space-view .profile-private-permission-matrix > div { min-width: 0; color: #bdc2cc; font-size: 11px; }
+#root .profile-space-view .profile-private-permission-matrix > div:first-child { grid-column: 1 / -1; }
+#root .profile-space-view .profile-private-permission-matrix i.is-granted { background: #9274d817; color: #bba5df; }
+#root .profile-space-view .profile-private-security-score { background: var(--private-mobile-card) !important; }
+#root .profile-space-view .profile-private-security-score > div { background: #ffffff03; }
+#root .profile-space-view .profile-private-security-identity__profile { grid-template-columns: 48px minmax(0,1fr); gap: 10px; }
+#root .profile-space-view .profile-private-security-identity__profile p { font-size: 11px; white-space: normal; line-height: 1.4; color: #a9afba; }
+#root .profile-space-view .profile-private-security-identity__bio { font-size: 12px; color: #a9afba; }
+#root .profile-space-view .profile-private-security-identity__actions { grid-column: 1 / -1; }
+#root .profile-space-view .profile-private-security-identity__actions > button { min-height: 44px; font-size: 11px; }
+#root .profile-space-view .profile-private-security-identity__visibility > button { padding: 10px; border-color: #ffffff1c; background: #ffffff03; border-radius: 12px; }
+#root .profile-space-view .profile-private-security-identity__completion > span { background: linear-gradient(90deg,#4f359e,#9274d8); box-shadow: none; }
+#root .profile-space-view .profile-switch > i { background: #e6e1ef; top: 3px; left: 3px; width: 15px; height: 15px; }
+#root .profile-space-view .profile-switch.is-on > i { transform: translateX(15px); }
+#root .profile-space-view .profile-private-record-detail { outline: none; }
+#root .profile-space-view .profile-private-transactions-metrics > button { min-height: 88px; padding: 10px; gap: 5px; }
+#root .profile-space-view .profile-private-transactions-metrics > button:last-child { display: none; }
+#root .profile-space-view .profile-private-transactions-metrics strong { font-size: 20px; white-space: nowrap; letter-spacing: -.7px; }
+#root .profile-space-view .profile-private-transactions-metrics small { font-size: 9px; }
+#root .profile-space-view .profile-private-transactions-toolbar { margin-top: 0; }
+#root .profile-space-view .profile-private-filter-group { padding: 0; background: transparent; border: 0; }
+#root .profile-space-view .profile-private-filter-group button { white-space: nowrap; }
+
 /* Accueil mobile: compact editorial hierarchy, using the existing Web cards. */
 #root .profile-command-bar .meewav-pillar-tabs button { display: flex; align-items: center; justify-content: center; }
 #root .profile-command-bar .meewav-pillar-tabs button strong { display: block; font-size: 10px; line-height: 14px; letter-spacing: 0; }

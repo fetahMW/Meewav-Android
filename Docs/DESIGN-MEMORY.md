@@ -70,6 +70,19 @@ violet urbain ; les actions répétées sur les cartes restent secondaires.
 Les images, badges officiels, fichiers et services importés du Web sont conservés.
 Les titres introductifs sont condensés pour laisser voir les contenus sur mobile.
 
+### Profil mobile — Espace privé
+
+Les six modules sont accessibles sur deux rangées de trois dans un second
+bandeau fixe à 100 px du haut, transparent et avec background blur. Il utilise
+exactement `--profile-mobile-glass`, comme les bandeaux de la messagerie,
+et laisse défiler le fond et les cartes derrière lui. Aucun panneau opaque ajouté.
+Les anciens tableaux de portefeuille et de transactions deviennent des lignes
+mobiles sans déplacement horizontal. Référence, date, type, statut et montant
+restent présents dans Transactions. Les fiches de contrats, matériel et membres
+sont accessibles au tap avec défilement vers la fiche et retour à la liste.
+Les actions en double sont retirées du contenu quand elles existent déjà en haut.
+Les services, garde-fous d’authentification et confirmations restent inchangés.
+
 ## Violet urbain Meewav — référence de messagerie
 
 Le 15 septembre 2026, l’utilisateur précise la référence exacte :
