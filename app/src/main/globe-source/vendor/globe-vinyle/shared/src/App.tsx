@@ -297,8 +297,10 @@ export default function App() {
   }, []);
   return (
     <main className="immersive-globe globe-v2-page">
-      <div ref={host} className="globe-stage" />
-      <GlobeInterface ready={ready} data={data.current} engine={engine} navigate={navigate} selection={selectedFeature} zoomLimit={zoomLimit} />
+      {/* Keep the viewport measurable while preparing the first frame, but
+          reveal the scene and its controls together behind the vinyl loader. */}
+      <div ref={host} className="globe-stage" style={{ visibility: ready ? 'visible' : 'hidden' }} aria-hidden={!ready} />
+      {ready && <GlobeInterface ready={ready} data={data.current} engine={engine} navigate={navigate} selection={selectedFeature} zoomLimit={zoomLimit} />}
       {!ready && !error && window.parent === window && <GlobeLoading />}
       {error && (
         <section className="error" role="alert">

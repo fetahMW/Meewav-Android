@@ -12,6 +12,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,10 +35,12 @@ internal fun SceneGlobeArrival(state: AuthUiState, onBack: () -> Unit, onEnter: 
     val sceneLabel = listOfNotNull(state.profile.musicScene?.label, state.profile.city.takeIf { it.isNotBlank() })
         .distinct().joinToString(" · ")
     if (interactive) {
+        var globeLoading by remember { mutableStateOf(true) }
         Box(Modifier.fillMaxSize().background(Color(0xFF08090D)).safeDrawingPadding()) {
-            AuthCompletionGlobe(Modifier.fillMaxSize(), interactive = true, onClick = onEnter)
+            AuthCompletionGlobe(Modifier.fillMaxSize(), interactive = true, onClick = onEnter,
+                onLoadingChange = { globeLoading = it })
             // Reserved right strip in mobile.css keeps this outside Web panels.
-            IconButton(onClick = onClose, modifier = Modifier.align(Alignment.TopEnd)
+            if (!globeLoading) IconButton(onClick = onClose, modifier = Modifier.align(Alignment.TopEnd)
                 .padding(end = 6.dp, top = 10.dp).size(44.dp)
                 .background(Brush.verticalGradient(listOf(Color(0xC01C1628), Color(0xD008070D))), RoundedCornerShape(16.dp))
                 .border(0.75.dp, Color(0x457E6A99), RoundedCornerShape(16.dp))) {

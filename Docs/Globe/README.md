@@ -44,6 +44,13 @@ Le document `https://appassets.androidplatform.net/globe-vinyle/index.html` est 
 
 Aucun secret, cookie Supabase, jeton ou pont JavaScript vers Android n’est exposé. L’adaptateur natif vers JavaScript transmet uniquement l’activité et des commandes fixes. Démonter React libère le moteur et ses workers. La WebView utilise `MATCH_PARENT` et le document une hauteur explicite pour éviter le canvas de hauteur nulle. Le statut prêt vient de `App.tsx` après `engine.firstFrame`.
 
+La transition du vinyle reste seule visible jusqu’à cette première image : le
+viewport conserve ses dimensions pendant la préparation, mais reste masqué, et
+les commandes React ne sont montées qu’au dévoilement du globe. Elles ne peuvent
+donc pas être actionnées pendant le chargement. La croix native attend également
+le statut prêt lu par Android ; en cas d’échec, elle redevient disponible avec
+l’action Réessayer. Aucun délai artificiel ni changement de qualité n’est ajouté.
+
 Les changements de taille liés au clavier sont regroupés au début de la boucle
 d’affichage : le tampon du canvas est redimensionné puis redessiné dans la même
 image. Le `ResizeObserver` ne l’efface plus entre deux rendus. Une notification

@@ -31,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,8 +62,12 @@ internal fun AuthCompletionGlobe(
     modifier: Modifier = Modifier,
     interactive: Boolean = false,
     onClick: () -> Unit,
+    onLoadingChange: (Boolean) -> Unit = {},
 ) {
     val controller = remember(interactive) { AuthGlobeController(interactive) }
+    LaunchedEffect(controller.ready, controller.unavailable) {
+        onLoadingChange(!controller.ready && !controller.unavailable)
+    }
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner, controller) {
         val lifecycle = lifecycleOwner.lifecycle
