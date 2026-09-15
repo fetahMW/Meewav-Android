@@ -28,7 +28,7 @@ sans redimensionnement. Les notices des bibliothèques sont livrées avec le paq
 | Onglet actif | Trait effilé du site déjà repris en messagerie | Même trait de 1 px, halo flouté léger ; pas de pavé lumineux |
 | CTA principaux | Messagerie : Groupes → Membres → Inviter | Dégradé 135° `rgba(79,53,158,.96)` → `rgba(76,47,169,.94)`, bordure `rgba(98,67,192,.34)` |
 | Barre du bas | iOS `Meewav/CustomNavBar.swift`, ordre de `MainTabView.swift` | Trois icônes à gauche, trois à droite, globe central dans une encoche circulaire |
-| Petit globe | Navbar du globe Android | Même carte et palette, rendu fixe ; résolution du canvas adaptée à ses 56 px et à la densité de l'écran |
+| Petit globe | Navbar du globe Android | Même carte et palette ; tour horizontal en 40 s dans le dock Profil ; résolution du canvas adaptée à ses 56 px et à la densité de l'écran |
 
 Référence iOS lue sur `sipiyou39/Meewav`, `main`, commit
 `aea7251a60a2b61d775901fcf39a62036fd108c4`. Le globe SwiftUI n'est pas repris.
@@ -113,3 +113,14 @@ les alignements et les retours à la ligne des cartes. Les captures locales
 sont dans `app/build/profile-review/` (dossier non livré).
 Ce contrôle concerne uniquement l'accueil ; les autres onglets attendent
 leur propre passe demandée par l'utilisateur.
+
+### Rotation lente du globe du dock
+
+Sur demande suivante, le dock Profil active `rotationSeconds={40}` sur
+`AndroidNavGlobeTexture`. Deux copies jointives de la carte sont préparées
+une seule fois, à la densité de l'écran, puis une translation CSS linéaire
+fait défiler un tour complet sans rupture. L'éclairage et la coque circulaire
+ne bougent pas. Aucun redessin Canvas2D ni rendu React par image n'est ajouté.
+La rotation est suspendue par le cycle de vie Android, puis reprend à la même
+position ; la préférence de réduction des animations conserve le rendu fixe.
+Cette option reste désactivée pour les autres usages du composant.

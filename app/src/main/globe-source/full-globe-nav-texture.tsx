@@ -1,8 +1,10 @@
 import { memo, useEffect, useRef } from "react";
 
-/** Keep the navigation globe still: repeated Canvas2D paints stall this WebView. */
-export default memo(function AndroidNavGlobeTexture({ landColor = "#EFE5FF", size = 38 }: { landColor?: string; size?: number }) {
+/** Bake once. Optional rotation moves the repeated map in the CSS compositor. */
+export default memo(function AndroidNavGlobeTexture({ landColor = "#EFE5FF", size = 38, rotationSeconds = 0 }: { landColor?: string; size?: number; rotationSeconds?: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const rotating = rotationSeconds > 0;
+  const mapWidth = size * 72 / 38;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -34,13 +36,15 @@ export default memo(function AndroidNavGlobeTexture({ landColor = "#EFE5FF", siz
       bake.putImageData(pixels, 0, 0);
 
       const scale = Math.max(2, window.devicePixelRatio || 1);
-      canvas.width = Math.round(size * scale);
+      canvas.width = rotating ? Math.round(mapWidth * scale) * 2 : Math.round(size * scale);
       canvas.height = Math.round(size * scale);
-      context.setTransform(scale, 0, 0, scale, 0, 0);
+      context.setTransform(rotating ? canvas.width / (mapWidth * 2) : scale, 0, 0, canvas.height / size, 0, 0);
       context.imageSmoothingEnabled = true;
       context.imageSmoothingQuality = "high";
-      context.drawImage(texture, 0, 0, size * 72 / 38, size);
-      // No animation loop: the first rendered map remains visible until unmount.
+      context.drawImage(texture, 0, 0, mapWidth, size);
+      if (rotating) context.drawImage(texture, mapWidth, 0, mapWidth, size);
+      // Two identical world maps make a seamless full revolution. No per-frame
+      // Canvas2D work: shading and the circular shell remain stationary.
       map.onload = null;
     };
     map.src = new URL("ui/images/earth_specular.jpg", document.baseURI).href;
@@ -49,7 +53,9 @@ export default memo(function AndroidNavGlobeTexture({ landColor = "#EFE5FF", siz
       disposed = true;
       map.onload = null;
     };
-  }, [landColor, size]);
+  }, [landColor, size, rotating, mapWidth]);
 
-  return <canvas ref={canvasRef} className="meewav-primary-nav__globe-map" aria-hidden="true" />;
+  return <canvas ref={canvasRef} className={`meewav-primary-nav__globe-map${rotating ? ' is-rotating' : ''}`}
+    style={rotating ? { width: `${mapWidth * 2}px`, animationDuration: `${rotationSeconds}s` } : undefined}
+    aria-hidden="true" />;
 });

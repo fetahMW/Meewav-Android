@@ -45,7 +45,7 @@ function Shell({ Page }: { Page: React.ComponentType }) {
       <div className="profile-bottom-dock__side">{items.slice(0, 3).map(renderItem)}</div>
       <button className="profile-bottom-dock__globe" aria-label="Retour au globe" onClick={() => native('globe')}
         style={{ '--nav-globe-ocean': NAVBAR_GLOBE_PALETTE.ocean } as React.CSSProperties}>
-        <NavGlobeTexture landColor={NAVBAR_GLOBE_PALETTE.land} size={56} /><span className="profile-bottom-dock__globe-light" />
+        <NavGlobeTexture landColor={NAVBAR_GLOBE_PALETTE.land} size={56} rotationSeconds={40} /><span className="profile-bottom-dock__globe-light" />
       </button>
       <div className="profile-bottom-dock__side">{items.slice(3).map(renderItem)}</div>
     </nav>
@@ -70,6 +70,9 @@ let started = false;
     } catch { root.render(<div className="mobile-profile-error">Profil indisponible.<button onClick={() => native('globe')}>Retour au globe</button></div>); }
   },
   updateToken,
-  setActive(active: boolean) { if (!active) document.querySelectorAll('audio,video').forEach(media => (media as HTMLMediaElement).pause()); },
+  setActive(active: boolean) {
+    document.documentElement.toggleAttribute('data-profile-inactive', !active);
+    if (!active) document.querySelectorAll('audio,video').forEach(media => (media as HTMLMediaElement).pause());
+  },
 };
 window.addEventListener('pagehide', () => { root.unmount(); updateToken(null); });
