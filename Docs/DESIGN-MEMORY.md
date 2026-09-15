@@ -57,6 +57,19 @@ leurs points sélectionnés pendant la fermeture. La période reste commune.
 Courbes et accents utilisent la gamme violette Meewav, cartes en gris fumé
 sombre, contrôles secondaires neutres. La couleur ne remplace jamais le libellé.
 
+### Profil mobile — Médias
+
+Médiathèque, La Cage, Setlist, Cadeaux et Badges partagent un bandeau de verre
+fixe juste sous les quatre onglets principaux. Un seul défilement vertical
+porte le contenu ; le sous-menu ne doit jamais recouvrir les commandes.
+Icônes neutres, texte blanc à la sélection et trait effilé lumineux, sans
+deuxième soulignement droit ni code couleur rose/orange/bleu par outil.
+Les listes et cartes sont en graphite fumé, avec des cibles tactiles de 44 px
+pour les commandes principales et les menus. Les CTA de création gardent le
+violet urbain ; les actions répétées sur les cartes restent secondaires.
+Les images, badges officiels, fichiers et services importés du Web sont conservés.
+Les titres introductifs sont condensés pour laisser voir les contenus sur mobile.
+
 ## Violet urbain Meewav — référence de messagerie
 
 Le 15 septembre 2026, l’utilisateur précise la référence exacte :
