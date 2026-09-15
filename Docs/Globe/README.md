@@ -122,6 +122,16 @@ basse identiques. Les groupes intermédiaires n’ajoutent plus d’espace propr
 Les résolutions, les textures sources et la géométrie
 du globe ne sont pas réduites par ces adaptations.
 
+La recherche place les villes avant les autres lieux et les artistes. Les noms
+exacts et débuts de noms restent prioritaires à l’intérieur de la catégorie ;
+la recherche d’artistes porte sur leur nom/alias, et non leur ville ou quartier.
+Les accents et tirets sont normalisés. Un appui tactile sur une suggestion
+déclenche sa destination au relâchement, sans attendre un clic après fermeture
+du clavier ; un défilement de liste annule cet appui. La perte de focus du champ
+vers la liste ne la démonte plus. Le clavier et l’accessibilité gardent leur
+activation habituelle. Les destinations d’avatars utilisent aussi l’index des
+quartiers et le code de leur ville, au lieu de supposer systématiquement Paris.
+
 Le bundle et l’APK debug sont reconstruits pour livraison sur le S22 Ultra.
 Aucun test ni contrôle visuel automatique n’est lancé pour cette retouche ; la
 validation du rendu et de la réactivité sur appareil reste à l’utilisateur.

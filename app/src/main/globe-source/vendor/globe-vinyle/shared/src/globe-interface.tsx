@@ -54,6 +54,9 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
   });
   const [draft, setDraft] = useState(applied);
   const inputRef = useRef<HTMLInputElement>(null);
+  const searchDock = useRef<HTMLElement>(null);
+  const searchResults = useRef<HTMLDivElement>(null);
+  const resultPress = useRef<{ id: number; resultId: string; x: number; y: number; moved: boolean } | null>(null);
   const filterTrigger = useRef<HTMLButtonElement>(null);
   const filterBody = useRef<HTMLDivElement>(null);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -88,7 +91,8 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
     const needle = normalise(query.trim()).replace(/[-’']/g, " ");
     if (!needle) return [];
     return catalogue.filter((x: any) => needle.split(/\s+/).every(term => x.searchKey.includes(term)))
-      .sort((a: any, b: any) => Number(b.searchName === needle || b.code === needle) - Number(a.searchName === needle || a.code === needle)
+      .sort((a: any, b: any) => Number(Boolean(b.city)) - Number(Boolean(a.city))
+        || Number(b.searchName === needle || b.code === needle) - Number(a.searchName === needle || a.code === needle)
         || Number(b.searchName.startsWith(needle)) - Number(a.searchName.startsWith(needle)) || (a.rank || 1) - (b.rank || 1))
       .slice(0, 8);
   }, [query, catalogue]);
@@ -113,8 +117,18 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
       currentEngine?.searchAvatars('');
     };
   }, [ready, focused, query, applied, engine]);
-  const results = [...avatarHits, ...placeResults.filter((item: any) => !avatarHits.some((hit: any) => hit.id === item.id))].slice(0, 8);
+  const results = [...placeResults, ...avatarHits.filter((hit: any) => !placeResults.some((item: any) => item.id === hit.id))].slice(0, 8);
   const showResults = focused && query.trim().length > 0;
+  useEffect(() => {
+    const outsideSearch = (event: PointerEvent) => {
+      if (!(event.target instanceof Node) || searchDock.current?.contains(event.target) || searchResults.current?.contains(event.target)) return;
+      resultPress.current = null;
+      setFocused(false);
+      inputRef.current?.blur();
+    };
+    document.addEventListener('pointerdown', outsideSearch, true);
+    return () => document.removeEventListener('pointerdown', outsideSearch, true);
+  }, []);
   const count = roleIds.length - applied.roles.length + applied.grades.length + Number(applied.hideConsulted);
   useEffect(() => {
     window.dispatchEvent(new CustomEvent("meewav:filters-change", { detail: applied }));
@@ -154,11 +168,15 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
     if (result.avatar) {
       const quarter = data.sectors.features.find((feature: any) => feature.id === result.zoneId);
       const commune = data.communes?.features?.find((feature: any) => feature.id === result.zoneId);
+      const indexedQuarter = data.quarterIndex?.labels?.find((item: any) => item.id === result.zoneId);
+      const cityCode = indexedQuarter?.cityCode || (result.cityId?.startsWith('fr-commune-') ? result.cityId.slice(11) : undefined);
       const feature = quarter || commune || null;
       overviewPose.current = null;
       navigate(feature, result.target, quarter
-        ? { cityCode: "75056", quarterId: quarter.id }
-        : commune ? { cityCode: String(commune.id).replace("fr-commune-", "") } : undefined);
+        ? { cityCode: quarter.properties.cityCode || cityCode || "75056", quarterId: quarter.id }
+        : indexedQuarter ? { cityCode, quarterId: indexedQuarter.id }
+        : commune ? { cityCode: String(commune.id).replace("fr-commune-", "") }
+        : cityCode ? { cityCode } : undefined);
       rememberCity(cityLabels.find((city: any) => city.id === (result.cityId || "fr-commune-75056")));
       setMode("city");
       setQuery(result.name); setFocused(false); setNotice(""); inputRef.current?.blur();
@@ -296,7 +314,7 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
       {topTenVisible && <NationalTopTen openRequested={topTenRequested} canOpen={() => !engine.current?.isMoving()} onOpenHandled={() => setTopTenRequested(false)} />}
     </div>}
     <aside className="reference-rail"><GlobeNavigationPole onGlobe={goGlobe} onNavigate={openDestination} /></aside>
-    <header className="reference-search-dock" aria-label="Recherche sur le globe">
+    <header ref={searchDock} className="reference-search-dock" aria-label="Recherche sur le globe">
       <MeewavSearchFilterBar query={query} placement="flow" placeholder="Ville ou avatar…" inputAriaLabel="Rechercher un lieu ou un avatar"
         inputAriaKeyShortcuts="Control+k Meta+k" shortcutHint="⌘ / Ctrl K" inputRef={inputRef} filterTriggerRef={filterTrigger}
         onQueryChange={event => { setQuery(event.target.value); setActiveIndex(0); setFocused(true); }}
@@ -305,7 +323,12 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
           if (event.key === "ArrowDown") { event.preventDefault(); setActiveIndex(i => Math.min(results.length - 1, i + 1)); }
           if (event.key === "ArrowUp") { event.preventDefault(); setActiveIndex(i => Math.max(0, i - 1)); }
           if (event.key === "Escape") setFocused(false);
-        }} onFormBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}
+        }} onFormBlur={event => {
+          // Touch may blur the input before click. The suggestions must survive
+          // that transition; an outside pointer or explicit selection closes them.
+          if (event.relatedTarget instanceof Node && !searchDock.current?.contains(event.relatedTarget)
+            && !searchResults.current?.contains(event.relatedTarget)) setFocused(false);
+        }}
         onClear={() => { setQuery(""); setFocused(true); inputRef.current?.focus(); }}
         onToggleFilters={() => { if (!filterOpen) setDraft(applied); setFilterOpen(!filterOpen); setFocused(false); }}
         filterOpen={filterOpen} filterActive={count > 0} activeFilterCount={count} filterPanelId="artist-filter-drawer"
@@ -316,9 +339,29 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
         <button className={`map-mode-switch__button ${mode === "country" ? "is-active" : ""}`} disabled={!ready} onClick={() => choose(catalogue.find((x: any) => x.id === "france"))} aria-pressed={mode === "country"} aria-label="Vue du pays : France" title="Pays"><span className="map-mode-switch__france-flag" aria-hidden="true" /><span className="map-mode-switch__label">Pays</span></button>
         <button className={`map-mode-switch__button ${mode === "position" ? "is-active" : ""}`} disabled={!ready} onClick={goPosition} aria-label="Ma position fictive : Charonne, Paris" title="Ma position — quartier Charonne, Paris (démo)" aria-pressed={mode === "position"}><Crosshair size={19} aria-hidden="true" /><span className="map-mode-switch__label">Ma position</span></button>
       </nav>
-    {showResults && <div id="reference-search-results" className="reference-search-results france-search-dropdown" role="listbox">
+    {showResults && <div ref={searchResults} id="reference-search-results" className="reference-search-results france-search-dropdown" role="listbox">
       {results.map((result: any, i: number) => <button key={result.id} id={`result-${result.id}`} role="option" aria-selected={i === activeIndex} className={i === activeIndex ? "is-active" : ""}
-        onMouseDown={event => event.preventDefault()} onMouseEnter={() => setActiveIndex(i)} onClick={() => choose(result)}><MapPin size={17} /><span><strong>{result.name}</strong><small>{result.subtitle}</small></span></button>)}
+        onPointerDown={event => {
+          if (!event.isPrimary || event.button !== 0) return;
+          event.preventDefault();
+          resultPress.current = { id: event.pointerId, resultId: result.id, x: event.clientX, y: event.clientY, moved: false };
+        }}
+        onPointerMove={event => {
+          const press = resultPress.current;
+          if (press?.id === event.pointerId && Math.hypot(event.clientX - press.x, event.clientY - press.y) > 10) press.moved = true;
+        }}
+        onPointerCancel={() => { resultPress.current = null; }}
+        onPointerUp={event => {
+          const press = resultPress.current;
+          resultPress.current = null;
+          if (!press || press.id !== event.pointerId || press.resultId !== result.id || press.moved) return;
+          event.preventDefault();
+          choose(result);
+        }}
+        onMouseEnter={() => setActiveIndex(i)} onClick={event => {
+          // Keyboard/accessibility activation; pointer taps were handled once above.
+          if (event.detail === 0) choose(result);
+        }}><MapPin size={17} /><span><strong>{result.name}</strong><small>{result.subtitle}</small></span></button>)}
       {!results.length && <p>Aucun lieu ni avatar trouvé.</p>}
     </div>}
     <MeewavFilterPanel open={filterOpen} panelId="artist-filter-drawer" eyebrow="Exploration personnalisée" title="Filtres artistes" description="Sélection des styles d’avatar"

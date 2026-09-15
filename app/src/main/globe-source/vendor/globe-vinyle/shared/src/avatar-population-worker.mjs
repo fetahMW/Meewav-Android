@@ -2,7 +2,7 @@ import { createParisAvatarPopulation } from './paris-avatar-population.mjs';
 
 let population, search = null, scheduled = false;
 const zones = new Set();
-const fold = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const fold = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[-’']/g, ' ');
 
 function schedule() {
   if (scheduled) return;
@@ -30,7 +30,9 @@ function pump() {
           if (request.grades.size && !request.grades.has(avatar.grade)) continue;
           if (request.hideConsulted && request.consulted.has(avatar.id) && avatar.id !== request.selectedId) continue;
         }
-        const hay = fold(`${avatar.name} ${avatar.role} ${avatar.zoneName} ${avatar.city}${avatar.isHost ? ' feta fetah beatmaker' : ''}`);
+        // City and neighbourhood queries belong to the place catalogue. Match
+        // artists by name/alias, not merely because they live in the typed city.
+        const hay = fold(`${avatar.name}${avatar.isHost ? ' feta fetah' : ''}`);
         if (!request.terms.every(term => hay.includes(term))) continue;
         request.hits.push({
           id: avatar.id, name: avatar.name, subtitle: `${avatar.role} · ${avatar.zoneName}`,
