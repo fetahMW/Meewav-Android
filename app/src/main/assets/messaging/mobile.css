@@ -183,20 +183,7 @@ button:disabled { opacity: .4; cursor: default; }
 #root .mobile-messaging .mw-chat-header__identity { flex: 1; }
 #root .mobile-messaging .mw-chat-header__actions { flex-shrink: 0; }
 #root .mobile-messaging .mw-chat-timeline { scrollbar-width: none; scrollbar-gutter: auto; }
-#root .mobile-messaging .mw-chat-timeline__inner { width: 100%; max-width: none; margin: 0; padding: 0 0 14px; }
-#root .mobile-messaging .mw-message { max-inline-size: 88% !important; margin-block: 4px 0; }
-#root .mobile-messaging .mw-message + .mw-message { margin-top: 8px; }
-#root .mobile-messaging .mw-message.has-tail { margin-bottom: 8px; }
-#root .mobile-messaging .mw-bubble--text { border: 1px solid #7960b22e; box-shadow: none; }
-#root .mobile-messaging .mw-message.is-theirs .mw-bubble--text { background: #181420; }
-#root .mobile-messaging .mw-bubble--text p { font-size: 14px; line-height: 1.5; }
-#root .mobile-messaging .mw-bubble--audio { border-radius: 18px; border: 1px solid #7960b244; background: #19122f; box-shadow: none; }
-#root .mobile-messaging .mw-bubble--audio button { min-height: 44px; min-width: 44px; }
-#root .mobile-messaging .mw-audio-capsule__play { width: 44px; height: 44px; background: #5137a1; border: 1px solid #bda3e533; box-shadow: none; color: #f6f1ff; }
-#root .mobile-messaging .mw-audio-capsule__options { width: 44px; height: 44px; background: transparent; border: 0; box-shadow: none; }
-#root .mobile-messaging .mw-audio-capsule__title { padding-right: 42px; font-size: 12px; }
-#root .mobile-messaging .mw-message__meta { min-height: 16px; margin-top: 4px; }
-#root .mobile-messaging .mw-message__time { font-size: 10px; color: #92889f; }
+/* Keep the original Web-derived text/audio bubbles: colours, relief and proportions. */
 #root .mobile-messaging .mw-composer-zone { flex-shrink: 0; }
 
 /* The contact picker keeps its actions visible, including with the IME open. */

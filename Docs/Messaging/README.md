@@ -141,8 +141,9 @@ Défauts constatés et corrigés :
 - Codes `[[mw:…]]` bruts dans les aperçus : réutilisation du rendu des émoticônes.
 - Portrait de conversation ovale, doubles contours de saisie et commandes désalignées :
   portraits carrés recadrés en cercle, une seule bordure et commandes de 44 px.
-- Espacements et ornements Web trop lourds dans la conversation : gouttières uniques,
-  marges resserrées, bulles sobres et contrôles audio en Violet urbain.
+- Une simplification des bulles avait été appliquée pendant cette passe. À la demande
+  de l’utilisateur, elle est annulée : couleurs, formes, reliefs et proportions des
+  bulles texte/audio de la V1 sont rétablis. Les corrections de navigation et de saisie restent.
 - Actions de nouvelle conversation rognées avec le clavier : liste seule défilante,
   en-tête, recherche et actions conservés dans la hauteur disponible.
 - Texte d’accessibilité affiché dans la recherche des émoticônes : restauration de
