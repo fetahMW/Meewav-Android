@@ -286,13 +286,11 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
         {ringPlayback.playing ? <Pause size={21} fill="currentColor" aria-hidden="true" /> : <Play size={21} fill="currentColor" aria-hidden="true" />}
       </button>
       {NATIONAL_TOP_ONE && <div className="ring-track-info"
-        aria-label={`Top 1 : ${NATIONAL_TOP_ONE.name}, ${RING_DEMO_TRACK_TITLE}. Morceau de démonstration.`}>
+        aria-label={`Top 1 Meewav France : ${NATIONAL_TOP_ONE.name}, ${RING_DEMO_TRACK_TITLE}. Morceau de démonstration.`}>
         <img src={NATIONAL_TOP_ONE.portraitUrl} alt="" width={34} height={34} draggable={false} />
         <div className="ring-track-info__copy">
-          <div className="ring-track-info__identity">
-            <span className="ring-track-info__rank"><Crown size={12} strokeWidth={1.8} aria-hidden="true" />Top 1</span>
-            <span className="ring-track-info__artist">{NATIONAL_TOP_ONE.name}</span>
-          </div>
+          <span className="ring-track-info__rank"><Crown size={11} strokeWidth={1.8} aria-hidden="true" />Top 1 Meewav France</span>
+          <span className="ring-track-info__artist">{NATIONAL_TOP_ONE.name}</span>
           <strong>{RING_DEMO_TRACK_TITLE}</strong>
         </div>
       </div>}

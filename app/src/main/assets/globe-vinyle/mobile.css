@@ -57,13 +57,12 @@ html, body, #root { width: 100%; height: 100%; margin: 0; overflow: hidden; }
     display:flex; flex:1; align-items:center; gap:8px; min-width:0; color:#fff; pointer-events:none;
   }
   .ring-track-info img { box-sizing:border-box; flex:none; width:34px; height:34px; object-fit:cover; border-radius:10px; border:1px solid #bda3e54d; }
-  .ring-track-info__copy { min-width:0; display:flex; flex-direction:column; gap:3px; }
-  .ring-track-info__identity { display:flex; align-items:center; gap:5px; min-width:0; }
-  .ring-track-info__rank { display:inline-flex; flex:none; align-items:center; gap:3px; padding:2px 5px; border:1px solid #bda3e54d; border-radius:20px; background:#5137a14d; color:var(--meewav-violet-urbain-light); font:650 9px/12px Inter,sans-serif; white-space:nowrap; }
+  .ring-track-info__copy { min-width:0; display:flex; flex-direction:column; gap:1px; }
+  .ring-track-info__rank { display:inline-flex; flex:none; align-self:flex-start; align-items:center; gap:3px; padding:1px 5px; border:1px solid #bda3e54d; border-radius:20px; background:#5137a14d; color:var(--meewav-violet-urbain-light); font:650 9px/10px Inter,sans-serif; white-space:nowrap; }
   .ring-track-info__rank svg { flex:none; }
   .ring-track-info__artist, .ring-track-info strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .ring-track-info__artist { color:#ddd1ed; font:500 9px/12px Inter,sans-serif; }
-  .ring-track-info strong { font:600 11px/14px Inter,sans-serif; }
+  .ring-track-info__artist { color:#ddd1ed; font:600 10px/11px Inter,sans-serif; }
+  .ring-track-info strong { font:500 11px/12px Inter,sans-serif; }
   /* Keep both controls reachable to the left of an open artist profile. */
   .immersive-globe .ring-player[data-profile-open="true"] { left:calc(100% - var(--mobile-artist-panel-right) - var(--mobile-artist-panel-width) - 114px); transform:none; width:102px; }
   .ring-player[data-profile-open="true"] .ring-track-info { display:none; }

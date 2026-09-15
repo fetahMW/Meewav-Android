@@ -157,7 +157,7 @@ perte de capture provenant d’un contrôle enfant n’annule pas la capture de 
 
 L’aide textuelle et son pictogramme de main sont remplacés par un lecteur unique
 de 320 × 46 pixels au maximum, centré horizontalement en haut de l’écran. Il réunit
-Play/Pause, le portrait, une pastille « Top 1 » avec couronne, le nom, le titre et
+Play/Pause, le portrait, une pastille « Top 1 Meewav France » avec couronne, le nom à côté du portrait, le titre et
 Muet dans la même surface Violet urbain Meewav. Les zones d’appui font 44 pixels.
 Son bord haut et sa hauteur sont alignés avec Retour au globe. Pendant l’ouverture
 d’un préprofil, il se compacte en deux commandes à gauche de la fiche pour garder
