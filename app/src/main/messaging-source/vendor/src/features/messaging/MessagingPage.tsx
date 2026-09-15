@@ -1044,6 +1044,7 @@ export default function MessagingPage() {
           conversationHeader={contentSpace === "collabs" && collabChatId ? <>
             <nav className="mw-hub-chips mw-collab-return" aria-label="Navigation des demandes de collab">
               <button type="button" onClick={() => {
+                window.dispatchEvent(new Event('meewav:messaging-list'));
                 nextRequestToken();
                 setCollabChatId(null);
                 setSelectedRailKey(null);

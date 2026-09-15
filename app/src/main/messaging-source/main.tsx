@@ -37,7 +37,7 @@ function MobileShell({ Page }: { Page: React.ComponentType }) {
   useLayoutEffect(() => {
     if (!detail) return;
     const timeline = document.querySelector<HTMLElement>('.mw-chat-timeline');
-    if (timeline) timeline.scrollTop = timeline.scrollHeight;
+    if (timeline) timeline.scrollTop = space === 'collabs' ? 0 : timeline.scrollHeight;
     const fitKeyboard = () => {
       if (document.activeElement?.closest('.mw-composer') && timeline) timeline.scrollTop = timeline.scrollHeight;
     };

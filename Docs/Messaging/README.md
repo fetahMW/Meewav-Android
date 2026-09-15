@@ -179,8 +179,25 @@ revient à la liste ; le chevron de l’en-tête général conserve le retour à
 précédente et la croix ferme la tâche Android. Le Track Pack réserve un emplacement de
 44 px à sa fermeture, distinct du titre.
 
-Collabs affiche le mur et les données `demoCollabs` du site Web en mode démo, avec
-défilement dans le panneau jusqu’au bas des demandes. Les portraits et quatre mixes
+Le mur Collabs a été présenté lors d’un essai, puis retiré à la demande de l’utilisateur :
+l’entrée affiche la liste des contacts. Sélectionner un contact ouvre la demande,
+ses messages et la réponse dans la même conversation, comme dans le Web. La carte
+et les messages partagent le défilement ; le champ de réponse reste en bas.
+Les données `demoCollabs` viennent du site Web. Les portraits et quatre mixes
 locaux dont les chemins sont assemblés dynamiquement sont ajoutés à la synchronisation
 des médias. Les anciens liens fictifs externes des autres demandes restent fictifs ;
 aucune donnée de démonstration ne remplace les réponses d’une session authentifiée.
+
+## Harmonisation des quatre onglets
+
+`scripts/messaging-brand.mjs` adapte les anciens accents roses/violets/cyan des styles
+Web au conditionnement Android : noirs, gris et nuances du CTA de connexion. Les
+opacités, gradients et géométries sont conservés ; les couleurs sémantiques rouge,
+orange et verte ainsi que les illustrations restent distinctes. Les règles des
+bulles Tchat et capsules audio gardent expressément leur finition Web demandée.
+Cette adaptation utilise PostCSS déjà présent dans les dépendances Web de compilation.
+
+Les en-têtes de Projets et Groupes ont une identité, des actions compactes et une ligne
+de sous-onglets. Les panneaux utilisent la hauteur disponible sous les quatre onglets,
+avec défilement de leur contenu et saisie en bas dans les conversations. La compilation
+ne constitue pas une validation visuelle ou un essai des échanges entre comptes.

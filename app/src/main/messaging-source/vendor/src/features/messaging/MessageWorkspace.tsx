@@ -1931,6 +1931,7 @@ export default function MessageWorkspace({
   const [notice, setNotice] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
+  const lastTimelineConversationRef = useRef<string | null>(null);
   const workspaceRef = useRef<HTMLElement>(null);
   const conversationRailRef = useRef<HTMLElement>(null);
   const conversationSearchRef = useRef<HTMLInputElement>(null);
@@ -2268,7 +2269,9 @@ export default function MessageWorkspace({
   useLayoutEffect(() => {
     const timeline = timelineRef.current;
     if (!timeline) return;
-    timeline.scrollTop = timeline.scrollHeight;
+    const openingConversation = lastTimelineConversationRef.current !== workspaceSelectedId;
+    timeline.scrollTop = conversationHeader && openingConversation ? 0 : timeline.scrollHeight;
+    lastTimelineConversationRef.current = workspaceSelectedId;
   }, [workspaceSelectedId, selectedConversation?.messages.length]);
 
   useEffect(() => () => {
@@ -3028,7 +3031,6 @@ export default function MessageWorkspace({
       </aside>
 
       {isMessageContent ? <section className={`mw-chat-scene${conversationHeader ? " has-conversation-header" : ""}`}>
-        {conversationHeader && <aside className="mw-conversation-header" aria-label="Demande de collaboration">{conversationHeader}</aside>}
         {marketplaceContext && (
           <aside className="mw-marketplace-context" aria-label="Contexte Marketplace">
             <span><Store aria-hidden="true" /></span>
@@ -3038,6 +3040,7 @@ export default function MessageWorkspace({
         )}
         <div className="mw-chat-timeline" ref={timelineRef}>
           <div className="mw-chat-timeline__inner">
+            {conversationHeader && <aside className="mw-conversation-header" aria-label="Demande de collaboration">{conversationHeader}</aside>}
             {liveController?.messagesStatus === "loading" && visibleMessages.length === 0 && <div className="mw-search-empty"><Search /><span>Chargement des messages…</span></div>}
             {liveController?.messagesStatus === "error" && <div className="mw-search-empty"><Info /><span>{liveController.messagesError ?? "Impossible de charger les messages."}</span><button type="button" onClick={() => void liveController.retryMessages()}>Réessayer</button></div>}
             {visibleMessages.map((message, index) => {

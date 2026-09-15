@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { readFile, writeFile, mkdir, readdir, copyFile, stat } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
+import { applyMessagingBrand } from './messaging-brand.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const web = resolve(root, '../Meewav-Web');
@@ -30,6 +31,10 @@ const result = await build({
     if (importing) context.onResolve({ filter: /^\.\/vendor\/src\// }, args => ({ path: join(web, args.path.slice('./vendor/'.length) + '.tsx') }));
   } }],
 });
+
+// Keep the copied Web source intact; apply the Android brand when packaging CSS.
+const compiledCss = join(output, 'assets/main.css');
+await writeFile(compiledCss, applyMessagingBrand(await readFile(compiledCss, 'utf8'), require('postcss')));
 
 // Explicit one-time import freezes only the messaging dependency graph. Future
 // builds read these copied sources, so Web changes cannot silently replace it.

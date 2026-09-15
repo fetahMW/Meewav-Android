@@ -121,9 +121,7 @@ button:disabled { opacity: .4; cursor: default; }
 /* Hubs keep their real actions and cards; desktop side rails/chrome are removed. */
 #root .mobile-messaging .mw-context-pane { display: none; grid-area: content; position: relative; min-width: 0; min-height: 0; width: 100%; height: 100%; padding: 0; overflow: auto; }
 #root .mobile-messaging.is-detail .mw-context-pane { display: block; }
-/* Show the original collaboration wall; the pane owns its vertical scrolling. */
-#root .mobile-messaging .messaging-stage[data-active-space='collabs'] .mw-conversation-rail { display: none; }
-#root .mobile-messaging .messaging-stage[data-active-space='collabs'] .mw-context-pane { display: block; overflow-x: hidden; overflow-y: auto; }
+/* Collabs follows the same contact list -> conversation journey as Tchat. */
 #root .mobile-messaging .mw-context-pane > .mw-hub--collabs { display: block; height: auto; min-height: 100%; max-height: none; overflow: visible; }
 #root .mobile-messaging .mw-collab-detail-workspace { display: block; height: auto; max-height: none; overflow: visible; }
 #root .mobile-messaging .mw-collab-detail-inline { height: auto; max-height: none; overflow: visible; padding: 10px 2px 20px; }
@@ -138,8 +136,8 @@ button:disabled { opacity: .4; cursor: default; }
 #root .mobile-messaging .mw-composer-row > button { width: 36px; min-width: 36px; }
 #root .mobile-messaging .mw-chat-header__identity-text small { display: block; }
 #root .mobile-messaging :is(.mw-hub,.mw-project-detail,.mwp-project-workspace,.agw) { --mw-violet: #5137a1; --mw-violet-deep: #19122f; --mw-cyan: #bda3e5; }
-#root .mobile-messaging .mw-conversation-header { max-height: 160px; overflow: auto; }
-#root .mobile-messaging.is-detail .mw-chat-scene.has-conversation-header { grid-template-rows: auto minmax(0,1fr) auto !important; }
+#root .mobile-messaging .mw-conversation-header { max-height: none; overflow: visible; margin: 0 0 16px; }
+#root .mobile-messaging.is-detail .mw-chat-scene.has-conversation-header { grid-template-rows: minmax(0,1fr) auto !important; }
 #root .mobile-messaging .mwp-project-workspace, #root .mobile-messaging .agw { width: 100%; height: 100%; min-width: 0; }
 #root .mobile-messaging .mwp-project-detail__content { min-width: 0; overflow: auto; padding: 12px; }
 #root .mobile-messaging .mwp-project-floating-controls { position: relative; inset: auto; padding: 8px; width: 100%; }
@@ -236,3 +234,47 @@ button:disabled { opacity: .4; cursor: default; }
 .mw-emoticon-wall__header > button { min-width: 44px; min-height: 44px; }
 .mw-emoticon-wall__categories > button { min-height: 40px; border-radius: 12px; }
 .mw-emoticon-wall__categories > button.is-active { background: #5137a1; border-color: #7960b2; }
+
+/* Shared mobile geometry for Projects and Groups; the outer tabs stay fixed. */
+#root .mobile-messaging :is(.mw-context-pane,.mwp-project-workspace,.mwp-project-detail,.agw,.agw-panel) { min-height: 0; min-width: 0; }
+#root .mobile-messaging :is(.mw-context-pane,.mwp-project-detail__content,.agw-panel__body) { scrollbar-width: thin; scrollbar-color: #5137a1 transparent; }
+#root .mobile-messaging .mwp-project-detail { display: grid; grid-template-rows: auto minmax(0,1fr); height: 100%; padding: 0; }
+#root .mobile-messaging .mwp-project-floating-controls,
+#root .mobile-messaging .agw-panel > .mw-hub-chipbar {
+  position: relative; inset: auto; display: grid; grid-template-columns: minmax(0,1fr) auto;
+  grid-template-areas: 'identity controls' 'tabs tabs'; gap: 8px; width: 100%; min-width: 0;
+  min-height: 0; padding: 10px 12px; border-bottom: 1px solid #ffffff12; background: #0b0816;
+}
+#root .mobile-messaging :is(.mwp-project-floating-controls,.agw-panel > .mw-hub-chipbar) > .agw-panel__identity { grid-area: identity; min-width: 0; max-width: 100%; }
+#root .mobile-messaging :is(.mwp-project-floating-controls,.agw-panel > .mw-hub-chipbar) > .agw-panel__identity strong { display: block; max-width: 100%; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#root .mobile-messaging :is(.mwp-project-floating-controls,.agw-panel > .mw-hub-chipbar) > .agw-panel__toolbar { grid-area: tabs; width: 100%; min-width: 0; padding: 0; }
+#root .mobile-messaging :is(.mwp-project-floating-controls,.agw-panel > .mw-hub-chipbar) > .agw-panel__controls { grid-area: controls; display: flex; gap: 4px; min-width: 0; }
+#root .mobile-messaging .agw-panel__controls > button { width: 44px; min-width: 44px; height: 44px; min-height: 44px; padding: 0; justify-content: center; border-radius: 12px; }
+#root .mobile-messaging .agw-panel__controls > button > span { display: none; }
+#root .mobile-messaging .agw-panel__toolbar .mw-hub-chips { display: flex; flex-wrap: nowrap; gap: 6px; width: 100%; max-width: none; min-width: 0; margin: 0; padding: 0; overflow-x: auto; }
+#root .mobile-messaging .agw-panel__toolbar .mw-hub-chips button { flex: 1 0 auto; display: flex; justify-content: center; min-height: 42px; padding: 8px 10px; font-size: 12px; border-radius: 12px; }
+#root .mobile-messaging .mw-project-detail__body { min-height: 0; height: 100%; overflow: hidden; display: block; padding: 0; }
+#root .mobile-messaging .mwp-project-detail__content { height: 100%; min-height: 0; overflow: auto; padding: 12px; }
+#root .mobile-messaging .mwp-project-detail[data-project-tab='chat'] .mwp-project-detail__content { overflow: hidden; padding: 0; }
+#root .mobile-messaging :is(.mwp-project-chat,.agw-group-chat) { display: grid; grid-template-rows: minmax(0,1fr) auto !important; height: 100%; min-height: 0; }
+#root .mobile-messaging .mwp-project-chat__messages { width: 100%; max-width: 100%; padding: 0 0 16px; }
+#root .mobile-messaging .mwp-info-stage__body { grid-template-columns: minmax(0,1fr); }
+#root .mobile-messaging .mwp-info-stage__rail { width: 100%; min-width: 0; }
+#root .mobile-messaging .agw-panel { grid-template-rows: auto minmax(0,1fr) !important; }
+#root .mobile-messaging .agw-panel__body { min-height: 0; overflow-x: hidden; }
+#root .mobile-messaging .agw-panel__body > :not(.agw-group-chat) { max-width: 100%; }
+#root .mobile-messaging :is(.mw-hub__header,.agw__header) { gap: 12px; padding: 12px; flex-wrap: wrap; }
+#root .mobile-messaging :is(.mw-hub__header h1,.agw__header h1) { font-size: 22px; line-height: 1.2; }
+#root .mobile-messaging :is(.mwp-task-list,.agw-members-grid,.agw-projects-grid) { grid-template-columns: minmax(0,1fr); }
+
+/* A single CTA treatment, including controls imported from the four workspaces. */
+:is(.mw-button--primary,.agw-primary,.agw-send,.agw-panel-create),
+#root .mobile-messaging .mw-composer-row .is-send { background: var(--mobile-violet-cta); border-color: #7960b2; color: #fff; }
+#root .mobile-messaging :is(.agw,.mw-hub,.mwp-project-workspace) { --agw-violet: #5137a1; --agw-violet-strong: #4e349f; --agw-cyan: #7960b2; --mw-violet: #5137a1; --mw-violet-deep: #372574; --mw-cyan: #7960b2; }
+#root .mobile-messaging .agw-panel__toolbar .mw-hub-chips button { color: #b8b5c1; background: #080610; border: 1px solid #ffffff14; box-shadow: none; }
+#root .mobile-messaging .agw-panel__toolbar .mw-hub-chips button.is-active { color: #fff; border-color: #7960b2; background: #19122f; box-shadow: inset 0 0 0 1px #5137a133; }
+#root .mobile-messaging .mw-conversation-header .mw-collab-detail-inline { padding: 0; }
+#root .mobile-messaging .mw-conversation-header .mw-collab-return { margin: 0 0 10px; }
+#root .mobile-messaging .mw-conversation-header .mw-collab-request { width: 100%; padding: 16px; border-radius: 24px; }
+#root .mobile-messaging .mw-conversation-header .mw-collab-request__actions { display: flex; flex-wrap: wrap; width: 100%; gap: 8px; }
+#root .mobile-messaging .mw-conversation-header .mw-collab-request__actions button { flex: 1; min-width: 0; min-height: 44px; }
