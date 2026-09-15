@@ -451,16 +451,20 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
     let selectedItem = null;
     for (const item of items) {
       drawn.push(item);
-      if (item.avatar.pinColor) pinItems.push(item);
+      if (item.avatar.pinColor && !item.avatar.isHost) pinItems.push(item);
+      if (item.avatar.isHost) hostItem = item;
       if (item.avatar.id === selectedId) { selectedItem = item; continue; }
-      if (item.avatar.isHost) { hostItem = item; continue; }
+      if (item.avatar.isHost) continue;
       const hovered = item.avatar.id === hoveredId;
       const gray = consulted.has(item.avatar.id) && !item.avatar.pinColor;
       sprites.add(item, item.size * (hovered ? 1.08 : 1), gray ? 0.55 : 1, gray ? 0 : 1);
     }
     if (hostItem) {
       const hovered = hostItem.avatar.id === hoveredId;
-      sprites.add(hostItem, hostItem.size * (hovered ? 1.06 : 1));
+      // Keep the ground marker when the enlarged profile presentation replaces
+      // the sprite. Its radius and foot anchor stay fixed during hover/selection.
+      const pinRadius = 41 * zoomFromSize(hostItem.size, hostItem.avatar) * PIN_HOST_SCALE;
+      sprites.add(hostItem, hostItem.size * (hovered ? 1.06 : 1), hostItem === selectedItem ? 0 : 1, 1, pinRadius);
     }
     sprites.finish();
     pinLayer.sync(pinItems);

@@ -11,7 +11,8 @@ export function createGroundAvatarSprites() {
   geometry.setIndex([0, 1, 2, 2, 1, 3]);
   geometry.instanceCount = 0;
   const slots = new Map();
-  let texture = null, capacity = 0, rectangles, layers, depths, saturations, count = 0;
+  let texture = null, capacity = 0, rectangles, layers, depths, saturations, pins, count = 0;
+  const pinColor = new T.Color();
   const material = new T.ShaderMaterial({
     glslVersion: T.GLSL3,
     uniforms: { icons: { value: null }, viewport: { value: new T.Vector2(1, 1) } },
@@ -24,15 +25,20 @@ export function createGroundAvatarSprites() {
       in float iconLayer;
       in float avatarDepth;
       in float avatarSaturation;
+      in vec4 avatarPin;
       uniform vec2 viewport;
       out vec2 iconUv;
       flat out float layer, opacity, spriteSize, saturation;
+      flat out vec4 pin;
       void main() {
         spriteSize = avatarRect.z;
         float padding = spriteSize * 0.12 + 2.0;
-        vec2 pixel = vec2((position.x - 0.5) * spriteSize,
+        pin = avatarPin;
+        float halfWidth = max(spriteSize * 0.5, pin.w * 1.7);
+        padding = max(padding, pin.w * 0.46 * 1.7 + 2.0);
+        vec2 pixel = vec2((position.x - 0.5) * halfWidth * 2.0,
           position.y * (spriteSize + padding) - padding);
-        iconUv = vec2(position.x, pixel.y / spriteSize);
+        iconUv = vec2(pixel.x / spriteSize + 0.5, pixel.y / spriteSize);
         layer = iconLayer; opacity = avatarRect.w;
         saturation = avatarSaturation;
         vec2 screen = avatarRect.xy + vec2(pixel.x, -pixel.y);
@@ -43,18 +49,41 @@ export function createGroundAvatarSprites() {
       uniform highp sampler2DArray icons;
       in vec2 iconUv;
       flat in float layer, opacity, spriteSize, saturation;
+      flat in vec4 pin;
       out vec4 outputColor;
+      float ringLine(float radius, float center, float width, float aa) {
+        return 1.0 - smoothstep(max(0.0, width - aa), width + aa, abs(radius - center));
+      }
       void main() {
         vec4 photo = texture(icons, vec3(clamp(vec2(iconUv.x, 1.0 - iconUv.y), 0.0, 1.0), layer));
         float gray = dot(photo.rgb, vec3(0.2126, 0.7152, 0.0722));
         photo.rgb = mix(vec3(gray), photo.rgb, saturation);
-        photo *= opacity * step(0.0, iconUv.y) * step(iconUv.y, 1.0);
+        photo *= opacity * step(0.0, iconUv.y) * step(iconUv.y, 1.0)
+          * step(0.0, iconUv.x) * step(iconUv.x, 1.0);
         vec2 ellipse = vec2((iconUv.x - 0.5) / 0.34, (iconUv.y + 2.0 / spriteSize) / 0.1);
         float r = length(ellipse), feather = max(fwidth(r) * 0.5, 0.0001);
         float shadow = (1.0 - smoothstep(1.0 - feather, 1.0 + feather, r)) * 0.1984;
         // These are unlit sprites: keep the source images' display sRGB
         // colours and premultiplied alpha, just like their HTML enlarged image.
         outputColor = vec4(photo.rgb, photo.a + shadow * (1.0 - photo.a));
+        if (pin.w > 0.0) {
+          // The host marker shares the avatar's foot anchor and depth. Compose
+          // its concentric ground rings UNDER the portrait, never as a DOM layer
+          // over its shoes. The two-pixel drop matches the original ground pin.
+          vec2 ground = vec2((iconUv.x - 0.5) * spriteSize / pin.w,
+            (iconUv.y * spriteSize + 2.0) / (pin.w * 0.46));
+          float distance = length(ground), aa = max(fwidth(distance), 0.001);
+          float stroke = max(ringLine(distance, 1.0, 0.018, aa),
+            max(ringLine(distance, 0.79, 0.012, aa) * 0.65,
+              max(ringLine(distance, 0.65, 0.015, aa) * 0.65,
+                ringLine(distance, 0.44, 0.015, aa) * 0.4)));
+          float center = 1.0 - smoothstep(0.07 - aa, 0.07 + aa, distance);
+          float glow = exp(-pow((distance - 1.0) / 0.24, 2.0)) * 0.24;
+          float alpha = min(0.96, max(stroke, center * 0.9) + glow);
+          vec4 floorRing = vec4(mix(pin.rgb, vec3(1.0), stroke * 0.18) * alpha, alpha);
+          outputColor.a = photo.a + shadow * opacity * (1.0 - photo.a);
+          outputColor += floorRing * (1.0 - outputColor.a);
+        }
       }`,
   });
   const mesh = new T.Mesh(geometry, material);
@@ -72,10 +101,12 @@ export function createGroundAvatarSprites() {
     layers = new T.InstancedBufferAttribute(new Float32Array(capacity), 1).setUsage(T.DynamicDrawUsage);
     depths = new T.InstancedBufferAttribute(new Float32Array(capacity), 1).setUsage(T.DynamicDrawUsage);
     saturations = new T.InstancedBufferAttribute(new Float32Array(capacity), 1).setUsage(T.DynamicDrawUsage);
+    pins = new T.InstancedBufferAttribute(new Float32Array(capacity * 4), 4).setUsage(T.DynamicDrawUsage);
     geometry.setAttribute('avatarRect', rectangles);
     geometry.setAttribute('iconLayer', layers);
     geometry.setAttribute('avatarDepth', depths);
     geometry.setAttribute('avatarSaturation', saturations);
+    geometry.setAttribute('avatarPin', pins);
   }
   return {
     setImages(images) {
@@ -117,13 +148,17 @@ export function createGroundAvatarSprites() {
       material.uniforms.viewport.value.set(width, height);
       count = 0;
     },
-    add(item, size = item.size, opacity = 1, saturation = 1) {
+    add(item, size = item.size, opacity = 1, saturation = 1, pinRadius = 0) {
       const slot = slots.get(item.avatar.icon) ?? slots.get('avatar_4');
       if (slot === undefined || size <= 0) return;
       rectangles.setXYZW(count, item.x, item.y, size, opacity);
       layers.setX(count, slot);
       depths.setX(count, item.depth);
       saturations.setX(count, saturation);
+      if (pinRadius > 0) {
+        pinColor.set(item.avatar.pinColor).convertLinearToSRGB();
+        pins.setXYZW(count, pinColor.r, pinColor.g, pinColor.b, pinRadius);
+      } else pins.setXYZW(count, 0, 0, 0, 0);
       count++;
     },
     finish() {
@@ -134,6 +169,7 @@ export function createGroundAvatarSprites() {
       layers.clearUpdateRanges(); layers.addUpdateRange(0, count); layers.needsUpdate = true;
       depths.clearUpdateRanges(); depths.addUpdateRange(0, count); depths.needsUpdate = true;
       saturations.clearUpdateRanges(); saturations.addUpdateRange(0, count); saturations.needsUpdate = true;
+      pins.clearUpdateRanges(); pins.addUpdateRange(0, count * 4); pins.needsUpdate = true;
     },
     hide() { mesh.visible = false; geometry.instanceCount = 0; },
     render(renderer) {

@@ -121,6 +121,12 @@ couleur d’épinglage sauvegardée. Dans son préprofil mobile, le nom ne s’�
 pour remplir la ligne : le badge le suit avec le même espacement de 4 pixels que
 sur les autres fiches, en conservant la place réservée au bouton de fermeture.
 
+L’anneau du host est composé sous son image dans le même rendu GPU, avec le même
+point d’ancrage aux pieds et le même rayon qu’auparavant. Il ne recouvre plus les
+chaussures via une couche HTML au-dessus du canvas. Il conserve la profondeur
+du personnage face aux monuments et reste au sol quand le préprofil est ouvert.
+Les autres épingles et les images sources des avatars restent inchangées.
+
 Les six villes rapides et les commandes 3D / zoom sont retirées de l’interface
 Android. Les gestes de zoom et d’inclinaison restent disponibles. Ville, Pays et
 Ma position occupent trois boutons carrés à droite, avec des icônes et des libellés
