@@ -108,11 +108,12 @@ Ma position occupent trois boutons carrés à droite, avec des icônes et des li
 d’accessibilité. Ils s’effacent quand le Top 10 est déplié pour laisser sa liste
 accessible. Ma position conserve sa destination de démonstration (Charonne) ;
 ce déplacement des commandes n’ajoute pas de géolocalisation réelle. La recherche
-est limitée à 312 × 36 pixels CSS en paysage. Dans le globe complet, le chevron
+est limitée à 264 × 36 pixels CSS en paysage. Dans le globe complet, le chevron
 vers l’inscription et le logo supérieur sont retirés. Le Top 10 et la navigation
 commencent à 10 pixels du haut. Une croix native en haut à droite ferme la tâche
 Android sans effacer les données ; le retour système depuis le globe fait de même.
-Une bande de 60 pixels à droite des fiches réserve sa cible tactile. Le bouton
+Une bande de 76 pixels à droite des fiches réserve sa cible tactile, avec
+26 pixels d’écart entre le Top 10 et la zone d’appui de fermeture. Le bouton
 « Retour au globe » de l’exploration du vinyle reste disponible.
 Le conteneur de navigation a un contour continu et accueille son petit globe
 fixe sans effet de creux. Tous les boutons, du globe au profil, partagent une
