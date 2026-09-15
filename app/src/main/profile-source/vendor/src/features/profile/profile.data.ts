@@ -248,6 +248,7 @@ export const audienceSources = [
 export const mediaItems: MediaItem[] = [
   {
     id: "media-midnight",
+    cover: "/images/messaging/covers/cover_1.png",
     title: "Nocturne 01",
     kind: "audio",
     meta: "MP3 · 24 juin 2024",
@@ -305,6 +306,7 @@ export const mediaItems: MediaItem[] = [
   },
   {
     id: "media-cover",
+    cover: "/images/messaging/covers/cover_2.png",
     title: "Minuit Bleu",
     kind: "audio",
     meta: "WAV · 2 juin 2024",

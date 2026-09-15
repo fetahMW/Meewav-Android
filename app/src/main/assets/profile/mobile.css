@@ -1,5 +1,6 @@
 @font-face { font-family: Inter; src: url('/fonts/inter.ttf') format('truetype'); font-display: swap; }
 :root { color-scheme: dark; font-family: Inter,system-ui,sans-serif; --mobile-violet-cta: linear-gradient(135deg,rgba(79,53,158,.96),rgba(76,47,169,.94)); --mobile-cta-rim: rgba(98,67,192,.34); --profile-mobile-menu: 100px;
+  --profile-dock-violet: linear-gradient(125deg,#ffffff08,#ffffff02 48%,#ffffff05),linear-gradient(110deg,#382961,#302351 52%,#33245b);
   /* Exact surface of the delivered messaging composer. */
   --profile-mobile-glass: linear-gradient(125deg,#ffffff15,#ffffff05 48%,#ffffff0b),#17191faa;
   --profile-mobile-glass-edge: inset 0 1px 0 #ffffff12,inset 0 -1px 0 #0003,0 6px 20px #0004;
@@ -75,7 +76,7 @@ button { touch-action: manipulation; }
 .mobile-profile-close { position: fixed; z-index: 50; right: 4px; top: 0; width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: #d6d8e0; }
 /* System-bar padding is already owned by the native host: no second safe inset. */
 .profile-bottom-dock { position: fixed; z-index: 45; bottom: 0; left: 0; right: 0; height: 82px; display: grid; grid-template-columns: minmax(0,1fr) 72px minmax(0,1fr); align-items: end; gap: 0; }
-.profile-bottom-dock__surface { position: absolute; z-index: 0; inset: 24px 0 0; border-radius: 22px 22px 0 0; background: linear-gradient(125deg,#ffffff08,#ffffff02 48%,#ffffff05),#17191f33; border: 1px solid #c5cbd335; border-top-color: #edf0f34d; border-bottom: 0; backdrop-filter: blur(22px) saturate(1.15); -webkit-backdrop-filter: blur(22px) saturate(1.15); mask-image: radial-gradient(circle 34px at 50% 4px,transparent 33px,#000 34px); box-shadow: var(--profile-mobile-glass-edge); pointer-events: none; }
+.profile-bottom-dock__surface { position: absolute; z-index: 0; inset: 24px 0 0; border-radius: 22px 22px 0 0; background: var(--profile-dock-violet); border: 1px solid #c5cbd335; border-top-color: #edf0f34d; border-bottom: 0; backdrop-filter: blur(22px) saturate(1.15); -webkit-backdrop-filter: blur(22px) saturate(1.15); mask-image: radial-gradient(circle 34px at 50% 4px,transparent 33px,#000 34px); box-shadow: var(--profile-mobile-glass-edge); pointer-events: none; }
 .profile-bottom-dock__side { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); height: 58px; align-items: center; padding: 0 5px; }
 .profile-bottom-dock__side button { min-width: 0; min-height: 48px; padding: 8px 2px; display: grid; place-items: center; border: 0; border-radius: 12px; background: transparent; color: #afb0bb; }
 .profile-bottom-dock__side button svg { width: 23px; height: 23px; stroke-width: 1.7; }
@@ -215,7 +216,7 @@ html { scroll-padding-top: 120px; scroll-padding-bottom: 116px; }
 #root .profile-media-view .profile-recognition-summary > button strong { font-size: 14px; }
 #root .profile-media-view .profile-recognition-summary > button > span { width: 22px; height: 22px; background: transparent; border: 0; }
 #root .profile-media-view .profile-recognition-grid { grid-template-columns: minmax(0,1fr); gap: 10px; }
-#root .profile-media-view .profile-recognition-card { min-height: 0; padding: 14px; border-color: #ffffff24; border-radius: 18px; background: var(--media-mobile-card); --recognition-accent: #9274d8 !important; }
+#root .profile-media-view .profile-recognition-card { min-height: 0; padding: 14px; border-color: #ffffff24; border-radius: 18px; background: var(--media-mobile-card);  }
 #root .profile-media-view .profile-recognition-card__copy h4 { font-size: 15px; }
 #root .profile-media-view .profile-recognition-card__copy p { font-size: 12px; }
 #root .profile-media-view :is(.profile-gifts-overview-hero > .profile-studio-workspace__back,.profile-gifts-overview-hero__divider) { display: none; }
@@ -698,3 +699,73 @@ html { scroll-padding-top: 120px; scroll-padding-bottom: 116px; }
 #root .profile-stats-view .profile-empty-state h3 { font-size: 14px; }
 #root .profile-stats-view .profile-empty-state p { font-size: 11px; line-height: 1.5; }
 @media (prefers-reduced-motion: reduce) { #root .profile-stats-view * { animation: none !important; transition: none !important; } }
+
+/* One current destination, revealed on demand, instead of stacked tool grids. */
+#root .profile-tool-bar { position: fixed; top: var(--profile-mobile-menu); left: 0; right: 0; z-index: 25; height: 48px; margin: 0; padding: 0 12px; border: 0; border-bottom: 1px solid #ffffff14; background: var(--profile-mobile-glass); backdrop-filter: blur(22px) saturate(1.12); -webkit-backdrop-filter: blur(22px) saturate(1.12); box-shadow: 0 5px 14px #0002; }
+#root .profile-main .profile-media-shell-header { height: 36px; margin-bottom: 12px; }
+#root .profile-space-view .profile-private-master-detail { padding-top: 48px; }
+#root .profile-main:has(:is(.profile-media-view,.profile-space-view)) { scroll-padding-top: 160px; }
+.profile-menu-select { position: relative; min-width: 0; }
+.profile-menu-select__trigger { display: flex; align-items: center; gap: 9px; min-height: 44px; max-width: 100%; padding: 0 12px; color: #f0edf6; background: #17191fc7; border: 1px solid #ffffff1c; border-radius: 13px; font: inherit; text-align: left; }
+.profile-menu-select__trigger strong { min-width: 0; font-size: 12px; font-weight: 550; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.profile-menu-select__trigger small { color: #9696a6; font-size: 11px; font-variant-numeric: tabular-nums; }
+.profile-menu-select__trigger > svg:last-child { flex: 0 0 16px; color: #ada3c3; transition: transform 160ms ease; }
+.profile-menu-select__trigger[aria-expanded=true] > svg:last-child { transform: rotate(180deg); }
+.profile-menu-select.is-navigation .profile-menu-select__trigger { height: 48px; width: 100%; padding: 0 4px; border: 0; border-radius: 0; background: transparent; }
+.profile-menu-select.is-navigation .profile-menu-select__trigger strong { font-size: 14px; }
+.profile-menu-select.is-navigation .profile-menu-select__trigger > svg:last-child { margin-left: auto; }
+.profile-menu-layer { position: fixed; inset: 0; z-index: 110; }
+.profile-menu-scrim { position: absolute; inset: 0; background: #0303093d; }
+.profile-menu-options { position: fixed; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding: 6px; border: 1px solid #d3c5ee30; border-radius: 18px; background: linear-gradient(130deg,#ffffff09,transparent 65%),#14151cef; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); box-shadow: inset 0 1px #ffffff0c,0 16px 45px #0009; }
+.profile-menu-options > button { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 11px 12px; border: 0; border-radius: 11px; background: transparent; color: #bfc0ca; font: inherit; text-align: left; }
+.profile-menu-options > button[aria-checked=true] { color: #f4f1fa; background: #5137a125; }
+.profile-menu-options > button > span { flex: 1; display: grid; min-width: 0; gap: 4px; }
+.profile-menu-options strong { font-size: 13px; font-weight: 550; }
+.profile-menu-options small { color: #9a9ca9; font-size: 11px; line-height: 1.4; }
+.profile-menu-options em { font-size: 11px; color: #a8a3b5; font-style: normal; }
+.profile-menu-options > button > svg { flex-shrink: 0; color: #b5a2d9; }
+.profile-menu-options button:focus-visible { outline: 2px solid #bda3e5; outline-offset: -2px; }
+
+/* Library: search + import, one filter, then actual covers and titles. */
+#root .profile-media-view .profile-library-toolbar.is-compact { display: grid; gap: 8px; margin: 0 0 14px; }
+#root .profile-library-search-row { display: grid; grid-template-columns: minmax(0,1fr) 44px; gap: 10px; }
+#root .profile-media-view .profile-library-search { min-height: 44px; border: 0; border-bottom: 1px solid #ffffff28; border-radius: 0; background: transparent; padding: 0 4px; box-shadow: none; }
+#root .profile-library-import { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--mobile-cta-rim); }
+#root .profile-library-filter-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-width: 0; }
+#root .profile-library-select { display: flex; align-items: center; justify-content: flex-end; gap: 5px; flex-shrink: 0; min-height: 44px; padding: 0 2px 0 6px; border: 0; background: transparent; color: #b7b0c7; font-size: 11px; }
+#root .profile-media-view .profile-media-card { display: grid; grid-template-columns: 76px minmax(0,1fr); gap: 10px; padding: 10px; border-radius: 17px; }
+#root .profile-media-view .profile-media-card__visual { width: 76px; height: 76px; min-height: 0; border: 0; border-radius: 11px; }
+#root .profile-media-view .profile-media-card__visual > :is(img,video,.profile-media-card__abstract) { height: 100%; width: 100%; }
+#root .profile-media-view .profile-media-card__visual-play { top: 50%; width: 44px; height: 44px; }
+#root .profile-media-view .profile-media-card__body { display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 0 32px 0 0; min-width: 0; }
+#root .profile-media-view .profile-media-card__title-row h3 { font-size: 14px; line-height: 19px; }
+#root .profile-media-view .profile-media-card__title-row > span { display: none; }
+#root .profile-media-view .profile-media-card__footer { display: flex; flex-direction: column; align-items: start; gap: 5px; padding: 0; }
+#root .profile-media-view .profile-media-card__footer p { margin: 0; font-size: 10px; color: #a1a3af; }
+#root .profile-media-view .profile-media-card__engagement { gap: 10px; }
+#root .profile-media-view .profile-media-card__engagement span { font-size: 10px; }
+#root .profile-media-view .profile-media-card__menu { top: 24px; right: 0; width: 40px; height: 44px; background: none; border: 0; box-shadow: none; }
+#root .profile-media-view .profile-media-card:not(.is-player-open) :is(.profile-media-card__type,.profile-media-card__visual-meta) { display: none; }
+#root .profile-media-view .profile-media-card__document-preview { padding: 10px; justify-content: center; }
+#root .profile-media-view .profile-media-card__document-preview > :not(i) { display: none; }
+#root .profile-media-view .profile-media-card__document-preview > i { font-size: 0; }
+#root .profile-media-view .profile-media-card__document-preview svg { width: 28px; height: 28px; }
+#root .profile-media-view .profile-media-card.is-player-open { grid-template-columns: minmax(0,1fr); }
+#root .profile-media-view .profile-media-card.is-player-open .profile-media-card__visual { width: 100%; height: 264px; }
+#root .profile-media-view .profile-media-card.is-player-open .profile-media-card__menu { top: auto; bottom: 20px; }
+#root .profile-media-view .profile-media-card.is-player-open .profile-media-card__visual-play { top: 83px; }
+#root .profile-media-view .profile-media-card.is-selection-mode .profile-media-card__select { left: 26px; top: 26px; border-radius: 50%; z-index: 4; }
+
+/* Web chart semantics: each metric keeps its own hue; readout floats on the curve. */
+#root .profile-metric-dropdown.is-open { border-color: color-mix(in srgb,var(--chart-accent) 48%,#ffffff15); }
+#root .profile-metric-toggle { background: linear-gradient(110deg,color-mix(in srgb,var(--chart-accent) 9%,transparent),transparent 68%); }
+#root .profile-metric-toggle__icon { color: var(--chart-accent); }
+#root .profile-metric-toggle__trend { color: var(--chart-highlight); }
+#root .profile-stats-view .profile-chart-value-panel { position: absolute; z-index: 6; transform: translateX(-50%); width: 126px; min-height: 54px; display: grid; gap: 4px; padding: 9px 34px 9px 10px; border: 1px solid color-mix(in srgb,var(--chart-accent) 50%,#ffffff20); border-radius: 12px; background: #101018f5; box-shadow: 0 5px 16px #0007; }
+#root .profile-chart-value-panel span { color: #b5b0c4; font-size: 10px; }
+#root .profile-chart-value-panel strong { color: var(--chart-highlight); font-size: 13px; white-space: nowrap; }
+#root .profile-chart-value-panel button { position: absolute; right: 0; top: 0; height: 100%; width: 32px; min-height: 44px; padding: 0; border: 0; background: transparent; color: #bcb7ca; font-size: 20px; }
+#root .profile-stats-view .profile-main-chart__footer i { background: var(--chart-accent); }
+#root .profile-media-view .profile-recognition-card__progress i.is-filled { background: var(--recognition-accent); }
+#root .profile-media-view .profile-gift-catalog-card.is-selected { border-color: #ad8eee; background: linear-gradient(120deg,#5137a125,transparent 65%),#111318; box-shadow: inset 0 0 0 1px #9a7cdb38,0 0 16px #5137a117; }
+#root .profile-media-view .profile-gift-catalog-card__select { color: #d3baff; }

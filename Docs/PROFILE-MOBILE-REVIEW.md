@@ -1,5 +1,43 @@
 # Profil Android — passe Médias et Espace privé, 15 septembre 2026
 
+## Reprise après audit du site — navigation, médias, cadeaux et statistiques
+
+Référence relue avant les corrections : `Meewav-Web/src/features/profile/views/`
+(`ProfileStatsView`, `ProfileMediaView`, `ProfileGiftsWorkspace`), `profile.data.ts`,
+`profile.css` et `src/features/grades/MeewavGradeBadge.tsx` / `gradeBadges.ts`.
+
+Constats : les quatre métriques avaient été uniformisées en violet dans la copie
+Android ; les valeurs de courbe avaient été déplacées sous le graphe. Une surcharge
+CSS écrasait aussi les accents des reconnaissances métier. Les cadeaux exigeaient
+un stock actif jusque pour préparer un brouillon local ; en aperçu sans compte,
+aucune carte ne pouvait donc être sélectionnée. Les covers audio n'étaient pas
+définies dans les fixtures du profil, alors que le site possède des covers dans
+`public/images/messaging/covers/`.
+
+Corrections :
+
+- Un sélecteur de destination sur une ligne remplace les cinq/six sous-onglets ;
+  son bandeau reste fixe, translucide et flouté. La liste se déplie sous le contrôle.
+- Un filtre déroulant remplace les séries de chips de Médiathèque, Cage, Setlist et
+  Cadeaux. La médiathèque présente recherche/import, filtre/sélection, puis des
+  lignes avec covers. Les deux covers audio viennent de `cover_1.png` et `cover_2.png`
+  du site, sans transformation des fichiers.
+- Le dock inférieur utilise une finition violette opaque constante ; les bandeaux
+  supérieurs conservent la transparence avec blur.
+- Couleurs exactes des métriques du site rétablies : Portée `#8b5cff`, Engagement
+  `#d946ef`, Revenus `#34d399`, Progression `#19b8ff`, avec leurs dégradés d'origine.
+  Un tap affiche date et valeur dans un panneau superposé à la courbe ; il ne crée
+  plus de rangée de chips. Les données restent celles du repository, ou les fixtures
+  clairement identifiées « Aperçu » dans le mode de développement.
+- Les SVG officiels de grades sont conservés et les accents originaux des
+  reconnaissances sont rétablis ; aucun badge n'est redessiné.
+- La sélection et l'enregistrement d'un brouillon cadeau ne débitent aucun stock.
+  L'inventaire affiché demeure celui du service ; la distribution reste contrôlée
+  côté Room. Les brouillons d'aperçu utilisent une clé locale séparée du compte.
+
+Cette section décrit les corrections ; les contrôles de la passe précédente,
+ci-dessous, ne constituent pas une validation automatique de cette reprise.
+
 ## Changements
 
 - Médias : cinq destinations dans un bandeau fixe translucide avec blur, commandes

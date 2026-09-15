@@ -57,6 +57,7 @@ import {
   type MediaLibraryFilter,
   type OwnerMediaItem,
 } from "../profile.media.service";
+import ProfileMenuSelect from "../components/ProfileMenuSelect";
 import ProfileStudioWorkspace, { type StudioMode } from "./ProfileStudioWorkspace";
 
 type ProfileMediaViewProps = {
@@ -521,28 +522,8 @@ export default function ProfileMediaView({
     <div className={`profile-view profile-media-view is-${activeMediaSection}`} aria-label="Média du profil">
       <header className="profile-private-shell-header profile-media-shell-header">
         <h2>Créations du profil</h2>
-        <div className="profile-private-shell-header__row">
-          <nav aria-label="Outils média">
-            {mediaWorkspaces.map((item) => {
-              const WorkspaceIcon = item.icon;
-              const isActive = activeWorkspaceId === item.id;
-              return (
-                <button
-                  key={item.id}
-                  id={`profile-media-tab-${item.id}`}
-                  type="button"
-                  aria-current={isActive ? "page" : undefined}
-                  className={isActive ? "is-active" : ""}
-                  style={{ "--private-tab-accent": item.accent } as React.CSSProperties}
-                  onClick={() => changeWorkspace(item.id)}
-                >
-                  <WorkspaceIcon size={15} />
-                  <strong>{item.label}</strong>
-                  <span>{mediaWorkspaceMetrics[item.id]}</span>
-                </button>
-              );
-            })}
-          </nav>
+        <div className="profile-tool-bar">
+          <ProfileMenuSelect label="Outils média" value={activeWorkspaceId} options={mediaWorkspaces.map(item => ({ value: item.id, label: item.label, detail: item.detail, icon: item.icon }))} onChange={changeWorkspace} />
         </div>
       </header>
       <input
@@ -566,28 +547,15 @@ export default function ProfileMediaView({
         onClickCapture={suppressDraggedClick}
       >
       {activeMediaSection === "library" && (
-        <div id="profile-media-panel-library" className="profile-media-library" role="tabpanel" aria-labelledby="profile-media-tab-library">
-          <div className="profile-library-toolbar">
-            <div className="profile-library-filters" aria-label="Filtrer les médias">
-              {kindFilters.map((filter) => (
-                <button key={filter.id} type="button" className={kind === filter.id ? "is-active" : ""} aria-pressed={kind === filter.id} onClick={() => setKind(filter.id)}>
-                  {filter.id === "meewav" && <Sparkles size={13} />}
-                  {filter.label}
-                  <span>{filter.id === "all" ? items.length : filter.id === "meewav" ? items.filter((item) => item.producedOnMeewav).length : items.filter((item) => item.kind === filter.id).length}</span>
-                </button>
-              ))}
+        <div id="profile-media-panel-library" className="profile-media-library" role="region" aria-label="Médiathèque">
+          <div className="profile-library-toolbar is-compact">
+            <div className="profile-library-search-row">
+              <label className="profile-library-search"><Search size={18} /><input aria-label="Rechercher un média" value={query} onChange={event => setQuery(event.target.value)} placeholder="Rechercher un titre…" /></label>
+              <button className="profile-library-import is-primary" type="button" aria-label={isImporting ? "Importation en cours" : "Importer des médias"} disabled={isImporting || libraryStatus === "loading"} onClick={() => fileInputRef.current?.click()}>{isImporting ? <LoaderCircle size={18} /> : <Upload size={18} />}</button>
             </div>
-            <div className="profile-library-actions">
-              <label className="profile-library-search">
-                <Search size={18} />
-                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Rechercher dans tes contenus" />
-              </label>
-              <div className="profile-library-primary-actions">
-                <button type="button" disabled={isImporting || libraryStatus === "loading"} onClick={() => fileInputRef.current?.click()}>
-                  {isImporting ? <LoaderCircle size={16} /> : <Upload size={16} />} {isImporting ? "Importation…" : "Importer"}
-                </button>
-                <button type="button" disabled={libraryStatus !== "ready" && libraryStatus !== "fallback"} className={selectionMode ? "is-active" : ""} onClick={() => selectionMode ? cancelSelectionMode() : startSelectionMode()}><Check size={16} /> {selectionMode ? "Annuler" : "Sélectionner"}</button>
-              </div>
+            <div className="profile-library-filter-row">
+              <ProfileMenuSelect label="Type de contenu" variant="filter" value={kind} options={kindFilters.map(filter => ({ value: filter.id, label: filter.id === "all" ? "Tous les contenus" : filter.label, count: filter.id === "all" ? items.length : filter.id === "meewav" ? items.filter(item => item.producedOnMeewav).length : items.filter(item => item.kind === filter.id).length }))} onChange={setKind} />
+              <button className="profile-library-select" type="button" disabled={libraryStatus !== "ready" && libraryStatus !== "fallback"} aria-pressed={selectionMode} onClick={() => selectionMode ? cancelSelectionMode() : startSelectionMode()}><Check size={16} />{selectionMode ? "Annuler" : "Sélectionner"}</button>
             </div>
           </div>
 
@@ -742,7 +710,7 @@ export default function ProfileMediaView({
       )}
 
       {activeMediaSection === "badges" && (
-        <div id="profile-media-panel-badges" className="profile-badges-dashboard" role="tabpanel" aria-labelledby="profile-media-tab-badges">
+        <div id="profile-media-panel-badges" className="profile-badges-dashboard" role="region" aria-label="Badges">
           <aside className="profile-badges-rail" aria-label="Progression du grade et prochain objectif">
             <article className="profile-grade-overview">
               <div className="profile-grade-overview__identity">

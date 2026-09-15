@@ -101,36 +101,36 @@ const metricDefinitions: Record<MetricId, MetricDefinition> = {
     id: "reach",
     label: "Portée",
     icon: Eye,
-    accent: "#8066bc",
-    secondary: "#5137a1",
-    highlight: "#b7a2e5",
+    accent: "#8b5cff",
+    secondary: "#6b7cff",
+    highlight: "#c7adff",
     formatPoint: (value) => `${value.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} k`,
   },
   engagement: {
     id: "engagement",
     label: "Engagement",
     icon: MousePointerClick,
-    accent: "#8066bc",
-    secondary: "#5137a1",
-    highlight: "#b7a2e5",
+    accent: "#d946ef",
+    secondary: "#8b5cff",
+    highlight: "#ff7bf2",
     formatPoint: (value) => `${value.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`,
   },
   revenue: {
     id: "revenue",
     label: "Revenus",
     icon: CircleDollarSign,
-    accent: "#8066bc",
-    secondary: "#5137a1",
-    highlight: "#b7a2e5",
+    accent: "#34d399",
+    secondary: "#19b8ff",
+    highlight: "#8af1c8",
     formatPoint: (value) => `${Math.round(value).toLocaleString("fr-FR")} €`,
   },
   growth: {
     id: "growth",
     label: "Progression",
     icon: TrendingUp,
-    accent: "#8066bc",
-    secondary: "#5137a1",
-    highlight: "#b7a2e5",
+    accent: "#19b8ff",
+    secondary: "#8b5cff",
+    highlight: "#75dcff",
     formatPoint: (value) => `+${value.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`,
   },
 };
@@ -402,200 +402,61 @@ type AnalyticsLoadState = {
 
 function MetricDropdown({ metric, period, snapshot, demo }: { metric: MetricId; period: StatsPeriod; snapshot: PeriodSnapshot; demo: boolean }) {
   const [open, setOpen] = useState(false);
-  const [hoveredPointIndex, setHoveredPointIndex] = useState<number | null>(null);
-  const [pinnedPointIndices, setPinnedPointIndices] = useState<number[]>([]);
+  const [selectedPoint, setSelectedPoint] = useState<number | null>(null);
   const definition = metricDefinitions[metric];
   const currentMetric = snapshot.metrics[metric];
   const points = useMemo(() => buildPoints(currentMetric.values, 720, 230, 24, 24, 36), [currentMetric.values]);
   const linePath = useMemo(() => buildSmoothLine(points), [points]);
-  const defaultPointIndex = Math.max(0, points.length - 1);
-  const lastPinnedPointIndex = pinnedPointIndices[pinnedPointIndices.length - 1] ?? null;
-  const activePointIndex = hoveredPointIndex ?? lastPinnedPointIndex ?? defaultPointIndex;
-  const previewPointIndex = hoveredPointIndex ?? (pinnedPointIndices.length === 0 ? defaultPointIndex : null);
-  const previewPoint = previewPointIndex === null ? null : points[previewPointIndex];
-
-  useEffect(() => {
-    setHoveredPointIndex(null);
-    setPinnedPointIndices((current) => current.length ? [] : current);
-  }, [currentMetric.values]);
+  const activePoint = selectedPoint === null ? null : points[selectedPoint];
+  useEffect(() => setSelectedPoint(null), [currentMetric.values]);
   const pointIndexAt = (clientX: number, element: HTMLDivElement) => {
     const rect = element.getBoundingClientRect();
-    const x = ((clientX - rect.left) / Math.max(1, rect.width)) * 720;
-    const ratio = Math.min(1, Math.max(0, (x - 36) / (720 - 72)));
+    const ratio = Math.min(1, Math.max(0, (((clientX - rect.left) / Math.max(1, rect.width)) * 720 - 36) / 648));
     return Math.round(ratio * Math.max(0, points.length - 1));
   };
-
-  const pinPoint = (index: number) => {
-    setHoveredPointIndex(index);
-    setPinnedPointIndices((current) => current.includes(index) ? current : [...current, index]);
-  };
-
-  const movePreviewPoint = (index: number) => {
-    setHoveredPointIndex(Math.min(points.length - 1, Math.max(0, index)));
-  };
-
-
   const Icon = definition.icon;
   const headingId = `profile-metric-${metric}-heading`;
   const contentId = `profile-metric-${metric}-content`;
-  return <section className={`profile-metric-dropdown ${open ? 'is-open' : ''}`}>
+  return <section className={`profile-metric-dropdown ${open ? "is-open" : ""}`} style={{ "--chart-accent": definition.accent, "--chart-secondary": definition.secondary, "--chart-highlight": definition.highlight } as React.CSSProperties}>
     <button id={headingId} type="button" className="profile-metric-toggle" aria-expanded={open} aria-controls={contentId} onClick={() => setOpen(value => !value)}>
       <Icon className="profile-metric-toggle__icon" size={21} />
       <span className="profile-metric-toggle__identity"><small>{definition.label}</small><strong>{currentMetric.value}</strong></span>
-      <span className="profile-metric-toggle__trend">{currentMetric.delta}</span>
-      <ChevronDown className="profile-metric-toggle__chevron" size={18} />
+      <span className="profile-metric-toggle__trend">{currentMetric.delta}</span><ChevronDown className="profile-metric-toggle__chevron" size={18} />
     </button>
     <div id={contentId} className="profile-metric-disclosure" role="region" aria-labelledby={headingId} aria-hidden={!open} inert={!open}>
-      <div className="profile-metric-disclosure__clip">
-        <article className="profile-panel profile-main-chart" style={{ "--chart-accent": definition.accent, "--chart-secondary": definition.secondary } as React.CSSProperties}>
-          <div className="profile-panel__heading">
-            <div>
-              <span className="profile-kicker">Évolution · {definition.label}</span>
-              <h3>{snapshot.range}</h3>
-            </div>
-            <span className="profile-positive-pill"><TrendingUp size={13} /> {currentMetric.delta}</span>
-          </div>
-          <p className="profile-metric-note">{currentMetric.note}</p>
-          <div
-            className={`profile-main-chart__canvas ${pinnedPointIndices.length > 0 ? "is-pinned" : ""}`}
-            role="group"
-            tabIndex={0}
-            aria-label={`Explorer les ${points.length} points de ${definition.label.toLowerCase()}. Survoler pour parcourir, cliquer pour conserver plusieurs labels, utiliser les flèches gauche et droite.`}
-            onPointerMove={(event) => event.pointerType === "mouse" && currentMetric.available !== false && setHoveredPointIndex(pointIndexAt(event.clientX, event.currentTarget))}
-            onPointerLeave={() => setHoveredPointIndex(null)}
-            onClick={(event) => currentMetric.available !== false && pinPoint(pointIndexAt(event.clientX, event.currentTarget))}
-            onKeyDown={(event) => {
+      <div className="profile-metric-disclosure__clip"><article className="profile-panel profile-main-chart">
+        <div className="profile-panel__heading"><h3>{snapshot.range}</h3></div>
+        <p className="profile-metric-note">{currentMetric.note}</p>
+        {currentMetric.available === false ? <div className="profile-empty-state" role="status"><BarChart3 size={28} /><h3>{currentMetric.note}</h3><p>Cette métrique apparaîtra dès qu’une source fiable sera consolidée.</p></div> : <div className="profile-main-chart__canvas">
+          <div className="profile-chart-plot" role="group" tabIndex={0} aria-label={`Évolution de ${definition.label}. Touche un point pour afficher sa date et sa valeur.`}
+            onClick={event => setSelectedPoint(pointIndexAt(event.clientX, event.currentTarget))}
+            onKeyDown={event => {
               if (event.target !== event.currentTarget) return;
-              if (event.key === "ArrowLeft") {
-                event.preventDefault();
-                movePreviewPoint(activePointIndex - 1);
-              }
-              if (event.key === "ArrowRight") {
-                event.preventDefault();
-                movePreviewPoint(activePointIndex + 1);
-              }
-              if (event.key === "Home") movePreviewPoint(0);
-              if (event.key === "End") movePreviewPoint(points.length - 1);
-              if (event.key === "Escape") {
-                setPinnedPointIndices([]);
-                setHoveredPointIndex(null);
-              }
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                pinPoint(activePointIndex);
-              }
-            }}
-          >
-            {currentMetric.available === false && (
-              <div className="profile-empty-state" role="status">
-                <BarChart3 size={28} />
-                <h3>{currentMetric.note}</h3>
-                <p>Cette métrique apparaîtra dès qu’une source fiable sera consolidée.</p>
-              </div>
-            )}
-            <div className="profile-chart-plot" style={currentMetric.available === false ? { display: "none" } : undefined}>
-              <svg viewBox="0 0 720 230" preserveAspectRatio="none" role="img" aria-label={`Évolution de ${definition.label.toLowerCase()} sur ${snapshot.label}`}>
-                <defs>
-                  <linearGradient id={`profile-stats-stroke-${metric}`} x1="0" x2="1">
-                    <stop offset="0" stopColor={definition.secondary} stopOpacity=".16" />
-                    <stop offset=".18" stopColor={definition.secondary} stopOpacity=".78" />
-                    <stop offset=".62" stopColor={definition.accent} />
-                    <stop offset="1" stopColor={definition.highlight} />
-                  </linearGradient>
-                  <linearGradient id={`profile-stats-area-${metric}`} x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0" stopColor={definition.accent} stopOpacity=".34" />
-                    <stop offset="1" stopColor={definition.accent} stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                <path className="profile-chart-grid" d="M0 36H720 M0 92H720 M0 148H720 M0 204H720" />
-                <path
-                  key={`area-${period}-${metric}`}
-                  d={`${linePath} L${points[points.length - 1]?.x ?? 720} 230 L${points[0]?.x ?? 0} 230 Z`}
-                  fill={`url(#profile-stats-area-${metric})`}
-                  className="profile-chart-area"
-                />
-                <path key={`line-${period}-${metric}`} d={linePath} className="profile-chart-line" stroke={`url(#profile-stats-stroke-${metric})`} />
-                {pinnedPointIndices.map((index) => {
-                  const point = points[index];
-                  return point ? <line key={`pinned-line-${index}`} x1={point.x} x2={point.x} y1="18" y2="214" className="profile-chart-crosshair is-pinned" /> : null;
-                })}
-                {previewPoint && previewPointIndex !== null && !pinnedPointIndices.includes(previewPointIndex) && (
-                  <line x1={previewPoint.x} x2={previewPoint.x} y1="18" y2="214" className="profile-chart-crosshair" />
-                )}
-              </svg>
-              {points.map((point, index) => (
-                <button
-                  key={`${period}-${metric}-${index}`}
-                  type="button"
-                  className={`profile-chart-point ${index === previewPointIndex ? "is-active" : ""} ${pinnedPointIndices.includes(index) ? "is-pinned" : ""}`}
-                  style={{ left: `${(point.x / 720) * 100}%`, top: `${(point.y / 230) * 100}%` }}
-                  aria-label={`${snapshot.axis[index]} : ${definition.formatPoint(point.value)}`}
-                  aria-pressed={pinnedPointIndices.includes(index)}
-                  onFocus={() => setHoveredPointIndex(index)}
-                  onBlur={() => setHoveredPointIndex(null)}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    pinPoint(index);
-                  }}
-                />
-              ))}
-
-            </div>
-            {currentMetric.available !== false && <div className="profile-main-chart__labels"><span>{snapshot.axisLabels[0]}</span><span>{snapshot.axisLabels[1]}</span><span>{snapshot.axisLabels[2]}</span></div>}
-            <div className="profile-chart-readouts">
-              {pinnedPointIndices.map((index) => {
-                const point = points[index];
-                if (!point) return null;
-                return (
-                  <div
-                    key={`pinned-label-${index}`}
-                    className="profile-chart-tooltip is-pinned"
-                    style={{
-                      left: `${(point.x / 720) * 100}%`,
-                      top: `${(point.y / 230) * 100}%`,
-                      transform: `translate(${index === 0 ? "0" : index === points.length - 1 ? "-100%" : "-50%"}, calc(-100% - 15px))`,
-                    }}
-                    role="status"
-                  >
-                    <button
-                      type="button"
-                      aria-label={`Retirer le label du ${snapshot.axis[index]}`}
-                      onPointerDown={(event) => event.stopPropagation()}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setPinnedPointIndices((current) => current.filter((item) => item !== index));
-                      }}
-                    >×</button>
-                    <span>{snapshot.axis[index]}</span>
-                    <strong>{definition.formatPoint(point.value)}</strong>
-                  </div>
-                );
-              })}
-              {previewPoint && previewPointIndex !== null && !pinnedPointIndices.includes(previewPointIndex) && (
-                <div
-                  className="profile-chart-tooltip"
-                  style={{
-                    left: `${(previewPoint.x / 720) * 100}%`,
-                    top: `${(previewPoint.y / 230) * 100}%`,
-                    transform: `translate(${previewPointIndex === 0 ? "0" : previewPointIndex === points.length - 1 ? "-100%" : "-50%"}, calc(-100% - 15px))`,
-                  }}
-                  role="status"
-                  aria-live="polite"
-                >
-                  <span>{snapshot.axis[previewPointIndex]}</span>
-                  <strong>{definition.formatPoint(previewPoint.value)}</strong>
-                </div>
-              )}
-            </div>
+              const current = selectedPoint ?? points.length - 1;
+              const next = event.key === "ArrowLeft" ? Math.max(0, current - 1) : event.key === "ArrowRight" ? Math.min(points.length - 1, current + 1) : event.key === "Home" ? 0 : event.key === "End" ? points.length - 1 : null;
+              if (next !== null) { event.preventDefault(); setSelectedPoint(next); }
+              if (event.key === "Escape") setSelectedPoint(null);
+              if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setSelectedPoint(current); }
+            }}>
+            <svg viewBox="0 0 720 230" preserveAspectRatio="none" role="img" aria-label={`Évolution de ${definition.label.toLowerCase()} sur ${snapshot.label}`}>
+              <defs>
+                <linearGradient id={`profile-stats-stroke-${metric}`} x1="0" x2="1"><stop offset="0" stopColor={definition.secondary} stopOpacity=".16" /><stop offset=".18" stopColor={definition.secondary} stopOpacity=".78" /><stop offset=".62" stopColor={definition.accent} /><stop offset="1" stopColor={definition.highlight} /></linearGradient>
+                <linearGradient id={`profile-stats-area-${metric}`} x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor={definition.accent} stopOpacity=".34" /><stop offset="1" stopColor={definition.accent} stopOpacity="0" /></linearGradient>
+              </defs>
+              <path className="profile-chart-grid" d="M0 36H720 M0 92H720 M0 148H720 M0 204H720" />
+              <path d={`${linePath} L${points[points.length - 1]?.x ?? 720} 230 L${points[0]?.x ?? 0} 230 Z`} fill={`url(#profile-stats-area-${metric})`} className="profile-chart-area" />
+              <path d={linePath} className="profile-chart-line" stroke={`url(#profile-stats-stroke-${metric})`} />
+              {activePoint && <line x1={activePoint.x} x2={activePoint.x} y1="18" y2="214" className="profile-chart-crosshair is-pinned" />}
+            </svg>
+            {points.map((point,index) => <button key={`${period}-${index}`} type="button" className={`profile-chart-point ${selectedPoint === index ? "is-active is-pinned" : ""}`} style={{ left: `${point.x / 720 * 100}%`, top: `${point.y / 230 * 100}%` }} aria-label={`${snapshot.axis[index]} : ${definition.formatPoint(point.value)}`} aria-pressed={selectedPoint === index} onClick={event => { event.stopPropagation(); setSelectedPoint(index); }} />)}
+            {activePoint && selectedPoint !== null && <div className="profile-chart-value-panel" style={{ left: `clamp(64px, ${activePoint.x / 720 * 100}%, calc(100% - 64px))`, top: `${Math.max(4,Math.min(92, activePoint.y / 230 * 148 > 68 ? activePoint.y / 230 * 148 - 66 : activePoint.y / 230 * 148 + 14))}px` }} role="status" aria-live="polite" onClick={event => event.stopPropagation()}>
+              <span>{snapshot.axis[selectedPoint]}</span><strong>{definition.formatPoint(activePoint.value)}</strong><button type="button" aria-label="Fermer la valeur" onClick={() => setSelectedPoint(null)}>×</button>
+            </div>}
           </div>
-          <div className="profile-main-chart__footer">
-            <span><i /> {demo ? "Aperçu" : "Données consolidées"}</span>
-            <span className={pinnedPointIndices.length > 0 ? "is-pinned" : ""}>
-              {pinnedPointIndices.length > 0 ? <>{pinnedPointIndices.length} valeur{pinnedPointIndices.length > 1 ? "s" : ""} retenue{pinnedPointIndices.length > 1 ? "s" : ""}</> : <><MousePointerClick size={11} /> Touche la courbe pour garder une valeur</>}
-            </span>
-          </div>
-        </article>
-      </div>
+          <div className="profile-main-chart__labels"><span>{snapshot.axisLabels[0]}</span><span>{snapshot.axisLabels[1]}</span><span>{snapshot.axisLabels[2]}</span></div>
+        </div>}
+        <div className="profile-main-chart__footer"><span><i /> {demo ? "Aperçu" : "Données consolidées"}</span><span>Touche la courbe pour explorer</span></div>
+      </article></div>
     </div>
   </section>;
 }

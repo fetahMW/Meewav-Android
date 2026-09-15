@@ -18,6 +18,7 @@ import {
   profilePrivateRepository,
   type ProfilePrivateDashboard,
 } from "../profile.private.service";
+import ProfileMenuSelect from "../components/ProfileMenuSelect";
 import ProfilePrivateModuleView, { type PrivateQuickAction } from "./ProfilePrivateModuleView";
 
 type ProfileSpaceViewProps = {
@@ -163,45 +164,6 @@ export default function ProfileSpaceView({
 
   const openModule = (moduleId: SpaceModuleId) => navigatePrivate(`/profile/private/${privateModuleSlugs[moduleId]}`);
 
-  const renderModuleRailItem = (moduleId: SpaceModuleId) => {
-    const module = spaceModules.find((item) => item.id === moduleId);
-    if (!module) return null;
-    const Icon = moduleIcons[module.id];
-    const isActive = activeModule === module.id;
-    const dashboard = dashboardState.dashboard;
-    const railValue = dashboardState.status === "loading"
-      ? "—"
-      : dashboard
-        ? module.id === "wallet"
-          ? formatCompactCurrency(dashboard.wallet.activityNet, dashboard.wallet.currency)
-          : module.id === "transactions"
-            ? String(dashboard.transactions.length)
-            : module.id === "contracts"
-              ? `${dashboard.contracts.filter((item) => /sign|pending|attente/i.test(item.status)).length} à traiter`
-              : module.id === "hardware"
-                ? `${dashboard.hardware.length} éléments`
-                : module.id === "security"
-                  ? dashboard.security.mfaVerifiedFactors > 0 ? "MFA actif" : "À renforcer"
-                  : `${dashboard.organizationInvitations.length} invitations`
-        : module.id === "contracts" ? module.status : module.metric;
-    return (
-      <button
-        key={module.id}
-        type="button"
-        className={`profile-private-module-rail__item is-${module.id} ${isActive ? "is-active" : ""}`}
-        style={{ "--module-accent": module.accent, viewTransitionName: `private-module-nav-${module.id}` } as React.CSSProperties}
-        aria-current={isActive ? "page" : undefined}
-        aria-controls="profile-private-module-detail"
-        aria-label={`${module.label} · ${module.detail} · ${railValue}`}
-        onClick={() => openModule(module.id)}
-      >
-        <span className="profile-private-module-rail__icon"><Icon size={18} /></span>
-        <span className="profile-private-module-rail__copy"><strong>{module.label}</strong></span>
-        <span className="profile-private-module-rail__metric"><strong>{railValue}</strong></span>
-        <ChevronRight className="profile-private-module-rail__chevron" size={14} />
-      </button>
-    );
-  };
 
   return (
     <div className="profile-view profile-space-view is-module" aria-label="Espace privé du profil">
@@ -211,13 +173,8 @@ export default function ProfileSpaceView({
 
       <div className="profile-private-content-stage">
         <div className="profile-private-master-detail has-active-module">
-          <aside className="profile-private-module-rail">
-            <div className="profile-private-module-rail__heading">
-              <span className="profile-kicker"><LayoutDashboard size={13} /> Outils privés</span>
-            </div>
-            <nav aria-label="Modules privés">
-              {spaceModules.map((module) => renderModuleRailItem(module.id))}
-            </nav>
+          <aside className="profile-tool-bar">
+            <ProfileMenuSelect label="Espace privé" value={activeModule} options={spaceModules.map(module => ({ value: module.id, label: module.label, detail: module.detail, icon: moduleIcons[module.id] }))} onChange={openModule} />
           </aside>
 
           <main id="profile-private-module-detail" className="profile-private-master-detail__surface" aria-live="polite">

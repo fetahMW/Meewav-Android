@@ -27,12 +27,12 @@ Le bandeau supérieur reprend la matière du champ
 de saisie de messagerie : `linear-gradient(125deg,#ffffff15,#ffffff05 48%,#ffffff0b),#17191faa`,
 avec `blur(22px) saturate(1.15)`. Reflets et ombre :
 `inset 0 1px 0 #ffffff12,inset 0 -1px 0 #0003,0 6px 20px #0004`.
-Pour la navbar, l'utilisateur demande ensuite une transparence plus visible :
-même famille de reflets, atténués, et même flou, mais voile `#17191f33`
-(20 % au lieu de 67 %). Finition du dock :
-`linear-gradient(125deg,#ffffff08,#ffffff02 48%,#ffffff05),#17191f33`.
-Le contenu doit rester perceptible derrière le verre. La surface et les
-icônes sont superposées sans isolation supplémentaire du dock.
+Après avoir vu une carte violette derrière le dock translucide, l'utilisateur
+demande de garder cette teinte illuminée **en permanence, opaque**. La finition
+du dock est désormais le jeton `--profile-dock-violet` :
+`linear-gradient(125deg,#ffffff08,#ffffff02 48%,#ffffff05),linear-gradient(110deg,#382961,#302351 52%,#33245b)`.
+Cette règle remplace la transparence du dock uniquement ; les bandeaux supérieurs
+restent en verre translucide avec blur. Les icônes partagent une seule surface.
 Les icônes reposent sur cette surface commune, sans pavés individuels ;
 l'icône active est indiquée par un petit trait effilé lumineux.
 
@@ -54,14 +54,20 @@ Chaque en-tête affiche sa valeur, sa variation et un chevron ; le graphe se
 déplie vers le bas dans sa propre carte et se replie au même endroit. Les quatre
 panneaux sont initialement fermés, peuvent rester ouverts ensemble et conservent
 leurs points sélectionnés pendant la fermeture. La période reste commune.
-Courbes et accents utilisent la gamme violette Meewav, cartes en gris fumé
-sombre, contrôles secondaires neutres. La couleur ne remplace jamais le libellé.
+À la demande suivante, les courbes et accents retrouvent exactement les couleurs
+du site : Portée violet `#8b5cff`, Engagement magenta `#d946ef`, Revenus vert
+`#34d399`, Progression bleu `#19b8ff`. Cette exception s'applique aux métriques,
+pas aux CTA principaux. Un tap affiche date et valeur dans un panneau superposé
+à la courbe, sans chips supplémentaires sous le graphe. Une valeur active par
+graphe évite les chevauchements sur mobile. La couleur ne remplace jamais le libellé.
 
 ### Profil mobile — Médias
 
-Médiathèque, La Cage, Setlist, Cadeaux et Badges partagent un bandeau de verre
-fixe juste sous les quatre onglets principaux. Un seul défilement vertical
-porte le contenu ; le sous-menu ne doit jamais recouvrir les commandes.
+Médiathèque, La Cage, Setlist, Cadeaux et Badges sont accessibles via un seul
+sélecteur déroulant dans un bandeau fixe en verre de 48 px sous les quatre onglets
+principaux. Les filtres secondaires utilisent aussi un sélecteur, sans rangées
+de chips. La médiathèque affiche une liste compacte avec covers. Un seul défilement
+vertical porte le contenu ; le sous-menu ne doit jamais recouvrir les commandes.
 Icônes neutres, texte blanc à la sélection et trait effilé lumineux, sans
 deuxième soulignement droit ni code couleur rose/orange/bleu par outil.
 Les listes et cartes sont en graphite fumé, avec des cibles tactiles de 44 px
@@ -72,8 +78,8 @@ Les titres introductifs sont condensés pour laisser voir les contenus sur mobil
 
 ### Profil mobile — Espace privé
 
-Les six modules sont accessibles sur deux rangées de trois dans un second
-bandeau fixe à 100 px du haut, transparent et avec background blur. Il utilise
+Les six modules sont accessibles via un seul sélecteur déroulant, sans double
+rangée, dans un second bandeau de 48 px fixe à 100 px du haut. Il utilise
 exactement `--profile-mobile-glass`, comme les bandeaux de la messagerie,
 et laisse défiler le fond et les cartes derrière lui. Aucun panneau opaque ajouté.
 Les anciens tableaux de portefeuille et de transactions deviennent des lignes

@@ -178,6 +178,14 @@
       "sha256": "d1a2d918ad9049685632ed8181c6b2c77efd5179472529abda8e655ac5399c8f"
     },
     {
+      "path": "images/messaging/covers/cover_1.png",
+      "sha256": "b342f13eaf94a0a7f3ef39130c7ecebb8717195a588e591c6f2b9eb3a4a21d13"
+    },
+    {
+      "path": "images/messaging/covers/cover_2.png",
+      "sha256": "c1128fdc09ccb97cf5f576029dbd9898fbba6a092337856800850e94f31198a8"
+    },
+    {
       "path": "images/preprofile/portraits/profile-01.webp",
       "sha256": "b805363350fa01239b9e7ad0bdace8bb2f9327de277425e24af7675ac79cd5dd"
     },
