@@ -53,7 +53,12 @@ const copyAsset = async (path, name) => {
   const target = join(output, name); await mkdir(dirname(target), { recursive: true }); await copyFile(path, target);
 };
 if (syncAssets) {
-  const publicAssets = new Set(['images/messaging', 'avatars', 'badges', 'images/grades', 'audio/rooms/wave-test-pack/House_124BPM_A_minor/Loops_8bars',
+  const publicAssets = new Set(['images/messaging', 'images/preprofile/portraits', 'avatars', 'badges', 'images/grades', 'audio/rooms/wave-test-pack/House_124BPM_A_minor/Loops_8bars',
+    // Collab showcase paths are assembled dynamically in messagingDemoData.ts.
+    'audio/rooms/wave-test-pack/Drill_142BPM_F_minor/Loops_8bars/Drill_FullMix_A_142BPM_8bars.wav',
+    'audio/rooms/wave-test-pack/Afro_100BPM_A_minor/Loops_8bars/Afro_FullMix_A_100BPM_8bars.wav',
+    'audio/rooms/wave-test-pack/Zouk_92BPM_G_minor/Loops_8bars/Zouk_FullMix_A_92BPM_8bars.wav',
+    'audio/rooms/wave-test-pack/Trap_150BPM_C_minor/Loops_8bars/Trap_FullMix_A_150BPM_8bars.wav',
     'meewav-emojis/webp/256', ...[2,3,4,5,6].map(version => `meewav-emojis/v${version}/webp/256`)]);
   // Literal public paths, including emoticon manifest entries and their trees.
   for (const entry of Object.keys(result.metafile.inputs)) {

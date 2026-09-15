@@ -65,10 +65,15 @@ button:disabled { opacity: .4; cursor: default; }
 #root .mobile-messaging .mw-conversation-row em img { display: inline-block; vertical-align: middle; }
 #root .mobile-messaging .mw-avatar { width: 52px; height: 52px; flex-shrink: 0; }
 #root .mobile-messaging .mw-chat-scene { grid-area: content; min-width: 0; min-height: 0; display: none; padding: 0; border: none; border-radius: 0; background: transparent; }
-#root .mobile-messaging.is-detail .mw-workspace { grid-template-rows: 64px minmax(0,1fr); }
-#root .mobile-messaging.is-detail .mw-conversation-rail, #root .mobile-messaging.is-detail .messaging-pillar-tabs { display: none; }
-#root .mobile-messaging.is-detail .mw-chat-header { height: 64px; padding: 8px 16px; }
+#root .mobile-messaging.is-detail .mw-workspace { grid-template-rows: auto minmax(0,1fr); }
+#root .mobile-messaging.is-detail .mw-conversation-rail { display: none; }
+#root .mobile-messaging.is-detail .mw-chat-header { height: auto; padding: 4px 12px; flex-direction: column; }
+#root .mobile-messaging.is-detail .messaging-pillar-tabs { display: grid; flex: 0 0 50px; }
 #root .mobile-messaging.is-detail .mw-chat-header__utility { display: flex; width: 100%; min-width: 0; justify-content: space-between; align-items: center; }
+#root .mobile-messaging.is-detail .mw-chat-header__utility { min-height: 60px; gap: 8px; }
+#root .mobile-messaging .mw-chat-contact-back { display: grid; place-items: center; flex: 0 0 40px; width: 40px; height: 44px; padding: 0; border: 0; border-radius: 12px; background: transparent; color: #bda3e5; }
+#root .mobile-messaging .mw-chat-header__identity { flex: 1; }
+#root .mobile-messaging .mw-chat-header__identity-text { overflow: hidden; }
 #root .mobile-messaging .mw-chat-header__identity { display: flex; align-items: center; gap: 10px; min-width: 0; }
 #root .mobile-messaging .mw-chat-header__identity-text { min-width: 0; }
 #root .mobile-messaging .mw-chat-header__identity strong { display: block; max-width: 190px; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -116,6 +121,15 @@ button:disabled { opacity: .4; cursor: default; }
 /* Hubs keep their real actions and cards; desktop side rails/chrome are removed. */
 #root .mobile-messaging .mw-context-pane { display: none; grid-area: content; position: relative; min-width: 0; min-height: 0; width: 100%; height: 100%; padding: 0; overflow: auto; }
 #root .mobile-messaging.is-detail .mw-context-pane { display: block; }
+/* Show the original collaboration wall; the pane owns its vertical scrolling. */
+#root .mobile-messaging .messaging-stage[data-active-space='collabs'] .mw-conversation-rail { display: none; }
+#root .mobile-messaging .messaging-stage[data-active-space='collabs'] .mw-context-pane { display: block; overflow-x: hidden; overflow-y: auto; }
+#root .mobile-messaging .mw-context-pane > .mw-hub--collabs { display: block; height: auto; min-height: 100%; max-height: none; overflow: visible; }
+#root .mobile-messaging .mw-collab-detail-workspace { display: block; height: auto; max-height: none; overflow: visible; }
+#root .mobile-messaging .mw-collab-detail-inline { height: auto; max-height: none; overflow: visible; padding: 10px 2px 20px; }
+#root .mobile-messaging .mw-hub--collabs > .mw-collabs-request-wall { display: grid; grid-template-columns: minmax(0,1fr); height: auto; max-height: none; overflow: visible; gap: 16px; }
+#root .mobile-messaging .mw-collab-detail-inline .mw-collab-request { height: auto; max-height: none; }
+#root .mobile-messaging .mw-collab-overview-controls { justify-content: flex-start; }
 #root .mobile-messaging .mw-conversation-list > article .mw-avatar { display: block; width: 52px; height: 52px; min-width: 52px; max-width: 52px; }
 #root .mobile-messaging .mw-conversation-list > article .mw-avatar img { width: 100%; height: 100%; object-fit: cover; }
 #root .mobile-messaging .mw-composer-row > button[aria-label='Ajouter un contenu musical'] { display: none; }
@@ -135,6 +149,8 @@ button:disabled { opacity: .4; cursor: default; }
 .mw-overlay :is(input,textarea,select), .mw-layer :is(input,textarea,select) { font-size: 16px; }
 .mw-overlay button, .mw-layer button { min-height: 44px; }
 .mw-track-studio__window { width: calc(100vw - 20px) !important; height: calc(100dvh - 20px) !important; border-radius: 22px !important; }
+.mw-track-studio:not(.mw-track-studio--embedded) .mw-track-studio__hero h1 { align-self: stretch; padding: 0 44px; min-height: 44px; font-size: 24px; line-height: 1.2; overflow-wrap: anywhere; }
+.mw-track-studio:not(.mw-track-studio--embedded) .mw-track-studio__close { left: 12px; top: 12px; width: 44px; height: 44px; min-height: 44px; z-index: 2; opacity: 1; }
 #root .mobile-messaging .mw-workspace > .mw-right-pane,
 #root .mobile-messaging .mw-workspace > .mw-specialized-pane { grid-area: content; min-width: 0; min-height: 0; overflow: auto; }
 #root .mobile-messaging .mw-hub, #root .mobile-messaging .mw-projects, #root .mobile-messaging .mw-collabs, #root .mobile-messaging .mw-artist-groups { min-width: 0; max-width: 100%; padding: 12px; }
@@ -146,8 +162,6 @@ button:disabled { opacity: .4; cursor: default; }
 @media (max-height: 480px) {
   :root { --mobile-header: 48px; }
   #root .mobile-messaging-header small { display: none; }
-  #root .mobile-messaging.is-detail .mw-workspace { grid-template-rows: 48px minmax(0,1fr); }
-  #root .mobile-messaging.is-detail .mw-chat-header { height: 48px; }
   #root .mobile-messaging .mw-composer-zone { padding-block: 4px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }

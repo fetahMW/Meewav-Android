@@ -171,3 +171,16 @@ fonctionnalité précédente dans la pile Android. Lors du lancement direct de c
 il n’y a pas de fonctionnalité précédente : le retour quitte donc la messagerie.
 La croix retire la tâche Meewav et ouvre l’accueil du téléphone. Le retour système
 conserve la navigation interne (fermeture des panneaux, puis retour à la liste).
+
+## Navigation et cartes mobiles — suite du chantier
+
+Les quatre onglets restent visibles dans une conversation. Le chevron près du contact
+revient à la liste ; le chevron de l’en-tête général conserve le retour à la fonctionnalité
+précédente et la croix ferme la tâche Android. Le Track Pack réserve un emplacement de
+44 px à sa fermeture, distinct du titre.
+
+Collabs affiche le mur et les données `demoCollabs` du site Web en mode démo, avec
+défilement dans le panneau jusqu’au bas des demandes. Les portraits et quatre mixes
+locaux dont les chemins sont assemblés dynamiquement sont ajoutés à la synchronisation
+des médias. Les anciens liens fictifs externes des autres demandes restent fictifs ;
+aucune donnée de démonstration ne remplace les réponses d’une session authentifiée.

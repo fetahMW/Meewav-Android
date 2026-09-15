@@ -2,6 +2,7 @@ import { demoTrackPackAudio } from "./demoTrackPackAudio";
 import { saveAttachment } from '../../../../downloads';
 import {
   ArrowDown,
+  ChevronLeft,
   ArrowUp,
   Archive,
   Ban,
@@ -2884,6 +2885,7 @@ export default function MessageWorkspace({
         />
         {(isMessageContent || (contentSpace === "groups" && onCreateGroup)) && (
           <nav className="mw-chat-header__utility" aria-label={isMessageContent ? "Actions et contact de la conversation" : "Actions des groupes"}>
+            {isMessageContent && <button type="button" className="mw-chat-contact-back" aria-label="Revenir aux contacts" onClick={() => window.dispatchEvent(new Event('meewav:messaging-list'))}><ChevronLeft size={22} /></button>}
             {isMessageContent && (
               <span className="mw-chat-header__identity" title={selectedConversation.name}>
                 <span className="mw-chat-header__contact">
