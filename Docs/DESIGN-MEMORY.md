@@ -144,5 +144,5 @@ est distinct du verre de navigation : base noir fumé #181920 vers #0A0B10, refl
 discret #4F359E à faible opacité dans l'angle supérieur. Il alimente les cartes
 Accueil, Statistique, Médias et Espace privé. Ne pas le propager aux bandeaux,
 au sélecteur, au dock ni aux CTA. Les couleurs sémantiques des graphes et badges
-restent celles du Web. Cette finition attend encore la revue visuelle sur le
-Samsung déverrouillé ; elle ne constitue pas une nouvelle couleur validée.
+restent celles du Web. La revue visuelle sur le Samsung a été effectuée sur chaque destination du profil.
+Cette finition de contenu reste distincte du violet de CTA validé par l'utilisateur.

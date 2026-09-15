@@ -102,9 +102,28 @@ puis commiter et pousser la branche profil.
 - Bandeau, sélecteurs, dock, CTA, ordre des sections et fonctionnement restent
   inchangés. Les fichiers médias conservent leur résolution.
 
-Base visuelle : captures Samsung des passes précédentes, revues pour chaque
- destination (y compris La Cage, Setlist et les six modules privés). Le téléphone
-est connecté mais verrouillé pendant cette passe ; la tentative de nouvelle
-capture produit une image noire. Les nouvelles captures et le contrôle visuel
-du rendu installé restent donc à faire après déverrouillage. Ne pas confondre
-les contrôles documentés ci-dessus avec une validation de cette dernière passe.
+Contrôle visuel réalisé après déverrouillage du Samsung : 17 nouvelles captures
+sur Accueil (haut et progression/classement), Statistique (fermé, ouvert et
+ audience), les cinq outils Médias et les six modules privés. Captures locales
+`app/build/profile-review/polish-*.png`, avec relevés de géométrie associés.
+
+La revue a révélé une grille Web à deux zones dans Matériel : une colonne
+implicite comprimait la liste à 29 px et la fiche la recouvrait. La grille
+mobile définit maintenant explicitement toolbar, list, detail dans une seule
+colonne. Les actions de fiche héritaient aussi d'un flex-basis vertical de
+120 px ; leur conteneur est une grille à rangées automatiques, boutons de 44 px
+minimum. Sélection d'Apollo Twin X, défilement jusqu'aux deux actions et retour
+à la liste vérifiés et recapturés. Aucune modification de matériel effectuée.
+
+Dernières retouches recapturées sur le Samsung : suppression du vrai filet du
+bloc titre des médias, suppression des marges cumulées avant le catalogue
+cadeaux, contraste des descriptions cadeaux et alignement des trois chiffres
+de Transactions. La nouvelle hiérarchie des reconnaissances est également
+vérifiée sur les badges obtenus et en progression. Les surfaces de navigation
+sont conservées ; le contenu reste coupé sous le bandeau principal et passe
+uniquement derrière le sélecteur. Pas de débordement horizontal relevé dans
+les vues examinées. La compilation Android et le paquet local sont reconstruits.
+
+Ces contrôles portent sur le rendu mobile et la navigation locale en aperçu.
+Aucune opération financière, signature, invitation ou changement de sécurité
+n'a été effectué. Ils ne valident pas les services réels.
