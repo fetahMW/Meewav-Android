@@ -372,3 +372,10 @@ rendu Android actuel. Le rond d’envoi partage déjà ce jeton, mais son état 
 son fond à pleine opacité ; l’icône s’atténue seule à 45 % quand le bouton est
 désactivé. La validation des messages vides ne change pas. Référence enregistrée
 dans DESIGN-MEMORY.md. Compilation et installation seulement, sans QA automatique.
+
+### Ajustement Infos : graphite plus sombre
+
+À la demande de l’utilisateur, la carte Infos est assombrie :
+`#202227 → #16181C → #0D0F12`, avec un reflet supérieur réduit. Les mix et
+commandes secondaires suivent ce graphite sombre. Les CTA violets, textes,
+dimensions et cartes Collab restent inchangés.
