@@ -145,7 +145,6 @@ export default function GroundArtistPreProfile({
     <button ref={closeButton} className="ring-artist-preprofile__close" type="button" onClick={onClose} aria-label="Fermer le pré-profil">
       <X aria-hidden="true" />
     </button>
-    <span className="ring-artist-preprofile__demo">Pré-profil de démonstration</span>
     {notice && <div className="ring-artist-preprofile__notice" role="status">{notice}</div>}
   </div>, document.body);
 }
