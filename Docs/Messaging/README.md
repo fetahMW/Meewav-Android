@@ -396,3 +396,11 @@ Web et le débordement du bouton Ajouter sont retirés. Les données, handlers d
 session et confirmations restent ceux de l’existant.
 
 Compilation et installation uniquement ; aucun test ou contrôle visuel automatique.
+
+### Décisions : Nouveau et décisions terminées
+
+Les règles spécifiques des CTA Membres/Décisions n’utilisent plus leurs anciens
+violets littéraux : Nouveau et Inviter référencent le même jeton violet urbain.
+Les cartes « Choix de la cover » et « Validation mixage », ainsi que le détail
+ouvert au toucher, passent en graphite noir/gris avec icônes et textes secondaires
+gris. Leurs interactions sont conservées. Compilation et installation uniquement.
