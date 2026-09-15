@@ -17,6 +17,10 @@ de la page Bienvenue : `IosAuthAction` dans `features/auth/IosLoginScene.kt`.
 Reprendre son dégradé vertical **`#5137A1 → #4E349F → #372574`** (arrêts 0 %, 50 %, 100 %),
 avec bordure `#7960B2` : la première couleur seule ne reproduit pas son rendu.
 La messagerie l’expose par `--mobile-violet-cta`.
+Dernier ajustement demandé pour la messagerie : rendu plus mat et légèrement plus
+bleuté (`#484084 → #403976 → #2F2A57`, contour `#6B6398`), à regarder sur le Samsung.
+Cette surcharge Android remplace actuellement le dégradé ci-dessus dans les CTA
+de messagerie ; elle ne modifie pas le bouton natif d’authentification.
 **Exception explicitement demandée pour les bulles du Tchat : reprendre exactement les
 couleurs, dégradés, contours, reliefs et formes du chat Web**, y compris le lecteur audio.
 Leurs styles de référence sont les copies de `message-workspace.css`, `message-grammar.css`

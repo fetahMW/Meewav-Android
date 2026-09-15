@@ -230,3 +230,15 @@ message, informations musicales, fichiers puis actions. Les lecteurs réservent 
 ligne au nom de fichier. La largeur utilise le panneau disponible, et le retour
 « Toutes les demandes » est masqué au profit du chevron contacts déjà présent.
 La liste, les réponses et la lecture des pièces jointes conservent leurs handlers.
+
+## Matière graphite et CTA mats — dernier ajustement utilisateur
+
+La carte Collab passe explicitement en gris graphite/noir avec reflets neutres et
+traits violets fins. Les anciens halos colorés de ses pseudo-éléments sont retirés.
+« Voir profil » conserve une marge de carte de 18 px et reçoit 10 px de padding interne.
+
+Pour la messagerie, l’utilisateur demande un violet légèrement plus bleu et moins vif :
+`--mobile-violet-cta` devient `#484084 → #403976 → #2F2A57`, avec contour `#6B6398`.
+C’est un ajustement de rendu Android à regarder, distinct des valeurs du bouton natif
+de connexion. Les CTA principaux, lecteurs et états interactifs partagent ce traitement
+mat ; les autres surfaces restent noires et grises. Les formes des bulles sont conservées.
