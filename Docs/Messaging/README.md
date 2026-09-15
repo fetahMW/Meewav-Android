@@ -35,8 +35,10 @@ second jeu de règles métier Kotlin.
 - Une seule surface occupe la largeur : liste, puis conversation/détail. Retour
   remonte à la liste avant de revenir au globe. Les cartes de projets et groupes
   réutilisent leurs actions Web dans la même enveloppe mobile.
-- La saisie occupe une ligne de grille sous l’historique. Les insets du clavier
-  redimensionnent l’espace disponible ; ils ne mettent pas la fenêtre à l’échelle.
+- La saisie flotte au bas de l’historique dans une capsule en verre fumé. Les
+  messages défilent derrière son flou ; un espace calculé d’après la hauteur réelle
+  du compositeur permet de lire le dernier message au-dessus de la barre. Les insets
+  du clavier redimensionnent l’espace disponible ; ils ne mettent pas la fenêtre à l’échelle.
   Les brouillons texte sont conservés en mémoire par conversation pendant cette
   ouverture de la messagerie. Ils ne sont pas persistés après fermeture de l’activité.
 - Les éléments tactiles principaux font 44 dp/CSS px ; les pop-ups secondaires
@@ -242,3 +244,19 @@ Pour la messagerie, l’utilisateur demande un violet légèrement plus bleu et 
 C’est un ajustement de rendu Android à regarder, distinct des valeurs du bouton natif
 de connexion. Les CTA principaux, lecteurs et états interactifs partagent ce traitement
 mat ; les autres surfaces restent noires et grises. Les formes des bulles sont conservées.
+
+## Barre de saisie en verre fumé — référence utilisateur Telegram
+
+La bande opaque sous la conversation est retirée. La capsule gris/noir translucide
+utilise un `backdrop-filter` de 22 px, un reflet neutre et un contour fin. Le flou
+porte sur cette petite surface, sans filtre ni animation sur toute la messagerie.
+Le bouton d’envoi rond garde le violet mat, avec des commandes de 44 px et un champ
+de 16 px. Les pièces jointes, émoticônes, vocaux et envois gardent leurs handlers.
+
+`useFloatingComposer.ts` mesure la hauteur de chaque barre, y compris les réponses,
+les pièces jointes et les brouillons multilignes. Il réserve cet espace à la fin de
+l’historique et conserve sa position lorsqu’on consulte d’anciens messages. La même
+présentation s’applique aux conversations Tchat, Collabs, Projets et Groupes.
+Un fond opaque est prévu en l’absence de flou ou si la réduction de transparence est
+demandée. Compilation et installation seulement ; le rendu et le clavier restent à
+regarder sur le Samsung par l’utilisateur.

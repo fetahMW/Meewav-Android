@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft, MessageCircle, Plus, X } from 'lucide-react';
 import { configure, previewEnabled, updateToken, type MobileConfig } from './runtime';
+import { useFloatingComposer } from './useFloatingComposer';
 
 const root = createRoot(document.getElementById('root')!);
 let started = false;
@@ -21,6 +22,7 @@ class ErrorBoundary extends Component<{ children: React.ReactNode }, { failed: b
 }
 
 function MobileShell({ Page }: { Page: React.ComponentType }) {
+  const surfaceRef = useFloatingComposer();
   const current = useLocation();
   const navigate = useNavigate();
   const [detail, setDetail] = useState(() => {
@@ -63,7 +65,7 @@ function MobileShell({ Page }: { Page: React.ComponentType }) {
       window.removeEventListener('meewav:messaging-list', close);
     };
   }, [detail]);
-  return <div className={`mobile-messaging${detail ? ' is-detail' : ''}`}>
+  return <div ref={surfaceRef} className={`mobile-messaging${detail ? ' is-detail' : ''}`}>
     <header className="mobile-messaging-header">
       <button aria-label="Retour à la fonctionnalité précédente" onClick={returnToGlobe}><ChevronLeft /></button>
       <div><strong>Messagerie</strong>{previewEnabled() && <small>Aperçu sans compte</small>}</div>
