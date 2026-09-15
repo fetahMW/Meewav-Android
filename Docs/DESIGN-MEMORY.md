@@ -10,6 +10,26 @@ La disposition iOS du dock est conservée (3 icônes + globe + 3 icônes), avec 
 globe **fixe de la navbar Android**, et non le globe iOS.
 Voir [l'audit et les sources du profil](Profile/README.md).
 
+### Accueil du profil — finition après captures Samsung
+
+Le bandeau supérieur et la navbar inférieure reprennent la matière du champ
+de saisie de messagerie : `linear-gradient(125deg,#ffffff15,#ffffff05 48%,#ffffff0b),#17191faa`,
+avec `blur(22px) saturate(1.15)`. Reflets et ombre :
+`inset 0 1px 0 #ffffff12,inset 0 -1px 0 #0003,0 6px 20px #0004`.
+Les icônes reposent sur cette surface commune, sans pavés individuels ;
+l'icône active est indiquée par un petit trait effilé lumineux.
+
+Le bandeau reste hors de la zone défilante : seul `.profile-main` défile.
+La navbar est ancrée à `bottom: 0` dans la WebView. Android réserve déjà
+l'espace des barres système : ne pas ajouter un second `safe-area-inset-bottom`
+ou une marge qui la ferait flotter au-dessus de la navigation Samsung.
+
+L'accueil privilégie une identité compacte (portrait et nom côte à côte),
+trois compteurs sur une ligne, puis les cartes Activité, Priorités,
+Progression, Classement et Activité récente. Progression et Classement sont
+séparés. Les cartes sont en verre fumé sombre neutre, avec un contour fin,
+sans empilement de surfaces violettes. Les CTA conservent la référence ci-dessous.
+
 ## Violet urbain Meewav — référence de messagerie
 
 Le 15 septembre 2026, l’utilisateur précise la référence exacte :

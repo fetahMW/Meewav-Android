@@ -316,8 +316,8 @@ export default function ProfileHomeView({
                       <linearGradient id="profile-home-line" x1="0" x2="1">
                         <stop offset="0" stopColor="#6b7cff" stopOpacity=".18" />
                         <stop offset=".18" stopColor="#6b7cff" stopOpacity=".82" />
-                        <stop offset="0.52" stopColor="#8b5cff" />
-                        <stop offset="1" stopColor="#f06cff" />
+                        <stop offset="0.52" stopColor="#9274d8" />
+                        <stop offset="1" stopColor="#b7a2e5" />
                       </linearGradient>
                       <linearGradient id="profile-home-fill" x1="0" x2="0" y1="0" y2="1">
                         <stop offset="0" stopColor="#8b5cff" stopOpacity=".32" />
@@ -379,9 +379,9 @@ export default function ProfileHomeView({
             {dailySignals.map((signal) => {
               const Icon = signal.icon;
               return (
-                <button key={signal.label} type="button" onClick={signal.action}>
+                <button key={signal.label} type="button" onClick={signal.action} aria-label={`${signal.label} : ${signal.value}, ${signal.detail}`}>
                   <span className="profile-signal-strip__icon"><Icon size={15} /></span>
-                  <span><small>{signal.label}</small><strong>{signal.value}</strong></span>
+                  <span><small>{signal.label === 'Nouveaux abonnés' ? 'Abonnés' : signal.label === 'Collaboration' ? 'Collabs' : signal.label}</small><strong>{signal.value}</strong></span>
                   <em>{signal.detail}</em>
                 </button>
               );
@@ -421,9 +421,11 @@ export default function ProfileHomeView({
             <span>{profile.grade === 6 ? "Parcours terminé" : "Régularité, audience et collaborations"}</span>
           </div>
 
-          <ProfileRankingPanel period={pulsePeriod} variant="home" onOpenDetails={() => onNavigate("stats")} />
-
           <button type="button" className="profile-journey-action" onClick={onOpenBadges}>Voir le détail du parcours <ArrowRight size={15} /></button>
+        </article>
+
+        <article className="profile-panel profile-territory-card">
+          <ProfileRankingPanel period={pulsePeriod} variant="home" onOpenDetails={() => onNavigate("stats")} />
         </article>
 
         <article className="profile-panel profile-priority-card">

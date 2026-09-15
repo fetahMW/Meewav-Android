@@ -75,8 +75,41 @@ node scripts/build-full-globe.mjs
 `--import-web` sert uniquement à une reprise explicite du graphe Web ;
 `--sync-assets` actualise explicitement les médias publics.
 
-La compilation du paquet et de l'APK a abouti. Aucun test, capture d'écran ou
-contrôle visuel automatique n'a été lancé, conformément à la préférence de
-l'utilisateur. Le rendu sur appareil, les sous-vues et les opérations avec
-une session réelle restent à apprécier par l'utilisateur ; une compilation
-ne constitue pas une validation de ces comportements.
+Lors du port initial, la compilation du paquet et de l'APK avait abouti sans
+test, capture ou contrôle visuel automatique, conformément à la préférence
+de l'utilisateur. La reprise ci-dessous comprend les captures qu'il a
+ensuite explicitement demandées. Les sous-vues et les opérations avec une
+session réelle ne sont pas validées par ces captures ni par la compilation.
+
+## Reprise de l'accueil — 15 septembre 2026
+
+Les captures initiales sur le Samsung connecté montraient un bandeau qui
+partait avec le contenu, un portrait occupant une ligne entière, des
+compteurs répartis sur deux lignes et une navbar détachée des contrôles
+système. La hiérarchie de l'accueil est adaptée dans `mobile.css`, avec
+quelques ajustements ciblés dans `ProfilePage.tsx` et `ProfileHomeView.tsx`.
+
+- Une seule zone défilante, `.profile-main`, sous le bandeau permanent.
+  Les quatre onglets affichent chacun leur icône et leur libellé.
+- Bandeau et dock : matière du champ de saisie de messagerie, base
+  `#17191faa`, reflets blancs et `blur(22px) saturate(1.15)`.
+  Cette finition remplace celle du tableau d'audit initial pour ces éléments.
+- Dock collé au bord inférieur de la WebView, qui est déjà ajustée aux
+  barres système par Android. Plus de second retrait CSS. Encoche et globe
+  fixe conservés ; icônes sur une surface commune et indicateur actif effilé.
+- Identité : portrait de 72 px à côté du nom, biographie sur deux lignes,
+  deux actions de 44 px minimum, trois compteurs sur une ligne et grade compact.
+- Activité : titre court, graphique de 104 px, quatre indicateurs sur une
+  ligne. Priorités compactes, puis cartes Progression et Classement séparées.
+  Le classement garde ses quatre territoires en grille de deux colonnes.
+- Cartes : gris fumé sombre, contours fins et espacements réguliers.
+  Ressources, portraits, badges, fond acoustique et données Web conservés ;
+  aucun média n'est redimensionné. Les actions existantes restent câblées.
+
+Le paquet Profil et l'APK Debug ont été compilés, puis installés sur le
+Samsung. Les captures du haut, du milieu et du bas de l'accueil ont permis
+de contrôler le bandeau fixe, le raccord du dock à la navigation système,
+les alignements et les retours à la ligne des cartes. Les captures locales
+sont dans `app/build/profile-review/` (dossier non livré).
+Ce contrôle concerne uniquement l'accueil ; les autres onglets attendent
+leur propre passe demandée par l'utilisateur.
