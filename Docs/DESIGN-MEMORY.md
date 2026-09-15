@@ -12,11 +12,14 @@ Voir [l'audit et les sources du profil](Profile/README.md).
 
 À la demande suivante du 15 septembre, le petit globe du dock Profil tourne
 lentement : un tour horizontal complet en **40 secondes**, mouvement linéaire
-continu. La carte défile vers la gauche, le contour et l'éclairage restent
+continu. La carte défile vers la gauche, la silhouette et l'éclairage restent
 fixes. Une texture répétée est préparée une seule fois ; seule sa translation
 CSS est animée, sans redessin du canvas à chaque image. La rotation se met
 en pause quand Android quitte le profil et respecte la réduction des animations.
 Le petit globe des autres écrans reste fixe par défaut.
+Le globe du dock Profil n'a **aucun stroke blanc ni ombre extérieure**.
+L'encoche est concentrique au globe et réserve environ 6 px transparents
+autour de sa partie encastrée : on voit le fond, sans anneau ajouté.
 
 ### Accueil du profil — finition après captures Samsung
 
