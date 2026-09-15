@@ -124,3 +124,47 @@ ne bougent pas. Aucun redessin Canvas2D ni rendu React par image n'est ajouté.
 La rotation est suspendue par le cycle de vie Android, puis reprend à la même
 position ; la préférence de réduction des animations conserve le rendu fixe.
 Cette option reste désactivée pour les autres usages du composant.
+
+## Statistique et transparence du dock — 15 septembre 2026
+
+À la demande suivante, l'ordre de l'accueil devient Activité, Progression,
+Classement, À faire maintenant, Activité récente.
+
+Statistique conserve ses dépôts de données Web, les périodes, le classement,
+l'acquisition, les objectifs et le conseil de publication. Les quatre anciens
+boutons qui pilotaient un graphe distant deviennent des composants
+`MetricDropdown` indépendants dans `ProfileStatsView.tsx`. Chacun contient
+son graphe, ses valeurs et ses points sélectionnés. Le panneau se déplie dans
+le flux, sans pop-up ni défilement interne. Les en-têtes indiquent leur état
+par `aria-expanded` ; le contenu replié est inerte et masqué à l'accessibilité.
+Les transitions respectent la réduction des animations.
+
+Les valeurs retenues sont affichées sous la courbe pour rester dans les
+marges du téléphone. Changer de période actualise toutes les données et
+réinitialise ces valeurs ; fermer et rouvrir un panneau les conserve.
+Les autres cartes sont adaptées au portrait : classement à quatre territoires
+sur deux colonnes, acquisition lisible avec cibles tactiles, objectifs courts,
+progression compacte et planification qui s'ouvre dans son propre bloc.
+Les CTA conservent le violet urbain de messagerie ; les contrôles secondaires
+et les surfaces sont neutres. L'aperçu utilise toujours les données de démo,
+sans nouvelles requêtes serveur.
+
+Le dock garde la famille de reflets et le `blur(22px) saturate(1.15)` du champ de
+messagerie. Ses reflets sont atténués (`#ffffff08`, `#ffffff02`, `#ffffff05`).
+Son voile passe de `#17191faa` à `#17191f33` pour laisser voir
+le fond et le contenu ; l'isolation du dock est retirée et les icônes sont
+placées au-dessus de la surface. Le bandeau supérieur garde sa finition.
+Le changement d'onglet réinitialise maintenant la zone défilante interne,
+en plus du document.
+
+Contrôles demandés sur le Samsung : captures de l'entrée, d'un graphe ouvert,
+du classement, de l'acquisition et du bas de page ; ouverture et fermeture
+des quatre panneaux ; données différentes pour les trois périodes ; maintien
+des points retenus après fermeture et remise à zéro au changement de période.
+Les panneaux fermés ont une hauteur nulle et sont inertes. Les points restent
+dans les marges du graphe ; la largeur défilante reste égale aux 384 px CSS
+du viewport. L'ordre Progression → Classement → À faire maintenant est
+contrôlé dans l'accueil. Le toast de changement de période est supprimé :
+l'actualisation des données et leurs états de chargement suffisent.
+Ces contrôles concernent le rendu et les interactions en aperçu local,
+pas les mesures ou opérations avec une session de production.

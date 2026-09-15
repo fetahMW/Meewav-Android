@@ -20,10 +20,16 @@ Le petit globe des autres écrans reste fixe par défaut.
 
 ### Accueil du profil — finition après captures Samsung
 
-Le bandeau supérieur et la navbar inférieure reprennent la matière du champ
+Le bandeau supérieur reprend la matière du champ
 de saisie de messagerie : `linear-gradient(125deg,#ffffff15,#ffffff05 48%,#ffffff0b),#17191faa`,
 avec `blur(22px) saturate(1.15)`. Reflets et ombre :
 `inset 0 1px 0 #ffffff12,inset 0 -1px 0 #0003,0 6px 20px #0004`.
+Pour la navbar, l'utilisateur demande ensuite une transparence plus visible :
+même famille de reflets, atténués, et même flou, mais voile `#17191f33`
+(20 % au lieu de 67 %). Finition du dock :
+`linear-gradient(125deg,#ffffff08,#ffffff02 48%,#ffffff05),#17191f33`.
+Le contenu doit rester perceptible derrière le verre. La surface et les
+icônes sont superposées sans isolation supplémentaire du dock.
 Les icônes reposent sur cette surface commune, sans pavés individuels ;
 l'icône active est indiquée par un petit trait effilé lumineux.
 
@@ -33,10 +39,20 @@ l'espace des barres système : ne pas ajouter un second `safe-area-inset-bottom`
 ou une marge qui la ferait flotter au-dessus de la navigation Samsung.
 
 L'accueil privilégie une identité compacte (portrait et nom côte à côte),
-trois compteurs sur une ligne, puis les cartes Activité, Priorités,
-Progression, Classement et Activité récente. Progression et Classement sont
+trois compteurs sur une ligne, puis les cartes Activité, Progression,
+Classement, À faire maintenant et Activité récente. Progression et Classement sont
 séparés. Les cartes sont en verre fumé sombre neutre, avec un contour fin,
 sans empilement de surfaces violettes. Les CTA conservent la référence ci-dessous.
+
+### Statistique — panneaux dépliables
+
+Portée, Engagement, Revenus et Progression sont quatre panneaux indépendants.
+Chaque en-tête affiche sa valeur, sa variation et un chevron ; le graphe se
+déplie vers le bas dans sa propre carte et se replie au même endroit. Les quatre
+panneaux sont initialement fermés, peuvent rester ouverts ensemble et conservent
+leurs points sélectionnés pendant la fermeture. La période reste commune.
+Courbes et accents utilisent la gamme violette Meewav, cartes en gris fumé
+sombre, contrôles secondaires neutres. La couleur ne remplace jamais le libellé.
 
 ## Violet urbain Meewav — référence de messagerie
 

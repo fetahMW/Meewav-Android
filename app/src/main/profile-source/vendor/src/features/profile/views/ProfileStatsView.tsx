@@ -406,7 +406,7 @@ function MetricDropdown({ metric, period, snapshot, demo }: { metric: MetricId; 
   const [pinnedPointIndices, setPinnedPointIndices] = useState<number[]>([]);
   const definition = metricDefinitions[metric];
   const currentMetric = snapshot.metrics[metric];
-  const points = useMemo(() => buildPoints(currentMetric.values, 720, 230, 24, 24, 8), [currentMetric.values]);
+  const points = useMemo(() => buildPoints(currentMetric.values, 720, 230, 24, 24, 36), [currentMetric.values]);
   const linePath = useMemo(() => buildSmoothLine(points), [points]);
   const defaultPointIndex = Math.max(0, points.length - 1);
   const lastPinnedPointIndex = pinnedPointIndices[pinnedPointIndices.length - 1] ?? null;
@@ -420,7 +420,8 @@ function MetricDropdown({ metric, period, snapshot, demo }: { metric: MetricId; 
   }, [currentMetric.values]);
   const pointIndexAt = (clientX: number, element: HTMLDivElement) => {
     const rect = element.getBoundingClientRect();
-    const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / Math.max(1, rect.width)));
+    const x = ((clientX - rect.left) / Math.max(1, rect.width)) * 720;
+    const ratio = Math.min(1, Math.max(0, (x - 36) / (720 - 72)));
     return Math.round(ratio * Math.max(0, points.length - 1));
   };
 
@@ -444,7 +445,7 @@ function MetricDropdown({ metric, period, snapshot, demo }: { metric: MetricId; 
       <span className="profile-metric-toggle__trend">{currentMetric.delta}</span>
       <ChevronDown className="profile-metric-toggle__chevron" size={18} />
     </button>
-    <div id={contentId} className="profile-metric-disclosure" role="region" aria-labelledby={headingId} aria-hidden={!open} {...(!open ? { inert: '' } : {})}>
+    <div id={contentId} className="profile-metric-disclosure" role="region" aria-labelledby={headingId} aria-hidden={!open} inert={!open}>
       <div className="profile-metric-disclosure__clip">
         <article className="profile-panel profile-main-chart" style={{ "--chart-accent": definition.accent, "--chart-secondary": definition.secondary } as React.CSSProperties}>
           <div className="profile-panel__heading">
@@ -668,7 +669,6 @@ export default function ProfileStatsView({ gradeLevel, gradeProgress, pointsToNe
 
   const changePeriod = (nextPeriod: StatsPeriod) => {
     setPeriod(nextPeriod);
-    onToast(`Chargement des statistiques sur ${periodLabels[nextPeriod].toLowerCase()}`);
   };
 
   const adjustGoal = (goalId: string, delta: number) => {
