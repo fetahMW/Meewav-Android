@@ -15,6 +15,7 @@ import {
   LogOut,
   MessageCircleMore,
   Mic,
+  MoreHorizontal,
   MoreVertical,
   Music,
   Music2,
@@ -26,7 +27,6 @@ import {
   Search,
   Send,
   Smile,
-  Settings2,
   ShieldCheck,
   Trash2,
   Upload,
@@ -1919,6 +1919,7 @@ function ProjectStemsPanel({
   const [currentTakeId, setCurrentTakeId] = useState(selectedMix?.currentTakeId ?? selectedMix?.takes[selectedMix.takes.length - 1]?.id ?? "");
   const currentTake = getTake(selectedMix, currentTakeId);
   const [stemMenuId, setStemMenuId] = useState<string | null>(null);
+  const [packActionsOpen, setPackActionsOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [compareMode, setCompareMode] = useState(false);
   const [compareIds, setCompareIds] = useState<string[]>([]);
@@ -2167,15 +2168,11 @@ function ProjectStemsPanel({
     <section className="mwp-project-stems">
       <div className="mwp-track-packs">
         <div className="mwp-track-packs__toolbar">
-          <label>Track Pack <select value={selectedMixId} onChange={(event) => selectMix(event.target.value)} aria-label="Sélectionner un Track Pack">
+          <label><span className="sr-only">Track Pack</span><select value={selectedMixId} onChange={(event) => selectMix(event.target.value)} aria-label="Sélectionner un Track Pack">
             {mixes.map((mix) => <option key={mix.id} value={mix.id}>{mix.name}</option>)}
           </select></label>
-          <div className="mw-hub-chips">
-            <button type="button" onClick={() => setNewMixOpen(true)}><Plus size={14} /> Nouveau Track Pack</button>
-            <button type="button" onClick={() => setHistoryOpen(true)}><History size={14} /> Take {currentTake.version}</button>
-            <button type="button" onClick={() => setSaveTakeOpen(true)}><Save size={14} /> Sauvegarder</button>
-            <button type="button" onClick={() => addStemInputRef.current?.click()}><Upload size={14} /> Ajouter une piste</button>
-          </div>
+          <button type="button" className="mwp-pack-take" onClick={() => setHistoryOpen(true)} aria-label={`Historique des prises, Take ${currentTake.version}`}><History size={16} /> Take {currentTake.version}</button>
+          <button type="button" className="mwp-pack-more" onClick={() => setPackActionsOpen(true)} aria-label="Actions du Track Pack" aria-haspopup="dialog" aria-expanded={packActionsOpen}><MoreHorizontal size={22} /></button>
         </div>
         <TrackPackViewer key={JSON.stringify([packMessage.id, packMessage.tracks, packMessage.trackDurations, packMessage.trackMediaUrls])} message={packMessage} embedded />
         <details className="mwp-track-packs__management">
@@ -2189,6 +2186,16 @@ function ProjectStemsPanel({
       </div>
 
       <input ref={addStemInputRef} type="file" accept="audio/*" hidden onChange={(event) => { addStem(event.target.files?.[0]); event.currentTarget.value = ""; }} />
+
+      {packActionsOpen && (
+        <Modal title="Actions du Track Pack" onClose={() => setPackActionsOpen(false)}>
+          <div className="mwp-action-list mwp-pack-actions">
+            <button type="button" autoFocus onClick={() => { setPackActionsOpen(false); setNewMixOpen(true); }}><Plus size={20} /><span>Nouveau Track Pack</span></button>
+            <button type="button" onClick={() => { setPackActionsOpen(false); setSaveTakeOpen(true); }}><Save size={20} /><span>Sauvegarder cette Take</span></button>
+            <button type="button" onClick={() => { setPackActionsOpen(false); addStemInputRef.current?.click(); }}><Upload size={20} /><span>Ajouter une piste</span></button>
+          </div>
+        </Modal>
+      )}
 
       {menuStem && (
         <Modal title={menuStem.label} onClose={() => setStemMenuId(null)}>
@@ -2802,7 +2809,6 @@ function ProjectDetail({
   onTabChange,
   onProjectChange,
   onProjectRemove,
-  onNewProject,
   liveController,
   invitationControl,
 }: {
@@ -2811,7 +2817,6 @@ function ProjectDetail({
   onTabChange: (tab: ProjectDetailTab) => void;
   onProjectChange: (project: ProjectWorkspaceItem) => void;
   onProjectRemove: () => void;
-  onNewProject: () => void;
   liveController?: ProjectsWorkspaceLiveController | null;
   invitationControl?: ReactNode;
 }) {
@@ -2828,7 +2833,7 @@ function ProjectDetail({
     <section className="mw-project-detail mwp-project-detail" data-project-tab={tab} aria-label={"Projet " + project.name}>
       <div className="mwp-project-floating-controls mw-hub-chipbar">
         <div className="agw-panel__identity">
-          <span><small>{project.members} MEMBRE{project.members > 1 ? "S" : ""} · {statusLabel(project.status)}</small><strong>{project.name}</strong></span>
+          <span><strong>{project.name}</strong><small>{project.members} membre{project.members > 1 ? "s" : ""} · {statusLabel(project.status)}</small></span>
         </div>
         <div className="agw-panel__toolbar">
           <nav className={`mw-hub-chips is-project is-${tab}`} aria-label="Espaces du projet">
@@ -2839,15 +2844,7 @@ function ProjectDetail({
             ))}
           </nav>
         </div>
-        <div className="agw-panel__controls">
-          <button type="button" className={`agw-panel-option${tab === "info" ? " is-active" : ""}`} onClick={() => onTabChange("info")} aria-label="Options du projet" aria-pressed={tab === "info"}>
-            <Settings2 size={17} /> <span>Options</span>
-          </button>
-          {invitationControl}
-          <button type="button" className="agw-panel-create" onClick={onNewProject} aria-label="Nouveau projet">
-            <Plus size={17} /> <span className="mwp-project-panel__create-label">Nouveau projet</span>
-          </button>
-        </div>
+        {invitationControl && <div className="agw-panel__controls">{invitationControl}</div>}
       </div>
       <div className="mw-project-detail__body">
         <div className="mwp-project-detail__content">
@@ -3140,7 +3137,6 @@ export function ProjectsWorkspace({
           onTabChange={setActiveProjectTab}
           onProjectChange={updateProject}
           onProjectRemove={() => removeProject(selectedProject.id)}
-          onNewProject={openNewProject}
           liveController={liveController}
           invitationControl={liveController ? <ProjectInvitationsButton controller={liveController} /> : undefined}
         />

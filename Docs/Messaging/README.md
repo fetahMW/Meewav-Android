@@ -260,3 +260,17 @@ présentation s’applique aux conversations Tchat, Collabs, Projets et Groupes.
 Un fond opaque est prévu en l’absence de flou ou si la réduction de transparence est
 demandée. Compilation et installation seulement ; le rendu et le clavier restent à
 regarder sur le Samsung par l’utilisateur.
+
+## Haut de l’écran Projets / Track Packs simplifié
+
+Les commandes générales Retour, Nouveau et Fermer conservent leurs zones tactiles
+de 44 px sans blocs rectangulaires. Dans le projet, le nom et les informations de
+contexte redeviennent visibles. Les quatre sous-onglets sont des libellés avec un
+trait discret pour la sélection. Options et Nouveau projet ne sont plus répétés :
+ils restent accessibles via Infos et le « + » général.
+
+La barre du Track Pack tient sur une ligne : choix du mix, historique de la Take
+et menu « Actions du Track Pack ». Ce menu regroupe Nouveau, Sauvegarder et Ajouter
+une piste avec leurs actions existantes. Le lecteur et les pistes ne sont pas
+redessinés. Les marges imbriquées et le défilement horizontal des commandes sont
+retirés ; le contenu du projet garde son défilement vertical.
