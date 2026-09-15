@@ -63,8 +63,11 @@ et à la même position de défilement jusqu’à la fermeture. Les préprofils 
 vinyle et des avatars au sol reprennent exactement ce même format.
 
 Le contenu utilise désormais des dimensions mobiles réelles, sans réduire toute
-la carte desktop par une transformation. Les cinq couleurs d’épingle mesurent
-36 pixels chacune et toute la ligne « Épingler sur la carte » est cliquable.
+la carte desktop par une transformation. Le cartouche « MEEWAV · PRÉ-PROFIL »
+est retiré, le contenu commence à 12 pixels du haut et le badge reste à côté du
+nom. Aperçu / Vidéo / Audio arrivent directement sous l’identité, avant les
+actions de suivi, d’épinglage et la bio. L’épinglage tient dans une ligne compacte :
+la palette se déplie à la demande et conserve cinq cibles de 36 pixels.
 Le corps de la fiche défile si nécessaire ; fermer, contacter et demander une
 collaboration restent accessibles dans les zones fixes. Le logo au-dessus du
 Top 10 s’efface lorsque la liste se déplie pour lui laisser toute cette hauteur.
@@ -73,7 +76,7 @@ Le panneau Top 10 et le bouton « Explorer les artistes » reprennent les couleu
 de la fenêtre d’authentification native (`renderIosStageWindow` dans
 `IosAvatarStage.kt`) : dégradé sombre `#2B1B5C` / `#19122F` / `#0B0816` /
 `#080610` / `#1A1234`, lumière violette `#5137A1` et même palette de contour.
-Ce traitement commun est limité à ces deux surfaces dans l’interface Android.
+Le bouton Play/Pause du vinyle reprend également ce traitement dans l’interface Android.
 
 Lors d’une sélection au sol, la représentation agrandie vient à 12 pixels de la
 fiche. Un repère et un trait discret conservent le lien avec sa position réelle
@@ -107,6 +110,23 @@ du globe ne sont pas réduites par ces adaptations.
 Le bundle et l’APK debug sont reconstruits pour livraison sur le S22 Ultra.
 Aucun test ni contrôle visuel automatique n’est lancé pour cette retouche ; la
 validation du rendu et de la réactivité sur appareil reste à l’utilisateur.
+
+### Lecture du vinyle en exploration
+
+L’aide textuelle et son pictogramme de main sont remplacés par un bouton fixe
+Play/Pause de 46 pixels. La manipulation manuelle reste disponible. Play entraîne
+le disque et ses portraits à raison d’un tour en quatre minutes ; la caméra ne
+tourne pas automatiquement. Pause garde exactement l’angle courant. Toucher le
+canvas, sélectionner un portrait, revenir au globe ou mettre l’application en
+arrière-plan met la lecture en pause ; elle ne repart que sur une nouvelle action.
+
+`ring-playback.ts` prépare une lecture audio locale : démarrage dans le geste
+utilisateur, rotation liée à l’état de lecture réel, pause/reprise sans remise à
+zéro du morceau, arrêt sur erreur et libération au démontage. La musique est
+prévue en boucle pendant la rotation. La lecture d’un média de préprofil suspend
+celle du vinyle. À ce stade, `ring-audio.ts` attend encore le chemin du morceau
+fourni par l’utilisateur : la rotation peut fonctionner seule, aucun morceau
+de substitution n’est choisi et la partie audio n’est pas livrée ni vérifiée.
 
 ### Historique des contrôles du rendu
 

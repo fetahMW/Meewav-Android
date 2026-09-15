@@ -13,6 +13,7 @@ import {
 } from "react";
 import {
   ChevronLeft,
+  ChevronDown,
   Camera,
   Check,
   ExternalLink,
@@ -895,82 +896,6 @@ export function HoverPreProfileContent({
         </div>
       </header>
 
-      {renderProfileActions()}
-
-      {!isOwner && showRestoreAvatar && (
-        <button
-          className="mw-preprofile__restore-avatar"
-          type="button"
-          onClick={() => onRestoreAvatar?.(artist.id)}
-        >
-          <span className="mw-preprofile__restore-avatar-icon" aria-hidden="true">
-            <RotateCcw size={15} strokeWidth={2.45} />
-          </span>
-          <span className="mw-preprofile__restore-avatar-copy">
-            <strong>Rétablir l’avatar</strong>
-            <small>Restaurer son nom, sa couleur et sa visibilité</small>
-          </span>
-        </button>
-      )}
-
-      {showMapPin && !isOwner && !showRestoreAvatar && (
-        <section
-          className={[
-            "mw-preprofile__pin",
-            selectedPinColor ? "has-selected-color" : "",
-            isPinned ? "is-pinned" : "",
-          ].join(" ")}
-          style={{ "--mw-active-pin-color": selectedPinColor ?? "#8B5CF6" } as CSSProperties}
-          aria-label="Épingler le profil"
-        >
-          <button className="mw-preprofile__pin-copy" type="button" aria-pressed={isPinned}
-            onClick={handlePinClick} disabled={!selectedPinColor}>
-            <span className="mw-preprofile__pin-button" aria-hidden="true">
-              <MapPin size={15} strokeWidth={2.35} />
-            </span>
-            <span className="mw-preprofile__pin-text">
-              <strong>{isPinned ? "Épinglé sur la carte" : "Épingler sur la carte"}</strong>
-              <small>
-                {isPinned ? "Ce repère reste visible" : "Garder cet avatar visible"}
-              </small>
-            </span>
-          </button>
-          <div className="mw-preprofile__colors" aria-label="Couleurs de repère">
-            <span className="mw-preprofile__colors-label">
-              <strong>Couleur</strong>
-              <small>du repère</small>
-            </span>
-            {pinColors.map((color) => (
-              <button
-                key={color}
-                className={color === selectedPinColor ? "is-selected" : ""}
-                style={{ "--mw-pin-color": color } as CSSProperties}
-                type="button"
-                aria-label={`Choisir la couleur ${color}`}
-                aria-pressed={color === selectedPinColor}
-                onClick={() => handlePinColor(color)}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      <section className="mw-preprofile__bio" aria-label="Bio artiste">
-        {isOwnerEditing ? (
-          <>
-            <textarea
-              value={bioDraft}
-              maxLength={BIO_MAX_LENGTH}
-              aria-label="Modifier la bio"
-              onChange={(event) => setBioDraft(event.target.value)}
-            />
-            <span className="mw-preprofile__bio-count">{bioDraft.length}/{BIO_MAX_LENGTH}</span>
-          </>
-        ) : (
-          <p>{isOwner ? savedBio : artist.bio}</p>
-        )}
-      </section>
-
       <div className={isOwner ? "mw-preprofile__owner-lower-stage" : "mw-preprofile__lower-stage"}>
         <div
           className={isOwner ? "mw-preprofile__owner-media-stage" : "mw-preprofile__media-stage"}
@@ -1236,6 +1161,92 @@ export function HoverPreProfileContent({
 
         </div>
       </div>
+
+      {renderProfileActions()}
+
+      {!isOwner && showRestoreAvatar && (
+        <button
+          className="mw-preprofile__restore-avatar"
+          type="button"
+          onClick={() => onRestoreAvatar?.(artist.id)}
+        >
+          <span className="mw-preprofile__restore-avatar-icon" aria-hidden="true">
+            <RotateCcw size={15} strokeWidth={2.45} />
+          </span>
+          <span className="mw-preprofile__restore-avatar-copy">
+            <strong>Rétablir l’avatar</strong>
+            <small>Restaurer son nom, sa couleur et sa visibilité</small>
+          </span>
+        </button>
+      )}
+
+      {showMapPin && !isOwner && !showRestoreAvatar && (
+        <section
+          className={[
+            "mw-preprofile__pin",
+            selectedPinColor ? "has-selected-color" : "",
+            isPinned ? "is-pinned" : "",
+          ].join(" ")}
+          style={{ "--mw-active-pin-color": selectedPinColor ?? "#8B5CF6" } as CSSProperties}
+          aria-label="Épingler le profil"
+        >
+          <button className="mw-preprofile__pin-copy" type="button" aria-pressed={isPinned}
+            onClick={handlePinClick} disabled={!selectedPinColor}>
+            <span className="mw-preprofile__pin-button" aria-hidden="true">
+              <MapPin size={15} strokeWidth={2.35} />
+            </span>
+            <span className="mw-preprofile__pin-text">
+              <strong>{isPinned ? "Épinglé sur la carte" : "Épingler sur la carte"}</strong>
+              <small>
+                {isPinned ? "Ce repère reste visible" : "Garder cet avatar visible"}
+              </small>
+            </span>
+          </button>
+          <details className="mw-preprofile__pin-palette">
+          <summary aria-label="Choisir la couleur de l’épingle">
+            <span style={{ backgroundColor: selectedPinColor ?? '#8B5CF6' }} />
+            <ChevronDown size={14} aria-hidden="true" />
+          </summary>
+          <div className="mw-preprofile__colors" aria-label="Couleurs de repère">
+            <span className="mw-preprofile__colors-label">
+              <strong>Couleur</strong>
+              <small>du repère</small>
+            </span>
+            {pinColors.map((color) => (
+              <button
+                key={color}
+                className={color === selectedPinColor ? "is-selected" : ""}
+                style={{ "--mw-pin-color": color } as CSSProperties}
+                type="button"
+                aria-label={`Choisir la couleur ${color}`}
+                aria-pressed={color === selectedPinColor}
+                onClick={(event) => {
+                  handlePinColor(color);
+                  event.currentTarget.closest('details')?.removeAttribute('open');
+                }}
+              />
+            ))}
+          </div>
+          </details>
+        </section>
+      )}
+
+      <section className="mw-preprofile__bio" aria-label="Bio artiste">
+        {isOwnerEditing ? (
+          <>
+            <textarea
+              value={bioDraft}
+              maxLength={BIO_MAX_LENGTH}
+              aria-label="Modifier la bio"
+              onChange={(event) => setBioDraft(event.target.value)}
+            />
+            <span className="mw-preprofile__bio-count">{bioDraft.length}/{BIO_MAX_LENGTH}</span>
+          </>
+        ) : (
+          <p>{isOwner ? savedBio : artist.bio}</p>
+        )}
+      </section>
+
       </div>
       <footer className="mw-preprofile__footer" aria-label="Actions de contact">
         <button

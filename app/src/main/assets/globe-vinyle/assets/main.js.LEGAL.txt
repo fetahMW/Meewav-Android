@@ -78,13 +78,10 @@ lucide-react/dist/esm/icons/crown.mjs:
 lucide-react/dist/esm/icons/ellipsis.mjs:
 lucide-react/dist/esm/icons/external-link.mjs:
 lucide-react/dist/esm/icons/eye-off.mjs:
-lucide-react/dist/esm/icons/hand.mjs:
 lucide-react/dist/esm/icons/heart-handshake.mjs:
 lucide-react/dist/esm/icons/mail.mjs:
 lucide-react/dist/esm/icons/map-pin.mjs:
 lucide-react/dist/esm/icons/message-circle.mjs:
-lucide-react/dist/esm/icons/mouse-pointer-2.mjs:
-lucide-react/dist/esm/icons/move-vertical.mjs:
 lucide-react/dist/esm/icons/orbit.mjs:
 lucide-react/dist/esm/icons/pause.mjs:
 lucide-react/dist/esm/icons/pencil-line.mjs:

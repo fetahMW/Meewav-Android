@@ -1,6 +1,7 @@
 import { solveScreenAnchor } from "./screen-anchor.mjs";
 import { createTouchNavigation } from "../../../../touch-navigation.mjs";
 import { createTouchCamera } from "../../../../touch-camera.mjs";
+import { createRingPlayback } from "../../../../ring-playback";
 import * as T from "three";
 import { LineSegments2 } from "three/addons/lines/LineSegments2.js";
 import { LineSegmentsGeometry } from "three/addons/lines/LineSegmentsGeometry.js";
@@ -444,6 +445,8 @@ export async function createThree(
     hitPoint = new T.Vector3();
   const updateGlobeCamera = createOrbitCameraUpdater(camera, view, GLOBE_ALIGN);
   const ringNavigation = createRingNavigation(camera, saturnRing, reducedMotion);
+  const ringPlayback = createRingPlayback(() => alive && active && !document.hidden &&
+    ringNavigation.active && !ringNavigation.returning && ringNavigation.entryProgress >= 1);
   const updateCamera = () => ringNavigation.active ? ringNavigation.tick(0, true) : updateGlobeCamera();
   const applyGlobeDrag = createGlobeDrag({ motion, axis: saturnRing.state().normal, updateCamera, align: GLOBE_ALIGN });
   let brandOverviewHeight = view.height;
@@ -709,6 +712,7 @@ export async function createThree(
     touchNavigation.cancel(settle); canvas.classList.remove('dragging');
   }
   function down(e: PointerEvent) {
+    if (ringNavigation.active) ringPlayback.pause();
     if (e.pointerType === 'touch' || e.pointerType === 'pen') {
       e.preventDefault(); canvas.focus({ preventScroll: true }); canvas.setPointerCapture(e.pointerId);
       touchNavigation.down(e); return;
@@ -849,7 +853,7 @@ export async function createThree(
   const wheel = (e: WheelEvent) => {
     e.preventDefault();
     cancelTouch();
-    if (ringNavigation.active) { ringNavigation.wheel(e.deltaY); return; }
+    if (ringNavigation.active) { ringPlayback.pause(); ringNavigation.wheel(e.deltaY); return; }
     if (gesture?.orbiting) return;
     if (!Number.isFinite(e.deltaY) || e.deltaY === 0) return;
     setBrandVisible(false);
@@ -948,7 +952,7 @@ export async function createThree(
     if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Escape', 'Home', '+', '=', '-'].includes(e.key)) cancelTouch();
     if (ringNavigation.active) {
       if (e.key === 'Escape' || e.key === 'Home') { e.preventDefault(); exitRing(); }
-      else if (ringNavigation.key(e.key)) e.preventDefault();
+      else if (ringNavigation.key(e.key)) { ringPlayback.pause(); e.preventDefault(); }
       return;
     }
     const directions: any = {
@@ -1111,9 +1115,10 @@ export async function createThree(
     touchNavigation.tick(now);
     if (ringNavigation.active) {
       const navigationChanged = ringNavigation.tick(dt, sceneDirty);
-      // Keep the whole exploration still, including its entry/return flights.
-      // Resume from this same angle once the overview is restored.
-      const vinylChanged = saturnRing.tick(dt, camera, true, false);
+      ringPlayback.refresh();
+      // Rotation physique du disque et des portraits, caméra manuelle inchangée.
+      // Un tour en quatre minutes ; aucune remise à zéro lors des pauses.
+      const vinylChanged = saturnRing.tick(dt, camera, true, ringPlayback.playing, 240, true);
       if (navigationChanged) {
         sceneDirty = false;
         if (ringNavigation.returning) ringPortraits.setReturnProgress(ringNavigation.returnProgress);
@@ -1284,6 +1289,7 @@ export async function createThree(
   }
   function exitRing(target?: any, afterReturn?: () => void) {
     if (!ringNavigation.active || ringNavigation.returning) return;
+    ringPlayback.pause();
     cancelTouch();
     const overview = overviewTarget('globe', width, height);
     const destination = target
@@ -1336,6 +1342,10 @@ export async function createThree(
     flyTo,
     enterRing,
     exitRing,
+    getRingPlaybackState: ringPlayback.state,
+    toggleRingPlayback() {
+      cancelTouch(); ringNavigation.cancel(); ringPlayback.toggle();
+    },
     getPreviewSnapshot: () => ({ view: { ...view }, focus: { cityCode: territoryFocus.cityCode,
       quarterId: territoryFocus.quarterId }, focusExitHeight, ring: ringNavigation.state() }),
     restorePreviewSnapshot(snapshot: any) {
@@ -1454,6 +1464,7 @@ export async function createThree(
     },
     setActive(value: boolean) {
       if (active === value) return;
+      if (!value) ringPlayback.pause();
       cancelTouch();
       ringNavigation.cancel();
       ringPortraits.cancel();
@@ -1474,6 +1485,7 @@ export async function createThree(
       if (active) raf = requestAnimationFrame(frame);
     },
     destroy() {
+      ringPlayback.dispose();
       cancelTouch();
       // Stop rendering immediately, but retain materials until an in-progress
       // parallel compile has finished polling them (notably during Vite HMR).

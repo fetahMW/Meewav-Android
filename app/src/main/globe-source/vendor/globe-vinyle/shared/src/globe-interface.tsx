@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Building2, Crosshair, Crown, EyeOff, MapPin, X, Orbit, ArrowLeft, ArrowRight, Hand, MoveVertical, MousePointer2 } from "lucide-react";
+import { Building2, Crosshair, Crown, EyeOff, MapPin, X, Orbit, ArrowLeft, ArrowRight, Play, Pause } from "lucide-react";
 import GlobeNavigationPole from "./GlobeNavigationPole";
 import NationalTopTen from "./NationalTopTen";
 import { RingPreProfileBoundary } from "./RingPreProfileBoundary";
@@ -36,8 +36,15 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
   const [topTenRequested, setTopTenRequested] = useState(false);
   const [mode, setMode] = useState<"globe" | "city" | "country" | "position" | "ring">("globe");
   const [ringReturning, setRingReturning] = useState(false);
+  const [ringPlayback, setRingPlayback] = useState({ playing: false, pending: false, available: false, error: '' });
   const [ringPortrait, setRingPortrait] = useState<any>(null);
   const [groundAvatar, setGroundAvatar] = useState<any>(null);
+  useEffect(() => {
+    const update = (event: Event) => setRingPlayback((event as CustomEvent).detail);
+    window.addEventListener('meewav:ring-playback', update);
+    if (ready && engine.current?.getRingPlaybackState) setRingPlayback(engine.current.getRingPlaybackState());
+    return () => window.removeEventListener('meewav:ring-playback', update);
+  }, [ready, engine]);
   const activeCityId = useRef("fr-commune-75056");
   const overviewPose = useRef<any>(null);
   const [notice, setNotice] = useState("");
@@ -256,16 +263,13 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
     </button>}
     {mode === 'ring' && <>
       <button className="ring-return-button ring-key-surface" onClick={goGlobe} disabled={ringReturning}><ArrowLeft size={17} aria-hidden="true" />{ringReturning ? 'Retour au globe…' : 'Retour au globe'}</button>
-      {!ringReturning && !ringPortrait && <section className="ring-visit-panel ring-key-surface" aria-label="Se déplacer sur l’anneau">
-        <div className="ring-visit-main">
-          <div className="ring-visit-gesture" aria-hidden="true"><ArrowLeft size={17} /><Hand size={26} strokeWidth={1.6} /><ArrowRight size={17} /></div>
-          <div className="ring-visit-copy"><h2>Glissez à gauche ou à droite</h2><p>Explorez les artistes sur l’anneau</p></div>
-        </div>
-        <div className="ring-visit-hints">
-          <span><MoveVertical size={13} aria-hidden="true" />Changer de rangée</span>
-          <span><MousePointer2 size={13} aria-hidden="true" />Clic droit : regarder</span>
-        </div>
-      </section>}
+      {!ringReturning && <button className="ring-playback-button ring-key-surface" type="button"
+        aria-label={ringPlayback.playing || ringPlayback.pending ? 'Mettre le vinyle et la musique en pause' : 'Lire le vinyle et la musique'}
+        aria-pressed={ringPlayback.playing || ringPlayback.pending} aria-busy={ringPlayback.pending}
+        disabled={!ringPlayback.available} onClick={() => engine.current?.toggleRingPlayback()}>
+        {ringPlayback.playing || ringPlayback.pending ? <Pause size={21} fill="currentColor" aria-hidden="true" /> : <Play size={21} fill="currentColor" aria-hidden="true" />}
+      </button>}
+      {ringPlayback.error && <p className="ring-playback-error" role="status">{ringPlayback.error}</p>}
       {!ringReturning && ringPortrait && <RingPreProfileBoundary key={ringPortrait.instanceId} onClose={closeRingPortrait}>
           <RingArtistPreProfile selection={ringPortrait} onClose={closeRingPortrait} />
       </RingPreProfileBoundary>}

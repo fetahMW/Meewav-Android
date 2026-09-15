@@ -139,7 +139,7 @@ export function createSaturnRing(scene, options = {}) {
     get rotation() { return rotation; },
     get visible() { return visible && inViewport; },
     setInViewport(value) { inViewport = value; },
-    tick(dt, camera, enabled = true, rotate = true) {
+    tick(dt, camera, enabled = true, rotate = true, periodSeconds = ROTATION_PERIOD_SECONDS, userInitiated = false) {
       if (!frustumReady || !lastProjection.equals(camera.projectionMatrix) || !lastCamera.equals(camera.matrixWorldInverse)) {
         lastProjection.copy(camera.projectionMatrix);
         lastCamera.copy(camera.matrixWorldInverse);
@@ -150,12 +150,12 @@ export function createSaturnRing(scene, options = {}) {
         frustumReady = true;
       }
       visible = enabled && intersectsView;
-      if (!rotate || !animated || reducedMotion.matches || !visible || !inViewport || document.hidden) return false;
+      if (!rotate || !animated || (!userInitiated && reducedMotion.matches) || !visible || !inViewport || document.hidden) return false;
       // Use elapsed seconds even at low frame rates. Discard a long suspended
       // frame instead of jumping around the disc when rendering resumes.
       const step = Number.isFinite(dt) && dt > 0 && dt < 1 ? dt : 0;
       if (!step) return false;
-      rotation = (rotation + step * TAU / ROTATION_PERIOD_SECONDS) % TAU;
+      rotation = (rotation + step * TAU / periodSeconds) % TAU;
       // Negative local Y is clockwise when looking down on the record.
       turntable.rotation.y = -rotation;
       // Transform the fixed studio sources into the rotating material frame:
