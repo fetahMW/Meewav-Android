@@ -333,3 +333,14 @@ informations membres/style restent visibles dans tous les outils du groupe.
 
 Compilation et installation autorisées ; aucun test ou contrôle visuel automatique.
 L’appréciation du rendu et les vérifications fonctionnelles restent à l’utilisateur.
+
+## Violet urbain des CTA — référence utilisateur du 15 septembre 2026
+
+La référence prioritaire est désormais le CTA « Créer un groupe » du Web,
+`.mw-chat-header__primary-action` : dégradé à 135° `rgba(79,53,158,.96)` vers
+`rgba(76,47,169,.94)`. Elle remplace l’essai mat précédent pour tous les CTA
+principaux de messagerie, y compris le rond d’envoi, les confirmations dans les
+modales et les labels de sélection de fichier utilisés comme boutons principaux.
+Le reflet supplémentaire du bouton d’envoi est supprimé pour éviter une teinte
+différente. Les bulles, les boutons secondaires et les bandeaux restent inchangés.
+Voir [la mémoire de design](../DESIGN-MEMORY.md) pour la référence durable.

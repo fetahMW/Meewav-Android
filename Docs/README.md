@@ -12,15 +12,15 @@ Nom retenu à la demande de l’utilisateur le 15 septembre 2026 : **Violet urba
 Meewav**. « Notre violet » désigne la finition du bouton **Explorer les artistes**,
 reprise de la fenêtre d’authentification native, et non l’ancien rose du globe.
 
-Pour les CTA de navigation et d’envoi, la référence explicite est le bouton **Se connecter**
-de la page Bienvenue : `IosAuthAction` dans `features/auth/IosLoginScene.kt`.
-Reprendre son dégradé vertical **`#5137A1 → #4E349F → #372574`** (arrêts 0 %, 50 %, 100 %),
-avec bordure `#7960B2` : la première couleur seule ne reproduit pas son rendu.
-La messagerie l’expose par `--mobile-violet-cta`.
-Dernier ajustement demandé pour la messagerie : rendu plus mat et légèrement plus
-bleuté (`#484084 → #403976 → #2F2A57`, contour `#6B6398`), à regarder sur le Samsung.
-Cette surcharge Android remplace actuellement le dégradé ci-dessus dans les CTA
-de messagerie ; elle ne modifie pas le bouton natif d’authentification.
+**Référence prioritaire pour les CTA de messagerie, confirmée le 15 septembre 2026 :**
+le bouton **Créer un groupe**, classe `.mw-chat-header__primary-action` du Web.
+Dégradé à 135° : `rgba(79,53,158,.96)` (`#4F359E`) vers
+`rgba(76,47,169,.94)` (`#4C2FA9`). Cette décision remplace l’essai mat
+`#484084 → #403976 → #2F2A57` et la référence d’authentification pour les CTA
+de messagerie. L’authentification et le globe restent inchangés.
+La référence durable est [DESIGN-MEMORY.md](DESIGN-MEMORY.md).
+Les variables `--meewav-violet-urbain-*` dans `messaging-source/mobile.css`
+alimentent les CTA principaux et les boutons d’envoi des quatre espaces.
 **Exception explicitement demandée pour les bulles du Tchat : reprendre exactement les
 couleurs, dégradés, contours, reliefs et formes du chat Web**, y compris le lecteur audio.
 Leurs styles de référence sont les copies de `message-workspace.css`, `message-grammar.css`
