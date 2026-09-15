@@ -197,6 +197,11 @@ orange et verte ainsi que les illustrations restent distinctes. Les règles des
 bulles Tchat et capsules audio gardent expressément leur finition Web demandée.
 Cette adaptation utilise PostCSS déjà présent dans les dépendances Web de compilation.
 
+Correction demandée ensuite : la carte de demande Collab reprend sa présentation
+Web dépliée, ses espacements, arrondis, dégradés et reliefs. Elle est exclue de la
+recoloration automatique et ne passe plus en variante compacte dans la conversation.
+La liste de contacts, les messages sous la carte et le champ de réponse sont conservés.
+
 Les en-têtes de Projets et Groupes ont une identité, des actions compactes et une ligne
 de sous-onglets. Les panneaux utilisent la hauteur disponible sous les quatre onglets,
 avec défilement de leur contenu et saisie en bas dans les conversations. La compilation

@@ -44,6 +44,8 @@ export function applyMessagingBrand(css, postcss) {
   const root = postcss.parse(css);
   root.walkRules(rule => {
     if (!/\.(?:mw-|mwp-|agw)/.test(rule.selector)) return;
+    // The user explicitly restored the original collaboration card finish.
+    if (/mw-collab-(?:detail|request|preview|card)/.test(rule.selector)) return;
     if (/mw-(?:bubble|audio-capsule|track-capsule|waveform|message(?:\.|:|\s|$))/.test(rule.selector)) return;
     rule.walkDecls(declaration => {
       if (/^(?:--|color$|background|border|outline|box-shadow$|text-shadow$|fill$|stroke|accent-color$|caret-color$)/.test(declaration.prop)) {

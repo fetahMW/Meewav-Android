@@ -834,7 +834,7 @@ export function CollabsWorkspace({
     const pinnedCollab = items.find((collab) => collab.id === pinnedCollabId);
     return <div className="mw-collab-detail-inline is-pinned-card">
       {displayedLiveError && <span className="mw-status is-rejected" role="alert">{displayedLiveError}</span>}
-      {pinnedCollab && renderRequestCard(pinnedCollab, true)}
+      {pinnedCollab && renderRequestCard(pinnedCollab)}
       {previewAttachment && <AttachmentPreview attachment={previewAttachment} resolveAttachmentUrl={liveController?.resolveAttachmentUrl} onClose={() => setPreviewAttachment(null)} />}
     </div>;
   }
