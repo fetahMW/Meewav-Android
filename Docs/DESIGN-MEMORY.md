@@ -83,6 +83,15 @@ sont accessibles au tap avec défilement vers la fiche et retour à la liste.
 Les actions en double sont retirées du contenu quand elles existent déjà en haut.
 Les services, garde-fous d’authentification et confirmations restent inchangés.
 
+### Médias locaux du profil Android
+
+La copie des chemins publics doit inclure `/media/`, en plus de `/audio/`.
+Sans ce répertoire, les cartes sont visibles mais leurs MP3/MP4 échouent au Play.
+`node scripts/build-profile.mjs --sync-media` synchronise uniquement les médias
+référencés depuis le Web, sans réimporter les sources ni remplacer les autres assets.
+Les fichiers sont empaquetés avec leur qualité d’origine et servis par le lecteur
+local Android existant, qui gère les requêtes Range.
+
 ## Violet urbain Meewav — référence de messagerie
 
 Le 15 septembre 2026, l’utilisateur précise la référence exacte :

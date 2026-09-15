@@ -390,6 +390,58 @@
       "sha256": "e69e1946eef5d14cf8d0b7e021d2d9b204423736d32b2b35f372dc1dc9207d98"
     },
     {
+      "path": "media/demo/concept-album.txt",
+      "sha256": "4d941f6f41f4885dd7418ff4b58edabd91b42f9256f470a50b7503facd78be39"
+    },
+    {
+      "path": "media/preprofile-demo/dj-turntable.mp4",
+      "sha256": "f260c462b9e079a8cce770f252f9ef5ca7aa465a0c448cb199da8936e8737866"
+    },
+    {
+      "path": "media/preprofile-demo/female-guitarist.mp4",
+      "sha256": "299aee6f06028dd88c71594c99bac873bc34e309b06cb6a0f02f84db84d0bc0e"
+    },
+    {
+      "path": "media/preprofile-demo/hazy-after-hours.mp3",
+      "sha256": "5a30d042dc51f517dc64b5d409e1ac0b9dba2a80241f8955f41257585e77890f"
+    },
+    {
+      "path": "media/preprofile-demo/tech-house-vibes.mp3",
+      "sha256": "95972c602ff0686e298792f45b384f0e15477f3cf983f05dd98fd5e5d965eed6"
+    },
+    {
+      "path": "media/profile-demo/guitar-session-audio.mp3",
+      "sha256": "92713302bad4a3471c5802833b3013405b81f93306c6b069f898381da5f6d5ad"
+    },
+    {
+      "path": "media/profile-demo/vocal-session-audio.mp3",
+      "sha256": "60d5fbce449e80813c531cf66271045e9bc55f49072a2ca70c1de4d035d2a86c"
+    },
+    {
+      "path": "media/shorts-demo/landscape-dj.mp4",
+      "sha256": "adbd58252779582af036eaff3b1046e7e619c22b612a31a0ee0bfe6c6ac71e8c"
+    },
+    {
+      "path": "media/shorts-demo/landscape-guitar.mp4",
+      "sha256": "129b35701aa0610b987fe72c6634905156318a64633cf40e5aa03b2dacbb8e34"
+    },
+    {
+      "path": "media/shorts-demo/landscape-roundtable.mp4",
+      "sha256": "86f4076a50bd13754ec0316e9a6a8708767b85e59ad303f7eadaf5ac8cc4545a"
+    },
+    {
+      "path": "media/shorts-demo/portrait-producer.mp4",
+      "sha256": "4aa299fbfacdca9943c200e511a31be2e9a892cc994689811fd87cd4a70f46b9"
+    },
+    {
+      "path": "media/shorts-demo/portrait-studio-rap.mp4",
+      "sha256": "85a8ab0a8a02c8ae5cedce59d03a70754614714c0aa01b21a7319a88a8f4ec68"
+    },
+    {
+      "path": "media/shorts-demo/portrait-vocal-session.mp4",
+      "sha256": "30675055e15ec7e481b80a8599203900669ee83e47bd52001f5aa612f9d0c883"
+    },
+    {
       "path": "meewav-emojis/v2/webp/256/applaudissements.webp",
       "sha256": "181436257910494ea89460ebaef54ea85c6396e6bbcf9369322c62f0c6f97097"
     },
@@ -1588,6 +1640,10 @@
     {
       "path": "meewav-emojis/webp/256/vinyle-notes.webp",
       "sha256": "567d5fcfdd2592fd59c65c418461e25c26392897f771d3151beb88a229412a5f"
+    },
+    {
+      "path": "ui/images/earth_specular.jpg",
+      "sha256": "2df48906732d7a458b2d0a7cdec51a829262307c6bdee4cfdf079a4dd7c71c69"
     }
   ]
 }

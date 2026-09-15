@@ -426,6 +426,9 @@ html { scroll-padding-top: 120px; scroll-padding-bottom: 116px; }
 #root .profile-space-view .profile-private-transactions-toolbar { margin-top: 0; }
 #root .profile-space-view .profile-private-filter-group { padding: 0; background: transparent; border: 0; }
 #root .profile-space-view .profile-private-filter-group button { white-space: nowrap; }
+#root .profile-space-view .profile-private-transactions-table > button > span:nth-child(4) small { color: #a9afba; }
+#root .profile-space-view .profile-private-transactions-table > button > span:nth-child(1) { color: #b7bdc7; }
+#root .profile-space-view :is(.profile-private-equipment-detail__hero,.profile-private-organization-detail__person) > div > small { font-size: 10px; color: #a9afba; }
 
 /* Accueil mobile: compact editorial hierarchy, using the existing Web cards. */
 #root .profile-command-bar .meewav-pillar-tabs button { display: flex; align-items: center; justify-content: center; }

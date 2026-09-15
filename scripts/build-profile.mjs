@@ -12,7 +12,8 @@ const source = join(root, 'app/src/main/profile-source');
 const vendor = join(source, 'vendor');
 const output = join(root, 'app/src/main/assets/profile');
 const importing = process.argv.includes('--import-web');
-const syncAssets = importing || process.argv.includes('--sync-assets');
+const syncMediaOnly = process.argv.includes('--sync-media') && !importing && !process.argv.includes('--sync-assets');
+const syncAssets = importing || process.argv.includes('--sync-assets') || syncMediaOnly;
 const require = createRequire(join(web, 'vendor/globe-vinyle/package.json'));
 const { build } = require('esbuild');
 const within = (base, path) => { const rel = relative(base, path); return !rel.startsWith('..') && !isAbsolute(rel); };
@@ -60,7 +61,7 @@ const copyAsset = async (path, name) => {
   const target = join(output, name); await mkdir(dirname(target), { recursive: true }); await copyFile(path, target);
 };
 if (syncAssets) {
-  const publicAssets = new Set(['images/profile', 'assets/orbit/founder-puff.png', 'badges', 'ui/images', 'images/preprofile/portraits', 'avatars', 'badges', 'images/grades', 'audio/rooms/wave-test-pack/House_124BPM_A_minor/Loops_8bars',
+  const publicAssets = new Set(syncMediaOnly ? [] : ['images/profile', 'assets/orbit/founder-puff.png', 'badges', 'ui/images', 'images/preprofile/portraits', 'avatars', 'badges', 'images/grades', 'audio/rooms/wave-test-pack/House_124BPM_A_minor/Loops_8bars',
     // Collab showcase paths are assembled dynamically in profileDemoData.ts.
     'audio/rooms/wave-test-pack/Drill_142BPM_F_minor/Loops_8bars/Drill_FullMix_A_142BPM_8bars.wav',
     'audio/rooms/wave-test-pack/Afro_100BPM_A_minor/Loops_8bars/Afro_FullMix_A_100BPM_8bars.wav',
@@ -72,8 +73,8 @@ if (syncAssets) {
     const path = resolve(root, entry);
     if ((!within(join(web, 'src'), path) && !within(vendor, path)) || !/\.(tsx?|css|json|jsx?)$/.test(path)) continue;
     const text = await readFile(path, 'utf8');
-    for (const match of text.matchAll(/["'`(](\/(?:images|avatars|assets|emoticons|audio|fonts)\/[^"'`)\r\n$]+)/g)) {
-      publicAssets.add(match[1].slice(1));
+    for (const match of text.matchAll(/["'`(](\/(?:images|avatars|assets|emoticons|audio|media|fonts)\/[^"'`)\r\n$]+)/g)) {
+      if (!syncMediaOnly || match[1].startsWith('/media/')) publicAssets.add(match[1].slice(1));
     }
   }
   async function copyTree(path, name) {
@@ -83,7 +84,7 @@ if (syncAssets) {
     } else await copyAsset(path, name);
   }
   for (const name of publicAssets) if (within(join(web, 'public'), resolve(web, 'public', name))) await copyTree(join(web, 'public', name), name);
-  await copyAsset(join(root, 'app/src/main/res/font/inter_variable.ttf'), 'fonts/inter.ttf');
+  if (!syncMediaOnly) await copyAsset(join(root, 'app/src/main/res/font/inter_variable.ttf'), 'fonts/inter.ttf');
   // Keep a byte-level record of the copied public media, without declaring new
   // rights or rewriting any source credits or legal notices.
   const publicFiles = [];
