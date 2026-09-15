@@ -66,6 +66,12 @@ export default function NationalTopTen({ openRequested = false, canOpen, onOpenH
       clearance: rect.width / 2, viewportWidth: window.innerWidth, viewportHeight: window.innerHeight,
     } });
   };
+  const navigateProfile = (index: number) => {
+    const artist = ARTISTS[index];
+    if (!artist || index + 1 === selection?.instanceId) return;
+    const button = panel.current?.querySelectorAll<HTMLButtonElement>('.national-top-ten__artist')[index];
+    if (button) open(artist, index + 1, button);
+  };
 
   return <>
     <section ref={panel} className="national-top-ten ring-key-surface" data-expanded={expanded}
@@ -108,8 +114,10 @@ export default function NationalTopTen({ openRequested = false, canOpen, onOpenH
       </>}
       </div>
     </section>
-    {selection && <RingPreProfileBoundary key={selection.artistId} onClose={close}>
-      <ArtistPreProfile selection={selection} onClose={close} />
+    {selection && <RingPreProfileBoundary onClose={close}>
+      <ArtistPreProfile selection={selection} onClose={close} navigation={{
+        index: selection.instanceId - 1, total: ARTISTS.length, name: selection.name, onChange: navigateProfile,
+      }} />
     </RingPreProfileBoundary>}
   </>;
 }

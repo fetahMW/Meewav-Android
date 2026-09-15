@@ -34,3 +34,28 @@
 }
 @keyframes ring-preprofile-enter { from { opacity:0; } to { opacity:1; } }
 @media (prefers-reduced-motion:reduce) { .ring-artist-preprofile { animation:none; } }
+.top-ten-profile-navigation {
+  position:absolute; top:52px; bottom:24px; right:-36px; width:32px;
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+}
+.top-ten-profile-navigation__rank {
+  color:var(--meewav-violet-urbain-light, #bda3e5); font:600 10px/16px Inter, sans-serif;
+  text-shadow:0 1px 4px #000;
+}
+.top-ten-profile-navigation__rail {
+  position:relative; width:32px; flex:1; min-height:40px;
+  touch-action:none; cursor:ns-resize; border-radius:12px;
+}
+.top-ten-profile-navigation__rail:focus-visible { outline:1px solid #bda3e5; outline-offset:1px; }
+.top-ten-profile-navigation__track {
+  position:absolute; inset:0 13px; border-radius:4px; background:#211830db;
+  box-shadow:inset 0 0 0 1px #bda3e530;
+}
+.top-ten-profile-navigation__thumb {
+  position:absolute; left:12px; width:8px; height:32px;
+  top:calc((100% - 32px) * var(--profile-progress)); border-radius:5px;
+  background:var(--meewav-violet-urbain-light, #bda3e5); box-shadow:0 0 7px #5137a166;
+}
+.top-ten-profile-navigation__announcement {
+  position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap;
+}

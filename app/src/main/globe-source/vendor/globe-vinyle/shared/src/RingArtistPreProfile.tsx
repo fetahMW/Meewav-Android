@@ -8,6 +8,7 @@ import { sceneDemoArtist } from "./reference/features/shorts/sceneArtistPortrait
 import { getGradeBadgeMeta } from "./reference/features/grades/gradeBadges";
 import "./ring-artist-preprofile.css";
 import { mobileArtistPanel } from '../../../../mobile-artist-panel';
+import { TopTenProfileNavigator, type ProfileNavigation } from './TopTenProfileNavigator';
 
 const RING_ARTIST_GRADE = getGradeBadgeMeta(6);
 
@@ -20,13 +21,16 @@ type PortraitSelection = {
   anchor: { x: number; y: number; clearance: number; viewportWidth: number; viewportHeight: number };
 };
 
-export default function RingArtistPreProfile({ selection, onClose }: { selection: PortraitSelection; onClose: () => void }) {
+export default function RingArtistPreProfile({ selection, onClose, navigation }: {
+  selection: PortraitSelection; onClose: () => void; navigation?: ProfileNavigation;
+}) {
   const panel = useRef<HTMLDivElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
   const [viewport, setViewport] = useState(() => ({ width: window.innerWidth, height: window.innerHeight }));
   const [notice, setNotice] = useState("");
+  useEffect(() => setNotice(''), [selection.slug]);
   const artist = useMemo(() => {
     const original = sceneDemoArtist(selection.name);
     const grade = selection.gradeLevel == null ? RING_ARTIST_GRADE : getGradeBadgeMeta(selection.gradeLevel);
@@ -104,12 +108,18 @@ export default function RingArtistPreProfile({ selection, onClose }: { selection
         '--mw-bubble-w': `${mobile.width}px`, '--mw-bubble-h': `${mobile.height}px` } : {}),
       "--mw-arrow-y": `${Math.max(40, Math.min(548, (y - popupTop) / scale))}px` } as CSSProperties}
     onPointerDown={event => event.stopPropagation()} onClick={event => event.stopPropagation()}>
-    <PreProfileFrame arrow>
+    <PreProfileFrame key={selection.slug} arrow>
       <HoverPreProfileContent artist={artist} demoFollow showMapPin={false}
         onOpenProfile={() => setNotice("Le profil complet sera bientôt disponible.")}
         onContact={() => setNotice("La messagerie sera bientôt disponible.")}
         onCollabRequest={() => setNotice("Les demandes de collaboration seront bientôt disponibles.")} />
     </PreProfileFrame>
+    {navigation && <>
+      <span id="top-ten-active-profile" className="top-ten-profile-navigation__announcement" role="status">
+        {navigation.index + 1} sur {navigation.total} : {selection.name}
+      </span>
+      <TopTenProfileNavigator {...navigation} />
+    </>}
     <button ref={closeButton} className="ring-artist-preprofile__close" type="button" onClick={onClose} aria-label="Fermer le pré-profil">
       <X aria-hidden="true" />
     </button>

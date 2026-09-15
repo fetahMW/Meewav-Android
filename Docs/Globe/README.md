@@ -126,6 +126,14 @@ Le bundle et l’APK debug sont reconstruits pour livraison sur le S22 Ultra.
 Aucun test ni contrôle visuel automatique n’est lancé pour cette retouche ; la
 validation du rendu et de la réactivité sur appareil reste à l’utilisateur.
 
+Les pré-profils ouverts depuis le Top 10 disposent d’une barre verticale à droite,
+avec le rang courant. Glisser son curseur, toucher la piste ou utiliser la molette
+permet de passer entre les dix artistes sans fermer la fiche. Le clavier peut
+également utiliser Haut/Bas, Page précédente/suivante et Début/Fin. La liste reste
+montée derrière la fiche. Le contenu et ses lecteurs sont remontés pour chaque
+artiste, tandis que la barre reste montée pour conserver le geste en cours.
+Le défilement interne d’une fiche garde son rôle lorsque son contenu déborde.
+
 ### Lecture du vinyle en exploration
 
 L’aide textuelle et son pictogramme de main sont remplacés par un bouton fixe
