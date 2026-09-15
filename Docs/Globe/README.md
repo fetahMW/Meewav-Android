@@ -76,7 +76,10 @@ Le panneau Top 10 et le bouton « Explorer les artistes » reprennent les couleu
 de la fenêtre d’authentification native (`renderIosStageWindow` dans
 `IosAvatarStage.kt`) : dégradé sombre `#2B1B5C` / `#19122F` / `#0B0816` /
 `#080610` / `#1A1234`, lumière violette `#5137A1` et même palette de contour.
-Le bouton Play/Pause du vinyle reprend également ce traitement dans l’interface Android.
+Les boutons Play/Pause et Retour au globe reprennent également ce traitement.
+Cette référence est nommée **Violet urbain Meewav** et conservée dans
+[l’index documentaire](../README.md#repère-artistique-à-conserver--violet-urbain-meewav),
+avec les variables CSS communes `--meewav-violet-urbain-*`.
 
 Lors d’une sélection au sol, la représentation agrandie vient à 12 pixels de la
 fiche. Un repère et un trait discret conservent le lien avec sa position réelle
@@ -114,7 +117,9 @@ validation du rendu et de la réactivité sur appareil reste à l’utilisateur.
 ### Lecture du vinyle en exploration
 
 L’aide textuelle et son pictogramme de main sont remplacés par un bouton fixe
-Play/Pause de 46 pixels. La manipulation manuelle reste disponible. Play entraîne
+Play/Pause de 46 pixels, centré horizontalement en haut de l’écran. Son bord haut
+et sa hauteur sont alignés avec Retour au globe, par les mêmes variables CSS.
+La manipulation manuelle reste disponible. Play entraîne
 le disque et ses portraits à raison d’un tour en quatre minutes ; la caméra ne
 tourne pas automatiquement. Pause garde exactement l’angle courant. Toucher le
 canvas, sélectionner un portrait, revenir au globe ou mettre l’application en
