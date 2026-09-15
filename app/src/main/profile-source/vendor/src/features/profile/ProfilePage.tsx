@@ -633,7 +633,7 @@ function ProfileHero({ profile, onEdit, onViewer, onToast }: ProfileHeroProps) {
           <p className="profile-hero__bio">{profile.bio}</p>
           <div className="profile-hero__actions">
             <button type="button" className="profile-primary-button" onClick={onEdit}><PencilLine size={16} /> Modifier le profil</button>
-            <button type="button" className="profile-soft-button" onClick={onViewer}><Eye size={16} /> Voir en mode visiteur</button>
+            <button type="button" className="profile-soft-button" onClick={onViewer} aria-label="Voir mon profil en mode visiteur"><Eye size={16} /> Vue visiteur</button>
             <button type="button" className="profile-icon-button" onClick={() => onToast("Menu du profil prêt") } aria-label="Plus d’actions"><MoreHorizontal size={18} /></button>
           </div>
         </div>
@@ -651,7 +651,7 @@ function ProfileHero({ profile, onEdit, onViewer, onToast }: ProfileHeroProps) {
             <strong>{gradeMeta.label}</strong>
             <small>{profile.profileCompletion} % du profil complété</small>
             <span className="profile-hero__completion" aria-label={`${profile.profileCompletion} % du profil complété`}><i style={{ width: `${profile.profileCompletion}%` }} /></span>
-            <button type="button" className="profile-hero__benefits" onClick={() => onToast("Avantages du grade ouverts")}>Voir les avantages <ArrowRight size={14} /></button>
+            <button type="button" className="profile-hero__benefits" onClick={() => onToast("Avantages du grade ouverts")}>Avantages <ArrowRight size={14} /></button>
           </div>
         </div>
       </div>

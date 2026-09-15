@@ -266,15 +266,13 @@ export default function ProfileHomeView({
         <article className="profile-panel profile-pulse-card" aria-busy={analyticsState.status === "loading" && !usesDemoFallback}>
           <div className="profile-panel__heading">
             <div>
-              <span className="profile-kicker"><Sparkles size={14} /> Pulse créative</span>
-              <h2>Ton évolution prend de la hauteur.</h2>
-              <p>{pulse.subtitle}</p>
+              <h2>Ton activité</h2>
             </div>
             <label className="profile-home-period-select">
               <span className="profile-visually-hidden">Période de la portée</span>
               <select value={pulsePeriod} onChange={(event) => setPulsePeriod(event.target.value as PulsePeriod)}>
                 {Object.entries(pulsePeriods).map(([value, period]) => (
-                  <option key={value} value={value}>{period.label}</option>
+                  <option key={value} value={value}>{value === '7d' ? '7 jours' : value === '30d' ? '30 jours' : '12 mois'}</option>
                 ))}
               </select>
             </label>
@@ -389,6 +387,7 @@ export default function ProfileHomeView({
               );
             })}
           </div>
+          <p className="profile-pulse-note">{pulse.subtitle}</p>
           </> : (
             <div className="profile-empty-state" role={analyticsState.status === "error" ? "alert" : "status"}>
               {analyticsState.status === "loading" ? <LoaderCircle size={32} /> : analyticsState.status === "error" ? <AlertTriangle size={32} /> : <BarChart3 size={32} />}
