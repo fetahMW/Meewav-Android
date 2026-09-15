@@ -31,16 +31,22 @@ avec `blur(24px) saturate(1.15)`. Seul le fond est translucide, les textes et ic
 restent à pleine opacité. Les autres bandeaux gardent `--profile-mobile-glass`.
 Reflets et ombre :
 `inset 0 1px 0 #ffffff12,inset 0 -1px 0 #0003,0 6px 20px #0004`.
-Après avoir vu une carte violette derrière le dock translucide, l'utilisateur
-demande de garder cette teinte illuminée **en permanence, opaque**. La finition
-du dock est désormais le jeton `--profile-dock-violet` :
-`linear-gradient(125deg,#ffffff08,#ffffff02 48%,#ffffff05),linear-gradient(110deg,#382961,#302351 52%,#33245b)`.
-Cette règle remplace la transparence du dock uniquement ; les bandeaux supérieurs
-restent en verre translucide avec blur. Les icônes partagent une seule surface.
+Le 16 septembre, l'utilisateur demande de réessayer le dock **transparent avec
+blur**, après la version violette opaque. Le jeton actif est `--profile-dock-glass` :
+`linear-gradient(125deg,#ffffff08,#ffffff02 48%,#ffffff05),#281a4a47`, avec blur 22 px.
+Il garde une légère teinte violette et laisse voir le contenu derrière. Les icônes
+partagent une seule surface. La version opaque précédente reste un repère historique
+(`#382961 → #302351 → #33245b`), pas le réglage actif.
 Les icônes reposent sur cette surface commune, sans pavés individuels ;
 l'icône active est indiquée par un petit trait effilé lumineux.
 
 Le bandeau reste hors de la zone défilante : seul `.profile-main` défile.
+La zone de scroll commence **sous le bandeau Profil et ses onglets**, à 100 px :
+aucune carte ne doit passer derrière ce bandeau transparent. Dans Médias et Espace
+privé, le contenu passe uniquement derrière le sélecteur de destination de 48 px.
+Les positions de scroll internes réservent 60 px pour ce sélecteur, pas 160 px.
+Le bandeau du sélecteur et les filtres déroulants utilisent un verre noir à légère
+teinte violette (`--profile-selector-glass`), pour supprimer leur dominante grise.
 La navbar est ancrée à `bottom: 0` dans la WebView. Android réserve déjà
 l'espace des barres système : ne pas ajouter un second `safe-area-inset-bottom`
 ou une marge qui la ferait flotter au-dessus de la navigation Samsung.
