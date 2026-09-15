@@ -573,6 +573,8 @@ button:disabled { opacity: .4; cursor: default; }
 }
 #root .mobile-messaging .mw-chat-scene > .mw-chat-timeline,
 #root .mobile-messaging .mw-chat-scene > .mw-chat-timeline > .mw-chat-timeline__inner { background: transparent; }
+
+
 #root .mobile-messaging .mw-mobile-workspace-header.mw-hub-chipbar {
   padding: 12px 16px 0;
   gap: 8px 12px;
@@ -733,4 +735,44 @@ button:disabled { opacity: .4; cursor: default; }
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
+}
+
+/* Canonical Web hairline: meewav-pillar-tabs.css, with the Messaging halo opacity. */
+#root .mobile-messaging .messaging-pillar-tabs button::before,
+#root .mobile-messaging .messaging-pillar-tabs button::after,
+#root .mobile-messaging .mw-mobile-workspace-header.mw-hub-chipbar .mw-hub-chips button::before,
+#root .mobile-messaging .mw-mobile-workspace-header.mw-hub-chipbar .mw-hub-chips button::after {
+  content: '';
+  display: block;
+  position: absolute;
+  inset: auto auto 5px 50%;
+  width: 72%;
+  max-width: 56px;
+  height: 1px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg,transparent,#9274d8 18%,#d7c6ff 50%,#9274d8 82%,transparent);
+  box-shadow: none;
+  transform: translateX(-50%);
+  opacity: 0;
+  pointer-events: none;
+}
+#root .mobile-messaging .messaging-pillar-tabs button::before,
+#root .mobile-messaging .mw-mobile-workspace-header.mw-hub-chipbar .mw-hub-chips button::before {
+  bottom: 3px;
+  height: 5px;
+  background: linear-gradient(90deg,transparent,#8060cc 24%,#b39aef 50%,#8060cc 76%,transparent);
+  filter: blur(3px);
+}
+#root .mobile-messaging .messaging-pillar-tabs button.is-active::after,
+#root .mobile-messaging .mw-mobile-workspace-header.mw-hub-chipbar .mw-hub-chips button.is-active::after { opacity: 1; }
+#root .mobile-messaging .messaging-pillar-tabs button.is-active::before,
+#root .mobile-messaging .mw-mobile-workspace-header.mw-hub-chipbar .mw-hub-chips button.is-active::before { opacity: .4; }
+/* Violet sampled from the active Web pole's fill, not a new accent palette. */
+#root .mobile-messaging .mw-conversation-row > b,
+#root .mobile-messaging .mw-rail-invitations > b {
+  background: linear-gradient(180deg,#4e349f,#5137a1 55%,#372574);
+  border: 1px solid #7960b2;
+  color: #fff;
+  box-shadow: inset 0 1px 0 #ffffff14;
 }

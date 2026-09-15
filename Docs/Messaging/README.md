@@ -302,3 +302,16 @@ Le fond remplit les conversations avec un cadrage centré qui conserve les propo
 Il reste immobile pendant le défilement des messages et se trouve derrière les surfaces
 en verre. Les bulles gardent leurs couleurs et leur forme. Cet essai visuel reste à
 apprécier sur le Samsung par l’utilisateur.
+
+## Indicateurs repris du site
+
+Le trait actif reprend les deux dégradés de
+`Meewav-Web/src/components/navigation/meewav-pillar-tabs.css` : ligne de 1 px
+qui s’efface aux extrémités et halo de 5 px flouté à 3 px. L’opacité du halo est
+0,4 comme dans la surcharge Messagerie du site. Il reste ancré au bouton réel
+sur Android et s’applique également aux sous-onglets Projets et Groupes.
+
+Les compteurs non lus reprennent les violets du poteau Web actif dans
+`MeewavPrimaryNav.tsx` (`isRoomsLandingChrome = true`) : `#4E349F`, `#5137A1`
+et `#372574`, plutôt qu’une nouvelle couleur. Le bandeau de contact et le champ
+de saisie translucides validés par l’utilisateur sont conservés.
