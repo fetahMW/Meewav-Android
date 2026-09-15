@@ -33,6 +33,12 @@ function dispose() {
 }
 
 window.addEventListener('pagehide', dispose);
+window.addEventListener('meewav:navigate', (event: Event) => {
+  const path = (event as CustomEvent).detail?.path;
+  if (typeof path !== 'string' || !/^\/messages(?:\?|$)/.test(path)) return;
+  event.preventDefault();
+  location.assign(`https://appassets.androidplatform.net/native/messages?route=${encodeURIComponent(path)}`);
+});
 (window as any).meewavFullGlobe = Object.freeze({
   get status() { return status; },
   setActive(value: boolean) { active = value === true; updateActivity(); },

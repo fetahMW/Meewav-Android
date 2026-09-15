@@ -2,6 +2,7 @@ package com.meewav.android.features.auth
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color as AndroidColor
 import android.graphics.Rect
 import android.net.Uri
@@ -55,6 +56,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import org.json.JSONObject
+import com.meewav.android.features.messaging.MessagingActivity
 
 /** Only the globe is rendered in the local WebView; navigation and CTA remain native. */
 @Composable
@@ -63,8 +65,10 @@ internal fun AuthCompletionGlobe(
     interactive: Boolean = false,
     onClick: () -> Unit,
     onLoadingChange: (Boolean) -> Unit = {},
+    previewMessages: Boolean = false,
 ) {
     val controller = remember(interactive) { AuthGlobeController(interactive) }
+    controller.previewMessages = previewMessages
     LaunchedEffect(controller.ready, controller.unavailable) {
         onLoadingChange(!controller.ready && !controller.unavailable)
     }
@@ -146,6 +150,7 @@ private val GlobeAssets = mapOf(
 )
 
 private class AuthGlobeController(private val fullScene: Boolean) {
+    var previewMessages = false
     private val page = if (fullScene) "$GlobeOrigin/globe-vinyle/index.html" else GlobePage
     private val api = if (fullScene) "meewavFullGlobe" else "meewavAuthGlobe"
     private var view: AuthGlobeWebView? = null
@@ -210,8 +215,17 @@ private class AuthGlobeController(private val fullScene: Boolean) {
             val fullAssets = if (fullScene) JSONObject(context.assets.open("globe-vinyle/asset-manifest.json")
                 .bufferedReader().use { it.readText() }) else null
             globeView.webViewClient = object : WebViewClient() {
-                override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest) =
-                    request.method != "GET" || request.url.toString() != page
+                override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                    if (fullScene && request.isForMainFrame && request.method == "GET"
+                        && request.url.scheme == "https" && request.url.host == "appassets.androidplatform.net"
+                        && request.url.path == "/native/messages") {
+                        context.startActivity(Intent(context, MessagingActivity::class.java)
+                            .putExtra("preview", previewMessages)
+                            .putExtra("route", request.url.getQueryParameter("route") ?: "/messages"))
+                        return true
+                    }
+                    return request.method != "GET" || request.url.toString() != page
+                }
 
                 override fun onReceivedError(webView: WebView, request: WebResourceRequest, error: WebResourceError) {
                     if (view === webView && request.isForMainFrame) showLoadFailure(webView)

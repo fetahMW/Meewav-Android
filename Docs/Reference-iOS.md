@@ -37,6 +37,11 @@ Le sélecteur, initialement paginé, devient à la demande de l’utilisateur un
 
 ## Messagerie : prochain portage
 
+Ce plan initial est remplacé par la demande utilisateur de reprendre la
+messagerie du **site Web** dans Android. Voir le [portage actuel](Messaging/README.md).
+Les contrats iOS ci-dessous restent une référence historique distincte ; ils ne
+constituent pas la preuve de disponibilité des RPC Web sur le serveur partagé.
+
 Sources : `Meewav/Features/Messaging/MessagingRootView.swift`, `Services/SupabaseMessagingRepository.swift` et `Docs/Messaging/README.md`, recoupés avec le code.
 
 Le repository contient la liste des conversations directes, la résolution du destinataire, l’envoi de texte et de vocaux, les lectures et les souscriptions Realtime. Contrats à conserver :

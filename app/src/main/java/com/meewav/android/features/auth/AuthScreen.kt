@@ -65,14 +65,15 @@ data class AuthActions(
     val exitPreview: () -> Unit = {},
     val social: (SocialAuthProvider) -> Unit = {},
     val closeApp: () -> Unit = {},
+    val openMessages: () -> Unit = {},
 )
 
 @Composable
-fun AuthScreen(state: AuthUiState, viewModel: AuthViewModel, onCloseApp: () -> Unit) {
+fun AuthScreen(state: AuthUiState, viewModel: AuthViewModel, onCloseApp: () -> Unit, onOpenMessages: () -> Unit = {}) {
     AuthContent(state, AuthActions(viewModel::navigate, viewModel::back, viewModel::email,
         viewModel::username, viewModel::password, viewModel::confirmation, viewModel::profile,
         viewModel::submit, viewModel::signOut, viewModel::startPreview, viewModel::exitPreview, viewModel::signInSocial,
-        closeApp = onCloseApp))
+        closeApp = onCloseApp, openMessages = onOpenMessages))
 }
 
 @Composable
@@ -254,9 +255,11 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                             AuthPage.SignedIn -> {
                                 Icon(Icons.Outlined.CheckCircleOutline, null, Modifier.align(Alignment.CenterHorizontally).size(52.dp), tint = Violet)
                                 Spacer(Modifier.height(18.dp))
-                                Text("L’expérience Android se prépare. Ton compte reste accessible sur les autres versions de Meewav.",
+                                Text("Retrouve tes conversations dans la messagerie Meewav.",
                                     color = Muted, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                                 Spacer(Modifier.height(22.dp))
+                                PrimaryAction("Ouvrir la messagerie", state.busy) { actions.openMessages() }
+                                Spacer(Modifier.height(12.dp))
                                 OutlinedButton(onClick = actions.signOut, enabled = !state.busy,
                                     modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp)) {
                                     if (state.busy) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)

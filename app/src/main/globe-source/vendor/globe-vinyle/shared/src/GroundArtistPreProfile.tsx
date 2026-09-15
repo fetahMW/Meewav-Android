@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { PreProfileFrame } from "./reference/features/globe/components/PreProfileFrame";
 import HoverPreProfileContent from "./reference/features/globe/components/preProfile/HoverPreProfileContent";
+import { openArtistMessaging } from '../../../../messaging-navigation';
 import { getPreProfileArtistForSeed } from "./reference/features/globe/components/preProfile/demoPreProfileArtist";
 import { getGradeBadgeMeta } from "./reference/features/grades/gradeBadges";
 import "./ring-artist-preprofile.css";
@@ -139,7 +140,7 @@ export default function GroundArtistPreProfile({
           window.dispatchEvent(new CustomEvent("meewav:ground-avatar-pin", { detail: { id, color, active } }));
         }}
         onOpenProfile={() => setNotice("Le profil complet sera bientôt disponible.")}
-        onContact={() => setNotice("La messagerie sera bientôt disponible.")}
+        onContact={() => openArtistMessaging(artist)}
         onCollabRequest={() => setNotice("Les demandes de collaboration seront bientôt disponibles.")} />
     </PreProfileFrame>
     <button ref={closeButton} className="ring-artist-preprofile__close" type="button" onClick={onClose} aria-label="Fermer le pré-profil">

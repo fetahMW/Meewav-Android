@@ -19,6 +19,7 @@ import com.meewav.android.core.design.MeewavTheme
 import com.meewav.android.features.auth.AuthScreen
 import com.meewav.android.features.auth.AuthViewModel
 import com.meewav.android.features.auth.AuthPage
+import com.meewav.android.features.messaging.MessagingActivity
 
 class MainActivity : ComponentActivity() {
     private lateinit var authViewModel: AuthViewModel
@@ -39,7 +40,8 @@ class MainActivity : ComponentActivity() {
             val state by authViewModel.state.collectAsStateWithLifecycle()
             val landscape = state.page == AuthPage.Preview || state.page == AuthPage.Globe
             LaunchedEffect(landscape) { applyDisplayMode(landscape) }
-            MeewavTheme { AuthScreen(state, authViewModel, onCloseApp = { finishAndRemoveTask() }) }
+            MeewavTheme { AuthScreen(state, authViewModel, onCloseApp = { finishAndRemoveTask() },
+                onOpenMessages = { startActivity(Intent(this, MessagingActivity::class.java)) }) }
         }
     }
 

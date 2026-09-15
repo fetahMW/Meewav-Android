@@ -24,7 +24,9 @@ Source : `Meewav-Web`, branche `main`, commit `32a5e5fea7f6eebb3867c22a27e8b6223
 | Interface | `globe-interface.tsx`, `GlobeNavigationPole.tsx` | Recherche, filtres, modes, exploration et préprofils ; feuille Android pour leur encombrement en paysage. |
 | Chargement | `vendor/meewav-vinyl/src/GlobeLoading.jsx`, `components/Vinyl.jsx` | Même animation du tourne-disque que sur le Web, affichée jusqu’à la première image du moteur. |
 
-Les destinations Messagerie, Rooms, La Scène, Marketplace, Tremplin et Profil sont raccordées au parent de l’iframe dans le Web. Ce lot ne les raccorde pas à Android. Le dialogue existant annonce les destinations encore non reliées.
+La destination Messagerie et les actions Contacter des préprofils ouvrent désormais
+le [module Android de messagerie](../Messaging/README.md). Les autres destinations
+conservent le dialogue annonçant les espaces encore non reliés.
 
 ## Sources, construction et droits
 

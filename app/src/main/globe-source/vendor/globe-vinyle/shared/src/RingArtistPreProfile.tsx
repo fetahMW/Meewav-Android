@@ -10,6 +10,7 @@ import "./ring-artist-preprofile.css";
 import { mobileArtistPanel } from '../../../../mobile-artist-panel';
 import { TopTenProfileNavigator, type ProfileNavigation } from './TopTenProfileNavigator';
 import { TopTenProfilePages } from './TopTenProfilePages';
+import { openArtistMessaging } from '../../../../messaging-navigation';
 
 const RING_ARTIST_GRADE = getGradeBadgeMeta(6);
 
@@ -123,7 +124,7 @@ function ArtistProfileCard({ selection, onClose, closeButton }: {
     <PreProfileFrame arrow>
       <HoverPreProfileContent artist={artist} demoFollow showMapPin={false}
         onOpenProfile={() => setNotice('Le profil complet sera bientôt disponible.')}
-        onContact={() => setNotice('La messagerie sera bientôt disponible.')}
+        onContact={() => openArtistMessaging(artist)}
         onCollabRequest={() => setNotice('Les demandes de collaboration seront bientôt disponibles.')} />
     </PreProfileFrame>
     <button ref={closeButton} className="ring-artist-preprofile__close" type="button" onClick={onClose} aria-label="Fermer le pré-profil">

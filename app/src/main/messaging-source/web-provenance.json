@@ -1,0 +1,266 @@
+{
+  "source": "Meewav-Web",
+  "commit": "32a5e5fea7f6eebb3867c22a27e8b62230bb8d21",
+  "files": [
+    {
+      "path": "src/features/globe/monGlobeContract.ts",
+      "sha256": "c77461faddd9c1b56ad802b57c9bfab0eed8d47c769476b47ce19ad81d69b551"
+    },
+    {
+      "path": "src/features/shorts/sceneContract.ts",
+      "sha256": "0ff6f4df8866ae24e5e9427e46efac16c71c6c81e931f9f4dd8daca9a726782c"
+    },
+    {
+      "path": "src/features/emoticons/meewav-emoticons.manifest.json",
+      "sha256": "bb59ad3d263f62f8e944c750c5aaeb5019f0f65b7be5ae78d4a2954e5ab84ea7"
+    },
+    {
+      "path": "src/features/emoticons/meewav-emoticons-v2.manifest.json",
+      "sha256": "521bacaafbb5728a91c6a67bf9aa4967fe3e2542de13f1c4b6e5603673710d40"
+    },
+    {
+      "path": "src/features/emoticons/meewav-emoticons-v3.manifest.json",
+      "sha256": "75550dd4542882d21f10015d17b40366dfea63f0045605603b6de457e84cb443"
+    },
+    {
+      "path": "src/features/emoticons/meewav-emoticons-v4.manifest.json",
+      "sha256": "1b643e098af26b4b98fa32b51e328a37f570bb92e3aa5c6dadb03edda5b4e2d6"
+    },
+    {
+      "path": "src/features/emoticons/meewav-emoticons-v5.manifest.json",
+      "sha256": "b7358ee0f036b4601d9655c3dc35fc798d0157851d37179f4851392161f3fe95"
+    },
+    {
+      "path": "src/features/emoticons/meewav-emoticons-v6.manifest.json",
+      "sha256": "1dfffcfba3e58b9e1743bafe6f306548b2acb77c4e3c1ac3a1cbe024b258c16d"
+    },
+    {
+      "path": "src/features/emoticons/meewav-emoticons.css",
+      "sha256": "ca9cb6f3bf76173d83c7adfd5d65e8a7920b7bcfdf1c9cd0a44672b5a56569c9"
+    },
+    {
+      "path": "src/features/emoticons/MeewavEmoticons.tsx",
+      "sha256": "7ec152079fecbbdea4cde784eb2dd03308cba385a1c99f9c7362c12eb0a0375c"
+    },
+    {
+      "path": "src/features/messaging/messagingSounds.ts",
+      "sha256": "82aa4f396639b49b1d1c3179544055d93f5d9372ac4a2bf2122f0d7dd94eba62"
+    },
+    {
+      "path": "src/features/messaging/artist-groups-workspace.css",
+      "sha256": "db891f39d7dd3731e0a57fe87229a6e2212e6e40e995c7af6522c08312fc6a8a"
+    },
+    {
+      "path": "src/features/messaging/ArtistGroupsWorkspace.tsx",
+      "sha256": "29944f8c5e43cc5167082cd3f14bfa34f735d2348eef9c129589e065601d3009"
+    },
+    {
+      "path": "src/features/messaging/trackPackInstrumentCatalog.ts",
+      "sha256": "b586cc657dfcee50eb873a7bd3e4d625fb51e399270f1290c33aae9523f505f8"
+    },
+    {
+      "path": "src/features/messaging/TrackPackStudioPrimitives.tsx",
+      "sha256": "9973358a3a22c5e33f635b5f4512c73b71a259201f3263e5ac3e9722563ab8b3"
+    },
+    {
+      "path": "src/features/messaging/CollabInlineAudio.tsx",
+      "sha256": "4169aab1a6e4383628e1ff7a87cafa2920639f9fcf36e0c1e57c0ec4677a0ea9"
+    },
+    {
+      "path": "src/features/grades/gradeBadges.ts",
+      "sha256": "8fb6ec73e48d73f5f2e651e305df57e28f3a0049225cb6fb5bb0130638057ffb"
+    },
+    {
+      "path": "src/features/grades/MeewavGradeBadge.css",
+      "sha256": "7bbbaf3913b61e03eee625c8645e54bdf7aaf46d17d804041b6f8cab586bd687"
+    },
+    {
+      "path": "src/features/grades/MeewavGradeBadge.tsx",
+      "sha256": "ff527c4d2e3cfb423a812d9b43c5c6540307bd8a089d3dcf972accb5f9066704"
+    },
+    {
+      "path": "src/features/messaging/messagingDemoData.ts",
+      "sha256": "75925c5508aae6ab491634893ac0b87542a573594602f57f651237ed173d473a"
+    },
+    {
+      "path": "src/features/messaging/collaborationRequestBridge.ts",
+      "sha256": "2740880be6b3aacaca9df4508e2aca1684cc25a43feeead336fb08232effeab5"
+    },
+    {
+      "path": "src/features/messaging/messaging-hubs.css",
+      "sha256": "22b08744f980f10ffbed87c5813cd37d7971ff49a7db263a693c240e870c2237"
+    },
+    {
+      "path": "src/features/messaging/CollabsWorkspace.tsx",
+      "sha256": "e7bdf7ce6f9e7464916a436f072a63cc59da29dab86f85dbf104d51bb9d84add"
+    },
+    {
+      "path": "src/features/messaging/demoTrackPackAudio.ts",
+      "sha256": "d21a9d708af2afe1b550cdccff67609d536c364c55cf357249cd82ecd3ace304"
+    },
+    {
+      "path": "src/components/navigation/meewav-chrome-brand.css",
+      "sha256": "1e262b4b9f9bc04c516c24be00780ca94293d8bef4d8ca290b04f90c9c7c5120"
+    },
+    {
+      "path": "src/components/navigation/meewav-pillar-brand.css",
+      "sha256": "95e852016fdbdd94230ed991d0c63addb5a66e7f8e75b9624ece1843f92061ef"
+    },
+    {
+      "path": "src/components/navigation/MeewavPillarBrand.tsx",
+      "sha256": "ab45b0d1b401b195a57448276f3ee69dc75ca8191a6c95329a20513a5a162005"
+    },
+    {
+      "path": "src/components/navigation/meewav-pillar-tabs.css",
+      "sha256": "ebc7bdfae14b335f56f6e363f542b081eaf86f0c8c23724811fcf9bb2c2f2f9e"
+    },
+    {
+      "path": "src/components/navigation/MeewavPillarTabs.tsx",
+      "sha256": "e6f9f2218ab22f891cfe65c38e8e19e291c4d21adb24e5c77d10f8d834285788"
+    },
+    {
+      "path": "src/features/messaging/messaging.composer-payloads.ts",
+      "sha256": "49b4ae03530c270569576a843c084448559c372c5e6a727277270cc4f6900660"
+    },
+    {
+      "path": "src/features/rooms/tools/audio/previewWaveform.ts",
+      "sha256": "0ed0359fe347fce4abac56d374d5e986a1855b8c7947a38b1bd216b74eeef43c"
+    },
+    {
+      "path": "src/features/messaging/StemWaveform.tsx",
+      "sha256": "6e3f3936495fefe569af05c06f23e7a0ecd3de00d661669e3c1c216b5563d5b1"
+    },
+    {
+      "path": "src/features/messaging/message-workspace.css",
+      "sha256": "dc3945c789704ded82025b8ca9d9330af8fcd5f7dcaee997cf4a7b3ab5954075"
+    },
+    {
+      "path": "src/features/messaging/message-grammar.css",
+      "sha256": "f3f5e2e731a748ac4c8c009531e2d3ec3da7d183961604be7f7f1d1b534cc223"
+    },
+    {
+      "path": "src/features/messaging/MessageWorkspace.tsx",
+      "sha256": "4570c9344a9857f8614331289d3568b54848252dcc43f350e0fc3857cf6a093c"
+    },
+    {
+      "path": "src/features/messaging/messaging.projects.errors.ts",
+      "sha256": "8a14c54990e3cfdf3df10677ba4cead347f2ef9c3132d5f2b473b1420dd0e9b7"
+    },
+    {
+      "path": "src/features/messaging/messaging.projects.adapters.ts",
+      "sha256": "28e181cc5e90937c44d3c1ba1d31b8267c56b33084cba73140999be89fbad177"
+    },
+    {
+      "path": "src/features/messaging/messaging.projects.service.ts",
+      "sha256": "622f25e39d301118a3fb23921d079eda6ee3b04cd5ebfbd0126e9e0e2211488f"
+    },
+    {
+      "path": "src/features/messaging/messaging.projects.retry.ts",
+      "sha256": "d93a2e131292ebd75dcc6e74be46c9f55c0243a7678f856ab58f9686babbb714"
+    },
+    {
+      "path": "src/features/messaging/ProjectsWorkspace.tsx",
+      "sha256": "1b321427b2dcdbbfd6d5bb1563493b9e81904b9ce8739c4e3a00109b1a5d2e11"
+    },
+    {
+      "path": "src/features/messaging/messaging.flags.ts",
+      "sha256": "1054f945d3ad7e6b462227d01da392f1e1a3f31984d430416b233856fd390e44"
+    },
+    {
+      "path": "src/features/messaging/messaging.route.ts",
+      "sha256": "97995de026815aae95defba80e6a94b8a139ba5f6dbf71d3e53eb33b63cec222"
+    },
+    {
+      "path": "src/features/messaging/messaging.adapters.ts",
+      "sha256": "7cb4897ee10963daddd819173d106a06363f1033eeb83bf53d63ef8e1e22c67e"
+    },
+    {
+      "path": "src/features/messaging/messaging.errors.ts",
+      "sha256": "c4f5ddf36488b3d88430ecef0880d114d645c2b0883387e68b1ffa399b313965"
+    },
+    {
+      "path": "src/features/messaging/messaging.attachments.errors.ts",
+      "sha256": "cbff8c1df5f8133438ba4a772e9a3ef2a3b3ea34a5d328c2430dc81e3c9e757c"
+    },
+    {
+      "path": "src/features/messaging/messaging.attachments.adapters.ts",
+      "sha256": "657e9c374752b3cf513b86b767297d2cd786237ddacea7cc7bc4da65f4553b76"
+    },
+    {
+      "path": "src/features/messaging/messaging.service.ts",
+      "sha256": "7786e9f800f503d4eecdde79c6ac4de9dcca4cf45c69437dca1c349cd97a9ca6"
+    },
+    {
+      "path": "src/features/messaging/messaging.attachments.workspace-adapters.ts",
+      "sha256": "a32c81357ceb936c05744214061e48671bfc98dfb579a7eb603fe3ef0eb5aa7d"
+    },
+    {
+      "path": "src/features/messaging/useMessagingLive.ts",
+      "sha256": "85480442b1448982e805edbddf47cc2a7569de035ce9033c0ed6c733b49ca9b5"
+    },
+    {
+      "path": "src/features/messaging/messaging.collaboration.adapters.ts",
+      "sha256": "10d45bfc1a47b909310c136cf39955e096bdcacf44cb43802d9bc660c8f63a1d"
+    },
+    {
+      "path": "src/features/messaging/messaging.collaboration.errors.ts",
+      "sha256": "049e4892d435ccea118d8fa81a84119d8e27a531e680734fd4350d460161e587"
+    },
+    {
+      "path": "src/features/messaging/messaging.collaboration.service.ts",
+      "sha256": "b9d315ddf0a797b53a67f8d03e91f87e1e4da3d631940a2d44c3f02f291e4b1d"
+    },
+    {
+      "path": "src/features/messaging/useMessagingCollaborationsLive.ts",
+      "sha256": "f66d01a7616ca09b7acaf62b79668dfa72b66ecde2e4a901fd5af7e8a863e296"
+    },
+    {
+      "path": "src/features/messaging/messaging.groups.adapters.ts",
+      "sha256": "090281b445d07023c057192ef465ec4fa44feb2c3b19a7de340d579906f0f24d"
+    },
+    {
+      "path": "src/features/messaging/messaging.groups.errors.ts",
+      "sha256": "8481c4ac5ba19c871ff1b9bdb13ae863156c13e52ce4a4c5fe724c68d61bb10b"
+    },
+    {
+      "path": "src/features/messaging/messaging.groups.service.ts",
+      "sha256": "254b10ef7ca630df112f2cf2d295fd420b4e3dcda7e6fea3d595edcb5ca542a8"
+    },
+    {
+      "path": "src/features/messaging/useMessagingGroupsLive.ts",
+      "sha256": "7af2acc35147cf48756c92962710ac40848e1b17bd01f2714d4404970e0c23b9"
+    },
+    {
+      "path": "src/features/messaging/useMessagingProjectsLive.ts",
+      "sha256": "4a28e12cb556254660c6efc5c9657a37508f143f8a73f99d7f17cc184f9a8c25"
+    },
+    {
+      "path": "src/features/messaging/messaging.attachments.service.ts",
+      "sha256": "9d64c8a5e8b7c870178e1d748996cabbf6f47afedb7dd3e261d95a30b0142063"
+    },
+    {
+      "path": "src/features/messaging/useMessagingAttachmentsLive.ts",
+      "sha256": "f884ae7e9e298193b520eaa2fddc041e8188830ca557496fcfbc06b6cb0419e7"
+    },
+    {
+      "path": "src/features/messaging/useMessagingRealtime.ts",
+      "sha256": "4e5e4142f7e41b8962c5a7230ba1331e38a8b722d337c7cfb1d671aebd87fa5a"
+    },
+    {
+      "path": "src/features/messaging/messaging.groups.workspace-adapters.ts",
+      "sha256": "81113893772f4ae8646bb0f0742376a6baa111f6d143c91b6877f6d823cbe1d1"
+    },
+    {
+      "path": "src/features/messaging/messaging-page.css",
+      "sha256": "225581933cae4cbaa46d11bbb44e4736d7c17386722776b0c15c88c061a2218e"
+    },
+    {
+      "path": "src/features/messaging/messaging-premium.css",
+      "sha256": "875a7be6cc1cc2b347b9939ea6a704325e69d530cc75096d1df3b3c2bcb7cfd9"
+    },
+    {
+      "path": "src/features/messaging/MessagingPage.tsx",
+      "sha256": "508c09cdd5f9844fb451aad258e99a996677a77303ec9cfd4322d93fdd5b6790"
+    }
+  ]
+}
