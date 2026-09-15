@@ -367,7 +367,7 @@ const attachmentActions: Array<{ id: Exclude<DemoMessageKind, "text" | "track-pa
 ];
 
 const messagingSpaces: readonly MeewavPillarTabItem<MessagingSpace>[] = [
-  { id: "messages", label: "Messages", icon: MessageCircle, accent: "#5b7cff" },
+  { id: "messages", label: "Tchat", icon: MessageCircle, accent: "#5137a1" },
   { id: "collabs", label: "Collabs", icon: UserPlus, accent: "#a77cff" },
   { id: "projects", label: "Projets", icon: FolderArchive, accent: "#e9a23b" },
   { id: "groups", label: "Groupes", icon: Users, accent: "#45dfa8" },
@@ -2982,7 +2982,7 @@ export default function MessageWorkspace({
             <article key={conversation.id} className={selectedConversation.id === conversation.id ? "is-active" : ""}>
               <button type="button" className="mw-conversation-row" onClick={() => selectConversation(conversation.id)} title={conversation.name} aria-label={`${conversation.name}${conversation.unread > 0 ? `, ${conversation.unread} messages non lus` : ""}`} aria-current={selectedConversation.id === conversation.id ? "true" : undefined}>
                 <ConversationAvatar conversation={conversation} />
-                <span><span><strong>{conversation.name}</strong><small>{conversation.time}</small></span><em>{conversation.preview}</em><small>{conversation.role}</small></span>
+                <span><span><strong>{conversation.name}</strong><small>{conversation.time}</small></span><em><MeeWavRichText emoticonSize={18}>{conversation.preview}</MeeWavRichText></em><small>{conversation.role}</small></span>
                 {conversation.unread > 0 && <b>{conversation.unread > 99 ? "99+" : conversation.unread}</b>}
               </button>
               <button type="button" className="mw-conversation-row__options" onClick={() => { selectConversation(conversation.id); setDrawerOpen(true); }} aria-label={`Options de ${conversation.name}`}><MoreHorizontal /></button>
@@ -3096,7 +3096,7 @@ export default function MessageWorkspace({
               <div className={`mw-composer ${selectedConversation.readOnlyReason ? "is-read-only" : ""}`}>
                 <button type="button" disabled={Boolean(selectedConversation.readOnlyReason)} onClick={() => liveController && !attachmentController ? setNotice("Le stockage sécurisé n’est pas disponible dans cette session.") : setShowAttachments((value) => !value)} aria-label="Ajouter une pièce jointe"><Paperclip /></button>
                 <div className="mw-composer__field">
-                  <MeeWavEmoticonComposer disabled={Boolean(selectedConversation.readOnlyReason)} value={composer} onChange={setComposer} onKeyDown={handleComposerKeyDown} maxLength={4_000} ariaLabel="Écrire un message" placeholder={selectedConversation.readOnlyReason ?? "Écris ton message..."} />
+                  <MeeWavEmoticonComposer disabled={Boolean(selectedConversation.readOnlyReason)} value={composer} onChange={setComposer} onKeyDown={handleComposerKeyDown} maxLength={4_000} ariaLabel="Écrire un message" placeholder={selectedConversation.readOnlyReason ?? "Message…"} />
                   <MeeWavEmoticonPicker
                     triggerIcon={<Smile aria-hidden="true" />}
                     disabled={Boolean(selectedConversation.readOnlyReason)}

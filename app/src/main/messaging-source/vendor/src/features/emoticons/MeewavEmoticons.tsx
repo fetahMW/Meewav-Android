@@ -412,7 +412,7 @@ export function MeeWavEmoticonPicker({
           <label className="mw-emoticon-wall__search">
             <Search aria-hidden="true" />
             <span className="sr-only">Rechercher une émoticône</span>
-            <input value={query} onChange={(event) => setQuery(event.currentTarget.value)} placeholder="Rechercher une vibe…" autoFocus />
+            <input value={query} onChange={(event) => setQuery(event.currentTarget.value)} placeholder="Rechercher une vibe…" />
           </label>
           <nav className="mw-emoticon-wall__categories" aria-label="Catégories d’émoticônes">
             {categories.map((id) => <button type="button" key={id} className={category === id ? "is-active" : ""} aria-pressed={category === id} onClick={() => setCategory(id)}>{CATEGORY_LABELS[id] ?? id}</button>)}

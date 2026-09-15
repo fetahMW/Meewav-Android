@@ -6,6 +6,7 @@ button, input, textarea, select { font: inherit; }
 button { touch-action: manipulation; cursor: pointer; }
 button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid #bda3e5; outline-offset: 2px; }
 button:disabled { opacity: .4; cursor: default; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 .mobile-message-error { height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 16px; padding: 32px; text-align: center; }
 .mobile-message-error button { border: 1px solid #7960b2; background: #19122f; border-radius: 16px; padding: 14px 22px; color: white; }
 #root .mobile-messaging { height: 100%; overflow: hidden; }
@@ -24,18 +25,30 @@ button:disabled { opacity: .4; cursor: default; }
 #root .mobile-messaging .mw-workspace { --mw-violet: #5137a1; --mw-violet-deep: #19122f; --mw-cyan: #bda3e5; display: grid; grid-template-columns: minmax(0,1fr); grid-template-rows: 58px minmax(0,1fr); grid-template-areas: 'header' 'content'; width: 100%; height: 100%; min-width: 0; padding: 0; gap: 0; background: transparent; border: none; border-radius: 0; }
 #root .mobile-messaging .mw-chat-header { position: relative; grid-area: header; inset: auto; display: flex; align-items: center; height: 58px; min-height: 0; width: 100%; padding: 4px 12px; border: 0; border-bottom: 1px solid #ffffff0b; background: #0b0a11; border-radius: 0; }
 #root .mobile-messaging .mw-chat-header__brand { display: none; }
-#root .mobile-messaging .messaging-pillar-tabs { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); width: 100%; min-width: 0; height: 48px; margin: 0; padding: 0; gap: 2px; overflow: hidden; }
-#root .mobile-messaging .messaging-pillar-tabs button { min-width: 0; min-height: 44px; padding: 5px 2px; font-size: 10px; color: #a5a1ae; border-radius: 12px; }
+#root .mobile-messaging .messaging-pillar-tabs { display: grid; grid-template-columns: repeat(var(--meewav-pillar-tab-count),minmax(0,1fr)); width: 100%; min-width: 0; max-width: none; height: 50px; margin: 0; padding: 0; gap: 0; overflow: hidden; }
+#root .mobile-messaging .messaging-pillar-tabs button { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 50px; min-width: 0; min-height: 44px; padding: 4px 2px 7px; gap: 4px; font-size: 11px; color: #9690a6; border-radius: 0; background: transparent; }
 #root .mobile-messaging .messaging-pillar-tabs svg { width: 18px; height: 18px; }
-#root .mobile-messaging .messaging-pillar-tabs button:is(.is-active,[aria-selected=true]) { color: #eee6ff; background: #5137a125; }
+#root .mobile-messaging .messaging-pillar-tabs button:is(.is-active,[aria-selected=true]) { color: #eee6ff; background: transparent; }
+#root .mobile-messaging .messaging-pillar-tabs button strong { display: block; font-size: 11px; line-height: 14px; font-weight: 550; letter-spacing: 0; text-shadow: none; }
+#root .mobile-messaging .messaging-pillar-tabs .meewav-pillar-tabs__icon { width: 20px; height: 20px; flex: 0 0 20px; border: 0; background: transparent; box-shadow: none; color: inherit; }
+/* Anchor the marker to the actual button, not a second width calculation. */
+#root .mobile-messaging .messaging-pillar-tabs .meewav-pillar-tabs__indicator { display: none; }
+#root .mobile-messaging .messaging-pillar-tabs button::after { content: ''; position: absolute; bottom: 0; left: calc(50% - 12px); width: 24px; height: 2px; border-radius: 2px; background: #bda3e5; opacity: 0; box-shadow: none; }
+#root .mobile-messaging .messaging-pillar-tabs button.is-active::after { opacity: 1; }
 #root .mobile-messaging .mw-chat-header__utility { display: none; }
 #root .mobile-messaging .mw-conversation-rail { grid-area: content; position: relative; inset: auto; display: flex; flex-direction: column; width: 100%; min-width: 0; height: 100%; padding: 0; margin: 0; border: 0; border-radius: 0; background: transparent; overflow: hidden; }
 #root .mobile-messaging .mw-contact-rail-resizer, #root .mobile-messaging .mw-rail-compact-action, #root .mobile-messaging .mw-rail-context-identity { display: none; }
 #root .mobile-messaging .mw-rail-controls { display: block; position: relative; width: 100%; height: auto; min-height: 0; padding: 14px 16px 10px; background: transparent; border: 0; }
 #root .mobile-messaging .mw-rail-search-wrap { display: flex; align-items: center; width: 100%; gap: 8px; }
-#root .mobile-messaging .mw-rail-search { display: flex; height: 44px; padding: 0 13px; flex: 1; min-width: 0; background: #121019; border: 1px solid #ffffff0e; border-radius: 14px; }
-#root .mobile-messaging .mw-rail-search input { display: block; font-size: 15px; min-width: 0; color: #f5f4f8; }
-#root .mobile-messaging .mw-rail-tune { width: 44px; height: 44px; flex-shrink: 0; background: #121019; border: 1px solid #ffffff0e; border-radius: 14px; }
+#root .mobile-messaging .mw-rail-search { display: flex; align-items: center; gap: 10px; height: 46px; min-height: 46px; padding: 0 12px; flex: 1; min-width: 0; background: #121019; border: 1px solid #ffffff12; border-radius: 14px; box-shadow: none; }
+#root .mobile-messaging .mw-rail-search input { display: block; width: 0; flex: 1; height: 44px; margin: 0; padding: 0; border: 0; outline: 0; background: transparent; box-shadow: none; font-size: 14px; min-width: 0; color: #f5f4f8; }
+#root .mobile-messaging .mw-rail-search > svg { width: 19px; height: 19px; flex: 0 0 19px; color: #9991ab; }
+#root .mobile-messaging .mw-rail-search > button { width: 32px; height: 44px; flex: 0 0 32px; margin-right: -8px; }
+#root .mobile-messaging .mw-rail-search:focus-within { border-color: #7960b2; background: #14101e; box-shadow: none; }
+#root .mobile-messaging .mw-rail-tune { display: grid; place-items: center; width: 46px; height: 46px; flex: 0 0 46px; padding: 0; background: #121019; border: 1px solid #ffffff12; border-radius: 14px; box-shadow: none; }
+#root .mobile-messaging .mw-rail-tune svg { width: 19px; height: 19px; }
+#root .mobile-messaging .mw-rail-menu { top: calc(100% + 8px); right: 0; left: auto; width: min(280px,calc(100vw - 32px)); padding: 6px; border: 1px solid #7960b244; border-radius: 16px; background: #14101e; box-shadow: 0 12px 36px #0008; }
+#root .mobile-messaging .mw-rail-menu button { min-height: 46px; font-size: 13px; gap: 10px; padding: 10px 12px; border-radius: 10px; }
 #root .mobile-messaging .mw-conversation-list { flex: 1; min-height: 0; width: 100%; overflow: auto; overscroll-behavior: contain; padding: 2px 10px 18px; scrollbar-width: none; }
 #root .mobile-messaging .mw-conversation-list > article { display: flex; width: 100%; padding: 0; margin: 0; border: 0; border-radius: 18px; background: transparent; }
 #root .mobile-messaging .mw-conversation-list > article.is-active { background: #5137a117; }
@@ -45,7 +58,11 @@ button:disabled { opacity: .4; cursor: default; }
 #root .mobile-messaging .mw-conversation-row strong { display: block; min-width: 0; font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #root .mobile-messaging .mw-conversation-row em { display: block; font-size: 12px; font-style: normal; color: #aaa6b5; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
 #root .mobile-messaging .mw-conversation-row small { display: block; font-size: 10px; color: #8b8698; }
-#root .mobile-messaging .mw-conversation-row__options { display: grid; place-items: center; width: 40px; min-height: 48px; align-self: center; color: #aaa6b5; opacity: 1; }
+#root .mobile-messaging .mw-conversation-row__options { position: relative; inset: auto; display: grid; place-items: center; flex: 0 0 36px; width: 36px; height: 48px; min-height: 48px; margin: 0; align-self: center; color: #aaa6b5; opacity: 1; background: transparent; border: 0; }
+#root .mobile-messaging .mw-conversation-row > b { flex: 0 0 auto; min-width: 20px; width: auto; height: 20px; padding: 0 5px; background: #5137a1; box-shadow: none; font-size: 10px; }
+#root .mobile-messaging .mw-conversation-row > span > span > small { flex-shrink: 0; font-size: 10px; }
+#root .mobile-messaging .mw-conversation-row em .mw-rich-text { display: inline; white-space: nowrap; }
+#root .mobile-messaging .mw-conversation-row em img { display: inline-block; vertical-align: middle; }
 #root .mobile-messaging .mw-avatar { width: 52px; height: 52px; flex-shrink: 0; }
 #root .mobile-messaging .mw-chat-scene { grid-area: content; min-width: 0; min-height: 0; display: none; padding: 0; border: none; border-radius: 0; background: transparent; }
 #root .mobile-messaging.is-detail .mw-workspace { grid-template-rows: 64px minmax(0,1fr); }
@@ -70,18 +87,27 @@ button:disabled { opacity: .4; cursor: default; }
 #root .mobile-messaging .mw-message.is-mine .mw-bubble--text { background: linear-gradient(140deg,#382267,#21183b); border-color: #7960b240; }
 #root .mobile-messaging .mw-composer-zone { width: 100%; max-width: 100%; margin: 0; padding: 8px 12px 10px; background: #0b0912; border-top: 1px solid #ffffff0b; }
 #root .mobile-messaging .mw-chat-scene > .mw-composer-zone { position: relative; inset: auto; transform: none; pointer-events: auto; padding: 8px 12px 10px; }
-#root .mobile-messaging .mw-composer { min-height: 52px; padding: 5px; border-radius: 20px; background: #14111e; border: 1px solid #7960b240; }
+#root .mobile-messaging .mw-composer { --control-size: 44px; --control-gap: 0px; height: auto; min-height: 54px; padding: 4px; border-radius: 19px; background: #14111e; border: 1px solid #7960b240; box-shadow: none; }
 #root .mobile-messaging .mw-composer-row { display: flex; align-items: flex-end; gap: 2px; min-width: 0; }
 #root .mobile-messaging .mw-composer { display: flex; align-items: flex-end; gap: 2px; width: 100%; }
-#root .mobile-messaging .mw-composer > button { width: 36px; min-width: 36px; height: 44px; padding: 8px; flex-shrink: 0; }
+#root .mobile-messaging .mw-composer > button { width: 44px; min-width: 44px; height: 44px; padding: 10px; flex: 0 0 44px; border: 0; border-radius: 14px; background: transparent; box-shadow: none; transform: none; }
 #root .mobile-messaging .mw-composer > button[aria-label='Ajouter un contenu musical'] { display: none; }
 #root .mobile-messaging .mw-composer > button.mw-composer-send { background: #5137a1; border-radius: 15px; }
 #root .mobile-messaging .mw-composer__field > .mw-emoticon-composer { min-width: 0; }
 #root .mobile-messaging .mw-composer-row > button { flex-shrink: 0; width: 40px; min-width: 40px; height: 44px; padding: 9px; }
-#root .mobile-messaging .mw-composer textarea, #root .mobile-messaging .mw-composer [contenteditable] { font-size: 16px; line-height: 1.4; min-height: 40px; max-height: 104px; padding: 9px 3px; }
+#root .mobile-messaging .mw-composer textarea, #root .mobile-messaging .mw-composer [contenteditable] { font: 400 15px/22px Inter,system-ui,sans-serif; width: 100%; min-height: 44px; max-height: 110px; padding: 11px 2px; margin: 0; overflow-wrap: anywhere; overflow-y: auto; }
+#root .mobile-messaging .mw-composer [contenteditable][data-empty=true]::before { white-space: nowrap; color: #a39aae; }
+#root .mobile-messaging .mw-composer::before, #root .mobile-messaging .mw-composer::after,
+#root .mobile-messaging .mw-composer button::before, #root .mobile-messaging .mw-composer button::after { display: none; }
+#root .mobile-messaging .mw-composer:focus-within { border: 1px solid #7960b2; outline: none; box-shadow: none; }
+#root .mobile-messaging .mw-composer__field { display: grid; grid-template-columns: minmax(0,1fr) 44px; align-items: end; gap: 0; padding: 0; }
+#root .mobile-messaging .mw-composer .mw-emoticon-picker__trigger { width: 44px; height: 44px; padding: 10px; border: 0; background: transparent; box-shadow: none; border-radius: 14px; }
+#root .mobile-messaging .mw-composer button svg { width: 21px; height: 21px; filter: none; }
+#root .mobile-messaging .mw-composer > button.mw-composer-send:is(:hover,:active,:disabled) { background: #5137a1; box-shadow: none; transform: none; }
+#root .mobile-messaging .mw-composer > button.mw-composer-send:disabled { opacity: .4; }
 #root .mobile-messaging .mw-composer-row .is-send { background: #5137a1; color: white; border-radius: 15px; }
 #root .mobile-messaging .mw-composer-tools, #root .mobile-messaging .mw-composer-hint { display: none; }
-#root .mobile-messaging .mw-attachment-menu { width: calc(100vw - 32px); max-height: 55vh; overflow: auto; left: 4px; bottom: calc(100% + 6px); border-radius: 22px; background: #100d1b; border: 1px solid #7960b266; }
+#root .mobile-messaging .mw-attachment-menu { width: auto; max-height: 55vh; overflow: auto; left: 12px; right: 12px; bottom: calc(100% + 6px); border-radius: 22px; background: #100d1b; border: 1px solid #7960b266; }
 #root .mobile-messaging .mw-attachment-menu button { min-height: 48px; }
 #root .mobile-messaging .mw-attachment-queue { max-height: 150px; overflow: auto; }
 #root .mobile-messaging .mw-recording-composer { flex-wrap: wrap; gap: 8px; min-height: 52px; }
@@ -141,3 +167,66 @@ button:disabled { opacity: .4; cursor: default; }
 #root .mobile-messaging .agw-panel__toolbar { min-width: 0; overflow-x: auto; scrollbar-width: none; }
 #root .mobile-messaging :is(.agw-panel__body,.mw-context-pane,.mwp-project-detail__content) { overscroll-behavior: contain; }
 #root .mobile-messaging .mw-empty-workspace { grid-area: content; }
+
+/* Chat: consistent mobile rhythm, without desktop ornaments or nested gutters. */
+#root .mobile-messaging-header > div { text-align: center; }
+#root .mobile-messaging-header strong { font-size: 19px; letter-spacing: -.4px; }
+#root .mobile-messaging-header > button { border-color: #7960b22e; border-radius: 14px; }
+#root .mobile-messaging .mw-conversation-row { min-height: 82px; padding-block: 12px; }
+#root .mobile-messaging .mw-conversation-row > span:not(.mw-avatar) { overflow: hidden; }
+#root .mobile-messaging .mw-conversation-list > article { box-shadow: none; }
+#root .mobile-messaging .mw-conversation-list > article.is-active { background: #171121; }
+#root .mobile-messaging .mw-avatar { aspect-ratio: 1; border-radius: 50%; overflow: visible; }
+#root .mobile-messaging .mw-chat-header__contact { display: flex; flex: 0 0 40px; width: 40px; height: 40px; }
+#root .mobile-messaging .mw-chat-header__contact .mw-avatar { width: 40px; height: 40px; min-width: 40px; border: 1px solid #7960b255; box-shadow: none; padding: 0; }
+#root .mobile-messaging .mw-chat-header__contact img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+#root .mobile-messaging .mw-chat-header__identity { flex: 1; }
+#root .mobile-messaging .mw-chat-header__actions { flex-shrink: 0; }
+#root .mobile-messaging .mw-chat-timeline { scrollbar-width: none; scrollbar-gutter: auto; }
+#root .mobile-messaging .mw-chat-timeline__inner { width: 100%; max-width: none; margin: 0; padding: 0 0 14px; }
+#root .mobile-messaging .mw-message { max-inline-size: 88% !important; margin-block: 4px 0; }
+#root .mobile-messaging .mw-message + .mw-message { margin-top: 8px; }
+#root .mobile-messaging .mw-message.has-tail { margin-bottom: 8px; }
+#root .mobile-messaging .mw-bubble--text { border: 1px solid #7960b22e; box-shadow: none; }
+#root .mobile-messaging .mw-message.is-theirs .mw-bubble--text { background: #181420; }
+#root .mobile-messaging .mw-bubble--text p { font-size: 14px; line-height: 1.5; }
+#root .mobile-messaging .mw-bubble--audio { border-radius: 18px; border: 1px solid #7960b244; background: #19122f; box-shadow: none; }
+#root .mobile-messaging .mw-bubble--audio button { min-height: 44px; min-width: 44px; }
+#root .mobile-messaging .mw-audio-capsule__play { width: 44px; height: 44px; background: #5137a1; border: 1px solid #bda3e533; box-shadow: none; color: #f6f1ff; }
+#root .mobile-messaging .mw-audio-capsule__options { width: 44px; height: 44px; background: transparent; border: 0; box-shadow: none; }
+#root .mobile-messaging .mw-audio-capsule__title { padding-right: 42px; font-size: 12px; }
+#root .mobile-messaging .mw-message__meta { min-height: 16px; margin-top: 4px; }
+#root .mobile-messaging .mw-message__time { font-size: 10px; color: #92889f; }
+#root .mobile-messaging .mw-composer-zone { flex-shrink: 0; }
+
+/* The contact picker keeps its actions visible, including with the IME open. */
+.mw-dialog[aria-label='Nouvelle conversation'] { display: flex; flex-direction: column; width: 100%; height: min(640px,calc(100dvh - 20px)); max-height: calc(100dvh - 20px); padding: 16px; gap: 12px; overflow: hidden; border: 1px solid #7960b255; border-radius: 24px; background: #100d17; }
+.mw-dialog[aria-label='Nouvelle conversation'] > :not(.mw-contact-picker) { flex-shrink: 0; }
+.mw-dialog[aria-label='Nouvelle conversation'] .mw-dialog__header { align-items: center; gap: 12px; margin: 0; }
+.mw-dialog[aria-label='Nouvelle conversation'] .mw-dialog__header span { color: #bda3e5; font-size: 9px; letter-spacing: 1px; }
+.mw-dialog[aria-label='Nouvelle conversation'] .mw-dialog__header h2 { margin: 5px 0 0; font-size: 20px; line-height: 1.2; }
+.mw-dialog[aria-label='Nouvelle conversation'] .mw-dialog__header button { width: 44px; height: 44px; min-width: 44px; border-radius: 14px; background: #191420; border: 1px solid #ffffff12; }
+.mw-dialog[aria-label='Nouvelle conversation'] .mw-dialog-search { display: flex; align-items: center; gap: 10px; min-height: 46px; height: 46px; margin: 0; padding: 0 12px; border: 1px solid #7960b244; background: #080810; border-radius: 14px; }
+.mw-dialog[aria-label='Nouvelle conversation'] .mw-dialog-search:focus-within { border-color: #7960b2; }
+.mw-dialog[aria-label='Nouvelle conversation'] .mw-dialog-search input { width: 0; flex: 1; min-width: 0; height: 44px; padding: 0; margin: 0; outline: none; box-shadow: none; border: none; background: transparent; font-size: 14px; }
+.mw-dialog[aria-label='Nouvelle conversation'] .mw-dialog-search > svg { width: 18px; height: 18px; flex: 0 0 18px; }
+.mw-dialog[aria-label='Nouvelle conversation'] .mw-contact-picker { flex: 1; min-height: 0; max-height: none; overflow: auto; overscroll-behavior: contain; margin: 0; padding: 0; scrollbar-width: none; }
+.mw-dialog[aria-label='Nouvelle conversation'] .mw-contact-picker > button { min-height: 68px; padding: 10px 4px; gap: 12px; border-radius: 14px; }
+.mw-dialog[aria-label='Nouvelle conversation'] .mw-contact-picker .mw-avatar { width: 44px; height: 44px; min-width: 44px; border: 1px solid #7960b244; box-shadow: none; }
+.mw-dialog[aria-label='Nouvelle conversation'] .mw-contact-picker > button > span:nth-child(2) { flex: 1; min-width: 0; }
+.mw-dialog[aria-label='Nouvelle conversation'] .mw-contact-picker strong { font-size: 14px; }
+.mw-dialog[aria-label='Nouvelle conversation'] .mw-contact-picker small { font-size: 11px; }
+.mw-dialog[aria-label='Nouvelle conversation'] .mw-contact-picker > button.is-selected { background: #5137a122; border-color: #7960b2; }
+.mw-dialog[aria-label='Nouvelle conversation'] .mw-contact-picker > button.is-selected > i { background: #5137a1; border-color: #bda3e5; }
+.mw-dialog[aria-label='Nouvelle conversation'] .mw-dialog__footer { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0; padding: 12px 0 0; border-top: 1px solid #ffffff12; }
+.mw-dialog[aria-label='Nouvelle conversation'] .mw-dialog__footer button { height: 46px; padding: 0 12px; border: 1px solid #7960b244; border-radius: 14px; font-size: 14px; background: #15101f; }
+.mw-dialog[aria-label='Nouvelle conversation'] .mw-dialog__footer button.is-primary { background: #5137a1; }
+.mw-emoticon-wall { border: 1px solid #7960b255; border-radius: 22px; background: #100d17; box-shadow: 0 16px 48px #0009; }
+.mw-emoticon-wall__search { display: flex; align-items: center; gap: 8px; height: 44px; min-height: 44px; padding: 0 12px; border: 1px solid #7960b244; border-radius: 12px; background: #080810; box-shadow: none; }
+.mw-emoticon-wall__search > svg { width: 18px; height: 18px; flex: 0 0 18px; }
+.mw-emoticon-wall__search input { flex: 1; width: 0; min-width: 0; height: 42px; margin: 0; padding: 0; background: transparent; border: 0; outline: none; box-shadow: none; font-size: 14px; }
+.mw-emoticon-wall__search:focus-within { border-color: #7960b2; box-shadow: none; }
+.mw-emoticon-wall__header small { color: #bda3e5; }
+.mw-emoticon-wall__header > button { min-width: 44px; min-height: 44px; }
+.mw-emoticon-wall__categories > button { min-height: 40px; border-radius: 12px; }
+.mw-emoticon-wall__categories > button.is-active { background: #5137a1; border-color: #7960b2; }

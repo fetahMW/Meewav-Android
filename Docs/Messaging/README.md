@@ -124,3 +124,31 @@ Compilation et installation ne valent pas essai fonctionnel ou validation visuel
 La relecture sur le S22, les gestes, le clavier, les fichiers, les vocaux et les
 échanges entre comptes appartiennent aux essais utilisateur. Aucun scénario
 automatique, capture ou envoi de message de test n’est lancé dans ce lot.
+
+## Relecture mobile du Tchat — 15 septembre 2026
+
+Après la V1, l’utilisateur a explicitement demandé une inspection avec captures
+sur son Samsung S22 Ultra. La passe porte sur le Tchat et sa navigation commune,
+sans relecture des contenus Collabs, Projets ou Groupes.
+
+Défauts constatés et corrigés :
+
+- Cinq colonnes CSS pour quatre onglets, libellés invisibles et indicateur calculé
+  sur une largeur différente : colonnes issues du nombre réel d’onglets, libellés
+  visibles et trait de 24 px centré dans le bouton sélectionné.
+- Recherche et filtre de hauteurs différentes, options superposées aux aperçus et
+  aux compteurs : marges régulières, commandes de même hauteur et options dans le flux.
+- Codes `[[mw:…]]` bruts dans les aperçus : réutilisation du rendu des émoticônes.
+- Portrait de conversation ovale, doubles contours de saisie et commandes désalignées :
+  portraits carrés recadrés en cercle, une seule bordure et commandes de 44 px.
+- Espacements et ornements Web trop lourds dans la conversation : gouttières uniques,
+  marges resserrées, bulles sobres et contrôles audio en Violet urbain.
+- Actions de nouvelle conversation rognées avec le clavier : liste seule défilante,
+  en-tête, recherche et actions conservés dans la hauteur disponible.
+- Texte d’accessibilité affiché dans la recherche des émoticônes : restauration de
+  `sr-only`, champ flexible et suppression de l’autofocus qui ouvrait le clavier.
+
+Captures et inspection effectuées dans la démo locale : liste du Tchat, conversation,
+clavier ouvert/replié, sélection des contacts, émoticônes, informations et menu des
+pièces jointes. Compilations et installation sur le Samsung effectuées. Cette passe
+ne valide pas les échanges Supabase, les envois de fichiers ou la capture vocale.
