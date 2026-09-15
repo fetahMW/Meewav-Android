@@ -83,7 +83,6 @@ lucide-react/dist/esm/icons/heart-handshake.mjs:
 lucide-react/dist/esm/icons/mail.mjs:
 lucide-react/dist/esm/icons/map-pin.mjs:
 lucide-react/dist/esm/icons/message-circle.mjs:
-lucide-react/dist/esm/icons/minus.mjs:
 lucide-react/dist/esm/icons/mouse-pointer-2.mjs:
 lucide-react/dist/esm/icons/move-vertical.mjs:
 lucide-react/dist/esm/icons/orbit.mjs:

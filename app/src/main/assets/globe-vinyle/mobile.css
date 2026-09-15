@@ -12,13 +12,12 @@ html, body, #root { width: 100%; height: 100%; margin: 0; overflow: hidden; }
     --mobile-artist-panel-height: calc(100dvh - var(--mobile-artist-panel-top) - var(--mobile-artist-panel-bottom));
   }
   .immersive-globe { --globe-search-left: 76px; }
-  .reference-search-dock { top: 10px; left: 76px; width: calc(100% - 310px); height: 40px; }
-  .reference-search-dock .meewav-search-filter-bar.is-flow { width: 100%; height: 40px; min-width: 0; }
+  .reference-search-dock { top: 10px; left: 76px; width: min(312px, calc(100% - 310px)); height: 36px; }
+  .reference-search-dock .meewav-search-filter-bar.is-flow { flex: 1 1 auto; width: 100%; height: 36px; min-width: 0; padding: 3px 5px; gap: 5px; border-radius: 13px; }
+  .reference-search-dock .search-bar input { font-size: 12px; }
+  .reference-search-dock .search-submit-button { width: 28px; height: 28px; }
   .reference-search-dock .meewav-search-filter-bar__shortcut { display: none; }
-  .reference-city-strip.filter-chips { top: 57px; left: 76px; max-width: calc(100% - 316px); overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
-  .reference-city-strip::-webkit-scrollbar { display: none; }
-  .reference-city-strip .filter-chip { min-height: 32px; padding: 0 10px; font-size: 12px; }
-  .reference-search-results.france-search-dropdown { top: 54px; left: 76px; width: calc(100% - 310px); max-height: calc(100dvh - 110px); overflow-y: auto; }
+  .reference-search-results.france-search-dropdown { top: 52px; left: 76px; width: min(312px, calc(100% - 310px)); max-height: calc(100dvh - 66px); overflow-y: auto; }
   .reference-rail .globe-navigation-pole { top: 66px; left: 10px; bottom: 10px; width: 52px; height: auto; padding: 6px 4px; gap: 3px; border-radius: 22px; }
   .reference-rail .globe-navigation-pole > .meewav-primary-nav__item.is-map { width: 42px; height: 36px; flex-basis: 36px; margin-top: 0; }
   .reference-rail .globe-navigation-pole .meewav-primary-nav__item:not(.is-map) { width: 42px; height: 36px; min-height: 36px; flex-basis: 36px; }
@@ -47,10 +46,27 @@ html, body, #root { width: 100%; height: 100%; margin: 0; overflow: hidden; }
   .ring-explore-button { top: auto; bottom: 62px; left: 76px; width: 192px; height: 40px; padding: 0 10px; }
   .immersive-globe .ring-explore-button.ring-key-surface { font-size: 12px; }
   .ring-explore-detail { display: none; }
-  .reference-view-switch.map-mode-switch { bottom: 10px; max-width: calc(100vw - 170px); }
-  .reference-view-switch .map-mode-switch__button { height: 36px; padding: 0 9px; min-width: 0; font-size: 12px; }
-  .reference-controls.map-control-stack { right: 14px; bottom: 12px; gap: 6px; }
-  .reference-controls .map-control-button { width: 38px; height: 38px; }
+  .reference-view-switch.map-mode-switch {
+    right: 12px; bottom: 12px; left: auto; top: auto; transform: none;
+    display: flex; flex-direction: column; gap: 8px; width: 42px; height: auto; max-width: none;
+    padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none;
+    backdrop-filter: none; -webkit-backdrop-filter: none;
+  }
+  .reference-view-switch .map-mode-switch__button {
+    flex: none; width: 42px; height: 42px; min-width: 42px; padding: 0; border-radius: 12px;
+    border: 1px solid #aa8ccb50; background: linear-gradient(150deg, #292036eb, #0a0710ed 75%);
+    box-shadow: inset 0 1px 0 #ffffff12, 0 4px 12px #0004; color: #dbd2e8;
+    touch-action: manipulation;
+  }
+  .reference-view-switch .map-mode-switch__button.is-active {
+    border-color: #b187ec; background: linear-gradient(150deg, #4c3078ed, #180e2aed);
+    box-shadow: inset 0 1px 0 #ffffff17, 0 0 10px #8a4ee133; color: #fff;
+  }
+  .reference-view-switch .map-mode-switch__button:focus-visible { outline: 2px solid #c69afb; outline-offset: 3px; }
+  .reference-view-switch .map-mode-switch__button:disabled { opacity: .45; }
+  .reference-view-switch .map-mode-switch__label { display: none; }
+  .reference-view-switch .map-mode-switch__france-flag { width: 20px; height: 15px; }
+  .immersive-globe:has(.national-top-ten[data-expanded="true"]) .reference-view-switch { visibility: hidden; }
   .reference-selection { left: 76px; bottom: 56px; font-size: 11px; }
   .ring-return-button { top: 12px; left: 76px; }
   .ring-visit-panel { top: 60px; width: 350px; padding: 10px 12px; }
@@ -59,7 +75,7 @@ html, body, #root { width: 100%; height: 100%; margin: 0; overflow: hidden; }
   .reference-destination { max-height: calc(100dvh - 28px); overflow-y: auto; }
 
   /* A landscape drawer reserves its height for choices, not a desktop hero. */
-  .meewav-filter-below-header { z-index: 17010; inset: 56px 12px 12px 76px; overflow: visible; }
+  .meewav-filter-below-header { z-index: 17010; inset: 52px 12px 12px 76px; overflow: visible; }
   .meewav-filter-below-header #artist-filter-drawer {
     inset: 0; width: 100%; height: 100%; max-height: 100%; margin: 0; padding: 10px 12px;
     border-radius: 18px; display: flex; flex-direction: column; gap: 0;
@@ -112,10 +128,16 @@ html, body, #root { width: 100%; height: 100%; margin: 0; overflow: hidden; }
   #artist-filter-drawer .artist-filter-panel__options--grades { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
   #artist-filter-drawer .artist-filter-grade { grid-template-columns: 34px minmax(0, 1fr); min-height: 46px; padding: 6px; gap: 6px; }
   #artist-filter-drawer .artist-filter-grade strong { font-size: 11px; }
-  #artist-filter-cities[data-mobile-active="true"] { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 16px; row-gap: 8px; }
-  #artist-filter-cities .artist-filter-panel__groupHeader { grid-column: 1 / -1; }
-  #artist-filter-cities .reference-favorite-city { margin: 0; gap: 8px; font-size: 11px; }
-  #artist-filter-cities .reference-favorite-city select { min-height: 34px; min-width: 0; font-size: 12px; }
+  #artist-filter-top-ten .artist-filter-history { min-height: 48px; margin-bottom: 10px; }
+  #artist-filter-top-ten .artist-filter-history__copy strong { font-size: 13px; }
+  #artist-filter-top-ten .artist-filter-history__copy small { font-size: 11px; }
+  #artist-filter-top-ten .mobile-top-ten-open {
+    display: flex; align-items: center; gap: 12px; width: 100%; min-height: 54px; padding: 10px 12px;
+    border: 1px solid #a87cdb6b; border-radius: 12px; background: linear-gradient(135deg, #352052, #150e23);
+    color: #f4edff; text-align: left; font: 600 13px/1.3 Inter, sans-serif;
+  }
+  #artist-filter-top-ten .mobile-top-ten-open > span { flex: 1; }
+  #artist-filter-top-ten .mobile-top-ten-open small { display: block; margin-top: 3px; color: #bbaeC8; font-size: 10px; font-weight: 400; }
   #artist-filter-drawer .artist-filter-panel__selectionHint { display: none; }
   #artist-filter-drawer .artist-filter-panel__actions { margin-top: 7px; gap: 8px; padding-top: 7px; border-top: 1px solid #a782dc2e; }
   #artist-filter-drawer .artist-filter-panel__actions button { min-height: 36px; border-radius: 10px; font-size: 12px; }

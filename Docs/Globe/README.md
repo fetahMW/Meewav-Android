@@ -63,9 +63,21 @@ et à la même position de défilement jusqu’à la fermeture. Les préprofils 
 vinyle et des avatars au sol reprennent exactement ce même format.
 
 Les filtres paysage ont un en-tête réduit, trois catégories (Avatars, Niveaux,
-Villes), des choix compacts dans une zone défilante, et les actions de pied de
-panneau fixes. Les filtres continuent de s’appliquer immédiatement. Les données,
-résolutions et matériaux du globe ne sont pas modifiés par ce lot.
+Top 10), des choix compacts dans une zone défilante, et les actions de pied de
+panneau fixes. Top 10 remplace les villes favorites : sa visibilité est mémorisée
+localement et un bouton ouvre le classement dans la vue d’ensemble. Le classement
+reste une démonstration, indépendante des filtres d’avatars et de niveaux.
+Les filtres d’artistes continuent de s’appliquer immédiatement.
+
+Les six villes rapides et les commandes 3D / zoom sont retirées de l’interface
+Android. Les gestes de zoom et d’inclinaison restent disponibles. Ville, Pays et
+Ma position occupent trois boutons carrés à droite, avec des icônes et des libellés
+d’accessibilité. Ils s’effacent quand le Top 10 est déplié pour laisser sa liste
+accessible. Ma position conserve sa destination de démonstration (Charonne) ;
+ce déplacement des commandes n’ajoute pas de géolocalisation réelle. La recherche
+est limitée à 312 × 36 pixels CSS en paysage ; le retour natif reste disponible
+vers « Ta scène est prête », centré sur le même axe que la navigation verticale.
+Les données, résolutions et matériaux du globe ne sont pas modifiés par ce lot.
 
 Le bundle et l’APK debug sont reconstruits pour livraison sur le S22 Ultra.
 Aucun test ni contrôle visuel automatique n’est lancé pour cette retouche ; la

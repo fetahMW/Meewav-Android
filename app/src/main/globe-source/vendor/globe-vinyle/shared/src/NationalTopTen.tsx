@@ -17,7 +17,11 @@ const ARTISTS = DEMO_ORDER.flatMap(name => {
     portraitUrl: new URL(`ui/ring-portraits/${file}`, document.baseURI).href }];
 });
 
-export default function NationalTopTen() {
+export default function NationalTopTen({ openRequested = false, canOpen, onOpenHandled }: {
+  openRequested?: boolean;
+  canOpen?: () => boolean;
+  onOpenHandled?: () => void;
+}) {
   const panel = useRef<HTMLElement>(null);
   const selectedButton = useRef<HTMLButtonElement>(null);
   const contentId = useId();
@@ -25,7 +29,8 @@ export default function NationalTopTen() {
   const [selection, setSelection] = useState<any>(null);
   useEffect(() => {
     // The engine also hides the globe branding through CSS while zooming or
-    // flying, without unmounting React. Every new appearance starts folded.
+    // flying, without unmounting React. A filter request waits for the overview;
+    // other appearances start folded.
     const globe = panel.current?.closest(".immersive-globe");
     if (!globe) return;
     const observer = new MutationObserver(() => {
@@ -35,6 +40,20 @@ export default function NationalTopTen() {
     observer.observe(globe, { attributes: true, attributeFilter: ["data-globe-brand-visible"] });
     return () => observer.disconnect();
   }, []);
+  useEffect(() => {
+    if (!openRequested) return;
+    let frame = 0;
+    const reveal = () => {
+      const globe = panel.current?.closest('.immersive-globe');
+      if (globe?.getAttribute('data-globe-brand-visible') === 'true' && (canOpen?.() ?? true)) {
+        setExpanded(true);
+        setSelection(null);
+        onOpenHandled?.();
+      } else frame = requestAnimationFrame(reveal);
+    };
+    reveal();
+    return () => cancelAnimationFrame(frame);
+  }, [openRequested, canOpen, onOpenHandled]);
   const close = () => {
     setSelection(null);
     requestAnimationFrame(() => selectedButton.current?.isConnected && selectedButton.current.focus({ preventScroll: true }));

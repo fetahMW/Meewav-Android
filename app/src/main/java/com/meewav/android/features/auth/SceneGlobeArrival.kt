@@ -2,6 +2,7 @@ package com.meewav.android.features.auth
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -13,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -32,9 +34,10 @@ internal fun SceneGlobeArrival(state: AuthUiState, onBack: () -> Unit, onEnter: 
             AuthCompletionGlobe(Modifier.fillMaxSize(), interactive = true, onClick = onEnter)
             // The full Web scene already provides its own branding and controls.
             IconButton(onClick = onBack, modifier = Modifier.align(Alignment.TopStart)
-                .padding(start = 10.dp, top = 10.dp).size(42.dp)
-                .background(Color(0xB3100B1D), RoundedCornerShape(14.dp))) {
-                Icon(Icons.Outlined.ChevronLeft, "Retour à ta scène", tint = Color.White)
+                .padding(start = 10.dp, top = 10.dp).size(width = 52.dp, height = 44.dp)
+                .background(Brush.verticalGradient(listOf(Color(0xC01C1628), Color(0xD008070D))), RoundedCornerShape(16.dp))
+                .border(0.75.dp, Color(0x457E6A99), RoundedCornerShape(16.dp))) {
+                Icon(Icons.Outlined.ChevronLeft, "Retour à ta scène", Modifier.size(22.dp), tint = Color.White)
             }
         }
         return

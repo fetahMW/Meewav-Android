@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Building2, Crosshair, EyeOff, MapPin, Minus, Plus, X, Orbit, ArrowLeft, ArrowRight, Hand, MoveVertical, MousePointer2 } from "lucide-react";
+import { Building2, Crosshair, Crown, EyeOff, MapPin, X, Orbit, ArrowLeft, ArrowRight, Hand, MoveVertical, MousePointer2 } from "lucide-react";
 import GlobeNavigationPole from "./GlobeNavigationPole";
 import NationalTopTen from "./NationalTopTen";
 import { RingPreProfileBoundary } from "./RingPreProfileBoundary";
@@ -20,32 +20,28 @@ import "./reference/features/globe/styles/globe-v2.css";
 const meewavBrandLogoUrl = new URL(meewavBrandLogo, import.meta.url).href;
 
 const normalise = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-const defaultCities = ["Paris", "Nice", "Marseille", "Lyon", "Nantes", "Lille"];
 const roleIds = GLOBE_ARTIST_ROLE_OPTIONS.map(role => role.key);
 const defaultFilters = { roles: roleIds as string[], grades: [] as number[], hideConsulted: false };
-const load = (key: string, fallback: any) => { try { return JSON.parse(localStorage.getItem(key) || "null") || fallback; } catch { return fallback; } };
+const load = (key: string, fallback: any) => { try { return JSON.parse(localStorage.getItem(key) || "null") ?? fallback; } catch { return fallback; } };
 const persist = (key: string, value: any) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* Optional local preferences. */ } };
 const names: Record<string, string> = { "/messages": "Messagerie", "/rooms/home": "Rooms", "/scene": "La Scène", "/market": "Marketplace", "/tremplin": "Tremplin", "/profile": "Profil" };
 
-export function GlobeInterface({ ready, data, engine, navigate, selection, zoomLimit }: any) {
+export function GlobeInterface({ ready, data, engine, navigate, selection }: any) {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [filterOpen, setFilterOpen] = useState(false);
   const [filterSection, setFilterSection] = useState('roles');
+  const [topTenVisible, setTopTenVisible] = useState(() => load('globelab.topTenVisible.v1', true) !== false);
+  const [topTenRequested, setTopTenRequested] = useState(false);
   const [mode, setMode] = useState<"globe" | "city" | "country" | "position" | "ring">("globe");
   const [ringReturning, setRingReturning] = useState(false);
   const [ringPortrait, setRingPortrait] = useState<any>(null);
   const [groundAvatar, setGroundAvatar] = useState<any>(null);
-  const [activeCity, setActiveCity] = useState("Paris");
   const activeCityId = useRef("fr-commune-75056");
   const overviewPose = useRef<any>(null);
   const [notice, setNotice] = useState("");
   const [destination, setDestination] = useState("");
-  const [cities, setCities] = useState<string[]>(() => {
-    const stored = load("globelab.favoriteCities.v1", defaultCities);
-    return Array.isArray(stored) && stored.length === 6 && stored.every(x => typeof x === "string") ? stored : defaultCities;
-  });
   const [applied, setApplied] = useState(() => {
     const stored = load("globelab.artistFilters.v1", defaultFilters);
     return { roles: Array.isArray(stored.roles) ? stored.roles.filter((id: string) => roleIds.includes(id as any)) : roleIds,
@@ -139,7 +135,6 @@ export function GlobeInterface({ ready, data, engine, navigate, selection, zoomL
   const rememberCity = (city: any) => {
     if (!city) return;
     activeCityId.current = city.id;
-    setActiveCity(city.name);
   };
   const closeRingPortrait = () => {
     engine.current?.closeRingPortrait();
@@ -176,7 +171,6 @@ export function GlobeInterface({ ready, data, engine, navigate, selection, zoomL
     if (result.quarter || result.landmark) rememberCity(cityLabels.find((city: any) => city.code === result.cityCode));
     setQuery(result.name); setFocused(false); setNotice(""); inputRef.current?.blur();
   };
-  const goCity = (name: string) => choose(catalogue.find((x: any) => x.city && x.name === name));
   const goCurrentCity = () => {
     const city = resolveCurrentCity();
     if (city) choose(catalogue.find((item: any) => item.city && item.id === city.id));
@@ -242,6 +236,18 @@ export function GlobeInterface({ ready, data, engine, navigate, selection, zoomL
   const toggleRole = (id: string) => commitFilters({ ...draft, roles: draft.roles.includes(id) ? draft.roles.filter((x: string) => x !== id) : [...draft.roles, id] });
   const toggleGrade = (level: number) => commitFilters({ ...draft, grades: draft.grades.includes(level) ? draft.grades.filter((x: number) => x !== level) : [...draft.grades, level] });
   const applyFilters = () => setFilterOpen(false);
+  const showTopTen = (visible: boolean) => {
+    setTopTenVisible(visible);
+    persist('globelab.topTenVisible.v1', visible);
+    if (!visible) setTopTenRequested(false);
+  };
+  const openTopTen = () => {
+    showTopTen(true);
+    setFilterOpen(false);
+    const overviewVisible = document.querySelector('.immersive-globe')?.getAttribute('data-globe-brand-visible') === 'true';
+    if (mode !== 'globe' || !overviewVisible) goGlobe();
+    setTopTenRequested(true);
+  };
   return <>
     {ready && mode === 'globe' && <button className="ring-explore-button ring-key-surface" type="button"
       aria-label="Explorer les artistes légendaires" onClick={() => engine.current.enterRing()}>
@@ -271,11 +277,11 @@ export function GlobeInterface({ ready, data, engine, navigate, selection, zoomL
       <div className="globe-brand-logo-shell globe-brand-compact">
         <img className="globe-brand-logo" src={meewavBrandLogoUrl} alt="MeeWav" draggable={false} />
       </div>
-      <NationalTopTen />
+      {topTenVisible && <NationalTopTen openRequested={topTenRequested} canOpen={() => !engine.current?.isMoving()} onOpenHandled={() => setTopTenRequested(false)} />}
     </div>}
     <aside className="reference-rail"><GlobeNavigationPole onGlobe={goGlobe} onNavigate={openDestination} /></aside>
     <header className="reference-search-dock" aria-label="Recherche sur le globe">
-      <MeewavSearchFilterBar query={query} placement="flow" placeholder="Rechercher une ville ou un avatar..." inputAriaLabel="Rechercher un lieu ou un avatar"
+      <MeewavSearchFilterBar query={query} placement="flow" placeholder="Ville ou avatar…" inputAriaLabel="Rechercher un lieu ou un avatar"
         inputAriaKeyShortcuts="Control+k Meta+k" shortcutHint="⌘ / Ctrl K" inputRef={inputRef} filterTriggerRef={filterTrigger}
         onQueryChange={event => { setQuery(event.target.value); setActiveIndex(0); setFocused(true); }}
         onSubmit={event => { event.preventDefault(); choose(results[activeIndex] || results[0]); }} onInputFocus={() => setFocused(true)}
@@ -290,26 +296,23 @@ export function GlobeInterface({ ready, data, engine, navigate, selection, zoomL
         expanded={showResults} suggestionListId="reference-search-results" activeDescendant={showResults && results[activeIndex] ? `result-${results[activeIndex].id}` : undefined} />
     </header>
       <nav className="reference-view-switch map-mode-switch" aria-label="Modes de carte">
-        <button className={`map-mode-switch__button ${mode === "city" ? "is-active" : ""}`} disabled={!ready} onClick={goCurrentCity} aria-pressed={mode === "city"} title="Recentrer la ville explorée"><Building2 size={15} /><span>Ville</span></button>
-        <button className={`map-mode-switch__button ${mode === "country" ? "is-active" : ""}`} disabled={!ready} onClick={() => choose(catalogue.find((x: any) => x.id === "france"))} aria-pressed={mode === "country"}><span className="map-mode-switch__france-flag" /><span>Pays</span></button>
-        <button className={`map-mode-switch__button ${mode === "position" ? "is-active" : ""}`} disabled={!ready} onClick={goPosition} aria-label="Ma position fictive : Charonne, Paris" title="Position fictive — quartier Charonne, Paris" aria-pressed={mode === "position"}><Crosshair size={15} /><span>Ma position</span></button>
+        <button className={`map-mode-switch__button ${mode === "city" ? "is-active" : ""}`} disabled={!ready} onClick={goCurrentCity} aria-pressed={mode === "city"} aria-label="Recentrer la ville explorée" title="Ville"><Building2 size={19} aria-hidden="true" /><span className="map-mode-switch__label">Ville</span></button>
+        <button className={`map-mode-switch__button ${mode === "country" ? "is-active" : ""}`} disabled={!ready} onClick={() => choose(catalogue.find((x: any) => x.id === "france"))} aria-pressed={mode === "country"} aria-label="Vue du pays : France" title="Pays"><span className="map-mode-switch__france-flag" aria-hidden="true" /><span className="map-mode-switch__label">Pays</span></button>
+        <button className={`map-mode-switch__button ${mode === "position" ? "is-active" : ""}`} disabled={!ready} onClick={goPosition} aria-label="Ma position fictive : Charonne, Paris" title="Ma position — quartier Charonne, Paris (démo)" aria-pressed={mode === "position"}><Crosshair size={19} aria-hidden="true" /><span className="map-mode-switch__label">Ma position</span></button>
       </nav>
-    <div className="reference-city-strip filter-chips" aria-label="Villes rapides">
-      {cities.map((city, i) => <button key={i} disabled={!ready} className={`filter-chip ${mode === "city" && activeCity === city ? "is-active" : ""}`} onClick={() => goCity(city)}>{city}</button>)}
-    </div>
     {showResults && <div id="reference-search-results" className="reference-search-results france-search-dropdown" role="listbox">
       {results.map((result: any, i: number) => <button key={result.id} id={`result-${result.id}`} role="option" aria-selected={i === activeIndex} className={i === activeIndex ? "is-active" : ""}
         onMouseDown={event => event.preventDefault()} onMouseEnter={() => setActiveIndex(i)} onClick={() => choose(result)}><MapPin size={17} /><span><strong>{result.name}</strong><small>{result.subtitle}</small></span></button>)}
       {!results.length && <p>Aucun lieu ni avatar trouvé.</p>}
     </div>}
     <MeewavFilterPanel open={filterOpen} panelId="artist-filter-drawer" eyebrow="Exploration personnalisée" title="Filtres artistes" description="Sélection des styles d’avatar"
-      onClose={() => setFilterOpen(false)} onReset={() => commitFilters(defaultFilters)} onApply={applyFilters} resetLabel="Réinitialiser" applyDisabled={!draft.roles.length} triggerRef={filterTrigger}
+      onClose={() => setFilterOpen(false)} onReset={() => { commitFilters(defaultFilters); showTopTen(true); }} onApply={applyFilters} resetLabel="Réinitialiser" applyDisabled={!draft.roles.length} triggerRef={filterTrigger}
       belowHeader bodyRef={filterBody} leftBoundarySelector=".meewav-primary-nav" selectionHint="Les avatars se mettent à jour tout de suite sur la carte.">
       <nav className="mobile-artist-filter-tabs" aria-label="Catégories de filtres">
-        {[['roles', 'Avatars', `${draft.roles.length}/${roleIds.length}`], ['grades', 'Niveaux', draft.grades.length || 'Tous'], ['cities', 'Villes', '6']].map(([id, label, count]) =>
+        {[['roles', 'Avatars', `${draft.roles.length}/${roleIds.length}`], ['grades', 'Niveaux', draft.grades.length || 'Tous'], ['top-ten', 'Top 10', null]].map(([id, label, count]) =>
           <button key={id} type="button" aria-pressed={filterSection === id} aria-controls={`artist-filter-${id}`}
             onClick={() => { setFilterSection(String(id)); if (filterBody.current) filterBody.current.scrollTop = 0; }}>
-            {label}<span>{count}</span>
+            {label}{count != null && <span>{count}</span>}
           </button>)}
       </nav>
       <p className="reference-empty-profiles">Les avatars au sol de Paris, de Charonne et de la petite couronne suivent cette sélection.</p>
@@ -321,15 +324,14 @@ export function GlobeInterface({ ready, data, engine, navigate, selection, zoomL
       <section id="artist-filter-roles" className="artist-filter-panel__group" data-mobile-active={filterSection === 'roles'} aria-label="Styles d’avatar"><div className="artist-filter-panel__groupHeader"><span>Styles d’avatar <small>{draft.roles.length} / {roleIds.length}</small></span><button className="artist-filter-bulk-toggle" aria-pressed={draft.roles.length === roleIds.length} onClick={() => commitFilters({ ...draft, roles: draft.roles.length === roleIds.length ? [] : roleIds })}>{draft.roles.length === roleIds.length ? "Tout désélectionner" : "Tout sélectionner"}</button></div>
         <MeewavIllustratedFilterGrid ariaLabel="Sélection multiple des styles d’avatar" options={GLOBE_ARTIST_ROLE_OPTIONS.map(role => ({ id: role.key, label: role.label, imageUrl: role.imageUrl }))} selectedIds={draft.roles} onToggle={toggleRole} />
       </section>
-      <section id="artist-filter-cities" className="artist-filter-panel__group" data-mobile-active={filterSection === 'cities'} aria-label="Villes favorites"><div className="artist-filter-panel__groupHeader"><span>Mes villes rapides</span><small>6 favoris</small></div>
-        {cities.map((city, index) => <label className="reference-favorite-city" key={index}><span>Ville {index + 1}</span><select value={city} onChange={event => { const next = cities.map((c, i) => i === index ? event.target.value : c); setCities(next); persist("globelab.favoriteCities.v1", next); }}>
-          {cityLabels.filter((c: any) => c.major || cities.includes(c.name)).map((c: any) => <option key={c.id} value={c.name}>{c.name}</option>)}</select></label>)}
+      <section id="artist-filter-top-ten" className="artist-filter-panel__group mobile-top-ten-settings" data-mobile-active={filterSection === 'top-ten'} aria-label="Top 10 MeeWav France">
+        <div className="artist-filter-history">
+          <div className="artist-filter-history__copy"><Crown size={20} aria-hidden="true" /><span><strong>Afficher le Top 10</strong><small>Dans la vue d’ensemble du globe.</small></span></div>
+          <button type="button" className={`artist-filter-history__toggle ${topTenVisible ? 'is-active' : ''}`} role="switch" aria-checked={topTenVisible} aria-label="Afficher le Top 10 sur le globe" onClick={() => showTopTen(!topTenVisible)}><span /></button>
+        </div>
+        <button type="button" className="mobile-top-ten-open" disabled={!ready} onClick={openTopTen}><Crown size={18} aria-hidden="true" /><span>Ouvrir le Top 10 France<small>Classement de démonstration</small></span><ArrowRight size={18} aria-hidden="true" /></button>
       </section>
     </MeewavFilterPanel>
-    <div className="map-control-stack reference-controls" aria-label="Commandes de carte">
-      <button className="map-control-button map-control-button--perspective ring-key-surface" disabled={!ready} title="Vue 3D / dessus" aria-label="Basculer vue du dessus et vue 3D" onClick={() => { const view = engine.current.getView(); engine.current.flyTo({ ...view, pitch: view.pitch > 5 ? 0 : 60 }, 350); }}>3D</button>
-      <div className="map-control-group map-control-group--zoom"><button className="map-control-button" aria-label="Zoomer" disabled={!ready || zoomLimit === "near"} onClick={() => engine.current.zoom(0.55)}><Plus size={18} /></button><button className="map-control-button" aria-label="Dézoomer" disabled={!ready || zoomLimit === "far"} onClick={() => engine.current.zoom(1.8)}><Minus size={18} /></button></div>
-    </div>
     {selection && <div className="reference-selection" role="status">{selection.properties.name}</div>}
     {notice && <div className="reference-notice" role="status">{notice}<button aria-label="Fermer le message" onClick={() => setNotice("")}><X size={16} /></button></div>}
     <dialog ref={dialog} className="reference-destination" onClose={() => setDestination("")}><button className="reference-dialog-close" aria-label="Fermer" onClick={() => dialog.current?.close()}><X size={20} /></button><h2>{names[destination] || "MeeWav"}</h2><p>Cet espace de votre application n’est pas encore relié à ce globe.</p><button onClick={() => dialog.current?.close()}>Revenir à la carte</button></dialog>
