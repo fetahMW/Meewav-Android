@@ -6,6 +6,7 @@ import HoverPreProfileContent from "./reference/features/globe/components/prePro
 import { getPreProfileArtistForSeed } from "./reference/features/globe/components/preProfile/demoPreProfileArtist";
 import { getGradeBadgeMeta } from "./reference/features/grades/gradeBadges";
 import "./ring-artist-preprofile.css";
+import { mobileArtistPanel } from '../../../../mobile-artist-panel';
 
 export type GroundAvatarSelection = {
   id: string;
@@ -62,7 +63,8 @@ export default function GroundArtistPreProfile({
   }), [selection, grade.level, grade.mainColor]);
 
   const margin = 16, leftGuard = viewport.width > 760 ? 112 : 88;
-  const scale = Math.min(1, (viewport.width - leftGuard - margin * 2) / 413, (viewport.height - 104) / 588);
+  const mobile = mobileArtistPanel(viewport);
+  const scale = mobile?.scale ?? Math.min(1, (viewport.width - leftGuard - margin * 2) / 413, (viewport.height - 104) / 588);
   const width = 413 * scale, height = 588 * scale;
   const gapFromAvatar = -20;
   const arrowSize = 8;
@@ -118,7 +120,8 @@ export default function GroundArtistPreProfile({
 
   return createPortal(<div ref={panel} className="ring-artist-preprofile" role="dialog" aria-modal="false"
     aria-label={`Pré-profil de ${selection.name}`} data-placement={placement}
-    style={{ left: popupLeft, top: popupTop, transform: `scale(${scale})`,
+    style={{ left: mobile?.left ?? popupLeft, top: mobile?.top ?? popupTop, transform: `scale(${scale})`,
+      ...(mobile ? { height: mobile.logicalHeight, '--mw-bubble-h': `${mobile.logicalHeight}px` } : {}),
       "--mw-arrow-y": `${Math.max(40, Math.min(548, (y - popupTop) / scale))}px` } as CSSProperties}
     onPointerDown={event => event.stopPropagation()} onClick={event => event.stopPropagation()}>
     <PreProfileFrame arrow>

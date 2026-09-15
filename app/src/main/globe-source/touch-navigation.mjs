@@ -177,7 +177,12 @@ export function createTouchNavigation(api, { pointers = new Map(), reducedMotion
       if (!final) { multi = true; rebase(now); return true; }
       if (quick && !quickMoved) zoomAt(.5, firstX, firstY);
       else {
-        if (tap) pendingTap = { x: e.clientX, y: e.clientY, time: now, pointerId: e.pointerId };
+        if (tap) {
+          const selection = { x: e.clientX, y: e.clientY, time: now, pointerId: e.pointerId };
+          // Portraits are controls: open on release. Empty geography keeps the
+          // double-tap / one-handed zoom window without delaying artist cards.
+          if (!api.immediateTap?.(selection)) pendingTap = selection;
+        }
         coast = nextCoast; previousFrame = now;
         startSettle();
       }

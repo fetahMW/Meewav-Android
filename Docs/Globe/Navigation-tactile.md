@@ -14,7 +14,7 @@ reste fixe. Aucun moteur ni gestionnaire de gestes tiers n’est ajouté.
 | Deux doigts | Une seule transformation par image : déplacement du centre, rapport des distances et angle des doigts. Le centre peut se déplacer et les doigts peuvent bouger asymétriquement. |
 | Rotation | Seuil initial de 2,5°, puis mouvement continu dans le sens des doigts. |
 | Inclinaison | Déplacement vertical parallèle des deux doigts, avec faible variation de distance et d’angle. Seuil de 6 pixels CSS, puis 0,22° par pixel ; hystérésis pour limiter les mouvements involontaires. |
-| Double toucher | Zoom avant animé de 280 ms au point touché. Le premier toucher attend 280 ms avant de sélectionner un lieu ou un portrait. |
+| Double toucher | Zoom avant animé de 280 ms au point touché sur la géographie. Le premier toucher attend 280 ms avant de sélectionner un lieu ; les portraits ouvrent directement leur préprofil au relâchement. |
 | Double toucher maintenu | Après le second appui, glissement vertical pour zoomer à une main ; descendre rapproche, monter éloigne. |
 | Ajout/retrait d’un doigt | Application du dernier déplacement puis reconstruction des références depuis la caméra affichée. Le troisième doigt ne pilote pas la caméra ; son arrivée et son départ réinitialisent également les références. |
 | Annulation/interruption | Annule le geste et la sélection différée. Une nouvelle pression arrête l’inertie ou le zoom depuis leur position visible. Perte de capture, changement de taille, arrière-plan et destruction sont pris en charge. |
@@ -75,6 +75,10 @@ de l’anneau. Le bouton 3D existant conserve sa fonction avec une transition de
 350 ms. Aucune nouvelle boussole ni nouvelle interface n’est ajoutée.
 
 ## Vérifications de ce lot
+
+Les résultats ci-dessous concernent le checkpoint tactile `9b84f06`. Le lot
+suivant sur les préprofils retire l’attente sur les portraits ; les tests ne sont
+pas rejoués automatiquement pour cette retouche. Voir l’[index du globe](README.md).
 
 - `node scripts/test-globe-navigation.mjs` : **12 tests réussis**. Ils couvrent
   transformation asymétrique, regroupement des événements, 1→2→1 et troisième

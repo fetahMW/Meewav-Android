@@ -685,6 +685,12 @@ export async function createThree(
       canvas.classList.add('dragging'); sceneDirty = true;
     },
     changed() { sceneDirty = true; viewportNeedsUpdate = true; },
+    immediateTap({ x, y }: { x: number; y: number }) {
+      if (ringNavigation.active) return ringPortraits.selectAt(x, y);
+      const avatar = groundAvatars?.pick(x, y);
+      if (!avatar) return false;
+      groundAvatars?.select(avatar, x, y, width, height); return true;
+    },
     tap({ x, y, pointerId }: { x: number; y: number; pointerId: number }) {
       if (ringNavigation.active) {
         const event = { clientX: x, clientY: y, pointerId, button: 0, ctrlKey: false };

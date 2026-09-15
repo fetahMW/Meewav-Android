@@ -1,6 +1,6 @@
 import { Component, type ReactNode } from "react";
 
-// Keep a profile render or lazy-import failure inside the overlay. The WebGL
+// Keep a profile rendering failure inside the overlay. The WebGL
 // canvas and navigation belong to the parent and must remain mounted.
 export class RingPreProfileBoundary extends Component<
   { children: ReactNode; onClose: () => void }, { failed: boolean }

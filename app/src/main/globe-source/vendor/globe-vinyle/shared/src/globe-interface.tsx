@@ -1,8 +1,10 @@
-import React, { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Building2, Crosshair, EyeOff, MapPin, Minus, Plus, X, Orbit, ArrowLeft, ArrowRight, Hand, MoveVertical, MousePointer2 } from "lucide-react";
 import GlobeNavigationPole from "./GlobeNavigationPole";
 import NationalTopTen from "./NationalTopTen";
 import { RingPreProfileBoundary } from "./RingPreProfileBoundary";
+import RingArtistPreProfile from './RingArtistPreProfile';
+import GroundArtistPreProfile from './GroundArtistPreProfile';
 import { MeewavSearchFilterBar, MeewavFilterPanel, MeewavIllustratedFilterGrid } from "./reference/components/shared/search-filter/MeewavSearchFilter";
 import { GLOBE_ARTIST_ROLE_OPTIONS } from "./reference/components/shared/avatar/profileIconCatalog";
 import { MeewavGradeBadge } from "./reference/features/grades/MeewavGradeBadge";
@@ -16,8 +18,6 @@ import "./reference/features/globe/styles/globe-v2.css";
 
 // esbuild emits the SVG beside this module, not beside the HTML page.
 const meewavBrandLogoUrl = new URL(meewavBrandLogo, import.meta.url).href;
-const RingArtistPreProfile = lazy(() => import("./RingArtistPreProfile"));
-const GroundArtistPreProfile = lazy(() => import("./GroundArtistPreProfile"));
 
 const normalise = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 const defaultCities = ["Paris", "Nice", "Marseille", "Lyon", "Nantes", "Lille"];
@@ -32,6 +32,7 @@ export function GlobeInterface({ ready, data, engine, navigate, selection, zoomL
   const [focused, setFocused] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [filterSection, setFilterSection] = useState('roles');
   const [mode, setMode] = useState<"globe" | "city" | "country" | "position" | "ring">("globe");
   const [ringReturning, setRingReturning] = useState(false);
   const [ringPortrait, setRingPortrait] = useState<any>(null);
@@ -54,6 +55,7 @@ export function GlobeInterface({ ready, data, engine, navigate, selection, zoomL
   const [draft, setDraft] = useState(applied);
   const inputRef = useRef<HTMLInputElement>(null);
   const filterTrigger = useRef<HTMLButtonElement>(null);
+  const filterBody = useRef<HTMLDivElement>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const cityLabels = useMemo(() => data?.cities || (data?.labels || []).filter((x: any) => x.kind === "city"), [data]);
   const catalogue = useMemo(() => {
@@ -259,15 +261,11 @@ export function GlobeInterface({ ready, data, engine, navigate, selection, zoomL
         </div>
       </section>}
       {!ringReturning && ringPortrait && <RingPreProfileBoundary key={ringPortrait.instanceId} onClose={closeRingPortrait}>
-        <Suspense fallback={null}>
           <RingArtistPreProfile selection={ringPortrait} onClose={closeRingPortrait} />
-        </Suspense>
       </RingPreProfileBoundary>}
     </>}
     {ready && mode !== "ring" && groundAvatar && <RingPreProfileBoundary key={groundAvatar.id} onClose={closeGroundAvatar}>
-      <Suspense fallback={null}>
         <GroundArtistPreProfile selection={groundAvatar} onClose={closeGroundAvatar} />
-      </Suspense>
     </RingPreProfileBoundary>}
     {ready && mode === "globe" && <div className="globe-honors-dock">
       <div className="globe-brand-logo-shell globe-brand-compact">
@@ -305,18 +303,25 @@ export function GlobeInterface({ ready, data, engine, navigate, selection, zoomL
       {!results.length && <p>Aucun lieu ni avatar trouvé.</p>}
     </div>}
     <MeewavFilterPanel open={filterOpen} panelId="artist-filter-drawer" eyebrow="Exploration personnalisée" title="Filtres artistes" description="Sélection des styles d’avatar"
-      onClose={() => setFilterOpen(false)} onReset={() => commitFilters(defaultFilters)} onApply={applyFilters} resetLabel="Recomposer ma sélection" applyDisabled={!draft.roles.length} triggerRef={filterTrigger}
-      belowHeader leftBoundarySelector=".meewav-primary-nav" selectionHint="Les avatars se mettent à jour tout de suite sur la carte.">
+      onClose={() => setFilterOpen(false)} onReset={() => commitFilters(defaultFilters)} onApply={applyFilters} resetLabel="Réinitialiser" applyDisabled={!draft.roles.length} triggerRef={filterTrigger}
+      belowHeader bodyRef={filterBody} leftBoundarySelector=".meewav-primary-nav" selectionHint="Les avatars se mettent à jour tout de suite sur la carte.">
+      <nav className="mobile-artist-filter-tabs" aria-label="Catégories de filtres">
+        {[['roles', 'Avatars', `${draft.roles.length}/${roleIds.length}`], ['grades', 'Niveaux', draft.grades.length || 'Tous'], ['cities', 'Villes', '6']].map(([id, label, count]) =>
+          <button key={id} type="button" aria-pressed={filterSection === id} aria-controls={`artist-filter-${id}`}
+            onClick={() => { setFilterSection(String(id)); if (filterBody.current) filterBody.current.scrollTop = 0; }}>
+            {label}<span>{count}</span>
+          </button>)}
+      </nav>
       <p className="reference-empty-profiles">Les avatars au sol de Paris, de Charonne et de la petite couronne suivent cette sélection.</p>
-      <section className="artist-filter-history" aria-label="Profils déjà consultés"><div className="artist-filter-history__copy"><EyeOff size={18} /><span><strong>Masquer les profils déjà consultés</strong><small>Les profils épinglés restent visibles.</small></span></div>
+      <section className="artist-filter-history" data-mobile-active={filterSection === 'roles'} aria-label="Profils déjà consultés"><div className="artist-filter-history__copy"><EyeOff size={18} /><span><strong>Masquer les profils déjà consultés</strong><small>Les profils épinglés restent visibles.</small></span></div>
         <button type="button" className={`artist-filter-history__toggle ${draft.hideConsulted ? "is-active" : ""}`} role="switch" aria-checked={draft.hideConsulted} aria-label="Masquer les profils déjà consultés" onClick={() => commitFilters({ ...draft, hideConsulted: !draft.hideConsulted })}><span /></button></section>
-      <section className="artist-filter-panel__group" aria-label="Niveaux"><div className="artist-filter-panel__groupHeader"><span>Niveaux</span><small>{draft.grades.length || "Tous"}</small></div>
+      <section id="artist-filter-grades" className="artist-filter-panel__group" data-mobile-active={filterSection === 'grades'} aria-label="Niveaux"><div className="artist-filter-panel__groupHeader"><span>Niveaux</span><small>{draft.grades.length || "Tous"}</small></div>
         <div className="artist-filter-panel__options artist-filter-panel__options--grades">{[1, 2, 3, 4, 5, 6].map(level => <button key={level} type="button" className={`artist-filter-grade ${draft.grades.includes(level) ? "is-active" : ""}`} aria-pressed={draft.grades.includes(level)} onClick={() => toggleGrade(level)}><MeewavGradeBadge level={level} size="sm" variant="icon" /><span><strong>{getGradeBadgeMeta(level as any).label}</strong><small>Niveau {level}</small></span></button>)}</div>
       </section>
-      <section className="artist-filter-panel__group" aria-label="Styles d’avatar"><div className="artist-filter-panel__groupHeader"><span>Styles d’avatar <small>{draft.roles.length} / {roleIds.length}</small></span><button className="artist-filter-bulk-toggle" aria-pressed={draft.roles.length === roleIds.length} onClick={() => commitFilters({ ...draft, roles: draft.roles.length === roleIds.length ? [] : roleIds })}>{draft.roles.length === roleIds.length ? "Tout désélectionner" : "Tout sélectionner"}</button></div>
+      <section id="artist-filter-roles" className="artist-filter-panel__group" data-mobile-active={filterSection === 'roles'} aria-label="Styles d’avatar"><div className="artist-filter-panel__groupHeader"><span>Styles d’avatar <small>{draft.roles.length} / {roleIds.length}</small></span><button className="artist-filter-bulk-toggle" aria-pressed={draft.roles.length === roleIds.length} onClick={() => commitFilters({ ...draft, roles: draft.roles.length === roleIds.length ? [] : roleIds })}>{draft.roles.length === roleIds.length ? "Tout désélectionner" : "Tout sélectionner"}</button></div>
         <MeewavIllustratedFilterGrid ariaLabel="Sélection multiple des styles d’avatar" options={GLOBE_ARTIST_ROLE_OPTIONS.map(role => ({ id: role.key, label: role.label, imageUrl: role.imageUrl }))} selectedIds={draft.roles} onToggle={toggleRole} />
       </section>
-      <section className="artist-filter-panel__group" aria-label="Villes favorites"><div className="artist-filter-panel__groupHeader"><span>Mes villes rapides</span><small>6 favoris</small></div>
+      <section id="artist-filter-cities" className="artist-filter-panel__group" data-mobile-active={filterSection === 'cities'} aria-label="Villes favorites"><div className="artist-filter-panel__groupHeader"><span>Mes villes rapides</span><small>6 favoris</small></div>
         {cities.map((city, index) => <label className="reference-favorite-city" key={index}><span>Ville {index + 1}</span><select value={city} onChange={event => { const next = cities.map((c, i) => i === index ? event.target.value : c); setCities(next); persist("globelab.favoriteCities.v1", next); }}>
           {cityLabels.filter((c: any) => c.major || cities.includes(c.name)).map((c: any) => <option key={c.id} value={c.name}>{c.name}</option>)}</select></label>)}
       </section>

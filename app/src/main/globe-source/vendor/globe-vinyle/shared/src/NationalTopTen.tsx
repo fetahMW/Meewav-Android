@@ -1,10 +1,9 @@
-import { lazy, Suspense, useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { ArrowUpRight, ChevronDown, Crown, Sparkles } from "lucide-react";
 import { SCENE_DEMO_ARTISTS } from "./reference/features/shorts/sceneArtistPortraits";
 import { RingPreProfileBoundary } from "./RingPreProfileBoundary";
 import "./national-top-ten.css";
-
-const ArtistPreProfile = lazy(() => import("./RingArtistPreProfile"));
+import ArtistPreProfile from "./RingArtistPreProfile";
 
 // Editorial demo order, independent of grades and of the map's active filters.
 // Replace this fixture when the national ranking service is connected.
@@ -20,6 +19,7 @@ const ARTISTS = DEMO_ORDER.flatMap(name => {
 
 export default function NationalTopTen() {
   const panel = useRef<HTMLElement>(null);
+  const selectedButton = useRef<HTMLButtonElement>(null);
   const contentId = useId();
   const [expanded, setExpanded] = useState(false);
   const [selection, setSelection] = useState<any>(null);
@@ -35,9 +35,13 @@ export default function NationalTopTen() {
     observer.observe(globe, { attributes: true, attributeFilter: ["data-globe-brand-visible"] });
     return () => observer.disconnect();
   }, []);
-  const close = () => setSelection(null);
+  const close = () => {
+    setSelection(null);
+    requestAnimationFrame(() => selectedButton.current?.isConnected && selectedButton.current.focus({ preventScroll: true }));
+  };
   const open = (artist: typeof ARTISTS[number], rank: number, button: HTMLButtonElement) => {
     const rect = button.getBoundingClientRect();
+    selectedButton.current = button;
     setSelection({ ...artist, instanceId: rank, anchor: {
       x: rect.left + rect.width / 2, y: rect.top + rect.height / 2,
       clearance: rect.width / 2, viewportWidth: window.innerWidth, viewportHeight: window.innerHeight,
@@ -45,7 +49,8 @@ export default function NationalTopTen() {
   };
 
   return <>
-    <section ref={panel} className="national-top-ten ring-key-surface" data-expanded={expanded} aria-labelledby="national-top-ten-title">
+    <section ref={panel} className="national-top-ten ring-key-surface" data-expanded={expanded}
+      data-profile-open={Boolean(selection)} inert={Boolean(selection)} aria-hidden={Boolean(selection)} aria-labelledby="national-top-ten-title">
       <header className="national-top-ten__header">
         <h2 id="national-top-ten-title">
           <button type="button" className="national-top-ten__toggle" aria-expanded={expanded} aria-controls={contentId}
@@ -85,7 +90,7 @@ export default function NationalTopTen() {
       </div>
     </section>
     {selection && <RingPreProfileBoundary key={selection.artistId} onClose={close}>
-      <Suspense fallback={null}><ArtistPreProfile selection={selection} onClose={close} /></Suspense>
+      <ArtistPreProfile selection={selection} onClose={close} />
     </RingPreProfileBoundary>}
   </>;
 }

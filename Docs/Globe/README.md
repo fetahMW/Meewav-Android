@@ -46,6 +46,33 @@ Aucun secret, cookie Supabase, jeton ou pont JavaScript vers Android n’est exp
 
 ## État des vérifications
 
+### Panneaux artistes et filtres Android — 15 septembre 2026
+
+Les composants `RingArtistPreProfile` et `GroundArtistPreProfile` sont désormais
+importés dès le démarrage du globe, au lieu d’un import différé au premier clic
+avec `Suspense fallback={null}`. Les portraits tactiles sont sélectionnés dès le
+relâchement, sans attendre les 280 ms de reconnaissance du double toucher sur la
+géographie. Ces deux attentes identifiées dans le code sont retirées ; leur part
+exacte dans le délai ressenti de 1–2 secondes n’a pas été chronométrée.
+
+En paysage mobile, le Top 10 déplié et les préprofils partagent les mêmes limites :
+210 pixels CSS de largeur, 50 pixels depuis le haut, 14 depuis le bas et 12 depuis
+la droite. `mobile-artist-panel.ts` utilise les variables de `full-globe-mobile.css`.
+Le préprofil du classement recouvre sa liste, qui reste montée, non interactive
+et à la même position de défilement jusqu’à la fermeture. Les préprofils du
+vinyle et des avatars au sol reprennent exactement ce même format.
+
+Les filtres paysage ont un en-tête réduit, trois catégories (Avatars, Niveaux,
+Villes), des choix compacts dans une zone défilante, et les actions de pied de
+panneau fixes. Les filtres continuent de s’appliquer immédiatement. Les données,
+résolutions et matériaux du globe ne sont pas modifiés par ce lot.
+
+Le bundle et l’APK debug sont reconstruits pour livraison sur le S22 Ultra.
+Aucun test ni contrôle visuel automatique n’est lancé pour cette retouche ; la
+validation du rendu et de la réactivité sur appareil reste à l’utilisateur.
+
+### Historique des contrôles du rendu
+
 Avant le rétablissement des réglages Web, le bundle avait été construit, `assembleDebug` avait réussi et l’APK avait été installé sur le S22 Ultra. L’arrivée paysage sur fond acoustique et le moteur complet avec étoiles, vinyle, portraits et palette territoriale avaient été observés sur le téléphone. Canvas 797 × 384 CSS ; aucune ressource distante ni erreur HTTP relevée, contexte WebGL actif sans erreur. Ces premières observations ne validaient pas la fluidité après restauration. L’inscription réelle, les services, les Rooms et les lives ne sont pas validés ici.
 
 Au checkpoint de restauration `32333d0` : bundle reconstruit, `:app:assembleDebug` réussi, APK installé et application relancée sur le S22 Ultra, sans relevé FPS supplémentaire à ce stade.

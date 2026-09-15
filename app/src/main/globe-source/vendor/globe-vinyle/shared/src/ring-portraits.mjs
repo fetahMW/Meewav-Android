@@ -315,6 +315,12 @@ export function createRingPortraits(scene, ring, camera, canvas, invalidate, pix
       };
     },
     clearSelection: () => select(-1),
+    selectAt(x, y) {
+      if (!active || entering) return false;
+      const id = pick(x, y);
+      if (id < 0) return false;
+      select(id); return true;
+    },
     setActive(value) {
       active = value; mesh.visible = value; pointer = down = null; setHover(-1); select(-1);
       entering = value;
