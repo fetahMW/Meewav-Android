@@ -23,9 +23,13 @@ autour de sa partie encastrée : on voit le fond, sans anneau ajouté.
 
 ### Accueil du profil — finition après captures Samsung
 
-Le bandeau supérieur reprend la matière du champ
-de saisie de messagerie : `linear-gradient(125deg,#ffffff15,#ffffff05 48%,#ffffff0b),#17191faa`,
-avec `blur(22px) saturate(1.15)`. Reflets et ombre :
+Le bandeau supérieur reprend la matière du champ de saisie de messagerie.
+Le 16 septembre, l'utilisateur demande une transparence plus visible : le titre
+Profil et ses quatre onglets utilisent `--profile-header-glass`, soit
+`linear-gradient(125deg,#ffffff08,#ffffff02 48%,#ffffff05),#17191f40`,
+avec `blur(24px) saturate(1.15)`. Seul le fond est translucide, les textes et icônes
+restent à pleine opacité. Les autres bandeaux gardent `--profile-mobile-glass`.
+Reflets et ombre :
 `inset 0 1px 0 #ffffff12,inset 0 -1px 0 #0003,0 6px 20px #0004`.
 Après avoir vu une carte violette derrière le dock translucide, l'utilisateur
 demande de garder cette teinte illuminée **en permanence, opaque**. La finition

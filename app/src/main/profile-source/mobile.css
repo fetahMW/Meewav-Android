@@ -3,6 +3,7 @@
   --profile-dock-violet: linear-gradient(125deg,#ffffff08,#ffffff02 48%,#ffffff05),linear-gradient(110deg,#382961,#302351 52%,#33245b);
   /* Exact surface of the delivered messaging composer. */
   --profile-mobile-glass: linear-gradient(125deg,#ffffff15,#ffffff05 48%,#ffffff0b),#17191faa;
+  --profile-header-glass: linear-gradient(125deg,#ffffff08,#ffffff02 48%,#ffffff05),#17191f40;
   --profile-mobile-glass-edge: inset 0 1px 0 #ffffff12,inset 0 -1px 0 #0003,0 6px 20px #0004;
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -18,8 +19,8 @@ button { touch-action: manipulation; }
   display: grid; grid-template-columns: minmax(0,1fr); grid-template-rows: 44px 56px; height: var(--profile-mobile-menu); min-height: var(--profile-mobile-menu);
   width: 100%; margin: 0; padding: 0 10px; gap: 0; border-radius: 0;
   border: 0; border-bottom: 1px solid #d3d9e01f;
-  background: var(--profile-mobile-glass);
-  backdrop-filter: blur(22px) saturate(1.15); -webkit-backdrop-filter: blur(22px) saturate(1.15);
+  background: var(--profile-header-glass);
+  backdrop-filter: blur(24px) saturate(1.15); -webkit-backdrop-filter: blur(24px) saturate(1.15);
   box-shadow: inset 0 -1px #ffffff06,0 4px 16px #0002;
 }
 #root .profile-command-bar__actions, #root .profile-command-brand :is(.meewav-pillar-brand__app,.meewav-pillar-brand__separator) { display: none; }
