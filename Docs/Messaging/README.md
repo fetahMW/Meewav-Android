@@ -379,3 +379,20 @@ dans DESIGN-MEMORY.md. Compilation et installation seulement, sans QA automatiqu
 `#202227 → #16181C → #0D0F12`, avec un reflet supérieur réduit. Les mix et
 commandes secondaires suivent ce graphite sombre. Les CTA violets, textes,
 dimensions et cartes Collab restent inchangés.
+
+## Bandeaux fixes et Planning graphite
+
+Les bandeaux Projets/Groupes utilisent la même hauteur de 108 px (identité 64 px,
+outils 44 px). Les transformations spécifiques du Web, dont le translateY(7px)
+et la marge du titre de Planning, sont annulées. Tous les outils de Groupes
+reçoivent la même couverture et la même ligne membres/style pour garder une
+identité stable lors des changements d’onglet.
+
+Planning adopte des surfaces noires et graphite inspirées du Track Pack : gris
+métalliques sombres, reflets fins et séparateurs neutres. Les grands halos, bandes
+latérales violettes et fonds colorés sont supprimés. Les boutons principaux gardent
+le violet urbain partagé. Les cartes sont disposées sur une colonne ; les marges
+Web et le débordement du bouton Ajouter sont retirés. Les données, handlers de
+session et confirmations restent ceux de l’existant.
+
+Compilation et installation uniquement ; aucun test ou contrôle visuel automatique.

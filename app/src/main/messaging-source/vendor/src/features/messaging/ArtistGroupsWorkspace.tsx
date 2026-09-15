@@ -1237,7 +1237,7 @@ export default function ArtistGroupsWorkspace({
     <PanelShell
       title={group.name}
       eyebrow={`${group.members.length} MEMBRES · ${group.style}`}
-      toolbar={renderGroupToolbar(group, "chat")}
+      groupIdentity={group} toolbar={renderGroupToolbar(group, "chat")}
       sideActions={renderGroupSideAction(group, "chat")}
       hideClose
     >
@@ -1252,7 +1252,7 @@ export default function ArtistGroupsWorkspace({
   );
 
   const renderPlanning = (group: ArtistGroup) => (
-    <PanelShell className="agw-panel--planning" title={group.name} eyebrow="PLANNING DU GROUPE" onBack={() => openPanel(group.id, "chat")} toolbar={renderGroupToolbar(group, "planning")} sideActions={renderGroupSideAction(group, "planning")} hideClose>
+    <PanelShell className="agw-panel--planning" title={group.name} eyebrow="PLANNING DU GROUPE" onBack={() => openPanel(group.id, "chat")} groupIdentity={group} toolbar={renderGroupToolbar(group, "planning")} sideActions={renderGroupSideAction(group, "planning")} hideClose>
       <div className="agw-subview agw-planning-subview">
         <div className="agw-subview__heading">
           <div><small>COORDINATION</small><h2>Sessions du groupe</h2><p>Confirme les présences et propose le prochain créneau.</p></div>
@@ -1303,7 +1303,7 @@ export default function ArtistGroupsWorkspace({
 
   const renderMembers = (group: ArtistGroup) => {
     const members = group.members.filter((member) => `${member.name} ${member.role}`.toLowerCase().includes(memberSearch.toLowerCase()));
-    return <PanelShell className="agw-panel--members" title={group.name} eyebrow="Membres du groupe" identityIcon={<GroupWaveMark />} onBack={() => openPanel(group.id, "chat")} toolbar={renderGroupToolbar(group, "members")} sideActions={renderGroupSideAction(group, "members")} hideClose>
+    return <PanelShell className="agw-panel--members" title={group.name} eyebrow="Membres du groupe" identityIcon={<GroupWaveMark />} onBack={() => openPanel(group.id, "chat")} groupIdentity={group} toolbar={renderGroupToolbar(group, "members")} sideActions={renderGroupSideAction(group, "members")} hideClose>
       <div className="agw-subview agw-members-subview">
         <div className="agw-subview__heading"><div><small><Sparkles size={13} /> ÉQUIPE ARTISTIQUE</small><h2>{group.members.length} membres</h2><p>Les rôles, disponibilités et accès du groupe.</p></div><button type="button" className="agw-primary-button is-small" aria-label="Ouvrir l’invitation d’un membre" onClick={() => setInviteMemberOpen((value) => !value)}><UserPlus size={19} /> Inviter</button></div>
         <label className="agw-search"><Search size={17} /><input value={memberSearch} onChange={(event) => setMemberSearch(event.target.value)} placeholder="Rechercher un membre…" /></label>
@@ -1333,7 +1333,7 @@ export default function ArtistGroupsWorkspace({
   };
 
   const renderDecisions = (group: ArtistGroup) => (
-    <PanelShell className="agw-panel--decisions" title={group.name} eyebrow="DÉCISIONS DU GROUPE" onBack={() => openPanel(group.id, "chat")} toolbar={renderGroupToolbar(group, "decisions")} sideActions={renderGroupSideAction(group, "decisions")} hideClose>
+    <PanelShell className="agw-panel--decisions" title={group.name} eyebrow="DÉCISIONS DU GROUPE" onBack={() => openPanel(group.id, "chat")} groupIdentity={group} toolbar={renderGroupToolbar(group, "decisions")} sideActions={renderGroupSideAction(group, "decisions")} hideClose>
       <div className="agw-subview">
         <div className="agw-subview__heading"><div><small>VOTE DU GROUPE</small><h2>Décider ensemble</h2><p>Chaque choix reste clair, documenté et partagé.</p></div><button type="button" className="agw-primary-button is-small" onClick={() => setNewDecisionOpen((value) => !value)}><Plus size={16} /> Nouveau</button></div>
         {newDecisionOpen && <form className="agw-inline-form" onSubmit={addDecision}><h3>Nouvelle décision</h3><label><span>Titre de la décision</span><input required value={decisionTitle} onChange={(event) => setDecisionTitle(event.target.value)} placeholder="Choisir le prochain créneau" /></label><label><span>Options, séparées par des virgules</span><input required value={decisionOptions} onChange={(event) => setDecisionOptions(event.target.value)} placeholder="Samedi, Dimanche, Lundi" /></label><div><button type="button" className="agw-secondary-button" onClick={() => setNewDecisionOpen(false)}>Annuler</button><button type="submit" className="agw-primary-button">Publier</button></div></form>}
@@ -1348,7 +1348,7 @@ export default function ArtistGroupsWorkspace({
   );
 
   const renderProjects = (group: ArtistGroup) => (
-    <PanelShell className="agw-panel--projects" title={group.name} eyebrow="PROJETS LIÉS" onBack={() => openPanel(group.id, "chat")} toolbar={renderGroupToolbar(group, "projects")} sideActions={renderGroupSideAction(group, "projects")} hideClose>
+    <PanelShell className="agw-panel--projects" title={group.name} eyebrow="PROJETS LIÉS" onBack={() => openPanel(group.id, "chat")} groupIdentity={group} toolbar={renderGroupToolbar(group, "projects")} sideActions={renderGroupSideAction(group, "projects")} hideClose>
       <div className="agw-subview">
         <div className="agw-subview__heading"><div><small>CRÉATIONS CONNECTÉES</small><h2>Projets du groupe</h2><p>Cette équipe durable peut relier plusieurs maquettes et projets, sans perdre son identité de groupe.</p></div></div>
         <div className="agw-project-list">{group.relatedProjectIds.map((id, index) => <button type="button" key={id} onClick={() => { onOpenProject?.(id); if (!onOpenProject) notify(`${id.replace("project_", "Project #")} ouvert.`); }}><span className="agw-project-cover"><img src={`/images/messaging/covers/cover_${((Number(id.replace("project_", "")) || index + 1) - 1) % 13 + 1}.png`} alt="" loading="lazy" /></span><strong>{id.replace("project_", "Project #")}</strong><small>Dernière modification : hier</small><ChevronRight size={17} /></button>)}{group.relatedProjectIds.length === 0 && <div className="agw-empty-inline"><FolderKanban size={24} /><strong>Aucun projet lié</strong><span>Connecte une création au groupe.</span></div>}</div>
@@ -1381,7 +1381,7 @@ export default function ArtistGroupsWorkspace({
         visibility: isPrivate ? "discoverable" : "private",
       }).catch(() => undefined);
     };
-    return <PanelShell title={group.name} eyebrow="OPTIONS DU GROUPE" onBack={() => openPanel(group.id, "chat")} toolbar={renderGroupToolbar(group, "settings")} sideActions={renderGroupSideAction(group, "settings")} hideClose>
+    return <PanelShell title={group.name} eyebrow="OPTIONS DU GROUPE" onBack={() => openPanel(group.id, "chat")} groupIdentity={group} toolbar={renderGroupToolbar(group, "settings")} sideActions={renderGroupSideAction(group, "settings")} hideClose>
       <div className="agw-subview">
         <div className="agw-settings-profile"><img src={group.cover} alt="" /><span><h2>{group.name}</h2><p>{group.style}</p></span></div>
         <div className="agw-section-title"><span>PRÉFÉRENCES</span></div>
@@ -1401,7 +1401,7 @@ export default function ArtistGroupsWorkspace({
   };
 
   const renderUnavailablePanel = (group: ArtistGroup, view: GroupPanel, title: string, description: string) => (
-    <PanelShell title={group.name} eyebrow={title.toLocaleUpperCase("fr-FR")} onBack={() => openPanel(group.id, "chat")} toolbar={renderGroupToolbar(group, view)} sideActions={renderGroupSideAction(group, view)} hideClose>
+    <PanelShell title={group.name} eyebrow={title.toLocaleUpperCase("fr-FR")} onBack={() => openPanel(group.id, "chat")} groupIdentity={group} toolbar={renderGroupToolbar(group, view)} sideActions={renderGroupSideAction(group, view)} hideClose>
       <div className="agw-subview">
         <div className="agw-empty-inline"><ShieldCheck size={26} /><strong>{title} — bientôt disponible</strong><span>{description} Aucune donnée de démonstration ne sera enregistrée à sa place.</span></div>
       </div>
