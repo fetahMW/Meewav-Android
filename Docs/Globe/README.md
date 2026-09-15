@@ -137,6 +137,11 @@ changement de fiche active. La liste reste montée derrière. La molette et le
 clavier de la barre restent utilisables ; le contenu débordant conserve son
 défilement interne à la molette/barre, le glissement tactile vertical parcourant
 les fiches. « Suivre » est noir au repos ; seul l’état « Suivi » est lumineux.
+Le conteneur interne déclare lui aussi `touch-action: pan-x` : la WebView tranche
+les gestes au premier conteneur défilant, donc le réglage du parent seul ne suffit
+pas. Cela réserve le geste vertical au déplacement de la fiche et supprime le
+rebond vertical interne. La direction tolère une légère dérive horizontale ; une
+perte de capture provenant d’un contrôle enfant n’annule pas la capture de la fiche.
 
 ### Lecture du vinyle en exploration
 

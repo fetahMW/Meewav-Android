@@ -70,5 +70,8 @@
   position:relative; width:100%; height:100%; scroll-snap-align:start; scroll-snap-stop:always;
 }
 .ring-artist-preprofile .top-ten-profile-page .mw-preprofile__scroll-body {
-  overscroll-behavior-y:auto;
+  /* WebView resolves touch-action at the first scroll container. Declaring it
+     only on the page viewport leaves this inner body free to steal the swipe. */
+  touch-action:pan-x;
+  overscroll-behavior-y:none;
 }

@@ -47,8 +47,9 @@ export function TopTenProfilePages({ index, total, onChange, renderPage }: {
       if (!gesture || gesture.id !== event.pointerId) return;
       const dx = event.clientX - gesture.x, dy = event.clientY - gesture.y;
       if (!gesture.moving) {
-        if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) { drag.current = null; return; }
-        if (Math.abs(dy) < 8) return;
+        // Ignore small sideways drift while the intended direction settles.
+        if (Math.abs(dx) > 14 && Math.abs(dx) > Math.abs(dy) * 1.5) { drag.current = null; return; }
+        if (Math.abs(dy) < 6 || Math.abs(dy) < Math.abs(dx) * 1.1) return;
         gesture.moving = true; suppressClick.current = true;
         event.currentTarget.classList.add('is-dragging');
         event.currentTarget.setPointerCapture(event.pointerId);
@@ -72,11 +73,15 @@ export function TopTenProfilePages({ index, total, onChange, renderPage }: {
     }}
     onPointerCancel={event => {
       const gesture = drag.current;
+      if (!gesture || gesture.id !== event.pointerId) return;
       drag.current = null;
       if (gesture?.moving) settle(event.currentTarget, gesture.page);
     }}
     onLostPointerCapture={event => {
+      // Media controls can release their own capture inside a page.
+      if (event.target !== event.currentTarget) return;
       const gesture = drag.current;
+      if (!gesture || gesture.id !== event.pointerId) return;
       drag.current = null;
       if (gesture?.moving) settle(event.currentTarget, gesture.page);
     }}
