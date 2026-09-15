@@ -56,11 +56,31 @@ géographie. Ces deux attentes identifiées dans le code sont retirées ; leur p
 exacte dans le délai ressenti de 1–2 secondes n’a pas été chronométrée.
 
 En paysage mobile, le Top 10 déplié et les préprofils partagent les mêmes limites :
-210 pixels CSS de largeur, 50 pixels depuis le haut, 14 depuis le bas et 12 depuis
+288 pixels CSS de largeur, 10 pixels depuis le haut, 10 depuis le bas et 12 depuis
 la droite. `mobile-artist-panel.ts` utilise les variables de `full-globe-mobile.css`.
 Le préprofil du classement recouvre sa liste, qui reste montée, non interactive
 et à la même position de défilement jusqu’à la fermeture. Les préprofils du
 vinyle et des avatars au sol reprennent exactement ce même format.
+
+Le contenu utilise désormais des dimensions mobiles réelles, sans réduire toute
+la carte desktop par une transformation. Les cinq couleurs d’épingle mesurent
+36 pixels chacune et toute la ligne « Épingler sur la carte » est cliquable.
+Le corps de la fiche défile si nécessaire ; fermer, contacter et demander une
+collaboration restent accessibles dans les zones fixes. Le logo au-dessus du
+Top 10 s’efface lorsque la liste se déplie pour lui laisser toute cette hauteur.
+
+Le panneau Top 10 et le bouton « Explorer les artistes » reprennent les couleurs
+de la fenêtre d’authentification native (`renderIosStageWindow` dans
+`IosAvatarStage.kt`) : dégradé sombre `#2B1B5C` / `#19122F` / `#0B0816` /
+`#080610` / `#1A1234`, lumière violette `#5137A1` et même palette de contour.
+Ce traitement commun est limité à ces deux surfaces dans l’interface Android.
+
+Lors d’une sélection au sol, la représentation agrandie vient à 12 pixels de la
+fiche. Un repère et un trait discret conservent le lien avec sa position réelle
+dans le quartier ; ni les coordonnées de l’avatar ni la caméra ne sont déplacées.
+Les avatars consultés non épinglés restent atténués et sont aussi désaturés dans
+le shader du lot de sprites. « Rétablir l’avatar » retire ce statut et restitue
+couleur et opacité, y compris après fermeture de la fiche restaurée.
 
 Les filtres paysage ont un en-tête réduit, trois catégories (Avatars, Niveaux,
 Top 10), des choix compacts dans une zone défilante, et les actions de pied de
@@ -68,6 +88,9 @@ panneau fixes. Top 10 remplace les villes favorites : sa visibilité est mémori
 localement et un bouton ouvre le classement dans la vue d’ensemble. Le classement
 reste une démonstration, indépendante des filtres d’avatars et de niveaux.
 Les filtres d’artistes continuent de s’appliquer immédiatement.
+« Masquer les profils déjà visités » est placé dans une barre fixe, accessible
+dans les trois catégories et pendant leur défilement. Toute sa ligne active
+l’interrupteur ; les profils épinglés gardent leur exemption.
 
 Les six villes rapides et les commandes 3D / zoom sont retirées de l’interface
 Android. Les gestes de zoom et d’inclinaison restent disponibles. Ville, Pays et
@@ -77,7 +100,9 @@ accessible. Ma position conserve sa destination de démonstration (Charonne) ;
 ce déplacement des commandes n’ajoute pas de géolocalisation réelle. La recherche
 est limitée à 312 × 36 pixels CSS en paysage ; le retour natif reste disponible
 vers « Ta scène est prête », centré sur le même axe que la navigation verticale.
-Les données, résolutions et matériaux du globe ne sont pas modifiés par ce lot.
+Le conteneur de navigation a un contour continu et accueille son petit globe
+fixe sans effet de creux. Les résolutions, les textures sources et la géométrie
+du globe ne sont pas réduites par ces adaptations.
 
 Le bundle et l’APK debug sont reconstruits pour livraison sur le S22 Ultra.
 Aucun test ni contrôle visuel automatique n’est lancé pour cette retouche ; la

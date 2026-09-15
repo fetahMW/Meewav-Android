@@ -307,7 +307,12 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
     </div>}
     <MeewavFilterPanel open={filterOpen} panelId="artist-filter-drawer" eyebrow="Exploration personnalisée" title="Filtres artistes" description="Sélection des styles d’avatar"
       onClose={() => setFilterOpen(false)} onReset={() => { commitFilters(defaultFilters); showTopTen(true); }} onApply={applyFilters} resetLabel="Réinitialiser" applyDisabled={!draft.roles.length} triggerRef={filterTrigger}
-      belowHeader bodyRef={filterBody} leftBoundarySelector=".meewav-primary-nav" selectionHint="Les avatars se mettent à jour tout de suite sur la carte.">
+      belowHeader bodyRef={filterBody} leftBoundarySelector=".meewav-primary-nav" selectionHint="Les avatars se mettent à jour tout de suite sur la carte."
+      toolbar={<button type="button" className="artist-filter-visited-switch" role="switch" aria-checked={draft.hideConsulted}
+        onClick={() => commitFilters({ ...draft, hideConsulted: !draft.hideConsulted })}>
+        <EyeOff size={19} aria-hidden="true" /><span className="artist-filter-visited-switch__copy"><strong>Masquer les profils déjà visités</strong><small>Les profils épinglés restent visibles.</small></span>
+        <span className="artist-filter-visited-switch__track" aria-hidden="true"><i /></span>
+      </button>}>
       <nav className="mobile-artist-filter-tabs" aria-label="Catégories de filtres">
         {[['roles', 'Avatars', `${draft.roles.length}/${roleIds.length}`], ['grades', 'Niveaux', draft.grades.length || 'Tous'], ['top-ten', 'Top 10', null]].map(([id, label, count]) =>
           <button key={id} type="button" aria-pressed={filterSection === id} aria-controls={`artist-filter-${id}`}
@@ -316,8 +321,6 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
           </button>)}
       </nav>
       <p className="reference-empty-profiles">Les avatars au sol de Paris, de Charonne et de la petite couronne suivent cette sélection.</p>
-      <section className="artist-filter-history" data-mobile-active={filterSection === 'roles'} aria-label="Profils déjà consultés"><div className="artist-filter-history__copy"><EyeOff size={18} /><span><strong>Masquer les profils déjà consultés</strong><small>Les profils épinglés restent visibles.</small></span></div>
-        <button type="button" className={`artist-filter-history__toggle ${draft.hideConsulted ? "is-active" : ""}`} role="switch" aria-checked={draft.hideConsulted} aria-label="Masquer les profils déjà consultés" onClick={() => commitFilters({ ...draft, hideConsulted: !draft.hideConsulted })}><span /></button></section>
       <section id="artist-filter-grades" className="artist-filter-panel__group" data-mobile-active={filterSection === 'grades'} aria-label="Niveaux"><div className="artist-filter-panel__groupHeader"><span>Niveaux</span><small>{draft.grades.length || "Tous"}</small></div>
         <div className="artist-filter-panel__options artist-filter-panel__options--grades">{[1, 2, 3, 4, 5, 6].map(level => <button key={level} type="button" className={`artist-filter-grade ${draft.grades.includes(level) ? "is-active" : ""}`} aria-pressed={draft.grades.includes(level)} onClick={() => toggleGrade(level)}><MeewavGradeBadge level={level} size="sm" variant="icon" /><span><strong>{getGradeBadgeMeta(level as any).label}</strong><small>Niveau {level}</small></span></button>)}</div>
       </section>

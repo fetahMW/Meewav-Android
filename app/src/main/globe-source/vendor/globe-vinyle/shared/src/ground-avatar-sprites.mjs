@@ -11,7 +11,7 @@ export function createGroundAvatarSprites() {
   geometry.setIndex([0, 1, 2, 2, 1, 3]);
   geometry.instanceCount = 0;
   const slots = new Map();
-  let texture = null, capacity = 0, rectangles, layers, depths, count = 0;
+  let texture = null, capacity = 0, rectangles, layers, depths, saturations, count = 0;
   const material = new T.ShaderMaterial({
     glslVersion: T.GLSL3,
     uniforms: { icons: { value: null }, viewport: { value: new T.Vector2(1, 1) } },
@@ -23,9 +23,10 @@ export function createGroundAvatarSprites() {
       in vec4 avatarRect;
       in float iconLayer;
       in float avatarDepth;
+      in float avatarSaturation;
       uniform vec2 viewport;
       out vec2 iconUv;
-      flat out float layer, opacity, spriteSize;
+      flat out float layer, opacity, spriteSize, saturation;
       void main() {
         spriteSize = avatarRect.z;
         float padding = spriteSize * 0.12 + 2.0;
@@ -33,6 +34,7 @@ export function createGroundAvatarSprites() {
           position.y * (spriteSize + padding) - padding);
         iconUv = vec2(position.x, pixel.y / spriteSize);
         layer = iconLayer; opacity = avatarRect.w;
+        saturation = avatarSaturation;
         vec2 screen = avatarRect.xy + vec2(pixel.x, -pixel.y);
         gl_Position = vec4(screen.x / viewport.x * 2.0 - 1.0,
           1.0 - screen.y / viewport.y * 2.0, avatarDepth, 1.0);
@@ -40,10 +42,12 @@ export function createGroundAvatarSprites() {
     fragmentShader: `
       uniform highp sampler2DArray icons;
       in vec2 iconUv;
-      flat in float layer, opacity, spriteSize;
+      flat in float layer, opacity, spriteSize, saturation;
       out vec4 outputColor;
       void main() {
         vec4 photo = texture(icons, vec3(clamp(vec2(iconUv.x, 1.0 - iconUv.y), 0.0, 1.0), layer));
+        float gray = dot(photo.rgb, vec3(0.2126, 0.7152, 0.0722));
+        photo.rgb = mix(vec3(gray), photo.rgb, saturation);
         photo *= opacity * step(0.0, iconUv.y) * step(iconUv.y, 1.0);
         vec2 ellipse = vec2((iconUv.x - 0.5) / 0.34, (iconUv.y + 2.0 / spriteSize) / 0.1);
         float r = length(ellipse), feather = max(fwidth(r) * 0.5, 0.0001);
@@ -67,9 +71,11 @@ export function createGroundAvatarSprites() {
     rectangles = new T.InstancedBufferAttribute(new Float32Array(capacity * 4), 4).setUsage(T.DynamicDrawUsage);
     layers = new T.InstancedBufferAttribute(new Float32Array(capacity), 1).setUsage(T.DynamicDrawUsage);
     depths = new T.InstancedBufferAttribute(new Float32Array(capacity), 1).setUsage(T.DynamicDrawUsage);
+    saturations = new T.InstancedBufferAttribute(new Float32Array(capacity), 1).setUsage(T.DynamicDrawUsage);
     geometry.setAttribute('avatarRect', rectangles);
     geometry.setAttribute('iconLayer', layers);
     geometry.setAttribute('avatarDepth', depths);
+    geometry.setAttribute('avatarSaturation', saturations);
   }
   return {
     setImages(images) {
@@ -111,12 +117,13 @@ export function createGroundAvatarSprites() {
       material.uniforms.viewport.value.set(width, height);
       count = 0;
     },
-    add(item, size = item.size, opacity = 1) {
+    add(item, size = item.size, opacity = 1, saturation = 1) {
       const slot = slots.get(item.avatar.icon) ?? slots.get('avatar_4');
       if (slot === undefined || size <= 0) return;
       rectangles.setXYZW(count, item.x, item.y, size, opacity);
       layers.setX(count, slot);
       depths.setX(count, item.depth);
+      saturations.setX(count, saturation);
       count++;
     },
     finish() {
@@ -126,6 +133,7 @@ export function createGroundAvatarSprites() {
       rectangles.clearUpdateRanges(); rectangles.addUpdateRange(0, count * 4); rectangles.needsUpdate = true;
       layers.clearUpdateRanges(); layers.addUpdateRange(0, count); layers.needsUpdate = true;
       depths.clearUpdateRanges(); depths.addUpdateRange(0, count); depths.needsUpdate = true;
+      saturations.clearUpdateRanges(); saturations.addUpdateRange(0, count); saturations.needsUpdate = true;
     },
     hide() { mesh.visible = false; geometry.instanceCount = 0; },
     render(renderer) {

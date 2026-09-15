@@ -2,6 +2,7 @@ import * as T from 'three';
 import { xyz, RADIUS } from './geo.mjs';
 import { METRES_TO_WORLD, quartierHeight } from './territory-style.mjs';
 import { createGroundAvatarSprites } from './ground-avatar-sprites.mjs';
+import { mobileArtistPanel } from '../../../../mobile-artist-panel';
 import { CHARONNE_ID } from './navigation-presets.mjs';
 import { PROFILE_ICON_FILES, getProfileIconImageUrl } from './reference/components/shared/avatar/profileIconAssets.ts';
 import {
@@ -155,6 +156,13 @@ function createSelectedOverlay(host) {
   layer.className = 'profile-icon-hover-overlay is-hover';
   layer.setAttribute('aria-hidden', 'true');
   layer.hidden = true;
+  const connection = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  connection.classList.add('profile-icon-hover-overlay__connection');
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  const origin = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  origin.setAttribute('r', '5');
+  connection.append(line, origin);
+  let layoutWidth = 0, layoutHeight = 0, mobile = null;
   const glow = document.createElement('div');
   glow.className = 'profile-icon-hover-overlay__glow';
   const sprite = document.createElement('img');
@@ -167,20 +175,38 @@ function createSelectedOverlay(host) {
   });
   const name = document.createElement('div');
   name.className = 'profile-icon-hover-overlay__name';
-  layer.append(glow, sprite, name);
+  layer.append(connection, glow, sprite, name);
   host.append(layer);
   return {
-    show(item, consulted = false) {
+    show(item, consulted = false, viewport) {
       if (!item) { layer.hidden = true; return; }
+      if (viewport.width !== layoutWidth || viewport.height !== layoutHeight) {
+        layoutWidth = viewport.width; layoutHeight = viewport.height;
+        mobile = mobileArtistPanel(viewport);
+      }
       const hostUser = Boolean(item.avatar.isHost);
       const metrics = selectedSpriteMetrics(item);
+      let x = item.x, feetY = item.y + metrics.lift;
+      let scale = metrics.spriteScale, drop = metrics.spriteDrop;
+      if (mobile) {
+        // Only the enlarged presentation moves. The map location stays marked.
+        const size = Math.min(Math.max(112, metrics.spriteBaseSize * scale),
+          208, Math.max(64, viewport.height - 110), viewport.height * 0.64, Math.max(72, mobile.left - 100));
+        x = mobile.left - 12 - size / 2;
+        feetY = Math.max(66 + size, Math.min(viewport.height - 34, feetY));
+        scale = size / metrics.spriteBaseSize; drop = 0;
+        line.setAttribute('x1', String(item.x)); line.setAttribute('y1', String(item.y));
+        line.setAttribute('x2', String(x)); line.setAttribute('y2', String(feetY));
+        origin.setAttribute('cx', String(item.x)); origin.setAttribute('cy', String(item.y));
+      }
+      layer.classList.toggle('is-mobile-profile', Boolean(mobile));
       layer.classList.toggle('is-current-user', hostUser);
       layer.classList.toggle('is-consulted', Boolean(consulted) && !hostUser);
-      layer.style.setProperty('--profile-hover-x', `${item.x}px`);
-      layer.style.setProperty('--profile-hover-y', `${item.y + metrics.lift}px`);
-      layer.style.setProperty('--profile-hover-scale', String(metrics.spriteScale));
-      layer.style.setProperty('--profile-hover-drop', `${metrics.spriteDrop}px`);
-      layer.style.setProperty('--profile-hover-name-drop', `${(hostUser ? -4 : -3) * zoomFromSize(item.size, item.avatar)}px`);
+      layer.style.setProperty('--profile-hover-x', `${x}px`);
+      layer.style.setProperty('--profile-hover-y', `${feetY}px`);
+      layer.style.setProperty('--profile-hover-scale', String(scale));
+      layer.style.setProperty('--profile-hover-drop', `${drop}px`);
+      layer.style.setProperty('--profile-hover-name-drop', mobile ? '6px' : `${(hostUser ? -4 : -3) * zoomFromSize(item.size, item.avatar)}px`);
       const src = iconSrc(item.avatar.icon);
       if (sprite.getAttribute('src') !== src) sprite.src = src;
       if (name.textContent !== item.avatar.name) name.textContent = item.avatar.name;
@@ -429,7 +455,7 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
       if (item.avatar.isHost) { hostItem = item; continue; }
       const hovered = item.avatar.id === hoveredId;
       const gray = consulted.has(item.avatar.id) && !item.avatar.pinColor;
-      sprites.add(item, item.size * (hovered ? 1.08 : 1), gray ? 0.55 : 1);
+      sprites.add(item, item.size * (hovered ? 1.08 : 1), gray ? 0.55 : 1, gray ? 0 : 1);
     }
     if (hostItem) {
       const hovered = hostItem.avatar.id === hoveredId;
@@ -437,7 +463,7 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
     }
     sprites.finish();
     pinLayer.sync(pinItems);
-    selectedOverlay.show(selectedItem, selectedRestore && !selectedItem?.avatar.pinColor);
+    selectedOverlay.show(selectedItem, selectedRestore && !selectedItem?.avatar.pinColor, { width, height });
     if (requestRender) invalidate();
   }
 

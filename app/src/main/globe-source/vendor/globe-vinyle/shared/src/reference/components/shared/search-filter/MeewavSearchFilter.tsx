@@ -167,6 +167,7 @@ type MeewavFilterPanelProps = {
   applyLabel?: string;
   applyDisabled?: boolean;
   selectionHint?: ReactNode;
+  toolbar?: ReactNode;
   triggerRef?: RefObject<HTMLButtonElement | null>;
   bodyRef?: RefObject<HTMLDivElement | null>;
   bodyProps?: HTMLAttributes<HTMLDivElement>;
@@ -190,6 +191,7 @@ export function MeewavFilterPanel({
   applyLabel = "Appliquer",
   applyDisabled = false,
   selectionHint,
+  toolbar,
   triggerRef,
   bodyRef,
   bodyProps,
@@ -353,6 +355,7 @@ export function MeewavFilterPanel({
             <X size={18} aria-hidden="true" />
           </button>
         </div>
+        {toolbar && <div className="artist-filter-panel__toolbar">{toolbar}</div>}
         <div ref={bodyRef} className="artist-filter-panel__body" {...bodyProps}>
           {children}
         </div>

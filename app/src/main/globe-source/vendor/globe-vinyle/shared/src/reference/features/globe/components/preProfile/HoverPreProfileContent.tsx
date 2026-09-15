@@ -812,6 +812,7 @@ export function HoverPreProfileContent({
       onPointerDown={(event) => event.stopPropagation()}
       onClick={(event) => event.stopPropagation()}
     >
+      <div className="mw-preprofile__scroll-body">
       <header className="mw-preprofile__header">
         <div className="mw-preprofile__portrait-wrap">
           <div className="mw-preprofile__portrait-shell">
@@ -922,36 +923,18 @@ export function HoverPreProfileContent({
           style={{ "--mw-active-pin-color": selectedPinColor ?? "#8B5CF6" } as CSSProperties}
           aria-label="Épingler le profil"
         >
-          <div className="mw-preprofile__pin-copy">
-            <button
-              className="mw-preprofile__pin-button"
-              type="button"
-              aria-label={selectedPinColor ? "Épingler avec la couleur choisie" : "Choisir une couleur de repère"}
-              aria-pressed={isPinned}
-              onClick={handlePinClick}
-              disabled={!selectedPinColor}
-            >
+          <button className="mw-preprofile__pin-copy" type="button" aria-pressed={isPinned}
+            onClick={handlePinClick} disabled={!selectedPinColor}>
+            <span className="mw-preprofile__pin-button" aria-hidden="true">
               <MapPin size={15} strokeWidth={2.35} />
-            </button>
-            <span
-              className="mw-preprofile__pin-text"
-              role={selectedPinColor ? "button" : undefined}
-              tabIndex={selectedPinColor ? 0 : undefined}
-              aria-pressed={selectedPinColor ? isPinned : undefined}
-              onClick={selectedPinColor ? handlePinClick : undefined}
-              onKeyDown={(event) => {
-                if (!selectedPinColor) return;
-                if (event.key !== "Enter" && event.key !== " ") return;
-                event.preventDefault();
-                handlePinClick();
-              }}
-            >
+            </span>
+            <span className="mw-preprofile__pin-text">
               <strong>{isPinned ? "Épinglé sur la carte" : "Épingler sur la carte"}</strong>
               <small>
                 {isPinned ? "Ce repère reste visible" : "Garder cet avatar visible"}
               </small>
             </span>
-          </div>
+          </button>
           <div className="mw-preprofile__colors" aria-label="Couleurs de repère">
             <span className="mw-preprofile__colors-label">
               <strong>Couleur</strong>
@@ -1251,6 +1234,9 @@ export function HoverPreProfileContent({
         </section>
       )}
 
+        </div>
+      </div>
+      </div>
       <footer className="mw-preprofile__footer" aria-label="Actions de contact">
         <button
           className="mw-preprofile__collab-button"
@@ -1281,9 +1267,6 @@ export function HoverPreProfileContent({
           </button>
         )}
       </footer>
-        </div>
-
-      </div>
     </section>
   );
 }

@@ -20,6 +20,12 @@
   font: inherit;
 }
 
+.mw-preprofile__scroll-body { display: contents; }
+.mw-preprofile button.mw-preprofile__pin-copy {
+  width: 100%; padding: 0; border: 0; background: none; color: inherit;
+  text-align: left; cursor: pointer;
+}
+
 .mw-preprofile__header {
   position: relative;
   display: grid;

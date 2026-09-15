@@ -3,31 +3,48 @@ html, body, #root { width: 100%; height: 100%; margin: 0; overflow: hidden; }
 .immersive-globe { position: fixed; inset: 0; width: 100%; height: 100%; }
 .globe-stage canvas { position: absolute; inset: 0; }
 .mobile-artist-filter-tabs { display: none; }
+.profile-icon-hover-overlay__connection { display: none; }
 @media (orientation: landscape) and (max-height: 600px) {
   :root {
-    --mobile-artist-panel-width: 210px;
-    --mobile-artist-panel-top: 50px;
-    --mobile-artist-panel-bottom: 14px;
+    --mobile-artist-panel-width: 288px;
+    --mobile-artist-panel-top: 10px;
+    --mobile-artist-panel-bottom: 10px;
     --mobile-artist-panel-right: 12px;
     --mobile-artist-panel-height: calc(100dvh - var(--mobile-artist-panel-top) - var(--mobile-artist-panel-bottom));
   }
   .immersive-globe { --globe-search-left: 76px; }
-  .reference-search-dock { top: 10px; left: 76px; width: min(312px, calc(100% - 310px)); height: 36px; }
+  /* Palette de renderIosStageWindow (IosAvatarStage.kt), fenêtre d’authentification. */
+  .immersive-globe :is(.national-top-ten, .ring-explore-button).ring-key-surface {
+    --ring-key-rgb: 81, 55, 161;
+    --ring-key-light: #bda3e5;
+    background:
+      radial-gradient(ellipse 54.7% 37.7% at 65.9% 95.2%, #37257480, transparent) padding-box,
+      radial-gradient(ellipse 74.6% 51.4% at 50% 1%, #5137a199, #4e349f40 50%, transparent) padding-box,
+      linear-gradient(147.2deg, #2b1b5c, #19122f 25%, #0b0816 50%, #080610 75%, #1a1234) padding-box,
+      linear-gradient(145.3deg, #bda3e5, #7960b2, #5137a1, #8162b7) border-box;
+    box-shadow: 0 0 5px #5137a166, 0 6px 15px #0008;
+  }
+  .immersive-globe .national-top-ten__emblem,
+  .immersive-globe .ring-explore-button .ring-explore-icon { color: var(--ring-key-light); }
+  .reference-search-dock { top: 10px; left: 76px; width: min(312px, calc(100% - var(--mobile-artist-panel-width) - 112px)); height: 36px; }
   .reference-search-dock .meewav-search-filter-bar.is-flow { flex: 1 1 auto; width: 100%; height: 36px; min-width: 0; padding: 3px 5px; gap: 5px; border-radius: 13px; }
   .reference-search-dock .search-bar input { font-size: 12px; }
   .reference-search-dock .search-submit-button { width: 28px; height: 28px; }
   .reference-search-dock .meewav-search-filter-bar__shortcut { display: none; }
-  .reference-search-results.france-search-dropdown { top: 52px; left: 76px; width: min(312px, calc(100% - 310px)); max-height: calc(100dvh - 66px); overflow-y: auto; }
-  .reference-rail .globe-navigation-pole { top: 66px; left: 10px; bottom: 10px; width: 52px; height: auto; padding: 6px 4px; gap: 3px; border-radius: 22px; }
-  .reference-rail .globe-navigation-pole > .meewav-primary-nav__item.is-map { width: 42px; height: 36px; flex-basis: 36px; margin-top: 0; }
+  .reference-search-results.france-search-dropdown { top: 52px; left: 76px; width: min(312px, calc(100% - var(--mobile-artist-panel-width) - 112px)); max-height: calc(100dvh - 66px); overflow-y: auto; }
+  .reference-rail .globe-navigation-pole { top: 66px; left: 10px; bottom: 10px; width: 52px; height: auto; padding: 8px 4px 6px; gap: 3px; border-radius: 16px; clip-path: none; mask: none; }
+  .reference-rail .globe-navigation-pole > .meewav-primary-nav__item.is-map { width: 42px; height: 36px; flex-basis: 36px; margin-top: 0; border-radius: 10px; background: none; box-shadow: none; }
+  .reference-rail .globe-navigation-pole > .meewav-primary-nav__item.is-map::before,
+  .reference-rail .globe-navigation-pole > .meewav-primary-nav__item.is-map::after { display: none; content: none; }
   .reference-rail .globe-navigation-pole .meewav-primary-nav__item:not(.is-map) { width: 42px; height: 36px; min-height: 36px; flex-basis: 36px; }
   .reference-rail .globe-navigation-pole .meewav-primary-nav__pillars { flex: 1; padding: 0; gap: 2px; min-height: 0; overflow-y: auto; scrollbar-width: none; }
   .reference-rail .globe-navigation-pole .meewav-primary-nav__account { margin: 0; padding: 4px 0 0; }
   .reference-rail .globe-navigation-pole .meewav-primary-nav__account::before { top: 0; }
-  .reference-rail .globe-navigation-pole .meewav-primary-nav__globe { width: 31px; height: 31px; }
+  .reference-rail .globe-navigation-pole.is-glass-chassis .meewav-primary-nav__globe { width: 31px; height: 31px; box-shadow: none; }
   .globe-honors-dock { --honors-top: 10px; top: 10px; right: var(--mobile-artist-panel-right); width: var(--mobile-artist-panel-width); gap: 8px; }
   .globe-honors-dock .globe-brand-logo-shell.globe-brand-compact { width: 100px; height: 32px; flex: 0 0 32px; }
   .globe-honors-dock .globe-brand-logo { width: 100%; height: 100%; object-fit: contain; }
+  .globe-honors-dock:has(.national-top-ten[data-expanded="true"]) .globe-brand-logo-shell { display: none; }
   .immersive-globe .national-top-ten__toggle { min-height: 42px; padding: 8px 10px; gap: 7px; font-size: 11px; }
   .national-top-ten__heading small { font-size: 9px; }
   .national-top-ten { max-height: var(--mobile-artist-panel-height); }
@@ -39,10 +56,68 @@ html, body, #root { width: 100%; height: 100%; margin: 0; overflow: hidden; }
   /* Keep the list mounted behind a profile; closing restores its scroll offset. */
   .ring-artist-preprofile { z-index: 17000; animation: none; }
   .ring-artist-preprofile .mw-hover-preprofile-bubble__arrow { display: none; }
-  .ring-artist-preprofile__close { width: 56px; height: 56px; top: 8px; right: 10px; border-radius: 14px; }
-  .ring-artist-preprofile__close svg { width: 26px; height: 26px; }
-  .ring-artist-preprofile .mw-hover-preprofile-bubble__surface:has(.mw-preprofile) { padding-top: 64px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
-  .ring-artist-preprofile .mw-preprofile { min-height: 480px; }
+  .ring-artist-preprofile__close { width: 36px; height: 36px; top: 7px; right: 8px; border-radius: 10px; }
+  .ring-artist-preprofile__close svg { width: 19px; height: 19px; }
+  .ring-artist-preprofile .mw-hover-preprofile-bubble__shell { border-radius: 18px; }
+  .ring-artist-preprofile .mw-hover-preprofile-bubble__shell::before { padding: 3px; }
+  .ring-artist-preprofile .mw-hover-preprofile-bubble__shell::after { inset: 3px; border-radius: 15px; }
+  .ring-artist-preprofile .mw-hover-preprofile-bubble__glass { inset: 4px; border-radius: 14px; }
+  .ring-artist-preprofile .mw-preprofile-frame__mark { top: 16px; left: 14px; font-size: 7px; }
+  .ring-artist-preprofile .mw-hover-preprofile-bubble__surface:has(.mw-preprofile) { padding: 44px 12px 16px; overflow: hidden; }
+  .ring-artist-preprofile .mw-preprofile { height: 100%; min-height: 0; padding: 0; gap: 7px; }
+  .ring-artist-preprofile .mw-preprofile__scroll-body {
+    display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; gap: 7px; padding: 1px 4px 7px 1px;
+    overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; scrollbar-width: thin; touch-action: pan-y;
+  }
+  .ring-artist-preprofile .mw-preprofile__scroll-body > * { flex-shrink: 0; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__header { grid-template-columns: 56px minmax(0, 1fr); gap: 8px; min-height: 66px; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__portrait-wrap { width: 56px; height: 56px; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__portrait-shell { width: 54px; height: 54px; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__portrait-status { width: 9px; height: 9px; right: 2px; bottom: 5px; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__name-row { display: grid; grid-template-columns: minmax(0, 1fr) 28px; gap: 4px; min-height: 26px; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__name { font-size: 16px; line-height: 1.15; white-space: normal; overflow-wrap: anywhere; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__grade-lockup { width: 28px; height: 28px; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__name-grade { transform: scale(.72); transform-origin: left center; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__grade-label { display: none; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__role { font-size: 11.5px; line-height: 1.3; margin-top: 3px; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__meta { flex-wrap: wrap; gap: 4px 7px; margin-top: 4px; font-size: 10.5px; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__meta > *::before { display: none; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__actions { min-height: 38px; gap: 7px; transform: none; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__button { height: 38px; font-size: 12px; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__pin { grid-template-columns: minmax(0, 1fr); min-height: 0; gap: 5px; padding: 7px; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__pin-copy { display: flex; align-items: center; min-height: 34px; gap: 8px; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__pin-button { display: grid; place-items: center; flex: none; width: 32px; height: 32px; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__pin strong { font-size: 12px; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__pin small { font-size: 10px; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__colors { justify-content: space-between; gap: 5px; padding: 3px 0; border: 0; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__colors-label { display: none; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__colors button { flex: 0 0 36px; width: 36px; height: 36px; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__restore-avatar { min-height: 48px; padding: 7px; gap: 8px; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__restore-avatar-copy strong { font-size: 13px; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__restore-avatar-copy small { font-size: 10px; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__bio { min-height: 0; padding: 2px 0; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__bio p { font-size: 12px; line-height: 1.4; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__lower-stage,
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__owner-lower-stage { display: block; flex: none; height: auto; min-height: 134px; overflow: visible; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__media-stage,
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__owner-media-stage { position: relative; inset: auto; display: flex; flex-direction: column; height: auto; gap: 6px; clip-path: none; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__tabs { flex: none; min-height: 34px; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__tabs button { height: 32px; font-size: 12px; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__preview { flex: 0 0 94px; height: 94px; min-height: 94px; max-height: 94px; gap: 7px; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__overview-card { height: 84px; max-height: 84px; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__overview-audio-play { width: 36px; height: 36px; flex-basis: 36px; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__footer { flex: none; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); min-height: 44px; margin: 0; gap: 6px; }
+  .ring-artist-preprofile .mw-preprofile.is-owner .mw-preprofile__footer { grid-template-columns: 1fr; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__collab-button,
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__contact-button { min-height: 44px; padding: 0 7px; gap: 6px; font-size: 12px; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__collab-icon { width: 25px; height: 25px; flex: none; border-radius: 6px; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__collab-icon svg { width: 16px; height: 16px; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__collab-copy strong { font-size: 11.5px; }
+  .ring-artist-preprofile .mw-preprofile .mw-preprofile__collab-copy small { display: none; }
+  .ring-artist-preprofile__demo { bottom: 4px; left: 15px; font-size: 7px; }
+  .profile-icon-hover-overlay.is-mobile-profile .profile-icon-hover-overlay__connection { position: absolute; inset: 0; display: block; width: 100%; height: 100%; overflow: visible; }
+  .profile-icon-hover-overlay__connection line { stroke: #c5a2ed; stroke-width: 1; stroke-dasharray: 3 5; opacity: .5; }
+  .profile-icon-hover-overlay__connection circle { fill: #a776d942; stroke: #dbc5f4; stroke-width: 1.5; }
   .ring-explore-button { top: auto; bottom: 62px; left: 76px; width: 192px; height: 40px; padding: 0 10px; }
   .immersive-globe .ring-explore-button.ring-key-surface { font-size: 12px; }
   .ring-explore-detail { display: none; }
@@ -82,7 +157,7 @@ html, body, #root { width: 100%; height: 100%; margin: 0; overflow: hidden; }
     transform: translateY(8px); transition: opacity 120ms ease, transform 120ms ease, visibility 0s linear 120ms;
   }
   .meewav-filter-below-header #artist-filter-drawer.is-open { transform: none; transition-delay: 0s; }
-  #artist-filter-drawer .side-panel__header { flex: none; min-height: 34px; padding: 0 0 7px; gap: 8px; }
+  #artist-filter-drawer .side-panel__header { flex: none; min-height: 34px; padding: 0 0 3px; gap: 8px; }
   #artist-filter-drawer .artist-filter-panel__heading { grid-template-columns: 24px minmax(0, 1fr); gap: 7px; }
   #artist-filter-drawer .artist-filter-panel__headingIcon { width: 24px; height: 24px; border: 0; background: none; box-shadow: none; }
   #artist-filter-drawer .artist-filter-panel__headingIcon::after { display: none; }
@@ -91,10 +166,23 @@ html, body, #root { width: 100%; height: 100%; margin: 0; overflow: hidden; }
   #artist-filter-drawer .reference-empty-profiles { display: none; }
   #artist-filter-drawer .side-panel__header strong { font-size: 16px; line-height: 1.2; letter-spacing: -.02em; }
   #artist-filter-drawer .side-panel__close { width: 34px; height: 34px; border-radius: 10px; }
+  #artist-filter-drawer .artist-filter-panel__toolbar { flex: none; padding-bottom: 3px; }
+  #artist-filter-drawer .artist-filter-visited-switch {
+    display: flex; align-items: center; gap: 9px; width: 100%; min-height: 44px; padding: 7px 10px;
+    color: #f0e8ff; border: 1px solid #b28ada55; border-radius: 10px; background: #211432;
+    font: 12px/1.25 Inter, sans-serif; text-align: left;
+  }
+  #artist-filter-drawer .artist-filter-visited-switch__copy { flex: 1; }
+  #artist-filter-drawer .artist-filter-visited-switch__copy strong { display: block; font-weight: 600; }
+  #artist-filter-drawer .artist-filter-visited-switch__copy small { display: block; margin-top: 2px; font-size: 10px; color: #bcaccf; }
+  #artist-filter-drawer .artist-filter-visited-switch__track { flex: none; width: 44px; height: 26px; padding: 3px; border-radius: 20px; background: #544362; }
+  #artist-filter-drawer .artist-filter-visited-switch__track i { display: block; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform 120ms ease; }
+  #artist-filter-drawer .artist-filter-visited-switch[aria-checked="true"] .artist-filter-visited-switch__track { background: #8b4fd6; }
+  #artist-filter-drawer .artist-filter-visited-switch[aria-checked="true"] .artist-filter-visited-switch__track i { transform: translateX(18px); }
   #artist-filter-drawer .artist-filter-panel__body { display: block; flex: 1 1 0; min-height: 0; margin: 0; padding: 0 3px 3px 0; overflow-y: auto; touch-action: pan-y; overscroll-behavior: contain; }
   #artist-filter-drawer .mobile-artist-filter-tabs {
     position: sticky; top: 0; z-index: 3; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 6px; padding: 7px 0; background: #100a20;
+    gap: 6px; padding: 4px 0; background: #100a20;
   }
   #artist-filter-drawer .mobile-artist-filter-tabs button {
     display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 34px; padding: 5px 8px;

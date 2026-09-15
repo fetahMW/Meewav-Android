@@ -121,7 +121,8 @@ export default function GroundArtistPreProfile({
   return createPortal(<div ref={panel} className="ring-artist-preprofile" role="dialog" aria-modal="false"
     aria-label={`Pré-profil de ${selection.name}`} data-placement={placement}
     style={{ left: mobile?.left ?? popupLeft, top: mobile?.top ?? popupTop, transform: `scale(${scale})`,
-      ...(mobile ? { height: mobile.logicalHeight, '--mw-bubble-h': `${mobile.logicalHeight}px` } : {}),
+      ...(mobile ? { width: mobile.width, height: mobile.height,
+        '--mw-bubble-w': `${mobile.width}px`, '--mw-bubble-h': `${mobile.height}px` } : {}),
       "--mw-arrow-y": `${Math.max(40, Math.min(548, (y - popupTop) / scale))}px` } as CSSProperties}
     onPointerDown={event => event.stopPropagation()} onClick={event => event.stopPropagation()}>
     <PreProfileFrame arrow>
