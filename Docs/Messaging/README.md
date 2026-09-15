@@ -274,3 +274,9 @@ et menu « Actions du Track Pack ». Ce menu regroupe Nouveau, Sauvegarder et Aj
 une piste avec leurs actions existantes. Le lecteur et les pistes ne sont pas
 redessinés. Les marges imbriquées et le défilement horizontal des commandes sont
 retirés ; le contenu du projet garde son défilement vertical.
+
+Projets et Groupes utilisent désormais la même classe `mw-mobile-workspace-header` :
+nom puis contexte, mêmes marges, commandes sans boîtes et sous-onglets textuels de
+44 px avec le même indicateur. Groupes conserve ses cinq destinations et son accès
+Options ; Projets en compte quatre. Le retour redondant des sous-vues de groupe est
+remplacé par l’onglet Chat déjà présent ; celui des étapes de création reste disponible.

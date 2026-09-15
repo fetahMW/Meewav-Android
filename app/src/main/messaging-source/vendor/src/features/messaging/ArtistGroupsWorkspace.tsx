@@ -426,11 +426,11 @@ function PanelShell({
 }) {
   return (
     <section className={`agw-panel${className ? ` ${className}` : ""}`} role="dialog" aria-modal="true" aria-label={title}>
-      <header className={`agw-panel__bar${toolbar ? " has-toolbar is-workspace-subbar mw-hub-chipbar" : ""}`}>
+      <header className={`agw-panel__bar${toolbar ? " has-toolbar is-workspace-subbar mw-hub-chipbar mw-mobile-workspace-header" : ""}`}>
         <div className="agw-panel__identity">
-          {onBack && <button type="button" className={`agw-icon-button${identityIcon ? " agw-panel__identity-back" : ""}`} onClick={onBack} aria-label="Retour"><ArrowLeft size={19} /></button>}
-          {identityIcon && <span className="agw-panel__identity-mark" aria-hidden="true">{identityIcon}</span>}
-          <span><small>{eyebrow}</small><strong>{title}</strong></span>
+          {onBack && !toolbar && <button type="button" className={`agw-icon-button${identityIcon ? " agw-panel__identity-back" : ""}`} onClick={onBack} aria-label="Retour"><ArrowLeft size={19} /></button>}
+          {identityIcon && !toolbar && <span className="agw-panel__identity-mark" aria-hidden="true">{identityIcon}</span>}
+          <span><strong>{title}</strong><small>{eyebrow}</small></span>
         </div>
         {toolbar && <div className="agw-panel__toolbar">{toolbar}</div>}
         {((toolbar && sideActions) || (onClose && !hideClose)) && (

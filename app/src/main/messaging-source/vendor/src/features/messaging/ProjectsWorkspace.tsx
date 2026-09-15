@@ -2831,7 +2831,7 @@ function ProjectDetail({
 
   return (
     <section className="mw-project-detail mwp-project-detail" data-project-tab={tab} aria-label={"Projet " + project.name}>
-      <div className="mwp-project-floating-controls mw-hub-chipbar">
+      <div className="mwp-project-floating-controls mw-hub-chipbar mw-mobile-workspace-header">
         <div className="agw-panel__identity">
           <span><strong>{project.name}</strong><small>{project.members} membre{project.members > 1 ? "s" : ""} · {statusLabel(project.status)}</small></span>
         </div>
