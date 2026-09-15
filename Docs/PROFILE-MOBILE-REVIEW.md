@@ -82,3 +82,29 @@ MP3/MP4 de la médiathèque chargent aussi leurs métadonnées sans erreur.
 Ces contrôles portent sur la présentation et les interactions locales en démo.
 Aucun retrait, signature, invitation, changement de sécurité ou autre opération
 serveur réelle n’a été exécuté. Ils ne constituent pas une validation de ces services.
+
+## Dernière passe de contenu — 16 septembre 2026
+
+Demande : conserver les bandeaux validés, revoir les contenus de chaque onglet,
+puis commiter et pousser la branche profil.
+
+- Accueil, Statistique, Médias et Espace privé partagent une surface de contenu
+  noir fumé, avec un reflet discret #4F359E dans l'angle supérieur. Les grands
+  aplats gris et les reflets blancs sont atténués ; les contours restent fins.
+  Aucun filtre de flou supplémentaire par carte.
+- Les compteurs de reconnaissances sont centrés, valeur et libellé compris.
+  La catégorie rejoint la description : suppression d'une rangée de chips
+  isolés dans chaque carte, tout en conservant l'information.
+- Les descriptions et dates des badges, ainsi que plusieurs libellés privés,
+  gagnent en contraste. Les trois valeurs du portefeuille sont mieux alignées.
+- Suppression du filet superflu au-dessus du titre des médias. Les couleurs
+  propres aux graphes, aux cadeaux et aux badges restent conservées.
+- Bandeau, sélecteurs, dock, CTA, ordre des sections et fonctionnement restent
+  inchangés. Les fichiers médias conservent leur résolution.
+
+Base visuelle : captures Samsung des passes précédentes, revues pour chaque
+ destination (y compris La Cage, Setlist et les six modules privés). Le téléphone
+est connecté mais verrouillé pendant cette passe ; la tentative de nouvelle
+capture produit une image noire. Les nouvelles captures et le contrôle visuel
+du rendu installé restent donc à faire après déverrouillage. Ne pas confondre
+les contrôles documentés ci-dessus avec une validation de cette dernière passe.

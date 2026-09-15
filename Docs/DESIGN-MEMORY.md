@@ -135,3 +135,14 @@ Son icône seule passe à 0,45 quand il est désactivé ; l’envoi reste réell
 désactivé, sans permettre de message vide. Les boutons secondaires restent neutres.
 Les bulles conservent les formes et couleurs du site demandées séparément.
 Le bandeau et le champ de saisie en verre restent inchangés.
+
+## Profil — finition des cartes de contenu, 16 septembre 2026
+
+Les bandeaux ont été validés par l'utilisateur ; la dernière demande vise les
+contenus trop gris. Le jeton `--profile-content-surface` de `profile-source/mobile.css`
+est distinct du verre de navigation : base noir fumé #181920 vers #0A0B10, reflet
+discret #4F359E à faible opacité dans l'angle supérieur. Il alimente les cartes
+Accueil, Statistique, Médias et Espace privé. Ne pas le propager aux bandeaux,
+au sélecteur, au dock ni aux CTA. Les couleurs sémantiques des graphes et badges
+restent celles du Web. Cette finition attend encore la revue visuelle sur le
+Samsung déverrouillé ; elle ne constitue pas une nouvelle couleur validée.

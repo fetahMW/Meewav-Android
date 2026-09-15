@@ -771,7 +771,7 @@ export default function ProfileMediaView({
                     }}
                   >
                     <span className="profile-recognition-card__icon"><RecognitionIcon size={24} /></span>
-                    <div className="profile-recognition-card__copy"><h4>{recognition.label}</h4><p>{recognition.detail}</p></div>
+                    <div className="profile-recognition-card__copy"><h4>{recognition.label}</h4><p>{recognition.detail}<span className="profile-recognition-card__category">{recognition.category}</span></p></div>
                     {recognition.progress && (
                       <div className="profile-recognition-card__progress" role="progressbar" aria-label={`${recognition.label} : ${recognition.progress.current} sur ${recognition.progress.target}`} aria-valuemin={0} aria-valuemax={recognition.progress.target} aria-valuenow={recognition.progress.current}>
                         <span>{Array.from({ length: 10 }, (_, index) => <i key={index} className={index < Math.round(progressRatio * 10) ? "is-filled" : ""} />)}</span>
@@ -782,7 +782,6 @@ export default function ProfileMediaView({
                       <span className="profile-recognition-card__status">{recognition.status === "earned" ? <CheckCircle2 size={14} /> : recognition.status === "progress" ? <Sparkles size={14} /> : <Archive size={14} />} {statusLabel}</span>
                       <time>{recognition.earnedAt ?? recognition.nextAction}</time>
                     </div>
-                    <span className="profile-recognition-card__tag">{recognition.category}</span>
                   </button>
                 );
               })}
