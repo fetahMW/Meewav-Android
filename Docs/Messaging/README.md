@@ -292,8 +292,9 @@ est réduite ou que le flou n’est pas pris en charge.
 ## Essai du fond acoustique fourni par l’utilisateur
 
 `app/src/main/assets/messaging/images/chat-acoustic-foam.png` est la copie intégrale
-du fichier fourni `C:/Users/linkw/Downloads/ChatGPT Image 8 juin 2026, 09_37_32 1 (3).png`
-(464 515 octets), sans redimensionnement ni réencodage. Il est embarqué localement et
+du fichier fourni `C:/Users/linkw/Downloads/ChatGPT Image 8 juin 2026, 09_37_32 1 (4).png`
+(727 798 octets), sans redimensionnement ni réencodage. Cette nouvelle variante remplace
+l’essai `(3).png`, conservé dans l’historique Git au commit `4075833`. Il est embarqué localement et
 référencé dans le manifeste des ressources. Cette provenance est distincte des médias
 importés du Web.
 
