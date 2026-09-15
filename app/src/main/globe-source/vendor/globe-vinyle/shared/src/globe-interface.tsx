@@ -322,7 +322,7 @@ export function GlobeInterface({ ready, data, engine, navigate, selection, zoomL
       </section>
     </MeewavFilterPanel>
     <div className="map-control-stack reference-controls" aria-label="Commandes de carte">
-      <button className="map-control-button map-control-button--perspective ring-key-surface" disabled={!ready} title="Vue 3D / dessus" aria-label="Basculer vue du dessus et vue 3D" onClick={() => { const view = engine.current.getView(); engine.current.flyTo({ ...view, pitch: view.pitch > 5 ? 0 : 60 }, 0); }}>3D</button>
+      <button className="map-control-button map-control-button--perspective ring-key-surface" disabled={!ready} title="Vue 3D / dessus" aria-label="Basculer vue du dessus et vue 3D" onClick={() => { const view = engine.current.getView(); engine.current.flyTo({ ...view, pitch: view.pitch > 5 ? 0 : 60 }, 350); }}>3D</button>
       <div className="map-control-group map-control-group--zoom"><button className="map-control-button" aria-label="Zoomer" disabled={!ready || zoomLimit === "near"} onClick={() => engine.current.zoom(0.55)}><Plus size={18} /></button><button className="map-control-button" aria-label="Dézoomer" disabled={!ready || zoomLimit === "far"} onClick={() => engine.current.zoom(1.8)}><Minus size={18} /></button></div>
     </div>
     {selection && <div className="reference-selection" role="status">{selection.properties.name}</div>}

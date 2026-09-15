@@ -1,4 +1,6 @@
 import { solveScreenAnchor } from "./screen-anchor.mjs";
+import { createTouchNavigation } from "../../../../touch-navigation.mjs";
+import { createTouchCamera } from "../../../../touch-camera.mjs";
 import * as T from "three";
 import { LineSegments2 } from "three/addons/lines/LineSegments2.js";
 import { LineSegmentsGeometry } from "three/addons/lines/LineSegmentsGeometry.js";
@@ -485,7 +487,7 @@ export async function createThree(
     const hit = raycaster.ray.intersectSphere(sphere, hitPoint);
     return hit ? worldToGeo(hit.x, hit.y, hit.z) : null;
   }
-  function keepPoint(anchor: any) {
+  function keepPoint(anchor: any, latitudeLimit = 85) {
     if (!anchor) return false;
     const rect = canvas.getBoundingClientRect();
     return solveScreenAnchor({
@@ -498,6 +500,7 @@ export async function createThree(
       height,
       updateCamera,
       align: GLOBE_ALIGN,
+      latitudeLimit,
     });
   }
   const wheelZoom = createWheelZoom({
@@ -515,6 +518,7 @@ export async function createThree(
       && !orbit.isMoving() && Math.abs(view.height - brandOverviewHeight) < 0.000001;
     wheelZoom.cancel();
     orbit.cancel();
+    cancelTouch();
     sceneDirty = true;
     viewportNeedsUpdate = true;
     if (gesture) gesture.anchor = null;
@@ -668,7 +672,42 @@ export async function createThree(
       holdFlightTerritory();
     }
   }
+  const touchCamera = createTouchCamera({ view, motion, pickPoint, keepPoint, updateCamera,
+    ring: ringNavigation, width: () => width, height: () => height,
+    rect: () => canvas.getBoundingClientRect() });
+  const touchNavigation = createTouchNavigation({
+    ...touchCamera,
+    started(e: PointerEvent) {
+      wheelZoom.cancel(); orbit.cancel(); cancelPick();
+      gesture = null; pendingFlightFocus = null; pendingHover = null;
+      ringPortraits.cancel(); holdFlightTerritory(); clearHover();
+      metrics.input('drag', e.timeStamp, true);
+      canvas.classList.add('dragging'); sceneDirty = true;
+    },
+    changed() { sceneDirty = true; viewportNeedsUpdate = true; },
+    tap({ x, y, pointerId }: { x: number; y: number; pointerId: number }) {
+      if (ringNavigation.active) {
+        const event = { clientX: x, clientY: y, pointerId, button: 0, ctrlKey: false };
+        ringPortraits.down(event); ringPortraits.up(event, false); return;
+      }
+      const avatar = groundAvatars?.pick(x, y);
+      if (avatar) { groundAvatars?.select(avatar, x, y, width, height); return; }
+      const point = pickPoint(x, y);
+      const feature = quarterStream.pick(raycaster.ray, view) || territoryPlates.pick(raycaster.ray, view)
+        || (point ? featureAt(point) : null);
+      if (feature && !isOccupiedTerritory(feature)) onPick(feature, targetAt(feature, point));
+    },
+  }, { pointers, reducedMotion });
+  function cancelTouch(settle = false) {
+    for (const id of pointers.keys()) if (canvas.hasPointerCapture(id)) canvas.releasePointerCapture(id);
+    touchNavigation.cancel(settle); canvas.classList.remove('dragging');
+  }
   function down(e: PointerEvent) {
+    if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+      e.preventDefault(); canvas.focus({ preventScroll: true }); canvas.setPointerCapture(e.pointerId);
+      touchNavigation.down(e); return;
+    }
+    cancelTouch();
     if (ringNavigation.active) {
       if (ringNavigation.returning) return;
       if (e.pointerType === 'mouse' && e.button !== 0 && e.button !== 2) return;
@@ -711,6 +750,7 @@ export async function createThree(
   }
   let pendingHover: { x: number; y: number } | null = null;
   function move(e: PointerEvent) {
+    if (touchNavigation.move(e)) return;
     if (ringNavigation.active) {
       if (!ringNavigation.returning) { ringPortraits.move(e); ringNavigation.move(e, width, height); }
       return;
@@ -722,7 +762,6 @@ export async function createThree(
     }
     metrics.input("drag", e.timeStamp);
     wheelZoom.cancel();
-    const old = [...pointers.values()];
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     gesture.moved = Math.max(
       gesture.moved,
@@ -734,18 +773,7 @@ export async function createThree(
       orbit.move(e.clientX - before.x, e.clientY - before.y);
       return;
     }
-    if (pointers.size >= 2) {
-      gesture.anchor = null;
-      const fresh = [...pointers.values()];
-      const a = { x: (old[0].x + old[1].x) / 2, y: (old[0].y + old[1].y) / 2 };
-      const b = { x: (fresh[0].x + fresh[1].x) / 2, y: (fresh[0].y + fresh[1].y) / 2 };
-      const anchor = pickPoint(a.x, a.y);
-      const d0 = Math.hypot(old[0].x - old[1].x, old[0].y - old[1].y),
-        d1 = Math.hypot(fresh[0].x - fresh[1].x, fresh[0].y - fresh[1].y);
-      if (d0 > 5 && d1 > 5) motion.zoom(d0 / d1);
-      updateCamera();
-      if (anchor) keepPoint({ ...b, point: anchor });
-    } else if (gesture.globeRotationSpeed) {
+    if (gesture.globeRotationSpeed) {
       applyGlobeDrag({
         from: before,
         to: { x: e.clientX, y: e.clientY },
@@ -765,6 +793,14 @@ export async function createThree(
     }
   }
   function end(e: PointerEvent, cancelled = false) {
+    // Implicit capture loss follows a normal up; it must not cancel its inertia.
+    if ((e.pointerType === 'touch' || e.pointerType === 'pen') && !pointers.has(e.pointerId)) return;
+    if (cancelled && (e.pointerType === 'touch' || e.pointerType === 'pen')) { cancelTouch(true); return; }
+    if (touchNavigation.up(e, cancelled)) {
+      if (!pointers.size) canvas.classList.remove('dragging');
+      if (cancelled) cancelTouch();
+      return;
+    }
     if (ringNavigation.active) {
       ringNavigation.up(e); ringPortraits.up(e, cancelled);
       canvas.classList.remove('dragging'); return;
@@ -806,6 +842,7 @@ export async function createThree(
   const cancel = (e: PointerEvent) => end(e, true);
   const wheel = (e: WheelEvent) => {
     e.preventDefault();
+    cancelTouch();
     if (ringNavigation.active) { ringNavigation.wheel(e.deltaY); return; }
     if (gesture?.orbiting) return;
     if (!Number.isFinite(e.deltaY) || e.deltaY === 0) return;
@@ -826,7 +863,7 @@ export async function createThree(
     );
   };
   function zoom(factor: number) {
-    if (ringNavigation.active) return;
+    cancelTouch();
     setBrandVisible(false);
     wheelZoom.cancel();
     orbit.cancel();
@@ -834,8 +871,8 @@ export async function createThree(
     metrics.input("zoom", performance.now());
     cancelPick();
     holdFlightTerritory();
-    motion.zoom(factor);
-    updateCamera();
+    const rect = canvas.getBoundingClientRect();
+    touchNavigation.zoomAt(factor, rect.left + width / 2, rect.top + height / 2);
   }
   let pendingFlightFocus: { id: number; destination: any; local?: boolean } | null = null;
   function isLocalAvatarFlight() {
@@ -867,6 +904,7 @@ export async function createThree(
       ? (pendingFlightFocus && motion.isFlying() ? pendingFlightFocus.destination
         : { cityCode: territoryFocus.cityCode, quarterId: territoryFocus.quarterId })
       : destinationFocus;
+    cancelTouch();
     if (destination?.quarterId || destination?.cityCode) prefetchArrival(destination);
     // Nearby communes keep their existing short flight and arrival framing.
     // Longer trips retain the existing city arc and altitude release rule.
@@ -901,6 +939,7 @@ export async function createThree(
     clearHover();
   }
   const keydown = (e: KeyboardEvent) => {
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Escape', 'Home', '+', '=', '-'].includes(e.key)) cancelTouch();
     if (ringNavigation.active) {
       if (e.key === 'Escape' || e.key === 'Home') { e.preventDefault(); exitRing(); }
       else if (ringNavigation.key(e.key)) e.preventDefault();
@@ -937,11 +976,11 @@ export async function createThree(
     }
   };
   const dblclick = (e: MouseEvent) => {
-    if (ringNavigation.active) return;
+    e.preventDefault();
+    if (touchNavigation.suppressDoubleClick(e.timeStamp)) return;
     cancelPick();
-    const point = pickPoint(e.clientX, e.clientY);
-    if (point)
-      flyTo({ lon: point[0], lat: point[1], height: Math.max(0.003, view.height * 0.4) }, 700);
+    cancelTouch(); wheelZoom.cancel(); orbit.cancel();
+    touchNavigation.zoomAt(.5, e.clientX, e.clientY);
   };
   const leave = () => {
     if (!pointers.size) {
@@ -960,6 +999,7 @@ export async function createThree(
   canvas.addEventListener("dblclick", dblclick);
   const contextmenu = (e: MouseEvent) => e.preventDefault();
   const blur = () => {
+    cancelTouch();
     ringNavigation.cancel();
     ringPortraits.cancel();
     pendingHover = null;
@@ -1030,7 +1070,7 @@ export async function createThree(
     cpuSamples: number[] = [],
     renderTimes: number[] = [];
   function pointerIsIdle() {
-    return !motion.isMoving() && !wheelZoom.isMoving() && !orbit.isMoving() && !pointers.size;
+    return !motion.isMoving() && !wheelZoom.isMoving() && !orbit.isMoving() && !touchNavigation.isMoving() && !pointers.size;
   }
   function syncPointerHover() {
     if (!pendingHover || !pointerIsIdle()) return;
@@ -1062,6 +1102,7 @@ export async function createThree(
     const frameStart = performance.now();
     const dt = lastTime ? (now - lastTime) / 1000 : 0;
     lastTime = now;
+    touchNavigation.tick(now);
     if (ringNavigation.active) {
       const navigationChanged = ringNavigation.tick(dt, sceneDirty);
       // Keep the whole exploration still, including its entry/return flights.
@@ -1163,7 +1204,7 @@ export async function createThree(
     showLayer(countryLayer, 1 - fade(view.height, 2.2, 8), 0.72, viewport);
     // HTML city points and geographic plates share the same hover target.
     // Keep hover transient; the destination focus still changes only on arrival.
-    const surfaceHoveredId = motion.isMoving() || wheelZoom.isMoving() || orbit.isMoving() || pointers.size
+    const surfaceHoveredId = motion.isMoving() || wheelZoom.isMoving() || orbit.isMoving() || touchNavigation.isMoving()
       ? null : cityMarkers.getHoveredId() || hovered?.id;
     territoryPlates.update(view, surfaceHoveredId);
     seededCommuneSurfaces.update(view, surfaceHoveredId);
@@ -1207,7 +1248,7 @@ export async function createThree(
       view: { ...view },
       drawCalls: renderer.info.render.calls,
       triangles: renderer.info.render.triangles,
-      moving: motion.isMoving() || wheelZoom.isMoving() || orbit.isMoving(),
+      moving: motion.isMoving() || wheelZoom.isMoving() || orbit.isMoving() || touchNavigation.isMoving(),
       communesLoaded:
         communes.features.length +
         [...loadedDepartments.values()].reduce((sum, c) => sum + c.features.length, 0),
@@ -1237,6 +1278,7 @@ export async function createThree(
   }
   function exitRing(target?: any, afterReturn?: () => void) {
     if (!ringNavigation.active || ringNavigation.returning) return;
+    cancelTouch();
     const overview = overviewTarget('globe', width, height);
     const destination = target
       ? { ...view, ...target, pitch: 0, bearing: target.globeOverview ? overview.bearing : 0 }
@@ -1259,6 +1301,7 @@ export async function createThree(
   }
   function enterRing() {
     if (ringNavigation.active) return;
+    cancelTouch();
     motion.interrupt(); wheelZoom.cancel(); orbit.cancel(); cancelPick();
     pendingFlightFocus = null; pendingHover = null; pointers.clear(); gesture = null;
     clearHover(); territoryFocus.set(null, true); setBrandVisible(false);
@@ -1290,6 +1333,7 @@ export async function createThree(
     getPreviewSnapshot: () => ({ view: { ...view }, focus: { cityCode: territoryFocus.cityCode,
       quarterId: territoryFocus.quarterId }, focusExitHeight, ring: ringNavigation.state() }),
     restorePreviewSnapshot(snapshot: any) {
+      cancelTouch();
       motion.flyTo(snapshot.view, 0);
       territoryFocus.set(snapshot.focus, true);
       focusExitHeight = snapshot.focusExitHeight;
@@ -1344,9 +1388,13 @@ export async function createThree(
     getRingSurface: saturnRing.surfaceAt,
     intersectRing: saturnRing.intersect,
     stopNavigation() {
+      cancelTouch();
       motion.interrupt(); wheelZoom.cancel(); orbit.cancel(); cancelPick();
     },
     zoom,
+    resetNorth() { if (ringNavigation.active) return; cancelTouch(); wheelZoom.cancel(); orbit.cancel(); motion.flyTo({ ...view, bearing: 0 }, 350); },
+    resetTilt(north = false) { if (ringNavigation.active) return; cancelTouch(); wheelZoom.cancel(); orbit.cancel();
+      motion.flyTo({ ...view, pitch: 0, ...(north ? { bearing: 0 } : {}) }, 350); },
     async probeCadence() {
       if (!active) throw Error("Le globe doit être visible pour mesurer la cadence");
       const result = await cadenceProbe.start();
@@ -1396,10 +1444,11 @@ export async function createThree(
       return { ...view };
     },
     isMoving() {
-      return motion.isMoving() || wheelZoom.isMoving() || orbit.isMoving();
+      return motion.isMoving() || wheelZoom.isMoving() || orbit.isMoving() || touchNavigation.isMoving();
     },
     setActive(value: boolean) {
       if (active === value) return;
+      cancelTouch();
       ringNavigation.cancel();
       ringPortraits.cancel();
       pendingHover = null;
@@ -1419,6 +1468,7 @@ export async function createThree(
       if (active) raf = requestAnimationFrame(frame);
     },
     destroy() {
+      cancelTouch();
       // Stop rendering immediately, but retain materials until an in-progress
       // parallel compile has finished polling them (notably during Vite HMR).
       alive = false;

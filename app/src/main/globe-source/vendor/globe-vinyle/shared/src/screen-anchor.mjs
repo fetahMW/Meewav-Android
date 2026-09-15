@@ -2,7 +2,18 @@ import * as T from "three";
 import { xyz, RADIUS } from "./geo.mjs";
 import { wrapLongitude } from "./camera.mjs";
 const clamp = T.MathUtils.clamp;
-export function solveScreenAnchor({ view, camera, point, x, y, width, height, updateCamera, align = null }) {
+const solvers = new WeakMap();
+export function solveScreenAnchor(options) {
+  let solve = solvers.get(options.camera);
+  if (!solve) { solve = createScreenAnchorSolver(); solvers.set(options.camera, solve); }
+  return solve(options);
+}
+export function createScreenAnchorSolver() {
+  const target = new T.Vector2(), worldPoint = new T.Vector3(), projected = new T.Vector3();
+  const current = new T.Vector2(), error = new T.Vector2(), lonDerivative = new T.Vector2();
+  const latDerivative = new T.Vector2(), candidate = new T.Vector2();
+  const weights = [1, .5, .25];
+  return function solve({ view, camera, point, x, y, width, height, updateCamera, align = null, latitudeLimit = 85 }) {
   const entry = { lon: view.lon, lat: view.lat };
   const rollback = () => {
     view.lon = entry.lon;
@@ -10,29 +21,28 @@ export function solveScreenAnchor({ view, camera, point, x, y, width, height, up
     updateCamera();
     return false;
   };
-  const target = new T.Vector2(x, y);
-  const worldPoint = new T.Vector3(...xyz(point[0], point[1], RADIUS));
+  target.set(x, y);
+  worldPoint.fromArray(xyz(point[0], point[1], RADIUS));
   if (align) worldPoint.applyQuaternion(align);
-  const project = () => {
-    const p = worldPoint.clone().project(camera);
-    return new T.Vector2(((p.x + 1) * width) / 2, ((1 - p.y) * height) / 2);
+  const project = out => {
+    projected.copy(worldPoint).project(camera);
+    return out.set(((projected.x + 1) * width) / 2, ((1 - projected.y) * height) / 2);
   };
   // Solve in screen space, which stays continuous when an anchor passes over a pole.
   for (let i = 0; i < 5; i++) {
-    const current = project(),
-      error = target.clone().sub(current);
+    project(current); error.copy(target).sub(current);
     if (error.length() < 0.15) return true;
     const original = { lon: view.lon, lat: view.lat },
       epsilon = Math.min(0.001, view.height * 0.01);
     view.lon = original.lon + epsilon;
     updateCamera();
-    const lonDerivative = project()
+    project(lonDerivative)
       .sub(current)
       .multiplyScalar(1 / epsilon);
     view.lon = original.lon;
     view.lat = original.lat + epsilon;
     updateCamera();
-    const latDerivative = project()
+    project(latDerivative)
       .sub(current)
       .multiplyScalar(1 / epsilon);
     view.lat = original.lat;
@@ -42,16 +52,17 @@ export function solveScreenAnchor({ view, camera, point, x, y, width, height, up
     const dl = clamp((error.x * latDerivative.y - error.y * latDerivative.x) / determinant, -4, 4);
     const dp = clamp((lonDerivative.x * error.y - lonDerivative.y * error.x) / determinant, -3, 3);
     let improved = false;
-    for (const step of [1, 0.5, 0.25]) {
+    for (const step of weights) {
       view.lon = wrapLongitude(original.lon + dl * step);
-      view.lat = clamp(original.lat + dp * step, -85, 85);
+      view.lat = clamp(original.lat + dp * step, -latitudeLimit, latitudeLimit);
       updateCamera();
-      if (project().distanceTo(target) < error.length()) {
+      if (project(candidate).distanceTo(target) < error.length()) {
         improved = true;
         break;
       }
     }
     if (!improved) return rollback();
   }
-  return project().distanceTo(target) < 1 || rollback();
+  return project(candidate).distanceTo(target) < 1 || rollback();
+  };
 }

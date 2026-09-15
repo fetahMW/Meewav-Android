@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.view.View
+import android.view.MotionEvent
 import android.view.ViewGroup
 import android.webkit.PermissionRequest
 import android.webkit.WebChromeClient
@@ -368,6 +369,18 @@ private fun fullGlobeAsset(context: Context, request: WebResourceRequest, manife
 
 private class AuthGlobeWebView(context: Context) : WebView(context) {
     var visibilityChanged: (() -> Unit)? = null
+
+    // WebView handles clicks and its accessibility tree; this only reserves the
+    // gesture from Compose parents and must not synthesize a second click.
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (event.actionMasked == MotionEvent.ACTION_DOWN) parent?.requestDisallowInterceptTouchEvent(true)
+        val handled = super.onTouchEvent(event)
+        if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL) {
+            parent?.requestDisallowInterceptTouchEvent(false)
+        }
+        return handled
+    }
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()

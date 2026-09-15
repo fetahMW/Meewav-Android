@@ -12,12 +12,13 @@ export function applyDirectDrag({
   pickPoint,
   keepPoint,
   updateCamera,
+  maxSteps = Infinity,
 }) {
   const dx = to.x - from.x,
     dy = to.y - from.y;
   if (!Number.isFinite(dx) || !Number.isFinite(dy) || (dx === 0 && dy === 0))
     return { steps: 0, solved: 0, fallback: 0 };
-  const steps = Math.max(1, Math.ceil(Math.hypot(dx, dy) / 8));
+  const steps = Math.max(1, Math.min(maxSteps, Math.ceil(Math.hypot(dx, dy) / 8)));
   let previous = from,
     solved = 0,
     fallback = 0;

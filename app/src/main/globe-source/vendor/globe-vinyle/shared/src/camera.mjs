@@ -3,6 +3,7 @@
 const MIN_HEIGHT = 0.003;
 const MAX_HEIGHT = 400;
 const MAX_LATITUDE = 85;
+export const CAMERA_LIMITS = Object.freeze({ minHeight: MIN_HEIGHT, maxHeight: MAX_HEIGHT, maxLatitude: MAX_LATITUDE, maxPitch: 75 });
 const MIN_LOG_HEIGHT = Math.log(MIN_HEIGHT);
 const MAX_LOG_HEIGHT = Math.log(MAX_HEIGHT);
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -31,14 +32,14 @@ export function shortestLongitudeDelta(from, to) {
   return wrapLongitude(wrapLongitude(to) - wrapLongitude(from));
 }
 
-function sanitizeView(value, fallback) {
+function sanitizeView(value, fallback, elastic = false) {
   return {
     lon: wrapLongitude(finite(value?.lon, fallback.lon)),
     // A rigid globe rotation can cross a geographic pole while staying far
     // from its own axle. Do not snap that camera frame back to latitude 85.
     lat: clamp(finite(value?.lat, fallback.lat), -90, 90),
-    height: clamp(finite(value?.height, fallback.height), MIN_HEIGHT, MAX_HEIGHT),
-    pitch: clamp(finite(value?.pitch, fallback.pitch || 0), 0, 75),
+    height: clamp(finite(value?.height, fallback.height), MIN_HEIGHT * (elastic ? .8 : 1), MAX_HEIGHT * (elastic ? 1.2 : 1)),
+    pitch: clamp(finite(value?.pitch, fallback.pitch || 0), elastic ? -3 : 0, elastic ? 78 : 75),
     bearing: wrapLongitude(finite(value?.bearing, fallback.bearing || 0)),
   };
 }
@@ -62,7 +63,7 @@ export function createCamera(initial, reducedMotion = false) {
   let flightId = 0, completedFlightId = 0;
 
   function interrupt() {
-    Object.assign(view, sanitizeView(view, defaults));
+    Object.assign(view, sanitizeView(view, defaults, true));
     flight = null;
     dragging = false;
   }
@@ -72,7 +73,7 @@ export function createCamera(initial, reducedMotion = false) {
     interrupt,
 
     tick(dtSeconds) {
-      Object.assign(view, sanitizeView(view, defaults));
+      Object.assign(view, sanitizeView(view, defaults, true));
       if (!Number.isFinite(dtSeconds) || dtSeconds <= 0) return;
       // Suspend rather than replay a background-tab pause in one visible frame.
       if (dtSeconds > 0.25) {

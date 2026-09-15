@@ -16,8 +16,9 @@ for (const [name, version] of [['three', '0.185.1'], ['react', '19.2.6'], ['reac
 const { build } = require('esbuild');
 await mkdir(join(output, 'assets'), { recursive: true });
 
-// Compile the Web renderer unchanged: original pixel ratio, antialiasing,
-// full geometry, materials and portrait atlases. Android only adapts its host.
+// Preserve the Web rendering quality: original pixel ratio, antialiasing,
+// geometry, materials and portrait atlases. Touch/camera adaptations are listed
+// in Docs/Globe/Navigation-tactile.md; the source provenance stays historical.
 const result = await build({
   absWorkingDir: root,
   entryPoints: {
