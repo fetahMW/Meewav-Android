@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ChevronLeft
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -25,19 +26,19 @@ import com.meewav.android.R
 import com.meewav.android.core.design.Muted
 
 @Composable
-internal fun SceneGlobeArrival(state: AuthUiState, onBack: () -> Unit, onEnter: () -> Unit) {
+internal fun SceneGlobeArrival(state: AuthUiState, onBack: () -> Unit, onEnter: () -> Unit, onClose: () -> Unit) {
     val interactive = state.page == AuthPage.Globe
     val sceneLabel = listOfNotNull(state.profile.musicScene?.label, state.profile.city.takeIf { it.isNotBlank() })
         .distinct().joinToString(" · ")
     if (interactive) {
         Box(Modifier.fillMaxSize().background(Color(0xFF08090D)).safeDrawingPadding()) {
             AuthCompletionGlobe(Modifier.fillMaxSize(), interactive = true, onClick = onEnter)
-            // The full Web scene already provides its own branding and controls.
-            IconButton(onClick = onBack, modifier = Modifier.align(Alignment.TopStart)
-                .padding(start = 10.dp, top = 10.dp).size(width = 52.dp, height = 44.dp)
+            // Reserved right strip in mobile.css keeps this outside Web panels.
+            IconButton(onClick = onClose, modifier = Modifier.align(Alignment.TopEnd)
+                .padding(end = 6.dp, top = 10.dp).size(44.dp)
                 .background(Brush.verticalGradient(listOf(Color(0xC01C1628), Color(0xD008070D))), RoundedCornerShape(16.dp))
                 .border(0.75.dp, Color(0x457E6A99), RoundedCornerShape(16.dp))) {
-                Icon(Icons.Outlined.ChevronLeft, "Retour à ta scène", Modifier.size(22.dp), tint = Color.White)
+                Icon(Icons.Outlined.Close, "Fermer l’application", Modifier.size(18.dp), tint = Color.White)
             }
         }
         return

@@ -39,7 +39,7 @@ class MainActivity : ComponentActivity() {
             val state by authViewModel.state.collectAsStateWithLifecycle()
             val landscape = state.page == AuthPage.Preview || state.page == AuthPage.Globe
             LaunchedEffect(landscape) { applyDisplayMode(landscape) }
-            MeewavTheme { AuthScreen(state, authViewModel) }
+            MeewavTheme { AuthScreen(state, authViewModel, onCloseApp = { finishAndRemoveTask() }) }
         }
     }
 

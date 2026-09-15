@@ -64,13 +64,15 @@ data class AuthActions(
     val startPreview: () -> Unit = {},
     val exitPreview: () -> Unit = {},
     val social: (SocialAuthProvider) -> Unit = {},
+    val closeApp: () -> Unit = {},
 )
 
 @Composable
-fun AuthScreen(state: AuthUiState, viewModel: AuthViewModel) {
+fun AuthScreen(state: AuthUiState, viewModel: AuthViewModel, onCloseApp: () -> Unit) {
     AuthContent(state, AuthActions(viewModel::navigate, viewModel::back, viewModel::email,
         viewModel::username, viewModel::password, viewModel::confirmation, viewModel::profile,
-        viewModel::submit, viewModel::signOut, viewModel::startPreview, viewModel::exitPreview, viewModel::signInSocial))
+        viewModel::submit, viewModel::signOut, viewModel::startPreview, viewModel::exitPreview, viewModel::signInSocial,
+        closeApp = onCloseApp))
 }
 
 @Composable
@@ -83,7 +85,9 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
     val submit = { keyboard?.hide(); focus.clearFocus(); actions.submit() }
     LaunchedEffect(state.page) { scroll.scrollTo(0) }
     BackHandler(enabled = !keyboardOpen && state.page !in setOf(AuthPage.Login, AuthPage.SignedIn)) {
-        if (!state.busy) actions.back()
+        if (!state.busy) {
+            if (state.page == AuthPage.Globe) actions.closeApp() else actions.back()
+        }
     }
     Box(Modifier.fillMaxSize().background(Ink)) {
         if (state.page != AuthPage.Globe) {
@@ -99,7 +103,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
             return@Box
         }
         if (state.page == AuthPage.Preview || state.page == AuthPage.Globe) {
-            SceneGlobeArrival(state, onBack = actions.back, onEnter = submit)
+            SceneGlobeArrival(state, onBack = actions.back, onEnter = submit, onClose = actions.closeApp)
             return@Box
         }
         BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {

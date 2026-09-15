@@ -1,18 +1,21 @@
 import { RING_AUDIO_URL } from './ring-audio';
 
 export function createRingPlayback(canPlay: () => boolean) {
-  const audio = new Audio(RING_AUDIO_URL);
+  const audio = new Audio();
   audio.preload = 'metadata'; audio.loop = true;
   let muted = false;
   try { muted = localStorage.getItem('meewav.ring-muted.v1') === 'true'; } catch { /* Optional preference. */ }
   audio.muted = muted;
   let requested = false, playing = false, pending = false, disposed = false;
   let generation = 0, error = '';
+  let sourceReady = false, sourceLoading = false, sourceUrl = '';
+  const sourceRequest = new AbortController();
   let lastState: ReturnType<typeof state> | null = null;
-  const state = () => ({ playing, pending, muted, available: !disposed && canPlay(), error });
+  const available = () => !disposed && !sourceLoading && canPlay();
+  const state = () => ({ playing, pending, muted, available: available(), error });
   const publish = () => {
     if (disposed) return;
-    const available = canPlay();
+    const available = state().available;
     if (lastState?.playing === playing && lastState.pending === pending &&
       lastState.available === available && lastState.error === error && lastState.muted === muted) return;
     const detail = { playing, pending, muted, available, error };
@@ -36,6 +39,27 @@ export function createRingPlayback(canPlay: () => boolean) {
   const onError = () => { error = 'Le morceau ne peut pas être lu. Réessaie.'; pause(); };
   const hidden = () => { if (document.hidden) pause(); else publish(); };
   const otherMedia = (event: Event) => { if (event.target !== audio) pause(); };
+  // Read the small bundled track once through the asset interceptor. The media
+  // decoder then seeks inside a Blob, without WebView HTTP range reads.
+  const prepareSource = async () => {
+    if (disposed || sourceLoading || sourceReady) return;
+    sourceLoading = true; error = ''; publish();
+    try {
+      const response = await fetch(RING_AUDIO_URL, { signal: sourceRequest.signal });
+      if (!response.ok) throw new Error('Local audio unavailable');
+      const blob = await response.blob();
+      if (!blob.size) throw new Error('Empty local audio');
+      if (disposed) return;
+      sourceUrl = URL.createObjectURL(blob);
+      audio.src = sourceUrl;
+      sourceReady = true;
+      audio.load();
+    } catch {
+      if (!disposed) error = 'Chargement du morceau impossible. Appuie sur Play pour réessayer.';
+    } finally {
+      sourceLoading = false; publish();
+    }
+  };
   audio?.addEventListener('playing', onPlaying);
   audio?.addEventListener('waiting', onWaiting);
   audio?.addEventListener('pause', onPause);
@@ -44,6 +68,7 @@ export function createRingPlayback(canPlay: () => boolean) {
   document.addEventListener('play', otherMedia, true);
   window.addEventListener('pagehide', pause);
   window.addEventListener('meewav:ring-portrait-select', pause);
+  void prepareSource();
   return {
     get playing() { return playing; },
     state,
@@ -58,6 +83,7 @@ export function createRingPlayback(canPlay: () => boolean) {
     toggle() {
       if (requested || playing || pending) { pause(); return; }
       if (disposed || !canPlay()) return;
+      if (!sourceReady) { void prepareSource(); return; }
       const attempt = ++generation;
       error = ''; requested = pending = true; publish();
       if (audio.error) audio.load();
@@ -69,6 +95,7 @@ export function createRingPlayback(canPlay: () => boolean) {
     },
     dispose() {
       pause(); disposed = true;
+      sourceRequest.abort();
       document.removeEventListener('visibilitychange', hidden);
       document.removeEventListener('play', otherMedia, true);
       window.removeEventListener('pagehide', pause);
@@ -79,6 +106,7 @@ export function createRingPlayback(canPlay: () => boolean) {
       audio.removeEventListener('pause', onPause);
       audio.removeEventListener('error', onError);
       audio.removeAttribute('src'); audio.load();
+      if (sourceUrl) URL.revokeObjectURL(sourceUrl);
     },
   };
 }

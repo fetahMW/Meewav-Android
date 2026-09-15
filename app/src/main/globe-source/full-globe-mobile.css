@@ -9,7 +9,8 @@ html, body, #root { width: 100%; height: 100%; margin: 0; overflow: hidden; }
     --mobile-artist-panel-width: 288px;
     --mobile-artist-panel-top: 10px;
     --mobile-artist-panel-bottom: 10px;
-    --mobile-artist-panel-right: 12px;
+    /* Keep the native app-close target clear, including with a profile open. */
+    --mobile-artist-panel-right: 60px;
     --mobile-artist-panel-height: calc(100dvh - var(--mobile-artist-panel-top) - var(--mobile-artist-panel-bottom));
     --mobile-ring-controls-top: 12px;
     --mobile-ring-controls-height: 46px;
@@ -47,13 +48,13 @@ html, body, #root { width: 100%; height: 100%; margin: 0; overflow: hidden; }
   }
   .immersive-globe .ring-mute-button[aria-pressed="true"] { color: #fff; }
   .ring-playback-error { position: fixed; left: calc(50% - 125px); top: calc(var(--mobile-ring-controls-top) + var(--mobile-ring-controls-height) + 8px); z-index: 16030; max-width: 250px; padding: 9px 12px; margin: 0; border-radius: 10px; background: #100a20ed; color: #eadcf7; font: 12px/1.35 Inter, sans-serif; }
-  .reference-search-dock { top: 10px; left: 76px; width: min(312px, calc(100% - var(--mobile-artist-panel-width) - 112px)); height: 36px; }
+  .reference-search-dock { top: 10px; left: 76px; width: min(312px, calc(100% - var(--mobile-artist-panel-width) - var(--mobile-artist-panel-right) - 100px)); height: 36px; }
   .reference-search-dock .meewav-search-filter-bar.is-flow { flex: 1 1 auto; width: 100%; height: 36px; min-width: 0; padding: 3px 5px; gap: 5px; border-radius: 13px; }
   .reference-search-dock .search-bar input { font-size: 12px; }
   .reference-search-dock .search-submit-button { width: 28px; height: 28px; }
   .reference-search-dock .meewav-search-filter-bar__shortcut { display: none; }
-  .reference-search-results.france-search-dropdown { top: 52px; left: 76px; width: min(312px, calc(100% - var(--mobile-artist-panel-width) - 112px)); max-height: calc(100dvh - 66px); overflow-y: auto; }
-  .reference-rail .globe-navigation-pole { top: 66px; left: 10px; bottom: 10px; width: 52px; height: auto; padding: 8px 4px; justify-content: space-between; gap: 0; border-radius: 16px; clip-path: none; mask: none; }
+  .reference-search-results.france-search-dropdown { top: 52px; left: 76px; width: min(312px, calc(100% - var(--mobile-artist-panel-width) - var(--mobile-artist-panel-right) - 100px)); max-height: calc(100dvh - 66px); overflow-y: auto; }
+  .reference-rail .globe-navigation-pole { top: 10px; left: 10px; bottom: 10px; width: 52px; height: auto; padding: 8px 4px; justify-content: space-between; gap: 0; border-radius: 16px; clip-path: none; mask: none; }
   .reference-rail .globe-navigation-pole > .meewav-primary-nav__item.is-map { width: 42px; height: 36px; flex-basis: 36px; margin-top: 0; border-radius: 10px; background: none; box-shadow: none; }
   .reference-rail .globe-navigation-pole > .meewav-primary-nav__item.is-map::before,
   .reference-rail .globe-navigation-pole > .meewav-primary-nav__item.is-map::after { display: none; content: none; }
@@ -64,9 +65,6 @@ html, body, #root { width: 100%; height: 100%; margin: 0; overflow: hidden; }
   .reference-rail .globe-navigation-pole .meewav-primary-nav__account::before { display: none; content: none; }
   .reference-rail .globe-navigation-pole.is-glass-chassis .meewav-primary-nav__globe { width: 31px; height: 31px; box-shadow: none; }
   .globe-honors-dock { --honors-top: 10px; top: 10px; right: var(--mobile-artist-panel-right); width: var(--mobile-artist-panel-width); gap: 8px; }
-  .globe-honors-dock .globe-brand-logo-shell.globe-brand-compact { width: 100px; height: 32px; flex: 0 0 32px; }
-  .globe-honors-dock .globe-brand-logo { width: 100%; height: 100%; object-fit: contain; }
-  .globe-honors-dock:has(.national-top-ten[data-expanded="true"]) .globe-brand-logo-shell { display: none; }
   .immersive-globe .national-top-ten__toggle { min-height: 42px; padding: 8px 10px; gap: 7px; font-size: 11px; }
   .national-top-ten__heading small { font-size: 9px; }
   .national-top-ten { max-height: var(--mobile-artist-panel-height); }

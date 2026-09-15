@@ -108,8 +108,12 @@ Ma position occupent trois boutons carrés à droite, avec des icônes et des li
 d’accessibilité. Ils s’effacent quand le Top 10 est déplié pour laisser sa liste
 accessible. Ma position conserve sa destination de démonstration (Charonne) ;
 ce déplacement des commandes n’ajoute pas de géolocalisation réelle. La recherche
-est limitée à 312 × 36 pixels CSS en paysage ; le retour natif reste disponible
-vers « Ta scène est prête », centré sur le même axe que la navigation verticale.
+est limitée à 312 × 36 pixels CSS en paysage. Dans le globe complet, le chevron
+vers l’inscription et le logo supérieur sont retirés. Le Top 10 et la navigation
+commencent à 10 pixels du haut. Une croix native en haut à droite ferme la tâche
+Android sans effacer les données ; le retour système depuis le globe fait de même.
+Une bande de 60 pixels à droite des fiches réserve sa cible tactile. Le bouton
+« Retour au globe » de l’exploration du vinyle reste disponible.
 Le conteneur de navigation a un contour continu et accueille son petit globe
 fixe sans effet de creux. Tous les boutons, du globe au profil, partagent une
 distribution verticale unique avec des intervalles égaux et des marges haute et
@@ -145,8 +149,12 @@ zéro du morceau, arrêt sur erreur et libération au démontage. La musique est
 en boucle pendant la rotation. La lecture d’un média de préprofil suspend
 celle du vinyle. `ring-audio.ts` référence `audio/ring-exploration.m4a`, copie sans
 transcodage du fichier utilisateur `Untitled (2).m4a`. Son MIME est `audio/mp4`.
-`LocalMediaAsset.kt` sert les portions demandées par le lecteur via Range,
-sans charger tout le média en mémoire ni autoriser une origine distante.
+Après des erreurs `PIPELINE_ERROR_READ` observées dans le journal du Samsung,
+le morceau (2,25 Mo) est préchargé une fois via fetch puis fourni au lecteur comme
+Blob local. Le décodeur peut chercher dans ce Blob sans requêtes Range vers la
+WebView. Play attend la fin du préchargement et démarre toujours la lecture dans
+le geste utilisateur. Le fichier AAC original reste intact ; le Blob est libéré
+au démontage. `LocalMediaAsset.kt` reste disponible pour les autres médias.
 
 Un bouton muet de 46 pixels, à droite de Play/Pause, coupe ou rétablit le son
 sans arrêter la rotation, sans changer la position de lecture et sans démarrer

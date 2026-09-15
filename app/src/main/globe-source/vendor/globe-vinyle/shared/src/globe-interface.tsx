@@ -12,12 +12,8 @@ import { getGradeBadgeMeta } from "./reference/features/grades/gradeBadges";
 import { targetFor } from "./geo.mjs";
 import { EIFFEL, MONTPARNASSE, NEGRESCO, CITY_LANDMARKS } from "./eiffel-landmark.mjs";
 import { CHARONNE_ID } from "./navigation-presets.mjs";
-import meewavBrandLogo from "../../assets/ui/assets/meewav-logo.svg";
 import "./globe-interface.css";
 import "./reference/features/globe/styles/globe-v2.css";
-
-// esbuild emits the SVG beside this module, not beside the HTML page.
-const meewavBrandLogoUrl = new URL(meewavBrandLogo, import.meta.url).href;
 
 const normalise = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 const roleIds = GLOBE_ARTIST_ROLE_OPTIONS.map(role => role.key);
@@ -283,9 +279,6 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
         <GroundArtistPreProfile selection={groundAvatar} onClose={closeGroundAvatar} />
     </RingPreProfileBoundary>}
     {ready && mode === "globe" && <div className="globe-honors-dock">
-      <div className="globe-brand-logo-shell globe-brand-compact">
-        <img className="globe-brand-logo" src={meewavBrandLogoUrl} alt="MeeWav" draggable={false} />
-      </div>
       {topTenVisible && <NationalTopTen openRequested={topTenRequested} canOpen={() => !engine.current?.isMoving()} onOpenHandled={() => setTopTenRequested(false)} />}
     </div>}
     <aside className="reference-rail"><GlobeNavigationPole onGlobe={goGlobe} onNavigate={openDestination} /></aside>
