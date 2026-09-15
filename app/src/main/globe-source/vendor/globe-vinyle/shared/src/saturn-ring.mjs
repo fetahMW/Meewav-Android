@@ -87,7 +87,7 @@ export function createSaturnRing(scene, options = {}) {
   root.add(turntable);
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const animated = options.animated !== false;
-  let rotation = 0;
+  let rotation = 0, reflectionTravel = 0;
 
   // The signature artwork follows the record plane, with neutral CSS fans.
   const material = createVinylRecordMaterial(layout, 0, intensity);
@@ -155,12 +155,15 @@ export function createSaturnRing(scene, options = {}) {
       // frame instead of jumping around the disc when rendering resumes.
       const step = Number.isFinite(dt) && dt > 0 && dt < 1 ? dt : 0;
       if (!step) return false;
-      rotation = (rotation + step * TAU / periodSeconds) % TAU;
+      const turn = step * TAU / periodSeconds;
+      rotation = (rotation + turn) % TAU;
+      // Seule la lecture explicite emporte les reflets avec la surface.
+      // Garder leur phase entre pauses et retours évite tout saut d’éclairage.
+      if (userInitiated) reflectionTravel = (reflectionTravel + turn) % TAU;
       // Negative local Y is clockwise when looking down on the record.
       turntable.rotation.y = -rotation;
-      // Transform the fixed studio sources into the rotating material frame:
-      // dust travels with the PVC, highlights stay under their light sources.
-      material.uniforms.uLightRotation.value = -rotation;
+      material.uniforms.uLightRotation.value = -rotation + reflectionTravel;
+      material.uniforms.uReflectionSurfaceRotation.value = -reflectionTravel;
       turntable.updateMatrixWorld(true);
       return true;
     },

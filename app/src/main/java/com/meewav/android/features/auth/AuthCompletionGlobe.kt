@@ -359,6 +359,10 @@ private fun fullGlobeAsset(context: Context, request: WebResourceRequest, manife
     val record = manifest.optJSONObject(asset) ?: return denied()
     val mime = record.getString("mime")
     return try {
+        if (mime.startsWith("audio/") || mime.startsWith("video/")) {
+            return localMediaAsset(context, "globe-vinyle/$asset", mime, record.getLong("bytes"),
+                request.requestHeaders.entries.firstOrNull { it.key.equals("Range", ignoreCase = true) }?.value)
+        }
         WebResourceResponse(mime,
             if (mime.startsWith("text/") || mime in setOf("application/javascript", "application/json", "image/svg+xml")) "utf-8" else null,
             200, "OK", mapOf("Cache-Control" to "no-store", "X-Content-Type-Options" to "nosniff",

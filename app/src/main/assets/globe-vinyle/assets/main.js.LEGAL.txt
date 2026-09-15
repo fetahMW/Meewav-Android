@@ -97,6 +97,8 @@ lucide-react/dist/esm/icons/store.mjs:
 lucide-react/dist/esm/icons/trash-2.mjs:
 lucide-react/dist/esm/icons/user-round.mjs:
 lucide-react/dist/esm/icons/users-round.mjs:
+lucide-react/dist/esm/icons/volume-2.mjs:
+lucide-react/dist/esm/icons/volume-x.mjs:
 lucide-react/dist/esm/icons/x.mjs:
 lucide-react/dist/esm/lucide-react.mjs:
   /**

@@ -129,13 +129,28 @@ tourne pas automatiquement. Pause garde exactement l’angle courant. Toucher le
 canvas, sélectionner un portrait, revenir au globe ou mettre l’application en
 arrière-plan met la lecture en pause ; elle ne repart que sur une nouvelle action.
 
-`ring-playback.ts` prépare une lecture audio locale : démarrage dans le geste
+Le disque et les portraits partageaient déjà le groupe tournant. Les reflets
+étaient compensés pour rester fixes dans l’espace, ce qui pouvait donner une
+impression de surface immobile. En lecture d’exploration, les reflets suivent
+désormais la surface, avec la compensation de vue déjà utilisée par la miniature.
+La phase lumineuse est conservée à la pause et au retour, sans saut ni réduction
+de qualité. Le rythme de quatre minutes par tour reste identique.
+
+`ring-playback.ts` commande une lecture audio locale : démarrage dans le geste
 utilisateur, rotation liée à l’état de lecture réel, pause/reprise sans remise à
 zéro du morceau, arrêt sur erreur et libération au démontage. La musique est
-prévue en boucle pendant la rotation. La lecture d’un média de préprofil suspend
-celle du vinyle. À ce stade, `ring-audio.ts` attend encore le chemin du morceau
-fourni par l’utilisateur : la rotation peut fonctionner seule, aucun morceau
-de substitution n’est choisi et la partie audio n’est pas livrée ni vérifiée.
+en boucle pendant la rotation. La lecture d’un média de préprofil suspend
+celle du vinyle. `ring-audio.ts` référence `audio/ring-exploration.m4a`, copie sans
+transcodage du fichier utilisateur `Untitled (2).m4a`. Son MIME est `audio/mp4`.
+`LocalMediaAsset.kt` sert les portions demandées par le lecteur via Range,
+sans charger tout le média en mémoire ni autoriser une origine distante.
+
+Un bouton muet de 46 pixels, à droite de Play/Pause, coupe ou rétablit le son
+sans arrêter la rotation, sans changer la position de lecture et sans démarrer
+une lecture en pause. Le choix reste dans le contrôleur de session ; sa sauvegarde
+locale est facultative et dépend de la disponibilité du stockage WebView.
+Compilation et installation ne constituent pas un essai audio ou visuel :
+la validation du son, de la reprise et des reflets sur appareil reste à l’utilisateur.
 
 ### Historique des contrôles du rendu
 

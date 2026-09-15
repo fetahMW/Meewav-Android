@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Building2, Crosshair, Crown, EyeOff, MapPin, X, Orbit, ArrowLeft, ArrowRight, Play, Pause } from "lucide-react";
+import { Building2, Crosshair, Crown, EyeOff, MapPin, X, Orbit, ArrowLeft, ArrowRight, Play, Pause, Volume2, VolumeX } from "lucide-react";
 import GlobeNavigationPole from "./GlobeNavigationPole";
 import NationalTopTen from "./NationalTopTen";
 import { RingPreProfileBoundary } from "./RingPreProfileBoundary";
@@ -36,7 +36,7 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
   const [topTenRequested, setTopTenRequested] = useState(false);
   const [mode, setMode] = useState<"globe" | "city" | "country" | "position" | "ring">("globe");
   const [ringReturning, setRingReturning] = useState(false);
-  const [ringPlayback, setRingPlayback] = useState({ playing: false, pending: false, available: false, error: '' });
+  const [ringPlayback, setRingPlayback] = useState({ playing: false, pending: false, muted: false, available: false, error: '' });
   const [ringPortrait, setRingPortrait] = useState<any>(null);
   const [groundAvatar, setGroundAvatar] = useState<any>(null);
   useEffect(() => {
@@ -268,6 +268,11 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
         aria-pressed={ringPlayback.playing || ringPlayback.pending} aria-busy={ringPlayback.pending}
         disabled={!ringPlayback.available} onClick={() => engine.current?.toggleRingPlayback()}>
         {ringPlayback.playing || ringPlayback.pending ? <Pause size={21} fill="currentColor" aria-hidden="true" /> : <Play size={21} fill="currentColor" aria-hidden="true" />}
+      </button>}
+      {!ringReturning && <button className="ring-mute-button ring-key-surface" type="button"
+        aria-label={ringPlayback.muted ? 'Rétablir le son du vinyle' : 'Couper le son du vinyle'}
+        aria-pressed={ringPlayback.muted} onClick={() => engine.current?.toggleRingMuted()}>
+        {ringPlayback.muted ? <VolumeX size={20} aria-hidden="true" /> : <Volume2 size={20} aria-hidden="true" />}
       </button>}
       {ringPlayback.error && <p className="ring-playback-error" role="status">{ringPlayback.error}</p>}
       {!ringReturning && ringPortrait && <RingPreProfileBoundary key={ringPortrait.instanceId} onClose={closeRingPortrait}>

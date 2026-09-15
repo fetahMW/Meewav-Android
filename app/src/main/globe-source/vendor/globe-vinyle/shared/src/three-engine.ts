@@ -1343,6 +1343,7 @@ export async function createThree(
     enterRing,
     exitRing,
     getRingPlaybackState: ringPlayback.state,
+    toggleRingMuted: ringPlayback.toggleMuted,
     toggleRingPlayback() {
       cancelTouch(); ringNavigation.cancel(); ringPlayback.toggle();
     },

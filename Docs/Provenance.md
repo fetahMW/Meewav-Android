@@ -2,6 +2,14 @@
 
 Le [globe complet](Globe/README.md) reprend les sources, données, modèles et médias de `Meewav-Web` au commit `32a5e5fea7f6eebb3867c22a27e8b62230bb8d21`. Les chemins et empreintes sont dans `app/src/main/globe-source/web-globe-provenance.json`. Les notices existantes et les licences des dépendances compilées accompagnent le nouveau bundle. La réutilisation demandée dans Android ne crée pas une attribution supplémentaire ni une licence publique du produit.
 
+## Audio de l’exploration du vinyle
+
+`app/src/main/assets/globe-vinyle/audio/ring-exploration.m4a` est la copie intégrale
+du fichier `C:/Users/linkw/Downloads/Untitled (2).m4a`, fourni directement par
+l’utilisateur pour cette lecture dans l’application. Taille : 2 254 689 octets.
+Le fichier est renommé pour l’embarquement, sans conversion ni réencodage.
+Aucun titre commercial, auteur ou licence supplémentaire n’est attribué.
+
 ## Identité Meewav
 
 Les ressources suivantes proviennent de la version Web validée par l’utilisateur, au commit `32a5e5fea7f6eebb3867c22a27e8b62230bb8d21` :

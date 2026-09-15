@@ -1,18 +1,21 @@
 import { RING_AUDIO_URL } from './ring-audio';
 
 export function createRingPlayback(canPlay: () => boolean) {
-  const audio = RING_AUDIO_URL ? new Audio(RING_AUDIO_URL) : null;
-  if (audio) { audio.preload = 'metadata'; audio.loop = true; }
+  const audio = new Audio(RING_AUDIO_URL);
+  audio.preload = 'metadata'; audio.loop = true;
+  let muted = false;
+  try { muted = localStorage.getItem('meewav.ring-muted.v1') === 'true'; } catch { /* Optional preference. */ }
+  audio.muted = muted;
   let requested = false, playing = false, pending = false, disposed = false;
   let generation = 0, error = '';
   let lastState: ReturnType<typeof state> | null = null;
-  const state = () => ({ playing, pending, available: !disposed && canPlay(), error });
+  const state = () => ({ playing, pending, muted, available: !disposed && canPlay(), error });
   const publish = () => {
     if (disposed) return;
     const available = canPlay();
     if (lastState?.playing === playing && lastState.pending === pending &&
-      lastState.available === available && lastState.error === error) return;
-    const detail = { playing, pending, available, error };
+      lastState.available === available && lastState.error === error && lastState.muted === muted) return;
+    const detail = { playing, pending, muted, available, error };
     lastState = detail;
     window.dispatchEvent(new CustomEvent('meewav:ring-playback', { detail }));
   };
@@ -46,13 +49,17 @@ export function createRingPlayback(canPlay: () => boolean) {
     state,
     refresh() { if (!canPlay() && requested) pause(); else publish(); },
     pause,
+    toggleMuted() {
+      if (disposed) return;
+      muted = !muted; audio.muted = muted;
+      try { localStorage.setItem('meewav.ring-muted.v1', String(muted)); } catch { /* Optional preference. */ }
+      publish();
+    },
     toggle() {
       if (requested || playing || pending) { pause(); return; }
       if (disposed || !canPlay()) return;
       const attempt = ++generation;
       error = ''; requested = pending = true; publish();
-      // Sans morceau configuré, permet de préparer la rotation indépendamment.
-      if (!audio) { onPlaying(); return; }
       if (audio.error) audio.load();
       // L’appel reste dans le tap utilisateur, requis par Android WebView.
       void audio.play().catch(() => {

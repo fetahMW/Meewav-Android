@@ -1,2 +1,2 @@
-// Le chemin local sera renseigné à réception du morceau choisi par l’utilisateur.
-export const RING_AUDIO_URL: string | null = null;
+// Morceau fourni par l’utilisateur : Untitled (2).m4a, copié sans transcodage.
+export const RING_AUDIO_URL = '/globe-vinyle/audio/ring-exploration.m4a';

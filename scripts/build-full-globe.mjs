@@ -74,7 +74,7 @@ await writeFile(join(output, 'THIRD_PARTY_NOTICES.txt'), notices);
 const types = { '.html':'text/html', '.css':'text/css', '.js':'application/javascript', '.json':'application/json',
   '.geojson':'application/json', '.svg':'image/svg+xml', '.jpg':'image/jpeg', '.jpeg':'image/jpeg', '.png':'image/png',
   '.webp':'image/webp', '.gif':'image/gif', '.glb':'model/gltf-binary', '.wasm':'application/wasm', '.mp4':'video/mp4',
-  '.mp3':'audio/mpeg', '.txt':'text/plain', '.md':'text/plain' };
+  '.mp3':'audio/mpeg', '.m4a':'audio/mp4', '.txt':'text/plain', '.md':'text/plain' };
 const assets = {};
 async function list(folder) {
   for (const entry of (await readdir(folder, { withFileTypes: true })).sort((a,b) => a.name.localeCompare(b.name))) {
