@@ -125,9 +125,12 @@ du globe ne sont pas réduites par ces adaptations.
 La recherche place les villes avant les autres lieux et les artistes. Les noms
 exacts et débuts de noms restent prioritaires à l’intérieur de la catégorie ;
 la recherche d’artistes porte sur leur nom/alias, et non leur ville ou quartier.
-Les accents et tirets sont normalisés. Un appui tactile sur une suggestion
-déclenche sa destination au relâchement, sans attendre un clic après fermeture
-du clavier ; un défilement de liste annule cet appui. La perte de focus du champ
+Les accents et tirets sont normalisés. L’activation d’une suggestion appelle
+directement la même navigation que la loupe, via le clic natif tactile, souris
+ou clavier. Le navigateur distingue ce clic d’un défilement de liste. Le champ
+et le clavier sont refermés avant de démarrer le vol ; une transition de focus
+de la WebView ne coupe plus un vol en cours. La mise en arrière-plan réelle garde
+sa suspension via `setActive(false)`. La perte de focus du champ
 vers la liste ne la démonte plus. Le clavier et l’accessibilité gardent leur
 activation habituelle. Les destinations d’avatars utilisent aussi l’index des
 quartiers et le code de leur ville, au lieu de supposer systématiquement Paris.

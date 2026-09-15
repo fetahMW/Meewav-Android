@@ -1013,8 +1013,11 @@ export async function createThree(
     ringPortraits.cancel();
     pendingHover = null;
     clearHover();
-    orbit.cancel(); wheelZoom.cancel(); motion.interrupt(); cancelPick();
-    holdFlightTerritory();
+    orbit.cancel(); wheelZoom.cancel(); cancelPick();
+    // Keyboard/focus transitions can blur the WebView while it remains active.
+    // Cancel manual input here, but preserve an explicit destination flight.
+    // Actual backgrounding still suspends navigation through setActive(false).
+    if (!motion.isFlying()) { motion.interrupt(); holdFlightTerritory(); }
     pointers.clear(); gesture = null; canvas.classList.remove("dragging");
   };
   canvas.addEventListener("contextmenu", contextmenu);

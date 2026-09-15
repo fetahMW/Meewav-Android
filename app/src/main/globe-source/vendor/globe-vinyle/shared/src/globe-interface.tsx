@@ -56,7 +56,6 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
   const inputRef = useRef<HTMLInputElement>(null);
   const searchDock = useRef<HTMLElement>(null);
   const searchResults = useRef<HTMLDivElement>(null);
-  const resultPress = useRef<{ id: number; resultId: string; x: number; y: number; moved: boolean } | null>(null);
   const filterTrigger = useRef<HTMLButtonElement>(null);
   const filterBody = useRef<HTMLDivElement>(null);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -122,7 +121,6 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
   useEffect(() => {
     const outsideSearch = (event: PointerEvent) => {
       if (!(event.target instanceof Node) || searchDock.current?.contains(event.target) || searchResults.current?.contains(event.target)) return;
-      resultPress.current = null;
       setFocused(false);
       inputRef.current?.blur();
     };
@@ -164,6 +162,9 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
   };
   const choose = (result: any) => {
     if (!result || !ready) return;
+    // Finish text entry before starting the camera flight. Closing Android's
+    // keyboard must not immediately cancel a flight just requested by a tap.
+    setQuery(result.name); setFocused(false); setNotice(''); inputRef.current?.blur();
     closeGroundAvatar();
     if (result.avatar) {
       const quarter = data.sectors.features.find((feature: any) => feature.id === result.zoneId);
@@ -179,7 +180,6 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
         : cityCode ? { cityCode } : undefined);
       rememberCity(cityLabels.find((city: any) => city.id === (result.cityId || "fr-commune-75056")));
       setMode("city");
-      setQuery(result.name); setFocused(false); setNotice(""); inputRef.current?.blur();
       return;
     }
     const target = result.id === "france" ? { ...engine.current.getOverviewTarget("country"), countryFlight: true } : result.target || targetFor(result.feature);
@@ -191,7 +191,6 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
     if (result.city) { rememberCity(result); setMode("city"); }
     else setMode(result.landmark || result.quarter || result.feature?.properties.kind === "quartier" || result.id === "eiffel" || result.id === "montparnasse" ? "city" : "country");
     if (result.quarter || result.landmark) rememberCity(cityLabels.find((city: any) => city.code === result.cityCode));
-    setQuery(result.name); setFocused(false); setNotice(""); inputRef.current?.blur();
   };
   const goCurrentCity = () => {
     const city = resolveCurrentCity();
@@ -341,28 +340,13 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
         <button className={`map-mode-switch__button ${mode === "position" ? "is-active" : ""}`} disabled={!ready} onClick={goPosition} aria-label="Ma position fictive : Charonne, Paris" title="Ma position — quartier Charonne, Paris (démo)" aria-pressed={mode === "position"}><Crosshair size={19} aria-hidden="true" /><span className="map-mode-switch__label">Ma position</span></button>
       </nav>
     {showResults && <div ref={searchResults} id="reference-search-results" className="reference-search-results france-search-dropdown" role="listbox">
-      {results.map((result: any, i: number) => <button key={result.id} id={`result-${result.id}`} role="option" aria-selected={i === activeIndex} className={i === activeIndex ? "is-active" : ""}
+      {results.map((result: any, i: number) => <button type="button" key={result.id} id={`result-${result.id}`} role="option" aria-selected={i === activeIndex} className={i === activeIndex ? "is-active" : ""}
         onPointerDown={event => {
-          if (!event.isPrimary || event.button !== 0) return;
-          event.preventDefault();
-          resultPress.current = { id: event.pointerId, resultId: result.id, x: event.clientX, y: event.clientY, moved: false };
+          // Keep the input focused until activation, while the browser still
+          // distinguishes a tap from native scrolling in the suggestions.
+          if (event.button === 0) event.preventDefault();
         }}
-        onPointerMove={event => {
-          const press = resultPress.current;
-          if (press?.id === event.pointerId && Math.hypot(event.clientX - press.x, event.clientY - press.y) > 10) press.moved = true;
-        }}
-        onPointerCancel={() => { resultPress.current = null; }}
-        onPointerUp={event => {
-          const press = resultPress.current;
-          resultPress.current = null;
-          if (!press || press.id !== event.pointerId || press.resultId !== result.id || press.moved) return;
-          event.preventDefault();
-          choose(result);
-        }}
-        onMouseEnter={() => setActiveIndex(i)} onClick={event => {
-          // Keyboard/accessibility activation; pointer taps were handled once above.
-          if (event.detail === 0) choose(result);
-        }}><MapPin size={17} /><span><strong>{result.name}</strong><small>{result.subtitle}</small></span></button>)}
+        onMouseEnter={() => setActiveIndex(i)} onClick={() => choose(result)}><MapPin size={17} /><span><strong>{result.name}</strong><small>{result.subtitle}</small></span></button>)}
       {!results.length && <p>Aucun lieu ni avatar trouvé.</p>}
     </div>}
     <MeewavFilterPanel open={filterOpen} panelId="artist-filter-drawer" eyebrow="Exploration personnalisée" title="Filtres artistes" description="Sélection des styles d’avatar"
