@@ -206,3 +206,17 @@ Les en-têtes de Projets et Groupes ont une identité, des actions compactes et 
 de sous-onglets. Les panneaux utilisent la hauteur disponible sous les quatre onglets,
 avec défilement de leur contenu et saisie en bas dans les conversations. La compilation
 ne constitue pas une validation visuelle ou un essai des échanges entre comptes.
+
+## Noir et graphite — accueil et Groupes
+
+À la demande de l’utilisateur, l’accueil du Tchat et Groupes utilisent le noir comme
+fond principal et le gris anthracite pour les surfaces et les commandes secondaires,
+avec un relief discret inspiré du Track Pack. Le violet urbain marque les sélections
+et les CTA principaux, sans grand voile prune sur la page. Ces règles locales se
+trouvent à la fin de `mobile.css`, après les styles importés.
+
+Les actions de fermeture et les commandes des panneaux de groupe partagent un seul
+conteneur pour éviter leur superposition. Les membres, projets liés, titres et actions
+ont des colonnes et espacements adaptés au mobile. Les cartes Collab et les bulles du
+Tchat ne sont pas redessinées dans cette passe. Compilation et installation seulement ;
+la validation visuelle reste à effectuer par l’utilisateur.

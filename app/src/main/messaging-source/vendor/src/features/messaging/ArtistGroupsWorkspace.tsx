@@ -433,10 +433,10 @@ function PanelShell({
           <span><small>{eyebrow}</small><strong>{title}</strong></span>
         </div>
         {toolbar && <div className="agw-panel__toolbar">{toolbar}</div>}
-        {toolbar && sideActions && <div className="agw-panel__controls">{sideActions}</div>}
-        {onClose && !hideClose && (
+        {((toolbar && sideActions) || (onClose && !hideClose)) && (
           <div className="agw-panel__controls">
-            <button type="button" className="agw-icon-button" onClick={onClose} aria-label="Fermer"><X size={20} /></button>
+            {toolbar && sideActions}
+            {onClose && !hideClose && <button type="button" className="agw-icon-button" onClick={onClose} aria-label="Fermer"><X size={20} /></button>}
           </div>
         )}
       </header>

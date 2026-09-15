@@ -276,3 +276,64 @@ button:disabled { opacity: .4; cursor: default; }
 #root .mobile-messaging .mw-conversation-header .mw-collab-detail-inline { padding: 0; }
 #root .mobile-messaging .mw-conversation-header .mw-collab-return { margin: 0 0 10px; }
 /* Use the original expanded Web request card; only its surrounding scroll changes. */
+
+/* Black/graphite foundation: violet is an active accent, not a tinted backdrop. */
+#root .mobile-messaging { --group-ink: #08090b; --group-surface: linear-gradient(150deg,#222429,#111215); --group-rim: #ffffff20; --group-muted: #a3a5ae; }
+#root .mobile-messaging .messaging-page,
+#root .mobile-messaging-header,
+#root .mobile-messaging .mw-chat-header,
+#root .mobile-messaging .mw-conversation-rail { background: #08090b; }
+#root .mobile-messaging .messaging-page__backdrop { display: none; }
+#root .mobile-messaging-header { border-bottom-color: #ffffff12; }
+#root .mobile-messaging-header small { color: #a3a5ae; }
+#root .mobile-messaging-header > button,
+#root .mobile-messaging-header__actions > button { background: linear-gradient(180deg,#23252a,#141519); border-color: #ffffff20; color: #e2e3e7; box-shadow: inset 0 1px #ffffff0b; }
+#root .mobile-messaging .mw-workspace .mw-conversation-list > article { background: transparent; border-color: transparent; box-shadow: none; }
+#root .mobile-messaging .mw-workspace .mw-conversation-list > article:is(:hover,:focus-within,.is-active) { background: linear-gradient(145deg,#24262c,#17181d); border-color: #ffffff15; box-shadow: inset 0 1px #ffffff0a; }
+#root .mobile-messaging :is(.mw-rail-search,.mw-rail-tune) { background: #181a1f; border-color: #ffffff20; }
+#root .mobile-messaging .mw-rail-search:focus-within { background: #181a1f; border-color: #7960b2; }
+#root .mobile-messaging .messaging-pillar-tabs button { color: #a3a5ae; }
+#root .mobile-messaging .messaging-pillar-tabs button.is-active { color: #f3f3f5; }
+#root .mobile-messaging .messaging-pillar-tabs button::after { background: #5137a1; }
+
+/* Groups: the Track Pack's graphite relief, with aligned mobile controls. */
+#root .mobile-messaging .agw,
+#root .mobile-messaging .agw-panel { background: var(--group-ink); color: #f3f3f5; }
+#root .mobile-messaging .agw::before { display: none; }
+#root .mobile-messaging .agw-panel__bar,
+#root .mobile-messaging .agw-panel > .mw-hub-chipbar { background: #101114; border-color: #ffffff18; }
+#root .mobile-messaging .agw-panel__bar:not(.mw-hub-chipbar) { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; gap: 8px; min-height: 64px; }
+#root .mobile-messaging .agw-panel__identity { min-width: 0; gap: 8px; align-items: center; }
+#root .mobile-messaging .agw-panel__identity > span { min-width: 0; }
+#root .mobile-messaging .agw-panel__identity strong { font-size: 15px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#root .mobile-messaging .agw-panel__identity small { color: var(--group-muted); font-size: 10px; letter-spacing: .3px; }
+#root .mobile-messaging .agw-panel__controls { align-items: center; flex-shrink: 0; }
+#root .mobile-messaging .agw-panel__layout { min-height: 0; min-width: 0; grid-template-columns: minmax(0,1fr); }
+#root .mobile-messaging .agw-panel__layout.has-side-actions { grid-template-rows: minmax(0,1fr) auto; }
+#root .mobile-messaging .agw-panel__side-rail { position: static; display: flex; flex-wrap: wrap; padding: 10px 12px; gap: 8px; width: 100%; border-top: 1px solid #ffffff18; background: #101114; }
+#root .mobile-messaging .agw-subview { min-width: 0; padding: 16px 12px 24px; background: #08090b; }
+#root .mobile-messaging .agw-subview__heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+#root .mobile-messaging .agw-subview__heading > div { flex: 1; min-width: 170px; }
+#root .mobile-messaging .agw-subview__heading h2 { margin: 4px 0 6px; font-size: 22px; line-height: 1.2; }
+#root .mobile-messaging .agw-subview__heading :is(small,p) { color: var(--group-muted); }
+#root .mobile-messaging .agw-subview__heading::after { display: none; }
+#root .mobile-messaging :is(.agw-search,.agw-secondary-button,.agw-icon-button,.agw-member-role,.agw-vote-options > button,.agw-panel-option,.agw-panel-create) { color: #dedfe4; border-color: var(--group-rim); background: var(--group-surface); box-shadow: inset 0 1px #ffffff0c,inset 0 -1px #0007; }
+#root .mobile-messaging .agw-icon-button { flex-shrink: 0; min-width: 44px; width: 44px; min-height: 44px; height: 44px; display: grid; place-items: center; padding: 0; border-radius: 12px; }
+#root .mobile-messaging :is(.agw-primary-button,.agw-secondary-button) { min-height: 44px; padding: 10px 14px; border-radius: 12px; }
+#root .mobile-messaging .agw-primary-button { color: white; border: 1px solid #7960b2; background: var(--mobile-violet-cta); }
+#root .mobile-messaging .agw-panel__toolbar .mw-hub-chips button { background: #191b20; border-color: #ffffff18; color: #b7bac3; }
+#root .mobile-messaging .agw-panel__toolbar .mw-hub-chips button.is-active,
+#root .mobile-messaging .agw-vote-options > button.is-selected { color: white; background: #191b20; border-color: #7960b2; box-shadow: inset 0 -2px #5137a1; }
+#root .mobile-messaging :is(.agw-members-list article,.agw-decision-card,.agw-project-list > button,.agw-session-details,.agw-inline-form) { min-width: 0; padding: 16px; border: 1px solid var(--group-rim); border-radius: 18px; background: var(--group-surface); box-shadow: inset 0 1px #ffffff12,inset 0 -1px #0008,0 8px 20px #0003; }
+#root .mobile-messaging .agw-members-list { display: grid; grid-template-columns: minmax(0,1fr); gap: 12px; }
+#root .mobile-messaging .agw-members-list article { grid-template-columns: 48px minmax(0,1fr) 44px; align-items: center; gap: 12px; min-height: 96px; padding: 12px; }
+#root .mobile-messaging .agw-members-list .agw-avatar.is-large { width: 48px; height: 48px; }
+#root .mobile-messaging .agw-members-list .agw-avatar img { border-color: #ffffff30; }
+#root .mobile-messaging .agw-member-copy { min-width: 0; }
+#root .mobile-messaging .agw-members-list article > .agw-member-copy > strong { font-size: 14px; }
+#root .mobile-messaging .agw-member-copy :is(.agw-member-role,.agw-member-access) { color: #b7bac3; }
+#root .mobile-messaging .agw-decision-card > div:first-child { align-items: center; gap: 12px; }
+#root .mobile-messaging .agw-decision-card > div:first-child > svg { padding: 10px; color: #d5d7dd; border-color: var(--group-rim); background: #2b2d33; flex-shrink: 0; }
+#root .mobile-messaging .agw-decision-card > div:first-child small { color: var(--group-muted); }
+#root .mobile-messaging .agw-project-list > button { display: grid; grid-template-columns: 48px minmax(0,1fr) 24px; align-items: center; gap: 12px; }
+#root .mobile-messaging .agw-project-list > button > .agw-project-cover { width: 48px; height: 48px; border-color: #ffffff20; }
