@@ -23,6 +23,12 @@ Les doigts presque confondus (moins de 16 pixels CSS) ou qui échangent brutalem
 leurs positions ne déclenchent pas de rotation de 180°. Leur translation reste
 consommée ; les références d’angle sont reconstruites.
 
+Le nettoyage d’un contrôleur tactile au repos n’annule pas un vol demandé par
+la recherche. Un changement de taille ou de focus lié au clavier supprime les
+gestes en attente, mais n’interrompt la caméra que si le tactile la pilotait
+effectivement. Un nouvel appui sur le globe et la mise en arrière-plan conservent
+leur interruption explicite.
+
 Les limites géographiques nominales sont : hauteur 0,003–400 unités du moteur,
 latitude −85° à +85°, inclinaison 0°–75°. Une résistance autorise un léger
 dépassement pendant le geste, puis un retour amorti de moins de 450 ms. Ces unités

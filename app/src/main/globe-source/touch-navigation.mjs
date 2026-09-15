@@ -53,9 +53,9 @@ export function createTouchNavigation(api, { pointers = new Map(), reducedMotion
     const limit = Math.min(1, 2200 / speed); vx *= limit; vy *= limit;
     return { vx, vy, x: last.x, y: last.y, anchor: drag.anchor };
   }
-  function stop() {
+  function stop(interruptCamera = true) {
     coast = zoomAnimation = null; settling = false; previousFrame = 0;
-    api.interrupt();
+    if (interruptCamera) api.interrupt();
   }
   function rebase(now) {
     dirty = false; drag.anchor = null; rotation = tilt = 0; rotating = tilting = false;
@@ -133,9 +133,13 @@ export function createTouchNavigation(api, { pointers = new Map(), reducedMotion
     } else zoomAnimation = { x, y, anchor, log: Math.log(factor), duration: duration / 1000, elapsed: 0, applied: 0 };
   }
   function cancel(settle = false) {
+    // Resize/focus cleanup also runs after a search result closes the keyboard.
+    // An idle touch controller must not cancel the destination flight. Only an
+    // actual gesture or its inertia/zoom/settling still owns the camera here.
+    const ownsCamera = pointers.size > 0 || coast !== null || zoomAnimation !== null || settling;
     dirty = false; pendingTap = null; quick = quickMoved = false;
-    pointers.clear(); rebase(0); stop(); api.release?.();
-    if (settle) startSettle();
+    pointers.clear(); rebase(0); stop(ownsCamera); api.release?.();
+    if (settle && ownsCamera) startSettle();
   }
 
   return {

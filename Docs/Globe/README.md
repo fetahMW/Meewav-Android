@@ -128,9 +128,13 @@ la recherche d’artistes porte sur leur nom/alias, et non leur ville ou quartie
 Les accents et tirets sont normalisés. L’activation d’une suggestion appelle
 directement la même navigation que la loupe, via le clic natif tactile, souris
 ou clavier. Le navigateur distingue ce clic d’un défilement de liste. Le champ
-et le clavier sont refermés avant de démarrer le vol ; une transition de focus
-de la WebView ne coupe plus un vol en cours. La mise en arrière-plan réelle garde
-sa suspension via `setActive(false)`. La perte de focus du champ
+et le clavier sont refermés avant de démarrer le vol. Le nettoyage tactile au
+redimensionnement ou à la perte de focus n’interrompt la caméra que si un geste,
+une inertie, un zoom tactile ou un retour amorti était actif. Auparavant,
+`cancelTouch()` appelait indirectement `motion.interrupt()` même au repos :
+la fermeture du clavier pouvait donc annuler le vol qui venait de démarrer,
+malgré la protection ajoutée au gestionnaire de focus. La mise en arrière-plan
+réelle garde sa suspension via `setActive(false)`. La perte de focus du champ
 vers la liste ne la démonte plus. Le clavier et l’accessibilité gardent leur
 activation habituelle. Les destinations d’avatars utilisent aussi l’index des
 quartiers et le code de leur ville, au lieu de supposer systématiquement Paris.
