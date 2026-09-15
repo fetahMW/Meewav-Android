@@ -58,7 +58,8 @@ open class MessagingActivity : ComponentActivity() {
     private var accessToken: String? = null
     private var profileId: String? = null
     private var fileResult: ValueCallback<Array<Uri>>? = null
-    private var microphoneRequest: PermissionRequest? = null
+    private var mediaPermissionRequest: PermissionRequest? = null
+    private var stopped = false
     private var pendingSave: Pair<String, Int>? = null
     private val preview by lazy { BuildConfig.DEBUG && intent.getBooleanExtra("preview", false) }
     private val service by lazy { Uri.parse(BuildConfig.SUPABASE_URL) }
@@ -71,12 +72,16 @@ open class MessagingActivity : ComponentActivity() {
         } else null
         fileResult?.onReceiveValue(values); fileResult = null
     }
-    private val microphone = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        microphoneRequest?.let { request ->
-            if (granted && !isFinishing && web.url == PAGE) request.grant(arrayOf(PermissionRequest.RESOURCE_AUDIO_CAPTURE))
+    private val mediaPermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        mediaPermissionRequest?.let { request ->
+            val granted = request.resources.all { resource ->
+                val permission = capturePermission(resource)
+                permission != null && ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
+            }
+            if (granted && !stopped && !isFinishing && !isDestroyed && web.url == PAGE) request.grant(request.resources)
             else request.deny()
         }
-        microphoneRequest = null
+        mediaPermissionRequest = null
     }
     private val savePicker = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val pending = pendingSave ?: return@registerForActivityResult
@@ -149,16 +154,20 @@ open class MessagingActivity : ComponentActivity() {
             }
             override fun onPermissionRequest(request: PermissionRequest) {
                 if (request.origin.toString().trimEnd('/') != ORIGIN || web.url != PAGE || !resumed
-                    || request.resources.any { it != PermissionRequest.RESOURCE_AUDIO_CAPTURE }) { request.deny(); return }
-                if (ContextCompat.checkSelfPermission(this@MessagingActivity, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-                    request.grant(arrayOf(PermissionRequest.RESOURCE_AUDIO_CAPTURE))
+                    || request.resources.isEmpty() || request.resources.any { capturePermission(it) == null }) { request.deny(); return }
+                val permissions = request.resources.mapNotNull(::capturePermission).distinct().filter {
+                    ContextCompat.checkSelfPermission(this@MessagingActivity, it) != PackageManager.PERMISSION_GRANTED
+                }
+                if (permissions.isEmpty()) {
+                    request.grant(request.resources)
                 } else {
-                    microphoneRequest?.deny(); microphoneRequest = request
-                    microphone.launch(Manifest.permission.RECORD_AUDIO)
+                    if (mediaPermissionRequest != null) { request.deny(); return }
+                    mediaPermissionRequest = request
+                    mediaPermissions.launch(permissions.toTypedArray())
                 }
             }
             override fun onPermissionRequestCanceled(request: PermissionRequest) {
-                if (microphoneRequest === request) microphoneRequest = null
+                if (mediaPermissionRequest === request) mediaPermissionRequest = null
             }
         }
         web.webViewClient = object : WebViewClient() {
@@ -306,14 +315,30 @@ open class MessagingActivity : ComponentActivity() {
         content.addView(Button(this).apply { text = "Retour au globe"; setOnClickListener { finish() } })
         container.addView(content, FrameLayout.LayoutParams(-1, -1))
     }
-    override fun onResume() { super.onResume(); resumed = true; if (::web.isInitialized) { web.onResume(); web.evaluateJavascript("window.meewavMessaging?.setActive(true);", null) } }
+    private fun capturePermission(resource: String): String? = when (resource) {
+        PermissionRequest.RESOURCE_AUDIO_CAPTURE -> Manifest.permission.RECORD_AUDIO
+        PermissionRequest.RESOURCE_VIDEO_CAPTURE -> Manifest.permission.CAMERA
+        else -> null
+    }
+    private fun suspendMedia() {
+        if (::web.isInitialized) { web.evaluateJavascript("window.meewavMessaging?.setActive(false);", null); web.onPause() }
+    }
+    override fun onResume() { super.onResume(); stopped = false; resumed = true; if (::web.isInitialized) { web.onResume(); web.evaluateJavascript("window.meewavMessaging?.setActive(true);", null) } }
     override fun onPause() {
         resumed = false
-        if (::web.isInitialized) { web.evaluateJavascript("window.meewavMessaging?.setActive(false);", null); web.onPause() }
+        // Android's permission sheet pauses this Activity. Cancelling the JS
+        // request here made the first microphone tap discard its own result.
+        if (mediaPermissionRequest == null) suspendMedia()
         super.onPause()
     }
+    override fun onStop() {
+        stopped = true
+        mediaPermissionRequest?.deny(); mediaPermissionRequest = null
+        suspendMedia()
+        super.onStop()
+    }
     override fun onDestroy() {
-        microphoneRequest?.deny(); microphoneRequest = null
+        mediaPermissionRequest?.deny(); mediaPermissionRequest = null
         fileResult?.onReceiveValue(null); fileResult = null
         if (::web.isInitialized) { container.removeView(web); web.stopLoading(); web.destroy() }
         accessToken = null; super.onDestroy()

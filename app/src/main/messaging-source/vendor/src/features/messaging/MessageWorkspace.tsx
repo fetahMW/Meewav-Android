@@ -1924,6 +1924,7 @@ export default function MessageWorkspace({
     if (soundsEnabled) preloadMessageSounds();
   }, [soundsEnabled]);
   const [recordingStatus, setRecordingStatus] = useState<RecordingStatus>("idle");
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [recordingError, setRecordingError] = useState<string | null>(null);
   const [recordedVoice, setRecordedVoice] = useState<RecordedVoice | null>(null);
   const [liveAttachmentDraft, setLiveAttachmentDraft] = useState<LiveAttachmentDraft | null>(null);
@@ -2581,6 +2582,7 @@ export default function MessageWorkspace({
   };
 
   const startVoiceRecording = async () => {
+    if (recorderRef.current || recordingStatus === "requesting") return;
     if (liveController && !attachmentController) {
       setNotice("Le stockage sécurisé des notes vocales est indisponible dans cette session.");
       return;
@@ -2589,6 +2591,7 @@ export default function MessageWorkspace({
     recordingRequestRef.current = requestId;
     setRecordingError(null);
     setRecordedVoice(null);
+    setRecordingSeconds(0);
     setRecordingStatus("requesting");
 
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
@@ -2598,13 +2601,15 @@ export default function MessageWorkspace({
     }
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      document.querySelectorAll<HTMLMediaElement>('audio,video').forEach(media => media.pause());
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
       if (requestId !== recordingRequestRef.current) {
         stream.getTracks().forEach((track) => track.stop());
         return;
       }
 
-      const preferredType = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus"].find((type) => MediaRecorder.isTypeSupported(type));
+      const preferredType = ["audio/webm;codecs=opus", "audio/mp4", "audio/webm", "audio/ogg;codecs=opus"].find((type) => MediaRecorder.isTypeSupported(type));
+      recordingStreamRef.current = stream;
       const recorder = new MediaRecorder(stream, preferredType ? { mimeType: preferredType } : undefined);
       recordingStreamRef.current = stream;
       recorderRef.current = recorder;
@@ -2616,11 +2621,14 @@ export default function MessageWorkspace({
       });
       recorder.addEventListener("error", () => {
         stopRecordingStream();
-        if (discardRecordingRef.current) return;
+        if (requestId !== recordingRequestRef.current) return;
+        recordingRequestRef.current += 1;
+        recorderRef.current = null;
         setRecordingError("Le micro a interrompu l'enregistrement. Réessaie.");
         setRecordingStatus("error");
       });
       recorder.addEventListener("stop", () => {
+        if (requestId !== recordingRequestRef.current) return;
         stopRecordingStream();
         recorderRef.current = null;
         if (discardRecordingRef.current) {
@@ -2638,19 +2646,21 @@ export default function MessageWorkspace({
         const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
         const mediaUrl = URL.createObjectURL(blob);
         ownedMediaUrlsRef.current.add(mediaUrl);
-        const durationMs = Math.max(1_000, Math.round(performance.now() - recordingStartedAtRef.current));
+        const durationMs = Math.min(900_000, Math.max(1_000, Math.round(performance.now() - recordingStartedAtRef.current)));
         const duration = formatDuration(durationMs / 1_000);
-        const extension = blob.type.startsWith("audio/ogg") ? "ogg" : "webm";
+        const extension = blob.type.startsWith("audio/mp4") ? "m4a" : blob.type.startsWith("audio/ogg") ? "ogg" : "webm";
         const file = new globalThis.File([blob], `note-vocale-${Date.now()}.${extension}`, { type: blob.type });
         setRecordedVoice({ mediaUrl, duration, durationMs, file });
         setRecordingStatus("ready");
       });
 
       recordingStartedAtRef.current = performance.now();
-      recorder.start();
+      recorder.start(250);
       setRecordingStatus("recording");
     } catch (error) {
+      if (requestId !== recordingRequestRef.current) return;
       stopRecordingStream();
+      recorderRef.current = null;
       const permissionDenied = error instanceof DOMException && (error.name === "NotAllowedError" || error.name === "PermissionDeniedError");
       setRecordingError(permissionDenied ? "Autorise l'accès au micro pour enregistrer une note vocale." : "Impossible d'ouvrir le micro. Vérifie qu'il n'est pas déjà utilisé.");
       setRecordingStatus("error");
@@ -2661,10 +2671,22 @@ export default function MessageWorkspace({
     if (recorderRef.current && recorderRef.current.state !== "inactive") recorderRef.current.stop();
   };
 
+  useEffect(() => {
+    if (recordingStatus !== 'recording') return;
+    const timer = window.setInterval(() => {
+      const elapsed = (performance.now() - recordingStartedAtRef.current) / 1000;
+      setRecordingSeconds(Math.floor(elapsed));
+      if (elapsed >= 899.5) stopVoiceRecording();
+    }, 250);
+    return () => window.clearInterval(timer);
+  }, [recordingStatus]);
+
   const cancelVoiceRecording = () => {
     recordingRequestRef.current += 1;
     discardRecordingRef.current = true;
     if (recorderRef.current && recorderRef.current.state !== "inactive") recorderRef.current.stop();
+    recorderRef.current = null;
+    recordingChunksRef.current = [];
     stopRecordingStream();
     if (recordedVoice) {
       URL.revokeObjectURL(recordedVoice.mediaUrl);
@@ -3089,7 +3111,7 @@ export default function MessageWorkspace({
             <div className={`mw-recording-composer is-${recordingStatus}`}>
               <button type="button" onClick={cancelVoiceRecording} aria-label="Annuler l'enregistrement"><X /></button>
               {recordingStatus === "requesting" && <span><i /> Autorisation du micro…</span>}
-              {recordingStatus === "recording" && <span><i /> Enregistrement en cours</span>}
+              {recordingStatus === "recording" && <span><i /> Enregistrement · {formatDuration(recordingSeconds)}</span>}
               {recordingStatus === "ready" && recordedVoice && <RecordedVoicePreview voice={recordedVoice} />}
               {recordingStatus === "error" && <span className="mw-recording-error" role="alert">{recordingError}</span>}
               {recordingStatus === "recording" && <button type="button" onClick={stopVoiceRecording}><CircleStop /> Arrêter</button>}
