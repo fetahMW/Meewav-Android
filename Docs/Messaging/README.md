@@ -344,3 +344,18 @@ modales et les labels de sélection de fichier utilisés comme boutons principau
 Le reflet supplémentaire du bouton d’envoi est supprimé pour éviter une teinte
 différente. Les bulles, les boutons secondaires et les bandeaux restent inchangés.
 Voir [la mémoire de design](../DESIGN-MEMORY.md) pour la référence durable.
+
+## Infos des projets — matière des demandes de Collab
+
+L’onglet Infos reprend le graphite de la carte de demande de Collab :
+`linear-gradient(150deg,#35373d 0%,#26282d 42%,#191b1f 100%)`, contour
+`#6b639866`, reflet blanc discret. Les panneaux internes et actions de gestion
+sont noirs/gris, les textes secondaires gris, et le CTA Inviter utilise le jeton
+Violet urbain Meewav. Les confirmations conservent leurs CTA communs.
+
+Résumé musical sur quatre colonnes, tonalité/livraison sur deux, puis direction,
+équipe, mix et pilotage sur une colonne. Les rôles et droits sont regroupés sous
+le nom du membre afin de laisser une vraie cible de 44 px au menu. Les handlers,
+permissions et confirmations de gestion ne changent pas. Le bandeau translucide
+et les autres onglets restent conservés. Compilation/installation uniquement ;
+aucune validation visuelle ou fonctionnelle automatique.

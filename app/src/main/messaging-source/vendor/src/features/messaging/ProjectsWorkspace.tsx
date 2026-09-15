@@ -2586,18 +2586,22 @@ function ProjectInfoPanel({
             <section className="mwp-info-zone mwp-info-zone--members">
               <header>
                 <span><Users size={17} /><strong>Équipe créative</strong><small>{members.length} membre{members.length > 1 ? "s" : ""}</small></span>
-                {canInvite && <button type="button" disabled={live?.pending} onClick={() => { inviteAttemptRef.current = null; setInviteOpen(true); }}><UserPlus size={16} /> Inviter</button>}
+                {canInvite && <button type="button" className="mw-button--primary" disabled={live?.pending} onClick={() => { inviteAttemptRef.current = null; setInviteOpen(true); }}><UserPlus size={16} /> Inviter</button>}
               </header>
               <div className="mwp-info-members">
                 {members.map((member) => (
                   <div key={member.memberId}>
                     <span className="mwp-member-avatar-wrap"><img src={member.avatar} alt="" />{member.online && <i />}</span>
-                    <span><strong>{member.name}{member.id === viewerProfileId ? " (Moi)" : ""}</strong><small>{member.role}</small></span>
-                    {member.creator && <em>Admin</em>}
-                    <span className="mwp-member-permissions">
-                      {member.permissions.canEdit && <i title="Peut éditer">E</i>}
-                      {member.permissions.canInvite && <i title="Peut inviter">I</i>}
-                      {member.permissions.canManageStems && <i title="Gère les stems">S</i>}
+                    <span>
+                      <strong>{member.name}{member.id === viewerProfileId ? " (Moi)" : ""}</strong><small>{member.role}</small>
+                      <span className="mwp-info-member-meta">
+                        {member.creator && <em>Admin</em>}
+                        <span className="mwp-member-permissions">
+                          {member.permissions.canEdit && <i title="Peut éditer">E</i>}
+                          {member.permissions.canInvite && <i title="Peut inviter">I</i>}
+                          {member.permissions.canManageStems && <i title="Gère les stems">S</i>}
+                        </span>
+                      </span>
                     </span>
                     {canManageMembers && member.id !== viewerProfileId && member.authorityRole !== "owner" && (
                       <button type="button" onClick={() => setMemberMenuId(member.id)} aria-label={"Options de " + member.name}><MoreVertical size={16} /></button>

@@ -860,3 +860,90 @@ button:disabled { opacity: .4; cursor: default; }
   color: #fff;
   box-shadow: inset 0 1px 0 #ffffff14;
 }
+
+/* Project Infos: graphite material from the approved collaboration request card. */
+#root .mobile-messaging .mwp-project-info {
+  --info-text: #e0e1e5;
+  --info-muted: #a4a7b0;
+  --info-line: #ffffff18;
+  --info-accent: #9f97b1;
+  width: 100%; min-width: 0; padding: 0 0 16px; color: var(--info-text);
+}
+#root .mobile-messaging .mwp-info-stage {
+  min-height: 0; padding: 0; border: 1px solid #6b639866; border-radius: 24px;
+  background: linear-gradient(150deg,#35373d 0%,#26282d 42%,#191b1f 100%);
+  box-shadow: inset 0 1px 0 #ffffff24,inset 0 -1px 0 #0009,0 10px 26px #0005;
+}
+#root .mobile-messaging .mwp-info-stage::before,
+#root .mobile-messaging .mwp-info-stage::after { content: none; }
+#root .mobile-messaging .mwp-info-stage__hero {
+  display: flex; flex-direction: column; align-items: stretch; min-height: 0;
+  padding: 18px; gap: 16px; border-color: var(--info-line); background: transparent;
+}
+#root .mobile-messaging .mwp-info-stage__heading { width: 100%; max-width: none; }
+#root .mobile-messaging .mwp-info-stage__eyebrow { color: #c4c6ce; font-size: 11px; letter-spacing: .03em; }
+#root .mobile-messaging .mwp-info-stage__heading h2 { margin: 8px 0; font-size: 23px; line-height: 1.2; letter-spacing: -.4px; color: #f3f4f6; overflow-wrap: anywhere; }
+#root .mobile-messaging .mwp-info-stage__heading p { margin: 0; font-size: 13px; line-height: 1.55; color: var(--info-text); }
+#root .mobile-messaging .mwp-info-stage__progress { width: 100%; margin: 16px 0 0; }
+#root .mobile-messaging .mwp-info-stage__progress > span { color: #d3d4dc; }
+#root .mobile-messaging .mwp-info-stage__progress > span small,
+#root .mobile-messaging .mwp-info-stage__progress > em { color: var(--info-muted); font-size: 11px; line-height: 1.5; font-style: normal; }
+#root .mobile-messaging .mwp-info-stage__progress > span strong { color: #f3f4f6; }
+#root .mobile-messaging .mwp-info-stage__progress > i { height: 4px; background: #0d0f13; border: 0; box-shadow: none; }
+#root .mobile-messaging .mwp-info-stage__progress > i > b { background: var(--mobile-violet-cta); box-shadow: none; }
+#root .mobile-messaging .mwp-info-stage__status { flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; width: 100%; }
+#root .mobile-messaging .mwp-info-stage__status > span { min-height: 28px; padding: 5px 9px; font-size: 11px; color: #d3d4dc; background: #202227; border: 1px solid var(--info-line); border-radius: 8px; box-shadow: none; }
+#root .mobile-messaging .mwp-info-stage__status > span i { background: var(--info-accent); box-shadow: none; }
+#root .mobile-messaging .mwp-info-stage__status > button,
+#root .mobile-messaging .mwp-info-zone > header > button {
+  min-height: 44px; padding: 10px 12px; border: 1px solid #6b639877; border-radius: 12px;
+  background: linear-gradient(180deg,#303239,#202227); color: #dedfe5; font-size: 12px;
+  box-shadow: inset 0 1px #ffffff0c;
+}
+#root .mobile-messaging .mwp-info-stage__pulse { grid-template-columns: repeat(4,minmax(0,1fr)); padding: 14px 18px; gap: 14px 8px; background: #11131755; border-color: var(--info-line); }
+#root .mobile-messaging .mwp-info-stage__pulse > div { min-width: 0; min-height: 0; gap: 5px; padding: 0; border: 0; }
+#root .mobile-messaging .mwp-info-stage__pulse strong { font-size: 18px; color: #f3f4f6; }
+#root .mobile-messaging .mwp-info-stage__pulse :is(small,span) { font-size: 10px; font-weight: 500; text-transform: none; letter-spacing: 0; color: var(--info-muted); }
+#root .mobile-messaging .mwp-info-stage__pulse .mwp-info-stage__date { grid-column: span 2; padding-top: 12px; border-top: 1px solid var(--info-line); }
+#root .mobile-messaging .mwp-info-stage__pulse .mwp-info-stage__date strong { margin: 0; font-size: 12px; line-height: 1.4; color: var(--info-text); white-space: normal; overflow-wrap: anywhere; }
+#root .mobile-messaging .mwp-info-stage__body { grid-template-columns: minmax(0,1fr); background: transparent; }
+#root .mobile-messaging .mwp-info-stage__main { grid-template-columns: minmax(0,1fr); padding: 18px; gap: 22px; }
+#root .mobile-messaging .mwp-info-zone + .mwp-info-zone { margin: 0; padding: 18px 0 0; border: 0; border-top: 1px solid var(--info-line); }
+#root .mobile-messaging .mwp-info-zone > header { gap: 10px; margin: 0 0 12px; align-items: center; }
+#root .mobile-messaging .mwp-info-zone > header > span { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 6px; color: var(--info-text); }
+#root .mobile-messaging .mwp-info-zone > header strong { font-size: 14px; line-height: 1.4; color: #f3f4f6; }
+#root .mobile-messaging .mwp-info-zone > header small { color: var(--info-muted); font-size: 11px; font-weight: 400; }
+#root .mobile-messaging .mwp-info-stage :is(.mwp-info-stage__eyebrow,.mwp-info-zone > header,.mwp-info-stage__rail > header) svg { color: var(--info-accent); }
+#root .mobile-messaging .mwp-info-brief { display: grid; grid-template-columns: minmax(0,1fr); gap: 16px; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+#root .mobile-messaging .mwp-info-brief :is(small,dt) { color: var(--info-muted); font-size: 10px; letter-spacing: .03em; }
+#root .mobile-messaging .mwp-info-brief > div > strong { color: #f3f4f6; font-size: 14px; line-height: 1.5; }
+#root .mobile-messaging .mwp-info-brief p { color: var(--info-text); font-size: 13px; line-height: 1.55; }
+#root .mobile-messaging .mwp-info-brief dl { display: grid; grid-template-columns: minmax(0,1fr); gap: 8px; margin: 0; }
+#root .mobile-messaging .mwp-info-brief dl > div { display: grid; grid-template-columns: 64px minmax(0,1fr); align-items: baseline; gap: 12px; padding: 0; border: 0; }
+#root .mobile-messaging .mwp-info-brief dd { margin: 0; color: var(--info-text); font-size: 12px; line-height: 1.5; white-space: normal; overflow-wrap: anywhere; }
+#root .mobile-messaging :is(.mwp-info-members,.mwp-info-mixes) { grid-template-columns: minmax(0,1fr); gap: 8px; }
+#root .mobile-messaging .mwp-info-members > div { grid-template-columns: 40px minmax(0,1fr) auto; gap: 10px; padding: 12px 0; border-radius: 0; background: transparent; border-bottom: 1px solid var(--info-line); }
+#root .mobile-messaging .mwp-info-members > div:last-child { border-bottom: 0; }
+#root .mobile-messaging .mwp-info-members img { width: 40px; height: 40px; border-color: #6b639866; }
+#root .mobile-messaging .mwp-info-members strong { color: #f3f4f6; font-size: 13px; white-space: normal; overflow-wrap: anywhere; }
+#root .mobile-messaging .mwp-info-members small { color: var(--info-muted); font-size: 11px; }
+#root .mobile-messaging .mwp-info-member-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
+#root .mobile-messaging .mwp-info-member-meta :is(em,.mwp-member-permissions i) { font-size: 10px; font-style: normal; color: #c4c6ce; border: 1px solid var(--info-line); background: #202227; border-radius: 5px; box-shadow: none; }
+#root .mobile-messaging .mwp-info-member-meta em { padding: 3px 6px; }
+#root .mobile-messaging .mwp-info-members > div > button { width: 44px; height: 44px; border: 0; border-radius: 12px; background: #ffffff06; color: #c4c6ce; }
+#root .mobile-messaging .mwp-info-mixes > div { grid-template-columns: auto auto minmax(0,1fr); gap: 8px; padding: 12px; border: 1px solid var(--info-line); background: linear-gradient(155deg,#25272c,#101215); border-radius: 14px; color: var(--info-accent); }
+#root .mobile-messaging .mwp-info-mixes > div.is-active { border-color: #6b639877; background: linear-gradient(155deg,#25272c,#101215); box-shadow: inset 0 1px #ffffff10; }
+#root .mobile-messaging .mwp-info-mixes strong { color: var(--info-text); font-size: 13px; white-space: normal; }
+#root .mobile-messaging .mwp-info-mixes small { color: var(--info-muted); font-size: 11px; }
+#root .mobile-messaging .mwp-info-mixes em { grid-column: 3; color: #c4c6ce; font-size: 10px; font-style: normal; background: transparent; }
+#root .mobile-messaging .mwp-info-zone--mixes > header > em { color: var(--info-muted); font-size: 10px; white-space: normal; }
+#root .mobile-messaging .mwp-info-zone--mixes > header > em i { background: var(--info-accent); box-shadow: none; }
+#root .mobile-messaging .mwp-info-stage__rail { width: 100%; padding: 18px; border: 0; border-top: 1px solid var(--info-line); background: #10121555; }
+#root .mobile-messaging .mwp-info-stage__rail > header { color: #f3f4f6; margin-bottom: 12px; }
+#root .mobile-messaging .mwp-info-stage__rail > header small { color: var(--info-muted); }
+#root .mobile-messaging .mwp-info-stage__rail .mwp-action-list { display: grid; grid-template-columns: minmax(0,1fr); gap: 6px; }
+#root .mobile-messaging .mwp-info-stage__rail .mwp-action-list > button { min-height: 60px; padding: 10px 12px; gap: 10px; border: 1px solid var(--info-line); border-radius: 12px; background: linear-gradient(180deg,#303239,#202227); color: #c4c6ce; box-shadow: inset 0 1px #ffffff0c; }
+#root .mobile-messaging .mwp-info-stage__rail .mwp-action-list > button strong { color: var(--info-text); font-size: 13px; }
+#root .mobile-messaging .mwp-info-stage__rail .mwp-action-list > button small { color: var(--info-muted); font-size: 11px; }
+#root .mobile-messaging .mwp-info-stage__rail .mwp-action-list > button.is-danger strong { color: #e3a5a5; }
+#root .mobile-messaging .mwp-info-stage button:focus-visible { outline: 2px solid #9f97b1; outline-offset: 2px; }
