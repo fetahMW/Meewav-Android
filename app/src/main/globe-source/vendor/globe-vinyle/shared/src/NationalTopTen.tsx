@@ -16,6 +16,7 @@ const ARTISTS = DEMO_ORDER.flatMap(name => {
   return [{ ...artist, slug: file.replace(/\.webp$/, ""),
     portraitUrl: new URL(`ui/ring-portraits/${file}`, document.baseURI).href }];
 });
+export const NATIONAL_TOP_ONE = ARTISTS[0];
 
 export default function NationalTopTen({ openRequested = false, canOpen, onOpenHandled }: {
   openRequested?: boolean;
@@ -115,7 +116,8 @@ export default function NationalTopTen({ openRequested = false, canOpen, onOpenH
       </div>
     </section>
     {selection && <RingPreProfileBoundary onClose={close}>
-      <ArtistPreProfile selection={selection} onClose={close} navigation={{
+      <ArtistPreProfile selection={selection} onClose={close}
+        profiles={ARTISTS.map((artist, index) => ({ ...artist, instanceId: index + 1, anchor: selection.anchor }))} navigation={{
         index: selection.instanceId - 1, total: ARTISTS.length, name: selection.name, onChange: navigateProfile,
       }} />
     </RingPreProfileBoundary>}

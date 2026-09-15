@@ -126,13 +126,17 @@ Le bundle et l’APK debug sont reconstruits pour livraison sur le S22 Ultra.
 Aucun test ni contrôle visuel automatique n’est lancé pour cette retouche ; la
 validation du rendu et de la réactivité sur appareil reste à l’utilisateur.
 
-Les pré-profils ouverts depuis le Top 10 disposent d’une barre verticale à droite,
-avec le rang courant. Glisser son curseur, toucher la piste ou utiliser la molette
-permet de passer entre les dix artistes sans fermer la fiche. Le clavier peut
-également utiliser Haut/Bas, Page précédente/suivante et Début/Fin. La liste reste
-montée derrière la fiche. Le contenu et ses lecteurs sont remontés pour chaque
-artiste, tandis que la barre reste montée pour conserver le geste en cours.
-Le défilement interne d’une fiche garde son rôle lorsque son contenu déborde.
+Les pré-profils du Top 10 forment des pages verticales : glisser la fiche elle-même
+vers le haut fait entrer la suivante depuis le bas, et inversement. Le déplacement
+suit le doigt, puis se cale sur une fiche au relâchement ; un geste trop court
+revient sur la fiche courante. Une barre à droite indique le rang et permet aussi
+un accès direct. Les clics sur les boutons restent possibles ; un glissement ne
+déclenche pas un clic. Les lecteurs et curseurs conservent leurs gestes propres.
+Trois fiches au maximum sont montées, et les lecteurs sont réinitialisés lors du
+changement de fiche active. La liste reste montée derrière. La molette et le
+clavier de la barre restent utilisables ; le contenu débordant conserve son
+défilement interne à la molette/barre, le glissement tactile vertical parcourant
+les fiches. « Suivre » est noir au repos ; seul l’état « Suivi » est lumineux.
 
 ### Lecture du vinyle en exploration
 
@@ -172,6 +176,11 @@ Un bouton muet de 46 pixels, à droite de Play/Pause, coupe ou rétablit le son
 sans arrêter la rotation, sans changer la position de lecture et sans démarrer
 une lecture en pause. Le choix reste dans le contrôleur de session ; sa sauvegarde
 locale est facultative et dépend de la disponibilité du stockage WebView.
+À côté du lecteur, « Top 1 », le portrait et le nom viennent directement du premier
+artiste de la liste Top 10. Le titre « Minuit sur orbite » est fictif et accompagne
+le morceau utilisateur existant dans cette démonstration. La règle produit est de
+diffuser le morceau du premier du classement ; le classement actuel reste une
+fixture, sans service de classement ni catalogue musical réel raccordé.
 Compilation et installation ne constituent pas un essai audio ou visuel :
 la validation du son, de la reprise et des reflets sur appareil reste à l’utilisateur.
 

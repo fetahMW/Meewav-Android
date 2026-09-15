@@ -47,6 +47,16 @@ html, body, #root { width: 100%; height: 100%; margin: 0; overflow: hidden; }
     --ring-key-radius: 14px; color: var(--ring-key-light); touch-action: manipulation;
   }
   .immersive-globe .ring-mute-button[aria-pressed="true"] { color: #fff; }
+  .ring-track-info {
+    position:fixed; left:calc(50% + 86px); top:var(--mobile-ring-controls-top); z-index:16030;
+    display:flex; align-items:center; gap:8px; height:var(--mobile-ring-controls-height);
+    width:min(220px, calc(50% - 146px)); min-width:0; color:#fff; pointer-events:none;
+  }
+  .ring-track-info img { flex:none; width:36px; height:36px; object-fit:cover; border-radius:50%; border:1px solid var(--meewav-violet-urbain-light); }
+  .ring-track-info > div { min-width:0; display:flex; flex-direction:column; gap:3px; }
+  .ring-track-info span, .ring-track-info strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-shadow:0 1px 4px #000; }
+  .ring-track-info span { color:var(--meewav-violet-urbain-light); font:600 10px/1.2 Inter,sans-serif; }
+  .ring-track-info strong { font:600 12px/1.3 Inter,sans-serif; }
   .ring-playback-error { position: fixed; left: calc(50% - 125px); top: calc(var(--mobile-ring-controls-top) + var(--mobile-ring-controls-height) + 8px); z-index: 16030; max-width: 250px; padding: 9px 12px; margin: 0; border-radius: 10px; background: #100a20ed; color: #eadcf7; font: 12px/1.35 Inter, sans-serif; }
   .reference-search-dock { top: 10px; left: 76px; width: min(264px, calc(100% - var(--mobile-artist-panel-width) - var(--mobile-artist-panel-right) - 100px)); height: 36px; }
   .reference-search-dock .meewav-search-filter-bar.is-flow { flex: 1 1 auto; width: 100%; height: 36px; min-width: 0; padding: 3px 5px; gap: 5px; border-radius: 13px; }
@@ -154,6 +164,10 @@ html, body, #root { width: 100%; height: 100%; margin: 0; overflow: hidden; }
   .ring-artist-preprofile .mw-hover-preprofile-bubble__shell.is-black-glass .mw-preprofile:is(.is-visitor, .is-owner) :is(.mw-preprofile__button--primary, .mw-preprofile__collab-button, .mw-preprofile__restore-avatar, .mw-preprofile__portrait-edit-button):is(:hover, :focus-visible) {
     border-color: var(--meewav-violet-urbain-light);
     box-shadow: inset 0 1px 0 #ffffff20, 0 0 12px rgba(var(--meewav-violet-urbain-rgb), .4);
+  }
+  .ring-artist-preprofile .mw-hover-preprofile-bubble__shell.is-black-glass .mw-preprofile.is-visitor .mw-preprofile__button--primary[aria-pressed="false"] {
+    background:linear-gradient(180deg, #101014, #040405); border-color:#ffffff24;
+    box-shadow:inset 0 1px 0 #ffffff0c; color:#fff;
   }
   .ring-artist-preprofile .mw-hover-preprofile-bubble__shell.is-black-glass .mw-preprofile:is(.is-visitor, .is-owner) .mw-preprofile__collab-icon {
     border-color: var(--meewav-violet-urbain-light);

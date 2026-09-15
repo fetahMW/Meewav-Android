@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Building2, Crosshair, Crown, EyeOff, MapPin, X, Orbit, ArrowLeft, ArrowRight, Play, Pause, Volume2, VolumeX } from "lucide-react";
 import GlobeNavigationPole from "./GlobeNavigationPole";
-import NationalTopTen from "./NationalTopTen";
+import NationalTopTen, { NATIONAL_TOP_ONE } from "./NationalTopTen";
+import { RING_DEMO_TRACK_TITLE } from '../../../../ring-audio';
 import { RingPreProfileBoundary } from "./RingPreProfileBoundary";
 import RingArtistPreProfile from './RingArtistPreProfile';
 import GroundArtistPreProfile from './GroundArtistPreProfile';
@@ -270,6 +271,11 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
         aria-pressed={ringPlayback.muted} onClick={() => engine.current?.toggleRingMuted()}>
         {ringPlayback.muted ? <VolumeX size={20} aria-hidden="true" /> : <Volume2 size={20} aria-hidden="true" />}
       </button>}
+      {!ringReturning && NATIONAL_TOP_ONE && <div className="ring-track-info"
+        aria-label={`Top 1 : ${NATIONAL_TOP_ONE.name}, ${RING_DEMO_TRACK_TITLE}. Morceau de démonstration.`}>
+        <img src={NATIONAL_TOP_ONE.portraitUrl} alt="" width={36} height={36} draggable={false} />
+        <div><span>Top 1 · {NATIONAL_TOP_ONE.name}</span><strong>{RING_DEMO_TRACK_TITLE}</strong></div>
+      </div>}
       {ringPlayback.error && <p className="ring-playback-error" role="status">{ringPlayback.error}</p>}
       {!ringReturning && ringPortrait && <RingPreProfileBoundary key={ringPortrait.instanceId} onClose={closeRingPortrait}>
           <RingArtistPreProfile selection={ringPortrait} onClose={closeRingPortrait} />
