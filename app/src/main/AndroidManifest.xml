@@ -18,6 +18,10 @@
             android:exported="false" android:screenOrientation="portrait"
             android:configChanges="orientation|screenSize|smallestScreenSize|keyboardHidden"
             android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".features.profile.ProfileActivity"
+            android:exported="false" android:screenOrientation="portrait"
+            android:configChanges="orientation|screenSize|smallestScreenSize|keyboardHidden"
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".app.MainActivity"
             android:exported="true"

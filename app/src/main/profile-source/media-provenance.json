@@ -1,0 +1,1593 @@
+{
+  "source": "Meewav-Web/public (Inter: existing Android asset)",
+  "files": [
+    {
+      "path": "audio/rooms/wave-test-pack/Afro_100BPM_A_minor/Loops_8bars/Afro_FullMix_A_100BPM_8bars.wav",
+      "sha256": "86bac70c76953bb2c01a035e965296e38e8195fa5de0be6dfa217f40403ba58e"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Drill_142BPM_F_minor/Loops_8bars/Drill_FullMix_A_142BPM_8bars.wav",
+      "sha256": "9d9e12d02cf269494fbca88a35e421837185157e074b761e5195d3466746edee"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/House_124BPM_A_minor/Loops_8bars/House_Acapella_Test_A_124BPM_8bars.wav",
+      "sha256": "61e907d3bb7fedc2a499c1d7956d4bf22ad2906a7be8d0dce67cfb60ac6e8c92"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/House_124BPM_A_minor/Loops_8bars/House_Bass_A_124BPM_8bars.wav",
+      "sha256": "fbeae3ade2f5eb478e17d2fe43301673d4e379e0c0449964d6eb2665bdf3fa7f"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/House_124BPM_A_minor/Loops_8bars/House_Bass_B_124BPM_8bars.wav",
+      "sha256": "cb502045f97e7e379e39757a84ee5199a830bd92402f5fc99e8f9a41da4291b4"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/House_124BPM_A_minor/Loops_8bars/House_Drums_A_124BPM_8bars.wav",
+      "sha256": "60d55d10029477ad366412e8ba69e89afa1c36848cd6175cf51edca783221a21"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/House_124BPM_A_minor/Loops_8bars/House_Drums_B_124BPM_8bars.wav",
+      "sha256": "52bc54465e0ded1f3f2f03f72d0b331e9cc1bed675d3766d72faea6408b2b4bd"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/House_124BPM_A_minor/Loops_8bars/House_FullMix_A_124BPM_8bars.wav",
+      "sha256": "01cba6d774f9904734c7e21fe28913d19fff7028c09466e371664e0650a9fbd8"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/House_124BPM_A_minor/Loops_8bars/House_Melody_A_124BPM_8bars.wav",
+      "sha256": "3f93fae2f99918969d95614578a4106441c7aa730bd996d22e8b553dbd37f4fe"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/House_124BPM_A_minor/Loops_8bars/House_Melody_B_124BPM_8bars.wav",
+      "sha256": "118a60b3fba458f2ca09300325196658f5faeb99b941358724139bb8d5a0ba73"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Trap_150BPM_C_minor/Loops_8bars/Trap_FullMix_A_150BPM_8bars.wav",
+      "sha256": "c368c0dc2e2422ca21b8f1b6c455560abe015543d303e0e2ca0edcc1f9f01b46"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Zouk_92BPM_G_minor/Loops_8bars/Zouk_FullMix_A_92BPM_8bars.wav",
+      "sha256": "6bf5025c87369b693edc6b52d123f867cd3eab07b587843c91fec296cca6ce09"
+    },
+    {
+      "path": "avatars/accordeoniste.png",
+      "sha256": "dc3fde83614bf41633cfc2956a433bafc3d25ef2e886202fb80f2baf845c7bda"
+    },
+    {
+      "path": "avatars/auteur-parolier.png",
+      "sha256": "7a7e09d8568da4aefba961914fd2593f30d8f196a205e7c244056ba9822d2f2c"
+    },
+    {
+      "path": "avatars/bassiste.png",
+      "sha256": "33275c6633a52cc5f2b7bbc8d3205333cc0d2cc37f6bad4c2517a827e084843c"
+    },
+    {
+      "path": "avatars/batteur-batteuse.png",
+      "sha256": "9071bc9e4527ed9888fa33c45701cf43a2f0f2d9fb7f2970083abdb66f4b75f1"
+    },
+    {
+      "path": "avatars/beatboxer.png",
+      "sha256": "ac47b484ffd3ade0cd86aec470aa22ae5af8e626eb75f393f81f9de4917a3d70"
+    },
+    {
+      "path": "avatars/beatmaker.png",
+      "sha256": "97f2ff3f73f97609bfd6411b2c0822e13643d74629e0e23f454ed9d8534664a2"
+    },
+    {
+      "path": "avatars/chanteur-rappeur.png",
+      "sha256": "7a7e09d8568da4aefba961914fd2593f30d8f196a205e7c244056ba9822d2f2c"
+    },
+    {
+      "path": "avatars/chanteuse-rappeuse.png",
+      "sha256": "b49ec6ed28c4edbf4ca9fe515b8888cf1e6d81494d4ac8f4fff089cd4fc5c4ea"
+    },
+    {
+      "path": "avatars/coach-vocal.png",
+      "sha256": "7a7e09d8568da4aefba961914fd2593f30d8f196a205e7c244056ba9822d2f2c"
+    },
+    {
+      "path": "avatars/compositeur.png",
+      "sha256": "60fb5afd8b25393070a837afa4320e18fd76998ebd928db48b2e2894cc23a723"
+    },
+    {
+      "path": "avatars/danseur.png",
+      "sha256": "48129349bff8eef75194ffaa1caab31ddab7fd8403f7e1341db9d1d91c668d78"
+    },
+    {
+      "path": "avatars/danseuse.png",
+      "sha256": "25afbdb64a2af60e064b9ac90c6778b3564b0f702a8e2eddc806473248cc3c6f"
+    },
+    {
+      "path": "avatars/directeur-artistique.png",
+      "sha256": "e7fa40a720627cf4b7484e2a2cf30dd194b99503f2866c5c0e9997dee08bb0ac"
+    },
+    {
+      "path": "avatars/dj.png",
+      "sha256": "6b216e8bb8b0fd23675316dc990300344c1abd830167467d91efac3f1ec297b8"
+    },
+    {
+      "path": "avatars/guitariste-acoustique.png",
+      "sha256": "431662a44c45cf6f81d9ffa3a997261ef798302c43d1211d26828561772efb88"
+    },
+    {
+      "path": "avatars/guitariste-electrique.png",
+      "sha256": "a911b380e5a5a83e9d7c3f1da022006f5e8f608ba1c5a8ad5104dcbd4e36485b"
+    },
+    {
+      "path": "avatars/ingenieur-son.png",
+      "sha256": "712b67a6ac91af58596fccf9d81cc681edb450cd8bce8d2f3450a854764a97c5"
+    },
+    {
+      "path": "avatars/instrumentiste-a-vent.png",
+      "sha256": "27bc4ff1a201c5d37264e9ea9d09d56b66480690d95657678c333a6795df4cf3"
+    },
+    {
+      "path": "avatars/instrumentiste-cuivre.png",
+      "sha256": "27bc4ff1a201c5d37264e9ea9d09d56b66480690d95657678c333a6795df4cf3"
+    },
+    {
+      "path": "avatars/label.png",
+      "sha256": "80db8aa5ae15c3e9bebf6d314b8f2803acdcdb751118d543cf7efe14699dbb87"
+    },
+    {
+      "path": "avatars/management.png",
+      "sha256": "a53a65ff26db448caaeea3929804bdf2c8e8dcda7d7aab924911b328a3960100"
+    },
+    {
+      "path": "avatars/organisateur-evenements.png",
+      "sha256": "0597251a8065a305bea975992b0612d155738aecb76ea98b810e11f4fe9bfff6"
+    },
+    {
+      "path": "avatars/percussionniste.png",
+      "sha256": "88baa7a0963c5ffe2ec99c2ff8d4152f8867981438dadf6627c80ebeda747e5a"
+    },
+    {
+      "path": "avatars/pianiste.png",
+      "sha256": "e714374a5613a495a5202e93a14fd80cead26a2918a88d24a20cf9a6e30ad139"
+    },
+    {
+      "path": "avatars/sound-designer.png",
+      "sha256": "c18ae38464e9672186b7fbe2d7053f8b824fa974e584f2a00e5b5a02fa30b38c"
+    },
+    {
+      "path": "avatars/studio-enregistrement.png",
+      "sha256": "c32adc5a5948b4bef5ee632723904903d70e603cf995ea2faf5db508d26de351"
+    },
+    {
+      "path": "avatars/utilisateur.png",
+      "sha256": "19d7dcc827c48f0c45837b5f32935b29bb3c2d7f46a593cebdf1c8af033054e0"
+    },
+    {
+      "path": "avatars/utilisatrice.png",
+      "sha256": "a8c5a320f3a66c324f5627959507801da3c68e88f05c9a994ffbac8950cd4cb6"
+    },
+    {
+      "path": "avatars/videaste-clipper.png",
+      "sha256": "d4a4d33cf91b5bcaa604e051a5d9e54c9e7a4d3149e7f0f0c805d7c43452c99d"
+    },
+    {
+      "path": "avatars/violoniste.png",
+      "sha256": "8198bcaf55d5106dd279fd47dcbd16356aaeb0b5f036ddd2ed21965ee93468bf"
+    },
+    {
+      "path": "fonts/inter.ttf",
+      "sha256": "29160a80ff49ddcab2c97711247e08b1fab27a484a329ce8b813d820dc559031"
+    },
+    {
+      "path": "images/background_seul_v2.png",
+      "sha256": "d1a2d918ad9049685632ed8181c6b2c77efd5179472529abda8e655ac5399c8f"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-01.webp",
+      "sha256": "b805363350fa01239b9e7ad0bdace8bb2f9327de277425e24af7675ac79cd5dd"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-02.webp",
+      "sha256": "3ad2cf3a235b73f6a7a195613319d08309ddf8c5602de11fa013f9d45b37213a"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-03.webp",
+      "sha256": "474a8ff03e9e509dbbd5a06dd819f849aaaa10b48cc2354d9c29acfe46c6a661"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-04.webp",
+      "sha256": "e42a963e275e8e0171fc370fab4effc145229b29f6f92d830d5a642ef959f41b"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-05.webp",
+      "sha256": "92feb80ae73375542ca1b5c7b20389e76a36414d2886a134c9857210b9b32178"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-06.webp",
+      "sha256": "b578bca584780ac600ae4e8fcc294ddd7a352d7a5df734a08d7502c32c655b7e"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-07.webp",
+      "sha256": "b4fe0e626cea30948b560a6de818b6a19069f6c8dd931d3ee38365e87412ea3b"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-08.webp",
+      "sha256": "5080c7117c6bbea041191bb20c2e8f5878544d009d86c6e949a3b5a64e708153"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-09.webp",
+      "sha256": "0fc1e928f93951ce8560078aac665e6892e43d2f2a4ff6c3b09af106a8575aba"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-10.webp",
+      "sha256": "6a5a53a086a477a129159ad2cb1e2972922fa69e68165b5ffbcfbdb9c8c5b0a5"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-11.webp",
+      "sha256": "173da97737d4a86f995a1b3cea020dfeee9ec8bc09ac457820dca0bfbbca5422"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-12.webp",
+      "sha256": "c466b0d659e861b32ce978e72513a4c67d3bf2739d4aca3e498d2c67e62c711f"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-13.webp",
+      "sha256": "9c30752e45d96d8e837c2ed63fa59b36136f496b63b81366b06e56e8201d5675"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-14.webp",
+      "sha256": "5138cac0b3fe8a88ae659051fba4e8fe367b291096b3c66cdb3427eb61a5cccd"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-15.webp",
+      "sha256": "e485e113015e0fbdabc1a224ee4ee3c44f8b565316a71273fac369686d54470e"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-16.webp",
+      "sha256": "048035b853b71b78386d61104987a489b42256c68a6c5c427e377d88633a87f3"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-17.webp",
+      "sha256": "9a376ceee8757360f43982754e6151d1cc947d4868816fb550be495abab14ade"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-18.webp",
+      "sha256": "4318006680d1c697e128a8596e2537239a922b395eb549b5b4edf413eecefbb6"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-19.webp",
+      "sha256": "db606132874795ed8684ad1a970f00eb44a670f49904248145cfb3c5afbbd575"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-20.webp",
+      "sha256": "c863ca2684b963ee7da6554eebc0995aec6345f85ba552ef5062886392f256f8"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-21.webp",
+      "sha256": "e78ef089867574dbf338694709b20b32414ffed9bf3687d082b484d88b4acdd3"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-22.webp",
+      "sha256": "27cebd55097ea5305eb90bbeb01e613a31786d447a65fee46d5095c8b7de7916"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-23.webp",
+      "sha256": "7187a34b676fcf750a5a0dcde1c631700bf4f5ebdbc105874516a80adcc43ce8"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-24.webp",
+      "sha256": "d42f738ac965e441a3f8099b8aa57f0d58b86bc651f852628ec27f3fe435ed50"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-25.webp",
+      "sha256": "262ddcc1becac18c8587a16d8cbd22193191c3fb8bf1cc47677e08ed85ebc8fb"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-26.webp",
+      "sha256": "ffdaee8212a5b530600fdea035d210d7db53bf1b7f4162111bae034c93c49631"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-27.webp",
+      "sha256": "bbbdf4ecb382aec6a49f493eda4187e0c5312fe75a79655ea40e8d2fbea29342"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-28.webp",
+      "sha256": "a915a189b2936d30b88ef87dc0ddd1d5f70a5aff4b814143e73fe0f3c5659da5"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-29.webp",
+      "sha256": "eccbb129016a6f1352e2122974119109e0fed47fa0a3c7f533d4d2e27b7d708d"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-30.webp",
+      "sha256": "308311bfa2719252f6d9e1ba9d8fb2eab8a78fcf8c5d3b27f99aabcd94e6e33d"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-31.webp",
+      "sha256": "ec85418fb3125f5cbbba46c5b0e9d098f482c61eb2b9e48a72a13b442a59a83f"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-32.webp",
+      "sha256": "b1315224b84b0d4fe66425cc853ead1112810982737693f130291e7df1793b53"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-33.webp",
+      "sha256": "a1f889346fa6ede782ad189887e7b75a4e351e196af982c376713023b0f9d0a2"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-34.webp",
+      "sha256": "ce84ffea737c38bcbf68f80a9de731166e0a293d9b6c672d380a99c96d6990ff"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-35.webp",
+      "sha256": "443320128dd228b04c0716ab8b33c55008991b6e863c7566f7bfb6ea2e01461e"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-36.webp",
+      "sha256": "ac7c548cb318521ceee2057f6f7bca9690589ae809e8d5b3dfaa4e1b881f0e37"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-37.webp",
+      "sha256": "ad76694ef9aeb43dba951083b4ace870ed7b56e17b740d8f13e727f92a8b1c74"
+    },
+    {
+      "path": "images/preprofile/portraits/profile-38.webp",
+      "sha256": "af07c092a5df4a10bfdcf3953e08b5b36c2e30d230bea35c0f4c08733452c09c"
+    },
+    {
+      "path": "images/profile-acoustic-background-trial.png",
+      "sha256": "8735bfd52c2e348da4d01155c3bbae91abe5bff1332c22beeb4f92f2ea68d2d6"
+    },
+    {
+      "path": "images/profile-viewer/paris-singer-producer-studio-v1.webp",
+      "sha256": "71b64b4488ff61bf0627384c07709ca747848515cc5222b7433e42af08a8f827"
+    },
+    {
+      "path": "images/shorts/catalog/performance-anouk-guitar.webp",
+      "sha256": "ddc28bd7081589b7309edc55c4192cb0fd7d246e37692e5c20ff6b2fcb2f58f9"
+    },
+    {
+      "path": "images/shorts/catalog-v2/creator-beatmaker-studio.webp",
+      "sha256": "b81e38b290257c1cf59f381c79a2c3ac530dd493e4bfaa90721d681f37c36d94"
+    },
+    {
+      "path": "images/shorts/catalog-v2/creator-dj-club.webp",
+      "sha256": "dc34b641648fc9394f372d80e9f80550e719fa387609b7e56af32db6b845c729"
+    },
+    {
+      "path": "images/shorts/catalog-v2/tv-interview-composer.webp",
+      "sha256": "3c45b8a7c9e8e5e7bc05e1cadc1f60902367ff2e687bf4c8938a4d3136e6c811"
+    },
+    {
+      "path": "images/shorts/community/community-rap-one-take.webp",
+      "sha256": "72162abf61d6c70f53ac248196aa705bba43c9ffefcdaacd9e18eddada5a12cb"
+    },
+    {
+      "path": "images/shorts/community/community-vocal-booth.webp",
+      "sha256": "6670345f4c96a4c7bf7b94ac6460e83ae5d6d8eb3de1add40fa4b4782567db8a"
+    },
+    {
+      "path": "images/tremplin/artists/generated/miko-reve-productrice-hyperpop-paris-v1.webp",
+      "sha256": "0b79bfcbe074199c46397ac17f0c06a1a65498b7ea029e1604970aaca78e75b3"
+    },
+    {
+      "path": "images/tremplin/artists/generated/nils-bensaid-trompettiste-jazz-paris-v1.webp",
+      "sha256": "eabbbe0e43b32be654613cacbe6a75c2e08013befe99bd29fc7329264f3e1f18"
+    },
+    {
+      "path": "images/tremplin/artists/generated/noa-prism-live-coding-nonbinary-paris-v1.webp",
+      "sha256": "1c630fe0cd399caf83562944623b659b3aa6be47d0a165e4ae7d5abd31c4a5b1"
+    },
+    {
+      "path": "images/tremplin/artists/wall-2026/alex-serein-art-pop-paris-v1.webp",
+      "sha256": "e1754b9a2f90f2e27274a7f0f6307fcea704af64f8a72a476d231048f3ca77a1"
+    },
+    {
+      "path": "images/tremplin/artists/wall-2026/idris-velour-neo-soul-paris-v1.webp",
+      "sha256": "e945914a415b9e4d24dfe92e89ed20f8a231e8e2ab4833f179b16d662930a8af"
+    },
+    {
+      "path": "images/tremplin/artists/wall-2026/lou-sato-uk-garage-dj-paris-v1.webp",
+      "sha256": "1c3c3ae0ae6cf21584f2b53ed5c9330d9985da7aaf02f609418f95c1984e4e6c"
+    },
+    {
+      "path": "images/tremplin/tremplin-grade-art-reference-v1.png",
+      "sha256": "e69e1946eef5d14cf8d0b7e021d2d9b204423736d32b2b35f372dc1dc9207d98"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/applaudissements.webp",
+      "sha256": "181436257910494ea89460ebaef54ea85c6396e6bbcf9369322c62f0c6f97097"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/badge-live.webp",
+      "sha256": "54d19e2fab8f89db8638413f5468f3bc284de1f0331737c52e452565490ad8c1"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/baguette-creative.webp",
+      "sha256": "aed2965a739bb63094db33631460b126ef6dbaa86dcc77ca547e0f25bb4a66d7"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/basse-electrique-neon.webp",
+      "sha256": "c3eac62d71a1fca88c97baf048cf8d5b7c44715687642317cc4d8e7ffa5529dd"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/batterie-mw.webp",
+      "sha256": "24f056d36fb3e3c2ef9d0630e07a2d22cf128746be3bda820ef63148fe3fe30b"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/beatboxer.webp",
+      "sha256": "bed8c0746dfbbdd24d677b8e09a8ff632ba55f963ae40212b94cc8a54fad9c38"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/boite-a-rythmes-808.webp",
+      "sha256": "b761f5665789be6124d2147428151698a6eb8ab2941253b75316d6f5a930843c"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/boombox-live.webp",
+      "sha256": "6ef1c7230781961ac7fcdf66b16db150d3089e30e52fd0880867cba8682208bd"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/breakdancer.webp",
+      "sha256": "ec3fa2cfe897507932e3c761069917fe06d480af0e6fa969b210436c9ffa9a1b"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/camera-videoclip.webp",
+      "sha256": "66f35019fa0c797f1d83093eeb709b3c4ed894577e4ca8ea247154e7c3fa006e"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/casque-mw-bleu.webp",
+      "sha256": "51eec143fbc30f31bc002b05414012e743fd6c96d2917c5541df46647340ac07"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/casque-mw-rouge.webp",
+      "sha256": "5d0512b2f53b6af2842ad4bb92e3fa9d7ee50d194a2c1b2a3e621cc27f832b0f"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/cassette-neon.webp",
+      "sha256": "fcf739bc365f142d327dd8a13b0dd5348e14d4be167b485531ca957c3956304c"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/chanteuse-live.webp",
+      "sha256": "12be04104499284fc25f419051b5c9ecef0cffce18c2286b216fd81f722d3c3c"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/clap-video.webp",
+      "sha256": "753141d3948a01ad7cbc15d623ab9ebb754642790800ab1979e08a6409e24c4c"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/coeur-casque.webp",
+      "sha256": "8c4a49bf31bde6646505ed2234aff0b8f01753bb7e8545fc720b774cad37ca01"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/collaboration.webp",
+      "sha256": "2bcf5c68c9b9e00b92d101687646b24f676826780c53f259f94b3339c6ad95f7"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/concert-live.webp",
+      "sha256": "6d4dfa3d27014e48dfc088e1b345563212e8d6b03784b981470147d9be72283d"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/couronne-mw.webp",
+      "sha256": "af1be9e4bd29959cd7c3995db041c58aefd5f10598b308edcea0fc1222e10ea5"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/danseur-hip-hop.webp",
+      "sha256": "a4659381da111966cd5615fe5c7cdb4e2b069549e0263c9ccf35d4985ab8a78a"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/discussion-groupe.webp",
+      "sha256": "ad0f0d569d93a4431d169c5e255f5fced7855d09c38f6697e5a379e79661f98e"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/dj-performance.webp",
+      "sha256": "0b9e4b003767871d6dafff5adf749739e9816532e2ec1574db51d5d66ab1b35a"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/enceinte-portable-mw.webp",
+      "sha256": "31d55bbb335e3e75e175e8ab2e5c921585ceab0efb4559ef508d3f61c44bb073"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/enceinte-studio-neon.webp",
+      "sha256": "36547ffcf7c2071c5af77900e0d75d317fdf343c9e5e7537a4d6e55d1f1c5f32"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/etoile-talent.webp",
+      "sha256": "cf317d81dc785e5780826947cf018563dc124b43ca414a3a29067edfdaa9c15f"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/fusee-musicale.webp",
+      "sha256": "0d1b327ed5dd1231c3ad450e37c95693060bf7cf08ca2b965c344a09753236d8"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/globe-casque.webp",
+      "sha256": "5ac907ed94c586d4de28561ccac8ab6b677cc019d11415ae0fbf0e4034937c47"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/guitare-acoustique.webp",
+      "sha256": "4435f1ca64a98860354132bf4cba96f83e8136b05657ed6558fcf21c05fecacd"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/guitare-electrique-feu.webp",
+      "sha256": "c511e4a4ca0bf6aa4f5f9fbe76ff5e7cc43abf10784d067fa5b4bf4cc0b92388"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/megaphone.webp",
+      "sha256": "d4aa3277ed4038e7534cd12f7b7ca57352d190f6616b4cfcc136346b24f1bfc6"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/messagerie.webp",
+      "sha256": "6016ff886effff169437af9b59342e7d1c4e7e96ac2563beb5feb768d955bcb4"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/micro-flamme-live.webp",
+      "sha256": "46f6e22ddb954be5fbe1458bce006ee280d77f85e9b2bbc9948027ad942272f0"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/micro-studio-or.webp",
+      "sha256": "0c353ecabfbfc79171d2de6e7f5b3ceb004d9bfe105746412ba65a4be0d7317e"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/note-en-flamme.webp",
+      "sha256": "b6c359dee4722540f9e4b6df451813b4f6556265fbeae8abdaf327b13bcaf26e"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/notes-musicales-pop.webp",
+      "sha256": "ad0ed943999b6b56650d1139e8b376c917f676ebb70f11021ae36fe7ebb8d60e"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/nuage-musical.webp",
+      "sha256": "c736bf5807d1ec6e13c21693881dab9f28f542aa6b57e72475ee06d7059cf0a5"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/onde-audio-neon.webp",
+      "sha256": "adac2b488047e8cb3d70ba01b10c32f5c2ad1621487428995acfb87e844d82d7"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/panneau-on-air.webp",
+      "sha256": "acf374c614f3c50043629c2718ba741fe02115a47508d8c142680a50b53f883c"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/platine-dj-neon.webp",
+      "sha256": "fc939c3c2d57f6bea7a601656382afaa05c6212bd14a6853f48c27f538ec289b"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/rappeur-live.webp",
+      "sha256": "ebfeaf40ed402c39aca26c86f35acf2991b1df1e160deb8311e7a0076da84bb3"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/saxophone-en-flamme.webp",
+      "sha256": "4b8923ec36914f0fe64e841c2295665b55a8e3a96a2c9760947c2f95f30f7089"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/short-musical.webp",
+      "sha256": "35c000937ba232f76d0f47ae06986a19738473a6426eea722835804ef8de25f2"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/signe-rock.webp",
+      "sha256": "018118228478ebc5da84ac1ba336b219cb703dc82c15887bef0ca6842ece936e"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/signe-victoire.webp",
+      "sha256": "9fbb355441263d8cc96f7d23d572e947d9f812ff6764d29013657221740f291e"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/synthetiseur-compact.webp",
+      "sha256": "f64362b201c29c991a7c7ae0424ef04f22cb10d25253bc944fb8be46a243d71b"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/table-de-mixage.webp",
+      "sha256": "1be6a4b9eddfe63e1d84b40806298a4c0a7e9bd097011b56049aa179feddaace"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/trompette-en-flamme.webp",
+      "sha256": "fdc618295c78c7e6a094f4ec35d231e505811e8b1cbc3add88ac2ae830c4664f"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/trophee-musical.webp",
+      "sha256": "6ae354fb94a5095466612fad8378e8d656d4da79b2162f6037059158ab230e96"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/videoclippeur.webp",
+      "sha256": "ef747d855db1719a35f406727704499b4a6a41b27b6ee5ca4c64d5ef55fcfd45"
+    },
+    {
+      "path": "meewav-emojis/v2/webp/256/vinyle-en-flamme.webp",
+      "sha256": "1d071830e43e86c8ef0c82040e9af85e4f56549fec151fc1cdfbf2f41e822591"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/angry-rap-face.webp",
+      "sha256": "3ec0c34d530e94b071f17ee4ddf6ea635cbc89839cc33b02eae7edbdbcac3443"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/barz-blast.webp",
+      "sha256": "893107bce154671ea60d3c18c7b0fde03bf47bf79ae7c97518161af6a8f59bfb"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/battle-fists.webp",
+      "sha256": "59aacd14439f0443a575022631138581e9563e53836246f51eb8fe16ab23c568"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/battle-pad-clash.webp",
+      "sha256": "78ed3662e6eb88eeef7cfe577fc951f8725c1874b1afaeec4b5d8dde0cab7562"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/battle-ring-stage.webp",
+      "sha256": "87f255839ea7dfd764e7f300a1990cea701b7ee42e83a47968e6addfbe9aa596"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/beef-alert-siren.webp",
+      "sha256": "14dd0a36dd74d52d706847c27b45745ef831726a4dcff745ed9779a6c41ccd7f"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/boxing-note.webp",
+      "sha256": "b06bd2e42b5574b7cfc71ddc68d2df03ef4604bd329ba55252c5ab92f8f76782"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/brain-with-shades.webp",
+      "sha256": "2e8c64a550c256f7069215fdfaa869fecd812d7bbb32dfa89c20cb7707fa3327"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/chain-808-sub.webp",
+      "sha256": "48d7eb20dc6b8b3982e452c06097e5e3bfa52d8d3f7fa55d8bedac60eb2118e7"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/chain-break-mics.webp",
+      "sha256": "5d350c9f990e659db2e79d28157270f5ef4cf6496ee0a8d4a4bfa88a7db60d3b"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/champion-crown-belt.webp",
+      "sha256": "ec64df7e10322fa03cf2f4d4e43a7c10afbd28121d112764fc86dc311e6e5cf8"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/clash-headphones.webp",
+      "sha256": "49ca96236ca9b53b803c6628df9e4248cbdd6c53f0a1ac08838a65f7d53bac18"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/combo-crown-badge.webp",
+      "sha256": "547e8d41f6ba4876e5bef971b5d5cdd318b2c777dea04ff85ebfd8e48a99d62e"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/cool-rapper-point.webp",
+      "sha256": "c1619a14fea1603c8a8a92a0c0de1e120296f13980906280017cdd394ac67473"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/crossed-battle-mics.webp",
+      "sha256": "79408262230d833fa95fbaefd7ab29cb42e517d404258e17604f836910607b7a"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/crowd-king-stage.webp",
+      "sha256": "7e2b63de3e5b5e86048e057fd5ef5d059ebbd84bedfeef32394749e13c2e6a68"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/crown-medallion.webp",
+      "sha256": "120b3d4e16033fe65fb9bfb8c52fe7bc718c497bb6591177b7c8faa221f8d5ae"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/crown-pedestal.webp",
+      "sha256": "118c04fa6a74b67f92896c69983c2b942882e139ed9fb8ab29940236280aec42"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/demon-808-face.webp",
+      "sha256": "494743acc0fccebada1e20b897c179a5373dcaaed8f0270c2e96cf3d2e842e52"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/electric-mic-blue.webp",
+      "sha256": "4c8060bea4bc8657a83806edf7f3a532256d8dccd87578d4cbc26e937f6409f5"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/exploding-crown-speaker.webp",
+      "sha256": "deef487d9071a9b7f57a76859f72991436e6bfb04903aff3a61c0fae542510ea"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/final-round-medal.webp",
+      "sha256": "1b74988b23cf3215f7a243e3053f8020fa8a9732df497722aeee78b1c671b549"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/fire-vs-ice-faces.webp",
+      "sha256": "5971587989722c9c419cfc2889f44146babb76cb579c5d473c39a477c8936b5d"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/flaming-mic.webp",
+      "sha256": "70908e06deebb1b74712be58e2e8c3cd97a650bde17ec27d89dcb9fb8c84e5e4"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/flaming-music-note.webp",
+      "sha256": "5232040e0aa4f1e0382087d65a730a6c86817c30ee4f5c34d3343d454be4e915"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/gold-hype-clap.webp",
+      "sha256": "cb11b423cc9b5753576db89d33ae8777ef9d5a4c81475f228d0577e6018fe7c4"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/gold-skull-headphones.webp",
+      "sha256": "dab6e7624b7ddce1d4c70ae1eb997b56b2ae58e8d1fef1a93f3f669c9fc96f75"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/gorilla-rage.webp",
+      "sha256": "20df11c0e4f1ae302e5fd6423c39f33c89b0a613becd1bed913e01c0786621f9"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/heat-check-note.webp",
+      "sha256": "8df0e36a3a3574179ad617707f82e85d99f6febc90c48fa22ac25f30432c15eb"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/hooded-rapper.webp",
+      "sha256": "cb7b3eca63c75e224d3ffadffa5e70deec35375548dc16acac32b05b4ca4f65f"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/hype-megaphone.webp",
+      "sha256": "322aa3be2039b09059e2af11e8559e8ff18d7d7a19f6bb54be94b2a1168a5f5b"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/king-shades-face.webp",
+      "sha256": "6822f6864b6cee12be513b5137406051201a3443436babcf0185dbcaf5c39f61"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/last-word-bubble.webp",
+      "sha256": "ff27625d25b70a2f4c000e942b048e25a2e5d33b91d920859e5536b3d631c5f3"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/mic-crosshair.webp",
+      "sha256": "a6852fa6d43decafc2d109b555b223d0857f80f3135e445b5d7e3946bf7eba33"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/mic-throne.webp",
+      "sha256": "6beea3413adfcbe7dc2de1e7c7293f87d68541c6e2ccff21ede3675547db08c2"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/music-storm-tornado.webp",
+      "sha256": "c899cef6cabca05cb48cd55491546ab82084a6d800c7921981c3d1c735acaa60"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/music-vortex.webp",
+      "sha256": "d4d1a61ed13fac300688668b39e48b6dd7c9c756502d5ba60a5ffb4e196972ff"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/no-mercy-note.webp",
+      "sha256": "08eec8e00dd33246aa963f273da9c3ba48be1932c4754419e0a438bebc16167f"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/punch-wave-glove.webp",
+      "sha256": "5cebf96eac17bdd88e7452bb9055ef83cc4835fff41ac2bf221926b378b13a47"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/purple-shadow-spirit.webp",
+      "sha256": "b3d8b513408b837d72eee291f783894f1a971bae46982493b3a342464aea56fd"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/red-stage-mic.webp",
+      "sha256": "b96a09ee4d7cd91618e2c223da5ac862a6a58ab66b4461ae6cb521a01fcab411"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/reply-flame-bubble.webp",
+      "sha256": "6156bb39b88fa66047c41f9b32fef981446c2586233cf629917c6d67c96b2d55"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/rocket-mic.webp",
+      "sha256": "51828ac32e5507a445be46c9321d254a150a8601bb77d3b1bd7830e5e5c06e43"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/shadow-rapper-profile.webp",
+      "sha256": "d4ad30b5d27910df931eb66dc285e365386ef3f35aa8976706738c4242439c8d"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/studio-condenser-mic.webp",
+      "sha256": "3852a8045a7d5c1c511e1fe64661931a03c63a3bc28b8de1bb69266aadb8c78a"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/turntable-duel.webp",
+      "sha256": "50c45b42640a4614372b18d0b459f4f52856d38acfaacc96ac3e79769f456c21"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/voice-cannon.webp",
+      "sha256": "35c897f7db920269080438b0562c021d0cf94c540fcac8827caed2c7595443cb"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/vs-badge.webp",
+      "sha256": "1c67ec597d3a37e5cb156e737ec1e9d85a79b4894362542ec2088e1f77782ad8"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/weapon-vinyl-disc.webp",
+      "sha256": "34c14374b9e2b7cd9fb0a367f19018a1ecc5aec7440623d016259931c1134857"
+    },
+    {
+      "path": "meewav-emojis/v3/webp/256/word-blade.webp",
+      "sha256": "4ff5f0420fe2f79fd46ce15ba10185fcc37b1f0a3c4b63f96f1175d494ccad4b"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/artist-crush.webp",
+      "sha256": "f11ac237f7a893417841d438fb220d40b1c3e78305989a8fff0b93d0649064bb"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/big-love.webp",
+      "sha256": "91861f8850389bfd7001db82cf66f7de8d568dd1f0731abd8cc8f9c2844829f9"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/ca-me-touche.webp",
+      "sha256": "f7f2ff121795a095d7fab1ada4935625126340bfc957cf5768853f1372b5ffe6"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/chill-vibes.webp",
+      "sha256": "a5d06798c5c50a02e89ae6082bc78dbf97a534d0a6d3b26cdeb1045287dd365b"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/connection-artist.webp",
+      "sha256": "44b5b713b3b80f105c265b66170a6d330be55fa5f17e3bf5b60ed92d3a706500"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/coup-de-coeur-sonore.webp",
+      "sha256": "bc67870b5e4eb8080abbe0e5d84635d08f7ad0f7a311f73a3d83866beb30a17f"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/donne-de-la-force.webp",
+      "sha256": "eba079f778b3f6bd4f444ca4b6aef9f93d002079f0a3404dfb75c5fc246404f3"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/dream-listener.webp",
+      "sha256": "1f48ecf663c56b06be28b69fa432e774db2bbfc25dbcfe4baa0bf26fd39365fb"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/dream-vibe.webp",
+      "sha256": "ce311cfce1b18124edf2f89ce5095408fabc0cb890f3c112fab3a36ceab99360"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/emotion-forte.webp",
+      "sha256": "5cb06ba22d44c52878eedbe73fdfbb92a22b56e4c28b72d21b137cfff877dc68"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/encore-encore.webp",
+      "sha256": "c3aa9049e8ac48518e950d18166e9e51ef51ac9d3ee083576a5f49e40484dcf1"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/fan-de-ouf.webp",
+      "sha256": "8e59cc3c2fdee72b4aa7a723aecce00034613f1a317f2efd7fe31cd5a606f728"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/fatal-mood.webp",
+      "sha256": "8646313185435930da70a8c02609d4294d2fbc0cc71f89f2933c054eba4df3fb"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/fierte.webp",
+      "sha256": "50e441da85fdf6cb90e912e514974608f336b59a2a12f85d249de0415242e0f7"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/force-infinie.webp",
+      "sha256": "b452bd073a832428a3c77a2711a707436e992e4ffa4964921c1ec2af3b0f6364"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/force-x100.webp",
+      "sha256": "0af17deec1666f3a23c8385262948089cd8593f6e9ebc54ed7cdc048034e5cc1"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/go-stream.webp",
+      "sha256": "3baa794a6f85ff21e7f6e7741538a73793208ce6f59a41c5c942ab7896ae21eb"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/goat-fan.webp",
+      "sha256": "aaa358d3c15a4e90ea6362458af873bf6dacbf0612904e8bf43e4724af8c134c"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/golden-follow.webp",
+      "sha256": "48b67e9e88ba7c38c42e5373176b6d312fb157704d3f3877d26ba6c106208e7c"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/heart-bass.webp",
+      "sha256": "e4a92dfe957ff80f2da3f757db16e6721903d8027175c2fb58453c8e1f90058d"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/jattends-le-drop.webp",
+      "sha256": "eb497fd2b1e6166c727ee6fc91084a8131dc539a163be8fc397e5dba20ab97f4"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/jazz-soul.webp",
+      "sha256": "e9abe8b63507c4e9444169d32e653e54d1775a3d35f76518dcb7529dea737721"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/je-te-suis.webp",
+      "sha256": "abb8185b1a0ecd6ce5716d5eb322363f9cd5fe2cdbd1f183d49620b0261f19e3"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/je-valide.webp",
+      "sha256": "b6122caefdb46af2b07ff02cbe6253204f4b2ab9ce145a4cd2c02d7c35536817"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/je-veux-le-voir-percer.webp",
+      "sha256": "12b32dc46c0047aa84bf065ea269d23185b2f87929dea0033e2f420a02ff6169"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/jecoute-en-boucle.webp",
+      "sha256": "9651985f2571c32a88430e805eb869465fa72e492268477c34fdfb8cbd3a7804"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/la-famille.webp",
+      "sha256": "fb8d91f2dae1cad7e5c513a0631b0eccc0d62385750e76e991772672d5769235"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/legend-in-progress.webp",
+      "sha256": "05d7907850b135a5de640023507ef4b204eb321d5b2ab01ffc66aa56ba3f885c"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/loyal-fan.webp",
+      "sha256": "8ca9653e348b83c76caf691635dede003a55be5a01492cd3dca83fea25d2347d"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/mon-artiste.webp",
+      "sha256": "4d0e8f9c2e529846bb5c37b2bb828c3f117f0ce81119adba60eb945b4414eb01"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/mon-son-du-moment.webp",
+      "sha256": "a19766513cd238dcafd9199d328b22d8631949191b5de61920b30c3d6eb86ad5"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/mood-fatal.webp",
+      "sha256": "36ffc037d4fcb0017b690327b6374e134f9fa5eeacc9a1e64b3ef3df2bf19177"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/mood-incroyable.webp",
+      "sha256": "a044ebbd054b2fa42f3a55c55f8fcba707805bae74eb2c9fe1d6a18524fbed6b"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/mood-studio.webp",
+      "sha256": "cd9a460371359267d57c1f5491f58965e5414e8c3e2f03582b90002a0f6596b7"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/night-mood.webp",
+      "sha256": "5dfc24e59c4dd54f8c098084b33b89be4b21d3ac53bfee05c17d13a656fb35dd"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/pepite.webp",
+      "sha256": "c2ec73c26c0c3fe4b2cbed5f90f19292ee929a2582651250d481e62fd2bdf1d1"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/protect-the-talent.webp",
+      "sha256": "f9995deb4cc70fc7681afde9c3653a1f21e66ebcf91b7e66de446e74f4d0df2f"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/replay-mood.webp",
+      "sha256": "4faaf9031d20d5aa11d420fc47b861719c27feeb60e927b6e34376107c51ddb9"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/respect-artist.webp",
+      "sha256": "fb252a7008b2f69b61184100e29fbd942246d278fc48022a0bd33d099fe90240"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/signed-with-my-heart.webp",
+      "sha256": "b8bba44c0406bb970f87caf361256207775ffbac4eaa2fb0518666cad19f4251"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/squad-support.webp",
+      "sha256": "2a8b3fbf3397164da09704e060d6996d26d7ba29d423e7a9d7d44ce5612f2785"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/super-fan.webp",
+      "sha256": "8070d4ebbdd7c27f95f027711379af8dc073b3f0e6f2424387568cc3af9733a5"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/support-legend.webp",
+      "sha256": "12b04b657572f856c0a3b4638669c377cb4e135e5f08091b5dc2f9b2bb812e02"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/talent-pur.webp",
+      "sha256": "7a86a32ec6efb84281fc2afdcc7cd4cd14d2654d731ba3ca2e07b0e9db8753b0"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/team-artist.webp",
+      "sha256": "e75a46b6a8281d05b4992bc13b621de1cf5083232ea6559750bd8d667561d92d"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/top-supporter.webp",
+      "sha256": "0d934523621b380bb93a17665cc519b6bab27f0ccbb8b80c3ede2d1a57dc2e0b"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/trap-love.webp",
+      "sha256": "a4018ab68ce28fc3ce629225fa4c3456e7e63d4596b9d5620734efb043355626"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/vibe-sincere.webp",
+      "sha256": "93fdfd17beb78a65460cabb442cb49645161b1f7c343a3679b3a475ed337e74a"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/wave-addict.webp",
+      "sha256": "4a8b8bc9d13f0874f89d38f407281c247c4316a41cb465daac8fe6726977ea52"
+    },
+    {
+      "path": "meewav-emojis/v4/webp/256/wave-lover.webp",
+      "sha256": "62a80e310e64fa1046132fe844ba662c19b2bbffb54f5e6647e7ec8aedab2aa5"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/applaudissements.webp",
+      "sha256": "4c3a21e541364c64c3f442e5a4b1a0d65a9738b9223cc721c944c7c9c5a775bd"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/argent-brule.webp",
+      "sha256": "5790bf19e76fc3decedff33d357e5c89cd35f2b97b1580ef5ea2fc044e1b6d13"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/autotune-max.webp",
+      "sha256": "f5bf1ef33fd2686edc59773e07f07368e1656ba02966196ace9bafd786b34ca3"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/back-to-studio.webp",
+      "sha256": "69c31238a96f295850af654c80286adb3580c72306098ee70c1d59d16cfac487"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/backstage-pass.webp",
+      "sha256": "845d3f198b26dadb0989a78a334e61101b4dd5d174c573ba5d0705f20f1a612c"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/beatbox-studio.webp",
+      "sha256": "753f5b9885a291758a8900837570426b540904efa4c359a4acd68f95b17c2272"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/breakdance.webp",
+      "sha256": "0f980f00ebea66c85f69c9edf92dd3b6b05229127d3d887d7d0276172c270593"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/couronne-tombee.webp",
+      "sha256": "0046d1c460a67969f5e6fa6482b024c001f844f3fcee6967ee59c88474bac41d"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/crowd-live.webp",
+      "sha256": "3dd04808d06cb97a077c023c68ae8f16f372604dfe35ef4922019680d4985171"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/danse-contemporaine.webp",
+      "sha256": "3a0ea2655f7d12668f0e1124dd10837610bb9c58623a1dc46de0106f9a2667c6"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/dj-live.webp",
+      "sha256": "8ac89ffdd4d96836aba839a29a35405e2a9940383f19778e4f6f951787d8d47c"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/entraine-toi.webp",
+      "sha256": "5f27ea2ebf84b1cc75a67511d1a6a3b37ac1498461dba7adfc6b79d185351e04"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/facepalm-artiste.webp",
+      "sha256": "7ef9298391b2fcb6ad05dd41c7ab21de8e12575545381506fad61fb6f1aee0c2"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/faux-artiste.webp",
+      "sha256": "242b1e007e4ad9b65737a395afd0750e6ae41675bf6f0b0a82a04e26869ab3bf"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/flow-casse.webp",
+      "sha256": "9736c24f5fa5d46f08e86260a216df0f2db5c01cd8ee7da8f9de05bef431fd8b"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/game-over.webp",
+      "sha256": "a766553b54cb58bbcd766b070f8a40ad203a076d307a2ef39d40c904bdd785e6"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/goat-mode.webp",
+      "sha256": "a4edc2c86adfe4934448fadcf18a1a63caea7a0e7771c1c26fb8af58ea5aa052"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/gold-record-brise.webp",
+      "sha256": "ce0a7a39812c369aabf636a82c0c40fe289484a79bcf2661760c620f2ef504ae"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/hip-hop-dance.webp",
+      "sha256": "394a516a075b8b771b402c3f7f4cabe21d2b1e4f8fdccdc3f841c83a5647ed24"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/legend-in-progress.webp",
+      "sha256": "b51f27212ad193b1d3bb5db546ccf805284e0bf4e820bb1354f7ee168f2e3250"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/level-up.webp",
+      "sha256": "fa5b07420d86f9761ccba41f0eb3e68d4eb632f9dad05f51f36c12ba94795ccd"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/low-energy.webp",
+      "sha256": "5b2b21e17c0088b9ad99150ae81f7ebb64d4530e6e4ac34dfdd262d4b1c211c4"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/mic-au-sol.webp",
+      "sha256": "f3b34d5b078cd3a8d3692e439cfef30345da8eade7a7afc8977319344b7b69fc"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/micro-aux-toilettes.webp",
+      "sha256": "f4365bde0ab31752fdaed5677e3f05e0f3b0b64d79fd4362fedb719898412713"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/mid.webp",
+      "sha256": "9c55dcee2fc22664a0ef700e2d6b06d329627dc46904cf571c2807607c172807"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/miroir-clown.webp",
+      "sha256": "7705b1cf4eed9364723d94715304fd171fe55d1302f74a56dd39f6107f1369e9"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/next.webp",
+      "sha256": "ed59651d4357510bc302f6a5dcb3532e48936e9b114938a627c7ddb5dd72f343"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/night-ride.webp",
+      "sha256": "bdedf935ab146ecd2626e1ef67cac8b7c5c5a3d2b0bd0d22ab74cb55a54f8144"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/note-zero-sur-dix.webp",
+      "sha256": "06f4e5efb04e11b2c2208cca8f9e4b445947fa9fa51598eddac3108293a27c2e"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/pas-encore-ton-heure.webp",
+      "sha256": "a96db8881075a32a67d9c1a61b15ed9e326905732db358b34058f4879e30d6f5"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/pepite.webp",
+      "sha256": "56220a7cbb92f12b6e5fe07221ccbb5a9a1eafe46253d27fdd438ec02f11b44e"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/poubelle-du-son.webp",
+      "sha256": "b7c9ef29c98e74180f8fd96d516059b40f4c5f2de6e2788cf357deae87ede8a9"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/public-part.webp",
+      "sha256": "4021ad4907055f21156b6ccacba8378e9af0d445c1fa698e275fac6aae8bcafc"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/real-ones.webp",
+      "sha256": "1b46115be92efc50df9d01e5aa9c2369d951d35d3b509e4cfd0282f61a28402f"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/rejete.webp",
+      "sha256": "fd19029cc8548bca234716eb6d9e54d1941781e402d22d7f5e1fed2eebd6af44"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/rocket-mic.webp",
+      "sha256": "1a3e46819f7b31a5a532a1d948ad0c4529fd8fab21882539ae1ae49f3d133011"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/rose-fanee.webp",
+      "sha256": "4014e2c676078db096c05dadda96fb9287fb0ce3572cbdd2363a1110d76cd6c4"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/scene-ouverte.webp",
+      "sha256": "82a71b8cd34cb77bcc60a4c1e0e9a38f8e4a7f1e1b4884c434f06529a701f020"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/shooting-clip.webp",
+      "sha256": "72d9997d5dab277225d300114cba7c73588c3246f3bc971eb355b10049085fea"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/silence.webp",
+      "sha256": "7ce6821c982be895f58641b26ad891072191172b606b49b354448c3e86528774"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/skip.webp",
+      "sha256": "8fb748f99cc70d63752f0c998a27cafe81d20b7cfb2041518107b103b4351aa1"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/stop-ca.webp",
+      "sha256": "631b0732cbb72cf4e0cd9ffe94d7a7319d30da0409b7ba3a496775d30447a223"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/studio-night.webp",
+      "sha256": "e97568ce1fdfaeb1093f57e1276e70cb119d5ac62bc7bc92c22c0474900b5ab7"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/support-plus-1000.webp",
+      "sha256": "ab9caa4a2616632484587c1f1321ebd1f5a96b4d1cf7160adb4d46c3ff9d737d"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/toi-la.webp",
+      "sha256": "ae178cb85e316b4f2b3b089957a2601f310cbe42a123eeed79de32e46446e178"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/tour-mode.webp",
+      "sha256": "aa767cacf1d50181a9f8139be21fad87fc8048d74b1da9f19d6ea3bce3b949c1"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/unfollow.webp",
+      "sha256": "ee36b48884126942ee40f501d6fcea557ab0ab31aa22ae01353d2ebff08c8453"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/vinyle-brise.webp",
+      "sha256": "49c6ab7752e0156c7c61ca7f8258b573df2afd97a80a256b730d618f2da00d7a"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/voice-note-ignoree.webp",
+      "sha256": "f99fddef0edd258364cb574704610761a58625c3dcbc75c8c18e946167c0f130"
+    },
+    {
+      "path": "meewav-emojis/v5/webp/256/world-collab.webp",
+      "sha256": "b821c3593e73314df0416f85268de1c46c200ada24dd8771ed411ab0c0790485"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/afro-dancer.webp",
+      "sha256": "00639bffa8669889190d65307def6fa743ee5932d6e0ffecf017727e887abed0"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/afrobeat-groove.webp",
+      "sha256": "056345e9f540b537736c052e5cb904ad7ca0c866da1d6639ec232061e82ae537"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/back-to-studio.webp",
+      "sha256": "afc8718dd90880db5779ca391bd8d7de2cd945d7fabfe26b0c17238311de962f"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/backstage-case.webp",
+      "sha256": "61c27c5fdda7da350e50fa415deb3c4ad6f7dd71d923b9b104c15f2cb6b4638a"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/ballet-dancer.webp",
+      "sha256": "15b0b0995b4c62ba680ffbd77515cf283721f35e2b68407c289b350922953882"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/bravo.webp",
+      "sha256": "1230ed1f16ae738269ec822971a54e3accf364c889d9061d81813948b5ce9f49"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/breakdance-freeze.webp",
+      "sha256": "c57e4acb012eb01867b0994ccff11386ea7ff4950fc06e5978daf5950157033d"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/cent.webp",
+      "sha256": "c0004bad931ac084c0fcebb8a62a6a2bd2c8e64ce04d30c3040edfa3dfcfba98"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/clip-camera.webp",
+      "sha256": "32e1df950cb9f8075899551939941f2d66511aa10c98bcbe51d13c6b8795a286"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/clip-clapper.webp",
+      "sha256": "7c65eb8bd17df2bd475ad74cafa1feea380bb1f3642d211956596421095729c3"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/collab.webp",
+      "sha256": "d90f0efb6706abd9965db20fdba66a9e8b008a023edd0f1644351b4fe7cc9bb0"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/community-network.webp",
+      "sha256": "a0e82bd33c97afa4aaf7b8e0ec0d7b9480232c741ba192ef8c6e10f960cca0a2"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/contemporary-dancer.webp",
+      "sha256": "d30088d1bf381a1062a7022cf690157693ac65fe1f8dec7d71a0feb8fe494b36"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/dancehall-duo.webp",
+      "sha256": "4f52f42611f68fbe2840e0832ad1f91f2afc6aefb4c90010139c4cb015442331"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/drill-culture.webp",
+      "sha256": "718e15edbfffa38cfbdc93fa138d547d32f2c5e2ba47ae7a14e2794e667ce8dc"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/etoile-legendaire.webp",
+      "sha256": "edf1ca2b2d1bcc32eaace317c7ccedd2df13e21ae141fa57c094d81a1bc63d62"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/fire.webp",
+      "sha256": "215915725f68cec879cb4d8943c4eb8ae3767381d8dc79b43c34aba5f1a7518f"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/hiphop-dancer.webp",
+      "sha256": "de3e9387a648b341af857199b6be19e5690e71d4ba8584413b07664e24ac2eb6"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/hit-record.webp",
+      "sha256": "f75d9390c817b4d961cd93f5c46877bcb899072c4e6015700fe14d571f537356"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/house-pulse.webp",
+      "sha256": "2686f37b7e3b98189dcdaa7ec9f2aaac06e6d25e23a42e9529b23bfafc2c0819"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/jazz-night.webp",
+      "sha256": "09d3850fe4eb2ec128d3dc7e9fba6f9f9ea66049752723e87648c569ee980d55"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/krump-dancer.webp",
+      "sha256": "1c8afbc612ec8931933a8520f752a9a2f6dc5854cac122c4beb5bf4d49403a14"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/level-up.webp",
+      "sha256": "481a1f5f9312d79572f0a2499cfdd4b9eda2ad5a98ee2dfb780456d3666a4398"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/live-stage.webp",
+      "sha256": "f85f4c87baf305c0bf47e9b9bfb1cc0961a902895e23c9d30f339b3a448c3582"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/lofi-vibes.webp",
+      "sha256": "9b9510270738e85f158e4719f284022355559f06e4fe122e6b204d7259522ebd"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/meewav-tv.webp",
+      "sha256": "1148ebafda8518ecf97d27776065464e20f356e995b44b08b693f0e0461864b1"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/mid.webp",
+      "sha256": "035f1eb566017b1db4b677fa1b4209c470fa272ba844b9b5464e19b310fcf60c"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/mix-engineer.webp",
+      "sha256": "cdcad6c7aac5a3887ce0de8be1f69c1b6f06ff9b2fdcb9626218f98d5e3882a2"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/music-globe.webp",
+      "sha256": "b7b6d250020f5e832f6d5843ce20e2385c28202543f09d155bdbbe443c22e5e6"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/next-level.webp",
+      "sha256": "278dfb3c26f6c7389d60d09a8d1b493451ff65438d64ad48e5bebf0c29e9e624"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/on-air-studio.webp",
+      "sha256": "eaa00c11e3876f22b20e441e56e8e4263b81cc5c56f755eba16150928f848f75"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/open-mic.webp",
+      "sha256": "3984d4a576f2893518f155dd42b33a569e43d08869b1d5b47c4ddf124e15efda"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/pas-ouf.webp",
+      "sha256": "8804fa4c1133b6bd149fc6b7d3b586baf2a4562998cc9a3867f67ea194769a63"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/rap-performer.webp",
+      "sha256": "9293e648656f24ecd6bbd1eba338b4a2feb0b665583635f00bc8cbde7aa9de61"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/reggae-vibes.webp",
+      "sha256": "d6c315ec9a3b4ca0abd59e2cee0a2a524a9bac9c3588f8a2e2ca1526caba6094"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/respect.webp",
+      "sha256": "461420f4808a4d2e20df8c251538fc6db1ce8cb4507f77ee0e4ff084b2a1a354"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/rnb-love.webp",
+      "sha256": "9c7d0f1f08baf624e49798160b05cc640e51f47d5e05089d8e5bede8930d7da9"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/rock-n-roll.webp",
+      "sha256": "876be284f45622ccf0f0796746d817498406180ebc4513009b59b61c37ff9a2e"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/room-host.webp",
+      "sha256": "c3b04c5f113a5eec54336d6f09db4b7491af3fe8f58e4587cee01c90b2d85e01"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/shorts-performer.webp",
+      "sha256": "b32c7ec75128b0a26016d3d3d8d6f9a0500c80f7cc765d4461699518cbbfb098"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/sold-out.webp",
+      "sha256": "b264f949e6bc8b3f206f97372cfe82b98fcd4027b82009ce87c8a84b4663392d"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/squad.webp",
+      "sha256": "45aa83be69ee489345bbcd1cf23bce7f26b82c78dd344a9f2e0b4be95b2826ef"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/street-dancer.webp",
+      "sha256": "92d0f183652153d4a802fa5a4454a822b107dd727117fe63ff69a95d7291584e"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/studio-session.webp",
+      "sha256": "f6a897f540ca087ad1692c1c6fe52a188b8dc6a81dd4434dfc3be1206c61c077"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/support.webp",
+      "sha256": "d4d780441809b5afbf667ee36d2d6058af92b30599b84884409bd72f5f150370"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/techno-night.webp",
+      "sha256": "239617587196bfe3ddfa95a8d104dd409e0f0346070ed371c19a4f91a7754c18"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/trap-culture.webp",
+      "sha256": "0d99548eb4adb865b0a6305d355b99a2ad294b662a29b880836cd7c4fd689f74"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/valide.webp",
+      "sha256": "37980c3a71266e28da2902bbfd01de401283f2a7af4293d6fceec9eea2e74546"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/vip-pass.webp",
+      "sha256": "710ec5101b7dd4f0b333446c68a86c74dfa5b326bce58a933fd221fe814e356b"
+    },
+    {
+      "path": "meewav-emojis/v6/webp/256/zero-sur-dix.webp",
+      "sha256": "4b02be7e348ba36274406e2824dcc8dcde8cc18f95ff435be927b62e866a187e"
+    },
+    {
+      "path": "meewav-emojis/webp/256/ampoule-musicale.webp",
+      "sha256": "0de0158879e632c98bd219052e0542634f4a14d5c091cea7b28b632d9ff4dea4"
+    },
+    {
+      "path": "meewav-emojis/webp/256/batterie.webp",
+      "sha256": "bc367802a0ce9be81cfa14bdaf6a0b5a3a9359af1822988593ecd290b6ec77df"
+    },
+    {
+      "path": "meewav-emojis/webp/256/beatpad-en-flamme.webp",
+      "sha256": "d18afbf53e52f1ad98a69239e5449e81a72548735105a7872bf6ae01ea192d5d"
+    },
+    {
+      "path": "meewav-emojis/webp/256/boite-a-rythmes-808.webp",
+      "sha256": "05f878212744ebfd6d43b10dd1bb72dd1bf4a233de436e1a9a5e5ef04f0f10af"
+    },
+    {
+      "path": "meewav-emojis/webp/256/boombox.webp",
+      "sha256": "d48a4e35dcbadab5bc26aff1c550990a225045c5652c0a43e71023aef07334dd"
+    },
+    {
+      "path": "meewav-emojis/webp/256/boule-disco-casque.webp",
+      "sha256": "3611c970589c79c8fe74cd99e1574a832434afb20d7799de744fb891a666dd6f"
+    },
+    {
+      "path": "meewav-emojis/webp/256/casque-en-flamme.webp",
+      "sha256": "c3f8204834b66c44b7e2281b70d8ca486960d95000e259ee0c1b444262f64ee3"
+    },
+    {
+      "path": "meewav-emojis/webp/256/casque-studio.webp",
+      "sha256": "cdd387c4e8bc078ea5026dc19a540c951066e8e9521db2deef964344dfadb7d7"
+    },
+    {
+      "path": "meewav-emojis/webp/256/cassette.webp",
+      "sha256": "ea33a3e23c8beaec9fd43f81b418d46d2d60ec546f1de23bf2dd1e05d11f7822"
+    },
+    {
+      "path": "meewav-emojis/webp/256/clavier-midi.webp",
+      "sha256": "69f99ab695247c9fc9d321dac793aa9a482bf5b6e734e57d554f48b7eddbcff9"
+    },
+    {
+      "path": "meewav-emojis/webp/256/coeur-casque.webp",
+      "sha256": "aaeb8252b23b89f67e260c094f1dd44b1c8961d1bba4e030e15a2c01981ffb06"
+    },
+    {
+      "path": "meewav-emojis/webp/256/coeur-en-flamme.webp",
+      "sha256": "6ef4c19fcef3d40842e62d0e63aa819e40114972c94ecdcc66b15e2751d7929c"
+    },
+    {
+      "path": "meewav-emojis/webp/256/coeur-musical.webp",
+      "sha256": "e7f45d9cadd18eaa80dfd96c613f5c2f1f03c4576198489ec3ff848976ab7017"
+    },
+    {
+      "path": "meewav-emojis/webp/256/collaboration.webp",
+      "sha256": "3bb814f7b0000336b7d2c4a1d2bdfe9386d3d801b9cc42642d5cfa02ee727459"
+    },
+    {
+      "path": "meewav-emojis/webp/256/couronne-mw.webp",
+      "sha256": "af3f4f3a9738e3ccce7a623dbf1cfe8d9963dfe02ff6a91b004f20be921e0994"
+    },
+    {
+      "path": "meewav-emojis/webp/256/disque-or.webp",
+      "sha256": "95d24e488757b65b785ac355ba4a7248be41442efcf1a72881f261d3385bf9e5"
+    },
+    {
+      "path": "meewav-emojis/webp/256/disque-vinyle.webp",
+      "sha256": "d17ad5009699af4efedcabb65fc10a210b739b9d4891423d4b5b53242ba3004c"
+    },
+    {
+      "path": "meewav-emojis/webp/256/dj-cool.webp",
+      "sha256": "5c11828e2df51fd4bcabfa27dac4196857e4598d240df1868917242e492a9b12"
+    },
+    {
+      "path": "meewav-emojis/webp/256/egaliseur.webp",
+      "sha256": "9513b9a2b391233700952025b138da9cfb8804b4657e0027548ecf6ec8f51940"
+    },
+    {
+      "path": "meewav-emojis/webp/256/enceinte-studio.webp",
+      "sha256": "f48b84ba6da0b52d689fe8f8305e723bf10cfc54092fa251af3ac07c81f266e6"
+    },
+    {
+      "path": "meewav-emojis/webp/256/etoile-casque.webp",
+      "sha256": "6d7a69178d375be942813be799715c5a88c1dd0be2380410477d4c84e39e0c3b"
+    },
+    {
+      "path": "meewav-emojis/webp/256/fusee-musicale.webp",
+      "sha256": "fb43335d9ba4e896f1d3ce071104d462188185042bfbb7e2e31e088ffc228a11"
+    },
+    {
+      "path": "meewav-emojis/webp/256/globe-casque.webp",
+      "sha256": "2c1a6145498da12b4ed8edd3677ed093bd8cc69174ce6d0a6e6fa1f7d193948d"
+    },
+    {
+      "path": "meewav-emojis/webp/256/guitare-acoustique.webp",
+      "sha256": "56d49f059dbe4184e1811580c7cedefc0741001245d7f3a6a22d2679a97abc89"
+    },
+    {
+      "path": "meewav-emojis/webp/256/guitare-electrique-flamme.webp",
+      "sha256": "d50b5a0d4dde441151af39159f0ee700ddaa214f9558f8568d96d0a15319bee1"
+    },
+    {
+      "path": "meewav-emojis/webp/256/laptop-waveform.webp",
+      "sha256": "9a37042c34e8b997a0add76933c4d32dd94ca6dde632dd3f3d643f0c8f0fcfc6"
+    },
+    {
+      "path": "meewav-emojis/webp/256/micro-flamme.webp",
+      "sha256": "bf0cc9356f3d80d62940d1812fe210d481e1d5848247bbbb35bf3c6403c69c67"
+    },
+    {
+      "path": "meewav-emojis/webp/256/micro-pop-filter.webp",
+      "sha256": "088204b7671fd491b49292a9f64cfeaaa02a6cb89ccb72eb97c4d2a7741561c7"
+    },
+    {
+      "path": "meewav-emojis/webp/256/micro-studio.webp",
+      "sha256": "9ac565b49268298b90347a097b2f24d5d0a427c3886e3840e0736ae0d5b17b9e"
+    },
+    {
+      "path": "meewav-emojis/webp/256/micro-vintage.webp",
+      "sha256": "a95b7e44b3feb49204bbdfa2432eed2439e23b7fca8218c5c43368437f785507"
+    },
+    {
+      "path": "meewav-emojis/webp/256/note-en-flamme.webp",
+      "sha256": "411f163734424430186904ed198aa28710b567a331058cb45a5898449741011d"
+    },
+    {
+      "path": "meewav-emojis/webp/256/notes-couronne.webp",
+      "sha256": "d013849203528ecb71baae5be97616724b685377d5a6b35e14dfe4227ad897fd"
+    },
+    {
+      "path": "meewav-emojis/webp/256/notes-pop.webp",
+      "sha256": "b560f00757c9d7d5b0af14e08133219d1e00b51aefedd37cd72f0651518bc22b"
+    },
+    {
+      "path": "meewav-emojis/webp/256/nuage-musical.webp",
+      "sha256": "7af5e8bf1f2e9d939aaedb3b30f4556d73bbe877bddec1a0e9fa0312ac346042"
+    },
+    {
+      "path": "meewav-emojis/webp/256/onde-audio.webp",
+      "sha256": "35fe0668883cffe17154b1240d55d2198460b2b128568a537eb959f4738398de"
+    },
+    {
+      "path": "meewav-emojis/webp/256/onde-neon.webp",
+      "sha256": "cf14ca26d9eb87a4b575700786296a8d79bddea870aa1feaf6e78f235498d76d"
+    },
+    {
+      "path": "meewav-emojis/webp/256/pad-midi.webp",
+      "sha256": "13b5a35221bffb06393320e44d9460f83ff71279d8e74fe2ce58b449e85f094b"
+    },
+    {
+      "path": "meewav-emojis/webp/256/pad-tactile.webp",
+      "sha256": "4079022f1dbb4966fe97f54ff0f200b2ea65ce1af9d7526683b7bfcf112a7051"
+    },
+    {
+      "path": "meewav-emojis/webp/256/partition-crayon.webp",
+      "sha256": "46d0a514898a3a7e4c54cece4e99e31f2b7e04348011445223a2626055da96ea"
+    },
+    {
+      "path": "meewav-emojis/webp/256/partition-notes.webp",
+      "sha256": "6e3203869c6ac0f23781da4194b4a9a6768371899cbad7d76ca5972055c973bc"
+    },
+    {
+      "path": "meewav-emojis/webp/256/planete-musicale.webp",
+      "sha256": "7c4cdddee0cf56d0a4e7198bec2758218bd4d5cc713f1b9b312ad8846cd60444"
+    },
+    {
+      "path": "meewav-emojis/webp/256/platine-vinyle.webp",
+      "sha256": "8cb48dbb35e4b099dfb5e75c1bf6b061a6fe38a47f358a864700794243b28490"
+    },
+    {
+      "path": "meewav-emojis/webp/256/saxophone.webp",
+      "sha256": "1d8e268f730235db1c140ea2d435102cb0db2567ea3d98f77a351534b6470664"
+    },
+    {
+      "path": "meewav-emojis/webp/256/scratch-dj.webp",
+      "sha256": "0f64be872943dfa99a19585623b2b07b3449faeef6ecfa85bd8096d1fa9e7bc1"
+    },
+    {
+      "path": "meewav-emojis/webp/256/signe-rock.webp",
+      "sha256": "bbe12e66a451af9e931fe08cb6f386571827f86363e42d5fbc04e1362d6659d2"
+    },
+    {
+      "path": "meewav-emojis/webp/256/synthetiseur.webp",
+      "sha256": "4761b9d06a016073f470178864c6963d457b19a3614aa749142fa44e5489cf60"
+    },
+    {
+      "path": "meewav-emojis/webp/256/table-mixage.webp",
+      "sha256": "b08c3b13f90f37330021e4447940cd5f123b40c72d4fd86810ff0bd962fb9401"
+    },
+    {
+      "path": "meewav-emojis/webp/256/trompette.webp",
+      "sha256": "ab3c7698f3f2bfb2dbb46374ad00ef0af43de64d072de8168e172a8784a8d9ee"
+    },
+    {
+      "path": "meewav-emojis/webp/256/vinyle-couronne.webp",
+      "sha256": "eca10d69e837943b113c6b6116a90620295380adebd32f79a062883d7e2d4872"
+    },
+    {
+      "path": "meewav-emojis/webp/256/vinyle-notes.webp",
+      "sha256": "567d5fcfdd2592fd59c65c418461e25c26392897f771d3151beb88a229412a5f"
+    }
+  ]
+}

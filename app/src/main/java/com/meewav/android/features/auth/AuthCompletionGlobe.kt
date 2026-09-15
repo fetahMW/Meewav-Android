@@ -57,6 +57,7 @@ import java.io.ByteArrayInputStream
 import java.io.IOException
 import org.json.JSONObject
 import com.meewav.android.features.messaging.MessagingActivity
+import com.meewav.android.features.profile.ProfileActivity
 
 /** Only the globe is rendered in the local WebView; navigation and CTA remain native. */
 @Composable
@@ -218,10 +219,12 @@ private class AuthGlobeController(private val fullScene: Boolean) {
                 override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                     if (fullScene && request.isForMainFrame && request.method == "GET"
                         && request.url.scheme == "https" && request.url.host == "appassets.androidplatform.net"
-                        && request.url.path == "/native/messages") {
-                        context.startActivity(Intent(context, MessagingActivity::class.java)
+                        && request.url.path in setOf("/native/messages", "/native/profile")) {
+                        val isProfile = request.url.path == "/native/profile"
+                        val destination = if (isProfile) ProfileActivity::class.java else MessagingActivity::class.java
+                        context.startActivity(Intent(context, destination)
                             .putExtra("preview", previewMessages)
-                            .putExtra("route", request.url.getQueryParameter("route") ?: "/messages"))
+                            .putExtra("route", request.url.getQueryParameter("route") ?: if (isProfile) "/profile" else "/messages"))
                         return true
                     }
                     return request.method != "GET" || request.url.toString() != page

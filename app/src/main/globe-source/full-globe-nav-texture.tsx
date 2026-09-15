@@ -1,7 +1,7 @@
 import { memo, useEffect, useRef } from "react";
 
 /** Keep the navigation globe still: repeated Canvas2D paints stall this WebView. */
-export default memo(function AndroidNavGlobeTexture({ landColor = "#EFE5FF" }: { landColor?: string }) {
+export default memo(function AndroidNavGlobeTexture({ landColor = "#EFE5FF", size = 38 }: { landColor?: string; size?: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -34,12 +34,12 @@ export default memo(function AndroidNavGlobeTexture({ landColor = "#EFE5FF" }: {
       bake.putImageData(pixels, 0, 0);
 
       const scale = Math.max(2, window.devicePixelRatio || 1);
-      canvas.width = Math.round(38 * scale);
-      canvas.height = Math.round(38 * scale);
+      canvas.width = Math.round(size * scale);
+      canvas.height = Math.round(size * scale);
       context.setTransform(scale, 0, 0, scale, 0, 0);
       context.imageSmoothingEnabled = true;
       context.imageSmoothingQuality = "high";
-      context.drawImage(texture, 0, 0, 72, 38);
+      context.drawImage(texture, 0, 0, size * 72 / 38, size);
       // No animation loop: the first rendered map remains visible until unmount.
       map.onload = null;
     };
@@ -49,7 +49,7 @@ export default memo(function AndroidNavGlobeTexture({ landColor = "#EFE5FF" }: {
       disposed = true;
       map.onload = null;
     };
-  }, [landColor]);
+  }, [landColor, size]);
 
   return <canvas ref={canvasRef} className="meewav-primary-nav__globe-map" aria-hidden="true" />;
 });

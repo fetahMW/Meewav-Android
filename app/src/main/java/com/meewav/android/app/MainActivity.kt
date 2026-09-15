@@ -20,21 +20,22 @@ import com.meewav.android.features.auth.AuthScreen
 import com.meewav.android.features.auth.AuthViewModel
 import com.meewav.android.features.auth.AuthPage
 import com.meewav.android.features.messaging.MessagingActivity
+import com.meewav.android.features.profile.ProfileActivity
 import com.meewav.android.BuildConfig
 
 class MainActivity : ComponentActivity() {
     companion object {
         const val EXTRA_OPEN_GLOBE = "com.meewav.android.OPEN_GLOBE"
-        // Temporary messaging workshop entry. Set false when restoring the normal journey.
-        private const val OPEN_MESSAGING_WORKSHOP = true
+        // Temporary Profile workshop entry. Set false to restore authentication.
+        private const val OPEN_PROFILE_WORKSHOP = true
     }
     private lateinit var authViewModel: AuthViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (BuildConfig.DEBUG && OPEN_MESSAGING_WORKSHOP && intent.action != Intent.ACTION_VIEW
+        if (BuildConfig.DEBUG && OPEN_PROFILE_WORKSHOP && intent.action != Intent.ACTION_VIEW
             && !intent.getBooleanExtra(EXTRA_OPEN_GLOBE, false)) {
-            startActivity(Intent(this, MessagingActivity::class.java).putExtra("preview", true))
+            startActivity(Intent(this, ProfileActivity::class.java).putExtra("preview", true))
             finish()
             return
         }
@@ -79,7 +80,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleAuthIntent(intent: Intent?) {
-        // The debug workshop can open Messaging without an existing globe activity.
+        // The debug workshop can open a feature without an existing globe activity.
         if (BuildConfig.DEBUG && intent?.getBooleanExtra(EXTRA_OPEN_GLOBE, false) == true) {
             authViewModel.navigate(AuthPage.Globe)
             intent.removeExtra(EXTRA_OPEN_GLOBE)

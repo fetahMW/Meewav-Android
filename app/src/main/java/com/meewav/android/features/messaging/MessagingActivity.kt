@@ -46,7 +46,10 @@ import org.json.JSONArray
 import java.io.ByteArrayInputStream
 
 /** Bundled messaging UI; only the configured Supabase origin can receive API traffic. */
-class MessagingActivity : ComponentActivity() {
+open class MessagingActivity : ComponentActivity() {
+    protected open val assetSurface = "messaging"
+    protected open val defaultRoute = "/messages?space=messages"
+    private val PAGE get() = "$ORIGIN/$assetSurface/index.html"
     private lateinit var web: WebView
     private lateinit var container: FrameLayout
     private var pageReady = false
@@ -59,7 +62,7 @@ class MessagingActivity : ComponentActivity() {
     private var pendingSave: Pair<String, Int>? = null
     private val preview by lazy { BuildConfig.DEBUG && intent.getBooleanExtra("preview", false) }
     private val service by lazy { Uri.parse(BuildConfig.SUPABASE_URL) }
-    private val manifest by lazy { JSONObject(assets.open("messaging/asset-manifest.json").bufferedReader().use { it.readText() }) }
+    private val manifest by lazy { JSONObject(assets.open("$assetSurface/asset-manifest.json").bufferedReader().use { it.readText() }) }
     private val globeManifest by lazy { JSONObject(assets.open("globe-vinyle/asset-manifest.json").bufferedReader().use { it.readText() }) }
     private val filePicker = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val values = if (result.resultCode == RESULT_OK) result.data?.let { data ->
@@ -161,11 +164,20 @@ class MessagingActivity : ComponentActivity() {
         web.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 if (!request.isForMainFrame) return true
+                if (request.url.toString() == "$ORIGIN/native/messages" && assetSurface == "profile") {
+                    startActivity(Intent(this@MessagingActivity, MessagingActivity::class.java).putExtra("preview", preview))
+                    return true
+                }
+                if (request.url.toString() == "$ORIGIN/native/profile" && assetSurface == "messaging") {
+                    startActivity(Intent(this@MessagingActivity, com.meewav.android.features.profile.ProfileActivity::class.java).putExtra("preview", preview))
+                    return true
+                }
                 if (request.url.toString() == "$ORIGIN/native/globe") {
-                    if (isTaskRoot && BuildConfig.DEBUG) {
-                        startActivity(Intent(this@MessagingActivity, MainActivity::class.java)
-                            .putExtra(MainActivity.EXTRA_OPEN_GLOBE, true))
-                    }
+                    // Reuse the globe below either feature, including Profile -> Messages.
+                    // Only the debug workshop can bypass the authentication entry.
+                    startActivity(Intent(this@MessagingActivity, MainActivity::class.java)
+                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                        .putExtra(MainActivity.EXTRA_OPEN_GLOBE, BuildConfig.DEBUG))
                     finish()
                     return true
                 }
@@ -191,7 +203,7 @@ class MessagingActivity : ComponentActivity() {
                 pageReady = true; sendConfiguration()
             }
             override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
-                if (request.isForMainFrame) showUnavailable("La messagerie n’a pas pu s’ouvrir.")
+                if (request.isForMainFrame) showUnavailable(if (assetSurface == "profile") "Le profil n’a pas pu s’ouvrir." else "La messagerie n’a pas pu s’ouvrir.")
             }
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
                 val uri = request.url
@@ -206,15 +218,15 @@ class MessagingActivity : ComponentActivity() {
                     if (!item.getString("mime").startsWith("image/")) return denied()
                     return try { WebResourceResponse(item.getString("mime"), null, assets.open("globe-vinyle/$name")) } catch (_: Exception) { denied() }
                 }
-                val name = uri.path.orEmpty().removePrefix("/").removePrefix("messaging/")
+                val name = uri.path.orEmpty().removePrefix("/").removePrefix("$assetSurface/")
                 if (name.split('/').any { it == ".." || it == "." } || !manifest.has(name)) return denied()
                 return try {
                     val item = manifest.getJSONObject(name)
                     val mime = item.getString("mime")
                     if (mime.startsWith("audio/") || mime.startsWith("video/"))
-                        localMediaAsset(this@MessagingActivity, "messaging/$name", mime, item.getLong("bytes"), request.requestHeaders["Range"])
+                        localMediaAsset(this@MessagingActivity, "$assetSurface/$name", mime, item.getLong("bytes"), request.requestHeaders["Range"])
                     else WebResourceResponse(mime, if (mime.startsWith("image/") || mime.startsWith("font/")) null else "utf-8", 200, "OK",
-                        mapOf("Cache-Control" to "no-store", "X-Content-Type-Options" to "nosniff", "Content-Security-Policy" to csp()), assets.open("messaging/$name"))
+                        mapOf("Cache-Control" to "no-store", "X-Content-Type-Options" to "nosniff", "Content-Security-Policy" to csp()), assets.open("$assetSurface/$name"))
                 } catch (_: Exception) { denied() }
             }
         }
@@ -249,9 +261,9 @@ class MessagingActivity : ComponentActivity() {
     private fun sendConfiguration() {
         if (!pageReady || started || (!preview && (accessToken == null || profileId == null))) return
         started = true
-        val requestedRoute = intent.getStringExtra("route")?.takeIf { it.startsWith("/messages") } ?: "/messages?space=messages"
+        val requestedRoute = intent.getStringExtra("route")?.takeIf { it.startsWith(defaultRoute.substringBefore('?')) } ?: defaultRoute
         // A live session must never silently fall back to a fixture inbox.
-        val route = if (!preview && Uri.parse(requestedRoute).getQueryParameter("mode") == "demo") "/messages?space=messages" else requestedRoute
+        val route = if (!preview && Uri.parse(requestedRoute).getQueryParameter("mode") == "demo") defaultRoute else requestedRoute
         val payload = JSONObject().put("preview", preview).put("url", if (preview) "" else BuildConfig.SUPABASE_URL)
             .put("key", if (preview) "" else BuildConfig.SUPABASE_PUBLISHABLE_KEY)
             .put("token", if (preview) JSONObject.NULL else accessToken).put("userId", if (preview) JSONObject.NULL else profileId)
@@ -308,6 +320,5 @@ class MessagingActivity : ComponentActivity() {
     }
     companion object {
         private const val ORIGIN = "https://appassets.androidplatform.net"
-        private const val PAGE = "$ORIGIN/messaging/index.html"
     }
 }

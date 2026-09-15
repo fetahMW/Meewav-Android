@@ -1,5 +1,15 @@
 # Mémoire de design — Meewav Android
 
+## Profil mobile — continuité avec la messagerie
+
+Le 15 septembre 2026, l'utilisateur demande d'adapter les composants du profil
+Web, en conservant leur fond et leurs matières. Les **CTA principaux du profil**
+reprennent exactement la finition de messagerie décrite ci-dessous ; les menus
+et sous-menus reprennent ses bandeaux translucides, son flou et son trait effilé.
+La disposition iOS du dock est conservée (3 icônes + globe + 3 icônes), avec le
+globe **fixe de la navbar Android**, et non le globe iOS.
+Voir [l'audit et les sources du profil](Profile/README.md).
+
 ## Violet urbain Meewav — référence de messagerie
 
 Le 15 septembre 2026, l’utilisateur précise la référence exacte :

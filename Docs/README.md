@@ -5,6 +5,7 @@
 - [Référence mobile iOS et ordre de portage](Reference-iOS.md)
 - [Globe : audit Web et arrivée en paysage](Globe/README.md)
 - [Messagerie : reprise Web, interface Android et limites serveur](Messaging/README.md)
+- [Profil : sources Web, matières, dock iOS et intégration Android](Profile/README.md)
 
 ## Repère artistique à conserver — Violet urbain Meewav
 
