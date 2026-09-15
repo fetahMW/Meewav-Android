@@ -24,7 +24,7 @@ const STORAGE_FILTERS = 'globelab.artistFilters.v1';
 const STORAGE_CONSULTED = 'globelab.consultedAvatars.v1';
 const STORAGE_PINS = 'globelab.pinnedAvatars.v1';
 const FALLBACK_ICON = 'avatar_4';
-const HOST_PIN_COLOR = '#C026FF';
+const HOST_PIN_COLOR = '#22C55E';
 const HOVER_LIFT_PX = 60;
 
 function readJson(key, fallback) {
@@ -343,7 +343,8 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
     for (const list of byZone.values()) {
       for (const avatar of list) {
         let pass = true;
-        const pinColor = pinned.get(avatar.id) || (avatar.isHost ? HOST_PIN_COLOR : '');
+        // The host's permanent green marker takes precedence over saved pins.
+        const pinColor = avatar.isHost ? HOST_PIN_COLOR : pinned.get(avatar.id) || '';
         avatar.pinColor = pinColor;
         if (!avatar.isHost && !pinned.get(avatar.id)) {
           if (!filters.roles.has(avatar.icon)) pass = false;

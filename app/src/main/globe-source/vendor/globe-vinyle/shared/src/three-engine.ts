@@ -516,7 +516,11 @@ export async function createThree(
       return Math.log2(previousHeight / view.height);
     },
   });
+  let viewportResizePending = false, viewportSized = false;
   function resizeViewport() {
+    const nextWidth = Math.max(1, host.clientWidth), nextHeight = Math.max(1, host.clientHeight);
+    if (viewportSized && nextWidth === width && nextHeight === height) return;
+    viewportSized = true;
     const keepOverviewFit = !ringNavigation.active && !motion.isMoving() && !wheelZoom.isMoving()
       && !orbit.isMoving() && Math.abs(view.height - brandOverviewHeight) < 0.000001;
     wheelZoom.cancel();
@@ -525,11 +529,13 @@ export async function createThree(
     sceneDirty = true;
     viewportNeedsUpdate = true;
     if (gesture) gesture.anchor = null;
-    width = Math.max(1, host.clientWidth);
-    height = Math.max(1, host.clientHeight);
+    width = nextWidth;
+    height = nextHeight;
     brandOverviewHeight = overviewTarget("globe", width, height).height;
     if (keepOverviewFit) view.height = brandOverviewHeight;
-    renderer.setSize(width, height);
+    // CSS sizes the canvas; only resize its drawing buffer here, immediately
+    // before the frame redraws it, never between rendering and composition.
+    renderer.setSize(width, height, false);
     orbitBloom.resize();
     camera.aspect = width / height;
     camera.fov = T.MathUtils.radToDeg(
@@ -539,7 +545,7 @@ export async function createThree(
     lineMaterials.forEach((m) => m.resolution.set(width, height));
     updateCamera();
   }
-  const resize = new ResizeObserver(resizeViewport);
+  const resize = new ResizeObserver(() => { viewportResizePending = true; });
   resize.observe(host);
   const ringVisibility = new IntersectionObserver(([entry]) => {
     saturnRing.setInViewport(entry.isIntersecting);
@@ -1112,6 +1118,9 @@ export async function createThree(
   function frame(now: number) {
     if (!alive || !active) return;
     const frameStart = performance.now();
+    // Keyboard insets may trigger several layouts. Coalesce them and repaint
+    // in this same frame so a cleared drawing buffer cannot flash on screen.
+    if (viewportResizePending) { viewportResizePending = false; resizeViewport(); }
     const dt = lastTime ? (now - lastTime) / 1000 : 0;
     lastTime = now;
     touchNavigation.tick(now);

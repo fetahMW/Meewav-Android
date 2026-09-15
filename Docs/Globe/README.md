@@ -44,6 +44,13 @@ Le document `https://appassets.androidplatform.net/globe-vinyle/index.html` est 
 
 Aucun secret, cookie Supabase, jeton ou pont JavaScript vers Android n’est exposé. L’adaptateur natif vers JavaScript transmet uniquement l’activité et des commandes fixes. Démonter React libère le moteur et ses workers. La WebView utilise `MATCH_PARENT` et le document une hauteur explicite pour éviter le canvas de hauteur nulle. Le statut prêt vient de `App.tsx` après `engine.firstFrame`.
 
+Les changements de taille liés au clavier sont regroupés au début de la boucle
+d’affichage : le tampon du canvas est redimensionné puis redessiné dans la même
+image. Le `ResizeObserver` ne l’efface plus entre deux rendus. Une notification
+à dimensions identiques ne réinitialise pas le tampon. La résolution et le ratio
+de pixels restent inchangés ; le cadrage initial est toujours calculé avant que
+le moteur soit exposé à l’interface.
+
 ## État des vérifications
 
 ### Panneaux artistes et filtres Android — 15 septembre 2026
@@ -101,6 +108,18 @@ Les filtres d’artistes continuent de s’appliquer immédiatement.
 « Masquer les profils déjà visités » est placé dans une barre fixe, accessible
 dans les trois catégories et pendant leur défilement. Toute sa ligne active
 l’interrupteur ; les profils épinglés gardent leur exemption.
+
+Le filtre mobile utilise des surfaces noires, des séparateurs discrets et le
+**Violet urbain Meewav** pour les commandes et sélections. Les anciens dégradés
+bleus et les halos de couleurs différentes sont remplacés jusque dans les états
+actifs, survolés et de focus. Les illustrations et les badges conservent leurs
+ressources d’origine. Avatars, Niveaux, Top 10 et le masquage des profils visités
+gardent leur fonctionnement.
+
+Le repère permanent du host est vert (`#22C55E`), prioritaire sur une éventuelle
+couleur d’épinglage sauvegardée. Dans son préprofil mobile, le nom ne s’étire plus
+pour remplir la ligne : le badge le suit avec le même espacement de 4 pixels que
+sur les autres fiches, en conservant la place réservée au bouton de fermeture.
 
 Les six villes rapides et les commandes 3D / zoom sont retirées de l’interface
 Android. Les gestes de zoom et d’inclinaison restent disponibles. Ville, Pays et
