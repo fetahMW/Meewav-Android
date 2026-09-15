@@ -4,6 +4,7 @@ import {
   BarChart3,
   Check,
   CircleDollarSign,
+  ChevronDown,
   Eye,
   Lightbulb,
   LoaderCircle,
@@ -100,36 +101,36 @@ const metricDefinitions: Record<MetricId, MetricDefinition> = {
     id: "reach",
     label: "Portée",
     icon: Eye,
-    accent: "#8b5cff",
-    secondary: "#6b7cff",
-    highlight: "#c7adff",
+    accent: "#8066bc",
+    secondary: "#5137a1",
+    highlight: "#b7a2e5",
     formatPoint: (value) => `${value.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} k`,
   },
   engagement: {
     id: "engagement",
     label: "Engagement",
     icon: MousePointerClick,
-    accent: "#d946ef",
-    secondary: "#8b5cff",
-    highlight: "#ff7bf2",
+    accent: "#8066bc",
+    secondary: "#5137a1",
+    highlight: "#b7a2e5",
     formatPoint: (value) => `${value.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`,
   },
   revenue: {
     id: "revenue",
     label: "Revenus",
     icon: CircleDollarSign,
-    accent: "#34d399",
-    secondary: "#19b8ff",
-    highlight: "#8af1c8",
+    accent: "#8066bc",
+    secondary: "#5137a1",
+    highlight: "#b7a2e5",
     formatPoint: (value) => `${Math.round(value).toLocaleString("fr-FR")} €`,
   },
   growth: {
     id: "growth",
     label: "Progression",
     icon: TrendingUp,
-    accent: "#19b8ff",
-    secondary: "#8b5cff",
-    highlight: "#75dcff",
+    accent: "#8066bc",
+    secondary: "#5137a1",
+    highlight: "#b7a2e5",
     formatPoint: (value) => `+${value.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`,
   },
 };
@@ -399,31 +400,10 @@ type AnalyticsLoadState = {
   message: string | null;
 };
 
-export default function ProfileStatsView({ gradeLevel, gradeProgress, pointsToNextGrade, onToast }: ProfileStatsViewProps) {
-  const [period, setPeriod] = useState<StatsPeriod>("30d");
-  const [metric, setMetric] = useState<MetricId>("revenue");
+function MetricDropdown({ metric, period, snapshot, demo }: { metric: MetricId; period: StatsPeriod; snapshot: PeriodSnapshot; demo: boolean }) {
+  const [open, setOpen] = useState(false);
   const [hoveredPointIndex, setHoveredPointIndex] = useState<number | null>(null);
   const [pinnedPointIndices, setPinnedPointIndices] = useState<number[]>([]);
-  const [acquisitionMode, setAcquisitionMode] = useState<AcquisitionMode>("discovery");
-  const [activeAcquisitionSource, setActiveAcquisitionSource] = useState<string | null>(null);
-  const [goalsEditing, setGoalsEditing] = useState(false);
-  const [goalScales, setGoalScales] = useState<Record<string, number>>({});
-  const [planned, setPlanned] = useState(false);
-  const [planningOpen, setPlanningOpen] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState("Aujourd’hui · 21:20");
-  const [analyticsReloadKey, setAnalyticsReloadKey] = useState(0);
-  const [analyticsState, setAnalyticsState] = useState<AnalyticsLoadState>({ status: "loading", data: null, message: null });
-  const nextGradeLevel = Math.min(6, gradeLevel + 1) as GradeLevel;
-  const nextGradeMeta = getGradeBadgeMeta(nextGradeLevel);
-
-  const localPreviewEnabled = isProfileLocalPreviewEnabled();
-  const demoFallbackEnabled = isProfileAnalyticsDemoFallbackEnabled();
-  const usesDemoFallback = demoFallbackEnabled && analyticsState.status !== "ready";
-  const snapshot = useMemo(() => analyticsState.data
-    ? toPeriodSnapshot(analyticsState.data)
-    : usesDemoFallback
-      ? statsSnapshots[period]
-      : emptyPeriodSnapshot(period), [analyticsState.data, usesDemoFallback, period]);
   const definition = metricDefinitions[metric];
   const currentMetric = snapshot.metrics[metric];
   const points = useMemo(() => buildPoints(currentMetric.values, 720, 230, 24, 24, 8), [currentMetric.values]);
@@ -433,71 +413,11 @@ export default function ProfileStatsView({ gradeLevel, gradeProgress, pointsToNe
   const activePointIndex = hoveredPointIndex ?? lastPinnedPointIndex ?? defaultPointIndex;
   const previewPointIndex = hoveredPointIndex ?? (pinnedPointIndices.length === 0 ? defaultPointIndex : null);
   const previewPoint = previewPointIndex === null ? null : points[previewPointIndex];
-  const acquisition = analyticsState.data?.acquisition[acquisitionMode]
-    ?? (usesDemoFallback
-      ? acquisitionSnapshots[period][acquisitionMode]
-      : { total: "0", unit: acquisitionMode === "discovery" ? "visiteurs attribués" : "actions attribuées", delta: "Non mesuré", sources: [] });
-  const selectedAcquisitionSource = acquisition.sources.find((source) => source.label === activeAcquisitionSource) ?? null;
-
-  useEffect(() => {
-    // Use the existing period/acquisition mock datasets directly in preview.
-    // A missing session must not become a stream of failed metrics requests.
-    if (localPreviewEnabled) {
-      setAnalyticsState({ status: "empty", data: null, message: null });
-      return;
-    }
-    let active = true;
-    setAnalyticsState({ status: "loading", data: null, message: null });
-    profileAnalyticsRepository.getDashboard(period)
-      .then((data) => {
-        if (!active) return;
-        setAnalyticsState({
-          status: data.hasData ? "ready" : "empty",
-          data: data.hasData ? data : null,
-          message: data.hasData ? null : "Aucune donnée statistique n’est encore consolidée pour cette période.",
-        });
-      })
-      .catch((error: unknown) => {
-        if (!active) return;
-        setAnalyticsState({
-          status: "error",
-          data: null,
-          message: error instanceof Error ? error.message : "Les statistiques sont indisponibles pour le moment.",
-        });
-      });
-    return () => {
-      active = false;
-    };
-  }, [localPreviewEnabled, period, analyticsReloadKey]);
 
   useEffect(() => {
     setHoveredPointIndex(null);
     setPinnedPointIndices((current) => current.length ? [] : current);
   }, [currentMetric.values]);
-
-  useEffect(() => {
-    setActiveAcquisitionSource(null);
-  }, [period, acquisitionMode]);
-
-  useEffect(() => {
-    if (!analyticsState.data || analyticsState.data.metrics[metric].available) return;
-    const firstAvailable = metricOrder.find((metricId) => analyticsState.data?.metrics[metricId].available);
-    if (firstAvailable) setMetric(firstAvailable);
-  }, [analyticsState.data, metric]);
-
-  const changePeriod = (nextPeriod: StatsPeriod) => {
-    setPeriod(nextPeriod);
-    onToast(`Chargement des statistiques sur ${periodLabels[nextPeriod].toLowerCase()}`);
-  };
-
-  const adjustGoal = (goalId: string, delta: number) => {
-    const storageKey = `${period}-${goalId}`;
-    setGoalScales((current) => ({
-      ...current,
-      [storageKey]: Math.min(140, Math.max(70, (current[storageKey] ?? 100) + delta)),
-    }));
-  };
-
   const pointIndexAt = (clientX: number, element: HTMLDivElement) => {
     const rect = element.getBoundingClientRect();
     const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / Math.max(1, rect.width)));
@@ -513,79 +433,19 @@ export default function ProfileStatsView({ gradeLevel, gradeProgress, pointsToNe
     setHoveredPointIndex(Math.min(points.length - 1, Math.max(0, index)));
   };
 
-  const statsHeader = (
-    <header className="profile-private-shell-header profile-stats-shell-header">
-      <h2>Statistiques du profil</h2>
-      <div className="profile-private-shell-header__row profile-stats-shell-header__row">
-        <p>Portée, engagement, revenus et progression sur la période sélectionnée.</p>
-        <div className="profile-period-switch" aria-label="Période des statistiques">
-          {periodOrder.map((item) => (
-            <button key={item} type="button" className={period === item ? "is-active" : ""} aria-pressed={period === item} onClick={() => changePeriod(item)}>
-              {periodLabels[item]}
-            </button>
-          ))}
-        </div>
-      </div>
-    </header>
-  );
 
-  if (!analyticsState.data && !usesDemoFallback) {
-    const loading = analyticsState.status === "loading";
-    return (
-      <div className="profile-view profile-stats-view" aria-label="Statistiques du profil" aria-busy={loading}>
-        {statsHeader}
-        <div className="profile-empty-state" role={analyticsState.status === "error" ? "alert" : "status"}>
-          {loading ? <LoaderCircle size={32} /> : analyticsState.status === "error" ? <AlertTriangle size={32} /> : <BarChart3 size={32} />}
-          <h3>{loading ? "Consolidation des statistiques" : analyticsState.status === "error" ? "Statistiques indisponibles" : "Aucune donnée sur cette période"}</h3>
-          <p>{loading ? "Les signaux de ton profil arrivent…" : analyticsState.message}</p>
-          {!loading && <button type="button" onClick={() => setAnalyticsReloadKey((value) => value + 1)}>Réessayer</button>}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="profile-view profile-stats-view" aria-label="Statistiques du profil">
-      {statsHeader}
-
-      <div className="profile-stats-metrics">
-        {metricOrder.map((metricId) => {
-          const item = metricDefinitions[metricId];
-          const data = snapshot.metrics[metricId];
-          const Icon = item.icon;
-          const miniature = buildSmoothLine(buildPoints(data.values, 72, 24, 3, 3));
-          const sparklineGradientId = `profile-stat-spark-${period}-${item.id}`;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              className={`profile-stat-card ${metric === item.id ? "is-active" : ""}`}
-              aria-pressed={metric === item.id}
-              onClick={() => setMetric(item.id)}
-              style={{ "--metric-accent": item.accent } as React.CSSProperties}
-            >
-              <span className="profile-stat-card__icon"><Icon size={19} /></span>
-              <span className="profile-stat-card__copy"><small>{item.label}</small><strong>{data.value}</strong></span>
-              {item.id === "growth" ? (
-                <span className="profile-stat-card__grade"><MeewavGradeBadge level={gradeLevel} size="xs" variant="icon" /><small>Niveau {gradeLevel}</small></span>
-              ) : <span className="profile-stat-card__delta">{data.delta}</span>}
-              {data.available !== false && <svg className="profile-stat-card__sparkline" viewBox="0 0 72 24" preserveAspectRatio="none" aria-hidden="true">
-                <defs>
-                  <linearGradient id={sparklineGradientId} x1="0" x2="1">
-                    <stop offset="0" stopColor={item.secondary} stopOpacity=".18" />
-                    <stop offset=".38" stopColor={item.secondary} />
-                    <stop offset=".72" stopColor={item.accent} />
-                    <stop offset="1" stopColor={item.highlight} />
-                  </linearGradient>
-                </defs>
-                <path d={miniature} style={{ stroke: `url(#${sparklineGradientId})` }} />
-              </svg>}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="profile-stats-layout">
+  const Icon = definition.icon;
+  const headingId = `profile-metric-${metric}-heading`;
+  const contentId = `profile-metric-${metric}-content`;
+  return <section className={`profile-metric-dropdown ${open ? 'is-open' : ''}`}>
+    <button id={headingId} type="button" className="profile-metric-toggle" aria-expanded={open} aria-controls={contentId} onClick={() => setOpen(value => !value)}>
+      <Icon className="profile-metric-toggle__icon" size={21} />
+      <span className="profile-metric-toggle__identity"><small>{definition.label}</small><strong>{currentMetric.value}</strong></span>
+      <span className="profile-metric-toggle__trend">{currentMetric.delta}</span>
+      <ChevronDown className="profile-metric-toggle__chevron" size={18} />
+    </button>
+    <div id={contentId} className="profile-metric-disclosure" role="region" aria-labelledby={headingId} aria-hidden={!open} {...(!open ? { inert: '' } : {})}>
+      <div className="profile-metric-disclosure__clip">
         <article className="profile-panel profile-main-chart" style={{ "--chart-accent": definition.accent, "--chart-secondary": definition.secondary } as React.CSSProperties}>
           <div className="profile-panel__heading">
             <div>
@@ -594,16 +454,13 @@ export default function ProfileStatsView({ gradeLevel, gradeProgress, pointsToNe
             </div>
             <span className="profile-positive-pill"><TrendingUp size={13} /> {currentMetric.delta}</span>
           </div>
-          <div className="profile-main-chart__summary">
-            <strong>{currentMetric.value}</strong>
-            <span>{currentMetric.note}</span>
-          </div>
+          <p className="profile-metric-note">{currentMetric.note}</p>
           <div
             className={`profile-main-chart__canvas ${pinnedPointIndices.length > 0 ? "is-pinned" : ""}`}
             role="group"
             tabIndex={0}
             aria-label={`Explorer les ${points.length} points de ${definition.label.toLowerCase()}. Survoler pour parcourir, cliquer pour conserver plusieurs labels, utiliser les flèches gauche et droite.`}
-            onPointerMove={(event) => currentMetric.available !== false && setHoveredPointIndex(pointIndexAt(event.clientX, event.currentTarget))}
+            onPointerMove={(event) => event.pointerType === "mouse" && currentMetric.available !== false && setHoveredPointIndex(pointIndexAt(event.clientX, event.currentTarget))}
             onPointerLeave={() => setHoveredPointIndex(null)}
             onClick={(event) => currentMetric.available !== false && pinPoint(pointIndexAt(event.clientX, event.currentTarget))}
             onKeyDown={(event) => {
@@ -681,6 +538,10 @@ export default function ProfileStatsView({ gradeLevel, gradeProgress, pointsToNe
                   }}
                 />
               ))}
+
+            </div>
+            {currentMetric.available !== false && <div className="profile-main-chart__labels"><span>{snapshot.axisLabels[0]}</span><span>{snapshot.axisLabels[1]}</span><span>{snapshot.axisLabels[2]}</span></div>}
+            <div className="profile-chart-readouts">
               {pinnedPointIndices.map((index) => {
                 const point = points[index];
                 if (!point) return null;
@@ -725,15 +586,139 @@ export default function ProfileStatsView({ gradeLevel, gradeProgress, pointsToNe
                 </div>
               )}
             </div>
-            {currentMetric.available !== false && <div className="profile-main-chart__labels"><span>{snapshot.axisLabels[0]}</span><span>{snapshot.axisLabels[1]}</span><span>{snapshot.axisLabels[2]}</span></div>}
           </div>
           <div className="profile-main-chart__footer">
-            <span><i /> Données consolidées</span>
+            <span><i /> {demo ? "Aperçu" : "Données consolidées"}</span>
             <span className={pinnedPointIndices.length > 0 ? "is-pinned" : ""}>
-              {pinnedPointIndices.length > 0 ? <>{pinnedPointIndices.length} label{pinnedPointIndices.length > 1 ? "s" : ""} conservé{pinnedPointIndices.length > 1 ? "s" : ""} · ferme chaque croix pour le retirer</> : <><MousePointerClick size={11} /> Survole ou touche · clic pour conserver un label</>}
+              {pinnedPointIndices.length > 0 ? <>{pinnedPointIndices.length} valeur{pinnedPointIndices.length > 1 ? "s" : ""} retenue{pinnedPointIndices.length > 1 ? "s" : ""}</> : <><MousePointerClick size={11} /> Touche la courbe pour garder une valeur</>}
             </span>
           </div>
         </article>
+      </div>
+    </div>
+  </section>;
+}
+
+export default function ProfileStatsView({ gradeLevel, gradeProgress, pointsToNextGrade, onToast }: ProfileStatsViewProps) {
+  const [period, setPeriod] = useState<StatsPeriod>("30d");
+  const [acquisitionMode, setAcquisitionMode] = useState<AcquisitionMode>("discovery");
+  const [activeAcquisitionSource, setActiveAcquisitionSource] = useState<string | null>(null);
+  const [goalsEditing, setGoalsEditing] = useState(false);
+  const [goalScales, setGoalScales] = useState<Record<string, number>>({});
+  const [planned, setPlanned] = useState(false);
+  const [planningOpen, setPlanningOpen] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState("Aujourd’hui · 21:20");
+  const [analyticsReloadKey, setAnalyticsReloadKey] = useState(0);
+  const [analyticsState, setAnalyticsState] = useState<AnalyticsLoadState>({ status: "loading", data: null, message: null });
+  const nextGradeLevel = Math.min(6, gradeLevel + 1) as GradeLevel;
+  const nextGradeMeta = getGradeBadgeMeta(nextGradeLevel);
+
+  const localPreviewEnabled = isProfileLocalPreviewEnabled();
+  const demoFallbackEnabled = isProfileAnalyticsDemoFallbackEnabled();
+  const usesDemoFallback = demoFallbackEnabled && analyticsState.status !== "ready";
+  const snapshot = useMemo(() => analyticsState.data
+    ? toPeriodSnapshot(analyticsState.data)
+    : usesDemoFallback
+      ? statsSnapshots[period]
+      : emptyPeriodSnapshot(period), [analyticsState.data, usesDemoFallback, period]);
+  const acquisition = analyticsState.data?.acquisition[acquisitionMode]
+    ?? (usesDemoFallback
+      ? acquisitionSnapshots[period][acquisitionMode]
+      : { total: "0", unit: acquisitionMode === "discovery" ? "visiteurs attribués" : "actions attribuées", delta: "Non mesuré", sources: [] });
+  const selectedAcquisitionSource = acquisition.sources.find((source) => source.label === activeAcquisitionSource) ?? null;
+
+  useEffect(() => {
+    // Use the existing period/acquisition mock datasets directly in preview.
+    // A missing session must not become a stream of failed metrics requests.
+    if (localPreviewEnabled) {
+      setAnalyticsState({ status: "empty", data: null, message: null });
+      return;
+    }
+    let active = true;
+    setAnalyticsState({ status: "loading", data: null, message: null });
+    profileAnalyticsRepository.getDashboard(period)
+      .then((data) => {
+        if (!active) return;
+        setAnalyticsState({
+          status: data.hasData ? "ready" : "empty",
+          data: data.hasData ? data : null,
+          message: data.hasData ? null : "Aucune donnée statistique n’est encore consolidée pour cette période.",
+        });
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        setAnalyticsState({
+          status: "error",
+          data: null,
+          message: error instanceof Error ? error.message : "Les statistiques sont indisponibles pour le moment.",
+        });
+      });
+    return () => {
+      active = false;
+    };
+  }, [localPreviewEnabled, period, analyticsReloadKey]);
+
+
+
+  useEffect(() => {
+    setActiveAcquisitionSource(null);
+  }, [period, acquisitionMode]);
+
+
+
+  const changePeriod = (nextPeriod: StatsPeriod) => {
+    setPeriod(nextPeriod);
+    onToast(`Chargement des statistiques sur ${periodLabels[nextPeriod].toLowerCase()}`);
+  };
+
+  const adjustGoal = (goalId: string, delta: number) => {
+    const storageKey = `${period}-${goalId}`;
+    setGoalScales((current) => ({
+      ...current,
+      [storageKey]: Math.min(140, Math.max(70, (current[storageKey] ?? 100) + delta)),
+    }));
+  };
+
+  const statsHeader = (
+    <header className="profile-private-shell-header profile-stats-shell-header">
+      <div className="profile-stats-title"><h2>Vue d’ensemble</h2><span>{snapshot.range}</span></div>
+      <div className="profile-private-shell-header__row profile-stats-shell-header__row">
+        <div className="profile-period-switch" aria-label="Période des statistiques">
+          {periodOrder.map((item) => (
+            <button key={item} type="button" className={period === item ? "is-active" : ""} aria-pressed={period === item} onClick={() => changePeriod(item)}>
+              {periodLabels[item]}
+            </button>
+          ))}
+        </div>
+      </div>
+    </header>
+  );
+
+  if (!analyticsState.data && !usesDemoFallback) {
+    const loading = analyticsState.status === "loading";
+    return (
+      <div className="profile-view profile-stats-view" aria-label="Statistiques du profil" aria-busy={loading}>
+        {statsHeader}
+        <div className="profile-empty-state" role={analyticsState.status === "error" ? "alert" : "status"}>
+          {loading ? <LoaderCircle size={32} /> : analyticsState.status === "error" ? <AlertTriangle size={32} /> : <BarChart3 size={32} />}
+          <h3>{loading ? "Consolidation des statistiques" : analyticsState.status === "error" ? "Statistiques indisponibles" : "Aucune donnée sur cette période"}</h3>
+          <p>{loading ? "Les signaux de ton profil arrivent…" : analyticsState.message}</p>
+          {!loading && <button type="button" onClick={() => setAnalyticsReloadKey((value) => value + 1)}>Réessayer</button>}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="profile-view profile-stats-view" aria-label="Statistiques du profil">
+      {statsHeader}
+
+      <div className="profile-metric-dropdowns">
+        {metricOrder.map((metric) => <MetricDropdown key={metric} metric={metric} period={period} snapshot={snapshot} demo={usesDemoFallback} />)}
+      </div>
+
+      <div className="profile-stats-layout">
+
 
         <ProfileRankingPanel period={period} variant="stats" />
 
@@ -742,7 +727,7 @@ export default function ProfileStatsView({ gradeLevel, gradeProgress, pointsToNe
             <div className="profile-acquisition-card__heading">
               <div>
                 <span className="profile-kicker"><Users size={14} /> {acquisitionMode === "discovery" ? "Découverte" : "Conversion"}</span>
-                <h3>{acquisitionMode === "discovery" ? "Comment ton audience te découvre" : "Ce que font les visiteurs ensuite"}</h3>
+                <h3>{acquisitionMode === "discovery" ? "Origine de ton audience" : "Actions des visiteurs"}</h3>
               </div>
               <span>{snapshot.label}</span>
             </div>
