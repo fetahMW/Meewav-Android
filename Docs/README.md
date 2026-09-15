@@ -17,8 +17,9 @@ et le contour `#BDA3E5` / `#7960B2` / `#5137A1` / `#8162B7`.
 Réutiliser les variables **`--meewav-violet-urbain-*`** de
 [full-globe-mobile.css](../app/src/main/globe-source/full-globe-mobile.css) pour
 les surfaces concernées, au lieu de choisir un nouveau violet à chaque retouche.
-Explorer les artistes, Top 10, Play/Pause et Retour au globe partagent cette
-référence. La fenêtre native source est `renderIosStageWindow` dans
+Explorer les artistes, Top 10, Play/Pause, Retour au globe et les accents du
+préprofil (suivi, collaboration, contour du portrait, trait des onglets) partagent
+cette référence, y compris leurs états interactifs. La fenêtre native source est `renderIosStageWindow` dans
 `app/src/main/java/com/meewav/android/features/auth/IosAvatarStage.kt`.
 
 ## Ordre de construction

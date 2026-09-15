@@ -65,8 +65,8 @@ vinyle et des avatars au sol reprennent exactement ce même format.
 Le contenu utilise désormais des dimensions mobiles réelles, sans réduire toute
 la carte desktop par une transformation. Le cartouche « MEEWAV · PRÉ-PROFIL »
 est retiré, le contenu commence à 12 pixels du haut et le badge reste à côté du
-nom. Aperçu / Vidéo / Audio arrivent directement sous l’identité, avant les
-actions de suivi, d’épinglage et la bio. L’épinglage tient dans une ligne compacte :
+nom. L’ordre est identité, Suivre / Voir profil, Aperçu / Vidéo / Audio, puis
+épinglage et bio. L’épinglage tient dans une ligne compacte :
 la palette se déplie à la demande et conserve cinq cibles de 36 pixels.
 Le corps de la fiche défile si nécessaire ; fermer, contacter et demander une
 collaboration restent accessibles dans les zones fixes. Le logo au-dessus du
@@ -80,6 +80,10 @@ Les boutons Play/Pause et Retour au globe reprennent également ce traitement.
 Cette référence est nommée **Violet urbain Meewav** et conservée dans
 [l’index documentaire](../README.md#repère-artistique-à-conserver--violet-urbain-meewav),
 avec les variables CSS communes `--meewav-violet-urbain-*`.
+Ces variables remplacent également les anciens accents roses du préprofil :
+suivi, collaboration (bouton et pictogramme), contour du portrait et trait des
+onglets, y compris les états de survol et de focus. Les couleurs de grades et
+les couleurs de repère choisies par l’utilisateur gardent leur signification.
 
 Lors d’une sélection au sol, la représentation agrandie vient à 12 pixels de la
 fiche. Un repère et un trait discret conservent le lien avec sa position réelle

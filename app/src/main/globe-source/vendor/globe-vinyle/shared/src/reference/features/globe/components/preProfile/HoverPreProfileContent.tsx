@@ -896,6 +896,8 @@ export function HoverPreProfileContent({
         </div>
       </header>
 
+      {renderProfileActions()}
+
       <div className={isOwner ? "mw-preprofile__owner-lower-stage" : "mw-preprofile__lower-stage"}>
         <div
           className={isOwner ? "mw-preprofile__owner-media-stage" : "mw-preprofile__media-stage"}
@@ -1161,8 +1163,6 @@ export function HoverPreProfileContent({
 
         </div>
       </div>
-
-      {renderProfileActions()}
 
       {!isOwner && showRestoreAvatar && (
         <button
