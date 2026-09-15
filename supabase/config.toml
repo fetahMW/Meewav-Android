@@ -1,0 +1,4 @@
+project_id = "meewav-android"
+
+[functions.messaging-call-token]
+verify_jwt = false

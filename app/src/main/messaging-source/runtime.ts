@@ -1,11 +1,12 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-export type MobileConfig = { preview: boolean; url: string; key: string; token: string | null; userId: string | null; route?: string };
+export type MobileConfig = { preview: boolean; url: string; key: string; token: string | null; userId: string | null; route?: string; nativeVoice?:boolean };
 let config: MobileConfig;
 export let supabase: SupabaseClient;
 export const useAuth = () => ({ user: config?.userId ? { id: config.userId } : null });
 export const isLocalAuthPreviewEnabled = () => config?.preview === true;
 export const previewEnabled = isLocalAuthPreviewEnabled;
+export const nativeVoiceEnabled = () => config?.nativeVoice === true;
 
 // The native SDK alone owns refresh and encrypted session persistence. The
 // bundled client receives only the short-lived access token, kept in memory.

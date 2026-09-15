@@ -1,0 +1,7 @@
+{
+  "name": "meewav-android-messaging-media",
+  "private": true,
+  "version": "1.0.0",
+  "dependencies": { "@byteplus/rtc": "4.68.5" },
+  "devDependencies": { "pg": "8.16.3" }
+}

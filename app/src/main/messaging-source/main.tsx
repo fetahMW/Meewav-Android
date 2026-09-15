@@ -4,6 +4,7 @@ import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft, MessageCircle, Plus, X } from 'lucide-react';
 import { configure, previewEnabled, updateToken, type MobileConfig } from './runtime';
 import { useFloatingComposer } from './useFloatingComposer';
+import VideoCalls from './calls/VideoCalls';
 
 const root = createRoot(document.getElementById('root')!);
 let started = false;
@@ -81,6 +82,7 @@ function MobileShell({ Page }: { Page: React.ComponentType }) {
       <button aria-label="Fermer l’application et revenir à l’accueil Samsung" onClick={closeApplication}><X /></button></span>
     </header>
     <Page />
+    <VideoCalls />
     {downloadError && <div className="mobile-download-error" role="alert">Ce fichier n’a pas pu être enregistré.<button aria-label="Fermer" onClick={() => setDownloadError(false)}>Fermer</button></div>}
   </div>;
 }
@@ -107,6 +109,7 @@ function MobileShell({ Page }: { Page: React.ComponentType }) {
     if (!active) {
       document.querySelectorAll('audio, video').forEach(item => (item as HTMLMediaElement).pause());
       window.dispatchEvent(new Event('meewav:messaging-suspend'));
+      window.dispatchEvent(new Event('meewav:call-suspend'));
     }
     window.dispatchEvent(new Event(active ? 'focus' : 'blur'));
   },

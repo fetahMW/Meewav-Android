@@ -782,6 +782,7 @@ export default function MessagingPage() {
         ? liveMessaging.openConversation(liveMessaging.selectedConversationId)
         : Promise.resolve([]),
       sendText: liveMessaging.sendText,
+      sendVoice: liveMessaging.sendVoice,
       retryMessage: liveMessaging.retryMessage,
       isReactionActiveByMe: (messageId, emoji) => Boolean(
         currentProfileId

@@ -1,0 +1,44 @@
+.mw-video-call { position: fixed; inset: 0; z-index: 10000; isolation: isolate; display: flex; flex-direction: column; overflow: hidden; background: #090b10; color: #f4f5f8; font-family: Inter,system-ui,sans-serif; }
+.mw-video-call::before { content: ''; position: absolute; z-index: -1; inset: 0; background: radial-gradient(ellipse at 50% 25%,#30264270,transparent 65%),linear-gradient(#101217,#07080b); }
+.mw-video-call button { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 48px; border: 1px solid #ffffff24; border-radius: 26px; background: linear-gradient(#ffffff09,#ffffff02),#14171ecc; color: #f5f6f8; font: 600 14px Inter,system-ui,sans-serif; padding: 12px 20px; touch-action: manipulation; }
+.mw-video-call button:disabled { opacity: .5; }
+.mw-video-call button:focus-visible { outline: 2px solid #bda3e5; outline-offset: 3px; }
+.mw-video-call > header { z-index: 3; display: flex; align-items: center; justify-content: space-between; min-height: 62px; padding: 8px 14px; border-bottom: 1px solid #ffffff13; background: linear-gradient(110deg,#ffffff08,#ffffff02),#12151c99; backdrop-filter: blur(22px) saturate(1.12); }
+.mw-video-call > header > span { display: flex; gap: 10px; align-items: center; font-size: 14px; font-weight: 550; }
+.mw-video-call > header > button { padding: 0; width: 44px; min-height: 44px; background: transparent; border: 0; }
+.mw-video-call__remote { position: absolute; inset: 0; z-index: -1; }
+.mw-video-call__remote video { width: 100%; height: 100%; object-fit: contain; }
+.mw-video-call__identity { margin: auto 24px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; }
+.mw-video-call__identity > img { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; border: 1px solid #9e88c266; }
+.mw-video-call__identity h2 { margin: 0; font-size: 23px; line-height: 1.2; }
+.mw-video-call__identity p { margin: 0; max-width: 330px; font-size: 13px; color: #b4b7c1; line-height: 1.5; }
+.mw-video-call__local { position: absolute; top: 80px; right: 14px; width: 88px; height: 126px; z-index: 2; overflow: hidden; border-radius: 16px; background: #0c0e12; border: 1px solid #ffffff30; box-shadow: 0 8px 24px #0006; }
+.mw-video-call__local:empty { display: none; }
+.mw-video-call__local video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+.mw-video-call__local.is-off video { visibility: hidden; }
+.mw-video-call__local.is-off::after { content: 'Caméra coupée'; position: absolute; inset: 0; display: grid; place-content: center; font-size: 11px; color: #b4b7c1; text-align: center; padding: 8px; }
+.mw-video-call:is(.is-preview,.is-ringing) .mw-video-call__local { position: relative; top: auto; right: auto; flex: 1; min-height: 120px; width: calc(100% - 48px); max-height: 52dvh; margin: 18px 24px; }
+.mw-video-call:is(.is-preview,.is-ringing) .mw-video-call__identity { margin: 16px 24px 0; gap: 6px; }
+.mw-video-call:is(.is-preview,.is-ringing) .mw-video-call__identity > :is(img,svg) { display: none; }
+.mw-video-call.is-connected .mw-video-call__identity { margin: 12px auto auto; gap: 5px; padding: 8px 16px; border-radius: 18px; background: #080b118c; backdrop-filter: blur(16px); }
+.mw-video-call.is-connected .mw-video-call__identity > :is(img,svg) { display: none; }
+.mw-video-call.is-connected .mw-video-call__identity h2 { font-size: 14px; }
+.mw-video-call footer { z-index: 3; padding: 16px 20px max(20px,env(safe-area-inset-bottom)); display: flex; align-items: center; flex-direction: column; gap: 18px; background: linear-gradient(transparent,#080a12c9 28%,#080a12); }
+.mw-video-call footer > p { margin: -6px 0 0; max-width: 290px; text-align: center; color: #a7abb7; font-size: 12px; line-height: 1.5; }
+.mw-video-call__controls { display: flex; justify-content: center; width: 100%; gap: 16px; }
+.mw-video-call__controls button { flex-direction: column; gap: 7px; width: 68px; min-height: 66px; padding: 10px 2px; border-radius: 19px; font-size: 10px; font-weight: 450; }
+.mw-video-call__controls button[aria-pressed=true] { background: #2c2e38; border-color: #cab9e566; }
+.mw-video-call .is-primary { width: min(100%,290px); background: linear-gradient(135deg,rgba(79,53,158,.96),rgba(76,47,169,.94)); border-color: rgba(98,67,192,.34); box-shadow: inset 0 1px #ffffff24,0 8px 24px #39267247; }
+.mw-video-call .is-hangup { background: #922f42; border-color: #c866793d; }
+.mw-video-call__answer { display: flex; width: 100%; gap: 12px; }
+.mw-video-call__answer button { flex: 1; min-width: 0; }
+.mw-video-call__resume { position: absolute; top: 225px; left: 50%; transform: translateX(-50%); z-index: 4; white-space: nowrap; }
+
+/* Keep Search, Video and Info on one row in the existing translucent banner. */
+#root .mobile-messaging .mw-chat-header__actions { display: flex; flex-shrink: 0; gap: 2px; }
+#root .mobile-messaging .mw-chat-header__actions .mw-video-call-trigger { display: inline-flex; }
+#root .mobile-messaging .mw-chat-header__actions .mw-video-call-trigger:disabled { display: inline-flex; opacity: .35; }
+#root .mobile-messaging .mw-chat-header__actions .mw-icon-button { width: 40px; min-width: 40px; height: 44px; padding: 8px; }
+#root .mobile-messaging .mw-chat-header__identity { min-width: 0; flex: 1; }
+#root .mobile-messaging .mw-chat-header__identity-text { min-width: 0; }
+@media (max-height: 620px) { .mw-video-call__identity { gap: 5px; } .mw-video-call footer { gap: 10px; padding: 10px 16px; } .mw-video-call__controls button { min-height: 48px; flex-direction: row; } .mw-video-call__controls button span { display: none; } }

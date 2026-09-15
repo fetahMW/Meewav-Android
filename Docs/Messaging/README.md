@@ -20,8 +20,9 @@ en place ; aucun média n’est téléchargé pour ce portage.
 Les quatre espaces du Web sont repris : messages, collaborations, projets et
 groupes. Les repositories, adaptateurs, files de pièces jointes, clés idempotentes,
 erreurs, lectures paginées et souscriptions privées Realtime sont conservés.
-Les limitations fonctionnelles du Web demeurent : appels directs non raccordés,
-ainsi que certaines fonctions avancées de projets/groupes encore différées.
+Les appels vidéo directs et les vocaux Android sont raccordés depuis le lot du
+15 septembre décrit dans [Media-and-calls.md](Media-and-calls.md). Certaines
+fonctions avancées de projets/groupes restent différées.
 
 ## Présentation et navigation
 
@@ -82,14 +83,22 @@ une session réelle en démo : elles y ouvrent seulement la boîte de réception
 
 Les pièces jointes utilisent le sélecteur de documents Android, puis la file
 d’upload et les limites du Web. Le micro est demandé au premier enregistrement,
-uniquement depuis la page locale, et aucune permission vidéo n’est accordée.
+uniquement depuis la page locale. Les appels vidéo demandent aussi la caméra ;
+les vocaux utilisent désormais l’enregistreur natif AAC/M4A compatible iOS.
 Quitter la conversation ou passer en arrière-plan interrompt la capture ; audio
 et vidéo en lecture sont également suspendus en arrière-plan. Le téléchargement
 propose **Enregistrer sous** avec le sélecteur Android ; le fichier est transmis
 par blocs à l’URI choisie. Cette exportation est limitée à 64 Mio par fichier pour
 borner la mémoire, sans conversion ni réduction de qualité.
 
-## Backend : code présent, déploiement à confirmer
+## Backend : contrat iOS pour les conversations directes
+
+Le lot du 15 septembre raccorde les conversations directes, le texte et les
+vocaux au contrat iOS réellement déployé (`messaging_*_v1`). Le contrat d’appels
+vidéo et son service BytePlus sont déployés sur Meewav Dev. Voir
+[Media-and-calls.md](Media-and-calls.md) pour les sources et limites actuelles.
+
+État historique de l’import Web initial, conservé pour les autres espaces :
 
 Les services Web appellent notamment `list_my_conversations_v2`,
 `get_conversation_messages_v3`, `send_message_v1` et les contrats de collaborations,
@@ -102,8 +111,7 @@ La documentation Web `docs/backend/MESSAGING_SUPABASE_SPEC.md` indique que les
 migrations préparées du 18 juillet n’avaient pas été déployées lors de son audit.
 Ce portage ne confirme ni n’infirme leur déploiement actuel. Les noms historiques
 iOS `messaging_*_v1` ne suffisent pas à garantir leur compatibilité avec le Web.
-**Aucune migration, modification de serveur ou écriture distante n’est effectuée
-par ce lot.** Les échanges réels, les droits entre plusieurs comptes, les URL
+**L’import Web initial n’avait modifié aucun serveur.** Les échanges réels, les droits entre plusieurs comptes, les URL
 signées et le Realtime restent à essayer séparément sur l’environnement voulu.
 
 ## Construction

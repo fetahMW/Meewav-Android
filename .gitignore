@@ -8,3 +8,5 @@ meewav.local.properties
 *.keystore
 .meewav-launch-route
 .DS_Store
+tools/messaging-media/node_modules/
+supabase/.temp/

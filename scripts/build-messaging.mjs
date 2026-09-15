@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module';
 import { dirname, join, resolve, relative, extname, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readFile, writeFile, mkdir, readdir, copyFile, stat } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, readdir, copyFile, stat, unlink } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { applyMessagingBrand } from './messaging-brand.mjs';
@@ -21,7 +21,7 @@ await mkdir(output, { recursive: true });
 const result = await build({
   absWorkingDir: root, entryPoints: [join(source, 'main.tsx')],
   outdir: join(output, 'assets'), entryNames: 'main', chunkNames: '[name]-[hash]',
-  nodePaths: [join(web, 'node_modules'), join(web, 'vendor/globe-vinyle/node_modules')], bundle: true, splitting: true, format: 'esm',
+  nodePaths: [join(root, 'tools/messaging-media/node_modules'), join(web, 'node_modules'), join(web, 'vendor/globe-vinyle/node_modules')], bundle: true, splitting: true, format: 'esm',
   target: ['chrome110'], jsx: 'automatic', minify: true, metafile: true, legalComments: 'linked',
   define: { 'import.meta.env': JSON.stringify({ DEV: false, BASE_URL: '/', VITE_MESSAGING_DEMO_FALLBACK: false }), 'process.env.NODE_ENV': '"production"' },
   loader: { '.png': 'file', '.svg': 'file', '.jpg': 'file', '.webp': 'file', '.mp3': 'file', '.wav': 'file' },
@@ -31,6 +31,17 @@ const result = await build({
     if (importing) context.onResolve({ filter: /^\.\/vendor\/src\// }, args => ({ path: join(web, args.path.slice('./vendor/'.length) + '.tsx') }));
   } }],
 });
+
+// Replace generated chunks instead of accumulating obsolete RTC bundles in the
+// APK. Only this builder's direct output files are eligible; public media stays.
+const generated = new Set(Object.keys(result.metafile.outputs).map(path => resolve(root,path)));
+const assetOutput = join(output,'assets');
+for (const name of await readdir(assetOutput)) {
+  if (!/^(?:MessagingPage-|chunk-|byteplus-).+\.(?:js(?:\.LEGAL\.txt)?|css)$/.test(name)) continue;
+  const path = resolve(assetOutput,name);
+  const owner = path.replace(/\.LEGAL\.txt$/, '');
+  if (within(assetOutput,path) && !generated.has(path) && !generated.has(owner)) await unlink(path);
+}
 
 // Keep the copied Web source intact; apply the Android brand when packaging CSS.
 const compiledCss = join(output, 'assets/main.css');

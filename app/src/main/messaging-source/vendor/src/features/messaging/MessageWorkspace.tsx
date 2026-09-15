@@ -1,5 +1,8 @@
 import { demoTrackPackAudio } from "./demoTrackPackAudio";
 import { saveAttachment } from '../../../../downloads';
+import { openVideoCall } from '../../../../calls/VideoCalls';
+import { nativeVoiceEnabled } from '../../../../runtime';
+import { startNativeVoice, stopNativeVoice, cancelNativeVoice } from '../../../../nativeVoice';
 import {
   ArrowDown,
   ChevronLeft,
@@ -212,6 +215,7 @@ export type MessagingWorkspaceLiveController = {
   retryInbox: () => void | Promise<unknown>;
   retryMessages: () => void | Promise<unknown>;
   sendText: (body: string, replyToMessageId?: string | null) => void | Promise<unknown>;
+  sendVoice?: (file: File, durationMs: number) => Promise<boolean>;
   retryMessage: (clientMessageId: string) => void | Promise<unknown>;
   isReactionActiveByMe?: (messageId: string, emoji: string) => boolean;
   setReaction: (messageId: string, emoji: string, active: boolean) => void | Promise<unknown>;
@@ -1924,6 +1928,8 @@ export default function MessageWorkspace({
     if (soundsEnabled) preloadMessageSounds();
   }, [soundsEnabled]);
   const [recordingStatus, setRecordingStatus] = useState<RecordingStatus>("idle");
+  const [voiceSending, setVoiceSending] = useState(false);
+  const voiceSendingRef = useRef<string | null>(null);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [recordingError, setRecordingError] = useState<string | null>(null);
   const [recordedVoice, setRecordedVoice] = useState<RecordedVoice | null>(null);
@@ -2277,6 +2283,7 @@ export default function MessageWorkspace({
 
   useEffect(() => () => {
     recordingRequestRef.current += 1;
+    cancelNativeVoice();
     discardRecordingRef.current = true;
     if (recorderRef.current?.state === "recording") recorderRef.current.stop();
     recordingStreamRef.current?.getTracks().forEach((track) => track.stop());
@@ -2583,7 +2590,7 @@ export default function MessageWorkspace({
 
   const startVoiceRecording = async () => {
     if (recorderRef.current || recordingStatus === "requesting") return;
-    if (liveController && !attachmentController) {
+    if (liveController && !attachmentController && !liveController.sendVoice) {
       setNotice("Le stockage sécurisé des notes vocales est indisponible dans cette session.");
       return;
     }
@@ -2593,6 +2600,25 @@ export default function MessageWorkspace({
     setRecordedVoice(null);
     setRecordingSeconds(0);
     setRecordingStatus("requesting");
+
+    if (nativeVoiceEnabled()) {
+      document.querySelectorAll<HTMLMediaElement>('audio,video').forEach(media => media.pause());
+      try {
+        await startNativeVoice(({file,durationMs}) => {
+          if (requestId !== recordingRequestRef.current) return;
+          const mediaUrl = URL.createObjectURL(file); ownedMediaUrlsRef.current.add(mediaUrl);
+          setRecordedVoice({file,durationMs,duration:formatDuration(durationMs/1000),mediaUrl});
+          setRecordingStatus('ready');
+        }, error => {
+          if (requestId !== recordingRequestRef.current) return;
+          setRecordingError(error.message); setRecordingStatus('error');
+        });
+        if (requestId === recordingRequestRef.current) {
+          recordingStartedAtRef.current = performance.now(); setRecordingStatus('recording');
+        }
+      } catch { /* The native callback presents the permission/capture error. */ }
+      return;
+    }
 
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
       setRecordingError("L'enregistrement vocal n'est pas disponible dans ce navigateur.");
@@ -2668,6 +2694,7 @@ export default function MessageWorkspace({
   };
 
   const stopVoiceRecording = () => {
+    if (nativeVoiceEnabled()) { stopNativeVoice(); return; }
     if (recorderRef.current && recorderRef.current.state !== "inactive") recorderRef.current.stop();
   };
 
@@ -2682,6 +2709,8 @@ export default function MessageWorkspace({
   }, [recordingStatus]);
 
   const cancelVoiceRecording = () => {
+    voiceSendingRef.current = null; setVoiceSending(false);
+    cancelNativeVoice();
     recordingRequestRef.current += 1;
     discardRecordingRef.current = true;
     if (recorderRef.current && recorderRef.current.state !== "inactive") recorderRef.current.stop();
@@ -2696,6 +2725,7 @@ export default function MessageWorkspace({
     setRecordingError(null);
     setRecordingStatus("idle");
   };
+  useEffect(() => { cancelVoiceRecording(); }, [workspaceSelectedId]);
   useEffect(() => {
     const stop = () => cancelVoiceRecording();
     window.addEventListener('meewav:messaging-suspend', stop);
@@ -2707,7 +2737,19 @@ export default function MessageWorkspace({
   }, [recordedVoice]);
 
   const sendRecordedVoice = () => {
-    if (!recordedVoice) return;
+    if (!recordedVoice || voiceSendingRef.current) return;
+    if (liveController?.sendVoice) {
+      const voice = recordedVoice;
+      const operation = crypto.randomUUID(); voiceSendingRef.current = operation; setVoiceSending(true);
+      void liveController.sendVoice(voice.file,voice.durationMs).then((sent:boolean) => {
+        if (!sent || voiceSendingRef.current !== operation) return;
+        URL.revokeObjectURL(voice.mediaUrl); ownedMediaUrlsRef.current.delete(voice.mediaUrl);
+        setRecordedVoice(null); setRecordingStatus('idle');
+      }).finally(() => {
+        if (voiceSendingRef.current === operation) { voiceSendingRef.current = null; setVoiceSending(false); }
+      });
+      return;
+    }
     if (liveController) {
       if (!selectedConversation || !attachmentController) {
         setNotice("La note vocale n’a pas été envoyée : stockage indisponible.");
@@ -2925,8 +2967,7 @@ export default function MessageWorkspace({
             {isMessageContent && (
               <span className="mw-chat-header__actions">
                 <button type="button" className="mw-icon-button" data-conversation-drawer-trigger aria-expanded={drawerOpen} aria-controls="mw-conversation-drawer" onClick={() => setDrawerOpen((open) => !open)} aria-label="Rechercher dans la conversation"><Search /></button>
-                <button type="button" className="mw-icon-button" disabled title="Appels directs non connectés au service audio" aria-label="Appel audio"><Phone /></button>
-                <button type="button" className="mw-icon-button" disabled title="Appels directs non connectés au service vidéo" aria-label="Appel vidéo"><Video /></button>
+                <button type="button" className="mw-icon-button mw-video-call-trigger" disabled={Boolean(selectedConversation.readOnlyReason) || (selectedConversation.conversationKind != null && selectedConversation.conversationKind !== 'direct')} onClick={() => openVideoCall({id:selectedConversation.id,name:selectedConversation.name,avatar:selectedConversation.avatar})} aria-label="Appel vidéo"><Video /></button>
                 <button type="button" className="mw-icon-button" data-conversation-drawer-trigger aria-expanded={drawerOpen} aria-controls="mw-conversation-drawer" onClick={() => setDrawerOpen((open) => !open)} aria-label="Options de la conversation"><Info /></button>
               </span>
             )}
@@ -3109,13 +3150,13 @@ export default function MessageWorkspace({
           )}
           {recordingStatus !== "idle" ? (
             <div className={`mw-recording-composer is-${recordingStatus}`}>
-              <button type="button" onClick={cancelVoiceRecording} aria-label="Annuler l'enregistrement"><X /></button>
+              <button type="button" disabled={voiceSending} onClick={cancelVoiceRecording} aria-label="Annuler l'enregistrement"><X /></button>
               {recordingStatus === "requesting" && <span><i /> Autorisation du micro…</span>}
               {recordingStatus === "recording" && <span><i /> Enregistrement · {formatDuration(recordingSeconds)}</span>}
               {recordingStatus === "ready" && recordedVoice && <RecordedVoicePreview voice={recordedVoice} />}
               {recordingStatus === "error" && <span className="mw-recording-error" role="alert">{recordingError}</span>}
               {recordingStatus === "recording" && <button type="button" onClick={stopVoiceRecording}><CircleStop /> Arrêter</button>}
-              {recordingStatus === "ready" && <button type="button" onClick={sendRecordedVoice}><Send /> Envoyer</button>}
+              {recordingStatus === "ready" && <button type="button" disabled={voiceSending} onClick={sendRecordedVoice}><Send /> {voiceSending ? 'Envoi…' : 'Envoyer'}</button>}
               {recordingStatus === "error" && <button type="button" onClick={() => void startVoiceRecording()}><Mic /> Réessayer</button>}
             </div>
           ) : (

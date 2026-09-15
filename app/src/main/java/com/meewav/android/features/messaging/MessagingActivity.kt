@@ -60,6 +60,20 @@ open class MessagingActivity : ComponentActivity() {
     private var fileResult: ValueCallback<Array<Uri>>? = null
     private var mediaPermissionRequest: PermissionRequest? = null
     private var stopped = false
+    private var voicePermissionId: String? = null
+    private val callAudio by lazy { NativeCallAudio(this) {
+        if (::web.isInitialized && !isDestroyed) web.evaluateJavascript("window.dispatchEvent(new Event('meewav:call-suspend'));", null)
+    } }
+    private val voice by lazy { NativeVoiceCapture(this) { payload ->
+        if (::web.isInitialized && !isDestroyed && web.url == PAGE) web.evaluateJavascript("window.meewavVoice?.event($payload);", null)
+    } }
+    private val voicePermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        val id = voicePermissionId; voicePermissionId = null
+        if (id != null) {
+            if (granted && !stopped && !isFinishing && web.url == PAGE) voice.start(id)
+            else voice.reject(id, "Autorise le micro dans les paramètres de Meewav pour enregistrer un vocal.")
+        }
+    }
     private var pendingSave: Pair<String, Int>? = null
     private val preview by lazy { BuildConfig.DEBUG && intent.getBooleanExtra("preview", false) }
     private val service by lazy { Uri.parse(BuildConfig.SUPABASE_URL) }
@@ -172,7 +186,33 @@ open class MessagingActivity : ComponentActivity() {
         }
         web.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                if (assetSurface == "messaging" && view.url == PAGE && request.isForMainFrame
+                    && request.url.scheme == "https" && request.url.host == "appassets.androidplatform.net"
+                    && request.url.path == "/native/call-audio") {
+                    when (request.url.getQueryParameter("state")) {
+                        "incoming" -> if (!stopped) callAudio.incoming()
+                        "connecting", "connected" -> if (!stopped) callAudio.connecting()
+                        else -> callAudio.stop()
+                    }
+                    return true
+                }
                 if (!request.isForMainFrame) return true
+                if (assetSurface == "messaging" && web.url == PAGE && request.url.scheme == "https"
+                    && request.url.host == "appassets.androidplatform.net" && request.url.path.orEmpty().startsWith("/native/voice-")) {
+                    val id = request.url.getQueryParameter("id").orEmpty()
+                    if (!Regex("[a-f0-9-]{36}").matches(id)) return true
+                    when (request.url.path) {
+                        "/native/voice-start" -> if (resumed && !stopped) {
+                            if (ContextCompat.checkSelfPermission(this@MessagingActivity, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) voice.start(id)
+                            else if (voicePermissionId == null && mediaPermissionRequest == null) { voicePermissionId = id; voicePermission.launch(Manifest.permission.RECORD_AUDIO) }
+                            else voice.reject(id, "Une autorisation est déjà en cours. Réessaie.")
+                        }
+                        "/native/voice-stop" -> voice.stop(id)
+                        "/native/voice-cancel" -> { if (voicePermissionId == id) voicePermissionId = null; voice.cancel(id) }
+                        "/native/voice-release" -> voice.release(id)
+                    }
+                    return true
+                }
                 if (request.url.toString() == "$ORIGIN/native/messages" && assetSurface == "profile") {
                     startActivity(Intent(this@MessagingActivity, MessagingActivity::class.java).putExtra("preview", preview))
                     return true
@@ -218,9 +258,16 @@ open class MessagingActivity : ComponentActivity() {
                 val uri = request.url
                 if (uri.scheme != "https") return denied()
                 if (uri.host != "appassets.androidplatform.net") {
-                    return if (!preview && service.scheme == "https" && uri.host == service.host && uri.port == service.port) null else denied()
+                    val rtcHost = uri.host.orEmpty()
+                    val rtc = assetSurface == "messaging" && !preview && (rtcHost == "rtcplus.com" || rtcHost.endsWith(".rtcplus.com")) && (uri.port == -1 || uri.port == 443)
+                    return if (rtc || (!preview && service.scheme == "https" && uri.host == service.host && uri.port == service.port)) null else denied()
                 }
                 if (request.method != "GET") return denied()
+                if (assetSurface == "messaging" && uri.path.orEmpty().startsWith("/native/voice-file/")) {
+                    val id = uri.lastPathSegment.orEmpty().removeSuffix(".m4a")
+                    if (!Regex("[a-f0-9-]{36}").matches(id)) return denied()
+                    return voice.response(id) ?: denied()
+                }
                 if (uri.path.orEmpty().startsWith("/globe-vinyle/")) {
                     val name = uri.path.orEmpty().removePrefix("/globe-vinyle/")
                     val item = globeManifest.optJSONObject(name) ?: return denied()
@@ -276,14 +323,15 @@ open class MessagingActivity : ComponentActivity() {
         val payload = JSONObject().put("preview", preview).put("url", if (preview) "" else BuildConfig.SUPABASE_URL)
             .put("key", if (preview) "" else BuildConfig.SUPABASE_PUBLISHABLE_KEY)
             .put("token", if (preview) JSONObject.NULL else accessToken).put("userId", if (preview) JSONObject.NULL else profileId)
-            .put("route", route)
+            .put("route", route).put("nativeVoice", assetSurface == "messaging")
         // Evaluate only into the fixed, local document. No JavaScript interface,
         // refresh token, URL credential, log or WebView persistence is used.
         if (web.url == PAGE) web.evaluateJavascript("window.meewavMessaging.configure($payload);", null)
     }
     private fun csp(): String {
         val remote = if (!preview && service.scheme == "https" && !service.host.isNullOrBlank()) "https://${service.authority} wss://${service.authority}" else ""
-        return "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: $remote; connect-src 'self' $remote; media-src 'self' blob: $remote; font-src 'self'; worker-src 'self' blob:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"
+        val rtc = if (assetSurface == "messaging" && !preview) "https://*.rtcplus.com wss://*.rtcplus.com" else ""
+        return "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: $remote; connect-src 'self' $remote $rtc; media-src 'self' blob: $remote; font-src 'self'; worker-src 'self' blob:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"
     }
     private fun denied() = WebResourceResponse("text/plain", "utf-8", 403, "Forbidden", emptyMap(), ByteArrayInputStream(byteArrayOf()))
     private suspend fun javascript(expression: String): String = suspendCancellableCoroutine { continuation ->
@@ -321,6 +369,7 @@ open class MessagingActivity : ComponentActivity() {
         else -> null
     }
     private fun suspendMedia() {
+        callAudio.stop()
         if (::web.isInitialized) { web.evaluateJavascript("window.meewavMessaging?.setActive(false);", null); web.onPause() }
     }
     override fun onResume() { super.onResume(); stopped = false; resumed = true; if (::web.isInitialized) { web.onResume(); web.evaluateJavascript("window.meewavMessaging?.setActive(true);", null) } }
@@ -328,16 +377,18 @@ open class MessagingActivity : ComponentActivity() {
         resumed = false
         // Android's permission sheet pauses this Activity. Cancelling the JS
         // request here made the first microphone tap discard its own result.
-        if (mediaPermissionRequest == null) suspendMedia()
+        if (mediaPermissionRequest == null && voicePermissionId == null) { voice.abort(); suspendMedia() }
         super.onPause()
     }
     override fun onStop() {
         stopped = true
+        voicePermissionId = null; voice.abort()
         mediaPermissionRequest?.deny(); mediaPermissionRequest = null
         suspendMedia()
         super.onStop()
     }
     override fun onDestroy() {
+        voicePermissionId = null; voice.destroy(); callAudio.destroy()
         mediaPermissionRequest?.deny(); mediaPermissionRequest = null
         fileResult?.onReceiveValue(null); fileResult = null
         if (::web.isInitialized) { container.removeView(web); web.stopLoading(); web.destroy() }
