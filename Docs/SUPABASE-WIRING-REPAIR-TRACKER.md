@@ -24,7 +24,7 @@ Référence : [audit et constats](SUPABASE-WIRING-AUDIT-2026-09-16.md). Un contr
 | P03 | Connexion username sans exposition d’e-mail, compatibilité legacy | À faire | Non | Non |
 | P04 | Profil propriétaire/public, visibilité et préférences | À faire | Non | Non |
 | P05 | Médias privés : lecture, upload, publication, archivage | Schéma et retry idempotent corrigés, compatibilité legacy préservée | Dev : 20260916123000 | 9 tests service ; recette réelle A/B : import, publication, lecture publique, archivage, privé refusé au tiers |
-| P06 | Métriques, classement, grades et notifications | À faire | Non | Non |
+| P06 | Métriques, classement, grades et notifications | Métriques/grades/classement raccordés ; notifications restent à recetter | Dev : 20260916130000, 131000 et 132000 ; cron quotidien actif | SQL propriétaire/tiers/idempotence/grade refusé ; API réelle ; aucun état erreur sur Samsung |
 | P07 | Espace privé/sécurité, cadeaux/attestations et outils locaux | À faire | Non | Non |
 | M01 | Tchat commun Web/Android et conversation réelle existante | À faire | Non | Non |
 | M02 | Citations, réactions, épingles, transfert/suppression/préférences | À faire | Non | Non |
@@ -52,3 +52,6 @@ Les paiements, signatures juridiques et quatre prochains piliers ne sont pas à 
 - S01 complément : identité React native stabilisée avec useSyncExternalStore. Une nouvelle référence utilisateur à chaque rendu provoquait auparavant des requêtes répétées. Test rerender/refresh/logout/changement de compte : 1/1. Sur Samsung, deux observations successives restent à 6 requêtes REST, chargement terminé.
 - P05 : migration média SHA-256 `9d3090beba6f6f3b512e9071b433980eeea42f36a9756ef7a66e047fbaf511c3` testée en rollback puis déployée à 06:08 UTC. Recette API par le service client réel à 06:13 UTC : un seul média au retry, lecture tierce privée refusée, publication téléchargeable, archivage interdit les nouvelles URL signées. Une URL signée déjà émise reste valide jusqu’à son expiration. Objet de recette nettoyé.
 - Profil : chiffres/activité et actions de démonstration limités au mode démo explicite ; compte réel présente ses valeurs et ses états vides. Démonstration investisseurs conservée. Statistiques et classement encore indisponibles, prochain lot.
+
+- P06 : contrats analytiques testés en rollback puis déployés. Visites rejouées sans doublon, 2 visites d’un même compte donnent 2 vues/1 visiteur ; événements d’autorité refusés au client ; chiffres privés propriétaires seulement ; suivi réel émet un événement serveur. Grades existants conservés avec plancher de points du niveau, ancien RPC iOS de tier inchangé.
+- Classement : quatre échelles testées et population privée exclue. Premier calcul réalisé ; pg_cron disponible mais absent a été activé puis job quotidien 03:17 UTC installé. API réelle du compte A privé renvoie zéro classement, aucune fausse position. Deux erreurs visibles du profil Samsung ont disparu après relecture. Les producteurs d’événements Globe/Messagerie restent à recetter dans leurs lots.
