@@ -7,15 +7,15 @@
 .market-page .market-search:has([aria-expanded="true"]) { border-color: #c5a0f0a0; box-shadow: inset 0 1px 1px #eee1ff40, 0 0 15px #a969ee1a; }
 .market-page .market-search__filter { background: linear-gradient(160deg, #d2b6f329, #121019 48%, #253b3026); border: 1px solid #c4a1ed50; box-shadow: inset 0 1px 1px #ead5ff4d, inset 0 -2px 3px #0009; border-radius: 11px; }
 .market-page .market-contentbar .market-contextbar__create {
-  min-height: 46px; padding-inline: 20px; border: 1px solid #bca2ea80; border-radius: 16px;
+  min-height: 46px; padding-inline: 20px; border: 1px solid #c2b4f088; border-radius: 16px;
 }
 .market-page .market-contentbar .market-contextbar__create,
 .market-page .market-home-hero__cta {
-  /* Violet body tones from the shared navigation chassis. */
-  border-color: #bca2ea80;
-  background: radial-gradient(ellipse at 24% -25%, #dcc6ff40, transparent 66%), linear-gradient(180deg, #4e349f 0%, #5137a1 65%, #372574 100%);
-  box-shadow: inset 0 2px 2px #f3e5ff70, inset 0 -3px 5px #35196591, 0 1px 0 #281642, 0 6px 15px #0006, 0 0 16px #8e51d61c;
-  text-shadow: 0 1px 2px #2a10485c;
+  /* Urban violet body tones from the shared navigation chassis. */
+  border-color: #c2b4f088;
+  background: radial-gradient(ellipse at 24% -25%, #ddd4ff4d, transparent 66%), linear-gradient(180deg, #5a47c8 0%, #5240bd 60%, #3d3096 100%);
+  box-shadow: inset 0 2px 2px #f3e9ff78, inset 0 -3px 5px #2c1c7499, 0 1px 0 #221355, 0 6px 16px #0007, 0 0 18px #6e5be628;
+  text-shadow: 0 1px 2px #22135566;
   transition: filter 160ms ease, transform 160ms ease;
 }
 .market-page .market-contentbar .market-contextbar__create:hover,

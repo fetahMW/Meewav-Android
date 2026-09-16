@@ -93,7 +93,8 @@
 #root .mobile-market .market-home-hero__price { flex: 1 0 100%; gap: 4px; white-space: normal; }
 #root .mobile-market .market-home-hero__price b { font-size: 19px; }
 #root .mobile-market .market-home-hero__price small { font-size: 10px; color: #b5b2bf; }
-#root .mobile-market .market-home-hero__cta { min-height: 0; padding: 0; font-size: 11px; color: #c1b0df; background: none; box-shadow: none; border: 0; }
+#root .mobile-market .market-home-hero__cta { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 6px 12px; border: 1px solid #c2b4f055; border-radius: 999px; background: linear-gradient(180deg, #5a47c83d, #3d30962e); box-shadow: inset 0 1px #ffffff14; color: #eee7ff; font-size: 11px; font-weight: 700; }
+#root .mobile-market .market-home-hero__cta svg { width: 13px; height: 13px; }
 #root .mobile-market .market-home-hero .market-rail-card__favorite { top: 6px; left: 6px; right: auto; width: 44px; height: 44px; }
 #root .mobile-market .market-home-hero .market-rail-card__badge { top: auto; bottom: 8px; left: 8px; max-width: calc(100% - 16px); }
 /* Small offers use intrinsic heights: no empty fixed-height footers or clipped prices. */

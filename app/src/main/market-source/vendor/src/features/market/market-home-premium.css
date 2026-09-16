@@ -34,7 +34,7 @@
 .market-home-hero__price { display: flex; align-items: baseline; gap: 5px; white-space: nowrap; }
 .market-home-hero__price b { font-size: 23px; letter-spacing: -.04em; color: #fff; }
 .market-home-hero__price small { color: #b3a6c6; font-size: 11px; }
-.market-home-hero__cta { display: inline-flex; align-items: center; gap: 10px; padding: 11px 13px; border: 1px solid rgba(205, 192, 242, 0.396078431372549); border-radius: 11px; background: linear-gradient(150deg, rgba(98, 66, 192, 0.3333333333333333), transparent 40%), linear-gradient(115deg, #5136a2, #3f2a7f); box-shadow: inset 0 1px 1px rgba(234, 229, 249, 0.4392156862745098), 0 4px 12px rgba(71, 47, 142, 0.1803921568627451); color: #fff; font-size: 11px; font-weight: 700; }
+.market-home-hero__cta { display: inline-flex; align-items: center; gap: 10px; padding: 11px 13px; border: 1px solid rgba(199, 190, 246, 0.44); border-radius: 11px; background: linear-gradient(150deg, rgba(88, 74, 200, 0.4), transparent 40%), linear-gradient(115deg, #5442bc, #3d3096); box-shadow: inset 0 1px 1px rgba(234, 231, 252, 0.46), 0 4px 12px rgba(60, 48, 150, 0.22); color: #fff; font-size: 11px; font-weight: 700; }
 .market-home-hero__cta svg { width: 15px; height: 15px; }
 .market-rail-card.market-mini { height: 235px; border-radius: 15px; }
 .market-mini .market-rail-card__visual { height: 112px; }

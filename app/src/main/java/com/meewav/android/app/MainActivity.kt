@@ -39,20 +39,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (BuildConfig.DEBUG && OPEN_FEATURE_WORKSHOP && intent.action != Intent.ACTION_VIEW
-            && !intent.getBooleanExtra(EXTRA_LIVE_AUTH, false)
-            && !intent.getBooleanExtra(EXTRA_OPEN_GLOBE, false)) {
-            val workshop = when {
-                intent.getBooleanExtra(EXTRA_OPEN_SCENE, false) -> com.meewav.android.features.scene.SceneActivity::class.java
-                intent.getBooleanExtra(EXTRA_OPEN_TREMPLIN, false) -> com.meewav.android.features.tremplin.TremplinActivity::class.java
-                intent.getBooleanExtra(EXTRA_OPEN_MESSAGES, false) -> MessagingActivity::class.java
-                intent.getBooleanExtra(EXTRA_OPEN_PROFILE, false) -> ProfileActivity::class.java
-                else -> com.meewav.android.features.market.MarketActivity::class.java
-            }
-            startActivity(Intent(this, workshop).putExtra("preview", true))
-            finish()
-            return
-        }
+        if (openFeatureWorkshopIfRequested(intent)) return
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.rgb(8, 8, 13)),
@@ -91,7 +78,25 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        if (openFeatureWorkshopIfRequested(intent)) return
         handleAuthIntent(intent)
+    }
+
+    private fun openFeatureWorkshopIfRequested(intent: Intent?): Boolean {
+        if (!BuildConfig.DEBUG || !OPEN_FEATURE_WORKSHOP || intent == null
+            || intent.action == Intent.ACTION_VIEW
+            || intent.getBooleanExtra(EXTRA_LIVE_AUTH, false)
+            || intent.getBooleanExtra(EXTRA_OPEN_GLOBE, false)) return false
+        val workshop = when {
+            intent.getBooleanExtra(EXTRA_OPEN_SCENE, false) -> com.meewav.android.features.scene.SceneActivity::class.java
+            intent.getBooleanExtra(EXTRA_OPEN_TREMPLIN, false) -> com.meewav.android.features.tremplin.TremplinActivity::class.java
+            intent.getBooleanExtra(EXTRA_OPEN_MESSAGES, false) -> MessagingActivity::class.java
+            intent.getBooleanExtra(EXTRA_OPEN_PROFILE, false) -> ProfileActivity::class.java
+            else -> com.meewav.android.features.market.MarketActivity::class.java
+        }
+        startActivity(Intent(this, workshop).putExtra("preview", true))
+        finish()
+        return true
     }
 
     private fun handleAuthIntent(intent: Intent?) {
