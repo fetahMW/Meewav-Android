@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState, type CSSProperties } from "react";
 import TremplinGradeProgression from "./TremplinGradeProgression";
+import TremplinMobileSectionSelect from "./TremplinMobileSectionSelect";
 import { SCENE_ROUTE } from "../shorts/sceneContract";
 import { trackTremplinEvent } from "./tremplinAnalytics";
 import MeewavTokenIcon from "./MeewavTokenIcon";
@@ -250,6 +251,7 @@ export default function TremplinTokenEducation({
   onOpenRoute,
 }: TremplinTokenEducationProps) {
   const [videoOpen, setVideoOpen] = useState(false);
+  const [chapter, setChapter] = useState('tremplin-discovery');
   const [followDemo, setFollowDemo] = useState(false);
   const [tokenSummaryOpen, setTokenSummaryOpen] = useState(false);
   const [tokenRulesOpen, setTokenRulesOpen] = useState(false);
@@ -335,14 +337,18 @@ export default function TremplinTokenEducation({
     <div className="tremplin-how">
       <header className="tremplin-how__hero">
         <span className="tremplin-how__kicker">LE TREMPLIN, SIMPLEMENT</span>
-        <h1>Découvre les artistes. Suis leur actualité gratuitement. <strong>L’achat de jetons de talent reste toujours facultatif.</strong></h1>
-        <p>Voici comment fonctionne le Tremplin, dans l’ordre.</p>
+        <h1>La musique d’abord.</h1>
+        <p>Découvre les artistes, suis leur actualité gratuitement. Les jetons de talent restent facultatifs.</p>
         <div className="tremplin-how__hero-actions">
-          <a href="#tremplin-discovery">Comprendre en 3 étapes <ArrowDown aria-hidden="true" /></a>
+          <a href="#tremplin-discovery">Les 3 étapes <ArrowDown aria-hidden="true" /></a>
           <button ref={videoTriggerRef} type="button" data-tremplin-video-cta onClick={() => setVideoOpen(true)}><PlayCircle aria-hidden="true" /> Voir la vidéo · 1 min 40</button>
         </div>
         <p className="tremplin-how__hero-note"><ShieldCheck aria-hidden="true" /> {TREMPLIN_COPY.freeAccess}</p>
       </header>
+
+      <TremplinMobileSectionSelect label="Chapitres du guide" value={chapter}
+        options={[["tremplin-discovery", "1 · Découvrir"], ["tremplin-follow", "2 · Suivre gratuitement"], ["tremplin-grades", "Comprendre les grades"], ["tremplin-token-mw", "3 · Les jetons de talent"]]}
+        onChange={(id) => { setChapter(id); document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} />
 
       <section id="tremplin-discovery" className="tremplin-how__section is-discovery" aria-labelledby="tremplin-discovery-title" tabIndex={-1}>
         <header className="tremplin-how__section-heading">

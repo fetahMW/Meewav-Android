@@ -1,0 +1,87 @@
+/* Mobile artist space: one summary, quiet cards, readable metrics and touch targets. */
+#root .mobile-tremplin .tremplin-my-dashboard { padding: 0; display: grid; gap: 16px; }
+#root .mobile-tremplin .tremplin-my-dashboard__header { padding: 4px 2px 0; gap: 8px; }
+#root .mobile-tremplin .tremplin-my-dashboard__header .tremplin-kicker { display: none; }
+#root .mobile-tremplin .tremplin-my-dashboard__header h1 { font-size: 25px; line-height: 1.15; margin: 0; }
+#root .mobile-tremplin .tremplin-my-dashboard__header p { font-size: 12px; line-height: 1.5; margin: 8px 0 0; color: #bab4c6; }
+#root .mobile-tremplin .tremplin-my-dashboard .mobile-tremplin-section { margin: 0; border-radius: 12px; }
+#root .mobile-tremplin .tremplin-my-artists-summary { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0; padding: 0 14px 6px; border: 1px solid #c8bcdf30; border-radius: 18px; background: linear-gradient(135deg,#191720ee,#0c0c14f5); box-shadow: inset 0 1px #ffffff0d; }
+#root .mobile-tremplin .tremplin-my-artists-summary > article { min-height: 64px; padding: 10px 0; border: 0; border-radius: 0; border-top: 1px solid #c8bcdf18; gap: 5px; background: none; box-shadow: none; }
+#root .mobile-tremplin .tremplin-my-artists-summary > article:nth-child(2n+3) { padding-left: 12px; }
+#root .mobile-tremplin .tremplin-my-artists-summary .tremplin-my-artists-summary__primary { grid-column: 1 / -1; padding: 14px 0 12px; background: none !important; border: 0; }
+#root .mobile-tremplin .tremplin-my-artists-summary__primary > strong { font-size: 28px; letter-spacing: -.03em; }
+#root .mobile-tremplin .tremplin-my-artists-summary article:not(:first-child) > strong { font-size: 18px; line-height: 1.2; }
+#root .mobile-tremplin .tremplin-my-artists-summary article > span { font-size: 10px; color: #bbb3c9; }
+#root .mobile-tremplin .tremplin-my-artists-summary small { font-size: 10px; max-width: 270px; color: #9992a8; }
+#root .mobile-tremplin .tremplin-my-artists-summary .tremplin-my-artists__change { font-size: 16px; gap: 5px; }
+#root .mobile-tremplin .tremplin-my-artists-summary .tremplin-my-artists__change > span { display: none; }
+#root .mobile-tremplin .tremplin-my-dashboard :is(.tremplin-my-dashboard__overview,.tremplin-my-dashboard__lower) { display: grid; grid-template-columns: minmax(0,1fr); gap: 20px; }
+#root .mobile-tremplin .tremplin-my-dashboard :is(.tremplin-my-dashboard__holdings,.tremplin-my-dashboard__watch,.tremplin-my-dashboard__followed,.tremplin-my-dashboard__tokens) { gap: 12px; }
+#root .mobile-tremplin .tremplin-my-dashboard__holdings > header { min-height: 0; padding: 0 2px; }
+#root .mobile-tremplin .tremplin-my-dashboard__holding-art { display: none; }
+#root .mobile-tremplin .tremplin-my-dashboard :is(h2,.tremplin-my-dashboard__holdings > header h2,.tremplin-my-dashboard__watch > header h2) { font-size: 20px; line-height: 1.2; margin: 5px 0; letter-spacing: -.02em; }
+#root .mobile-tremplin .tremplin-my-dashboard :is(.tremplin-kicker,.tremplin-my-dashboard__holdings > header .tremplin-kicker,.tremplin-my-dashboard__watch > header .tremplin-kicker) { font-size: 9px; letter-spacing: .1em; color: #b6a0d7; }
+#root .mobile-tremplin .tremplin-my-dashboard section > header p { font-size: 11px; line-height: 1.5; margin: 6px 0 0; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-grid { display: grid; grid-template-columns: minmax(0,1fr); gap: 12px; }
+#root .mobile-tremplin .tremplin-my-dashboard__overview .tremplin-my-token-grid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding-bottom: 3px; }
+#root .mobile-tremplin .tremplin-my-dashboard__overview .tremplin-my-token-card { flex: 0 0 91%; scroll-snap-align: start; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card { display: flex; flex-direction: column; gap: 0; min-height: 0; padding: 14px; border-radius: 18px; border: 1px solid #c8bcdf30; background: linear-gradient(140deg,#191820f2,#0b0b11f5 70%); box-shadow: inset 0 1px #ffffff0d; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card::before { display: none; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card__header { grid-template-columns: 50px minmax(0,1fr) 32px; gap: 10px; padding-bottom: 12px; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card__header > img { width: 50px; height: 58px; border-radius: 11px; border: 1px solid #c8bcdf30; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card__header h3 { font-size: 17px; margin: 3px 0; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card__header small { font-size: 9px; letter-spacing: .12em; color: #bda6df; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card__header p { font-size: 10px; margin-top: 3px; color: #b2aabb; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card__header .mw-grade-badge { --mw-grade-size: 32px !important; width: 32px; height: 32px; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card__market { padding: 10px 0; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card__market > div > span { font-size: 10px; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card__market > div > strong { font-size: 23px; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card__market .tremplin-my-artists__change { gap: 5px; font-size: 13px; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card__market .tremplin-my-artists__change > span { font-size: 10px; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card__holding { grid-template-columns: repeat(3,minmax(0,1fr)); padding: 10px 0; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card__holding > div { padding: 0 6px; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card__holding > div:first-child { padding-left: 0; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card__holding dt { font-size: 9px; line-height: 1.35; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card__holding dd { font-size: 11px; margin-top: 5px; overflow-wrap: anywhere; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card__update { font-size: 11px; line-height: 1.45; padding: 10px 0; gap: 8px; margin: 0; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card__update > i { display: none; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card > footer { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); grid-template-rows: auto; gap: 6px; margin-top: auto; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card > footer > button { min-height: 44px; padding: 8px; font-size: 11px; gap: 6px; border-radius: 12px; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card > footer > button.is-primary { background: var(--mobile-violet-cta); border-color: var(--mobile-cta-rim); box-shadow: none; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card > footer > button.is-primary svg:last-child { display: none; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card > footer > button.is-link { grid-column: 1 / -1; color: #bfaadd; }
+#root .mobile-tremplin .tremplin-my-token-card__transaction-actions { display: grid; grid-template-columns: 1fr 1fr; grid-column: 1 / -1; gap: 6px; }
+#root .mobile-tremplin .tremplin-my-token-card__transaction-actions button { min-height: 44px; padding: 8px; border-radius: 12px; font-size: 11px; white-space: normal; }
+#root .mobile-tremplin .tremplin-my-token-card__transaction-actions .is-token-action { background: var(--mobile-violet-cta); }
+#root .mobile-tremplin .tremplin-my-dashboard__watch article { grid-template-columns: 44px minmax(0,1fr); padding: 12px; gap: 8px 10px; border-radius: 14px; background: #101017e0; }
+#root .mobile-tremplin .tremplin-my-dashboard__watch article > img { width: 44px; height: 50px; grid-row: 1 / 3; }
+#root .mobile-tremplin .tremplin-my-dashboard__watch article > button { grid-column: 2; justify-content: flex-start; text-align: left; min-height: 44px; max-width: none; font-size: 11px; }
+#root .mobile-tremplin .tremplin-my-dashboard :is(.tremplin-my-dashboard__activity,.tremplin-my-dashboard__rooms,.tremplin-my-dashboard__operations) { min-width: 0; padding: 14px; border-radius: 18px; background: linear-gradient(140deg,#181720e8,#0b0b12f2); border: 1px solid #c8bcdf28; box-shadow: inset 0 1px #ffffff09; }
+#root .mobile-tremplin .tremplin-my-dashboard__feed-filters { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; width: 100%; margin-top: 12px; }
+#root .mobile-tremplin .tremplin-my-dashboard__feed-filters label { min-width: 0; width: 100%; font-size: 10px; }
+#root .mobile-tremplin .tremplin-my-dashboard__feed-filters select { width: 100%; min-width: 0; font-size: 12px; padding: 8px; background: #13111c; color: #e6dfef; border: 1px solid #c8bcdf30; border-radius: 10px; }
+#root .mobile-tremplin .tremplin-my-dashboard__feed-filters .is-checkbox { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; min-height: 44px; font-size: 12px; }
+#root .mobile-tremplin .tremplin-my-dashboard__feed-filters input[type=checkbox] { min-height: 20px; width: 20px; height: 20px; accent-color: #5137a1; }
+#root .mobile-tremplin .tremplin-my-dashboard__feed-filters > button { grid-column: 1 / -1; min-height: 44px; color: #c4afe3; border: 1px solid #c8bcdf25; border-radius: 12px; background: #15131d; font-size: 12px; }
+#root .mobile-tremplin .tremplin-my-dashboard__activity article { grid-template-columns: 36px minmax(0,1fr); padding: 10px 0; border: 0; border-top: 1px solid #c8bcdf1c; background: none; border-radius: 0; }
+#root .mobile-tremplin .tremplin-my-dashboard__activity article > img { width: 36px; height: 40px; }
+#root .mobile-tremplin .tremplin-my-dashboard__activity article > button { grid-column: 2; justify-self: start; padding: 0; color: #c4afe3; }
+#root .mobile-tremplin .tremplin-my-dashboard__activity article h3 { font-size: 13px; line-height: 1.4; }
+#root .mobile-tremplin .tremplin-my-dashboard__activity article p { font-size: 11px; line-height: 1.5; }
+#root .mobile-tremplin .tremplin-my-dashboard__rooms article { padding: 12px 0; border: 0; border-top: 1px solid #c8bcdf1c; border-radius: 0; background: none; }
+#root .mobile-tremplin .tremplin-my-dashboard__rooms article footer button { white-space: normal; font-size: 11px; padding: 8px; font-weight: 550; border-color: #c8bcdf30; background: #15131d; }
+#root .mobile-tremplin .tremplin-my-dashboard__rooms article footer button:first-child { background: var(--mobile-violet-cta); color: white; }
+#root .mobile-tremplin .tremplin-my-dashboard__followed > div { grid-template-columns: minmax(0,1fr); }
+#root .mobile-tremplin .tremplin-my-dashboard__followed article { grid-template-columns: 50px minmax(0,1fr) 32px; gap: 10px; padding: 14px; background: linear-gradient(140deg,#191820ee,#0b0b11f2); border-color: #c8bcdf30; }
+#root .mobile-tremplin .tremplin-my-dashboard__followed article > img { width: 50px; height: 60px; }
+#root .mobile-tremplin .tremplin-my-dashboard__followed article h3 { font-size: 16px; }
+#root .mobile-tremplin .tremplin-my-dashboard__followed article p { font-size: 11px; line-height: 1.4; }
+#root .mobile-tremplin .tremplin-my-dashboard__followed article > button { grid-column: 1 / -1; background: #17131f; border-color: #c8bcdf30; color: #c5b2e3; }
+#root .mobile-tremplin .tremplin-my-dashboard__operations article { grid-template-columns: minmax(0,1fr) auto; gap: 5px 10px; padding: 12px 0; }
+#root .mobile-tremplin .tremplin-my-dashboard__operations article time { grid-column: 1 / -1; font-size: 10px; color: #aaa1b8; }
+#root .mobile-tremplin .tremplin-my-dashboard__operations article strong { grid-row: 2; font-size: 13px; }
+#root .mobile-tremplin .tremplin-my-dashboard__operations article > span:nth-of-type(2) { grid-column: 2; grid-row: 2; color: #ede8f5; }
+#root .mobile-tremplin .tremplin-my-dashboard__operations article em { text-align: right; color: #bfaedb; }
+#root .mobile-tremplin .tremplin-my-dashboard__empty { padding: 22px 16px; min-height: 0; border-radius: 18px; background: #121018e6; }
+#root .mobile-tremplin .tremplin-my-dashboard__empty p { font-size: 13px; line-height: 1.5; }
+#root .mobile-tremplin .tremplin-my-dashboard__empty button { min-height: 44px; background: var(--mobile-violet-cta); border-radius: 12px; }
