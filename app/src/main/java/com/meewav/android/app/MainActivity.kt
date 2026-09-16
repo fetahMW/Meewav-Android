@@ -27,6 +27,7 @@ class MainActivity : ComponentActivity() {
     companion object {
         const val EXTRA_OPEN_GLOBE = "com.meewav.android.OPEN_GLOBE"
         const val EXTRA_OPEN_MESSAGES = "com.meewav.android.OPEN_MESSAGES"
+        const val EXTRA_LIVE_AUTH = "com.meewav.android.LIVE_AUTH"
         // Temporary Profile workshop entry. Set false to restore authentication.
         private const val OPEN_PROFILE_WORKSHOP = true
     }
@@ -35,6 +36,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (BuildConfig.DEBUG && OPEN_PROFILE_WORKSHOP && intent.action != Intent.ACTION_VIEW
+            && !intent.getBooleanExtra(EXTRA_LIVE_AUTH, false)
             && !intent.getBooleanExtra(EXTRA_OPEN_GLOBE, false)) {
             val workshop = if (intent.getBooleanExtra(EXTRA_OPEN_MESSAGES, false)) MessagingActivity::class.java else ProfileActivity::class.java
             startActivity(Intent(this, workshop).putExtra("preview", true))
@@ -48,7 +50,8 @@ class MainActivity : ComponentActivity() {
         authViewModel = ViewModelProvider(this, object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                AuthViewModel((application as MeewavApplication).authRepository) as T
+                AuthViewModel((application as MeewavApplication).authRepository,
+                    preview = BuildConfig.DEBUG && intent.action != Intent.ACTION_VIEW && !intent.getBooleanExtra(EXTRA_LIVE_AUTH, false)) as T
         })[AuthViewModel::class.java]
         if (savedInstanceState == null) handleAuthIntent(intent)
         setContent {
@@ -83,7 +86,7 @@ class MainActivity : ComponentActivity() {
 
     private fun handleAuthIntent(intent: Intent?) {
         // The debug workshop can open a feature without an existing globe activity.
-        if (BuildConfig.DEBUG && intent?.getBooleanExtra(EXTRA_OPEN_GLOBE, false) == true) {
+        if (intent?.getBooleanExtra(EXTRA_OPEN_GLOBE, false) == true) {
             authViewModel.navigate(AuthPage.Globe)
             intent.removeExtra(EXTRA_OPEN_GLOBE)
             return

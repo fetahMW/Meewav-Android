@@ -14,6 +14,9 @@ class RegistrationProfileTest {
         assertEquals("ViolonIcon", data["avatar_url"]?.jsonPrimitive?.content)
         assertEquals("Violoniste", data["avatar_name"]?.jsonPrimitive?.content)
         assertEquals("REEL", data["artist_type"]?.jsonPrimitive?.content)
+        assertEquals("REEL", data["creator_type"]?.jsonPrimitive?.content)
+        assertEquals("avatar_1", data["avatar_style_key"]?.jsonPrimitive?.content)
+        assertEquals("violinist", data["primary_role_key"]?.jsonPrimitive?.content)
         assertEquals("1998-05-12", data["birth_date"]?.jsonPrimitive?.content)
         assertEquals("Lyon", data["city"]?.jsonPrimitive?.content)
         assertTrue(data.getValue("is_ghost_mode").jsonPrimitive.boolean)
@@ -26,6 +29,7 @@ class RegistrationProfileTest {
         val data = RegistrationProfile("Musique", "MicroIcon", "Artiste", false,
             "", "Paris", "75011", "France").metadata()
         assertEquals("IA", data["artist_type"]?.jsonPrimitive?.content)
+        assertEquals("vocalist", data["primary_role_key"]?.jsonPrimitive?.content)
         assertEquals("75011", data["postal_code"]?.jsonPrimitive?.content)
         assertFalse(data.containsKey("birth_date"))
     }

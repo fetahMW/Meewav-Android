@@ -226,7 +226,8 @@ open class MessagingActivity : ComponentActivity() {
                     // Only the debug workshop can bypass the authentication entry.
                     startActivity(Intent(this@MessagingActivity, MainActivity::class.java)
                         .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                        .putExtra(MainActivity.EXTRA_OPEN_GLOBE, BuildConfig.DEBUG))
+                        .putExtra(MainActivity.EXTRA_OPEN_GLOBE, true)
+                        .putExtra(MainActivity.EXTRA_LIVE_AUTH, !preview))
                     finish()
                     return true
                 }

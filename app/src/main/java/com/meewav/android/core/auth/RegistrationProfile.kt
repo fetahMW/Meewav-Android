@@ -25,7 +25,12 @@ data class RegistrationProfile(
     val visibleOnScene: Boolean = false,
 ) {
     fun metadata() = buildJsonObject {
+        val canonical = CanonicalAvatar.forIcon(avatarIcon)
         put("username", username.trim())
+        put("avatar_style_key", canonical.style)
+        put("avatar_icon_id", canonical.style)
+        put("primary_role_key", canonical.role)
+        put("creator_type", if (realArtist) "REEL" else "IA")
         put("artist_type", if (realArtist) "REEL" else "IA")
         put("avatar_url", avatarIcon)
         put("avatar_name", avatarName)
@@ -33,6 +38,7 @@ data class RegistrationProfile(
         put("city", city.trim())
         postalCode.trim().takeIf { it.isNotEmpty() }?.let { put("postal_code", it) }
         put("country", country.trim())
+        put("country_code", "FR")
         put("is_ghost_mode", !visibleOnScene)
         put("show_on_public_profile", visibleOnScene)
         if (communeCode.isNotBlank() && zoneId.isNotBlank()) {

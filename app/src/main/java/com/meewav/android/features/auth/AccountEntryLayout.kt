@@ -97,14 +97,15 @@ private fun AccountRegistrationForm(state: AuthUiState, actions: AuthActions, su
     AccountHeader()
     state.error?.let { Message(it, true); Spacer(Modifier.height(14.dp)) }
     state.notice?.let { Message(it, false); Spacer(Modifier.height(14.dp)) }
-    AccountSocialOptions(state, actions.social)
+    if (!state.authenticated) AccountSocialOptions(state, actions.social)
     AuthField("Adresse e-mail", state.email, actions.email, Icons.Outlined.AlternateEmail,
-        type = KeyboardType.Email, enabled = !state.busy,
+        type = KeyboardType.Email, enabled = !state.busy && !state.authenticated,
         modifier = Modifier.focusRequester(fields[0]), onNext = { fields[1].requestFocus() })
     Spacer(Modifier.height(12.dp))
     AuthField("Nom d’utilisateur", state.username, actions.username, Icons.Outlined.PersonOutline,
         enabled = !state.busy, modifier = Modifier.focusRequester(fields[1]),
-        onNext = { fields[2].requestFocus() })
+        onNext = { if (state.authenticated) submit() else fields[2].requestFocus() })
+    if (!state.authenticated) {
     Spacer(Modifier.height(12.dp))
     AuthField("Mot de passe", state.password, actions.password, Icons.Outlined.Lock,
         secret = true, enabled = !state.busy, modifier = Modifier.focusRequester(fields[2]),
@@ -113,4 +114,5 @@ private fun AccountRegistrationForm(state: AuthUiState, actions: AuthActions, su
     AuthField("Confirmer mot de passe", state.confirmation, actions.confirmation, Icons.Outlined.Lock,
         secret = true, enabled = !state.busy, ime = ImeAction.Done, onDone = submit,
         singleLineLabel = true, modifier = Modifier.focusRequester(fields[3]))
+    }
 }

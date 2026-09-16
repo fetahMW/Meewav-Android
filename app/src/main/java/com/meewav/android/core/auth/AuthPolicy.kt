@@ -12,7 +12,11 @@ object AuthPolicy {
         if (Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$").matches(email.trim())) null
         else "Entre une adresse e-mail valide."
 
+    fun usernameError(name: String): String? = if (Regex("^[a-zA-Z0-9_]{3,20}$").matches(name.trim())) null
+        else "Choisis un pseudo de 3 à 20 lettres, chiffres ou tirets bas."
+
     fun signupError(name: String, email: String, password: String, confirmation: String): String? = when {
+        usernameError(name) != null -> usernameError(name)
         name.trim().codePointCount(0, name.trim().length) < 3 -> "Choisis un nom d’utilisateur d’au moins 3 caractères."
         name.trim().codePointCount(0, name.trim().length) > 20 -> "Le nom d’utilisateur est limité à 20 caractères."
         emailError(email) != null -> emailError(email)

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.meewav.android.BuildConfig
 import com.meewav.android.core.auth.AuthPolicy
+import com.meewav.android.core.auth.CanonicalAvatar
 import com.meewav.android.core.auth.MeewavAuthRepository
 import com.meewav.android.core.auth.RegistrationProfile
 import com.meewav.android.core.auth.SocialAuthProvider
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonPrimitive
 
 enum class AuthPage { Login, Avatar, Register, Location, Forgot, CheckEmail, NewPassword, SignedIn, Preview, Globe }
 
@@ -44,31 +46,38 @@ data class AuthUiState(
     val notice: String? = null,
     val connectedName: String = "",
     val localPreview: Boolean = false,
+    val authenticated: Boolean = false,
+    val onboardingComplete: Boolean = false,
     val profile: ProfileDraft = ProfileDraft(),
 )
 
-class AuthViewModel(private val repository: MeewavAuthRepository) : ViewModel() {
+class AuthViewModel(private val repository: MeewavAuthRepository, preview: Boolean = BuildConfig.DEBUG) : ViewModel() {
     private val mutable = MutableStateFlow(AuthUiState(configured = repository.configured,
-        initializing = repository.configured && !BuildConfig.DEBUG, localPreview = BuildConfig.DEBUG))
+        initializing = repository.configured && !preview, localPreview = preview && BuildConfig.DEBUG))
     val state = mutable.asStateFlow()
     private var recoveryInProgress = false
+    private var routedUserId: String? = null
 
     init {
         if (repository.configured) viewModelScope.launch {
             repository.auth.sessionStatus.collect { status ->
                 if (state.value.localPreview) return@collect
                 when (status) {
-                    is SessionStatus.Authenticated -> mutable.update {
-                        it.copy(initializing = false,
-                            page = if (recoveryInProgress) AuthPage.NewPassword else AuthPage.SignedIn,
-                            connectedName = (status.session.user?.userMetadata?.get("username") as? JsonPrimitive)?.contentOrNull.orEmpty(),
-                            email = status.session.user?.email ?: it.email,
-                            password = "", confirmation = "", error = null, profile = ProfileDraft())
+                    is SessionStatus.Authenticated -> {
+                        // Refreshes must not reset the current screen or an OAuth draft.
+                        if (!state.value.busy && routedUserId != status.session.user?.id) {
+                            try { routeAuthenticated() }
+                            catch (error: Exception) {
+                                if (error is CancellationException) throw error
+                                mutable.update { it.copy(initializing = false, error = MeewavAuthRepository.messageFor(error)) }
+                            }
+                        }
                     }
-                    is SessionStatus.NotAuthenticated -> mutable.update {
-                        it.copy(initializing = false,
-                            page = if (it.page == AuthPage.SignedIn || it.page == AuthPage.NewPassword) AuthPage.Login else it.page,
-                            password = "", confirmation = "")
+                    is SessionStatus.NotAuthenticated -> {
+                        routedUserId = null
+                        mutable.update { it.copy(initializing = false, authenticated = false, onboardingComplete = false,
+                            page = if (it.authenticated || it.page == AuthPage.NewPassword) AuthPage.Login else it.page,
+                            password = "", confirmation = "") }
                     }
                     is SessionStatus.RefreshFailure -> mutable.update {
                         it.copy(initializing = false, error = "La session doit être actualisée. Vérifie ta connexion.")
@@ -77,6 +86,27 @@ class AuthViewModel(private val repository: MeewavAuthRepository) : ViewModel() 
                 }
             }
         }
+    }
+
+    private suspend fun routeAuthenticated() {
+        val user = repository.auth.currentUserOrNull() ?: return
+        if (recoveryInProgress) {
+            mutable.update { it.copy(page = AuthPage.NewPassword, initializing = false, authenticated = true) }
+            return
+        }
+        val identity = repository.ownerIdentity()
+        if (repository.auth.currentUserOrNull()?.id != user.id) return
+        val completed = identity["onboarding_completed_at"]?.jsonPrimitive?.contentOrNull != null
+        val saved = repository.avatarChoice()
+        val icon = saved?.first ?: CanonicalAvatar.iconForStyle(identity["avatar_style_key"]?.jsonPrimitive?.contentOrNull)
+        val username = identity["username"]?.jsonPrimitive?.contentOrNull.orEmpty()
+        routedUserId = user.id
+        mutable.update { it.copy(initializing = false, authenticated = true, onboardingComplete = completed,
+            page = if (completed) AuthPage.Globe else AuthPage.Register,
+            email = user.email.orEmpty(), username = username.ifBlank { it.username }, connectedName = username,
+            password = "", confirmation = "", error = null,
+            profile = it.profile.copy(avatarIcon = icon ?: it.profile.avatarIcon,
+                realArtist = saved?.second ?: (identity["artist_type"]?.jsonPrimitive?.contentOrNull != "IA"))) }
     }
 
     fun email(value: String) { mutable.update { it.copy(email = value, error = null) } }
@@ -105,8 +135,8 @@ class AuthViewModel(private val repository: MeewavAuthRepository) : ViewModel() 
 
     fun navigate(page: AuthPage) {
         if (state.value.busy) return
-        if (page == AuthPage.Preview && !(BuildConfig.DEBUG && state.value.localPreview)) return
-        if (page == AuthPage.Globe && !(BuildConfig.DEBUG && state.value.localPreview)) return
+        if (page in setOf(AuthPage.Preview, AuthPage.Globe) &&
+            !(BuildConfig.DEBUG && state.value.localPreview) && !state.value.onboardingComplete) return
         if (page == AuthPage.Login && state.value.localPreview) { exitPreview(); return }
         mutable.update {
             val preserve = it.page in setOf(AuthPage.Avatar, AuthPage.Register, AuthPage.Location) &&
@@ -144,13 +174,15 @@ class AuthViewModel(private val repository: MeewavAuthRepository) : ViewModel() 
             navigate(next)
             return
         }
+        if (draft.page == AuthPage.Preview && draft.onboardingComplete) { navigate(AuthPage.Globe); return }
         if (draft.page == AuthPage.Avatar) { navigate(AuthPage.Register); return }
         if (!draft.configured && draft.page != AuthPage.Register) {
             mutable.update { it.copy(error = "La connexion n’est pas disponible dans cette version de l’application.") }
             return
         }
         val validation = when (draft.page) {
-            AuthPage.Register, AuthPage.Location -> AuthPolicy.signupError(draft.username, draft.email, draft.password, draft.confirmation)
+            AuthPage.Register, AuthPage.Location -> (if (draft.authenticated) AuthPolicy.usernameError(draft.username)
+                else AuthPolicy.signupError(draft.username, draft.email, draft.password, draft.confirmation))
                 ?: if (draft.profile.birthDate.isNotBlank() && RegistrationProfile.normalizedBirthDate(draft.profile.birthDate) == null)
                     "Entre une date de naissance valide au format JJ/MM/AAAA." else null
             AuthPage.Login -> when {
@@ -178,10 +210,10 @@ class AuthViewModel(private val repository: MeewavAuthRepository) : ViewModel() 
         }
         execute {
             when (draft.page) {
-                AuthPage.Login -> repository.signIn(draft.email, draft.password)
+                AuthPage.Login -> { repository.signIn(draft.email, draft.password); routeAuthenticated() }
                 AuthPage.Location -> {
                     val avatar = AvatarCatalog.find(draft.profile.avatarIcon)
-                    repository.signUp(RegistrationProfile(draft.username, avatar.icon, avatar.name,
+                    val registration = RegistrationProfile(draft.username, avatar.icon, avatar.name,
                         draft.profile.realArtist, draft.profile.birthDate, draft.profile.city,
                         draft.profile.postalCode, draft.profile.country,
                         communeCode = draft.profile.communeCode,
@@ -190,7 +222,13 @@ class AuthViewModel(private val repository: MeewavAuthRepository) : ViewModel() 
                         sceneSource = draft.profile.musicScene?.source.orEmpty(),
                         sceneLongitude = draft.profile.musicScene?.center?.getOrNull(0),
                         sceneLatitude = draft.profile.musicScene?.center?.getOrNull(1),
-                        visibleOnScene = draft.profile.visibleOnScene), draft.email, draft.password)
+                        visibleOnScene = draft.profile.visibleOnScene)
+                    if (draft.authenticated) repository.completeRegistration(registration)
+                    else repository.signUp(registration, draft.email, draft.password)
+                    if (repository.auth.currentSessionOrNull() != null) {
+                        routeAuthenticated()
+                        mutable.update { it.copy(page = AuthPage.Preview) }
+                    }
                     if (repository.auth.currentSessionOrNull() == null) mutable.update {
                         it.copy(page = AuthPage.CheckEmail, password = "", confirmation = "", profile = ProfileDraft(),
                             notice = "Vérifie tes e-mails pour confirmer ton adresse, puis connecte-toi.")
@@ -204,7 +242,7 @@ class AuthViewModel(private val repository: MeewavAuthRepository) : ViewModel() 
                 AuthPage.NewPassword -> {
                     repository.updatePassword(draft.password)
                     recoveryInProgress = false
-                    mutable.update { it.copy(page = AuthPage.SignedIn, password = "", confirmation = "", notice = "Ton mot de passe a été mis à jour.") }
+                    routeAuthenticated()
                 }
                 else -> Unit
             }
@@ -220,7 +258,7 @@ class AuthViewModel(private val repository: MeewavAuthRepository) : ViewModel() 
             try {
                 repository.auth.awaitInitialization()
                 repository.exchangeCode(callback.code)
-                mutable.update { it.copy(page = if (callback.recovery) AuthPage.NewPassword else AuthPage.SignedIn) }
+                routeAuthenticated()
             } catch (error: Exception) {
                 recoveryInProgress = false
                 throw error
@@ -235,11 +273,13 @@ class AuthViewModel(private val repository: MeewavAuthRepository) : ViewModel() 
             return
         }
         recoveryInProgress = false
+        repository.saveAvatarChoice(state.value.profile.avatarIcon, state.value.profile.realArtist)
         execute { repository.signInSocial(provider) }
     }
 
     fun signOut() = execute {
         repository.signOut()
+        routedUserId = null
         recoveryInProgress = false
         mutable.update { AuthUiState(initializing = false, configured = repository.configured) }
     }
@@ -250,7 +290,8 @@ class AuthViewModel(private val repository: MeewavAuthRepository) : ViewModel() 
         viewModelScope.launch {
             try { action() }
             catch (cancelled: CancellationException) { throw cancelled }
-            catch (error: Exception) { mutable.update { it.copy(error = MeewavAuthRepository.messageFor(error)) } }
+            catch (error: Exception) { mutable.update { it.copy(error = MeewavAuthRepository.messageFor(error),
+                authenticated = repository.configured && repository.auth.currentSessionOrNull() != null) } }
             finally { mutable.update { it.copy(busy = false) } }
         }
     }

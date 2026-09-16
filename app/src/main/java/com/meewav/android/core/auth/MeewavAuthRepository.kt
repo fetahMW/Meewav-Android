@@ -16,10 +16,17 @@ import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
 import java.io.IOException
 import kotlin.time.Duration.Companion.seconds
 
 class MeewavAuthRepository(context: Context) {
+    // Only the avatar choice survives an OAuth browser round trip. No password,
+    // token, e-mail or private location is stored in this draft.
+    private val draft = context.applicationContext.getSharedPreferences("onboarding_choice", Context.MODE_PRIVATE)
     val configured = AuthPolicy.configurationAvailable(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_PUBLISHABLE_KEY)
     private val client = if (configured) createSupabaseClient(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_PUBLISHABLE_KEY) {
         requestTimeout = 15.seconds
@@ -56,6 +63,46 @@ class MeewavAuthRepository(context: Context) {
             this.password = password
             data = profile.metadata()
         }
+        if (auth.currentSessionOrNull() != null) completeRegistration(profile)
+    }
+
+    fun saveAvatarChoice(icon: String, real: Boolean) {
+        CanonicalAvatar.forIcon(icon)
+        draft.edit().putString("icon", icon).putBoolean("real", real).apply()
+    }
+    fun avatarChoice(): Pair<String, Boolean>? = draft.getString("icon", null)?.let { it to draft.getBoolean("real", true) }
+
+    suspend fun ownerIdentity(): JsonObject {
+        val backend = checkNotNull(client).postgrest
+        val private = backend.rpc("get_my_private_profile").decodeAs<JsonObject>()
+        val public = backend.from("profiles").select(io.github.jan.supabase.postgrest.query.Columns.list("avatar_style_key", "artist_type", "creator_type")) {
+            filter { eq("id", checkNotNull(auth.currentUserOrNull()).id) }
+        }.decodeList<JsonObject>().single()
+        return JsonObject(private + public)
+    }
+
+    suspend fun completeRegistration(profile: RegistrationProfile) {
+        val canonical = CanonicalAvatar.forIcon(profile.avatarIcon)
+        val backend = checkNotNull(client).postgrest
+        // The legacy AI/real value is kept independently from the profession.
+        backend.from("profiles").update(buildJsonObject { put("artist_type", if (profile.realArtist) "REEL" else "IA") }) {
+            filter { eq("id", checkNotNull(auth.currentUserOrNull()).id) }
+        }
+        backend.rpc("complete_onboarding", buildJsonObject {
+            put("p_username", profile.username.trim().lowercase()); put("p_display_name", profile.username.trim())
+            put("p_avatar_style_key", canonical.style); put("p_primary_role_key", canonical.role)
+            put("p_city", profile.city.trim()); put("p_country_code", "FR")
+            put("p_latitude", profile.sceneLatitude?.let { kotlinx.serialization.json.JsonPrimitive(it) } ?: JsonNull)
+            put("p_longitude", profile.sceneLongitude?.let { kotlinx.serialization.json.JsonPrimitive(it) } ?: JsonNull)
+            put("p_is_ghost_mode", !profile.visibleOnScene); put("p_show_on_public_profile", profile.visibleOnScene)
+        })
+        backend.rpc("update_my_public_discovery_profile", buildJsonObject {
+            put("p_scene_name", profile.sceneName); put("p_commune_code", profile.communeCode)
+            put("p_zone_id", profile.zoneId); put("p_district_name", profile.sceneName); put("p_avatar_icon_id", canonical.style)
+        })
+        // Update the common completion hint only after both server writes succeed.
+        auth.updateUser { data = profile.metadata().let { JsonObject(it + ("onboarding_completed" to kotlinx.serialization.json.JsonPrimitive(true))) } }
+        draft.edit().clear().apply()
     }
 
     suspend fun requestRecovery(email: String) = auth.resetPasswordForEmail(email.trim(), redirectUrl = AuthPolicy.RECOVERY_REDIRECT)
