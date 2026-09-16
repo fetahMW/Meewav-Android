@@ -1,0 +1,33 @@
+/* Shared mobile chassis: the delivered Profile/Messaging glass and urban violet. */
+#root .mobile-feature { --feature-header: 100px; }
+.mobile-feature-back { position: fixed; z-index: 51000; top: 0; left: 4px; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; color: #d6d8e0; }
+#root .mobile-feature > .mobile-profile-close { z-index: 51000; }
+#root .mobile-feature :is(.market-primary-rail,.shorts-primary-rail,.meewav-rail-edge) { display: none; }
+#root .mobile-feature :is(.market-topbar,.shorts-topbar) {
+  position: fixed; z-index: 500; inset: 0 0 auto; display: grid;
+  grid-template-columns: minmax(0,1fr); grid-template-rows: 44px 56px;
+  width: 100%; height: 100px; min-height: 0; gap: 0; margin: 0; padding: 0 10px;
+  border: 0; border-radius: 0; border-bottom: 1px solid #d3d9e01f;
+  background: var(--profile-header-glass); backdrop-filter: blur(24px) saturate(1.15); -webkit-backdrop-filter: blur(24px) saturate(1.15);
+  box-shadow: inset 0 -1px #ffffff06,0 4px 16px #0002;
+}
+#root .mobile-feature :is(.market-brand,.shorts-topbar__brand) { grid-area: 1 / 1; display: flex; justify-content: center; justify-self: center; align-items: center; padding: 0 44px; width: 100%; min-width: 0; height: 44px; }
+#root .mobile-feature :is(.meewav-pillar-brand__app,.meewav-pillar-brand__separator,.meewav-pillar-brand__eyebrow) { display: none; }
+#root .mobile-feature .meewav-pillar-brand__pillar { color: #f4f5f7; font-size: 22px; line-height: 1.2; }
+#root .mobile-feature .market-contextbar__toolbar { grid-area: 2 / 1; width: 100%; height: 56px; padding: 0; margin: 0; }
+#root .mobile-feature :is(.market-pillar-tabs,.shorts-pillar-tabs) { grid-area: 2 / 1; display: flex; width: 100%; min-width: 0; height: 56px; gap: 0; padding: 0; border: 0; background: transparent; overflow-x: auto; scrollbar-width: none; }
+#root .mobile-feature :is(.market-pillar-tabs,.shorts-pillar-tabs) > button { display: flex; flex: 1 0 0; flex-direction: column; justify-content: center; align-items: center; position: relative; min-width: 50px; min-height: 48px; height: 56px; padding: 6px 2px; gap: 4px; border: 0; border-radius: 0; background: transparent; color: #b7bac3; box-shadow: none; }
+#root .mobile-feature :is(.market-pillar-tabs,.shorts-pillar-tabs) button strong { display: block; font-size: 10px; font-weight: 550; line-height: 1.2; white-space: nowrap; }
+#root .mobile-feature :is(.market-pillar-tabs,.shorts-pillar-tabs) button svg { width: 18px; height: 18px; }
+#root .mobile-feature .meewav-pillar-tabs__icon { width: 18px; height: 18px; flex: 0 0 18px; color: inherit; border: 0; background: none; box-shadow: none; }
+#root .mobile-feature :is(.market-pillar-tabs,.shorts-pillar-tabs) button.is-active { color: #fff; }
+#root .mobile-feature :is(.market-pillar-tabs,.shorts-pillar-tabs) button.is-active::after { content: ''; position: absolute; bottom: 1px; left: 26%; right: 26%; height: 2px; border-radius: 100%; background: linear-gradient(90deg,transparent,#bca5e6,transparent); box-shadow: 0 0 7px #9c7dd45c; }
+#root .mobile-feature .meewav-pillar-tabs__indicator { display: none; }
+#root .mobile-feature :is(input,textarea,select) { font-size: 16px; max-width: 100%; min-width: 0; min-height: 44px; }
+#root .mobile-feature :is(button,a,summary) { touch-action: manipulation; }
+#root .mobile-feature :is(h1,h2,h3,p) { overflow-wrap: anywhere; }
+#root .mobile-feature :is(button,a,summary):focus-visible { outline: 2px solid #b7a1e4; outline-offset: 2px; }
+#root .mobile-feature :is(.market-primary-button,.market-contextbar__create,.market-home-hero__cta,.market-composer__submit,.shorts-create-button,.shorts-primary-button,.scene-watch-follow[aria-pressed=true]) { background: var(--mobile-violet-cta); border-color: var(--mobile-cta-rim); color: #fff; }
+#root .mobile-feature :is(.market-toast,.shorts-toast) { position: fixed; z-index: 52000; inset: auto 12px 100px; width: auto; max-width: none; transform: none; font-size: 13px; }
+#root .mobile-feature .profile-bottom-dock { z-index: 450; }
+@media (prefers-reduced-motion: reduce) { #root .mobile-feature * { scroll-behavior: auto !important; } }

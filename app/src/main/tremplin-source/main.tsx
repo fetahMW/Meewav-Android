@@ -15,13 +15,13 @@ function Shell({ Page }: { Page: React.ComponentType }) {
   const [notice, setNotice] = useState('');
   const select = (id: string) => {
     if (id === 'tremplin') navigate('/tremplin');
-    else if (['profile', 'messages', 'globe'].includes(id)) native(id);
+    else if (['profile', 'messages', 'market', 'scene', 'globe'].includes(id)) native(id);
     else setNotice(`${featureItems.find(item => item.id === id)?.label ?? 'Cette destination'} n’est pas encore disponible dans cette version Android.`);
   };
   useEffect(() => {
     if (route.pathname.startsWith('/tremplin')) return;
     const destination = route.pathname.split('/')[1];
-    if (['messages', 'profile'].includes(destination)) native(destination, route.pathname + route.search);
+    if (['messages', 'profile', 'market', 'scene'].includes(destination)) native(destination, route.pathname + route.search);
     else if (['globe', 'mon-globe'].includes(destination)) native('globe');
     else setNotice(`${featureItems.find(item => item.id === destination)?.label ?? 'Cette destination'} n’est pas encore disponible dans cette version Android.`);
     navigate(-1);
@@ -31,7 +31,8 @@ function Shell({ Page }: { Page: React.ComponentType }) {
     if (close) close.click();
     else if (route.pathname !== '/tremplin' || route.search) {
       if (route.key === 'default') navigate('/tremplin', { replace: true }); else navigate(-1);
-    } else native('globe');
+    } else if (route.key !== 'default') navigate(-1);
+    else native('back');
   };
   useEffect(() => { (window as any).meewavMessaging.back = back; }, [route]);
   useEffect(() => {
@@ -55,7 +56,7 @@ class Boundary extends Component<{ children: React.ReactNode }, { failed: boolea
 const root = createRoot(document.getElementById('root')!);
 let started = false;
 (window as any).meewavMessaging = {
-  back: () => native('globe'),
+  back: () => native('back'),
   async configure(config: MobileConfig) {
     if (started) return;
     started = true; configure(config);

@@ -5,30 +5,32 @@ import { X } from 'lucide-react';
 import { configure, updateToken, type MobileConfig } from './runtime';
 import FeatureDock, { featureItems } from '../shared-ui/FeatureDock';
 
-const native = (destination: string) => location.assign(`https://appassets.androidplatform.net/native/${destination}`);
+const native = (destination: string, route?: string) => location.assign(`https://appassets.androidplatform.net/native/${destination}${route ? `?route=${encodeURIComponent(route)}` : ""}`);
 function Shell({ Page }: { Page: React.ComponentType }) {
   const route = useLocation();
   const navigate = useNavigate();
   const [notice, setNotice] = useState('');
   useEffect(() => {
-    if (route.pathname.startsWith('/messages')) native('messages');
-    else if (route.pathname.startsWith('/tremplin')) native('tremplin');
-    else if (!route.pathname.startsWith('/profile')) native('globe');
+    if (route.pathname.startsWith('/profile')) return;
+    if (['messages','tremplin','market','scene'].includes(route.pathname.split('/')[1])) native(route.pathname.split('/')[1], route.pathname + route.search + route.hash);
+    else if (['/globe','/mon-globe'].includes(route.pathname)) native('globe');
+    navigate(-1);
   }, [route.pathname]);
   useEffect(() => {
     (window as any).meewavMessaging.back = () => {
       const close = document.querySelector<HTMLButtonElement>('[role="dialog"] button[aria-label^="Fermer"]');
       if (close) close.click();
-      else if (route.pathname !== '/profile') navigate('/profile');
-      else native('globe');
+      else if (route.key !== 'default') navigate(-1);
+      else if (route.pathname !== '/profile') navigate('/profile', { replace: true });
+      else native('back');
     };
-  }, [route.pathname, navigate]);
+  }, [route, navigate]);
   return <div className="mobile-profile">
     <button className="mobile-profile-close" aria-label="Fermer l’application" onClick={() => native('close-app')}><X /></button>
     <Page />
     <FeatureDock active="profile" onSelect={id => {
       if (id === 'profile') navigate('/profile');
-      else if (['messages','tremplin','globe'].includes(id)) native(id);
+      else if (['messages','tremplin','market','scene','globe'].includes(id)) native(id);
       else setNotice(`${featureItems.find(item => item.id === id)?.label} n’est pas encore disponible dans cette version Android.`);
     }} />
     {notice && <aside className="mobile-profile-notice" role="status">{notice}<button aria-label="Fermer" onClick={() => setNotice('')}><X size={18}/></button></aside>}
@@ -42,7 +44,7 @@ class Boundary extends Component<{children: React.ReactNode}, {failed: boolean}>
 const root = createRoot(document.getElementById('root')!);
 let started = false;
 (window as any).meewavMessaging = {
-  back: () => native('globe'),
+  back: () => native('back'),
   async configure(config: MobileConfig) {
     if (started) return;
     started = true; configure(config);
