@@ -4,8 +4,8 @@
 #root .mobile-market .market-shell { position: absolute; inset: 0; display: block; padding: 0; width: 100%; }
 #root .mobile-market .market-scroll { position: absolute; inset: 100px 0 0; width: 100%; height: auto; max-height: none; min-height: 0; margin: 0; padding: 8px 0 106px; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; mask-image: none; overscroll-behavior-y: contain; }
 #root .mobile-market .market-contextbar__toolbar { min-width: 0; overflow: hidden; }
-#root .mobile-market .market-pillar-tabs { overflow-x: auto; overflow-y: hidden; overscroll-behavior-inline: contain; scroll-snap-type: x proximity; }
-#root .mobile-market .market-pillar-tabs > button { flex: 0 0 25%; min-width: 0; max-width: 25%; scroll-snap-align: start; }
+#root .mobile-market .market-pillar-tabs { overflow-x: auto; overflow-y: hidden; overscroll-behavior-inline: contain; scroll-snap-type: none; scroll-behavior: auto; }
+#root .mobile-market .market-pillar-tabs > button { flex: 0 0 25%; min-width: 0; max-width: 25%; height: 56px; margin: 0; scroll-snap-align: none; }
 #root .mobile-market .market-pillar-tabs button strong { font-size: 11px; }
 #root .mobile-market .market-pillar-tabs button svg { width: 20px; height: 20px; }
 #root .mobile-market .market-pillar-tabs::-webkit-scrollbar { display: none; }
@@ -17,12 +17,12 @@
 #root .mobile-market .market-icon-button svg { width: 19px; height: 19px; }
 #root .mobile-market .market-icon-button__badge { background: var(--mobile-violet-cta); font-size: 9px; }
 #root .mobile-market .market-contentbar { position: relative; display: flex; flex-wrap: nowrap; align-items: center; gap: 8px; width: 100%; padding: 0 14px 14px; margin: 0; border: 0; background: none; }
-#root .mobile-market .market-search { display: flex; flex: 1 1 0; min-width: 0; width: auto; height: 46px; padding: 0 4px 0 10px; border-radius: 15px; background: var(--profile-mobile-glass); border: 1px solid #bca5e627; box-shadow: var(--profile-mobile-glass-edge); }
+#root .mobile-market .market-search { display: flex; flex: 1 1 0; min-width: 0; width: auto; max-width: none; height: 48px; min-height: 48px; align-items: center; padding: 0 3px 0 13px; border-radius: 24px; background: var(--profile-mobile-glass); border: 1px solid #bca5e627; box-shadow: var(--profile-mobile-glass-edge); }
 #root .mobile-market .market-search > svg { width: 18px; height: 18px; flex-shrink: 0; }
-#root .mobile-market .market-search input { flex: 1; width: 0; height: 44px; font-size: 13px; padding: 0 7px; }
-#root .mobile-market .market-search__filter { width: 40px; min-width: 40px; height: 44px; }
-#root .mobile-market .market-contextbar__create { min-height: 46px; flex: 0 0 auto; padding: 10px 12px; border-radius: 15px; gap: 5px; font-size: 12px; white-space: nowrap; box-shadow: inset 0 1px #ffffff14; }
-#root .mobile-market .market-contextbar__create svg { width: 16px; height: 16px; }
+#root .mobile-market .market-search input { flex: 1; width: 0; height: 44px; min-height: 0; margin: 0; font-size: 13px; line-height: normal; padding: 0 8px; appearance: none; }
+#root .mobile-market .market-search__filter { width: 44px; min-width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: transparent; box-shadow: none; }
+#root .mobile-market .market-contextbar__create { display: grid; place-items: center; width: 48px; min-width: 48px; max-width: 48px; height: 48px; min-height: 48px; max-height: 48px; flex: 0 0 48px; align-self: center; padding: 0; margin: 0; border-radius: 15px; gap: 0; box-shadow: inset 0 1px #ffffff14; }
+#root .mobile-market .market-contextbar__create svg { display: block; width: 22px; height: 22px; flex: none; }
 #root .mobile-market .market-discovery { margin: 0; }
 #root .mobile-market .market-home-rails { padding-bottom: 0; }
 #root .mobile-market .market-rail--featured { --rail-card-width: min(430px,calc(100vw - 40px)); margin: 0; padding: 0; }
@@ -39,7 +39,7 @@
 /* Featured offers are horizontal, with the photograph beside the purchase summary. */
 #root .mobile-market .market-home-hero { height: auto; border-radius: 18px; }
 #root .mobile-market .market-home-hero .market-rail-card__main { display: grid; grid-template-columns: 40% minmax(0,1fr); grid-template-rows: auto; min-height: 184px; height: auto; }
-#root .mobile-market .market-home-hero__visual { width: 100%; height: 100%; min-height: 184px; border-radius: 17px 0 0 17px; background: #111216; }
+#root .mobile-market .market-home-hero__visual { width: 100%; height: auto; align-self: stretch; min-height: 184px; border-radius: 17px 0 0 17px; background: #111216; }
 #root .mobile-market .market-home-hero__visual img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
 #root .mobile-market .market-home-hero[data-market-pillar=services] .market-home-hero__visual img { object-fit: cover; }
 #root .mobile-market .market-home-hero__body { min-width: 0; padding: 12px; gap: 5px; background: radial-gradient(ellipse at 20% 0,#ffffff08,transparent 65%),linear-gradient(155deg,#1a1b21,#0c0d11); }
@@ -58,7 +58,7 @@
 #root .mobile-market .market-mini { height: auto; border-radius: 15px; }
 #root .mobile-market .market-mini .market-rail-card__main { display: flex; flex-direction: column; height: 100%; }
 #root .mobile-market .market-mini .market-rail-card__visual { width: 100%; height: auto; aspect-ratio: 3 / 2; flex: none; background: #121319; }
-#root .mobile-market .market-mini .market-rail-card__visual img { object-fit: contain; filter: none; }
+#root .mobile-market .market-mini .market-rail-card__visual img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; filter: none; }
 #root .mobile-market .market-mini[data-market-pillar=services] .market-rail-card__visual img { object-fit: cover; }
 #root .mobile-market .market-mini .market-rail-card__body { height: auto; min-height: 0; flex: 1; padding: 9px 10px 10px; gap: 4px; background: linear-gradient(155deg,#1a1b21,#0c0d11); }
 #root .mobile-market .market-mini .market-rail-card__body > strong { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; font-size: 13px; line-height: 1.3; margin: 0; }
@@ -82,12 +82,12 @@
 #root .mobile-market .market-product-card { min-width: 0; border-radius: 15px; height: auto; min-height: 0; }
 #root .mobile-market .market-product-card__main { min-height: 0; height: 100%; }
 #root .mobile-market .market-product-card__visual { width: 100%; height: auto; aspect-ratio: 3 / 2; flex: none; background: #121319; }
-#root .mobile-market .market-product-card__visual img { width: 100%; height: 100%; object-fit: contain; transform: none; }
+#root .mobile-market .market-product-card__visual img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; transform: none; }
 #root .mobile-market .market-product-card[data-market-pillar=services] .market-product-card__visual img { object-fit: cover; }
 #root .mobile-market .market-product-card__body { flex: 1; min-width: 0; padding: 9px 10px 10px; gap: 4px; background: linear-gradient(155deg,#1a1b21,#0c0d11); }
 #root .mobile-market .market-product-card h3 { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; font-size: 13px; line-height: 1.3; min-height: 0; margin: 0; }
-#root .mobile-market .market-product-card__meta { font-size: 10px; gap: 4px; flex-wrap: wrap; margin: 0; overflow: visible; color: #aaa7b5; }
-#root .mobile-market .market-product-card__meta > .market-card-seller { flex: 1 0 100%; }
+#root .mobile-market .market-product-card__meta { font-size: 10px; gap: 4px; flex-wrap: nowrap; margin: 0; overflow: visible; color: #aaa7b5; }
+#root .mobile-market .market-product-card__meta > .market-card-seller { flex: 1 1 0; min-width: 0; }
 #root .mobile-market .market-product-card__price strong { font-size: 17px; line-height: 1.2; }
 #root .mobile-market .market-product-card__price span { font-size: 10px; line-height: 1.3; color: #aaa7b5; }
 #root .mobile-market .market-product-card__footer { margin-top: auto; padding-top: 4px; gap: 4px; }
@@ -209,9 +209,32 @@
 @media (max-width: 359px) {
   #root .mobile-market .market-topbar__actions { gap: 0; }
   #root .mobile-market .market-mobile-utility h1 { font-size: 17px; }
-  #root .mobile-market .market-contextbar__create { padding-inline: 10px; }
-  #root .mobile-market .market-contextbar__create > svg { display: none; }
+  #root .mobile-market .market-contextbar__create { padding: 0; }
+  #root .mobile-market .market-contextbar__create > svg { display: block; }
 }
 @media (min-width: 600px) {
   #root .mobile-market .market-product-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
 }
+
+/* Own the full indicator geometry: do not combine the shared left/right offsets
+   with Profile's translateX(-50%). Both layers travel with their actual tab. */
+#root .mobile-market .market-pillar-tabs > button::after,
+#root .mobile-market .market-pillar-tabs > button::before {
+  content: ''; position: absolute; inset: auto auto 4px 50%;
+  width: 56%; max-width: 48px; height: 1px; transform: translateX(-50%);
+  border: 0; border-radius: 50%; opacity: 0; pointer-events: none;
+  background: linear-gradient(90deg,transparent,#9274d8 22%,#d7c6ff 50%,#9274d8 78%,transparent);
+  box-shadow: none; filter: none;
+}
+#root .mobile-market .market-pillar-tabs > button::before {
+  bottom: 2px; height: 5px; filter: blur(3px);
+  background: linear-gradient(90deg,transparent,#8060cc 25%,#b39aef 50%,#8060cc 75%,transparent);
+}
+#root .mobile-market .market-pillar-tabs > button.is-active::after { opacity: 1; }
+#root .mobile-market .market-pillar-tabs > button.is-active::before { opacity: .45; }
+#root .mobile-market .market-pillar-tabs > button .meewav-pillar-tabs__icon { color: inherit; }
+#root .mobile-market .market-pillar-tabs > button strong { text-shadow: none; }
+#root .mobile-market .market-contextbar__create > span { display: none; }
+#root .mobile-market .market-search { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+#root .mobile-market .market-search:focus-within { border-color: #a58aca80; background: var(--profile-mobile-glass); }
+#root .mobile-market .market-card-rating { flex: 0 0 auto; }

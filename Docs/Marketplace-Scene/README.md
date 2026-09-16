@@ -83,3 +83,14 @@ fins. Actions principales : jeton existant `--mobile-violet-cta`. Catégories et
 badges ne reprennent plus les multiples accents orange/cyan/rose du site.
 Fiches, demandes, brouillons et panier conservent leurs handlers et leur scroll.
 Compilation de livraison uniquement ; pas de tests ou revue visuelle automatiques.
+
+### Barre intelligente et géométrie — correction suivante
+
+Occasion décale le rail d’un onglet, Location de deux : les destinations suivantes
+apparaissent sans devoir atteindre le bord. Le rail seul défile, sans scrollIntoView
+sur les ancêtres. Les redimensionnements repositionnent la sélection.
+L’indicateur appartient à son bouton, avec une géométrie complète centrée à 50 %
+et un halo violet effilé ; suppression du cumul des offsets Profil / Feature.
+Recherche en capsule de 48 px, ajout dans un carré arrondi de 48 × 48 px.
+Les images de catalogue et des petits rails sont positionnées dans leur cadre 3:2,
+pour que leurs dimensions intrinsèques ne puissent plus étirer les cartes.

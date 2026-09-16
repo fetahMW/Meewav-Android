@@ -46,6 +46,7 @@ type MeewavPillarTabsProps<Id extends string> = {
   ariaLabel: string;
   onSelect: (id: Id) => void;
   className?: string;
+  visibleCount?: number;
 };
 
 export default function MeewavPillarTabs<Id extends string>({
@@ -54,6 +55,7 @@ export default function MeewavPillarTabs<Id extends string>({
   ariaLabel,
   onSelect,
   className,
+  visibleCount,
 }: MeewavPillarTabsProps<Id>) {
   const navigationRef = useRef<HTMLElement>(null);
   const activeIndex = items.findIndex((item) => item.id === activeId);
@@ -68,11 +70,34 @@ export default function MeewavPillarTabs<Id extends string>({
   } as CSSProperties;
 
   useEffect(() => {
-    const activeTab = navigationRef.current?.querySelector<HTMLElement>('[aria-current="page"]');
+    const navigation = navigationRef.current;
+    const activeTab = navigation?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (navigation && activeTab && visibleCount) {
+      // Keep a previous destination and reveal the upcoming ones. Only move this
+      // rail: scrollIntoView can also move the surrounding page on Android.
+      const reveal = (smooth: boolean) => {
+        const firstVisible = Math.max(0, Math.min(activeIndex - 1, items.length - visibleCount));
+        const target = navigation.children[firstVisible] as HTMLElement | undefined;
+        if (!target) return;
+        navigation.scrollTo({
+          left: target.offsetLeft,
+          behavior: smooth && !window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'instant',
+        });
+      };
+      reveal(true);
+      let lastWidth = navigation.clientWidth;
+      const observer = new ResizeObserver(() => {
+        if (navigation.clientWidth === lastWidth) return;
+        lastWidth = navigation.clientWidth;
+        reveal(false);
+      });
+      observer.observe(navigation);
+      return () => observer.disconnect();
+    }
     if (activeTab && typeof activeTab.scrollIntoView === "function") {
       activeTab.scrollIntoView({ block: "nearest", inline: "nearest" });
     }
-  }, [activeId]);
+  }, [activeId, activeIndex, items.length, visibleCount]);
 
   return (
     <nav

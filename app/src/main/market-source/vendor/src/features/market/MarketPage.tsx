@@ -1487,6 +1487,7 @@ export default function MarketPage() {
               items={MARKET_NAV_ITEMS}
               activeId={marketNavigationId}
               ariaLabel="Espaces de la Marketplace"
+              visibleCount={4}
               onSelect={(id) => {
                 if (id === "home") handleHome();
                 else handlePillarChange(id);
