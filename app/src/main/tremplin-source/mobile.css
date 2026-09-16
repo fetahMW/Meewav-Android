@@ -2,6 +2,12 @@
    in vendor; Profile is the source of the glass materials and bottom dock. */
 :root { --tremplin-mobile-header: 100px; }
 .mobile-tremplin-back { position: fixed; z-index: 50; top: 0; left: 4px; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; color: #d6d8e0; }
+.mobile-tremplin-menu-overlay { position: fixed; z-index: 55; inset: 0; padding: 0; border: 0; background: transparent; }
+.mobile-tremplin-menu { position: fixed; z-index: 56; top: 46px; left: 10px; display: grid; min-width: 218px; margin: 0; padding: 6px; border: 1px solid #8b93d438; border-radius: 14px; background: linear-gradient(160deg,#1a1b22f8,#0e0f14f8 60%); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); box-shadow: inset 0 1px #ffffff14,0 12px 28px #0008; }
+.mobile-tremplin-menu button { display: flex; align-items: center; gap: 11px; min-height: 44px; padding: 8px 12px; border: 0; border-radius: 10px; background: transparent; color: #e8e4f0; font: inherit; font-size: 13px; text-align: left; }
+.mobile-tremplin-menu button svg { color: #a8b0e8; flex-shrink: 0; }
+.mobile-tremplin-menu button[aria-current] { background: #4f359e35; color: #fff; }
+.mobile-tremplin-menu hr { width: 100%; margin: 4px 0; border: 0; border-top: 1px solid #ffffff12; }
 #root .mobile-tremplin .tremplin-page { position: absolute; z-index: auto; inset: 0; min-height: 0; width: 100%; --tremplin-nav-space: 0px; --tremplin-primary-band-height: 100px; --tremplin-header-height: 0px; --tremplin-secondary-band-height: 0px; }
 #root .mobile-tremplin .tremplin-primary-rail { display: none; }
 #root .mobile-tremplin .tremplin-shell { inset: 0; display: block; padding: 0; }

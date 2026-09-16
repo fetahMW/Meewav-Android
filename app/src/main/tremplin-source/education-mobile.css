@@ -14,18 +14,17 @@
 #root .mobile-tremplin .tg-intro p { margin: 0; color: #aca9b7; font-size: 13px; line-height: 1.5; }
 /* Original Web crop: scale both dimensions together, never force its height. */
 #root .mobile-tremplin .tg-illustration {
-  position: relative; display: block; width: 100%; height: auto; aspect-ratio: 552 / 320; margin: 18px 0;
-  border: 0; border-radius: 14px; overflow: hidden;
+  display: block; width: 100%; height: auto; aspect-ratio: 552 / 320; margin: 18px 0;
+  border: 0; border-radius: 14px;
   background: url('/images/tremplin/tremplin-token-guide-reference.png') 8.276% 45.04% / 231.522% 251.25% no-repeat;
 }
-#root .mobile-tremplin .tg-illustration video { display: block; width: 100%; height: 100%; object-fit: cover; background: #050507; }
 #root .mobile-tremplin .tg-video-play {
-  position: absolute; left: 10px; bottom: 10px; display: flex; align-items: center; gap: 8px;
-  min-height: 36px; padding: 5px 13px; border: 1px solid #a594d866; border-radius: 20px;
-  background: #0b0a14d9; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-  color: #efeaf8; font-size: 11px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%; min-height: 44px;
+  margin: 16px 0 0; padding: 10px 14px; border: 1px solid #8b93d445; border-radius: 13px;
+  background: linear-gradient(160deg,#1b1c24,#101115 60%); color: #efeaf8; font-size: 12px; font-weight: 600;
 }
-#root .mobile-tremplin .tg-video-play svg { color: #b49ae4; flex-shrink: 0; }
+#root .mobile-tremplin .tg-video-play svg { color: #a78fe0; flex-shrink: 0; }
+#root .mobile-tremplin .tg-video { display: block; width: 100%; height: auto; max-height: 65dvh; margin-top: 12px; border-radius: 12px; background: #050507; }
 #root .mobile-tremplin .tg-steps { display: grid; gap: 18px; list-style: none; margin: 0; padding: 0; }
 #root .mobile-tremplin .tremplin-guide .tg-steps > li {
   display: grid; grid-template-columns: 30px minmax(0,1fr); align-items: start; gap: 10px;

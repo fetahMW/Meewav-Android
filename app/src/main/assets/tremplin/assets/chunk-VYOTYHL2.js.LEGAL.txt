@@ -1,0 +1,126 @@
+Bundled license information:
+
+react/cjs/react.production.js:
+  /**
+   * @license React
+   * react.production.js
+   *
+   * Copyright (c) Meta Platforms, Inc. and affiliates.
+   *
+   * This source code is licensed under the MIT license found in the
+   * LICENSE file in the root directory of this source tree.
+   */
+
+react/cjs/react-jsx-runtime.production.js:
+  /**
+   * @license React
+   * react-jsx-runtime.production.js
+   *
+   * Copyright (c) Meta Platforms, Inc. and affiliates.
+   *
+   * This source code is licensed under the MIT license found in the
+   * LICENSE file in the root directory of this source tree.
+   */
+
+react-dom/cjs/react-dom.production.js:
+  /**
+   * @license React
+   * react-dom.production.js
+   *
+   * Copyright (c) Meta Platforms, Inc. and affiliates.
+   *
+   * This source code is licensed under the MIT license found in the
+   * LICENSE file in the root directory of this source tree.
+   */
+
+react-router/dist/development/chunk-6CSD65Y2.mjs:
+react-router/dist/development/index.mjs:
+  /**
+   * react-router v7.17.0
+   *
+   * Copyright (c) Remix Software Inc.
+   *
+   * This source code is licensed under the MIT license found in the
+   * LICENSE.md file in the root directory of this source tree.
+   *
+   * @license MIT
+   */
+
+lucide-react/dist/esm/shared/src/utils/mergeClasses.mjs:
+lucide-react/dist/esm/shared/src/utils/toKebabCase.mjs:
+lucide-react/dist/esm/shared/src/utils/toCamelCase.mjs:
+lucide-react/dist/esm/shared/src/utils/toPascalCase.mjs:
+lucide-react/dist/esm/defaultAttributes.mjs:
+lucide-react/dist/esm/shared/src/utils/hasA11yProp.mjs:
+lucide-react/dist/esm/context.mjs:
+lucide-react/dist/esm/Icon.mjs:
+lucide-react/dist/esm/createLucideIcon.mjs:
+lucide-react/dist/esm/icons/arrow-down-up.mjs:
+lucide-react/dist/esm/icons/arrow-left.mjs:
+lucide-react/dist/esm/icons/arrow-right.mjs:
+lucide-react/dist/esm/icons/bell.mjs:
+lucide-react/dist/esm/icons/chart-line.mjs:
+lucide-react/dist/esm/icons/chart-no-axes-column-increasing.mjs:
+lucide-react/dist/esm/icons/chevron-left.mjs:
+lucide-react/dist/esm/icons/chevron-right.mjs:
+lucide-react/dist/esm/icons/circle-check.mjs:
+lucide-react/dist/esm/icons/heart.mjs:
+lucide-react/dist/esm/icons/history.mjs:
+lucide-react/dist/esm/icons/house.mjs:
+lucide-react/dist/esm/icons/info.mjs:
+lucide-react/dist/esm/icons/lock-keyhole.mjs:
+lucide-react/dist/esm/icons/map-pin.mjs:
+lucide-react/dist/esm/icons/menu.mjs:
+lucide-react/dist/esm/icons/mouse-pointer-click.mjs:
+lucide-react/dist/esm/icons/music-2.mjs:
+lucide-react/dist/esm/icons/pause.mjs:
+lucide-react/dist/esm/icons/play.mjs:
+lucide-react/dist/esm/icons/radio.mjs:
+lucide-react/dist/esm/icons/rocket.mjs:
+lucide-react/dist/esm/icons/search.mjs:
+lucide-react/dist/esm/icons/shield-check.mjs:
+lucide-react/dist/esm/icons/sliders-horizontal.mjs:
+lucide-react/dist/esm/icons/sparkles.mjs:
+lucide-react/dist/esm/icons/store.mjs:
+lucide-react/dist/esm/icons/trending-down.mjs:
+lucide-react/dist/esm/icons/trending-up.mjs:
+lucide-react/dist/esm/icons/triangle-alert.mjs:
+lucide-react/dist/esm/icons/user-check.mjs:
+lucide-react/dist/esm/icons/users-round.mjs:
+lucide-react/dist/esm/icons/x.mjs:
+lucide-react/dist/esm/icons/activity.mjs:
+lucide-react/dist/esm/icons/badge-check.mjs:
+lucide-react/dist/esm/icons/box.mjs:
+lucide-react/dist/esm/icons/calendar-check-2.mjs:
+lucide-react/dist/esm/icons/calendar-days.mjs:
+lucide-react/dist/esm/icons/chart-column.mjs:
+lucide-react/dist/esm/icons/chart-no-axes-combined.mjs:
+lucide-react/dist/esm/icons/check.mjs:
+lucide-react/dist/esm/icons/chevron-down.mjs:
+lucide-react/dist/esm/icons/chevron-up.mjs:
+lucide-react/dist/esm/icons/circle-dashed.mjs:
+lucide-react/dist/esm/icons/circle-play.mjs:
+lucide-react/dist/esm/icons/clapperboard.mjs:
+lucide-react/dist/esm/icons/clock-3.mjs:
+lucide-react/dist/esm/icons/cloud-upload.mjs:
+lucide-react/dist/esm/icons/earth.mjs:
+lucide-react/dist/esm/icons/euro.mjs:
+lucide-react/dist/esm/icons/file-check-corner.mjs:
+lucide-react/dist/esm/icons/file-text.mjs:
+lucide-react/dist/esm/icons/flask-conical.mjs:
+lucide-react/dist/esm/icons/gauge.mjs:
+lucide-react/dist/esm/icons/headphones.mjs:
+lucide-react/dist/esm/icons/landmark.mjs:
+lucide-react/dist/esm/icons/mail.mjs:
+lucide-react/dist/esm/icons/minus.mjs:
+lucide-react/dist/esm/icons/receipt-text.mjs:
+lucide-react/dist/esm/icons/refresh-ccw.mjs:
+lucide-react/dist/esm/icons/scale.mjs:
+lucide-react/dist/esm/icons/user-round.mjs:
+lucide-react/dist/esm/lucide-react.mjs:
+  /**
+   * @license lucide-react v1.17.0 - ISC
+   *
+   * This source code is licensed under the ISC license.
+   * See the LICENSE file in the root directory of this source tree.
+   */

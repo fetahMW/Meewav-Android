@@ -1,7 +1,7 @@
 import React, { Component, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, X } from 'lucide-react';
+import { ChartNoAxesColumnIncreasing, Heart, Home, Menu, Sparkles, Store, X } from 'lucide-react';
 import FeatureDock, { featureItems } from '../shared-ui/FeatureDock';
 import { configure, updateToken, type MobileConfig } from './runtime';
 import './home-mobile.css';
@@ -13,6 +13,7 @@ const native = (destination: string, route?: string) => location.assign(`https:/
 function Shell({ Page }: { Page: React.ComponentType }) {
   const route = useLocation(), navigate = useNavigate();
   const [notice, setNotice] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
   const select = (id: string) => {
     if (id === 'tremplin') navigate('/tremplin');
     else if (['profile', 'messages', 'market', 'scene', 'globe'].includes(id)) native(id);
@@ -40,8 +41,23 @@ function Shell({ Page }: { Page: React.ComponentType }) {
     const timer = window.setTimeout(() => setNotice(''), 5000);
     return () => window.clearTimeout(timer);
   }, [notice]);
+  const menu = [
+    { label: 'Accueil', icon: Home, path: '/tremplin' },
+    { label: 'Découvrir', icon: Sparkles, path: '/tremplin/decouvrir' },
+    { label: 'Mes artistes', icon: Heart, path: '/tremplin/mes-artistes' },
+    { label: 'Statistiques', icon: ChartNoAxesColumnIncreasing, path: '/tremplin/statistiques' },
+  ];
   return <div className="mobile-profile mobile-tremplin">
-    <button className="mobile-tremplin-back" aria-label="Retour" onClick={back}><ArrowLeft /></button>
+    <button className="mobile-tremplin-back" aria-label="Menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(open => !open)}><Menu /></button>
+    {menuOpen && <>
+      <button className="mobile-tremplin-menu-overlay" aria-label="Fermer le menu" onClick={() => setMenuOpen(false)} />
+      <nav className="mobile-tremplin-menu" aria-label="Menu Tremplin">
+        {menu.map(({ label, icon: Icon, path }) => <button key={path} aria-current={route.pathname === path ? 'page' : undefined} onClick={() => { setMenuOpen(false); navigate(path); }}><Icon size={17} /> {label}</button>)}
+        <hr />
+        <button onClick={() => { setMenuOpen(false); native('market'); }}><Store size={17} /> Marketplace</button>
+        <button onClick={() => native('close-app')}><X size={17} /> Quitter le Tremplin</button>
+      </nav>
+    </>}
     <button className="mobile-profile-close" aria-label="Fermer l’application" onClick={() => native('close-app')}><X /></button>
     <Page />
     <FeatureDock active="tremplin" onSelect={select} />

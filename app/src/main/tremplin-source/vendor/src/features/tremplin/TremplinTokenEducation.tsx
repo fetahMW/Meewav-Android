@@ -229,16 +229,14 @@ export default function TremplinTokenEducation({ onDiscover, onOpenRoute }: Trem
       <h1 id="tremplin-guide-title">Découvre. Suis. Soutiens.</h1>
       <p>La musique d’abord. Tu choisis jusqu’où tu veux aller.</p>
     </header>
-    <figure className="tg-illustration" role={videoOpen ? undefined : "img"} aria-label={videoOpen ? undefined : "Jeton de talent MeeWav en verre violet, posé sur la roche"}>
-      {videoOpen
-        ? <video controls autoPlay playsInline poster={tremplinArtists[0].artwork} aria-label="Présentation de MeeWav"><source src={MEEWAV_ECOSYSTEM_VIDEO_SRC} type="video/mp4" />Ton navigateur ne peut pas lire cette vidéo.</video>
-        : <button type="button" className="tg-video-play" onClick={() => setVideoOpen(true)} aria-label="Regarder la présentation vidéo de MeeWav"><PlayCircle size={20} /><span>Regarder la vidéo · 1 min 40</span></button>}
-    </figure>
+    <figure className="tg-illustration" role="img" aria-label="Jeton de talent MeeWav en verre violet, posé sur la roche" />
     <ol className="tg-steps">
       <li id="tremplin-discovery"><span aria-hidden="true"><Sparkles size={19} /></span><div><h2>Découvre un talent</h2><p>Écoute sa musique et explore son projet.</p></div></li>
       <li id="tremplin-follow"><span aria-hidden="true"><Heart size={19} /></span><div><h2>Suis-le gratuitement</h2><p>Retrouve ses créations et ses rendez-vous dans Mes artistes.</p></div></li>
       <li><span aria-hidden="true"><ShieldCheck size={19} /></span><div><h2>Soutiens si tu le souhaites</h2><p>Certains artistes proposent un jeton de talent payant. L’achat reste facultatif.</p></div></li>
     </ol>
+    <button type="button" className="tg-video-play" onClick={() => setVideoOpen(open => !open)} aria-expanded={videoOpen}><PlayCircle size={20} /><span>Regarder la vidéo · 1 min 40</span></button>
+    {videoOpen && <video className="tg-video" controls autoPlay playsInline poster={tremplinArtists[0].artwork} aria-label="Présentation de MeeWav"><source src={MEEWAV_ECOSYSTEM_VIDEO_SRC} type="video/mp4" />Ton navigateur ne peut pas lire cette vidéo.</video>}
     <p className="tg-essential">Le prix peut baisser. Aucun gain n’est garanti et la revente peut prendre du temps.</p>
     <button type="button" className="tg-primary" onClick={() => { trackTremplinEvent("how_it_works_completed"); onDiscover(); }}>Découvrir les artistes <ArrowRight size={18} /></button>
     <TremplinGradeProgression id="tremplin-grades">
