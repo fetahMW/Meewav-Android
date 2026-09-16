@@ -21,7 +21,8 @@
 #root .mobile-tremplin .tremplin-contextbar__toolbar { grid-area: 2 / 1; width: 100%; min-width: 0; height: 56px; padding: 0; margin: 0; }
 #root .mobile-tremplin .tremplin-pillar-tabs { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); width: 100%; min-width: 0; height: 56px; gap: 0; padding: 0; border: 0; background: transparent; overflow: hidden; }
 #root .mobile-tremplin .tremplin-pillar-tabs button { display: flex; flex-direction: column; justify-content: center; position: relative; min-width: 0; min-height: 48px; padding: 6px 2px; gap: 4px; border: 0; border-radius: 0; background: transparent; color: #b7bac3; box-shadow: none; }
-#root .mobile-tremplin .tremplin-pillar-tabs button strong { font-size: 10px; font-weight: 550; line-height: 1.2; white-space: nowrap; }
+#root .mobile-tremplin .tremplin-pillar-tabs button strong { display: block; font-size: 10px; font-weight: 550; line-height: 1.2; white-space: nowrap; }
+#root .mobile-tremplin .tremplin-pillar-tabs > button { height: 56px; }
 #root .mobile-tremplin .tremplin-pillar-tabs button svg { width: 18px; height: 18px; }
 #root .mobile-tremplin .tremplin-pillar-tabs .meewav-pillar-tabs__icon { width: 18px; height: 18px; flex: 0 0 18px; color: inherit; border: 0; background: none; box-shadow: none; }
 #root .mobile-tremplin .tremplin-pillar-tabs button.is-active { color: #fff; }

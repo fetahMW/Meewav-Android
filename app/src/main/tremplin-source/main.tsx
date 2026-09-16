@@ -4,6 +4,7 @@ import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, X } from 'lucide-react';
 import FeatureDock, { featureItems } from '../shared-ui/FeatureDock';
 import { configure, updateToken, type MobileConfig } from './runtime';
+import './home-mobile.css';
 
 const native = (destination: string, route?: string) => location.assign(`https://appassets.androidplatform.net/native/${destination}${route ? `?route=${encodeURIComponent(route)}` : ''}`);
 function Shell({ Page }: { Page: React.ComponentType }) {

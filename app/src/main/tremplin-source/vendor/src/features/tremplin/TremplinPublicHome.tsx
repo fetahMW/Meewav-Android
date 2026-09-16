@@ -44,7 +44,7 @@ import "./tremplin-public-home-compact.css";
 import "./tremplin-public-home-gateway.css";
 import "./tremplin-grades-prestige.css";
 
-type TremplinPublicHomeProps = {
+export type TremplinPublicHomeProps = {
   playingArtistId: string | null;
   followedArtistIds: ReadonlySet<string>;
   userState: TremplinUserState;

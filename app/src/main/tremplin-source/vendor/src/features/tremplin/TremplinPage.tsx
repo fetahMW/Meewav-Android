@@ -56,7 +56,7 @@ import { trackTremplinEvent } from "./tremplinAnalytics";
 import { TREMPLIN_FEATURE_FLAGS } from "./tremplinFeatureFlags";
 import { loadConnectedTremplinFollows, persistTremplinFollow } from "./tremplinFollowService";
 import { readTremplinPersistedSet, writeTremplinPersistedSet } from "./tremplinPersistence";
-import TremplinPublicHome from "./TremplinPublicHome";
+import TremplinPublicHome from "./TremplinMobileHome";
 import TremplinTokenEducation, { TremplinCurveExplainer } from "./TremplinTokenEducation";
 import TremplinTokenFlow from "./TremplinTokenFlow";
 import TremplinTokenChange24h from "./TremplinTokenChange24h";

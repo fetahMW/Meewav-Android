@@ -45,6 +45,31 @@ locales de `TremplinPage.tsx` : ne pas l’utiliser pour une simple compilation.
 L’extra debug `com.meewav.android.OPEN_TREMPLIN=true` sur `MainActivity` ouvre
 directement l’atelier Tremplin. La route de lancement habituelle reste inchangée.
 
-Aucun test automatique ni contrôle visuel n’est effectué pour cette passe,
+Lors de l’import initial, aucun test automatique ni contrôle visuel n’était effectué,
 conformément aux consignes du projet. Le rendu sur appareil reste à apprécier
 par l’utilisateur ; une compilation ne vaut pas validation des interactions.
+
+## Accueil mobile — passe visuelle demandée le 16 septembre
+
+À la demande explicite de l’utilisateur, captures et itérations sur son Samsung.
+Le premier écran importé conservait une illustration de plusieurs centaines de
+pixels sous un long texte, des boutons sur plusieurs lignes et de grandes
+cartes explicatives. Le premier artiste restait plusieurs écrans plus bas.
+
+`TremplinMobileHome.tsx` compose maintenant une landing dédiée au mobile :
+accroche illustrée et CTA principal, recherche distincte, sélection d’artistes
+en cartes horizontales, accès suivis si disponibles, trois étapes compactes,
+six badges tactiles, espace artiste et accès aux règles. Les mêmes données,
+badges, extraits et callbacks de navigation Web restent utilisés. Le composant
+Web original est conservé pour référence. Les explications et les grades
+s’ouvrent dans des panneaux inférieurs avec fond flouté, focus modal et fermeture.
+
+La seconde passe enlève la hauteur vide résiduelle du hero, rétablit les libellés
+des quatre onglets et aligne leur hauteur. Les CTA gardent le violet urbain du
+Profil. Aucun changement des autres compositions d’onglets dans cette passe.
+
+Captures locales : `app/build/reports/tremplin/landing/` (non versionnées).
+Contrôles ciblés : haut, milieu, bas, panneau explicatif, panneau de grade,
+images chargées, absence de débordement horizontal, préécoute par appui réel,
+recherche « luna » et ouverture du parcours Lunaé. La compilation Android réussit.
+Ces contrôles ne constituent pas une recette serveur des simulations de jetons.
