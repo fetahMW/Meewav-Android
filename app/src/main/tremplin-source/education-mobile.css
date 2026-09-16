@@ -66,26 +66,32 @@
 #root .mobile-tremplin .tg-example dl > div { display: flex; justify-content: space-between; gap: 16px; padding: 8px 0; border-bottom: 1px solid #ffffff08; font-size: 11px; line-height: 1.5; }
 #root .mobile-tremplin .tg-example dt { color: #a8a3b6; }
 #root .mobile-tremplin .tg-example dd { margin: 0; color: #e5dfef; text-align: right; max-width: 62%; }
-/* Android: the six grades are exhibited first as horizontal cards, the active
-   note follows, then the reduced explanation text. Card artwork stays from
-   vendor; only the inner layout turns horizontal. */
-#root .mobile-tremplin .tremplin-guide .tremplin-gateway__levels { display: flex; flex-direction: column; width: calc(100% + 16px); min-width: 0; margin: 24px -8px 0; padding: 22px 12px; }
-#root .mobile-tremplin .tremplin-guide .tremplin-public-home__level-track { order: 1; grid-template-columns: minmax(0,1fr); gap: 12px; }
-#root .mobile-tremplin .tremplin-guide .tremplin-public-home__level-note { order: 2; margin-top: 12px; }
-#root .mobile-tremplin .tremplin-guide .tremplin-gateway__levels > :not(.tremplin-public-home__level-track):not(.tremplin-public-home__level-note) { order: 3; }
-#root .mobile-tremplin .tremplin-guide .tremplin-public-home__levels-heading { width: 100%; }
-#root .mobile-tremplin .tremplin-guide .tremplin-gateway__progression-header { margin-top: 16px; }
-#root .mobile-tremplin .tremplin-guide .tremplin-public-home__section-heading h2 { font-size: 16px; line-height: 1.3; margin: 0 0 8px; }
-#root .mobile-tremplin .tremplin-guide .tremplin-public-home__section-heading p { font-size: 11px; line-height: 1.5; }
-#root .mobile-tremplin .tremplin-guide .tremplin-public-home__levels-clarification { font-size: 10px; }
-#root .mobile-tremplin .tremplin-guide .tremplin-public-home__levels-recognition { min-height: 40px; padding: 6px 0; font-size: 11px; }
-#root .mobile-tremplin .tremplin-guide .tremplin-gateway__prestige-bridges { display: none; }
-#root .mobile-tremplin .tremplin-guide .tremplin-gateway__grade-card { display: grid; grid-template-columns: auto minmax(0,1fr); grid-template-areas: "badge stage" "badge title" "badge desc"; align-items: center; column-gap: 14px; min-width: 0; min-height: 0; padding: 12px 14px; cursor: pointer; text-align: left; }
-#root .mobile-tremplin .tremplin-guide .tremplin-gateway__grade-card .tremplin-public-home__level-badge { grid-area: badge; --mw-grade-size: 64px !important; width: 64px; height: 64px; margin: 0; }
-#root .mobile-tremplin .tremplin-guide .tremplin-gateway__grade-card > .tremplin-public-home__level-stage { grid-area: stage; margin: 0; font-size: 9px; }
-#root .mobile-tremplin .tremplin-guide .tremplin-gateway__grade-card > strong { grid-area: title; margin: 2px 0 0; font-size: 13px; }
-#root .mobile-tremplin .tremplin-guide .tremplin-gateway__grade-description { grid-area: desc; max-width: none; min-height: 0; margin-top: 4px; padding-inline: 0; font-size: 10px; }
-#root .mobile-tremplin .tremplin-guide .tremplin-gateway__grade-caption { display: none; }
+/* Android: the six grades are exhibited first as horizontal cards (badge on
+   the left, Niveau/title/description/caption stacked on the right), the
+   active note follows, then the reduced explanation text. Card artwork
+   (lacquer rim, glow, active elevation) stays from vendor; only the inner
+   layout turns horizontal. Selectors must outrank tremplin-grades-prestige.css,
+   which targets :is(#niveaux, #tremplin-grades) — hence the #tremplin-grades id. */
+#root .mobile-tremplin .tremplin-guide #tremplin-grades.tremplin-gateway__levels { display: flex; flex-direction: column; width: calc(100% + 16px); min-width: 0; margin: 24px -8px 0; padding: 22px 12px; }
+#root .mobile-tremplin .tremplin-guide #tremplin-grades .tremplin-public-home__level-track { order: 1; grid-template-columns: minmax(0,1fr); gap: 14px; padding: 0; margin-top: 0; }
+#root .mobile-tremplin .tremplin-guide #tremplin-grades .tremplin-public-home__level-note { order: 2; width: 100%; min-height: 0; margin: 14px 0 0; padding: 12px; gap: 10px; grid-template-columns: 36px minmax(0,1fr); border-radius: 12px; box-shadow: none; background: #ffffff04; }
+#root .mobile-tremplin .tremplin-guide #tremplin-grades > :not(.tremplin-public-home__level-track):not(.tremplin-public-home__level-note) { order: 3; }
+#root .mobile-tremplin .tremplin-guide #tremplin-grades .tremplin-gateway__progression-header { display: block; min-height: 0; margin-top: 16px; }
+#root .mobile-tremplin .tremplin-guide #tremplin-grades .tremplin-public-home__levels-heading { width: 100%; padding: 0; }
+#root .mobile-tremplin .tremplin-guide #tremplin-grades .tremplin-public-home__section-heading h2 { font-size: 16px; line-height: 1.3; margin: 0 0 8px; text-wrap: wrap; }
+#root .mobile-tremplin .tremplin-guide #tremplin-grades .tremplin-public-home__section-heading p { max-width: none; font-size: 11px; line-height: 1.5; }
+#root .mobile-tremplin .tremplin-guide #tremplin-grades .tremplin-public-home__levels-clarification { font-size: 10px; }
+#root .mobile-tremplin .tremplin-guide #tremplin-grades .tremplin-public-home__levels-recognition { min-height: 34px; padding: 4px 0; font-size: 11px !important; }
+#root .mobile-tremplin .tremplin-guide #tremplin-grades :is(.tremplin-gateway__grade-art,.tremplin-gateway__prestige-bridges,.tremplin-public-home__levels-kicker,.tremplin-gateway__grade-principles) { display: none; }
+#root .mobile-tremplin .tremplin-guide #tremplin-grades .tremplin-gateway__grade-card { display: grid; grid-template-columns: auto minmax(0,1fr); grid-template-rows: auto; grid-template-areas: "badge stage" "badge title" "badge desc" "badge caption"; align-items: center; justify-items: start; column-gap: 14px; height: auto; min-height: 0; padding: 12px 14px; cursor: pointer; text-align: left; }
+#root .mobile-tremplin .tremplin-guide #tremplin-grades .tremplin-gateway__grade-card.is-active { transform: none; }
+#root .mobile-tremplin .tremplin-guide #tremplin-grades .tremplin-public-home__level-badge { grid-area: badge; --mw-grade-size: 68px !important; width: 68px; height: 68px; margin: 0; }
+#root .mobile-tremplin .tremplin-guide #tremplin-grades .tremplin-gateway__grade-card > .tremplin-public-home__level-stage { grid-area: stage; margin: 0; font-size: 10px; }
+#root .mobile-tremplin .tremplin-guide #tremplin-grades .tremplin-gateway__grade-card > strong { grid-area: title; margin: 2px 0 0; font-size: 13px; }
+#root .mobile-tremplin .tremplin-guide #tremplin-grades .tremplin-gateway__grade-description { grid-area: desc; max-width: none; min-height: 0; margin: 3px 0 0; padding-inline: 0; font-size: 11px; }
+#root .mobile-tremplin .tremplin-guide #tremplin-grades .tremplin-gateway__grade-caption { grid-area: caption; width: 100%; min-height: 0; height: auto; margin: 7px 0 0; padding: 4px 6px; font-size: 8px; }
+#root .mobile-tremplin .tremplin-guide #tremplin-grades .tremplin-public-home__level-note p { font-size: 11px; line-height: 1.5; }
+#root .mobile-tremplin .tremplin-guide #tremplin-grades .tremplin-public-home__level-note p strong { font-size: 12px; }
 #root .mobile-tremplin .tremplin-guide .tg-career { margin-top: 12px; font-size: 11px; }
 #root .mobile-tremplin .tremplin-scroll:has(.tremplin-guide),#root .mobile-tremplin .tremplin-scroll:has(.tremplin-my-dashboard) { mask-image: none; -webkit-mask-image: none; }
 #root .mobile-tremplin .mobile-tremplin-section > button { border-radius: 11px; }
