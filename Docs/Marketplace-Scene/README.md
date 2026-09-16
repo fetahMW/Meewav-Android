@@ -94,3 +94,11 @@ et un halo violet effilé ; suppression du cumul des offsets Profil / Feature.
 Recherche en capsule de 48 px, ajout dans un carré arrondi de 48 × 48 px.
 Les images de catalogue et des petits rails sont positionnées dans leur cadre 3:2,
 pour que leurs dimensions intrinsèques ne puissent plus étirer les cartes.
+
+### Fond Marketplace en essai
+
+Image fournie le 16 septembre : `ChatGPT Image 12 sept. 2026, 23_51_01 1 (3).png`,
+copiée sans transformation dans `images/market/background-mobile-trial.png`.
+Appliquée uniquement au Marketplace via mobile.css. Le fond original est conservé ;
+retirer cette surcharge pour revenir à la version précédente. Ne pas étendre aux
+autres piliers sans validation de l’utilisateur.

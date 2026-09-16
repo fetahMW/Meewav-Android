@@ -272,3 +272,8 @@
 #root .mobile-market .market-search { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
 #root .mobile-market .market-search:focus-within { border-color: #a58aca80; background: var(--profile-mobile-glass); }
 #root .mobile-market .market-card-rating { flex: 0 0 auto; }
+
+/* User-provided background trial, scoped to Marketplace; keep the original asset. */
+#root .mobile-market .market-page__background {
+  background: #090711 url('/images/market/background-mobile-trial.png') center / cover no-repeat;
+}
