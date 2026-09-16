@@ -1,0 +1,333 @@
+{
+  "date": "2026-09-16",
+  "project": "dqabekaqpznjsagoxzwc",
+  "method": "Read-only PostgreSQL catalog; no user content",
+  "relations": [
+    {
+      "name": "profiles",
+      "present": true,
+      "rls": true,
+      "columns": [
+        "id",
+        "username",
+        "full_name",
+        "email",
+        "phone",
+        "birth_date",
+        "avatar_url",
+        "avatar_name",
+        "artist_type",
+        "profile_image_url",
+        "bio",
+        "talents",
+        "street",
+        "city",
+        "postal_code",
+        "country",
+        "latitude",
+        "longitude",
+        "is_ghost_mode",
+        "is_online",
+        "followers_count",
+        "following_count",
+        "grade",
+        "show_on_public_profile",
+        "created_at",
+        "updated_at",
+        "social_links",
+        "is_verified",
+        "selected_audio_ids",
+        "selected_video_ids",
+        "public_profile_preferences",
+        "commune_code",
+        "zone_id",
+        "district_id",
+        "district_name",
+        "scene_name",
+        "scene_source",
+        "avatar_icon_id"
+      ]
+    },
+    {
+      "name": "profile_grade_state",
+      "present": false,
+      "rls": null,
+      "columns": []
+    },
+    {
+      "name": "media_files",
+      "present": true,
+      "rls": true,
+      "columns": [
+        "id",
+        "user_id",
+        "type",
+        "name",
+        "format",
+        "file_size",
+        "duration_ms",
+        "file_url",
+        "cover_url",
+        "folder_id",
+        "is_public",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    {
+      "name": "profile_transactions",
+      "present": true,
+      "rls": true,
+      "columns": [
+        "id",
+        "user_id",
+        "title",
+        "category",
+        "amount",
+        "currency",
+        "occurred_at",
+        "image_url",
+        "is_token_trade",
+        "token_label",
+        "metadata",
+        "created_at"
+      ]
+    },
+    {
+      "name": "profile_contracts",
+      "present": true,
+      "rls": true,
+      "columns": [
+        "id",
+        "user_id",
+        "title",
+        "contract_type",
+        "status",
+        "amount_label",
+        "parties",
+        "source",
+        "details",
+        "metadata",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    {
+      "name": "profile_hardware_devices",
+      "present": true,
+      "rls": true,
+      "columns": [
+        "id",
+        "user_id",
+        "name",
+        "device_type",
+        "status",
+        "latency_label",
+        "accent_hex",
+        "metadata",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    {
+      "name": "profile_organization_invitations",
+      "present": true,
+      "rls": true,
+      "columns": [
+        "id",
+        "user_id",
+        "recipient_name",
+        "handle",
+        "space_name",
+        "role",
+        "status",
+        "permissions",
+        "metadata",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    {
+      "name": "notifications",
+      "present": true,
+      "rls": true,
+      "columns": [
+        "id",
+        "user_id",
+        "type",
+        "from_user_id",
+        "content",
+        "is_read",
+        "created_at"
+      ]
+    },
+    {
+      "name": "public_profiles",
+      "present": false,
+      "rls": null,
+      "columns": []
+    },
+    {
+      "name": "published_media_files",
+      "present": false,
+      "rls": null,
+      "columns": []
+    },
+    {
+      "name": "profile_certif_endorsements_v1",
+      "present": false,
+      "rls": null,
+      "columns": []
+    },
+    {
+      "name": "room_gift_awards_v1",
+      "present": false,
+      "rls": null,
+      "columns": []
+    },
+    {
+      "name": "room_gift_deliveries_v1",
+      "present": false,
+      "rls": null,
+      "columns": []
+    },
+    {
+      "name": "messaging_direct_conversations_v1",
+      "present": true,
+      "rls": true,
+      "columns": [
+        "id",
+        "participant_low_id",
+        "participant_high_id",
+        "created_at",
+        "updated_at",
+        "last_message_at"
+      ]
+    },
+    {
+      "name": "messaging_messages_v1",
+      "present": true,
+      "rls": true,
+      "columns": [
+        "id",
+        "conversation_id",
+        "sender_id",
+        "client_message_id",
+        "kind",
+        "body",
+        "created_at",
+        "edited_at",
+        "voice_storage_path",
+        "voice_duration_ms",
+        "voice_mime_type",
+        "voice_byte_size"
+      ]
+    },
+    {
+      "name": "messaging_conversation_participants_v1",
+      "present": true,
+      "rls": true,
+      "columns": [
+        "conversation_id",
+        "user_id",
+        "joined_at",
+        "last_read_at"
+      ]
+    },
+    {
+      "name": "messaging_video_calls_v1",
+      "present": true,
+      "rls": true,
+      "columns": [
+        "id",
+        "conversation_id",
+        "caller_id",
+        "callee_id",
+        "status",
+        "created_at",
+        "answered_at",
+        "ended_at",
+        "caller_seen_at",
+        "callee_seen_at"
+      ]
+    }
+  ],
+  "buckets": [
+    {
+      "id": "avatars",
+      "public": true,
+      "file_size_limit": null,
+      "allowed_mime_types": null
+    },
+    {
+      "id": "media",
+      "public": true,
+      "file_size_limit": null,
+      "allowed_mime_types": null
+    },
+    {
+      "id": "messaging-voice",
+      "public": false,
+      "file_size_limit": "10485760",
+      "allowed_mime_types": [
+        "audio/mp4",
+        "audio/m4a",
+        "audio/x-m4a",
+        "audio/aac"
+      ]
+    }
+  ],
+  "auth": {
+    "status": 200,
+    "external": {
+      "anonymous_users": false,
+      "apple": false,
+      "azure": false,
+      "bitbucket": false,
+      "discord": false,
+      "facebook": false,
+      "snapchat": false,
+      "figma": false,
+      "fly": false,
+      "github": false,
+      "gitlab": false,
+      "google": true,
+      "keycloak": false,
+      "kakao": false,
+      "linkedin": false,
+      "linkedin_oidc": false,
+      "notion": false,
+      "spotify": false,
+      "slack": false,
+      "slack_oidc": false,
+      "workos": false,
+      "twitch": false,
+      "twitter": false,
+      "email": true,
+      "phone": false,
+      "zoom": false
+    },
+    "disable_signup": false,
+    "mailer_autoconfirm": true
+  },
+  "messagingPublication": [
+    {
+      "pubname": "supabase_realtime",
+      "schemaname": "public",
+      "tablename": "messaging_conversation_participants_v1"
+    },
+    {
+      "pubname": "supabase_realtime",
+      "schemaname": "public",
+      "tablename": "messaging_messages_v1"
+    }
+  ],
+  "lookup": {
+    "name": "resolve_profile_email_for_username",
+    "args": "p_username text",
+    "result": "TABLE(email text)",
+    "security_definer": true,
+    "anon_execute": true,
+    "authenticated_execute": true
+  }
+}
