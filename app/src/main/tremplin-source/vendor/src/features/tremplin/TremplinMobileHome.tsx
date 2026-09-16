@@ -20,6 +20,7 @@ const steps = [
   ['Découvre son parcours', 'Projets, collaborations et grade : des repères concrets.'],
   ['Donne-lui de la force', 'Suis-le gratuitement. Le soutien payant reste facultatif.'],
 ];
+const stepIcons = [CirclePlay, Sparkles, Heart];
 
 /** Mobile composition, using the Web artists, lifecycle rules and route callbacks. */
 export default function TremplinMobileHome(props: TremplinPublicHomeProps) {
@@ -79,7 +80,11 @@ export default function TremplinMobileHome(props: TremplinPublicHomeProps) {
           const playing = props.playingArtistId === artist.id;
           return <article className="tm-artist" key={artist.id}>
             <div className="tm-artwork"><button aria-label={`Voir le projet de ${artist.name}`} onClick={() => openArtist(artist)}><img src={artist.artwork || artist.portrait} alt="" loading="lazy" /></button><span>{artist.city}</span><button className="tm-preview" aria-label={`${playing ? 'Mettre en pause' : 'Écouter'} ${artist.name}`} onClick={() => props.onToggleArtistAudio(artist.id)}>{playing ? <Pause size={18} /> : <Play size={18} fill="currentColor" />}</button></div>
-            <div className="tm-artist-copy"><header><div><h3>{artist.name}</h3><p>{getTremplinProfessionLabel(artist)} · {artist.styles[0]}</p></div><MeewavGradeBadge level={artist.gradeLevel} variant="icon" size="sm" /></header><p className="tm-project">{project.headline}</p><footer><span>{status.label}</span>{status.showPrice && token && <strong className="tm-price">{formatTremplinTokenPrice(token.currentValueEur)}</strong>}<button aria-label={`Découvrir ${artist.name}`} onClick={() => openArtist(artist)}><ArrowRight size={18} /></button></footer></div>
+            <div className="tm-artist-copy">
+              <header><div><h3>{artist.name}</h3><p>{getTremplinProfessionLabel(artist)} · {artist.styles[0]}</p></div><MeewavGradeBadge level={artist.gradeLevel} variant="icon" size="sm" /></header>
+              <p className="tm-project">{project.headline}</p>
+              <footer><div className="tm-token-info"><span>{status.label}</span>{status.showPrice && token && <strong className="tm-price">{formatTremplinTokenPrice(token.currentValueEur)}<small> / jeton</small></strong>}</div><button aria-label={`Découvrir le projet de ${artist.name}`} onClick={() => openArtist(artist)}>Le projet <ArrowRight size={15} /></button></footer>
+            </div>
           </article>;
         })}
       </div>
@@ -88,7 +93,11 @@ export default function TremplinMobileHome(props: TremplinPublicHomeProps) {
 
     {followed.length > 0 && <section className="tm-section"><header className="tm-heading"><h2>Tes artistes suivis</h2><button aria-label="Ouvrir Mes artistes" onClick={props.onMyArtists}><ArrowRight size={20} /></button></header><div className="tm-followed">{followed.map(artist => <button key={artist.id} onClick={() => openArtist(artist)}><img src={artist.portrait} alt="" /><span><strong>{artist.name}</strong><small>{getTremplinProjectSnapshot(artist).headline}</small></span><ChevronRight size={18} /></button>)}</div></section>}
 
-    <section className="tm-section tm-path" aria-labelledby="tm-path-title"><header className="tm-heading"><div><span className="tm-eyebrow">SIMPLE, À TON RYTHME</span><h2 id="tm-path-title">Du talent au soutien</h2></div></header><ol>{steps.map(([title, detail], index) => <li key={title}><span>0{index + 1}</span><div><h3>{title}</h3><p>{detail}</p></div></li>)}</ol><button className="tm-text-link" onClick={() => setSheet('steps')}>Comprendre le parcours <ArrowRight size={16} /></button></section>
+    <section className="tm-section tm-path" aria-labelledby="tm-path-title">
+      <header className="tm-heading"><div><span className="tm-eyebrow">À TON RYTHME</span><h2 id="tm-path-title">Du talent au soutien</h2></div></header>
+      <ol>{steps.map(([title, detail], index) => { const Icon = stepIcons[index]; return <li key={title}><span className="tm-path-marker" aria-hidden="true"><Icon size={18} /></span><div><h3>{title}</h3><p>{detail}</p></div></li>; })}</ol>
+      <button className="tm-path-action" onClick={() => setSheet('steps')}><span>Comprendre le parcours</span><ArrowRight size={17} /></button>
+    </section>
 
     <section className="tm-section" aria-labelledby="tm-grades-title"><header className="tm-heading"><div><span className="tm-eyebrow">DES REPÈRES CONCRETS</span><h2 id="tm-grades-title">Six grades, un parcours</h2></div></header><p className="tm-subtitle">Touche un badge pour découvrir ce qu’il représente.</p><div className="tm-grades">{levels.map(level => <button key={level} onClick={() => setSheet(level)} style={{ '--grade-color': getGradeBadgeMeta(level).mainColor } as CSSProperties} aria-label={`Niveau ${level}, ${getGradeBadgeMeta(level).label}`}><MeewavGradeBadge level={level} variant="icon" size="md" /><span>{getGradeBadgeMeta(level).label}</span></button>)}</div><p className="tm-caption">Le grade reflète le parcours, pas la valeur du jeton.</p></section>
 
