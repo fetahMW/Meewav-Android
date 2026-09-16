@@ -27,7 +27,6 @@ import {
   Truck,
   UserRound,
   UsersRound,
-  X,
   Zap,
   type LucideIcon,
 } from "lucide-react";
@@ -723,6 +722,16 @@ export default function MarketPage() {
       if (frame && marketScrollRef.current) frame.scrollTop = marketScrollRef.current.scrollTop;
     };
     const back = (event: Event) => {
+      if (mediaZoomed) {
+        event.preventDefault();
+        closeMediaZoom();
+        return;
+      }
+      if (selectedProduct) {
+        event.preventDefault();
+        closeProductDetail();
+        return;
+      }
       if (viewHistory.current.length < 2) return;
       event.preventDefault();
       viewHistory.current.pop();
@@ -737,7 +746,7 @@ export default function MarketPage() {
     scroller?.addEventListener('scroll', rememberScroll, { passive: true });
     window.addEventListener('meewav:feature-back', back);
     return () => { scroller?.removeEventListener('scroll', rememberScroll); window.removeEventListener('meewav:feature-back', back); };
-  }, []);
+  }, [mediaZoomed, selectedProduct]);
   const marketCenterTriggerRef = useRef<HTMLButtonElement>(null);
   const notificationsTriggerRef = useRef<HTMLButtonElement>(null);
   const marketCenterPopoverRef = useRef<HTMLElement>(null);
@@ -2010,16 +2019,6 @@ export default function MarketPage() {
           >
             <ChevronRight aria-hidden="true" />
           </button>
-          <button
-            type="button"
-            className="market-product-modal__close"
-            aria-label="Fermer l’annonce"
-            onClick={closeProductDetail}
-            autoFocus
-          >
-            <X aria-hidden="true" />
-          </button>
-
           <div className="market-product-modal__media">
             <img src={selectedProduct.imageUrl} alt={selectedProduct.imageAlt} />
             <button
@@ -2200,15 +2199,6 @@ export default function MarketPage() {
           onClick={closeMediaZoom}
         >
           <img src={selectedProduct.imageUrl} alt={selectedProduct.imageAlt} />
-          <button
-            type="button"
-            className="market-product-modal__zoom-close"
-            aria-label="Fermer la photo agrandie"
-            onClick={closeMediaZoom}
-            autoFocus
-          >
-            <X aria-hidden="true" />
-          </button>
         </div>
       )}
 
