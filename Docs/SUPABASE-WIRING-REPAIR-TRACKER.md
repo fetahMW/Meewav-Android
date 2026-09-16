@@ -26,13 +26,13 @@ Référence : [audit et constats](SUPABASE-WIRING-AUDIT-2026-09-16.md). Un contr
 | P05 | Médias privés : lecture, upload, publication, archivage | Schéma et retry idempotent corrigés, compatibilité legacy préservée | Dev : 20260916123000 | 9 tests service ; recette réelle A/B : import, publication, lecture publique, archivage, privé refusé au tiers |
 | P06 | Métriques, classement, grades et notifications | Métriques/grades/classement raccordés ; notifications restent à recetter | Dev : 20260916130000, 131000 et 132000 ; cron quotidien actif | SQL propriétaire/tiers/idempotence/grade refusé ; API réelle ; aucun état erreur sur Samsung |
 | P07 | Espace privé/sécurité, cadeaux/attestations et outils locaux | À faire | Non | Non |
-| M01 | Tchat commun Web/Android et conversation réelle existante | Tables partagées + projection legacy bidirectionnelle, IDs historiques conservés | Dev : 20260916140000 ; adaptation UI avancée reste à faire | Tests SQL texte/vocal/droits ; API A/B simultanée réussie ; 104 régressions SQL passent |
-| M02 | Citations, réactions, épingles, transfert/suppression/préférences | À faire | Non | Non |
-| M03 | Invitations, blocage/signalement et permissions | À faire | Non | Non |
-| M04 | Collabs : requêtes, pièces jointes, discussion, réponses | À faire | Non | Non |
-| M05 | Projets : membres, tâches, outils et discussion | À faire | Non | Non |
-| M06 | Groupes : membres, planning/décisions, discussion | À faire | Non | Non |
-| M07 | Vocaux : limites, retries, stockage privé et lecture distante | Android : plafond 10 MiB/600 ms aligné, arrêt natif avant limite sans réduire AAC, retry lié au compte | APK compilé, installation suivante à faire | 1 test contrat limites/retry/concurrence/changement propriétaire passe ; micro et écoute distante restent à recetter |
+| M01 | Tchat commun Web/Android et conversation réelle existante | Contrat canonique et projection legacy bidirectionnelle ; adaptateur Android commun | Dev : 20260916140000 ; APK installé | 104 assertions SQL ; API A/B simultanée ; conversation réelle et messages visibles Samsung |
+| M02 | Citations, réactions, épingles, transfert/suppression/préférences | RPC actions et réactions actuelles ; Android lit v3 | Dev : 20260916152000, 153000 | 18 assertions + pin/réaction/suppression intercontrats ; UI actions à recetter |
+| M03 | Invitations, blocage/signalement et permissions | Fondation commune et Realtime privé raccordés ; appels à durcir | Dev : 20260916140000, 151000 | Suites SQL ; vraie souscription native : canal tiers refusé, notification reçue 406 ms |
+| M04 | Collabs : requêtes, pièces jointes, discussion, réponses | Workflow, fichiers et discussion dédiée distincte du DM | Dev : 20260916143000, 145000, 153000 | 50 + 88 assertions SQL, isolation/retry discussion collab ; UI à recetter |
+| M05 | Projets : membres, tâches, outils et discussion | Socle projets/membres/tâches raccordé ; outils locaux à terminer | Dev : 20260916144000 | 83 assertions SQL ; UI et Track Pack persistants à recetter |
+| M06 | Groupes : membres, planning/décisions, discussion | Socle groupes et membres raccordé ; planning/décisions à examiner | Dev : 20260916150000 | 58 assertions SQL ; UI/outils restent à recetter |
+| M07 | Vocaux : limites, retries, stockage privé et lecture distante | AAC legacy exposé au lecteur commun ; autres conversations par attachments ; réservation vocale corrigée | Dev : 20260916154000 ; APK 08:55 installé, dernier correctif client à installer | Contrat natif + projection SQL + 7 tests service ; micro et lecture physique restent à recetter |
 | M08 | Vidéo Web/Android, jetons, signalisation et cycle de vie | À faire | Non | Non |
 | G01 | Population publique réelle, recherche, Top 10, profils/actions | À faire | Non | Non |
 | G02 | Pont session/arrivée Android, démo distincte du réel | À faire | Non | Non |
@@ -58,3 +58,8 @@ Les paiements, signatures juridiques et quatre prochains piliers ne sont pas à 
 
 - M01 : migration partagée SHA `0d9ae3600d6e5231bec854187d031402de0eca12b2f04d734f11afae687985a8` appliquée après recette rollback. Anciennes conversations/messages/accusés préservés ; les nouveaux directs Web sont visibles dans la projection legacy. API réelle A/B à 06:38 UTC : envois simultanés opposés, mêmes identifiants, retry sans doublon. Aucun destinataire humain.
 - Recherche contacts : ajout des tables de reconnaissances serveur manquantes, sans attribuer de badge. Attribution client refusée, progression idempotente, profil privé absent de la projection publique. La suite existante messagerie (104 assertions) passe en rollback, avec uniquement l’appel de fixture onboarding adapté au nom réellement déployé. Les fonctionnalités avancées et appels vidéo restent en cours.
+
+- Lot messagerie avancée : migrations 143000→154000 effectivement déployées, preuves SHA et recettes dans app/build/shared-schema. Suites : 50 collabs, 83 projets, 88 attachments, 58 groupes, 35 realtime, 18 actions plus exercices intercontrats. Quatre dernières migrations et correction réservation vocale enregistrées Web 872d97a1f.
+- Recette réseau 07:03 UTC : client identique au pont natif (accessToken sans Auth JS), canal privé propriétaire souscrit, canal étranger refusé, signal de message reçu en 406 ms ; uniquement identifiants dans le payload.
+- Recette Storage 07:04 UTC via repository Web réel : réservations/envois idempotents, brouillon non lisible par le destinataire, pièce jointe envoyée téléchargeable, anonyme refusé, suppression interdit nouvelles URL signées, abandon supprime le blob par Storage API. Le worker de rétention des pièces jointes supprimées reste à déployer/vérifier. Anciennes URL signées : expiration normale.
+- Samsung : conversation A/B ouverte, messages distants et suppression reçus dans la conversation, aucune erreur affichée. Pas encore de validation physique audio/vidéo.

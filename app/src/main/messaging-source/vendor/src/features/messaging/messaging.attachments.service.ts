@@ -208,8 +208,10 @@ export function validateMessagingAttachment(input: {
   if (input.sizeBytes > MESSAGING_ATTACHMENT_MAX_BYTES[input.purpose]) {
     throw new MessagingAttachmentsError("attachment_size_limit");
   }
-  if (input.purpose === "voice_note"
-    && (input.durationMs == null || !Number.isInteger(input.durationMs)
+  // Reservation happens before duration metadata is finalized. The server
+  // requires a valid duration before this upload can become an attachment.
+  if (input.purpose === "voice_note" && input.durationMs != null
+    && (!Number.isInteger(input.durationMs)
       || input.durationMs < 1 || input.durationMs > 600_000)) {
     throw new MessagingAttachmentsError("voice_note_duration_limit");
   }

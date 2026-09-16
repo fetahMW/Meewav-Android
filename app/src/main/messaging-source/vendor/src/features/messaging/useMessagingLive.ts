@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { iosDirectRepository, sendIosVoice } from '../../../../iosDirectMessaging';
-import { supabase } from '../../../../runtime';
 import {
   mapConversationRowToViewModel,
   mapMessageRowToViewModel,
@@ -82,11 +81,7 @@ function mapLiveMessage(
   currentProfileId: string,
 ): MessagingMessageViewModel {
   const base = mapMessageRowToViewModel(row, currentProfileId);
-  if ('voiceMediaUrl' in row && row.voiceMediaUrl) {
-    const seconds = Math.max(1,Math.round(Number((row as any).voiceDurationMs)/1000));
-    return {...base,kind:'audio' as const,body:'Note vocale',mediaUrl:String(row.voiceMediaUrl),
-      duration:`${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`,compactAudio:true};
-  }
+
   if (!("attachments" in row) || !Array.isArray(row.attachments)) return base;
   const structured = mapServerMessageToDemoMessage({
     message: row as MessagingMessageWithAttachments,
@@ -375,10 +370,6 @@ export function useMessagingLive({
       const rows = await repository.listMessages({
         conversationId,
         beforeSequence: firstServerSequence,
-        beforeCreatedAt: current.filter(message => message.deliveryStatus === 'sent')
-          .sort((a,b)=>a.server.createdAt.localeCompare(b.server.createdAt)||a.id.localeCompare(b.id))[0]?.server.createdAt,
-        beforeId: current.filter(message => message.deliveryStatus === 'sent')
-          .sort((a,b)=>a.server.createdAt.localeCompare(b.server.createdAt)||a.id.localeCompare(b.id))[0]?.id,
         limit: 50,
       });
       if (selectedRef.current !== conversationId) return [];
@@ -950,22 +941,6 @@ export function useMessagingLive({
       setActionError({code:'mutation_failed',message:'Le vocal n’a pas été envoyé. Il est conservé ici : tu peux réessayer.'});return false;
     }
   },[active,currentProfileId,refreshSelectedConversation,refreshInbox]);
-
-  useEffect(()=>{
-    if(!active||!currentProfileId)return;
-    let queued:number|undefined;
-    const refresh=()=>{
-      if(document.hidden)return;
-      window.clearTimeout(queued);
-      queued=window.setTimeout(()=>{void refreshInbox({silent:true});void refreshSelectedConversation();},120);
-    };
-    const channel=supabase.channel(`android-direct-messages:${currentProfileId}`)
-      .on('postgres_changes',{event:'INSERT',schema:'public',table:'messaging_messages_v1'},refresh)
-      .subscribe();
-    // Foreground recovery also covers a dropped realtime subscription.
-    const timer=window.setInterval(refresh,10_000);
-    return ()=>{window.clearTimeout(queued);window.clearInterval(timer);void supabase.removeChannel(channel);};
-  },[active,currentProfileId,refreshInbox,refreshSelectedConversation]);
 
   return {
     conversations,

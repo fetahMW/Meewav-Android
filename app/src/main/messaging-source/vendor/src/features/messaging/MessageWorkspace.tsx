@@ -2738,7 +2738,7 @@ export default function MessageWorkspace({
 
   const sendRecordedVoice = () => {
     if (!recordedVoice || voiceSendingRef.current) return;
-    if (liveController?.sendVoice) {
+    if (liveController?.sendVoice && selectedConversation?.conversationKind === "direct" && !selectedConversation.collaborationRequestId) {
       const voice = recordedVoice;
       const operation = crypto.randomUUID(); voiceSendingRef.current = operation; setVoiceSending(true);
       void liveController.sendVoice(voice.file,voice.durationMs).then((sent:boolean) => {

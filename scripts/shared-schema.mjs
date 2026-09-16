@@ -30,7 +30,15 @@ try{
  await client.query(sql);
  const after=(await client.query('select (select count(*) from auth.users)::int as users,(select count(*) from public.profiles)::int as profiles,(select count(*) from public.messaging_messages_v1)::int as messages')).rows[0];
  if(JSON.stringify(before)!==JSON.stringify(after))throw Error('Unexpected cardinality change');
- if(testSource)await client.query(testSource);
+ if(testSource){
+ await client.query('SET LOCAL search_path=public,extensions,pg_catalog');
+ const results=await client.query(testSource.replace(/^\s*(?:begin|commit|rollback);\s*$/gmi,''));
+ const lines=(Array.isArray(results)?results:[results]).flatMap(r=>r.rows.flatMap(row=>Object.values(row).filter(v=>typeof v==='string'))).flatMap(v=>v.split('\n'));
+ const failures=lines.filter(l=>/^not ok|^#.*(?:failed|planned)/i.test(l));
+ const plan=lines.find(l=>/^1\.\.\d+$/.test(l));const passed=lines.filter(l=>/^ok \d+/.test(l)).length;
+ if(failures.length||(plan&&passed!==Number(plan.slice(3))))throw Error(JSON.stringify({plan,passed,failures,diagnostics:lines.filter(l=>l.startsWith('#'))}));
+ if(plan)console.log(JSON.stringify({testsPassed:passed,plan}));
+ }
  if(apply){await client.query('insert into supabase_migrations.schema_migrations(version,name,statements) values($1,$2,$3)',[version,basename(path).replace('.sql','').slice(15),[source]]);await client.query("NOTIFY pgrst,'reload schema'");await client.query('COMMIT');}
  else await client.query('ROLLBACK');
  const result={at:new Date().toISOString(),project:'dqabekaqpznjsagoxzwc',migration:basename(path),sha256:digest,testSha256:testSource?createHash('sha256').update(testSource).digest('hex'):null,result:apply?'applied':'dry-run-rolled-back',cardinalityUnchanged:true};
