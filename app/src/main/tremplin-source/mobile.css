@@ -1,0 +1,70 @@
+/* Android adaptation only. Web components, backgrounds, artwork and flows stay
+   in vendor; Profile is the source of the glass materials and bottom dock. */
+:root { --tremplin-mobile-header: 100px; }
+.mobile-tremplin-back { position: fixed; z-index: 50; top: 0; left: 4px; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; color: #d6d8e0; }
+#root .mobile-tremplin .tremplin-page { position: absolute; z-index: auto; inset: 0; min-height: 0; width: 100%; --tremplin-nav-space: 0px; --tremplin-primary-band-height: 100px; --tremplin-header-height: 0px; --tremplin-secondary-band-height: 0px; }
+#root .mobile-tremplin .tremplin-primary-rail { display: none; }
+#root .mobile-tremplin .tremplin-shell { inset: 0; display: block; padding: 0; }
+#root .mobile-tremplin .tremplin-topbar {
+  position: absolute; z-index: 30; inset: 0 0 auto; display: grid;
+  grid-template-columns: minmax(0,1fr); grid-template-rows: 44px 56px;
+  width: 100%; height: var(--tremplin-mobile-header); min-height: 0; gap: 0; margin: 0; padding: 0 10px;
+  border: 0; border-radius: 0; border-bottom: 1px solid #d3d9e01f;
+  background: var(--profile-header-glass); backdrop-filter: blur(24px) saturate(1.15); -webkit-backdrop-filter: blur(24px) saturate(1.15);
+  box-shadow: inset 0 -1px #ffffff06,0 4px 16px #0002;
+}
+#root .mobile-tremplin .tremplin-brand { grid-area: 1 / 1; justify-self: center; padding: 0 44px; max-width: 100%; }
+#root .mobile-tremplin .tremplin-brand :is(.meewav-pillar-brand__app,.meewav-pillar-brand__separator) { display: none; }
+#root .mobile-tremplin .tremplin-brand .meewav-pillar-brand__pillar { color: #f4f5f7; font-size: 22px; }
+/* Activity and account destinations remain available through Mes artistes. */
+#root .mobile-tremplin .tremplin-topbar__actions { display: none; }
+#root .mobile-tremplin .tremplin-contextbar__toolbar { grid-area: 2 / 1; width: 100%; min-width: 0; height: 56px; padding: 0; margin: 0; }
+#root .mobile-tremplin .tremplin-pillar-tabs { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); width: 100%; min-width: 0; height: 56px; gap: 0; padding: 0; border: 0; background: transparent; overflow: hidden; }
+#root .mobile-tremplin .tremplin-pillar-tabs button { display: flex; flex-direction: column; justify-content: center; position: relative; min-width: 0; min-height: 48px; padding: 6px 2px; gap: 4px; border: 0; border-radius: 0; background: transparent; color: #b7bac3; box-shadow: none; }
+#root .mobile-tremplin .tremplin-pillar-tabs button strong { font-size: 10px; font-weight: 550; line-height: 1.2; white-space: nowrap; }
+#root .mobile-tremplin .tremplin-pillar-tabs button svg { width: 18px; height: 18px; }
+#root .mobile-tremplin .tremplin-pillar-tabs .meewav-pillar-tabs__icon { width: 18px; height: 18px; flex: 0 0 18px; color: inherit; border: 0; background: none; box-shadow: none; }
+#root .mobile-tremplin .tremplin-pillar-tabs button.is-active { color: #fff; }
+#root .mobile-tremplin .tremplin-pillar-tabs button.is-active::after { content: ''; position: absolute; bottom: 1px; left: 26%; right: 26%; height: 2px; border-radius: 100%; background: linear-gradient(90deg,transparent,#bca5e6,transparent); box-shadow: 0 0 7px #9c7dd45c; }
+#root .mobile-tremplin .tremplin-pillar-tabs .meewav-pillar-tabs__indicator { display: none; }
+#root .mobile-tremplin .tremplin-scroll {
+  position: absolute; inset: var(--tremplin-mobile-header) 0 0; width: 100%; height: auto; min-height: 0; max-height: none;
+  margin: 0; padding: 12px 12px 108px; overflow-y: auto; overflow-x: hidden;
+  scrollbar-width: none; overscroll-behavior-y: contain; scroll-padding: 12px 0 110px;
+}
+#root .mobile-tremplin .tremplin-scroll::-webkit-scrollbar { display: none; }
+#root .mobile-tremplin .tremplin-scroll:has(~ .tremplin-now-playing),
+#root .mobile-tremplin .tremplin-page:has(.tremplin-now-playing) .tremplin-scroll { padding-bottom: 172px; }
+#root .mobile-tremplin :is(.tremplin-primary-cta,.ttw-primary-button,.tremplin-gateway__hero-actions .is-primary,.tremplin-gateway__section-actions .is-primary) { background: var(--mobile-violet-cta); border-color: var(--mobile-cta-rim); color: #fff; }
+#root .mobile-tremplin :is(button,input,select,textarea) { touch-action: manipulation; }
+#root .mobile-tremplin :is(input,select,textarea) { font-size: 16px; min-height: 44px; min-width: 0; max-width: 100%; }
+#root .mobile-tremplin :is(h1,h2,h3,p) { overflow-wrap: anywhere; }
+#root .mobile-tremplin :is(.tremplin-gateway__demo,.tremplin-gateway__hero,.tremplin-gateway__section) { width: 100%; margin-inline: 0; }
+#root .mobile-tremplin .tremplin-gateway { padding-bottom: 0; }
+#root .mobile-tremplin .tremplin-gateway__hero { grid-template-columns: minmax(0,1fr); padding: 20px 16px; gap: 22px; margin-top: 10px; border-radius: 22px; }
+#root .mobile-tremplin .tremplin-gateway__hero h1 { font-size: clamp(28px,8vw,34px); line-height: 1.12; }
+#root .mobile-tremplin .tremplin-gateway__hero-copy > p { font-size: 13px; line-height: 1.6; }
+#root .mobile-tremplin .tremplin-gateway__hero-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+#root .mobile-tremplin .tremplin-gateway__hero-actions button { min-height: 46px; flex: 1 1 140px; padding: 10px 12px; font-size: 12px; white-space: normal; }
+#root .mobile-tremplin .tremplin-gateway__section { margin-top: 24px; }
+#root .mobile-tremplin .tremplin-scroll :is(.tremplin-token-home,.tremplin-token-artist,.tremplin-my-dashboard,.tremplin-home-discovery,.tremplin-token-education) { min-width: 0; max-width: 100%; margin-inline: 0; }
+#root .mobile-tremplin .tremplin-scroll.is-home-wall .tremplin-home-discovery { height: auto; min-height: 100%; }
+#root .mobile-tremplin .tremplin-my-dashboard__header h1 { font-size: 27px; line-height: 1.2; }
+#root .mobile-tremplin .tremplin-token-artist__hero { grid-template-columns: minmax(0,1fr); gap: 16px; padding: 16px; }
+#root .mobile-tremplin .tremplin-token-artist__hero h1 { font-size: 28px; }
+#root .mobile-tremplin .tremplin-token-artist__section-nav { position: sticky; top: -12px; z-index: 10; padding: 8px; gap: 4px; border: 1px solid #bda3e52c; border-radius: 14px; background: var(--profile-selector-glass); backdrop-filter: blur(22px); display: flex; overflow-x: auto; scrollbar-width: none; }
+#root .mobile-tremplin .tremplin-token-artist__section-nav :is(a,button) { flex-shrink: 0; min-height: 44px; display: inline-flex; align-items: center; padding: 6px 10px; font-size: 12px; }
+#root .mobile-tremplin .tremplin-now-playing { position: fixed; z-index: 40; left: 12px; right: 12px; bottom: 88px; width: auto; max-width: none; margin: 0; border: 1px solid #bda3e533; border-radius: 18px; background: var(--profile-mobile-glass); backdrop-filter: blur(24px); box-shadow: var(--profile-mobile-glass-edge); }
+#root .mobile-tremplin .tremplin-now-playing > div { min-width: 0; }
+#root .mobile-tremplin .tremplin-now-playing strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#root .mobile-tremplin .tremplin-toast { position: fixed; z-index: 100; inset: auto 12px 152px; max-width: calc(100% - 24px); width: auto; transform: none; font-size: 13px; }
+#root .mobile-tremplin :is(.ttw-workspace,.ttw-creator-shell,.ttw-creator-workspace,.tremplin-token-flow) { min-height: 0; height: auto; max-width: 100%; border-radius: 20px; }
+#root .mobile-tremplin :is(.ttw-topbar,.ttw-creator-topbar) { top: 0; background: var(--profile-selector-glass); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); }
+#root .mobile-tremplin .ttw-dashboard-tabs { overflow-x: auto; scrollbar-width: none; background: var(--profile-selector-glass); backdrop-filter: blur(22px); }
+.mobile-tremplin-section { position: sticky; top: -12px; z-index: 15; margin: 12px 0; padding: 6px 0; background: var(--profile-selector-glass); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); border-block: 1px solid #bda3e526; }
+.mobile-tremplin-section > button { width: 100%; min-height: 46px; padding: 8px 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; border: 0; background: transparent; color: #eeeaf6; font: inherit; font-size: 14px; }
+.mobile-tremplin-section > div { display: grid; padding: 4px 8px 8px; gap: 4px; max-height: 45dvh; overflow-y: auto; }
+.mobile-tremplin-section > div button { min-height: 44px; padding: 10px 12px; text-align: left; border: 0; border-radius: 10px; color: #c6c4d2; background: #08090bbb; font: inherit; font-size: 13px; }
+.mobile-tremplin-section > div button[aria-current] { background: #4f359e35; color: white; box-shadow: inset 2px 0 #9274d8; }
+@media (max-width: 360px) { #root .mobile-tremplin .tremplin-pillar-tabs button strong { font-size: 9px; } }
+@media (prefers-reduced-motion: reduce) { #root .mobile-tremplin * { scroll-behavior: auto !important; } }

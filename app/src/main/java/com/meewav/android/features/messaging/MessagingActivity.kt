@@ -147,7 +147,7 @@ open class MessagingActivity : ComponentActivity() {
                 // BytePlus reads DOM storage during module initialization. The
                 // Auth client still has persistSession=false; refresh tokens
                 // remain exclusively in the native encrypted session manager.
-                domStorageEnabled = assetSurface == "messaging"
+                domStorageEnabled = assetSurface in setOf("messaging", "tremplin")
                 databaseEnabled = false
                 allowFileAccess = false; allowContentAccess = true
                 allowFileAccessFromFileURLs = false; allowUniversalAccessFromFileURLs = false
@@ -218,12 +218,17 @@ open class MessagingActivity : ComponentActivity() {
                     }
                     return true
                 }
-                if (request.url.toString() == "$ORIGIN/native/messages" && assetSurface == "profile") {
-                    startActivity(Intent(this@MessagingActivity, MessagingActivity::class.java).putExtra("preview", preview))
-                    return true
-                }
-                if (request.url.toString() == "$ORIGIN/native/profile" && assetSurface == "messaging") {
-                    startActivity(Intent(this@MessagingActivity, com.meewav.android.features.profile.ProfileActivity::class.java).putExtra("preview", preview))
+                if (request.isForMainFrame && request.method == "GET" && request.url.scheme == "https"
+                    && request.url.host == "appassets.androidplatform.net"
+                    && request.url.path in setOf("/native/messages", "/native/profile", "/native/tremplin")) {
+                    val destination = when (request.url.path) {
+                        "/native/profile" -> com.meewav.android.features.profile.ProfileActivity::class.java
+                        "/native/tremplin" -> com.meewav.android.features.tremplin.TremplinActivity::class.java
+                        else -> MessagingActivity::class.java
+                    }
+                    startActivity(Intent(this@MessagingActivity, destination)
+                        .putExtra("preview", preview)
+                        .putExtra("route", request.url.getQueryParameter("route")))
                     return true
                 }
                 if (request.url.toString() == "$ORIGIN/native/globe") {
@@ -258,7 +263,11 @@ open class MessagingActivity : ComponentActivity() {
                 pageReady = true; sendConfiguration()
             }
             override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
-                if (request.isForMainFrame) showUnavailable(if (assetSurface == "profile") "Le profil n’a pas pu s’ouvrir." else "La messagerie n’a pas pu s’ouvrir.")
+                if (request.isForMainFrame) showUnavailable(when (assetSurface) {
+                    "profile" -> "Le profil n’a pas pu s’ouvrir."
+                    "tremplin" -> "Le Tremplin n’a pas pu s’ouvrir."
+                    else -> "La messagerie n’a pas pu s’ouvrir."
+                })
             }
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
                 val uri = request.url

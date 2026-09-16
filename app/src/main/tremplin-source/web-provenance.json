@@ -1,0 +1,274 @@
+{
+  "source": "Meewav-Web",
+  "commit": "32a5e5fea7f6eebb3867c22a27e8b62230bb8d21",
+  "files": [
+    {
+      "path": "src/components/navigation/meewav-chrome-brand.css",
+      "sha256": "1e262b4b9f9bc04c516c24be00780ca94293d8bef4d8ca290b04f90c9c7c5120"
+    },
+    {
+      "path": "src/components/navigation/meewav-pillar-brand.css",
+      "sha256": "95e852016fdbdd94230ed991d0c63addb5a66e7f8e75b9624ece1843f92061ef"
+    },
+    {
+      "path": "src/components/navigation/MeewavPillarBrand.tsx",
+      "sha256": "ab45b0d1b401b195a57448276f3ee69dc75ca8191a6c95329a20513a5a162005"
+    },
+    {
+      "path": "src/components/navigation/meewav-pillar-tabs.css",
+      "sha256": "ebc7bdfae14b335f56f6e363f542b081eaf86f0c8c23724811fcf9bb2c2f2f9e"
+    },
+    {
+      "path": "src/components/navigation/MeewavPillarTabs.tsx",
+      "sha256": "e6f9f2218ab22f891cfe65c38e8e19e291c4d21adb24e5c77d10f8d834285788"
+    },
+    {
+      "path": "src/features/grades/gradeBadges.ts",
+      "sha256": "8fb6ec73e48d73f5f2e651e305df57e28f3a0049225cb6fb5bb0130638057ffb"
+    },
+    {
+      "path": "src/features/grades/MeewavGradeBadge.css",
+      "sha256": "7bbbaf3913b61e03eee625c8645e54bdf7aaf46d17d804041b6f8cab586bd687"
+    },
+    {
+      "path": "src/features/grades/MeewavGradeBadge.tsx",
+      "sha256": "ff527c4d2e3cfb423a812d9b43c5c6540307bd8a089d3dcf972accb5f9066704"
+    },
+    {
+      "path": "src/features/globe/monGlobeContract.ts",
+      "sha256": "c77461faddd9c1b56ad802b57c9bfab0eed8d47c769476b47ce19ad81d69b551"
+    },
+    {
+      "path": "src/features/tremplin/tremplinRoleData.ts",
+      "sha256": "f4df783dc895c9e76cd3170c772f87f958cab18a79b83e3f4d92bc636ec034b6"
+    },
+    {
+      "path": "src/features/tremplin/tremplinProductModel.ts",
+      "sha256": "135792ea2f5d4a34843f4265f6965b792ec7b20193021b2966a7600076bd9b1c"
+    },
+    {
+      "path": "src/features/tremplin/tremplin-grade-system.css",
+      "sha256": "d3c678bf9832d5695d9f956147083ed4de7efa7f2394949716d005fb1373f0e5"
+    },
+    {
+      "path": "src/features/tremplin/TremplinGradeSystem.tsx",
+      "sha256": "c8339d3d098ed7a9501b9218236a37fe845df30b44c10bcbbe8a464a128d0ced"
+    },
+    {
+      "path": "src/features/tremplin/tremplinCopy.ts",
+      "sha256": "be793f06dd87933243bd9023ecc906f5bef5ae6c93d33bc364c35dc4e17616b3"
+    },
+    {
+      "path": "src/features/tremplin/tremplinFeatureFlags.ts",
+      "sha256": "d73c30bb88b1ddd810b25ce8f8f186856902052c85646d461203fbfc14093a05"
+    },
+    {
+      "path": "src/features/tremplin/TremplinDemoBanner.tsx",
+      "sha256": "4a27e2ddcfed979cab0389ffbfa95651a88193099dbc66f94944a449f9f185f2"
+    },
+    {
+      "path": "src/assets/signature-mw.svg",
+      "sha256": "37c31b519b1f3ac563e05ab3c66b5ba307b178a2ebf694cb50d89df504f749a2"
+    },
+    {
+      "path": "src/features/tremplin/MeewavTokenIcon.tsx",
+      "sha256": "071b3de2b4ee35e8743aad70fffc0bd52a599fcd212f3dfd55397b55463fbd17"
+    },
+    {
+      "path": "src/components/shared/rail/rail-edge-navigation.css",
+      "sha256": "ca665b066290b059aae9c0a9f97c1a4c34188343999a8c0ae0dcdc1c0a13aac6"
+    },
+    {
+      "path": "src/components/shared/rail/RailEdgeNavigation.tsx",
+      "sha256": "6837073e56408846b648fd0120323a478dc15a8bbc2c68df926220e88c29ed36"
+    },
+    {
+      "path": "src/features/globe/styles/globe-v2.css",
+      "sha256": "90963843430b0e810b692b4558c03b826c536b4d2a8e68519b5c12bfb52e4693"
+    },
+    {
+      "path": "src/components/shared/search-filter/meewav-search-filter.css",
+      "sha256": "aaafc938f8ccfdacd78cfd74021620e3eb0b32d9dc7f81fde87d700f23fe91b7"
+    },
+    {
+      "path": "src/components/shared/search-filter/MeewavSearchFilter.tsx",
+      "sha256": "b879ccae698f7ba761bc820e78e54f938de6e61ca7ea7c5a0191a4a7ae28b9e8"
+    },
+    {
+      "path": "src/features/tremplin/generatedRoster/danceRoster.ts",
+      "sha256": "68bc8f8e6aced11b518432e00a4a3a4c3629449af9c5ba7c2a6ff3c046a2bd09"
+    },
+    {
+      "path": "src/features/tremplin/generatedRoster/pianoRoster.ts",
+      "sha256": "840c06990090620c6d5c4909d4b1d6a3ffd41a7dd6a7be63f2eb4e872e7f9efc"
+    },
+    {
+      "path": "src/features/tremplin/generatedRoster/soundImageRoster.ts",
+      "sha256": "f4231679ea3b3d32b4b139240e693de2d63b7787b2f949ea6f94af885db49c02"
+    },
+    {
+      "path": "src/features/tremplin/generatedRoster/supportRoster.ts",
+      "sha256": "aa95ab180dcd803099c3bb3539d530dd2f4fb206e800420d909dd59eac010799"
+    },
+    {
+      "path": "src/features/tremplin/tremplinArtistData.ts",
+      "sha256": "de7c24f1ce9cf54d8502095810ade7879d1cb1d60192d4b769450c897c90fe97"
+    },
+    {
+      "path": "src/features/tremplin/tremplinProjectData.ts",
+      "sha256": "511a601c09154f215c92139756ef866a5269fabd6facbf3eeecc72c84106055b"
+    },
+    {
+      "path": "src/features/tremplin/tremplinTokenData.ts",
+      "sha256": "c91fb3d6509696e6af64034be93e692dfe66cdfa2912255bee3d4451c20d69e0"
+    },
+    {
+      "path": "src/features/tremplin/TremplinTokenChange24h.tsx",
+      "sha256": "c3fb83d056fbe1db962e830260ffa8c83705cc09bd873b0b3a2aa276e0d5a4cf"
+    },
+    {
+      "path": "src/features/tremplin/tremplinDiscoveryToken.ts",
+      "sha256": "156e182b38c53ac6e506ea4cabb106703974fb77dc873f4cf94a4ee65d1d7c61"
+    },
+    {
+      "path": "src/features/tremplin/tremplin-home-experience.css",
+      "sha256": "bdea349ba44d96ddd04e8b2c81fb8fc812ee8f5e988627bbfb7c7d562ff3cd88"
+    },
+    {
+      "path": "src/features/tremplin/tremplin-discovery-premium.css",
+      "sha256": "4bd819ffcc92e8f769f9324dec3c011ed334979f33026888482b8310f37d8732"
+    },
+    {
+      "path": "src/features/tremplin/tremplin-discovery-rails.css",
+      "sha256": "a892d9e77ac1c88a2ef81b66dee415f02c8e0ca182bad78f87a74711de99ef15"
+    },
+    {
+      "path": "src/features/tremplin/TremplinHomeExperience.tsx",
+      "sha256": "5a6d1f37d10d22736e7bee79baae8f5a2c3c84ebd2769f1470113e3c3b2ff972"
+    },
+    {
+      "path": "src/features/tremplin/tremplinAnalytics.ts",
+      "sha256": "fa33a250c446871e3c5578a9970765efaa5909b1281ad03b06d26ccfd69ce78f"
+    },
+    {
+      "path": "src/features/globe/api/preProfile.api.ts",
+      "sha256": "28b2bc4dd679411ab770cf45b5a179562785177794968eb556cabf294af39bb4"
+    },
+    {
+      "path": "src/features/tremplin/tremplinFollowService.ts",
+      "sha256": "df2751a702d03e70ca3f922de92590952fd53dd456fab0522b13b5d53b087447"
+    },
+    {
+      "path": "src/features/tremplin/tremplinPersistence.ts",
+      "sha256": "733aa2f6489f46ac1f53433f14f628d19fe7f5a00d57ebc13d8bc75815fbe647"
+    },
+    {
+      "path": "src/features/tremplin/tremplinHomeTokenStatus.ts",
+      "sha256": "3ef78e854e46d15d9a5ce8f8eb831995bd6ae288eec3cd28351a4cabf2dd63f9"
+    },
+    {
+      "path": "src/features/tremplin/tremplin-public-home.css",
+      "sha256": "4b9e20a38629c857a746cfd6db85f7b18dbee8cea617f5adf59a11022821198b"
+    },
+    {
+      "path": "src/features/tremplin/tremplin-public-home-compact.css",
+      "sha256": "fd0e10da6a02b70389560ad6cab9063321eaf9c532d7212b90ac6a5747f25e8c"
+    },
+    {
+      "path": "src/features/tremplin/tremplin-public-home-gateway.css",
+      "sha256": "36553a535237f91973609cf2f420662e6b52fb7a23f08023bfb5f56af29752b1"
+    },
+    {
+      "path": "src/features/tremplin/tremplin-grades-prestige.css",
+      "sha256": "6b1abd463c5fde3290effd1cb9e3bf8293c6fb20bccfd91e6a649cae93370439"
+    },
+    {
+      "path": "src/features/tremplin/TremplinGradeProgression.tsx",
+      "sha256": "b5f367e245b75fb2443d55971725776d5ae661420ffd381b11843f32372df4cb"
+    },
+    {
+      "path": "src/features/tremplin/TremplinPublicHome.tsx",
+      "sha256": "93a64805b783a3cf873519120b2cb8b8b79d7c41b6d97f0dcf0467899c8be284"
+    },
+    {
+      "path": "src/features/shorts/sceneContract.ts",
+      "sha256": "0ff6f4df8866ae24e5e9427e46efac16c71c6c81e931f9f4dd8daca9a726782c"
+    },
+    {
+      "path": "src/features/tremplin/tremplin-curve-explainer.css",
+      "sha256": "6b4766465af844a2cfec784949845a6dc355542daefed296946b90eb51bf996e"
+    },
+    {
+      "path": "src/features/tremplin/tremplin-token-education.css",
+      "sha256": "53fe648b68ded0af1c6a8d37094149aed31e536bba300782680d6734f7e36256"
+    },
+    {
+      "path": "src/features/tremplin/tremplin-discovery-guide.css",
+      "sha256": "37a24ffd1fffe147d80a88de0969f5da244e8cf89b30ce3f0b78ca46ba8b19d9"
+    },
+    {
+      "path": "src/features/tremplin/tremplin-follow-guide.css",
+      "sha256": "e7a75387a4d3e5f6eabe0fda5617e247c4c55f1f894ba1bcfd34d906b2686691"
+    },
+    {
+      "path": "src/features/tremplin/tremplin-token-guide.css",
+      "sha256": "d83b0d1738c8c2ec59acd7a99814fc72da9bbb13c2a7f9dd8b8f951554604022"
+    },
+    {
+      "path": "src/features/tremplin/tremplin-education-surfaces.css",
+      "sha256": "1c48cc8f9689273bd529482aeac98d0a53b6e564ad24b026bb1b01cbc3c0cd65"
+    },
+    {
+      "path": "src/features/tremplin/TremplinTokenEducation.tsx",
+      "sha256": "de7cdfb2553f6f31664ac8ee649913114b32a80b60bb19383369b83a15330b86"
+    },
+    {
+      "path": "src/features/tremplin/tremplinQuoteService.ts",
+      "sha256": "1f96f7dc072751dbf5742fbd4003daaffde155ac427d15e33c8041834ec75a39"
+    },
+    {
+      "path": "src/features/tremplin/tremplin-token-flow.css",
+      "sha256": "62e4125d59285856a72f81f6161dbbf4e4820109e8dd42dbc9109a797252855d"
+    },
+    {
+      "path": "src/features/tremplin/TremplinTokenFlow.tsx",
+      "sha256": "f5917dd891249f14cc2a711b027869898e19c716e0e2a89d1c3eeb905c5de0de"
+    },
+    {
+      "path": "src/features/tremplin/tremplin-token-workspace.css",
+      "sha256": "0503ae285e846acf852d42f00822b73fc8d5f588d53ccb25bb79b064c2f14324"
+    },
+    {
+      "path": "src/features/tremplin/TremplinTokenWorkspace.tsx",
+      "sha256": "bdc05aad62e5ef53ecad0c07834d0c6aa16c2040e6533e58882caa10d9d45728"
+    },
+    {
+      "path": "src/features/tremplin/tremplinMyArtistsFixtures.ts",
+      "sha256": "8de71e33c302fe47e461a5988cdd966844ef9fea35e048678fc5979cf1db5133"
+    },
+    {
+      "path": "src/features/tremplin/tremplinViewer.ts",
+      "sha256": "a6af447cefb13275f93c1a8c4a41f74ed62d3379bd939ba3d4a1fa2b6b3ae2b3"
+    },
+    {
+      "path": "src/features/tremplin/tremplin-page.css",
+      "sha256": "d04901d76b52c43861baf111cd860da743563f119800bc90137596b9691f6dd9"
+    },
+    {
+      "path": "src/features/tremplin/tremplin-shell.css",
+      "sha256": "1cdc91391e9c5c2edb1cccfe383c4294da73a95bc7145fc4465bbecbf8c0436e"
+    },
+    {
+      "path": "src/features/tremplin/tremplin-token-page.css",
+      "sha256": "515ad3611d63acc5edde7f979e64df9037a652c25e4de0b1c030e1a9adf53aec"
+    },
+    {
+      "path": "src/features/tremplin/tremplin-my-artists-premium.css",
+      "sha256": "7c63e74c545228f3e81f5cc3adfe573eb47e1b1a3a90bb97395fa50bba6e6418"
+    },
+    {
+      "path": "src/features/tremplin/TremplinPage.tsx",
+      "sha256": "d946e9774e7c8c816f66ee1a4c5f7bc8d14a863c58defbeb2f77eb117f8d8e73"
+    }
+  ]
+}

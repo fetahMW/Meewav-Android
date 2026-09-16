@@ -26,6 +26,10 @@
             android:exported="false" android:screenOrientation="portrait"
             android:configChanges="orientation|screenSize|smallestScreenSize|keyboardHidden"
             android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".features.tremplin.TremplinActivity"
+            android:exported="false" android:screenOrientation="portrait"
+            android:configChanges="orientation|screenSize|smallestScreenSize|keyboardHidden"
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".app.MainActivity"
             android:exported="true"

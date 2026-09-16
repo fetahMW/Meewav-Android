@@ -6,6 +6,7 @@
 - [Globe : audit Web et arrivée en paysage](Globe/README.md)
 - [Messagerie : reprise Web, interface Android et limites serveur](Messaging/README.md)
 - [Profil : sources Web, matières, dock iOS et intégration Android](Profile/README.md)
+- [Tremplin : import Web, navigation commune au Profil et limites des simulations](Tremplin/README.md)
 - [Audit Supabase Web / iOS / Android — 16 septembre 2026](SUPABASE-WIRING-AUDIT-2026-09-16.md) : état des contrats réellement déployés, incompatibilités et ordre de raccordement ; démos investisseurs conservées.
 - [Inventaire RPC comparé au serveur](SUPABASE-RPC-INVENTORY-2026-09-16.md) et [preuve de schéma sans données utilisateur](SUPABASE-WIRING-EVIDENCE-2026-09-16.json).
 

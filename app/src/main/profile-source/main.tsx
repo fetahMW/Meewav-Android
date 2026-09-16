@@ -1,26 +1,18 @@
 import React, { Component, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
-import { Mail, UserRound, Box, Play, Store, Rocket, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { configure, updateToken, type MobileConfig } from './runtime';
-import NavGlobeTexture from '../globe-source/full-globe-nav-texture';
-import { NAVBAR_GLOBE_PALETTE } from '../globe-source/vendor/globe-vinyle/shared/src/globe-palette.mjs';
+import FeatureDock, { featureItems } from '../shared-ui/FeatureDock';
 
 const native = (destination: string) => location.assign(`https://appassets.androidplatform.net/native/${destination}`);
-const items = [
-  { id: 'messages', label: 'Messagerie', Icon: Mail },
-  { id: 'profile', label: 'Profil', Icon: UserRound },
-  { id: 'rooms', label: 'Rooms', Icon: Box },
-  { id: 'scene', label: 'La Scène', Icon: Play },
-  { id: 'market', label: 'Marketplace', Icon: Store },
-  { id: 'tremplin', label: 'Tremplin', Icon: Rocket },
-];
 function Shell({ Page }: { Page: React.ComponentType }) {
   const route = useLocation();
   const navigate = useNavigate();
   const [notice, setNotice] = useState('');
   useEffect(() => {
     if (route.pathname.startsWith('/messages')) native('messages');
+    else if (route.pathname.startsWith('/tremplin')) native('tremplin');
     else if (!route.pathname.startsWith('/profile')) native('globe');
   }, [route.pathname]);
   useEffect(() => {
@@ -31,24 +23,14 @@ function Shell({ Page }: { Page: React.ComponentType }) {
       else native('globe');
     };
   }, [route.pathname, navigate]);
-  const renderItem = ({ id, label, Icon }: typeof items[number]) => <button key={id} aria-label={label}
-    aria-current={id === 'profile' ? 'page' : undefined} onClick={() => {
-      if (id === 'profile') navigate('/profile');
-      else if (id === 'messages') native('messages');
-      else setNotice(`${label} n’est pas encore disponible dans cette version Android.`);
-    }}><Icon /><span>{label}</span></button>;
   return <div className="mobile-profile">
     <button className="mobile-profile-close" aria-label="Fermer l’application" onClick={() => native('close-app')}><X /></button>
     <Page />
-    <nav className="profile-bottom-dock" aria-label="Navigation principale Meewav">
-      <div className="profile-bottom-dock__surface" />
-      <div className="profile-bottom-dock__side">{items.slice(0, 3).map(renderItem)}</div>
-      <button className="profile-bottom-dock__globe" aria-label="Retour au globe" onClick={() => native('globe')}
-        style={{ '--nav-globe-ocean': NAVBAR_GLOBE_PALETTE.ocean } as React.CSSProperties}>
-        <NavGlobeTexture landColor={NAVBAR_GLOBE_PALETTE.land} size={56} rotationSeconds={40} /><span className="profile-bottom-dock__globe-light" />
-      </button>
-      <div className="profile-bottom-dock__side">{items.slice(3).map(renderItem)}</div>
-    </nav>
+    <FeatureDock active="profile" onSelect={id => {
+      if (id === 'profile') navigate('/profile');
+      else if (['messages','tremplin','globe'].includes(id)) native(id);
+      else setNotice(`${featureItems.find(item => item.id === id)?.label} n’est pas encore disponible dans cette version Android.`);
+    }} />
     {notice && <aside className="mobile-profile-notice" role="status">{notice}<button aria-label="Fermer" onClick={() => setNotice('')}><X size={18}/></button></aside>}
   </div>;
 }
