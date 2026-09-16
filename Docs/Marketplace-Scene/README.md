@@ -61,3 +61,25 @@ Les provenances distinguent l’original du site et les adaptations versionnées
 Pas de tests ni de contrôle visuel automatique pour cette passe, conformément à la
 consigne du projet. La revue visuelle et les essais sur le Samsung appartiennent à
 l’utilisateur. Les modifications Gradle préexistantes sont laissées hors commit.
+
+## Reprise des proportions Android — 16 septembre 2026
+
+À la demande de l’utilisateur, le Marketplace affiche quatre onglets de même
+largeur à la fois ; les deux suivants se découvrent par glissement horizontal.
+Le bandeau reste fixe, l’onglet sélectionné reste visible et le trait effilé est
+conservé. Les autres piliers ne sont pas affectés par ce réglage.
+
+L’accueil utilise des offres vedettes horizontales (photo 40 %, résumé 60 %,
+hauteur intrinsèque à partir de 184 px), puis des rails de deux petites cartes.
+Le catalogue garde deux colonnes sur téléphone, avec visuels 3:2, titres sur deux
+lignes maximum, vendeur et prix lisibles. Aucun pied de carte n’a de hauteur fixe ;
+les informations spécifiques aux services et achats groupés restent présentes.
+Les descriptions complètes sont dans les fiches. Les photos restent intactes.
+Le titre de rubrique et les outils partagent une ligne ; recherche et action
+Vendre partagent la suivante, sans grand slogan supplémentaire.
+
+Matière commune : noir hi-fi / graphite sombre, léger relief inférieur, contours
+fins. Actions principales : jeton existant `--mobile-violet-cta`. Catégories et
+badges ne reprennent plus les multiples accents orange/cyan/rose du site.
+Fiches, demandes, brouillons et panier conservent leurs handlers et leur scroll.
+Compilation de livraison uniquement ; pas de tests ou revue visuelle automatiques.

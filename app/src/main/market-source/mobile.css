@@ -1,61 +1,102 @@
-#root .mobile-market .market-page { position: absolute; inset: 0; min-height: 0; width: 100%; --market-nav-space: 0px; --market-primary-band-height: 100px; --market-secondary-band-height: 0px; }
+/* Android storefront: four destinations visible, consistent compact product scales. */
+#root .mobile-market .market-page { position: absolute; inset: 0; min-height: 0; width: 100%; --market-nav-space: 0px; --market-primary-band-height: 100px; --market-secondary-band-height: 0px; --market-violet: #a58aca; --market-violet-deep: #654ea3; }
+#root .mobile-market [data-market-pillar] { --market-offer-accent: 165,138,202; }
 #root .mobile-market .market-shell { position: absolute; inset: 0; display: block; padding: 0; width: 100%; }
-#root .mobile-market .market-scroll { position: absolute; inset: 100px 0 0; width: 100%; height: auto; max-height: none; min-height: 0; margin: 0; padding: 12px 0 106px; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; mask-image: none; overscroll-behavior-y: contain; }
-#root .mobile-market .market-mobile-utility { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 0 12px 10px; }
-#root .mobile-market .market-mobile-utility > span { color: #a9a6b4; font-size: 12px; }
-#root .mobile-market .market-topbar__actions { display: flex; position: static; gap: 4px; padding: 0; }
-#root .mobile-market :is(.market-icon-button,.market-brand__portrait) { width: 40px; height: 40px; min-width: 40px; border-radius: 50%; background: #ffffff06; border: 1px solid #bca5e620; box-shadow: none; }
+#root .mobile-market .market-scroll { position: absolute; inset: 100px 0 0; width: 100%; height: auto; max-height: none; min-height: 0; margin: 0; padding: 8px 0 106px; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; mask-image: none; overscroll-behavior-y: contain; }
+#root .mobile-market .market-contextbar__toolbar { min-width: 0; overflow: hidden; }
+#root .mobile-market .market-pillar-tabs { overflow-x: auto; overflow-y: hidden; overscroll-behavior-inline: contain; scroll-snap-type: x proximity; }
+#root .mobile-market .market-pillar-tabs > button { flex: 0 0 25%; min-width: 0; max-width: 25%; scroll-snap-align: start; }
+#root .mobile-market .market-pillar-tabs button strong { font-size: 11px; }
+#root .mobile-market .market-pillar-tabs button svg { width: 20px; height: 20px; }
+#root .mobile-market .market-pillar-tabs::-webkit-scrollbar { display: none; }
+#root .mobile-market .market-mobile-utility { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 0 14px 8px; }
+#root .mobile-market .market-mobile-utility h1 { min-width: 0; margin: 0; color: #f4f4f7; font-size: 19px; line-height: 1.2; letter-spacing: -.035em; }
+#root .mobile-market .market-topbar__actions { display: flex; flex-shrink: 0; position: static; gap: 0; padding: 0; }
+#root .mobile-market :is(.market-icon-button,.market-brand__portrait) { width: 40px; height: 44px; min-width: 40px; border-radius: 50%; background: transparent; border: 0; box-shadow: none; }
+#root .mobile-market .market-brand__portrait img { width: 30px; height: 30px; border-radius: 50%; }
 #root .mobile-market .market-icon-button svg { width: 19px; height: 19px; }
 #root .mobile-market .market-icon-button__badge { background: var(--mobile-violet-cta); font-size: 9px; }
-#root .mobile-market .market-contentbar { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; width: 100%; padding: 0 12px 12px; margin: 0; border: 0; background: none; }
-#root .mobile-market .market-search { order: -1; display: flex; flex: 1 0 100%; min-width: 0; width: 100%; height: 46px; padding: 0 4px 0 12px; border-radius: 14px; background: var(--profile-mobile-glass); border: 1px solid #bca5e627; box-shadow: var(--profile-mobile-glass-edge); }
-#root .mobile-market .market-search input { flex: 1; width: 0; height: 44px; font-size: 13px; padding: 0 8px; }
-#root .mobile-market .market-search__filter { width: 40px; min-width: 40px; height: 40px; }
-#root .mobile-market .market-contentbar h1 { flex: 1; min-width: 150px; font-size: 22px; line-height: 1.18; margin: 4px 0; letter-spacing: -.03em; }
-#root .mobile-market .market-contentbar h1 span { color: #b6a1db; }
-#root .mobile-market .market-contextbar__create { min-height: 44px; padding: 10px 12px; border-radius: 12px; gap: 6px; font-size: 11px; white-space: normal; max-width: 134px; }
+#root .mobile-market .market-contentbar { position: relative; display: flex; flex-wrap: nowrap; align-items: center; gap: 8px; width: 100%; padding: 0 14px 14px; margin: 0; border: 0; background: none; }
+#root .mobile-market .market-search { display: flex; flex: 1 1 0; min-width: 0; width: auto; height: 46px; padding: 0 4px 0 10px; border-radius: 15px; background: var(--profile-mobile-glass); border: 1px solid #bca5e627; box-shadow: var(--profile-mobile-glass-edge); }
+#root .mobile-market .market-search > svg { width: 18px; height: 18px; flex-shrink: 0; }
+#root .mobile-market .market-search input { flex: 1; width: 0; height: 44px; font-size: 13px; padding: 0 7px; }
+#root .mobile-market .market-search__filter { width: 40px; min-width: 40px; height: 44px; }
+#root .mobile-market .market-contextbar__create { min-height: 46px; flex: 0 0 auto; padding: 10px 12px; border-radius: 15px; gap: 5px; font-size: 12px; white-space: nowrap; box-shadow: inset 0 1px #ffffff14; }
+#root .mobile-market .market-contextbar__create svg { width: 16px; height: 16px; }
 #root .mobile-market .market-discovery { margin: 0; }
-#root .mobile-market .market-rail--featured { --rail-card-width: min(330px,calc(100vw - 40px)); padding: 0; }
-#root .mobile-market .market-rail--catalog { --rail-card-width: 172px; margin: 0; padding-top: 8px; }
-#root .mobile-market .market-rail__header { padding: 0 12px; gap: 8px; align-items: center; }
-#root .mobile-market .market-rail__header h2 { font-size: 18px; line-height: 1.25; }
-#root .mobile-market .market-rail__header p { font-size: 11px; margin: 4px 0 0; }
-#root .mobile-market .market-rail__header button { min-height: 44px; font-size: 11px; padding: 6px 8px; white-space: nowrap; }
-#root .mobile-market .market-rail__viewport { padding: 12px 12px 20px; scroll-padding-inline: 12px; scrollbar-width: none; }
-#root .mobile-market .market-rail__track { gap: 12px; }
-#root .mobile-market :is(.market-rail-card,.market-product-card) { border: 1px solid #c4b9d52a; background: var(--profile-content-surface); box-shadow: inset 0 1px #ffffff0b, inset 0 -2px #0005,0 8px 18px #0003; }
-#root .mobile-market .market-home-hero { height: auto; min-height: 0; border-radius: 18px; }
-#root .mobile-market .market-home-hero .market-rail-card__main { display: flex; flex-direction: column; height: 100%; }
-#root .mobile-market .market-home-hero__visual { width: 100%; height: 166px; flex-shrink: 0; border-radius: 17px 17px 0 0; background: #14151a; }
-#root .mobile-market .market-home-hero__visual img { object-fit: contain; }
-#root .mobile-market .market-home-hero__body { flex: 1; padding: 12px 14px 14px; background: linear-gradient(155deg,#22232a,#0d0e13); }
-#root .mobile-market .market-home-hero__title { font-size: 18px; line-height: 1.22; margin: 5px 0; -webkit-line-clamp: 2; }
-#root .mobile-market .market-home-hero__description { font-size: 11px; line-height: 1.45; margin: 7px 0; -webkit-line-clamp: 2; }
-#root .mobile-market .market-home-hero__detail { display: none; }
-#root .mobile-market .market-home-hero__footer { padding-top: 9px; gap: 8px; }
-#root .mobile-market .market-home-hero__price b { font-size: 20px; }
-#root .mobile-market .market-home-hero__cta { min-height: 40px; padding: 8px 12px; font-size: 11px; }
-#root .mobile-market .market-home-hero .market-rail-card__favorite { top: 8px; right: 8px; left: auto; width: 44px; height: 44px; }
-#root .mobile-market .market-mini { height: 250px; }
-#root .mobile-market .market-mini .market-rail-card__visual { height: 118px; }
-#root .mobile-market .market-mini .market-rail-card__body { height: 132px; padding: 10px; background: linear-gradient(150deg,#202127,#0d0e13); }
-#root .mobile-market .market-mini .market-rail-card__body > strong { font-size: 13px; -webkit-line-clamp: 2; }
-#root .mobile-market .market-mini .market-rail-card__favorite { width: 40px; height: 40px; }
-#root .mobile-market .market-catalog { padding: 0 12px; margin: 0; }
-#root .mobile-market .market-filter-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding: 6px 0 12px; gap: 6px; }
-#root .mobile-market .market-filter-chip { flex-shrink: 0; min-height: 38px; padding: 6px 10px; font-size: 11px; background: #17181e; border-color: #bca5e622; }
-#root .mobile-market .market-product-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
-#root .mobile-market .market-product-card { min-width: 0; border-radius: 15px; height: auto; }
-#root .mobile-market .market-product-card__visual { height: auto; aspect-ratio: 1 / 1; }
-#root .mobile-market .market-product-card__visual img { width: 100%; height: 100%; object-fit: contain; }
-#root .mobile-market .market-product-card__body { padding: 10px; background: linear-gradient(150deg,#202127,#0d0e13); }
-#root .mobile-market .market-product-card h3 { font-size: 13px; line-height: 1.3; min-height: 34px; }
-#root .mobile-market .market-product-card__category { font-size: 9px; }
-#root .mobile-market .market-product-card__meta { font-size: 10px; gap: 4px; flex-wrap: wrap; }
-#root .mobile-market .market-product-card__price strong { font-size: 17px; }
-#root .mobile-market .market-product-card__footer { flex-wrap: wrap; gap: 6px; }
-#root .mobile-market .market-favorite-button { width: 40px; height: 40px; }
-#root .mobile-market .market-badge { font-size: 9px; max-width: calc(100% - 45px); padding: 5px 7px; }
+#root .mobile-market .market-home-rails { padding-bottom: 0; }
+#root .mobile-market .market-rail--featured { --rail-card-width: min(430px,calc(100vw - 40px)); margin: 0; padding: 0; }
+#root .mobile-market .market-rail--catalog { --rail-card-width: clamp(152px,calc((100vw - 38px) / 2),200px); margin: 0; padding: 10px 0 0; border-color: #ffffff0c; }
+#root .mobile-market .market-rail__header { padding: 0 14px; gap: 8px; align-items: center; }
+#root .mobile-market .market-rail__eyebrow { display: none; }
+#root .mobile-market .market-rail__header h2 { font-size: 17px; line-height: 1.25; margin: 0; letter-spacing: -.025em; }
+#root .mobile-market .market-rail__header p { display: none; }
+#root .mobile-market .market-rail__header button { min-width: 0; min-height: 44px; height: 44px; font-size: 12px; padding: 6px 0 6px 8px; white-space: nowrap; border: 0; background: none; box-shadow: none; color: #bcadd6; }
+#root .mobile-market .market-rail__viewport { padding: 10px 14px 18px; scroll-padding-inline: 14px; scrollbar-width: none; }
+#root .mobile-market .market-rail__track { gap: 10px; }
+#root .mobile-market :is(.market-rail-card,.market-product-card) { min-height: 0; border: 1px solid #a4a8b52c; border-top-color: #b8adca38; background: #101115; box-shadow: inset 0 1px #ffffff0a,inset 0 -2px 3px #0008,0 3px 0 #050508,0 8px 16px #0004; transform: none; }
+#root .mobile-market :is(.market-rail-card,.market-product-card):hover { transform: none; border-color: #b7a3d24d; box-shadow: inset 0 1px #ffffff0d,inset 0 -2px 3px #0008,0 3px 0 #050508,0 8px 16px #0004; }
+/* Featured offers are horizontal, with the photograph beside the purchase summary. */
+#root .mobile-market .market-home-hero { height: auto; border-radius: 18px; }
+#root .mobile-market .market-home-hero .market-rail-card__main { display: grid; grid-template-columns: 40% minmax(0,1fr); grid-template-rows: auto; min-height: 184px; height: auto; }
+#root .mobile-market .market-home-hero__visual { width: 100%; height: 100%; min-height: 184px; border-radius: 17px 0 0 17px; background: #111216; }
+#root .mobile-market .market-home-hero__visual img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+#root .mobile-market .market-home-hero[data-market-pillar=services] .market-home-hero__visual img { object-fit: cover; }
+#root .mobile-market .market-home-hero__body { min-width: 0; padding: 12px; gap: 5px; background: radial-gradient(ellipse at 20% 0,#ffffff08,transparent 65%),linear-gradient(155deg,#1a1b21,#0c0d11); }
+#root .mobile-market .market-home-hero__title { font-size: 15px; line-height: 1.3; margin: 0; -webkit-line-clamp: 2; white-space: normal; }
+#root .mobile-market .market-home-hero__seller { font-size: 11px; line-height: 1.35; }
+#root .mobile-market .market-home-hero__description { display: none; }
+#root .mobile-market .market-home-hero__detail { display: -webkit-box; -webkit-line-clamp: 2; font-size: 10px; line-height: 1.4; color: #aca9b6; }
+#root .mobile-market .market-home-hero__footer { flex-wrap: wrap; padding-top: 6px; gap: 5px 8px; border-top: 0; }
+#root .mobile-market .market-home-hero__price { flex: 1 0 100%; gap: 4px; white-space: normal; }
+#root .mobile-market .market-home-hero__price b { font-size: 19px; }
+#root .mobile-market .market-home-hero__price small { font-size: 10px; color: #b5b2bf; }
+#root .mobile-market .market-home-hero__cta { min-height: 0; padding: 0; font-size: 11px; color: #c1b0df; background: none; box-shadow: none; border: 0; }
+#root .mobile-market .market-home-hero .market-rail-card__favorite { top: 6px; left: 6px; right: auto; width: 44px; height: 44px; }
+#root .mobile-market .market-home-hero .market-rail-card__badge { top: auto; bottom: 8px; left: 8px; max-width: calc(100% - 16px); }
+/* Small offers use intrinsic heights: no empty fixed-height footers or clipped prices. */
+#root .mobile-market .market-mini { height: auto; border-radius: 15px; }
+#root .mobile-market .market-mini .market-rail-card__main { display: flex; flex-direction: column; height: 100%; }
+#root .mobile-market .market-mini .market-rail-card__visual { width: 100%; height: auto; aspect-ratio: 3 / 2; flex: none; background: #121319; }
+#root .mobile-market .market-mini .market-rail-card__visual img { object-fit: contain; filter: none; }
+#root .mobile-market .market-mini[data-market-pillar=services] .market-rail-card__visual img { object-fit: cover; }
+#root .mobile-market .market-mini .market-rail-card__body { height: auto; min-height: 0; flex: 1; padding: 9px 10px 10px; gap: 4px; background: linear-gradient(155deg,#1a1b21,#0c0d11); }
+#root .mobile-market .market-mini .market-rail-card__body > strong { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; font-size: 13px; line-height: 1.3; margin: 0; }
+#root .mobile-market .market-mini .market-rail-card__seller { margin: 0; font-size: 10px; color: #aaa7b5; }
+#root .mobile-market .market-mini :is(.market-rail-card__service,.market-rail-card__progress) { font-size: 10px; line-height: 1.35; margin: 0; color: #aaa7b5; }
+#root .mobile-market .market-mini .market-rail-card__price { padding-top: 4px; gap: 4px; flex-wrap: wrap; align-items: baseline; }
+#root .mobile-market .market-mini .market-rail-card__price b { font-size: 17px; }
+#root .mobile-market .market-mini .market-rail-card__price > span { max-width: 100%; font-size: 10px; color: #aaa7b5; }
+#root .mobile-market .market-mini .market-rail-card__favorite { top: 3px; right: 3px; width: 44px; height: 44px; }
+#root .mobile-market .market-mini .market-rail-card__badge { top: auto; bottom: 6px; left: 6px; }
+#root .mobile-market :is(.market-rail-card__category,.market-product-card__category) { font-size: 9px; line-height: 1.3; letter-spacing: .03em; color: #b1a4c5; }
+#root .mobile-market :is(.market-rail-card__badge,.market-badge) { min-height: 20px; max-width: calc(100% - 12px); padding: 3px 6px; font-size: 9px; line-height: 1.2; letter-spacing: 0; text-transform: none; border: 1px solid #b9a0de35; color: #e4d9f4; background: #101017c9; box-shadow: none; border-radius: 6px; }
+#root .mobile-market .market-card-seller { gap: 4px; }
+#root .mobile-market .market-card-seller__icon { width: 13px; height: 16px; flex: 0 0 13px; border: 0; border-radius: 0; background: none; box-shadow: none; color: #a6a3b0; }
+#root .mobile-market .market-card-seller__icon svg { width: 12px; height: 12px; }
+#root .mobile-market .market-catalog { padding: 0 14px; margin: 0; }
+#root .mobile-market .market-filter-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding: 0 0 12px; gap: 6px; }
+#root .mobile-market .market-filter-chip { flex-shrink: 0; min-height: 40px; padding: 7px 12px; font-size: 12px; background: #15161cbc; border: 1px solid #bca5e622; border-radius: 20px; color: #b9b6c3; }
+#root .mobile-market .market-filter-chip.is-active { background: #654ea32b; color: #eee8f8; border-color: #a58aca85; box-shadow: inset 0 1px #ffffff0a; }
+#root .mobile-market .market-product-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px 10px; align-items: stretch; }
+#root .mobile-market .market-product-card { min-width: 0; border-radius: 15px; height: auto; min-height: 0; }
+#root .mobile-market .market-product-card__main { min-height: 0; height: 100%; }
+#root .mobile-market .market-product-card__visual { width: 100%; height: auto; aspect-ratio: 3 / 2; flex: none; background: #121319; }
+#root .mobile-market .market-product-card__visual img { width: 100%; height: 100%; object-fit: contain; transform: none; }
+#root .mobile-market .market-product-card[data-market-pillar=services] .market-product-card__visual img { object-fit: cover; }
+#root .mobile-market .market-product-card__body { flex: 1; min-width: 0; padding: 9px 10px 10px; gap: 4px; background: linear-gradient(155deg,#1a1b21,#0c0d11); }
+#root .mobile-market .market-product-card h3 { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; font-size: 13px; line-height: 1.3; min-height: 0; margin: 0; }
+#root .mobile-market .market-product-card__meta { font-size: 10px; gap: 4px; flex-wrap: wrap; margin: 0; overflow: visible; color: #aaa7b5; }
+#root .mobile-market .market-product-card__meta > .market-card-seller { flex: 1 0 100%; }
+#root .mobile-market .market-product-card__price strong { font-size: 17px; line-height: 1.2; }
+#root .mobile-market .market-product-card__price span { font-size: 10px; line-height: 1.3; color: #aaa7b5; }
+#root .mobile-market .market-product-card__footer { margin-top: auto; padding-top: 4px; gap: 4px; }
+#root .mobile-market .market-product-card__action { width: 24px; height: 24px; flex: 0 0 24px; background: none; border: 0; color: #b5a1d2; }
+#root .mobile-market .market-product-card__collective { margin-top: 2px; }
+#root .mobile-market .market-product-card__collective-row { flex-wrap: wrap; gap: 3px; font-size: 10px; }
+#root .mobile-market .market-favorite-button { top: 3px; right: 3px; width: 44px; height: 44px; border-radius: 50%; background: #0e0f17b8; }
+#root .mobile-market .market-badge { top: auto; bottom: 6px; left: 6px; }
+#root .mobile-market :is(.market-favorite-button,.market-rail-card__favorite).is-active { color: #bca5e6; border-color: #a58aca70; }
 /* Product sheet: one vertical scroll, full-width photography and a sticky action footer. */
 #root .mobile-market .market-overlay { z-index: 52000; }
 #root .mobile-market .market-product-modal { z-index: 52001; position: fixed; inset: 10px 0 0; transform: none; animation: none; display: block; width: 100%; height: auto; max-height: none; min-height: 0; overflow-y: auto; overflow-x: hidden; border-radius: 24px 24px 0 0; padding-bottom: 0; background: #0e0f14; }
@@ -132,3 +173,45 @@
 #root .mobile-market .market-cart-line__actions { flex-wrap: wrap; }
 #root .mobile-market .market-cart-line__media { width: 64px; height: 76px; }
 #root .mobile-market .market-cart-line__topline h3 { font-size: 14px; }
+
+/* Supporting surfaces follow the same dark hi-fi material, not the desktop purple panels. */
+#root .mobile-market :is(.market-primary-cta,.market-seller-drafts__create,.market-seller-drafts__resume,.market-intent-card__actions button.is-primary) { background: var(--mobile-violet-cta); border-color: var(--mobile-cta-rim); color: #fff; box-shadow: inset 0 1px #ffffff14,0 4px 12px #0003; }
+#root .mobile-market .market-product-modal__media { height: clamp(180px,30dvh,250px); }
+#root .mobile-market .market-product-modal__content { padding: 14px; }
+#root .mobile-market .market-product-modal__heading h2 { font-size: 21px; }
+#root .mobile-market .market-product-modal__heading > strong { font-size: 22px; }
+#root .mobile-market .market-detail__facts { gap: 6px; }
+#root .mobile-market .market-detail__fact { border: 1px solid #ffffff0d; border-radius: 10px; padding: 9px; background: #17181d; }
+#root .mobile-market .market-detail__fact strong { font-size: 12px; }
+#root .mobile-market .market-detail__guarantees { grid-template-columns: minmax(0,1fr); gap: 6px; }
+#root .mobile-market .market-detail__guarantee { min-height: 0; padding: 8px 10px; font-size: 11px; border-color: #ffffff0d; background: #14151a; }
+#root .mobile-market .market-seller-drafts { margin: 0 14px; padding: 14px; gap: 16px; border-radius: 17px; border-color: #bca5e627; background: linear-gradient(155deg,#191a20,#0d0e13); box-shadow: inset 0 1px #ffffff0a,0 6px 20px #0003; }
+#root .mobile-market .market-seller-drafts__header { flex-wrap: wrap; gap: 10px; }
+#root .mobile-market .market-seller-drafts__header h2 { font-size: 18px; }
+#root .mobile-market .market-seller-drafts__header p { font-size: 12px; }
+#root .mobile-market .market-seller-drafts__list li { grid-template-columns: 44px minmax(0,1fr); gap: 8px 10px; padding: 10px; min-height: 0; border-radius: 12px; background: #111217; }
+#root .mobile-market .market-seller-drafts__icon { width: 44px; height: 44px; border-radius: 10px; background: #1c1c25; color: #bca5e6; border-color: #bca5e629; }
+#root .mobile-market .market-seller-drafts__resume { grid-column: 2; justify-self: start; min-height: 44px; font-size: 12px; }
+#root .mobile-market .market-seller-drafts__copy strong { font-size: 14px; }
+#root .mobile-market .market-intents__content { min-height: 0; flex: 1; }
+#root .mobile-market .market-intents__roles { flex-wrap: wrap; gap: 6px; }
+#root .mobile-market .market-intents__roles > button { flex: 1; min-height: 44px; background: #17181d; font-size: 12px; }
+#root .mobile-market .market-intents__roles > button.is-active { border-color: #a58aca70; background: #654ea32b; box-shadow: none; }
+#root .mobile-market .market-intents__summary { width: 100%; margin: 0; padding: 2px 0 0; font-size: 11px; }
+#root .mobile-market .market-intent-card { grid-template-columns: 34px minmax(0,1fr); gap: 10px; min-height: 0; padding: 12px; border-radius: 14px; background: linear-gradient(150deg,#1a1b21,#101115); }
+#root .mobile-market .market-intent-card__icon { width: 34px; height: 34px; background: #654ea31a; color: #bca5e6; border-color: #bca5e629; }
+#root .mobile-market .market-intent-card__eyebrow { flex-wrap: wrap; gap: 5px; font-size: 10px; }
+#root .mobile-market .market-intent-card__main h3 { font-size: 14px; }
+#root .mobile-market .market-intent-card__actions { grid-column: 1 / -1; flex-wrap: wrap; }
+#root .mobile-market .market-intent-card__actions button { flex: 1; min-height: 44px; background: #18191f; }
+#root .mobile-market .market-intent-card__confirm { grid-column: 1 / -1; }
+#root .mobile-market .market-empty { min-height: 170px; padding: 20px; background: #101117; }
+@media (max-width: 359px) {
+  #root .mobile-market .market-topbar__actions { gap: 0; }
+  #root .mobile-market .market-mobile-utility h1 { font-size: 17px; }
+  #root .mobile-market .market-contextbar__create { padding-inline: 10px; }
+  #root .mobile-market .market-contextbar__create > svg { display: none; }
+}
+@media (min-width: 600px) {
+  #root .mobile-market .market-product-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+}

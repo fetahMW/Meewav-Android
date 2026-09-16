@@ -1498,7 +1498,9 @@ export default function MarketPage() {
         </header>
 
         <div ref={marketScrollRef} className="market-scroll">
-          <div className="market-mobile-utility"><span>Ton espace musique</span>          <div className="market-topbar__actions">
+          <div className="market-mobile-utility">
+            <h1>{sellerDraftsOpen ? 'Mes annonces' : showFavoritesOnly ? 'Mes favoris' : isHome ? 'À découvrir' : MARKET_PILLARS.find((pillar) => pillar.id === activePillar)?.label ?? 'Catalogue'}</h1>
+            <div className="market-topbar__actions">
             <button
               type="button"
               className={`market-icon-button ${showFavoritesOnly ? "is-active" : ""}`}
@@ -1585,7 +1587,7 @@ export default function MarketPage() {
                   setQuery(nextQuery);
                   if (nextQuery.trim()) setViewMode("catalog");
                 }}
-                placeholder="Rechercher un instrument, une marque…"
+                placeholder="Instrument, marque…"
                 aria-label="Rechercher dans le Market"
               />
               <button
@@ -1604,14 +1606,11 @@ export default function MarketPage() {
                 )}
               </button>
             </div>
-            <h1>{isHome ? <>La boutique où la musique <span>prend vie.</span></> : (
-              <>{MARKET_PILLARS.find((pillar) => pillar.id === activePillar)?.label ?? "Market"} <span>sélection MeeWav.</span></>
-            )}</h1>
-            <button type="button" className="market-contextbar__create" onClick={() => {
+            <button type="button" className="market-contextbar__create" aria-label="Déposer une annonce" onClick={() => {
               setEditingOwnerDraft(null);
               setListingOpen(true);
             }}>
-              <Plus aria-hidden="true" /> <span>Déposer une annonce</span>
+              <Plus aria-hidden="true" /> <span>Vendre</span>
             </button>
           </div>
           {marketLive.active && marketLive.status === "loading" ? (
