@@ -32,7 +32,7 @@ import {
   UsersRound,
   type LucideIcon,
 } from "lucide-react";
-import { useCallback, useEffect, useId, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import MeewavPillarBrand from "../../components/navigation/MeewavPillarBrand";
 import MeewavPillarTabs from "../../components/navigation/MeewavPillarTabs";
@@ -90,6 +90,7 @@ import "./tremplin-shell.css";
 import "./tremplin-token-page.css";
 import "./tremplin-my-artists-premium.css";
 import TremplinMobileSectionSelect from "./TremplinMobileSectionSelect";
+import TremplinPreProfile from "./TremplinPreProfile";
 import TremplinStatistics from "./TremplinStatistics";
 import type { TremplinStatisticsSort } from "./tremplinStatisticsRanking";
 
@@ -1075,6 +1076,12 @@ export default function TremplinPage() {
   const [selectedArtist, setSelectedArtist] = useState<TremplinArtist | null>(() => getArtistFromPath(location.pathname));
   const [flow, setFlow] = useState<{ artist: TremplinArtist; token: TremplinArtistToken; mode: TokenOperationMode } | null>(null);
   const [statisticsSort, setStatisticsSort] = useState<TremplinStatisticsSort>("value");
+  const [preProfile, setPreProfile] = useState<{ artist: TremplinArtist; anchor: { x: number; y: number; clearance: number } } | null>(null);
+  const preProfileArtists = useMemo(() => {
+    const map = new Map<string, TremplinArtist>();
+    tremplinArtists.forEach((artist) => { map.set(artist.portrait, artist); if (artist.artwork) map.set(artist.artwork, artist); });
+    return map;
+  }, []);
   const [playingArtistId, setPlayingArtistId] = useState<string | null>(null);
   const [audioProgress, setAudioProgress] = useState({ currentTime: 0, duration: 0 });
   const [toast, setToast] = useState<string | null>(null);
@@ -1256,6 +1263,29 @@ export default function TremplinPage() {
     if (tab === "tokens" && mwTab !== "holdings") params.set("section", mwTab);
     const query = params.toString();
     navigate(`${TREMPLIN_VIEW_ROUTES.myArtists}${query ? `?${query}` : ""}`, { replace: true });
+  };
+  const openPreProfileFromPortrait = (event: ReactMouseEvent<HTMLElement>) => {
+    const target = event.target as Element | null;
+    if (!target) return;
+    let artist: TremplinArtist | undefined;
+    let anchorElement: Element | null = null;
+    const portraitZone = target.closest(".td-featured-art, .tremplin-project-mini__visual");
+    if (portraitZone && !target.closest(".td-featured-play, .tremplin-project-mini__audio")) {
+      const artistId = portraitZone.closest("[data-artist-id]")?.getAttribute("data-artist-id");
+      artist = tremplinArtists.find((entry) => entry.id === artistId);
+      anchorElement = portraitZone;
+    }
+    if (!artist) {
+      const img = target.closest("img") as HTMLImageElement | null;
+      if (!img?.src) return;
+      try { artist = preProfileArtists.get(decodeURIComponent(new URL(img.src).pathname)); } catch { return; }
+      if (!artist) return;
+      anchorElement = img;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    const rect = (anchorElement ?? target).getBoundingClientRect();
+    setPreProfile({ artist, anchor: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, clearance: rect.width / 2 } });
   };
   const openArtist = (artist: TremplinArtist, anchorId?: string) => {
     scrollPositionsRef.current.set(currentTremplinLocation.split("#")[0], scrollRef.current?.scrollTop ?? 0);
@@ -1463,11 +1493,12 @@ export default function TremplinPage() {
             <button type="button" className="tremplin-account-button" aria-label={`Ouvrir Mes artistes pour ${viewer.displayName}`} title={viewer.displayName} onClick={() => changeView("myArtists")}><img src={viewer.avatarUrl} alt="" /><span /></button>
           </div>
         </header>
-        <div className={`tremplin-scroll${!selectedArtist && (activeView === "application" || activeView === "dashboard") ? " is-workspace" : ""}${!selectedArtist && activeView === "discover" && homeWallRailId !== null ? " is-home-wall" : ""}${!selectedArtist && activeView === "home" ? " is-understand" : ""}`} ref={scrollRef}>
+        <div className={`tremplin-scroll${!selectedArtist && (activeView === "application" || activeView === "dashboard") ? " is-workspace" : ""}${!selectedArtist && activeView === "discover" && homeWallRailId !== null ? " is-home-wall" : ""}${!selectedArtist && activeView === "home" ? " is-understand" : ""}`} ref={scrollRef} onClickCapture={openPreProfileFromPortrait}>
           {flow ? <TremplinTokenFlow artist={flow.artist} token={flow.token} initialMode={flow.mode} backLabel={getTremplinReturnLabel(location.state)} onClose={closeFlow} onConfirm={(operation) => { setToast(`${operation.operation === "purchase" ? "Achat" : "Revente"} simulé pour ${flow.artist.name}. Aucune transaction réelle n’a été effectuée.`); }} /> : mainContent}
         </div>
       </div>
       {playingArtist && !isFocusedFlow ? <aside className="tremplin-now-playing" aria-label={`Lecture en cours : ${playingArtist.audio.title} par ${playingArtist.name}`}><img src={playingArtist.artwork} alt="" /><div><small>En écoute</small><strong>{playingArtist.audio.title}</strong><span>{playingArtist.name} · {playingArtist.styles[0]}</span><i aria-hidden="true"><b style={{ width: `${audioProgressPercent}%` }} /></i></div><button type="button" onClick={() => toggleAudio(playingArtist.id)} aria-label={`Mettre ${playingArtist.audio.title} en pause`}><Pause /></button></aside> : null}
+      {preProfile && <TremplinPreProfile artist={preProfile.artist} anchor={preProfile.anchor} followed={favorites.has(preProfile.artist.id)} onClose={() => setPreProfile(null)} onOpenProfile={() => { const artist = preProfile.artist; setPreProfile(null); openArtist(artist); }} onFollow={toggleFavorite} onContact={() => { setPreProfile(null); navigate("/messages"); }} />}
       {toast && <div className="tremplin-toast" role="status"><CheckCircle2 /> {toast}</div>}
     </main>
   );

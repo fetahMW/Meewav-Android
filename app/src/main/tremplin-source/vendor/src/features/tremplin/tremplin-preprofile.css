@@ -1,0 +1,40 @@
+/* Portrait tap pre-profile — the globe's ring-artist-preprofile bubble,
+   anchored to the tapped portrait, sliding in from the opposite side. */
+.tremplin-preprofile {
+  --mw-bubble-w: 413px; --mw-bubble-h: 588px;
+  position: fixed; z-index: 15940; width: 413px; height: 588px;
+  transform-origin: top left; pointer-events: auto;
+  color: #eee; -webkit-user-select: none; user-select: none;
+}
+.tremplin-preprofile *, .tremplin-preprofile *::before, .tremplin-preprofile *::after { box-sizing: border-box; }
+.tremplin-preprofile * { -webkit-user-select: none; user-select: none; }
+.tremplin-preprofile[data-placement="right"] { animation: tremplin-preprofile-in-right .26s cubic-bezier(.22,.9,.3,1); }
+.tremplin-preprofile[data-placement="left"] { animation: tremplin-preprofile-in-left .26s cubic-bezier(.22,.9,.3,1); }
+.tremplin-preprofile__close {
+  position: absolute; z-index: 21; top: 10px; right: 12px;
+  display: grid; place-items: center; width: 30px; height: 30px;
+  padding: 0; border: 1px solid #bfc0c15c; border-radius: 8px;
+  background: radial-gradient(ellipse at 23% -8%, #ffffff26, transparent 65%), linear-gradient(160deg, #303132, #101112 34%, #030303 72%, #111213);
+  box-shadow: inset 0 1px 1px #ffffff38, inset 0 -1px 3px #000, 0 2px 0 #010101, 0 4px 6px #0009;
+  color: #d0d2d5; cursor: pointer;
+}
+.tremplin-preprofile__close svg { width: 15px; height: 15px; stroke-width: 1.65; }
+.tremplin-preprofile__close:hover { border-color: #d4dae5a3; color: #fff; }
+.tremplin-preprofile__close:active { transform: translateY(1px); }
+.tremplin-preprofile__close:focus-visible { outline: 2px solid #c0ccdf; outline-offset: 3px; }
+.tremplin-preprofile[data-placement="right"] .mw-hover-preprofile-bubble__arrow {
+  left: -7px; border-left: 1px solid #b4c0d25c; border-bottom: 1px solid #404853; transform: translateY(-50%) rotate(45deg);
+}
+.tremplin-preprofile[data-placement="left"] .mw-hover-preprofile-bubble__arrow {
+  right: -7px; border-top: 1px solid #b4c0d25c; border-right: 1px solid #404853; transform: translateY(-50%) rotate(45deg);
+}
+.tremplin-preprofile__notice {
+  position: absolute; z-index: 22; bottom: 32px; left: 20px; right: 20px;
+  padding: 14px; border: 1px solid #b5a0e85e; border-radius: 12px;
+  background: #171020f5; color: #eee5ff; font-size: 13px; line-height: 1.5; text-align: center;
+  box-shadow: 0 6px 20px #0007;
+}
+/* Slide uses the `translate` property so `transform: scale()` keeps working. */
+@keyframes tremplin-preprofile-in-right { from { translate: 115% 0; opacity: .4; } to { translate: 0 0; opacity: 1; } }
+@keyframes tremplin-preprofile-in-left { from { translate: -115% 0; opacity: .4; } to { translate: 0 0; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .tremplin-preprofile { animation: none; } }
