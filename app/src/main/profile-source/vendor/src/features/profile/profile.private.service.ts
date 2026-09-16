@@ -1,3 +1,4 @@
+import { getSessionUser, getSessionFactors } from "../../lib/sessionIdentity";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { supabase } from "../../lib/supabaseClient";
 import { isProfileLocalPreviewEnabled } from "./profile.preview";
@@ -175,7 +176,7 @@ function loadFailure() {
 export function createProfilePrivateRepository(client: SupabaseClient = supabase) {
   return {
     async getOwnerDashboard(expectedOwnerUserId?: string): Promise<ProfilePrivateDashboard> {
-      const { data: authData, error: authError } = await client.auth.getUser();
+      const { data: authData, error: authError } = await getSessionUser(client);
       const user = authData.user;
       if (authError || !user) {
         throw new ProfilePrivateServiceError("not-authenticated", "Ta session a expiré. Reconnecte-toi pour ouvrir cet espace privé.");
@@ -190,7 +191,7 @@ export function createProfilePrivateRepository(client: SupabaseClient = supabase
         client.from("profile_contracts").select(CONTRACT_SELECT).eq("user_id", ownerUserId).order("updated_at", { ascending: false }),
         client.from("profile_hardware_devices").select(HARDWARE_SELECT).eq("user_id", ownerUserId).order("updated_at", { ascending: false }),
         client.from("profile_organization_invitations").select(INVITATION_SELECT).eq("user_id", ownerUserId).order("updated_at", { ascending: false }),
-        client.auth.mfa.listFactors(),
+        getSessionFactors(client),
       ]);
 
       if (transactionsResult.error || contractsResult.error || hardwareResult.error || invitationsResult.error) {

@@ -15,7 +15,7 @@ Référence : [audit et constats](SUPABASE-WIRING-AUDIT-2026-09-16.md). Un contr
 
 | ID | Constat / résultat attendu | Préparation | Déploiement | Vérification |
 |---|---|---|---|---|
-| S01 | Accès utilisateur/MFA Android compatibles avec session native | En cours | Non | Non |
+| S01 | Accès utilisateur/MFA Android compatibles avec session native | Corrigé, façade commune Web/native | Bundle Profil reconstruit ; APK pas encore installé | 5 tests ciblés passent ; recette authentifiée à faire |
 | A01 | Création/connexion réelle → globe → retours des features | À faire | Non | Non |
 | A02 | Finalisation identité, rôle IA/réel/métier, avatar/scène commune | À faire | Non | Non |
 | A03 | Brouillon Google, callbacks et disponibilité Apple | À faire | Non | Non |
@@ -43,3 +43,4 @@ Les paiements, signatures juridiques et quatre prochains piliers ne sont pas à 
 ## Journal
 
 - 16 septembre : audit conservé, comparaison backend déjà disponible ; préparation des espaces isolés. Aucun changement distant à cette étape.
+- S01 : lecture Auth REST avec le jeton natif, contrôle d’identité et invalidation après déconnexion/changement de compte ; suppression des appels `supabase.auth` incompatibles dans les cinq services importés. Aucun second refresh token ni session Web créée. Tests `node --test scripts/session-identity.test.mjs` : 5/5. Build du bundle Profil effectué, pas de validation de bout en bout revendiquée.

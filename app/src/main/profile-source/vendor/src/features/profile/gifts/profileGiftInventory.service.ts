@@ -1,3 +1,4 @@
+import { getSessionUser } from "../../../lib/sessionIdentity";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { supabase } from "../../../lib/supabaseClient";
 import type { RoomGiftCode } from "../../rooms/place/placeGiftCatalog";
@@ -127,7 +128,7 @@ function mapInventoryRows(data: unknown): ProfileGiftInventoryItem[] {
 export function createProfileGiftInventoryRepository(client: SupabaseClient = supabase) {
   return {
     async listMine(expectedOwnerUserId?: string): Promise<ProfileGiftInventoryItem[]> {
-      const { data: authData, error: authError } = await client.auth.getUser();
+      const { data: authData, error: authError } = await getSessionUser(client);
       const user = authData.user as User | null;
       if (authError || !user) {
         throw new ProfileGiftInventoryError(

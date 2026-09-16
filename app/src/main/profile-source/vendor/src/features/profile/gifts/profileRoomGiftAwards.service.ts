@@ -1,3 +1,4 @@
+import { getSessionUser } from "../../../lib/sessionIdentity";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "../../../lib/supabaseClient";
 
@@ -136,7 +137,7 @@ function mapDelivery(row: DeliveryRow): ProfileRoomGiftAward {
 export function createProfileRoomGiftAwardsRepository(client: SupabaseClient = supabase) {
   return {
     async listMine(expectedOwnerUserId?: string): Promise<ProfileRoomGiftAward[]> {
-      const { data: authData, error: authError } = await client.auth.getUser();
+      const { data: authData, error: authError } = await getSessionUser(client);
       const user = authData.user;
       if (authError || !user) {
         throw new ProfileRoomGiftAwardsError(

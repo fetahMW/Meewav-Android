@@ -1,7 +1,9 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createNativeSessionReader } from './sessionIdentity';
 
 export type MobileConfig = { preview: boolean; url: string; key: string; token: string | null; userId: string | null; route?: string; nativeVoice?:boolean };
 let config: MobileConfig;
+export const { getSessionUser, getSessionFactors } = createNativeSessionReader(() => config);
 export let supabase: SupabaseClient;
 export const useAuth = () => ({ user: config?.userId ? { id: config.userId } : null });
 export const isLocalAuthPreviewEnabled = () => config?.preview === true;

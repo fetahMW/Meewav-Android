@@ -1,3 +1,4 @@
+import { getSessionUser } from "../../../lib/sessionIdentity";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "../../../lib/supabaseClient";
 
@@ -156,7 +157,7 @@ export function createProfileCertifEndorsementsRepository(client: SupabaseClient
     },
 
     async listMine(expectedOwnerUserId?: string): Promise<ProfileCertifEndorsement[]> {
-      const { data: authData, error: authError } = await client.auth.getUser();
+      const { data: authData, error: authError } = await getSessionUser(client);
       const user = authData.user;
       if (authError || !user) {
         throw new ProfileCertifServiceError(

@@ -1,3 +1,4 @@
+import { getSessionUser } from "../../../lib/sessionIdentity";
 import { supabase } from "../../../lib/supabaseClient";
 
 export type PublicPreProfile = {
@@ -248,7 +249,7 @@ export async function getPublishedPreProfileMedia(
 }
 
 async function getAuthenticatedProfileId() {
-  const { data, error } = await supabase.auth.getUser();
+  const { data, error } = await getSessionUser(supabase);
   if (error) throw error;
   return data.user?.id ?? null;
 }

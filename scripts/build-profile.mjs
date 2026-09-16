@@ -30,6 +30,7 @@ const result = await build({
     context.onResolve({ filter: /(?:AuthContext|supabaseClient|MeewavPrimaryNav)$/ }, () => ({ path: join(source, 'runtime.ts') }));
     context.onResolve({ filter: /(?:^|\/)auth$/ }, () => ({ path: join(source, 'runtime.ts') }));
     context.onResolve({ filter: /localAuthPreview$/ }, () => ({ path: join(source, 'localPreview.ts') }));
+    context.onResolve({ filter: /\/lib\/sessionIdentity$/ }, () => ({ path: join(source, 'runtime.ts') }));
     context.onResolve({ filter: /^\// }, args => ({ path: args.path, external: true }));
     if (importing) context.onResolve({ filter: /^\.\/vendor\/src\// }, args => ({ path: join(web, args.path.slice('./vendor/'.length) + '.tsx') }));
   } }],
