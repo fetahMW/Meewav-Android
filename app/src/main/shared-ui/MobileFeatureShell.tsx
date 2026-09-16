@@ -14,10 +14,11 @@ export function mountFeature(id: 'market' | 'scene', title: string, load: () => 
       if (document.fullscreenElement) { void document.exitFullscreen(); return; }
       const close = [...document.querySelectorAll<HTMLButtonElement>('[role="dialog"]:not([aria-hidden="true"]) button[aria-label^="Fermer"]')]
         .find(button => button.getClientRects().length > 0 && getComputedStyle(button).visibility !== 'hidden');
-      if (close) close.click();
-      else if (route.key !== 'default') navigate(-1);
+      if (close) { close.click(); return; }
+      if (!window.dispatchEvent(new Event('meewav:feature-back', { cancelable: true }))) return;
+      if (route.key !== 'default') navigate(-1);
       else if (route.pathname !== `/${id}` || route.search) navigate(`/${id}`, { replace: true });
-      else native('globe');
+      else native('back');
     };
     useEffect(() => { (window as any).meewavMessaging.back = back; }, [route]);
     useEffect(() => {
@@ -53,7 +54,7 @@ export function mountFeature(id: 'market' | 'scene', title: string, load: () => 
   const root = createRoot(document.getElementById('root')!);
   let started = false;
   (window as any).meewavMessaging = {
-    back: () => native('globe'),
+    back: () => native('back'),
     async configure(config: MobileConfig) {
       if (started) return;
       started = true; configure(config);

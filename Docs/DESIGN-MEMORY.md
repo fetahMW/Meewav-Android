@@ -146,3 +146,32 @@ Accueil, Statistique, Médias et Espace privé. Ne pas le propager aux bandeaux,
 au sélecteur, au dock ni aux CTA. Les couleurs sémantiques des graphes et badges
 restent celles du Web. La revue visuelle sur le Samsung a été effectuée sur chaque destination du profil.
 Cette finition de contenu reste distincte du violet de CTA validé par l'utilisateur.
+
+## Navigation commune et retour — 16 septembre 2026
+
+Le chevron supérieur ferme d’abord la fiche ou revient à la page précédente dans
+la feature ; à sa racine il appelle `/native/back`, qui termine uniquement
+l’activité courante. Android retrouve ainsi la feature d’origine avec son scroll
+et son état. Seul le globe de la navbar utilise explicitement `/native/globe`.
+Le Marketplace conserve une pile de ses rubriques pilotées par état React,
+avec filtres, recherche et position. Les retours inter-features utilisent la pile
+Android existante ; aucune remise à zéro forcée sur le globe.
+
+FeatureDock est partagé entre Profil, Tremplin, Marketplace, Scène et Messagerie.
+Son portail le place hors des conteneurs qui coupent le contenu. Matière et encoche
+restent celles du Profil, six icônes et globe central, au contact de la barre système.
+Une poignée replie / déplie la navigation. Hors conversation, un déplacement tactile
+vers le bas de 56 px la replie, une remontée de 28 px la révèle ; les scrolls
+programmatiques et les carrousels horizontaux ne déclenchent pas ce comportement.
+Les gestes courts ont un seuil pour éviter les oscillations. Une action manuelle
+suspend brièvement l’automatisme. La réduction des animations est respectée.
+
+Dans une conversation la navbar commence repliée et reste manuelle, afin que
+la lecture ne fasse pas bouger le champ de message. Le champ et son contenu sont
+réservés au-dessus de la navbar ; à la saisie elle disparaît pour le clavier.
+Les fenêtres de détail masquent la navbar et gardent leurs boutons accessibles.
+Rooms conserve son message de disponibilité, sans route fictive.
+
+Le fond Marketplace en essai utilise désormais la variante utilisateur (4),
+`ChatGPT Image 12 sept. 2026, 23_51_01 1 (4).png`, sans changement des autres fonds.
+Compilation de livraison ; pas de tests ni de nouvelle inspection visuelle automatique.

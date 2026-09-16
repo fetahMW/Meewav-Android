@@ -253,6 +253,12 @@ open class MessagingActivity : ComponentActivity() {
                         .putExtra("route", request.url.getQueryParameter("route")))
                     return true
                 }
+                if (request.isForMainFrame && request.method == "GET" && request.url.toString() == "$ORIGIN/native/back") {
+                    // Pop this feature and reveal its actual caller, preserving
+                    // that activity's route, scroll and draft. Never invent a globe entry.
+                    finish()
+                    return true
+                }
                 if (request.url.toString() == "$ORIGIN/native/globe") {
                     // Reuse the globe below either feature, including Profile -> Messages.
                     // Only the debug workshop can bypass the authentication entry.

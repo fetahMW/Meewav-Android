@@ -11,17 +11,20 @@ function Shell({ Page }: { Page: React.ComponentType }) {
   const navigate = useNavigate();
   const [notice, setNotice] = useState('');
   useEffect(() => {
+    if (route.pathname.startsWith('/profile')) return;
     if (['messages','tremplin','market','scene'].includes(route.pathname.split('/')[1])) native(route.pathname.split('/')[1], route.pathname + route.search + route.hash);
-    else if (!route.pathname.startsWith('/profile')) native('globe');
+    else if (['/globe','/mon-globe'].includes(route.pathname)) native('globe');
+    navigate(-1);
   }, [route.pathname]);
   useEffect(() => {
     (window as any).meewavMessaging.back = () => {
       const close = document.querySelector<HTMLButtonElement>('[role="dialog"] button[aria-label^="Fermer"]');
       if (close) close.click();
-      else if (route.pathname !== '/profile') navigate('/profile');
-      else native('globe');
+      else if (route.key !== 'default') navigate(-1);
+      else if (route.pathname !== '/profile') navigate('/profile', { replace: true });
+      else native('back');
     };
-  }, [route.pathname, navigate]);
+  }, [route, navigate]);
   return <div className="mobile-profile">
     <button className="mobile-profile-close" aria-label="Fermer l’application" onClick={() => native('close-app')}><X /></button>
     <Page />
@@ -41,7 +44,7 @@ class Boundary extends Component<{children: React.ReactNode}, {failed: boolean}>
 const root = createRoot(document.getElementById('root')!);
 let started = false;
 (window as any).meewavMessaging = {
-  back: () => native('globe'),
+  back: () => native('back'),
   async configure(config: MobileConfig) {
     if (started) return;
     started = true; configure(config);

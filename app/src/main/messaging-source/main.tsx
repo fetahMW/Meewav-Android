@@ -5,11 +5,14 @@ import { ChevronLeft, MessageCircle, Plus, X } from 'lucide-react';
 import { configure, previewEnabled, updateToken, type MobileConfig } from './runtime';
 import { useFloatingComposer } from './useFloatingComposer';
 import VideoCalls from './calls/VideoCalls';
+import FeatureDock from '../shared-ui/FeatureDock';
 
 const root = createRoot(document.getElementById('root')!);
 let started = false;
 let disposed = false;
 const returnToGlobe = () => location.assign('https://appassets.androidplatform.net/native/globe');
+const native = (destination: string, route?: string) => location.assign(`https://appassets.androidplatform.net/native/${destination}${route ? `?route=${encodeURIComponent(route)}` : ''}`);
+const returnToPreviousFeature = () => native('back');
 const closeApplication = () => location.assign('https://appassets.androidplatform.net/native/close-app');
 
 class ErrorBoundary extends Component<{ children: React.ReactNode }, { failed: boolean }> {
@@ -31,6 +34,7 @@ function MobileShell({ Page }: { Page: React.ComponentType }) {
     return ['mockArtistId', 'conversation', 'request', 'project', 'group'].some(key => params.has(key));
   });
   const [downloadError, setDownloadError] = useState(false);
+  const [navigationNotice, setNavigationNotice] = useState(false);
   useEffect(() => {
     const failed = () => setDownloadError(true);
     window.addEventListener('meewav:download-error', failed);
@@ -48,7 +52,11 @@ function MobileShell({ Page }: { Page: React.ComponentType }) {
     return () => window.removeEventListener('resize', fitKeyboard);
   }, [detail]);
   useEffect(() => {
-    if (!current.pathname.startsWith('/messages')) returnToGlobe();
+    const destination = current.pathname.split('/')[1];
+    if (destination === 'messages') return;
+    if (['profile','tremplin','market','scene','globe'].includes(destination)) native(destination, current.pathname + current.search);
+    else setNavigationNotice(true);
+    navigate(-1);
   }, [current.pathname]);
   useEffect(() => {
     const open = () => setDetail(true);
@@ -58,17 +66,19 @@ function MobileShell({ Page }: { Page: React.ComponentType }) {
     (window as any).meewavMessaging.back = () => {
       // Let the existing dialog handlers close their own panels before leaving.
       const closeButton = document.querySelector<HTMLButtonElement>('[role="dialog"] button[aria-label^="Fermer"], .mw-overlay button[aria-label^="Fermer"], .mw-conversation-drawer button[aria-label^="Fermer"]');
-      if (closeButton) { closeButton.click(); return; }
-      if (detail) close(); else returnToGlobe();
+      if (closeButton && closeButton.getClientRects().length) { closeButton.click(); return; }
+      if (detail) close();
+      else if (current.key !== 'default') navigate(-1);
+      else returnToPreviousFeature();
     };
     return () => {
       window.removeEventListener('meewav:messaging-detail', open);
       window.removeEventListener('meewav:messaging-list', close);
     };
-  }, [detail]);
+  }, [detail, current]);
   return <div ref={surfaceRef} className={`mobile-messaging${detail ? ' is-detail' : ''}`}>
     <header className="mobile-messaging-header">
-      <button aria-label="Retour au globe" onClick={returnToGlobe}><ChevronLeft /></button>
+      <button aria-label="Retour à l’écran précédent" onClick={() => (window as any).meewavMessaging.back()}><ChevronLeft /></button>
       <div><strong>Messagerie</strong>{previewEnabled() && <small>Aperçu sans compte</small>}</div>
       <span className="mobile-messaging-header__actions"><button aria-label={space === 'groups' ? 'Créer un groupe' : space === 'projects' ? 'Nouveau projet' : 'Nouvelle conversation'} onClick={() => {
         if (space === 'groups' || space === 'projects') {
@@ -83,12 +93,18 @@ function MobileShell({ Page }: { Page: React.ComponentType }) {
     </header>
     <Page />
     <VideoCalls />
+    <FeatureDock active="messages" compact={detail} onSelect={id => {
+      if (id === 'messages') { setDetail(false); window.dispatchEvent(new Event('meewav:messaging-list')); }
+      else if (id === 'rooms') setNavigationNotice(true);
+      else native(id);
+    }} />
+    {navigationNotice && <div className="mobile-download-error" role="status">Cette destination sera disponible prochainement.<button onClick={() => setNavigationNotice(false)}>Fermer</button></div>}
     {downloadError && <div className="mobile-download-error" role="alert">Ce fichier n’a pas pu être enregistré.<button aria-label="Fermer" onClick={() => setDownloadError(false)}>Fermer</button></div>}
   </div>;
 }
 
 (window as any).meewavMessaging = {
-  status: 'loading', back: returnToGlobe,
+  status: 'loading', back: returnToPreviousFeature,
   async configure(value: MobileConfig) {
     if (started || disposed) return;
     started = true;
@@ -106,6 +122,7 @@ function MobileShell({ Page }: { Page: React.ComponentType }) {
   },
   updateToken,
   setActive(active: boolean) {
+    document.documentElement.toggleAttribute('data-profile-inactive', !active);
     if (!active) {
       document.querySelectorAll('audio, video').forEach(item => (item as HTMLMediaElement).pause());
       window.dispatchEvent(new Event('meewav:messaging-suspend'));

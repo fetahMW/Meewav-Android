@@ -1046,3 +1046,8 @@ button:disabled { opacity: .4; cursor: default; }
   box-shadow: inset 0 1px #ffffff10;
 }
 #root .mobile-messaging .agw-panel--decisions .agw-settings-detail p { color: #a4a7b0; }
+
+/* The composer stays inside the page above the shared dock. While typing the
+   dock disappears, so Android's keyboard keeps its existing input geometry. */
+#root .mobile-messaging .messaging-page { bottom: var(--feature-dock-inset,104px); }
+#root .mobile-messaging .mobile-download-error { bottom: calc(var(--feature-dock-inset,104px) + 8px); }

@@ -696,6 +696,46 @@ export default function MarketPage() {
   const [rentalEnd, setRentalEnd] = useState("2026-07-22");
   const [viewMode, setViewMode] = useState<"home" | "catalog">("home");
   const marketScrollRef = useRef<HTMLDivElement>(null);
+  // The Web catalogue changes React state rather than URL. Retain its actual
+  // visited pages so the mobile chevron can restore them before popping Android.
+  const captureView = () => ({ activePillar, activeFilter, query, viewMode,
+    showFavoritesOnly, sellerDraftsOpen, marketFilters, scrollTop: marketScrollRef.current?.scrollTop ?? 0 });
+  const viewHistory = useRef<ReturnType<typeof captureView>[]>([]);
+  const restoringView = useRef(false);
+  useLayoutEffect(() => {
+    const snapshot = captureView();
+    const previous = viewHistory.current.at(-1);
+    if (restoringView.current) {
+      restoringView.current = false;
+      if (marketScrollRef.current && previous) marketScrollRef.current.scrollTop = previous.scrollTop;
+      return;
+    }
+    const samePage = previous && previous.activePillar === activePillar && previous.viewMode === viewMode
+      && previous.showFavoritesOnly === showFavoritesOnly && previous.sellerDraftsOpen === sellerDraftsOpen;
+    if (samePage) viewHistory.current[viewHistory.current.length - 1] = snapshot;
+    else viewHistory.current.push(snapshot);
+  }, [activePillar, activeFilter, query, viewMode, showFavoritesOnly, sellerDraftsOpen, marketFilters]);
+  useEffect(() => {
+    const rememberScroll = () => {
+      const frame = viewHistory.current.at(-1);
+      if (frame && marketScrollRef.current) frame.scrollTop = marketScrollRef.current.scrollTop;
+    };
+    const back = (event: Event) => {
+      if (viewHistory.current.length < 2) return;
+      event.preventDefault();
+      viewHistory.current.pop();
+      const previous = viewHistory.current.at(-1)!;
+      restoringView.current = true;
+      setActivePillar(previous.activePillar); setActiveFilter(previous.activeFilter);
+      setQuery(previous.query); setViewMode(previous.viewMode);
+      setShowFavoritesOnly(previous.showFavoritesOnly); setSellerDraftsOpen(previous.sellerDraftsOpen);
+      setMarketFilters(previous.marketFilters);
+    };
+    const scroller = marketScrollRef.current;
+    scroller?.addEventListener('scroll', rememberScroll, { passive: true });
+    window.addEventListener('meewav:feature-back', back);
+    return () => { scroller?.removeEventListener('scroll', rememberScroll); window.removeEventListener('meewav:feature-back', back); };
+  }, []);
   const marketCenterTriggerRef = useRef<HTMLButtonElement>(null);
   const notificationsTriggerRef = useRef<HTMLButtonElement>(null);
   const marketCenterPopoverRef = useRef<HTMLElement>(null);

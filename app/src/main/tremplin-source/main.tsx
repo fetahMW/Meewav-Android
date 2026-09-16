@@ -31,7 +31,8 @@ function Shell({ Page }: { Page: React.ComponentType }) {
     if (close) close.click();
     else if (route.pathname !== '/tremplin' || route.search) {
       if (route.key === 'default') navigate('/tremplin', { replace: true }); else navigate(-1);
-    } else native('globe');
+    } else if (route.key !== 'default') navigate(-1);
+    else native('back');
   };
   useEffect(() => { (window as any).meewavMessaging.back = back; }, [route]);
   useEffect(() => {
@@ -55,7 +56,7 @@ class Boundary extends Component<{ children: React.ReactNode }, { failed: boolea
 const root = createRoot(document.getElementById('root')!);
 let started = false;
 (window as any).meewavMessaging = {
-  back: () => native('globe'),
+  back: () => native('back'),
   async configure(config: MobileConfig) {
     if (started) return;
     started = true; configure(config);
