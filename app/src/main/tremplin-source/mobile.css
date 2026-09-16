@@ -75,5 +75,22 @@
 .mobile-tremplin-section > div { display: grid; padding: 4px 8px 8px; gap: 4px; max-height: 45dvh; overflow-y: auto; }
 .mobile-tremplin-section > div button { min-height: 44px; padding: 10px 12px; text-align: left; border: 0; border-radius: 10px; color: #c6c4d2; background: #08090bbb; font: inherit; font-size: 13px; }
 .mobile-tremplin-section > div button[aria-current] { background: #4f359e35; color: white; box-shadow: inset 2px 0 #9274d8; }
+/* Statistiques — mêmes surfaces graphite que Mes artistes / Découvrir. */
+#root .mobile-tremplin .tremplin-statistics { padding-top: 2px; }
+#root .mobile-tremplin .tremplin-statistics__header h1 { font-size: 26px; }
+#root .mobile-tremplin .tremplin-statistics__filters { gap: 8px; }
+#root .mobile-tremplin .tremplin-statistics__filters button { flex: 1 1 44%; min-height: 42px; border: 1px solid #8b93d433; border-radius: 14px; background: #14161cd9; color: #c6c9d6; box-shadow: inset 0 1px #ffffff0a; }
+#root .mobile-tremplin .tremplin-statistics__filters button[aria-pressed="true"] { background: #45dfa812; border-color: #45dfa873; color: #7ce8bd; box-shadow: inset 0 1px #ffffff0d,0 4px 14px #00000030; }
+#root .mobile-tremplin .tremplin-statistics__list { gap: 10px; }
+#root .mobile-tremplin .tremplin-statistics__row { grid-template-columns: 28px 46px minmax(0,1fr) 16px; gap: 12px; padding: 13px 14px; border: 1px solid #8b93d42e; border-radius: 18px; background: linear-gradient(160deg,#1a1c21,#101115 48%,#0a0b0e); box-shadow: inset 0 1px #ffffff12,0 10px 22px #00000038; }
+#root .mobile-tremplin .tremplin-statistics__row:active { border-color: #8b93d459; background: linear-gradient(160deg,#1e2027,#121318 48%,#0b0c10); }
+#root .mobile-tremplin .tremplin-statistics__rank { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: #ffffff09; font-size: 12px; }
+#root .mobile-tremplin .tremplin-statistics__list li:first-child .tremplin-statistics__rank { background: #45dfa81a; }
+#root .mobile-tremplin .tremplin-statistics__row img { border: 1px solid #8b93d433; }
+#root .mobile-tremplin .tremplin-statistics__metrics { padding-top: 11px; border-top: 1px solid #8b93d41f; }
+#root .mobile-tremplin .tremplin-statistics__metrics > span { padding: 8px 10px; border-radius: 10px; background: #ffffff05; }
+#root .mobile-tremplin .tremplin-statistics__metrics [data-selected="true"] { background: #45dfa812; }
+#root .mobile-tremplin .tremplin-statistics__chevron { color: #8f95ab; }
+#root .mobile-tremplin .tremplin-statistics__empty { border-color: #8b93d43d; }
 @media (max-width: 360px) { #root .mobile-tremplin .tremplin-pillar-tabs button strong { font-size: 9px; } }
 @media (prefers-reduced-motion: reduce) { #root .mobile-tremplin * { scroll-behavior: auto !important; } }

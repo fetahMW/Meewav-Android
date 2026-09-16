@@ -1,7 +1,7 @@
 import React, { Component, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
-import { Coins, Heart, Menu, ReceiptText, Sparkles, Store, Wallet, X } from 'lucide-react';
+import { CirclePlus, Coins, Menu, ReceiptText, Wallet, X } from 'lucide-react';
 import FeatureDock, { featureItems } from '../shared-ui/FeatureDock';
 import { configure, updateToken, type MobileConfig } from './runtime';
 import './home-mobile.css';
@@ -44,9 +44,8 @@ function Shell({ Page }: { Page: React.ComponentType }) {
   const current = route.pathname + route.search;
   const menu = [
     { label: 'Mon jeton', icon: Coins, path: '/tremplin/mon-jeton' },
-    { label: 'Mon solde', icon: Wallet, path: '/tremplin/mes-artistes?tab=tokens' },
+    { label: 'Portefeuille', icon: Wallet, path: '/tremplin/mes-artistes?tab=tokens' },
     { label: 'Dernières opérations', icon: ReceiptText, path: '/tremplin/mes-artistes?tab=tokens&section=history' },
-    { label: 'Mes artistes', icon: Heart, path: '/tremplin/mes-artistes' },
   ];
   return <div className="mobile-profile mobile-tremplin">
     <button className="mobile-tremplin-back" aria-label="Menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(open => !open)}><Menu /></button>
@@ -54,9 +53,8 @@ function Shell({ Page }: { Page: React.ComponentType }) {
       <button className="mobile-tremplin-menu-overlay" aria-label="Fermer le menu" onClick={() => setMenuOpen(false)} />
       <nav className="mobile-tremplin-menu" aria-label="Menu Tremplin">
         {menu.map(({ label, icon: Icon, path }) => <button key={path} aria-current={current === path ? 'page' : undefined} onClick={() => { setMenuOpen(false); navigate(path); }}><Icon size={17} /> {label}</button>)}
+        <button onClick={() => { setMenuOpen(false); setNotice('Le rechargement du solde n’est pas encore disponible dans cette version Android.'); }}><CirclePlus size={17} /> Recharger le solde</button>
         <hr />
-        <button onClick={() => { setMenuOpen(false); navigate('/tremplin/decouvrir'); }}><Sparkles size={17} /> Découvrir les talents</button>
-        <button onClick={() => { setMenuOpen(false); native('market'); }}><Store size={17} /> Marketplace</button>
         <button onClick={() => native('close-app')}><X size={17} /> Quitter le Tremplin</button>
       </nav>
     </>}
