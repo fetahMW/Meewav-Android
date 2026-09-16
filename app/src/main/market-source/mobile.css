@@ -218,15 +218,15 @@
 
 /* Own the full indicator geometry: do not combine the shared left/right offsets
    with Profile's translateX(-50%). Both layers travel with their actual tab. */
-#root .mobile-market .market-pillar-tabs > button::after,
-#root .mobile-market .market-pillar-tabs > button::before {
+#root .mobile-market .market-topbar .market-pillar-tabs > button::after,
+#root .mobile-market .market-topbar .market-pillar-tabs > button::before {
   content: ''; position: absolute; inset: auto auto 4px 50%;
   width: 56%; max-width: 48px; height: 1px; transform: translateX(-50%);
   border: 0; border-radius: 50%; opacity: 0; pointer-events: none;
   background: linear-gradient(90deg,transparent,#9274d8 22%,#d7c6ff 50%,#9274d8 78%,transparent);
   box-shadow: none; filter: none;
 }
-#root .mobile-market .market-pillar-tabs > button::before {
+#root .mobile-market .market-topbar .market-pillar-tabs > button::before {
   bottom: 2px; height: 5px; filter: blur(3px);
   background: linear-gradient(90deg,transparent,#8060cc 25%,#b39aef 50%,#8060cc 75%,transparent);
 }
