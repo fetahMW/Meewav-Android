@@ -19,8 +19,8 @@ Référence : [audit et constats](SUPABASE-WIRING-AUDIT-2026-09-16.md). Un contr
 | A01 | Création/connexion réelle → globe → retours des features | À faire | Non | Non |
 | A02 | Finalisation identité, rôle IA/réel/métier, avatar/scène commune | À faire | Non | Non |
 | A03 | Brouillon Google, callbacks et disponibilité Apple | À faire | Non | Non |
-| P01 | Colonnes/projections profil compatibles Web/Android | À faire | Non | Non |
-| P02 | Confidentialité PII et droits sur champs d’autorité | À faire | Non | Non |
+| P01 | Colonnes/projections profil compatibles Web/Android | Migration identité revue, métier séparé du statut IA/réel | Dev : 20260916120000 | RPC réels + édition/relecture dans deux sessions Auth ; interfaces encore à vérifier |
+| P02 | Confidentialité PII et droits sur champs d’autorité | Projections publiques étroites, RPC propriétaire, droits par colonne | Dev : 20260916120000 | Tests SQL rollback + API avec deux comptes : PII/grade/écriture tierce refusés. Ancien RPC e-mail reste ouvert en P03 |
 | P03 | Connexion username sans exposition d’e-mail, compatibilité legacy | À faire | Non | Non |
 | P04 | Profil propriétaire/public, visibilité et préférences | À faire | Non | Non |
 | P05 | Médias privés : lecture, upload, publication, archivage | À faire | Non | Non |
@@ -44,3 +44,5 @@ Les paiements, signatures juridiques et quatre prochains piliers ne sont pas à 
 
 - 16 septembre : audit conservé, comparaison backend déjà disponible ; préparation des espaces isolés. Aucun changement distant à cette étape.
 - S01 : lecture Auth REST avec le jeton natif, contrôle d’identité et invalidation après déconnexion/changement de compte ; suppression des appels `supabase.auth` incompatibles dans les cinq services importés. Aucun second refresh token ni session Web créée. Tests `node --test scripts/session-identity.test.mjs` : 5/5. Build du bundle Profil effectué, pas de validation de bout en bout revendiquée.
+- Identité : migration dérivée revue de la fondation Web, testée sous rôles anon/authenticated dans une transaction annulée, puis appliquée à Dev (SHA-256 `1b5764348dfe897b41ffdeaaa2dcc5b7b2cc4b6a13f876e4b619a72627094cc1`). Comptes/profils/messages existants : cardinalités inchangées. Les lectures publiques nommées et écritures d’onboarding Swift actuelles restent permises ; aucune modification iOS. Le RPC historique username → e-mail reste explicitement ouvert, sans prétention de résolution P03.
+- Recette réelle `node scripts/shared-identity-live.mjs` : deux comptes dédiés privés, inscription Auth, onboarding/scène, édition de profil, nouvelle session/relecture, refus PII/champs d’autorité/écriture tierce et invisibilité du profil privé. Succès le 16 septembre à 05:57 UTC. Il s’agit de tests API, pas d’une recette des interfaces. Les secrets de recette restent dans `app/build/shared-recipe` ignoré ; aucun compte tiers utilisé.
