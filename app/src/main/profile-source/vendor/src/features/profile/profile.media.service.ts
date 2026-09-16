@@ -351,6 +351,7 @@ function titleFromFilename(filename: string) {
 export type ProfileMediaRepository = ReturnType<typeof createProfileMediaRepository>;
 
 export function createProfileMediaRepository(client: SupabaseClient = supabase) {
+  const uploads = new WeakMap<File, { owner: string; pillar: string; id: string; path: string; uploaded: boolean; pending?: Promise<MediaItem> }>();
   const resolveAssetUrl = async (record: MediaFileRecord) => {
     if (isDirectAssetUrl(record.file_url)) return record.file_url ?? undefined;
     if (!record.storage_bucket || !record.storage_path) return undefined;
@@ -425,52 +426,79 @@ export function createProfileMediaRepository(client: SupabaseClient = supabase) 
       const classified = options.sourcePillar === "marketplace"
         ? classifyMarketplaceMediaFile(file)
         : classifyMediaFile(file);
-      const storagePath = `${ownerId}/${new Date().getUTCFullYear()}/${crypto.randomUUID()}-${safeStorageSegment(file.name)}`;
-      const storage = client.storage.from(PROFILE_MEDIA_BUCKET);
-      const uploadResult = await storage.upload(storagePath, file, {
-        cacheControl: "3600",
-        contentType: classified.mimeType,
-        upsert: false,
-      });
-
-      if (uploadResult.error) {
-        throw new ProfileMediaServiceError("media-upload-failed", `L’import de « ${file.name} » a échoué.`);
+      const pillar = options.sourcePillar ?? "profile";
+      let attempt = uploads.get(file);
+      if (attempt && (attempt.owner !== ownerId || attempt.pillar !== pillar)) {
+        throw new ProfileMediaServiceError("media-upload-failed", "Ce fichier appartient à un autre import. Sélectionne-le à nouveau.");
       }
+      if (!attempt) {
+        const id = crypto.randomUUID();
+        attempt = { owner: ownerId, pillar, id, path: `${ownerId}/${new Date().getUTCFullYear()}/${id}-${safeStorageSegment(file.name)}`, uploaded: false };
+        uploads.set(file, attempt);
+      }
+      if (attempt.pending) return attempt.pending;
+      const draft = attempt;
+      const execute = async () => {
+        // The insert response can be lost after commit. Re-read our stable ID
+        // before retrying rather than creating a duplicate or deleting its file.
+        const existing = await client.from("media_files").select(MEDIA_SELECT).eq("id", draft.id).eq("user_id", ownerId).maybeSingle();
+        if (existing.error) throw new ProfileMediaServiceError("media-upload-failed", "Impossible de vérifier l’import. Réessaie dans un instant.");
+        if (existing.data) return hydrateRecord(existing.data as unknown as MediaFileRecord);
+        const storagePath = draft.path;
+        const storage = client.storage.from(PROFILE_MEDIA_BUCKET);
+        if (!draft.uploaded) {
+        const uploadResult = await storage.upload(storagePath, file, {
+          cacheControl: "3600",
+          contentType: classified.mimeType,
+          upsert: false,
+        });
 
-      const insertPayload = {
-        user_id: ownerId,
-        type: classified.kind,
-        name: titleFromFilename(file.name),
-        format: classified.extension.toLocaleUpperCase("fr-FR"),
-        file_size: file.size,
-        size_bytes: file.size,
-        duration_ms: null,
-        file_url: null,
-        cover_url: null,
-        storage_bucket: PROFILE_MEDIA_BUCKET,
-        storage_path: storagePath,
-        mime_type: classified.mimeType,
-        status: "draft",
-        visibility: "private",
-        source_pillar: options.sourcePillar ?? "profile",
-        metadata: {
-          upload_source: "web",
-          upload_context: options.sourcePillar ?? "profile",
-        },
+        if (uploadResult.error && String((uploadResult.error as { statusCode?: string }).statusCode) !== "409"
+            && !/already exists|duplicate/i.test(uploadResult.error.message)) {
+          throw new ProfileMediaServiceError("media-upload-failed", `L’import de « ${file.name} » a échoué.`);
+        }
+        draft.uploaded = true;
+        }
+
+        const insertPayload = {
+          id: draft.id,
+          user_id: ownerId,
+          type: classified.kind,
+          name: titleFromFilename(file.name),
+          format: classified.extension.toLocaleUpperCase("fr-FR"),
+          file_size: file.size,
+          size_bytes: file.size,
+          duration_ms: null,
+          file_url: null,
+          cover_url: null,
+          storage_bucket: PROFILE_MEDIA_BUCKET,
+          storage_path: storagePath,
+          mime_type: classified.mimeType,
+          status: "draft",
+          visibility: "private",
+          source_pillar: options.sourcePillar ?? "profile",
+          metadata: {
+            upload_source: "web",
+            upload_context: options.sourcePillar ?? "profile",
+          },
+        };
+
+        const { data, error } = await client
+          .from("media_files")
+          .insert(insertPayload)
+          .select(MEDIA_SELECT)
+          .single();
+
+        if (error || !data) {
+          // Never delete on an uncertain response: the row may already reference
+          // this object. A retry with the same File reuses the same operation.
+          throw new ProfileMediaServiceError("media-upload-failed", `L’import de « ${file.name} » n’a pas pu être enregistré.`);
+        }
+
+        return hydrateRecord(data as unknown as MediaFileRecord);
       };
-
-      const { data, error } = await client
-        .from("media_files")
-        .insert(insertPayload)
-        .select(MEDIA_SELECT)
-        .single();
-
-      if (error || !data) {
-        await storage.remove([storagePath]);
-        throw new ProfileMediaServiceError("media-upload-failed", `L’import de « ${file.name} » n’a pas pu être enregistré.`);
-      }
-
-      return hydrateRecord(data as unknown as MediaFileRecord);
+      draft.pending = execute();
+      try { return await draft.pending; } finally { draft.pending = undefined; }
     },
 
     async renameOwnerMedia(ownerId: string, mediaId: string, name: string) {

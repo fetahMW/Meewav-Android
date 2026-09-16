@@ -1,0 +1,41 @@
+import {readFile,writeFile,mkdir} from 'node:fs/promises';
+import {createRequire} from 'node:module';
+import {resolve} from 'node:path';
+import {pathToFileURL} from 'node:url';
+import assert from 'node:assert/strict';
+const root=resolve(import.meta.dirname,'..'),web=resolve(root,'../Meewav-Web-supabase-wiring');
+const require=createRequire(resolve(root,'../Meewav-Web/package.json'));
+const {createClient}=require('@supabase/supabase-js');
+const {build}=createRequire(resolve(root,'../Meewav-Web/vendor/globe-vinyle/package.json'))('esbuild');
+const dir=resolve(root,'app/build/shared-recipe');await mkdir(dir,{recursive:true});
+await build({entryPoints:[resolve(web,'src/features/profile/profile.media.service.ts')],outfile:resolve(dir,'media-service.mjs'),bundle:true,platform:'node',format:'esm',plugins:[{name:'injected-client',setup(b){b.onResolve({filter:/lib\/supabaseClient$/},()=>({path:'injected',namespace:'stub'}));b.onLoad({filter:/.*/,namespace:'stub'},()=>({contents:'export const supabase = null;'}));}}]});
+const {createProfileMediaRepository}=await import(pathToFileURL(resolve(dir,'media-service.mjs')));
+const props=await readFile(resolve(root,'meewav.local.properties'),'utf8');
+const url=props.match(/^SUPABASE_URL=(.+)$/m)[1].trim().replaceAll('\\:',':');
+assert.equal(new URL(url).hostname,'dqabekaqpznjsagoxzwc.supabase.co');
+const key=props.match(/^SUPABASE_PUBLISHABLE_KEY=(.+)$/m)[1].trim();
+const accounts=JSON.parse(await readFile(resolve(dir,'accounts.json'),'utf8'));
+const clients=[];
+for(const a of accounts){const c=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});const {error}=await c.auth.signInWithPassword({email:a.email,password:a.password});assert.equal(error,null,'Recipe sign-in');clients.push(c);}
+const [a,b]=clients;
+const repo=createProfileMediaRepository(a);
+const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=','base64');
+const file=new File([png],'recette-cablage.png',{type:'image/png'});
+const item=await repo.uploadOwnerMedia(accounts[0].id,file);
+const again=await repo.uploadOwnerMedia(accounts[0].id,file);assert.equal(again.id,item.id,'Upload idempotency');
+const row=await a.from('media_files').select('id,storage_path').eq('id',item.id).single();assert.equal(row.error,null);
+const path=row.data.storage_path;
+const privateRead=await b.storage.from('profile-media').createSignedUrl(path,30);assert.ok(privateRead.error,'Peer private read denied');
+const published=await a.from('media_files').update({status:'published',visibility:'public'}).eq('id',item.id);assert.equal(published.error,null);
+const publicClient=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
+const publicRead=await publicClient.storage.from('profile-media').createSignedUrl(path,30);assert.equal(publicRead.error,null,'Published object readable');
+assert.equal((await fetch(publicRead.data.signedUrl)).status,200);
+const archived=await a.rpc('archive_media_file',{p_media_id:item.id});assert.equal(archived.error,null);assert.equal(archived.data,true);
+const hiddenAgain=await b.storage.from('profile-media').createSignedUrl(path,30);assert.ok(hiddenAgain.error,'Archived object denies new grants');
+// Remove only this recipe upload, which is now archived and uniquely identified.
+const removed=await a.storage.from('profile-media').remove([path]);assert.equal(removed.error,null);
+const proof={at:new Date().toISOString(),project:new URL(url).hostname,assertions:['actual Web media repository upload','same File retry has same ID','peer private access denied','published anonymous signed download HTTP 200','archive prevents new signed URLs','recipe blob cleaned'],uiTested:false,signedUrlRevocation:'previously issued URLs remain valid until expiry'};
+await writeFile(resolve(dir,'media-proof.json'),JSON.stringify(proof,null,2));console.log(JSON.stringify(proof));
+for(const c of clients)await c.removeAllChannels();
+// Supabase Auth keeps a BroadcastChannel alive in Node even with persistence off.
+process.exit(0);

@@ -119,7 +119,7 @@ export default function ProfilePage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, status: authStatus, error: authError } = useAuth();
-  const demoFallbackEnabled = import.meta.env.DEV && import.meta.env.VITE_PROFILE_DEMO_FALLBACK === "true";
+  const demoFallbackEnabled = !user && isProfileLocalPreviewEnabled();
   const localAuthPreviewEnabled = isProfileLocalPreviewEnabled();
   const activeTab = getProfileTabFromPath(location.pathname);
   const [mediaSection, setMediaSection] = useState<MediaSectionId>("library");
@@ -329,6 +329,7 @@ export default function ProfilePage() {
       <main className={`profile-main ${activeTab === "home" ? "is-profile-home" : "is-profile-workspace"}`}>
         {activeTab === "home" && (
           <ProfileHero
+            demo={!user && localAuthPreviewEnabled}
             profile={profile}
             onEdit={() => setDialog({ type: "edit-profile" })}
             onViewer={() => setDialog({ type: "viewer" })}
@@ -339,6 +340,8 @@ export default function ProfilePage() {
         <section className="profile-view-stage" key={activeTab}>
           {activeTab === "home" && (
             <ProfileHomeView
+              demo={!user && localAuthPreviewEnabled}
+              notifications={notifications}
               profile={profile}
               onNavigate={openTab}
               onEditProfile={() => setDialog({ type: "edit-profile" })}
@@ -609,13 +612,14 @@ export function ProfileSearch({ query, onQueryChange, onSelect, onFilterApplied 
 }
 
 type ProfileHeroProps = {
+  demo: boolean;
   profile: DemoProfile;
   onEdit: () => void;
   onViewer: () => void;
   onToast: (message: string) => void;
 };
 
-function ProfileHero({ profile, onEdit, onViewer, onToast }: ProfileHeroProps) {
+function ProfileHero({ profile, onEdit, onViewer, onToast, demo }: ProfileHeroProps) {
   const gradeMeta = getGradeBadgeMeta(profile.grade);
   return (
     <section className="profile-hero" aria-labelledby="profile-hero-title">
@@ -624,13 +628,13 @@ function ProfileHero({ profile, onEdit, onViewer, onToast }: ProfileHeroProps) {
         <div className="profile-hero__avatar-shell">
           <span className="profile-hero__avatar-orbit" />
           <img src={profile.avatarUrl} alt={`Portrait de ${profile.displayName}`} />
-          <span className="profile-hero__live"><i /> Live</span>
+          {demo && <span className="profile-hero__live"><i /> Live</span>}
         </div>
         <div className="profile-hero__identity">
           <div className="profile-hero__eyebrow"><span>Profil artiste</span></div>
           <h1 id="profile-hero-title">{profile.displayName}</h1>
           <p className="profile-hero__role">{profile.username} · {profile.role}</p>
-          <p className="profile-hero__location"><MapPin size={14} /> {profile.city}, {profile.country}<span /> Disponible pour collaborer</p>
+          <p className="profile-hero__location"><MapPin size={14} /> {profile.city}, {profile.country}{demo && <><span /> Disponible pour collaborer</>}</p>
           <p className="profile-hero__bio">{profile.bio}</p>
           <div className="profile-hero__actions">
             <button type="button" className="profile-primary-button" onClick={onEdit}><PencilLine size={16} /> Modifier le profil</button>
@@ -641,9 +645,9 @@ function ProfileHero({ profile, onEdit, onViewer, onToast }: ProfileHeroProps) {
       </div>
       <div className="profile-hero__insights-card">
         <div className="profile-hero__stats">
-          <div><UsersRound aria-hidden="true" /><strong>{profile.followers}</strong><span>Abonnés</span><small>+1 248 ce mois</small></div>
+          <div><UsersRound aria-hidden="true" /><strong>{profile.followers}</strong><span>Abonnés</span><small>{demo ? "+1 248 ce mois" : "Abonnés actuels"}</small></div>
           <div><UserPlus aria-hidden="true" /><strong>{profile.following}</strong><span>Abonnements</span><small>Réseau actif</small></div>
-          <div><Sparkles aria-hidden="true" /><strong>{profile.tokenValue}</strong><span>Token MW</span><small>+4,8 %</small></div>
+          <div><Sparkles aria-hidden="true" /><strong>{demo ? profile.tokenValue : "—"}</strong><span>Token MW</span><small>{demo ? "+4,8 %" : "Aucune cotation disponible"}</small></div>
         </div>
         <div className="profile-hero__grade">
           <div className="profile-hero__grade-badge"><MeewavGradeBadge level={profile.grade} size="lg" variant="icon" /></div>

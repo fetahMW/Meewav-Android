@@ -19,15 +19,15 @@ import { getGradeBadgeMeta, type GradeLevel } from "../../grades/gradeBadges";
 import { SCENE_NAME } from "../../shorts/sceneContract";
 import { activityItems, type DemoProfile, type ProfileTabId, type StatsPeriod } from "../profile.data";
 import {
-  isProfileAnalyticsDemoFallbackEnabled,
   profileAnalyticsRepository,
   type ProfileAnalyticsSnapshot,
 } from "../profile.analytics.service";
 import ProfileRankingPanel from "../components/ProfileRankingPanel";
-import { isProfileLocalPreviewEnabled } from "../profile.preview";
 
 type ProfileHomeViewProps = {
+  demo?: boolean;
   profile: DemoProfile;
+  notifications?: import("../profile.data").ProfileNotification[];
   onNavigate: (tab: ProfileTabId) => void;
   onEditProfile: () => void;
   onOpenNotifications: () => void;
@@ -175,6 +175,8 @@ type AnalyticsLoadState = {
 
 export default function ProfileHomeView({
   profile,
+  notifications = [],
+  demo = false,
   onNavigate,
   onEditProfile,
   onOpenNotifications,
@@ -188,8 +190,14 @@ export default function ProfileHomeView({
   const nextGradeLevel = (profile.grade === 6 ? 6 : profile.grade + 1) as GradeLevel;
   const currentGradeMeta = getGradeBadgeMeta(profile.grade);
   const nextGradeMeta = getGradeBadgeMeta(nextGradeLevel);
-  const localPreviewEnabled = isProfileLocalPreviewEnabled();
-  const demoFallbackEnabled = isProfileAnalyticsDemoFallbackEnabled();
+  const localPreviewEnabled = demo;
+  const demoFallbackEnabled = demo;
+  const shownActions = localPreviewEnabled ? priorityActions : [
+    { label: "Compléter ton profil", detail: "Identité et présentation publique", progress: profile.profileCompletion },
+    { label: "Ajouter tes créations", detail: "Importer un premier média", progress: 0 },
+    { label: "Consulter ton activité", detail: "Notifications de ton compte", progress: 0 },
+  ];
+  const shownActivity = localPreviewEnabled ? activityItems : notifications;
   const usesDemoFallback = demoFallbackEnabled && analyticsState.status !== "ready";
   const pulse = analyticsState.data
     ? pulseFromAnalytics(analyticsState.data)
@@ -437,14 +445,14 @@ export default function ProfileHomeView({
             <span className="profile-count-pill">{completedActions.length}/3</span>
           </div>
           <div className="profile-priority-list">
-            {priorityActions.map((action) => {
+            {shownActions.map((action, index) => {
               const complete = completedActions.includes(action.label);
               return (
                 <button
                   key={action.label}
                   type="button"
                   className={`profile-priority-row ${complete ? "is-complete" : ""}`}
-                  onClick={() => togglePriority(action.label)}
+                  onClick={() => localPreviewEnabled ? togglePriority(action.label) : index === 0 ? onEditProfile() : index === 1 ? onNavigate("media") : onOpenNotifications()}
                 >
                   <span className="profile-priority-row__check">{complete ? <Check size={15} /> : null}</span>
                   <span className="profile-priority-row__copy"><strong>{action.label}</strong><small>{action.detail}</small></span>
@@ -468,7 +476,8 @@ export default function ProfileHomeView({
             </button>
           </div>
           <div className="profile-activity-list">
-            {activityItems.map((activity) => (
+            {shownActivity.length === 0 && <p>Aucune activité pour le moment.</p>}
+            {shownActivity.map((activity) => (
               <button key={activity.id} type="button" className="profile-activity-row" onClick={onOpenNotifications}>
                 <span className={`profile-activity-row__icon is-${activity.type}`}><span /></span>
                 <span><strong>{activity.title}</strong><small>{activity.detail}</small></span>
