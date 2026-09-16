@@ -143,7 +143,12 @@ open class MessagingActivity : ComponentActivity() {
             isVerticalScrollBarEnabled = false; isHorizontalScrollBarEnabled = false
             overScrollMode = View.OVER_SCROLL_NEVER
             settings.apply {
-                javaScriptEnabled = true; domStorageEnabled = false; databaseEnabled = false
+                javaScriptEnabled = true
+                // BytePlus reads DOM storage during module initialization. The
+                // Auth client still has persistSession=false; refresh tokens
+                // remain exclusively in the native encrypted session manager.
+                domStorageEnabled = assetSurface == "messaging"
+                databaseEnabled = false
                 allowFileAccess = false; allowContentAccess = true
                 allowFileAccessFromFileURLs = false; allowUniversalAccessFromFileURLs = false
                 javaScriptCanOpenWindowsAutomatically = false; setSupportMultipleWindows(false)

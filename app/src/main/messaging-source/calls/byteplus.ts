@@ -13,13 +13,17 @@ export class VideoTransport {
   private timer?:number;
   private cameraIndex=0;
   private connection?:Promise<void>;
+  private stage="credentials";
   constructor(private callId:string,private local:HTMLElement,private remote:HTMLElement,
     private ready:()=>void,private failed:(message:string)=>void,
     private autoplay:(resume:()=>Promise<unknown>)=>void,private audioEnabled=true,private videoEnabled=true) {}
-  connect(){return this.connection=this.connectInternal();}
+  connect(){return this.connection=this.connectInternal().catch(error=>{
+    console.warn('[MeeWav RTC]',JSON.stringify({stage:this.stage,name:error instanceof Error?error.name:'UnknownError',code:typeof error?.code==='number'?error.code:undefined}));throw error;
+  });}
   private async connectInternal() {
     const credentials=await access(this.callId);
     if(this.disposed)return;
+    this.stage='engine';
     const engine=this.engine=BytePlusRTC.createEngine(credentials.appId);
     engine.on('onUserJoined',({userInfo})=>{
       if(!this.disposed&&userInfo.userId===credentials.peerId)this.ready();
@@ -32,15 +36,20 @@ export class VideoTransport {
     engine.on('onUserLeave',({userInfo})=>{if(userInfo.userId===credentials.peerId && !this.disposed)this.failed('Ton contact a quitté l’appel.');});
     engine.on('onError',()=>{if(!this.disposed)this.failed('La connexion vidéo a été interrompue.');});
     engine.on('onAutoplayFailed',({resume})=>{if(!this.disposed)this.autoplay(resume);});
+    this.stage='capture-config';
     await engine.setVideoCaptureConfig({width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30},facingMode:'user'});
     if(this.disposed)return;
+    this.stage='audio-capture';
     if(this.audioEnabled)await engine.startAudioCapture();
     if(this.disposed)return;
+    this.stage='video-capture';
     if(this.videoEnabled)await engine.startVideoCapture();
     if(this.disposed)return;
     engine.setLocalVideoPlayer(0,{renderDom:this.local});
+    this.stage='encoder-config';
     await engine.setVideoEncoderConfig({width:1280,height:720,frameRate:30,maxKbps:1800});
     if(this.disposed)return;
+    this.stage='join-room';
     await engine.joinRoom(credentials.token,credentials.roomId,{userId:credentials.identity},{
       roomProfileType:RoomProfileType.chat,isAutoPublish:true,isAutoSubscribeAudio:true,isAutoSubscribeVideo:true,
     });

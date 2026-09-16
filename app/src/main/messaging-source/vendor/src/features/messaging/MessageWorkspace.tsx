@@ -2967,7 +2967,7 @@ export default function MessageWorkspace({
             {isMessageContent && (
               <span className="mw-chat-header__actions">
                 <button type="button" className="mw-icon-button" data-conversation-drawer-trigger aria-expanded={drawerOpen} aria-controls="mw-conversation-drawer" onClick={() => setDrawerOpen((open) => !open)} aria-label="Rechercher dans la conversation"><Search /></button>
-                <button type="button" className="mw-icon-button mw-video-call-trigger" disabled={Boolean(selectedConversation.readOnlyReason) || (selectedConversation.conversationKind != null && selectedConversation.conversationKind !== 'direct')} onClick={() => openVideoCall({id:selectedConversation.id,name:selectedConversation.name,avatar:selectedConversation.avatar})} aria-label="Appel vidéo"><Video /></button>
+                <button type="button" className="mw-icon-button mw-video-call-trigger" disabled={Boolean(selectedConversation.readOnlyReason) || Boolean(selectedConversation.collaborationRequestId) || (selectedConversation.conversationKind != null && selectedConversation.conversationKind !== 'direct')} onClick={() => openVideoCall({id:selectedConversation.id,name:selectedConversation.name,avatar:selectedConversation.avatar})} aria-label="Appel vidéo"><Video /></button>
                 <button type="button" className="mw-icon-button" data-conversation-drawer-trigger aria-expanded={drawerOpen} aria-controls="mw-conversation-drawer" onClick={() => setDrawerOpen((open) => !open)} aria-label="Options de la conversation"><Info /></button>
               </span>
             )}

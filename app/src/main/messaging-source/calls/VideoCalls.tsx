@@ -91,10 +91,13 @@ export default function VideoCalls(){
         message=>{if(generation===epoch.current)problem(message);},
         resume=>{if(generation===epoch.current)setResumeAudio(()=>resume);},!muted,!cameraOff);
       transport.current=rtc;await rtc.connect();
-    }catch{if(generation===epoch.current)problem('Impossible d’établir la connexion vidéo. Tu peux rappeler.');}
+    }catch(error){console.warn('[MeeWav call]',JSON.stringify({stage:'connect',name:error instanceof Error?error.name:'UnknownError'}));if(generation===epoch.current)problem('Impossible d’établir la connexion vidéo. Tu peux rappeler.');}
   };
   const consume=(value:Call|null)=>{
     if(!value){if(call.current)finish('Appel terminé.');return;}
+    // An outgoing call opened on another client belongs to that client. Do not
+    // join it here and accidentally end its media session during navigation.
+    if(!call.current && !value.incoming)return;
     if(call.current && call.current.id!==value.id)return;
     if(value.status==='ended'||value.status==='declined'||value.status==='missed'){
       if(call.current?.id===value.id){call.current=null;stopMedia();setBusy(false);pending.current=false;

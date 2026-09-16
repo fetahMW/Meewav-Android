@@ -2,7 +2,9 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { generateBytePlusToken } from './byteplusToken.ts';
 
 const headers = {
-  'Access-Control-Allow-Origin': 'https://appassets.androidplatform.net',
+  // Auth uses an explicit bearer token, never ambient browser cookies. Every
+  // request still checks the user and accepted conversation before issuing RTC.
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Content-Type': 'application/json', 'Cache-Control': 'no-store',
