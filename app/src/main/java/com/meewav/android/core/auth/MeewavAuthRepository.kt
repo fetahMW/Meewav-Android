@@ -20,6 +20,12 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.Json
+import io.github.jan.supabase.auth.user.UserSession
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.net.URL
+import java.net.HttpURLConnection
 import java.io.IOException
 import kotlin.time.Duration.Companion.seconds
 
@@ -43,14 +49,38 @@ class MeewavAuthRepository(context: Context) {
 
     suspend fun signIn(identifier: String, password: String) {
         val trimmed = identifier.trim()
-        val address = if (trimmed.contains('@')) trimmed else {
-            checkNotNull(client).postgrest.rpc("resolve_profile_email_for_username", buildJsonObject {
-                put("p_username", trimmed)
-            }).decodeList<ProfileEmail>().firstOrNull()?.email?.takeIf { it.isNotBlank() }
-                ?: throw UserMessageException("L’identifiant ou le mot de passe est incorrect.")
+        if (trimmed.contains('@')) {
+            auth.signInWith(Email) { this.email = trimmed; this.password = password }
+            return
         }
-        // Resolved addresses are never displayed or retained in the form state.
-        auth.signInWith(Email) { this.email = address; this.password = password }
+        val session = withContext(Dispatchers.IO) {
+            val connection = URL(BuildConfig.SUPABASE_URL.trimEnd('/') + "/functions/v1/username-sign-in")
+                .openConnection() as HttpURLConnection
+            try {
+                connection.requestMethod = "POST"
+                connection.instanceFollowRedirects = false
+                connection.connectTimeout = 15_000
+                connection.readTimeout = 15_000
+                connection.doOutput = true
+                connection.setRequestProperty("apikey", BuildConfig.SUPABASE_PUBLISHABLE_KEY)
+                connection.setRequestProperty("Content-Type", "application/json")
+                connection.outputStream.use { output ->
+                    output.write(buildJsonObject { put("identifier", trimmed); put("password", password) }
+                        .toString().toByteArray(Charsets.UTF_8))
+                }
+                when (connection.responseCode) {
+                    200 -> connection.inputStream.bufferedReader().use {
+                        Json { ignoreUnknownKeys = true }.decodeFromString<UserSession>(it.readText())
+                    }
+                    401 -> throw UserMessageException("L’identifiant ou le mot de passe est incorrect.")
+                    429 -> throw UserMessageException("Trop de tentatives. Patiente avant de réessayer.")
+                    else -> throw UserMessageException("La connexion est momentanément indisponible. Réessaie dans un instant.")
+                }
+            } finally { connection.disconnect() }
+        }
+        // Import through Auth so encryption, refresh and session observers remain
+        // identical to e-mail login. No second store, no public e-mail resolver.
+        auth.importSession(session)
     }
 
     suspend fun signUp(profile: RegistrationProfile, email: String, password: String) {
@@ -118,8 +148,6 @@ class MeewavAuthRepository(context: Context) {
     suspend fun signOut() { auth.signOut(scope = SignOutScope.LOCAL) }
 
     class UserMessageException(message: String) : Exception(message)
-
-    @Serializable private data class ProfileEmail(val email: String? = null)
 
     companion object {
         /** Never render raw provider payloads, URLs or credentials in UI/logs. */

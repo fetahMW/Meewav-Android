@@ -44,4 +44,4 @@ try{
  const result={at:new Date().toISOString(),project:'dqabekaqpznjsagoxzwc',migration:basename(path),sha256:digest,testSha256:testSource?createHash('sha256').update(testSource).digest('hex'):null,result:apply?'applied':'dry-run-rolled-back',cardinalityUnchanged:true};
  await mkdir(resolve(root,'app/build/shared-schema'),{recursive:true});await writeFile(resolve(root,'app/build/shared-schema',version+(apply?'-applied':'-check')+'.json'),JSON.stringify(result,null,2));
  console.log(JSON.stringify(result));
-}catch(error){await client.query('ROLLBACK').catch(()=>{});console.error('Schema operation failed:',error.code||error.name,error.message?.replace(/postgres(?:ql)?:\/\/\S+/g,'[connection]'));process.exitCode=1;}finally{await client.end()}
+}catch(error){await client.query('ROLLBACK').catch(()=>{});console.error('Schema operation failed:',error.code||error.name,'position',error.position||error.internalPosition||'unknown',error.message?.replace(/postgres(?:ql)?:\/\/\S+/g,'[connection]'));process.exitCode=1;}finally{await client.end()}
