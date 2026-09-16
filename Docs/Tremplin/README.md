@@ -73,3 +73,18 @@ Contrôles ciblés : haut, milieu, bas, panneau explicatif, panneau de grade,
 images chargées, absence de débordement horizontal, préécoute par appui réel,
 recherche « luna » et ouverture du parcours Lunaé. La compilation Android réussit.
 Ces contrôles ne constituent pas une recette serveur des simulations de jetons.
+
+## Découvrir mobile — cartes compactes
+
+Les chevrons latéraux des carrousels sont retirés ; le défilement tactile reste
+inchangé. Les cartes à la une remplacent la grille Web fixe de 585 px par une
+composition mobile d’environ 305 px sur le Samsung : portrait et identité,
+projet, état du jeton et actions. Les informations du jeton restent dans le flux
+de la carte, sans panneau superposé. Les miniatures conservent leur hauteur de
+210 px ; symbole, prix et variation sur 24 h sont ajoutés pour les jetons actifs.
+Les autres projets affichent leur état réel, sans prix inventé.
+
+Les données et callbacks proviennent toujours du Tremplin Web importé. Les
+captures demandées sont conservées localement sous
+`app/build/reports/tremplin/discover/` (non versionnées). Cette passe concerne
+la présentation mobile, sans changer les simulations ni leur câblage serveur.

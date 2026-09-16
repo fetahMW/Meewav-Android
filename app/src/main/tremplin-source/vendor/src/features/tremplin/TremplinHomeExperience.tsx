@@ -404,7 +404,7 @@ function buildRails(catalog: readonly TalentEntry[]): DiscoveryRail[] {
     .sort((a, b) => stableHash(a.artist.id) - stableHash(b.artist.id));
 
   return [
-    { id: "weekly", eyebrow: "Sélection MeeWav", title: "Projets et jetons de talent à découvrir", description: "Consulte les projets mis en avant, leur grade et l’état réel de leur jeton de talent.", entries: takeUnseen(weeklyRanking, 10) },
+    { id: "weekly", eyebrow: "Sélection MeeWav", title: "Les projets à la une", description: "Consulte les projets mis en avant, leur grade et l’état réel de leur jeton de talent.", entries: takeUnseen(weeklyRanking, 10) },
     { id: "watchlist", eyebrow: "Nouveaux projets", title: "À découvrir aussi", description: "Des créations en cours, racontées par celles et ceux qui les construisent.", entries: takeUnseen(watchlist) },
     { id: "emerging", eyebrow: "Premiers pas", title: "Premiers projets sur MeeWav", description: "Une place réservée aux nouveaux profils, quelle que soit leur audience.", entries: takeUnseen(emerging) },
     { id: "verified", eyebrow: "Parcours documentés", title: "Profils à explorer", description: "Des profils qui présentent leurs créations, leurs étapes et leur projet en cours.", entries: takeUnseen(byVerification) },
@@ -470,135 +470,32 @@ type ProjectCardProps = {
   onToggleFollow: () => void;
 };
 
-function HeroProjectCard({
-  entry,
-  railId,
-  variant = "rail",
-  playing,
-  followed,
-  eager = false,
-  instanceId,
-  controlsTabIndex,
-  decorativeImage = false,
-  onOpen,
-  onOpenToken,
-  onOpenStatistics,
-  onToggleAudio,
-  onToggleFollow,
-}: ProjectCardProps) {
-  const cardBadge = getTalentCardBadge(entry, railId);
-  const professionLabel = getTremplinProfessionLabel(entry.artist);
-  const cleanedProfessionLabel = professionLabel.replace(/\s+amateur(?:e)?\b/iu, "").trim();
-  const metadata = [cleanedProfessionLabel, entry.artist.styles[0], entry.artist.city]
-    .filter((value, index, values) => value && values.findIndex((candidate) => candidate.toLocaleLowerCase("fr-FR") === value.toLocaleLowerCase("fr-FR")) === index);
-  const artisticMetadata = metadata.slice(0, -1);
-  const locationMetadata = metadata[metadata.length - 1];
-  const project = getTremplinProjectSnapshot(entry.artist);
-  const recentProof = getTalentLatestProgression(entry.artist, project.proofPoints[0]);
-  const projectDescription = [
-    recentProof,
-    project.nextMilestone ? `Prochaine étape : ${project.nextMilestone}` : null,
-  ].find((candidate) => candidate && normalize(candidate) !== normalize(project.headline)) ?? null;
-  const tokenStage = getTremplinTokenLifecycleStage(entry.artist);
-  const tokenUi = TREMPLIN_DISCOVERY_TOKEN_UI[tokenStage];
-  const token24h = getTremplinToken24hSnapshot(entry.token);
-  const gradeExperience = TREMPLIN_GRADE_EXPERIENCE[entry.artist.gradeLevel];
-  const nonActiveContext = (() => {
-    if (tokenStage === "active") return null;
-    const latestStep = entry.artist.updates[0]?.title ?? project.proofPoints[0] ?? null;
-    const nextStep = project.nextMilestone ?? null;
-    if (tokenStage === "observation" && latestStep && normalize(latestStep) !== normalize(project.headline)) return { label: "Dernière étape", value: latestStep };
-    if (tokenStage === "eligible" && nextStep) return { label: "Prochaine étape", value: nextStep };
-    if (tokenStage === "review" && entry.artist.updates[0]?.dateLabel) return { label: "Dernière mise à jour", value: entry.artist.updates[0].dateLabel };
-    if (tokenStage === "upcoming" && nextStep) return { label: "Prochaine étape", value: nextStep };
-    if (tokenStage === "suspended" && latestStep) return { label: "Dernière information", value: latestStep };
-    return null;
-  })();
-  const headingId = `tremplin-talent-${instanceId.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
-  return (
-    <article
-      className={`tremplin-home-card tremplin-discovery-card tremplin-home-card--${variant}`}
-      style={{
-        "--talent-accent": entry.palette.accent,
-      } as CSSProperties}
-      data-tremplin-card
-      data-artist-id={entry.artist.id}
-      data-project-family={getProjectWallFamily(entry) ?? "other"}
-      data-token-stage={tokenStage}
-      aria-labelledby={headingId}
-    >
-      <div className="tremplin-home-card__visual">
-        <img
-          src={entry.artist.artwork}
-          alt={decorativeImage ? "" : `Portrait de ${entry.artist.name}`}
-          loading={eager ? "eager" : "lazy"}
-          decoding="async"
-        />
-        <button type="button" tabIndex={controlsTabIndex} className="tremplin-home-card__media-open" onClick={onOpen} aria-label={`Voir le profil de ${entry.artist.name}`} />
-        {cardBadge ? <span className="tremplin-home-card__rank">{cardBadge}</span> : null}
-        <button type="button" tabIndex={controlsTabIndex} className={`tremplin-home-card__follow${followed ? " is-followed" : ""}`} aria-label={followed ? `Ne plus suivre ${entry.artist.name}` : `Suivre ${entry.artist.name}`} title={followed ? "Suivi" : "Suivre"} aria-pressed={followed} onClick={onToggleFollow}>
-          <Heart size={18} fill={followed ? "currentColor" : "none"} aria-hidden="true" />
-        </button>
-        <button
-          type="button"
-          tabIndex={controlsTabIndex}
-          className="tremplin-home-card__audio-overlay"
-          aria-label={`${playing ? "Mettre en pause" : "Écouter un extrait de"} ${entry.artist.audio.title} par ${entry.artist.name}`}
-          aria-pressed={playing}
-          onClick={onToggleAudio}
-        >
-          {playing ? <Pause size={16} fill="currentColor" aria-hidden="true" /> : <Play size={16} fill="currentColor" aria-hidden="true" />}
-          <span>{playing ? "Pause" : entry.artist.audio.durationLabel}</span>
-        </button>
-      </div>
-      <div className="tremplin-home-card__body">
-        <div className="tremplin-home-card__heading">
-          <div>
-            <button type="button" tabIndex={controlsTabIndex} className="tremplin-home-card__name" onClick={onOpen}>
-              <strong id={headingId}>{entry.artist.name}</strong>
-            </button>
-            <p className="tremplin-home-card__identity-meta">
-              {artisticMetadata.length ? <span>{artisticMetadata.join(" · ")}</span> : null}
-              {locationMetadata ? <span><MapPin size={14} aria-hidden="true" />{locationMetadata}</span> : null}
-            </p>
-          </div>
-          <span className="tremplin-home-card__grade">
-            <MeewavGradeBadge level={entry.artist.gradeLevel} size="xs" variant="icon" />
-            <span>Niveau {entry.artist.gradeLevel} · {gradeExperience.title}</span>
-          </span>
-        </div>
-        <div className="tremplin-home-card__project">
-          <small>Projet actuel</small>
-          <strong title={project.headline}>{project.headline}</strong>
-          {projectDescription ? <p>{projectDescription}</p> : null}
-        </div>
-        <section className="tremplin-home-card__token-summary" data-token-stage={tokenStage} aria-label={`État du jeton de talent de ${entry.artist.name}`}>
-          <header><i className="tremplin-discovery-card__status-icon" aria-hidden="true">{tokenStage === "active" ? <MeewavTokenIcon /> : <span />}</i><span>{tokenUi.label}</span>{tokenStage === "active" && entry.token ? <strong>{entry.token.symbol}</strong> : null}</header>
-          <p>{tokenUi.helper}</p>
-          {nonActiveContext ? <p className="tremplin-home-card__token-context"><span>{nonActiveContext.label}</span><strong>{nonActiveContext.value}</strong></p> : null}
-          {tokenUi.showPrice && entry.token ? <>
-            <dl className="tremplin-home-card__token-data">
-              <div><dt>Valeur actuelle</dt><dd>{formatTremplinTokenPrice(entry.token.currentValueEur)}</dd></div>
-              <div><dt>Évolution</dt><dd><TremplinTokenChange24h value={token24h.changePercent} /></dd></div>
-            </dl>
-            <small className="tremplin-home-card__updated">{formatTremplinTokenUpdatedAt(token24h.updatedAt)}</small>
-          </> : null}
-        </section>
-      </div>
-      <footer className="tremplin-home-card__actions">
-        <button type="button" tabIndex={controlsTabIndex} className="tremplin-home-card__primary" onClick={onOpenToken}>{tokenStage === "active" ? <MeewavTokenIcon /> : <FileText aria-hidden="true" />}<span>{tokenUi.primaryAction}</span><ArrowRight size={16} aria-hidden="true" /></button>
-        {tokenStage === "active" ? <button type="button" tabIndex={controlsTabIndex} className="tremplin-home-card__stats" aria-label={`Voir les statistiques du jeton de ${entry.artist.name}`} onClick={onOpenStatistics}><ChartNoAxesCombined size={16} aria-hidden="true" /> Statistiques</button> : null}
-        <button type="button" tabIndex={controlsTabIndex} className="tremplin-home-card__profile" onClick={onOpen}>Voir le profil <ArrowRight size={15} aria-hidden="true" /></button>
-      </footer>
-    </article>
-  );
+function HeroProjectCard({ entry, playing, followed, eager = false, instanceId, controlsTabIndex, onOpen, onOpenToken, onOpenStatistics, onToggleAudio, onToggleFollow }: ProjectCardProps) {
+  const artist = entry.artist;
+  const project = getTremplinProjectSnapshot(artist);
+  const stage = getTremplinTokenLifecycleStage(artist);
+  const status = TREMPLIN_DISCOVERY_TOKEN_UI[stage];
+  const snapshot = getTremplinToken24hSnapshot(entry.token);
+  const titleId = `mobile-featured-${instanceId}`;
+  return <article className="td-featured" data-tremplin-card data-artist-id={artist.id} data-token-stage={stage} aria-labelledby={titleId}>
+    <div className="td-featured-top">
+      <div className="td-featured-art"><img src={artist.artwork} alt="" loading={eager ? 'eager' : 'lazy'} /><button tabIndex={controlsTabIndex} aria-label={`Voir le profil de ${artist.name}`} onClick={onOpen} /><button className="td-featured-play" tabIndex={controlsTabIndex} aria-label={`${playing ? 'Mettre en pause' : 'Écouter'} ${artist.name}`} onClick={onToggleAudio}>{playing ? <Pause size={17} /> : <Play size={17} fill="currentColor" />}</button></div>
+      <div className="td-featured-identity"><div className="td-featured-badge"><span>À LA UNE</span><MeewavGradeBadge level={artist.gradeLevel} size="xs" variant="icon" /></div><button tabIndex={controlsTabIndex} onClick={onOpen}><h3 id={titleId}>{artist.name}</h3></button><p>{getTremplinProfessionLabel(artist)}</p><small>{artist.styles[0]} · {artist.city}</small></div>
+    </div>
+    <div className="td-featured-project"><span>SON PROJET</span><strong>{project.headline}</strong></div>
+    <button className="td-featured-token" tabIndex={controlsTabIndex} onClick={onOpenToken} aria-label={`${status.primaryAction} de ${artist.name}`}><span>{status.label}<small>{status.showPrice && entry.token ? entry.token.symbol : status.helper}</small></span>{status.showPrice && entry.token ? <span className="td-featured-value"><strong>{formatTremplinTokenPrice(entry.token.currentValueEur)}</strong><TremplinTokenChange24h value={snapshot.changePercent} /></span> : null}</button>
+    <footer><button className="td-featured-primary" tabIndex={controlsTabIndex} onClick={onOpen}>Voir le projet</button>{status.showPrice && <button className="td-featured-statistics" tabIndex={controlsTabIndex} aria-label={`Statistiques du jeton de ${artist.name}`} onClick={onOpenStatistics}><ChartNoAxesCombined size={19} /></button>}<button className="td-featured-follow" tabIndex={controlsTabIndex} aria-label={`${followed ? 'Ne plus suivre' : 'Suivre'} ${artist.name}`} aria-pressed={followed} onClick={onToggleFollow}><Heart size={19} fill={followed ? 'currentColor' : 'none'} /></button></footer>
+  </article>;
 }
 
-function ProjectMiniCard({ entry, playing, followed, eager = false, instanceId, controlsTabIndex, decorativeImage = false, onOpen, onToggleAudio, onToggleFollow }: ProjectCardProps) {
+function ProjectMiniCard({ entry, playing, followed, eager = false, instanceId, controlsTabIndex, decorativeImage = false, onOpen, onOpenToken, onToggleAudio, onToggleFollow }: ProjectCardProps) {
   const project = getTremplinProjectSnapshot(entry.artist);
   const headingId = `tremplin-mini-${instanceId.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
   const profession = getTremplinProfessionLabel(entry.artist).replace(/\s+amateur(?:e)?\b/iu, "").trim();
   const discipline = [profession, entry.artist.styles[0]].filter((value, index, values) => value && values.findIndex(candidate => candidate.toLocaleLowerCase("fr-FR") === value.toLocaleLowerCase("fr-FR")) === index).join(" · ");
+  const stage = getTremplinTokenLifecycleStage(entry.artist);
+  const tokenUi = TREMPLIN_DISCOVERY_TOKEN_UI[stage];
+  const token24h = getTremplinToken24hSnapshot(entry.token);
   return <article className="tremplin-project-mini" data-tremplin-card data-artist-id={entry.artist.id} aria-labelledby={headingId}>
     <div className="tremplin-project-mini__visual">
       <img src={entry.artist.artwork} alt={decorativeImage ? "" : `Portrait de ${entry.artist.name}`} loading={eager ? "eager" : "lazy"} decoding="async" />
@@ -612,7 +509,10 @@ function ProjectMiniCard({ entry, playing, followed, eager = false, instanceId, 
       <p className="tremplin-project-mini__discipline">{discipline}</p>
       <p className="tremplin-project-mini__city"><MapPin size={11} aria-hidden="true" />{entry.artist.city}</p>
       <p className="tremplin-project-mini__project" title={project.headline}>{project.headline}</p>
-      <footer><button type="button" tabIndex={controlsTabIndex} onClick={onOpen}>Voir le projet <ArrowRight size={13} /></button><button className="tremplin-project-mini__follow" type="button" tabIndex={controlsTabIndex} onClick={onToggleFollow} aria-label={`${followed ? "Ne plus suivre" : "Suivre"} ${entry.artist.name}`} aria-pressed={followed}><Heart size={14} fill={followed ? "currentColor" : "none"} /></button></footer>
+      <button className="td-mini-token" type="button" tabIndex={controlsTabIndex} onClick={onOpenToken} aria-label={`${tokenUi.primaryAction} de ${entry.artist.name}`}>
+        {tokenUi.showPrice && entry.token ? <><span><small>{entry.token.symbol} · Jeton actif</small><strong>{formatTremplinTokenPrice(entry.token.currentValueEur)}</strong></span><TremplinTokenChange24h value={token24h.changePercent} /></> : <span className="td-mini-status">{tokenUi.label}</span>}
+      </button>
+      <footer><button type="button" tabIndex={controlsTabIndex} onClick={onOpen}>Voir le projet</button><button className="tremplin-project-mini__follow" type="button" tabIndex={controlsTabIndex} onClick={onToggleFollow} aria-label={`${followed ? "Ne plus suivre" : "Suivre"} ${entry.artist.name}`} aria-pressed={followed}><Heart size={14} fill={followed ? "currentColor" : "none"} /></button></footer>
     </div>
   </article>;
 }
@@ -703,18 +603,6 @@ function TalentRail({
     }, 96);
   };
 
-  const scrollByPage = (direction: -1 | 1) => {
-    const viewport = viewportRef.current;
-    if (!viewport || rail.entries.length <= 1) return;
-    const card = viewport.querySelector<HTMLElement>("[data-tremplin-rail-card]");
-    const track = viewport.querySelector<HTMLElement>(".tremplin-home-rail__track");
-    if (!card || !track) return;
-    const gap = Number.parseFloat(getComputedStyle(track).columnGap) || 0;
-    const stride = card.getBoundingClientRect().width + gap;
-    const cardsPerPage = Math.max(1, Math.floor(viewport.clientWidth / stride));
-    viewport.scrollBy({ left: direction * cardsPerPage * stride, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
-  };
-
   return (
     <section className={`tremplin-home-rail${rail.id === "weekly" ? " is-featured" : ""}${rail.id === "emerging" ? " is-first-projects" : ""}`} aria-labelledby={`tremplin-${rail.id}-title`}>
       <header className="tremplin-home-rail__header">
@@ -775,7 +663,7 @@ function TalentRail({
             })}
           </div>
         </div>
-        <RailEdgeNavigation title={rail.title} viewportId={`tremplin-${rail.id}-viewport`} disabled={rail.entries.length <= 1} onPrevious={() => scrollByPage(-1)} onNext={() => scrollByPage(1)} />
+
       </div>
     </section>
   );

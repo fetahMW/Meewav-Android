@@ -6,13 +6,13 @@
 #root .mobile-tremplin .tremplin-home-rail.is-featured { --tremplin-rail-card-width: min(84vw,330px); margin-top: 0; }
 #root .mobile-tremplin .tremplin-home-rail.is-featured .tremplin-home-rail__track > div { height: auto; align-self: stretch; }
 #root .mobile-tremplin .tremplin-home-rail__header { padding-inline: 0; gap: 12px; }
-#root .mobile-tremplin .tremplin-home-rail__header > div > h2 { font-size: 20px; line-height: 1.2; margin: 5px 0; }
+#root .mobile-tremplin .tremplin-home-rail__header > div > h2 { font-size: 20px; line-height: 1.2; margin: 5px 0; white-space: normal; }
 #root .mobile-tremplin .tremplin-home-rail__header > div > p { font-size: 11px; line-height: 1.5; margin: 4px 0; }
 #root .mobile-tremplin .tremplin-home-rail__header > div > span { font-size: 9px; letter-spacing: .1em; }
 #root .mobile-tremplin .tremplin-home-rail__header-actions { gap: 0; }
 #root .mobile-tremplin .tremplin-home-rail__more { min-height: 38px; color: #c6b5e1; }
 #root .mobile-tremplin .tremplin-home-rail__more svg { display: none; }
-.td-featured { display: flex; flex-direction: column; gap: 11px; height: 100%; min-height: 0; padding: 13px; border: 1px solid #c8bcdf38; border-radius: 18px; background: linear-gradient(140deg,#191820e8,#0b0b11f2 65%); box-shadow: inset 0 1px #ffffff10,0 5px 14px #0003; color: #f2eef7; box-sizing: border-box; }
+.td-featured { display: flex; flex-direction: column; gap: 11px; width: 100%; height: 100%; min-width: 0; min-height: 0; padding: 13px; border: 1px solid #c8bcdf38; border-radius: 18px; background: linear-gradient(140deg,#191820e8,#0b0b11f2 65%); box-shadow: inset 0 1px #ffffff10,0 5px 14px #0003; color: #f2eef7; box-sizing: border-box; }
 .td-featured button { font: inherit; color: inherit; cursor: pointer; }
 .td-featured-top { display: grid; grid-template-columns: 99px minmax(0,1fr); gap: 12px; align-items: center; }
 .td-featured-art { position: relative; height: 112px; overflow: hidden; border-radius: 12px; }
