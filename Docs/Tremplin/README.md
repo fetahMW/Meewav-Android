@@ -112,3 +112,11 @@ translucides restent cohérents avec Profil et Messagerie.
 
 La compilation Android réussit. Cette passe de présentation et d’interactions
 locales ne constitue pas une validation du serveur ni des transactions de jetons.
+
+Contrôles ciblés sur l’APK installé : les cinq rubriques de Mes artistes, les
+cartes et montants des opérations, les quatre chapitres du guide, sélection du
+grade 6 et mise à jour de son explication, exemple chiffré, ouverture d’une règle,
+chargement local de la vidéo (readyState 4, sans erreur média), activation puis
+retrait d’un rappel, filtre d’activité et retour en haut après changement de rubrique.
+Les états modifiés pour la vérification ont été rétablis. Les images du guide
+réutilisent les illustrations existantes, sans réduction de leur résolution.
