@@ -90,8 +90,10 @@ import "./tremplin-shell.css";
 import "./tremplin-token-page.css";
 import "./tremplin-my-artists-premium.css";
 import TremplinMobileSectionSelect from "./TremplinMobileSectionSelect";
+import TremplinStatistics from "./TremplinStatistics";
+import type { TremplinStatisticsSort } from "./tremplinStatisticsRanking";
 
-type TremplinView = "home" | "discover" | "myArtists" | "application" | "dashboard";
+type TremplinView = "home" | "discover" | "myArtists" | "statistics" | "application" | "dashboard";
 type TokenOperationMode = "buy" | "sell";
 type MyArtistsTab = "overview" | "tokens" | "followed" | "rooms" | "activity" | "now" | "mw";
 type MyArtistsMwTab = "holdings" | "history" | "documents";
@@ -164,15 +166,17 @@ const TOKEN_LIFECYCLE_PRESENTATION: Readonly<Record<
 } as const;
 
 const TREMPLIN_NAV_ITEMS: readonly ViewDefinition[] = [
-  { id: "home", label: "Accueil", icon: Home, accent: "#b79cff" },
-  { id: "discover", label: "Découvrir", icon: Sparkles, accent: "#b79cff" },
-  { id: "myArtists", label: "Mes artistes", icon: Heart, accent: "#b79cff" },
+  { id: "home", label: "Accueil", icon: Home, accent: "#ffffff" },
+  { id: "discover", label: "Découvrir", icon: Sparkles, accent: "#64b5ff" },
+  { id: "myArtists", label: "Mes artistes", icon: Heart, accent: "#f472b6" },
+  { id: "statistics", label: "Statistiques", icon: ChartNoAxesColumnIncreasing, accent: "#45dfa8" },
 ];
 
 const TREMPLIN_VIEW_ROUTES: Readonly<Record<TremplinView, string>> = {
   home: "/tremplin",
   discover: "/tremplin/decouvrir",
   myArtists: "/tremplin/mes-artistes",
+  statistics: "/tremplin/statistiques",
   application: "/tremplin/demande",
   dashboard: "/tremplin/mon-jeton",
 };
@@ -225,6 +229,7 @@ function didReturnFromRooms(state: unknown) {
 function getTremplinReturnLabel(state: unknown) {
   const returnTo = getTremplinReturnTo(state);
   if (returnTo?.startsWith(TREMPLIN_ARTIST_ROUTE_PREFIX)) return "Retour au profil artiste";
+  if (returnTo?.startsWith(TREMPLIN_VIEW_ROUTES.statistics)) return "Retour aux Statistiques";
   if (returnTo?.startsWith(TREMPLIN_VIEW_ROUTES.myArtists)) return "Retour à Mes artistes";
   if (returnTo?.startsWith(TREMPLIN_VIEW_ROUTES.discover)) return "Retour à Découvrir";
   if (returnTo === TREMPLIN_VIEW_ROUTES.home) return "Retour à l’accueil du Tremplin";
@@ -233,6 +238,7 @@ function getTremplinReturnLabel(state: unknown) {
 
 function getArtistReturnLabel(state: unknown) {
   const returnTo = getTremplinReturnTo(state);
+  if (returnTo?.startsWith(TREMPLIN_VIEW_ROUTES.statistics)) return "Retour aux Statistiques";
   if (returnTo?.startsWith(TREMPLIN_VIEW_ROUTES.myArtists)) return "Retour à Mes artistes";
   if (returnTo?.startsWith(TREMPLIN_VIEW_ROUTES.discover)) return "Retour à Découvrir";
   if (returnTo === TREMPLIN_VIEW_ROUTES.home) return "Retour à l’accueil du Tremplin";
@@ -1068,6 +1074,7 @@ export default function TremplinPage() {
   const [favorites, setFavorites] = useState<Set<string>>(() => readTremplinPersistedSet("followed-artists", viewer.storageScope));
   const [selectedArtist, setSelectedArtist] = useState<TremplinArtist | null>(() => getArtistFromPath(location.pathname));
   const [flow, setFlow] = useState<{ artist: TremplinArtist; token: TremplinArtistToken; mode: TokenOperationMode } | null>(null);
+  const [statisticsSort, setStatisticsSort] = useState<TremplinStatisticsSort>("value");
   const [playingArtistId, setPlayingArtistId] = useState<string | null>(null);
   const [audioProgress, setAudioProgress] = useState({ currentTime: 0, duration: 0 });
   const [toast, setToast] = useState<string | null>(null);
@@ -1376,6 +1383,7 @@ export default function TremplinPage() {
     }
     if (isArtistRoutePath(location.pathname)) return <ArtistNotFound onBack={closeArtist} backLabel={getArtistReturnLabel(location.state)} />;
     if (activeView === "myArtists") return <MyArtistsView favorites={favorites} initialTab={myArtistsNavigation.tab} initialMwTab={myArtistsNavigation.mwTab} onOpen={openArtist} onTrade={openFlow} onOpenRoom={openRoom} onDiscover={() => changeView("discover")} onNotify={setToast} onNavigationChange={updateMyArtistsNavigation} sessionState={myArtistsSessionState} onSessionStateChange={updateMyArtistsSessionState} />;
+    if (activeView === "statistics") return <TremplinStatistics sort={statisticsSort} onSortChange={setStatisticsSort} onOpen={openArtist} />;
     if (activeView === "application") return <TremplinTokenWorkspace mode="application" onClose={closeWorkspace} onApplicationSubmitted={() => setToast("Simulation terminée : aucune demande réelle n’a été envoyée.")} />;
     if (activeView === "dashboard") return <TremplinTokenWorkspace mode="dashboard" onClose={closeWorkspace} />;
     if (activeView === "home") {

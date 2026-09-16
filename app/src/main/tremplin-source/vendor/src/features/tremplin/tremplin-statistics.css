@@ -1,0 +1,48 @@
+.tremplin-statistics {
+  --statistics-accent: #45dfa8;
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 20px 0 32px;
+  color: #f5f5f5;
+  font-family: inherit;
+}
+
+.tremplin-statistics * { box-sizing: border-box; }
+.tremplin-statistics svg { width: 18px; height: 18px; flex-shrink: 0; }
+.tremplin-statistics__header h1 { margin: 12px 0; font-size: clamp(24px, 6vw, 36px); line-height: 1.15; letter-spacing: -.035em; }
+.tremplin-statistics__eyebrow, .tremplin-statistics__country { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.tremplin-statistics__eyebrow { color: var(--statistics-accent); font-weight: 650; }
+.tremplin-statistics__country b { margin-left: auto; padding: 5px 9px; border: 1px solid #45dfa84d; border-radius: 6px; color: var(--statistics-accent); background: #45dfa810; font-size: 11px; letter-spacing: .08em; }
+.tremplin-statistics__header p, .tremplin-statistics__note { color: #b7bac3; font-size: 12px; line-height: 1.6; }
+.tremplin-statistics__filters { display: flex; flex-wrap: wrap; gap: 6px; margin: 20px 0 12px; }
+.tremplin-statistics__filters button { flex: 1 0 auto; min-height: 44px; padding: 8px 10px; border: 1px solid #34383d; border-radius: 24px; background: #181a1d; color: #d0d3d8; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; transition: background .16s, border-color .16s; }
+.tremplin-statistics__filters button[aria-pressed="true"] { background: #45dfa81a; border-color: var(--statistics-accent); color: var(--statistics-accent); }
+.tremplin-statistics__summary { margin: 0 0 12px; color: #b7bac3; font-size: 11px; }
+.tremplin-statistics__list { display: grid; gap: 8px; list-style: none; padding: 0; margin: 0; }
+.tremplin-statistics__row { display: grid; grid-template-columns: 24px 44px minmax(0, 1fr) 18px; align-items: center; gap: 10px; width: 100%; padding: 14px 12px; border: 1px solid #303338; border-radius: 14px; background: #151719; color: inherit; font: inherit; text-align: left; cursor: pointer; transition: background .16s, border-color .16s; }
+.tremplin-statistics__rank { color: #b7bac3; font-size: 13px; font-variant-numeric: tabular-nums; text-align: center; }
+.tremplin-statistics__list li:first-child .tremplin-statistics__rank { color: var(--statistics-accent); font-weight: 750; }
+.tremplin-statistics__row img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: #303338; }
+.tremplin-statistics__identity { min-width: 0; display: grid; gap: 4px; }
+.tremplin-statistics__identity strong { font-size: 14px; overflow-wrap: anywhere; }
+.tremplin-statistics__identity small { color: #b7bac3; font-size: 11px; overflow-wrap: anywhere; }
+.tremplin-statistics__chevron { color: #b7bac3; }
+.tremplin-statistics__metrics { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding-top: 12px; border-top: 1px solid #303338; }
+.tremplin-statistics__metrics > span { min-width: 0; display: grid; gap: 5px; }
+.tremplin-statistics__metrics small { color: #b7bac3; font-size: 10px; }
+.tremplin-statistics__metrics strong { display: flex; align-items: center; gap: 3px; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.tremplin-statistics__metrics svg { width: 13px; height: 13px; }
+.tremplin-statistics__metrics [data-selected="true"] small, .tremplin-statistics__metrics .is-up { color: var(--statistics-accent); }
+.tremplin-statistics__metrics .is-down { color: #fda4af; }
+.tremplin-statistics__metrics .is-stable { color: #d0d3d8; }
+.tremplin-statistics__empty { padding: 24px 16px; border: 1px dashed #34383d; border-radius: 14px; color: #b7bac3; line-height: 1.5; }
+.tremplin-statistics__note { margin: 18px 0 0; }
+.tremplin-statistics button:focus-visible { outline: 2px solid var(--statistics-accent); outline-offset: 3px; }
+.tremplin-statistics button:active { background: #252a2b; }
+@media (hover: hover) {
+  .tremplin-statistics button:hover { border-color: var(--statistics-accent); background: #202625; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tremplin-statistics button { transition: none; }
+}

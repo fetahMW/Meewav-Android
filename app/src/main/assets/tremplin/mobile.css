@@ -25,8 +25,8 @@
 #root .mobile-tremplin .tremplin-pillar-tabs > button { height: 56px; }
 #root .mobile-tremplin .tremplin-pillar-tabs button svg { width: 18px; height: 18px; }
 #root .mobile-tremplin .tremplin-pillar-tabs .meewav-pillar-tabs__icon { width: 18px; height: 18px; flex: 0 0 18px; color: inherit; border: 0; background: none; box-shadow: none; }
-#root .mobile-tremplin .tremplin-pillar-tabs button.is-active { color: #fff; }
-#root .mobile-tremplin .tremplin-pillar-tabs button.is-active::after { content: ''; position: absolute; bottom: 1px; left: 26%; right: 26%; height: 2px; border-radius: 100%; background: linear-gradient(90deg,transparent,#bca5e6,transparent); box-shadow: 0 0 7px #9c7dd45c; }
+#root .mobile-tremplin .tremplin-pillar-tabs button.is-active { color: var(--meewav-pillar-tab-accent); }
+#root .mobile-tremplin .tremplin-pillar-tabs button.is-active::after { content: ''; position: absolute; bottom: 1px; left: 26%; right: 26%; height: 2px; border-radius: 100%; background: linear-gradient(90deg,transparent,var(--meewav-pillar-tab-accent),transparent); box-shadow: 0 0 7px color-mix(in srgb,var(--meewav-pillar-tab-accent) 36%,transparent); }
 #root .mobile-tremplin .tremplin-pillar-tabs .meewav-pillar-tabs__indicator { display: none; }
 #root .mobile-tremplin .tremplin-scroll {
   position: absolute; inset: var(--tremplin-mobile-header) 0 0; width: 100%; height: auto; min-height: 0; max-height: none;

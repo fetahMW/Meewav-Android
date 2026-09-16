@@ -66,26 +66,11 @@
 #root .mobile-tremplin .tg-example dl > div { display: flex; justify-content: space-between; gap: 16px; padding: 8px 0; border-bottom: 1px solid #ffffff08; font-size: 11px; line-height: 1.5; }
 #root .mobile-tremplin .tg-example dt { color: #a8a3b6; }
 #root .mobile-tremplin .tg-example dd { margin: 0; color: #e5dfef; text-align: right; max-width: 62%; }
-/* Keep the actual coloured, interactive badges in the visible guide section. */
-#root .mobile-tremplin .tremplin-guide .tremplin-gateway__levels { width: 100%; min-width: 0; padding: 16px 0 0; margin: 18px 0 0; border: 0; border-top: 1px solid #c6b5e218; border-radius: 0; background: none; box-shadow: none; }
-#root .mobile-tremplin .tremplin-guide .tremplin-gateway__progression-header { display: block; }
-#root .mobile-tremplin .tremplin-guide .tremplin-public-home__section-heading { padding: 0; text-align: left; }
-#root .mobile-tremplin .tremplin-guide .tremplin-public-home__section-heading h2 { font-size: 18px; line-height: 1.3; margin: 0 0 10px; }
-#root .mobile-tremplin .tremplin-guide .tremplin-public-home__section-heading h2 span { color: #bda6e6; -webkit-text-fill-color: #bda6e6; background: none; }
-#root .mobile-tremplin .tremplin-guide .tremplin-public-home__section-heading p { font-size: 12px; line-height: 1.5; }
-#root .mobile-tremplin .tremplin-guide .tremplin-public-home__levels-clarification { display: block; margin: 10px 0; font-size: 11px; line-height: 1.5; }
-#root .mobile-tremplin .tremplin-guide :is(.tremplin-gateway__grade-art,.tremplin-gateway__prestige-bridges,.tremplin-public-home__levels-kicker,.tremplin-gateway__grade-principles) { display: none; }
-#root .mobile-tremplin .tremplin-guide .tremplin-public-home__level-track { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; padding: 0; margin: 14px 0; overflow: visible; }
-#root .mobile-tremplin .tremplin-guide .tremplin-gateway__grade-card { display: flex; flex-direction: column; justify-content: center; align-items: center; min-width: 0; width: auto; min-height: 106px; height: auto; padding: 8px 3px; gap: 4px; transform: none; border-radius: 12px; box-shadow: none; background: #121217; border: 1px solid #c8bcdf24; }
-#root .mobile-tremplin .tremplin-guide .tremplin-gateway__grade-card.is-active { border-color: var(--grade-light); background: #1b1727; }
-#root .mobile-tremplin .tremplin-guide .tremplin-gateway__grade-card::before,#root .mobile-tremplin .tremplin-guide .tremplin-gateway__grade-card::after { display: none; }
-#root .mobile-tremplin .tremplin-guide .mw-grade-badge { --mw-grade-size: 48px !important; width: 48px; height: 48px; }
-#root .mobile-tremplin .tremplin-guide .tremplin-public-home__level-stage { font-size: 9px; }
-#root .mobile-tremplin .tremplin-guide .tremplin-gateway__grade-card strong { font-size: 10px; }
-#root .mobile-tremplin .tremplin-guide :is(.tremplin-gateway__grade-description,.tremplin-gateway__grade-caption) { display: none; }
-#root .mobile-tremplin .tremplin-guide .tremplin-public-home__level-note { display: flex; align-items: flex-start; padding: 12px; min-height: 0; gap: 10px; margin: 0; border-radius: 12px; box-shadow: none; background: #ffffff04; }
-#root .mobile-tremplin .tremplin-guide .tremplin-public-home__level-note p { font-size: 11px; line-height: 1.5; margin: 0; }
-#root .mobile-tremplin .tremplin-guide .tremplin-public-home__level-note p strong { font-size: 12px; }
+#root .mobile-tremplin .tremplin-guide .tremplin-gateway__levels { width: calc(100% + 16px); min-width: 0; margin: 24px -8px 0; padding: 22px 12px; }
+#root .mobile-tremplin .tremplin-guide .tremplin-public-home__levels-heading { width: 100%; }
+#root .mobile-tremplin .tremplin-guide .tremplin-public-home__level-track { grid-template-columns: repeat(2,minmax(0,1fr)); }
+#root .mobile-tremplin .tremplin-guide .tremplin-gateway__grade-card { min-width: 0; cursor: pointer; }
+#root .mobile-tremplin .tremplin-guide .tremplin-gateway__grade-description { padding-inline: 4px; }
 #root .mobile-tremplin .tremplin-guide .tg-career { margin-top: 12px; font-size: 11px; }
 #root .mobile-tremplin .tremplin-scroll:has(.tremplin-guide),#root .mobile-tremplin .tremplin-scroll:has(.tremplin-my-dashboard) { mask-image: none; -webkit-mask-image: none; }
 #root .mobile-tremplin .mobile-tremplin-section > button { border-radius: 11px; }
