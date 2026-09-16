@@ -69,12 +69,12 @@ export const iosDirectRepository={
 // Keep one immutable object/client ID per draft, including an uncertain retry.
 // Never delete an uploaded object after an ambiguous RPC result: it may already
 // be attached to the recipient's message, exactly as in the iOS repository.
-const voiceDrafts=new WeakMap<File,{conversationId:string;id:string;path:string;uploaded:boolean;done:boolean;pending?:Promise<void>}>();
+const voiceDrafts=new WeakMap<File,{conversationId:string;userId:string;id:string;path:string;uploaded:boolean;done:boolean;pending?:Promise<void>}>();
 export async function sendIosVoice(conversationId:string,userId:string,file:File,durationMs:number){
-  if(file.type!=='audio/mp4'||!file.size||durationMs<1||durationMs>900_000)throw Error('invalid_voice');
+  if(file.type!=='audio/mp4'||!file.size||file.size>10*1024*1024||!Number.isFinite(durationMs)||durationMs<600||durationMs>900_000)throw Error('invalid_voice');
   let draft=voiceDrafts.get(file);
-  if(!draft){const id=crypto.randomUUID();draft={conversationId,id,path:`${conversationId}/${userId}/${id}.m4a`,uploaded:false,done:false};voiceDrafts.set(file,draft);}
-  if(draft.conversationId!==conversationId)throw Error('voice_conversation_changed');
+  if(!draft){const id=crypto.randomUUID();draft={conversationId,userId,id,path:`${conversationId}/${userId}/${id}.m4a`,uploaded:false,done:false};voiceDrafts.set(file,draft);}
+  if(draft.conversationId!==conversationId||draft.userId!==userId)throw Error('voice_owner_or_conversation_changed');
   if(draft.done)return;
   if(draft.pending)return draft.pending;
   const current=draft;

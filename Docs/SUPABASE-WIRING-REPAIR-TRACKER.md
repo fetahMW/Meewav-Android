@@ -32,7 +32,7 @@ Référence : [audit et constats](SUPABASE-WIRING-AUDIT-2026-09-16.md). Un contr
 | M04 | Collabs : requêtes, pièces jointes, discussion, réponses | À faire | Non | Non |
 | M05 | Projets : membres, tâches, outils et discussion | À faire | Non | Non |
 | M06 | Groupes : membres, planning/décisions, discussion | À faire | Non | Non |
-| M07 | Vocaux : limites, retries, stockage privé et lecture distante | À faire | Non | Non |
+| M07 | Vocaux : limites, retries, stockage privé et lecture distante | Android : plafond 10 MiB/600 ms aligné, arrêt natif avant limite sans réduire AAC, retry lié au compte | APK compilé, installation suivante à faire | 1 test contrat limites/retry/concurrence/changement propriétaire passe ; micro et écoute distante restent à recetter |
 | M08 | Vidéo Web/Android, jetons, signalisation et cycle de vie | À faire | Non | Non |
 | G01 | Population publique réelle, recherche, Top 10, profils/actions | À faire | Non | Non |
 | G02 | Pont session/arrivée Android, démo distincte du réel | À faire | Non | Non |

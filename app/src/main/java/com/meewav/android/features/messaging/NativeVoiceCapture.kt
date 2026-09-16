@@ -28,8 +28,15 @@ class NativeVoiceCapture(private val context: Context, private val event: (JSONO
             capture.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             capture.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
             capture.setAudioChannels(1); capture.setAudioSamplingRate(48_000); capture.setAudioEncodingBitRate(128_000)
-            capture.setMaxDuration(899_500); capture.setOutputFile(file.absolutePath)
-            capture.setOnInfoListener { _, what, _ -> if (what == MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED) stop(id) }
+            capture.setMaxDuration(899_500)
+            // Keep AAC quality; stop before the shared Storage limit (10 MiB),
+            // leaving room for MP4 finalization instead of creating an unsendable draft.
+            capture.setMaxFileSize(10L * 1024 * 1024 - 256 * 1024)
+            capture.setOutputFile(file.absolutePath)
+            capture.setOnInfoListener { _, what, _ ->
+                if (what == MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED ||
+                    what == MediaRecorder.MEDIA_RECORDER_INFO_MAX_FILESIZE_REACHED) stop(id)
+            }
             capture.setOnErrorListener { _, _, _ -> abort(); reject(id, "L’enregistrement a été interrompu. Réessaie.") }
             capture.prepare(); capture.start(); startedAt = SystemClock.elapsedRealtime()
             emit(id, "started")
@@ -41,10 +48,11 @@ class NativeVoiceCapture(private val context: Context, private val event: (JSONO
         val file = output ?: return
         recorder = null; activeId = null; output = null
         try {
+            val durationMs = SystemClock.elapsedRealtime() - startedAt
             capture.stop()
-            if (file.length() == 0L) error("empty_voice")
+            if (file.length() !in 1..(10L * 1024 * 1024) || durationMs !in 600..900_000) error("invalid_voice")
             synchronized(completed) { completed[id] = file }
-            event(JSONObject().put("id", id).put("phase", "ready").put("durationMs", (SystemClock.elapsedRealtime() - startedAt).coerceIn(1_000, 900_000))
+            event(JSONObject().put("id", id).put("phase", "ready").put("durationMs", durationMs)
                 .put("url", "https://appassets.androidplatform.net/native/voice-file/$id.m4a"))
         } catch (_: Exception) { file.delete(); reject(id, "Le vocal est trop court ou a été interrompu. Réessaie.") }
         finally { capture.release() }
