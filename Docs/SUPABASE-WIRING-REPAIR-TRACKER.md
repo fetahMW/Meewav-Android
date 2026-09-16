@@ -26,7 +26,7 @@ Référence : [audit et constats](SUPABASE-WIRING-AUDIT-2026-09-16.md). Un contr
 | P05 | Médias privés : lecture, upload, publication, archivage | Schéma et retry idempotent corrigés, compatibilité legacy préservée | Dev : 20260916123000 | 9 tests service ; recette réelle A/B : import, publication, lecture publique, archivage, privé refusé au tiers |
 | P06 | Métriques, classement, grades et notifications | Métriques/grades/classement raccordés ; notifications restent à recetter | Dev : 20260916130000, 131000 et 132000 ; cron quotidien actif | SQL propriétaire/tiers/idempotence/grade refusé ; API réelle ; aucun état erreur sur Samsung |
 | P07 | Espace privé/sécurité, cadeaux/attestations et outils locaux | À faire | Non | Non |
-| M01 | Tchat commun Web/Android et conversation réelle existante | À faire | Non | Non |
+| M01 | Tchat commun Web/Android et conversation réelle existante | Tables partagées + projection legacy bidirectionnelle, IDs historiques conservés | Dev : 20260916140000 ; adaptation UI avancée reste à faire | Tests SQL texte/vocal/droits ; API A/B simultanée réussie ; 104 régressions SQL passent |
 | M02 | Citations, réactions, épingles, transfert/suppression/préférences | À faire | Non | Non |
 | M03 | Invitations, blocage/signalement et permissions | À faire | Non | Non |
 | M04 | Collabs : requêtes, pièces jointes, discussion, réponses | À faire | Non | Non |
@@ -55,3 +55,6 @@ Les paiements, signatures juridiques et quatre prochains piliers ne sont pas à 
 
 - P06 : contrats analytiques testés en rollback puis déployés. Visites rejouées sans doublon, 2 visites d’un même compte donnent 2 vues/1 visiteur ; événements d’autorité refusés au client ; chiffres privés propriétaires seulement ; suivi réel émet un événement serveur. Grades existants conservés avec plancher de points du niveau, ancien RPC iOS de tier inchangé.
 - Classement : quatre échelles testées et population privée exclue. Premier calcul réalisé ; pg_cron disponible mais absent a été activé puis job quotidien 03:17 UTC installé. API réelle du compte A privé renvoie zéro classement, aucune fausse position. Deux erreurs visibles du profil Samsung ont disparu après relecture. Les producteurs d’événements Globe/Messagerie restent à recetter dans leurs lots.
+
+- M01 : migration partagée SHA `0d9ae3600d6e5231bec854187d031402de0eca12b2f04d734f11afae687985a8` appliquée après recette rollback. Anciennes conversations/messages/accusés préservés ; les nouveaux directs Web sont visibles dans la projection legacy. API réelle A/B à 06:38 UTC : envois simultanés opposés, mêmes identifiants, retry sans doublon. Aucun destinataire humain.
+- Recherche contacts : ajout des tables de reconnaissances serveur manquantes, sans attribuer de badge. Attribution client refusée, progression idempotente, profil privé absent de la projection publique. La suite existante messagerie (104 assertions) passe en rollback, avec uniquement l’appel de fixture onboarding adapté au nom réellement déployé. Les fonctionnalités avancées et appels vidéo restent en cours.
