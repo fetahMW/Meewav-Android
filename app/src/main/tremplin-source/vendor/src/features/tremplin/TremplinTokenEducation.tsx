@@ -229,7 +229,11 @@ export default function TremplinTokenEducation({ onDiscover, onOpenRoute }: Trem
       <h1 id="tremplin-guide-title">Découvre. Suis. Soutiens.</h1>
       <p>La musique d’abord. Tu choisis jusqu’où tu veux aller.</p>
     </header>
-    <figure className="tg-illustration" role="img" aria-label="Jeton de talent MeeWav en verre violet, posé sur la roche" />
+    <figure className="tg-illustration" role={videoOpen ? undefined : "img"} aria-label={videoOpen ? undefined : "Jeton de talent MeeWav en verre violet, posé sur la roche"}>
+      {videoOpen
+        ? <video controls autoPlay playsInline poster={tremplinArtists[0].artwork} aria-label="Présentation de MeeWav"><source src={MEEWAV_ECOSYSTEM_VIDEO_SRC} type="video/mp4" />Ton navigateur ne peut pas lire cette vidéo.</video>
+        : <button type="button" className="tg-video-play" onClick={() => setVideoOpen(true)} aria-label="Regarder la présentation vidéo de MeeWav"><PlayCircle size={20} /><span>Regarder la vidéo · 1 min 40</span></button>}
+    </figure>
     <ol className="tg-steps">
       <li id="tremplin-discovery"><span aria-hidden="true"><Sparkles size={19} /></span><div><h2>Découvre un talent</h2><p>Écoute sa musique et explore son projet.</p></div></li>
       <li id="tremplin-follow"><span aria-hidden="true"><Heart size={19} /></span><div><h2>Suis-le gratuitement</h2><p>Retrouve ses créations et ses rendez-vous dans Mes artistes.</p></div></li>
@@ -241,10 +245,6 @@ export default function TremplinTokenEducation({ onDiscover, onOpenRoute }: Trem
       <p className="tg-career">Un parcours professionnel antérieur peut être reconnu après vérification. Dès le niveau 2, une demande de jeton est possible ; MeeWav reste libre de l’accepter ou de la refuser.</p>
     </TremplinGradeProgression>
     <div className="tg-details">
-      <details onToggle={event => setVideoOpen(event.currentTarget.open)}>
-        <summary><PlayCircle size={18} /><span>En vidéo · 1 min 40</span><ChevronRight size={17} /></summary>
-        <div className="tg-answer">{videoOpen && <video controls playsInline preload="metadata" poster={tremplinArtists[0].artwork} aria-label="Présentation de MeeWav"><source src={MEEWAV_ECOSYSTEM_VIDEO_SRC} type="video/mp4" />Ton navigateur ne peut pas lire cette vidéo.</video>}</div>
-      </details>
       <details>
         <summary><span>Où trouver les artistes ?</span><ChevronRight size={17} /></summary>
         <div className="tg-answer tg-destinations">{DISCOVERY_CHANNELS.map(({id,icon: Icon,title,detail,route}) => <button key={id} type="button" onClick={() => onOpenRoute(route)}><Icon size={20} /><span><strong>{title}</strong><small>{detail}</small></span><ArrowRight size={16} /></button>)}</div>
