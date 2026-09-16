@@ -1,32 +1,8 @@
-import {
-  ArrowDown,
-  ArrowDownUp,
-  ArrowRight,
-  CalendarDays,
-  ChevronRight,
-  Clock3,
-  Clapperboard,
-  Database,
-  Eye,
-  FileText,
-  Globe2,
-  Heart,
-  Info,
-  PlayCircle,
-  Radio,
-  Rocket,
-  Shield,
-  ShieldCheck,
-  UserRound,
-  X,
-} from "lucide-react";
-import { useEffect, useId, useMemo, useRef, useState, type CSSProperties } from "react";
+import { ArrowDownUp, ArrowRight, ChevronRight, Heart, Info, PlayCircle, Radio, Clapperboard, Globe2, Sparkles, ShieldCheck } from "lucide-react";
+import { useId, useMemo, useState, type CSSProperties } from "react";
 import TremplinGradeProgression from "./TremplinGradeProgression";
-import TremplinMobileSectionSelect from "./TremplinMobileSectionSelect";
 import { SCENE_ROUTE } from "../shorts/sceneContract";
 import { trackTremplinEvent } from "./tremplinAnalytics";
-import MeewavTokenIcon from "./MeewavTokenIcon";
-import { TREMPLIN_COPY } from "./tremplinCopy";
 import { tremplinArtists } from "./tremplinArtistData";
 import {
   TREMPLIN_EDUCATIONAL_SUMMARY_FIXTURE,
@@ -236,7 +212,6 @@ const TOKEN_EDUCATION_DETAILS = [
   },
 ] as const;
 
-type TokenEducationDetailId = (typeof TOKEN_EDUCATION_DETAILS)[number]["id"];
 const MEEWAV_ECOSYSTEM_VIDEO_SRC = "/media/tremplin/ecosysteme-meewav.mp4";
 
 type TremplinTokenEducationProps = {
@@ -245,294 +220,52 @@ type TremplinTokenEducationProps = {
   onOpenRoute: (route: string) => void;
 };
 
-export default function TremplinTokenEducation({
-  onDiscover,
-  onHome,
-  onOpenRoute,
-}: TremplinTokenEducationProps) {
+/** One mobile reading surface; optional details expand in place. */
+export default function TremplinTokenEducation({ onDiscover, onOpenRoute }: TremplinTokenEducationProps) {
   const [videoOpen, setVideoOpen] = useState(false);
-  const [chapter, setChapter] = useState('tremplin-discovery');
-  const [followDemo, setFollowDemo] = useState(false);
-  const [tokenSummaryOpen, setTokenSummaryOpen] = useState(false);
-  const [tokenRulesOpen, setTokenRulesOpen] = useState(false);
-  const [openTokenDetail, setOpenTokenDetail] = useState<TokenEducationDetailId | null>(null);
-  const videoTriggerRef = useRef<HTMLButtonElement>(null);
-  const videoCloseRef = useRef<HTMLButtonElement>(null);
-  const videoDialogRef = useRef<HTMLElement>(null);
-  const tokenRulesTriggerRef = useRef<HTMLButtonElement>(null);
-  const tokenRulesCloseRef = useRef<HTMLButtonElement>(null);
-  const tokenRulesDialogRef = useRef<HTMLElement>(null);
-  const featuredArtist = tremplinArtists[0];
-
-  useEffect(() => {
-    const scroller = document.querySelector('.tremplin-scroll');
-    if (!scroller) return;
-    let frame = 0;
-    const updateChapter = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        const top = scroller.getBoundingClientRect().top + 110;
-        const ids = ['tremplin-discovery', 'tremplin-follow', 'tremplin-grades', 'tremplin-token-mw'];
-        const current = ids.filter(id => (document.getElementById(id)?.getBoundingClientRect().top ?? Infinity) <= top).at(-1);
-        if (current) setChapter(current);
-      });
-    };
-    scroller.addEventListener('scroll', updateChapter, { passive: true });
-    updateChapter();
-    return () => { scroller.removeEventListener('scroll', updateChapter); cancelAnimationFrame(frame); };
-  }, []);
-
-  const openTokenRules = () => {
-    setOpenTokenDetail(null);
-    setTokenRulesOpen(true);
-  };
-
-  useEffect(() => {
-    if (!videoOpen) return undefined;
-    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const previousBodyOverflow = document.body.style.overflow;
-    const handleDialogKeys = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setVideoOpen(false);
-        return;
-      }
-      if (event.key !== "Tab") return;
-      const focusable = [...(videoDialogRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), [href], video[controls], summary, [tabindex]:not([tabindex="-1"])') ?? [])];
-      if (focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    document.body.style.overflow = "hidden";
-    videoCloseRef.current?.focus();
-    window.addEventListener("keydown", handleDialogKeys);
-    return () => {
-      document.body.style.overflow = previousBodyOverflow;
-      window.removeEventListener("keydown", handleDialogKeys);
-      previouslyFocused?.focus();
-    };
-  }, [videoOpen]);
-
-  useEffect(() => {
-    if (!tokenRulesOpen) return undefined;
-    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const previousBodyOverflow = document.body.style.overflow;
-    const handleDialogKeys = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setTokenRulesOpen(false);
-        return;
-      }
-      if (event.key !== "Tab") return;
-      const focusable = [...(tokenRulesDialogRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), [href], summary, [tabindex]:not([tabindex="-1"])') ?? [])];
-      if (focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    document.body.style.overflow = "hidden";
-    tokenRulesCloseRef.current?.focus();
-    window.addEventListener("keydown", handleDialogKeys);
-    return () => {
-      document.body.style.overflow = previousBodyOverflow;
-      window.removeEventListener("keydown", handleDialogKeys);
-      previouslyFocused?.focus();
-    };
-  }, [tokenRulesOpen]);
-
-  return (
-    <div className="tremplin-how">
-      <header className="tremplin-how__hero">
-        <span className="tremplin-how__kicker">LE TREMPLIN, SIMPLEMENT</span>
-        <h1>La musique d’abord.</h1>
-        <p>Découvre les artistes, suis leur actualité gratuitement. Les jetons de talent restent facultatifs.</p>
-        <div className="tremplin-how__hero-actions">
-          <a href="#tremplin-discovery">Les 3 étapes <ArrowDown aria-hidden="true" /></a>
-          <button ref={videoTriggerRef} type="button" data-tremplin-video-cta onClick={() => setVideoOpen(true)}><PlayCircle aria-hidden="true" /> Voir la vidéo · 1 min 40</button>
+  return <article className="tremplin-guide" aria-labelledby="tremplin-guide-title">
+    <header className="tg-intro">
+      <span>LE TREMPLIN, SIMPLEMENT</span>
+      <h1 id="tremplin-guide-title">Découvre. Suis. Soutiens.</h1>
+      <p>La musique d’abord. Tu choisis jusqu’où tu veux aller.</p>
+    </header>
+    <figure className="tg-illustration" role="img" aria-label="Jeton de talent MeeWav en verre violet, posé sur la roche" />
+    <ol className="tg-steps">
+      <li id="tremplin-discovery"><span aria-hidden="true"><Sparkles size={19} /></span><div><h2>Découvre un talent</h2><p>Écoute sa musique et explore son projet.</p></div></li>
+      <li id="tremplin-follow"><span aria-hidden="true"><Heart size={19} /></span><div><h2>Suis-le gratuitement</h2><p>Retrouve ses créations et ses rendez-vous dans Mes artistes.</p></div></li>
+      <li><span aria-hidden="true"><ShieldCheck size={19} /></span><div><h2>Soutiens si tu le souhaites</h2><p>Certains artistes proposent un jeton de talent payant. L’achat reste facultatif.</p></div></li>
+    </ol>
+    <p className="tg-essential">Le prix peut baisser. Aucun gain n’est garanti et la revente peut prendre du temps.</p>
+    <button type="button" className="tg-primary" onClick={() => { trackTremplinEvent("how_it_works_completed"); onDiscover(); }}>Découvrir les artistes <ArrowRight size={18} /></button>
+    <div className="tg-details">
+      <details onToggle={event => setVideoOpen(event.currentTarget.open)}>
+        <summary><PlayCircle size={18} /><span>En vidéo · 1 min 40</span><ChevronRight size={17} /></summary>
+        <div className="tg-answer">{videoOpen && <video controls playsInline preload="metadata" poster={tremplinArtists[0].artwork} aria-label="Présentation de MeeWav"><source src={MEEWAV_ECOSYSTEM_VIDEO_SRC} type="video/mp4" />Ton navigateur ne peut pas lire cette vidéo.</video>}</div>
+      </details>
+      <details>
+        <summary><span>Où trouver les artistes ?</span><ChevronRight size={17} /></summary>
+        <div className="tg-answer tg-destinations">{DISCOVERY_CHANNELS.map(({id,icon: Icon,title,detail,route}) => <button key={id} type="button" onClick={() => onOpenRoute(route)}><Icon size={20} /><span><strong>{title}</strong><small>{detail}</small></span><ArrowRight size={16} /></button>)}</div>
+      </details>
+      <details id="tremplin-grades" tabIndex={-1}>
+        <summary><span>À quoi servent les grades ?</span><ChevronRight size={17} /></summary>
+        <div className="tg-answer"><TremplinGradeProgression id="tremplin-grade-explanation">
+          <p className="tg-career">Un parcours professionnel antérieur peut être reconnu après vérification. Dès le niveau 2, une demande de jeton est possible ; MeeWav reste libre de l’accepter ou de la refuser.</p>
+        </TremplinGradeProgression></div>
+      </details>
+      <details id="tremplin-token-mw" tabIndex={-1}>
+        <summary><span>Comment fonctionnent les jetons ?</span><ChevronRight size={17} /></summary>
+        <div className="tg-answer">
+          {TOKEN_EDUCATION_DETAILS.map(detail => <section key={detail.id}><h3>{detail.title}</h3><p>{detail.copy}</p></section>)}
+          <section className="tg-example"><h3>Avant de confirmer, tout est affiché.</h3><p>Un exemple de récapitulatif, sans transaction :</p><dl>
+            <div><dt>Montant choisi</dt><dd>{euros(TREMPLIN_EDUCATIONAL_SUMMARY_FIXTURE.amountCents / 100)}</dd></div>
+            <div><dt>Jetons estimés</dt><dd>{new Intl.NumberFormat('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2}).format(TREMPLIN_EDUCATIONAL_SUMMARY_FIXTURE.estimatedTokenHundredths / 100)} jetons</dd></div>
+            <div><dt>Frais</dt><dd>{euros(TREMPLIN_EDUCATIONAL_SUMMARY_FIXTURE.feesCents / 100)}</dd></div>
+            <div><dt>Part de l’artiste</dt><dd>{euros(TREMPLIN_EDUCATIONAL_SUMMARY_FIXTURE.artistShareCents / 100)}</dd></div>
+            <div><dt>Total débité</dt><dd>{euros(TREMPLIN_EDUCATIONAL_SUMMARY_FIXTURE.totalDebitCents / 100)}</dd></div>
+            <div><dt>Revente</dt><dd>{TREMPLIN_EDUCATIONAL_SUMMARY_FIXTURE.resaleLabel}</dd></div>
+          </dl></section>
         </div>
-        <p className="tremplin-how__hero-note"><ShieldCheck aria-hidden="true" /> {TREMPLIN_COPY.freeAccess}</p>
-      </header>
-
-      <TremplinMobileSectionSelect label="Chapitres du guide" value={chapter}
-        options={[["tremplin-discovery", "1 · Découvrir"], ["tremplin-follow", "2 · Suivre gratuitement"], ["tremplin-grades", "Comprendre les grades"], ["tremplin-token-mw", "3 · Les jetons de talent"]]}
-        onChange={(id) => { setChapter(id); document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} />
-
-      <section id="tremplin-discovery" className="tremplin-how__section is-discovery" aria-labelledby="tremplin-discovery-title" tabIndex={-1}>
-        <header className="tremplin-how__section-heading">
-          <span>1</span>
-          <div><small>JE DÉCOUVRE</small><h2 id="tremplin-discovery-title">Où découvre-t-on les <em>artistes&nbsp;?</em></h2><p>Tu peux les rencontrer dans les Rooms, sur La Scène et dans le Globe. Le Tremplin rassemble ensuite leur profil, leurs créations, leurs prochaines activités et les étapes de leur parcours.</p></div>
-        </header>
-        <div className="tremplin-how__discovery-art" aria-hidden="true" />
-        <div className="tremplin-how__channels">
-          {DISCOVERY_CHANNELS.map(({ id, title, detail, action, route }) => (
-            <article key={id} className={`is-${id}`}>
-              <div className="tremplin-how__channel-art" aria-hidden="true" />
-              <h3>{title}</h3>
-              <p>{detail}</p>
-              <button type="button" onClick={() => onOpenRoute(route)}>{action} <ArrowRight aria-hidden="true" /></button>
-            </article>
-          ))}
-        </div>
-        <footer className="tremplin-how__discovery-signature" aria-hidden="true"><span>Talents d’aujourd’hui<br />Icônes de demain</span><span>Explorer · Soutenir · Vibrer · Grandir</span></footer>
-      </section>
-
-      <section id="tremplin-follow" className="tremplin-how__section is-follow" aria-labelledby="tremplin-follow-title" tabIndex={-1}>
-        <header className="tremplin-how__section-heading">
-          <span>2</span>
-          <div><small>JE SUIS LEUR ACTUALITÉ</small><h2 id="tremplin-follow-title">Suivre un artiste est <em>gratuit.</em></h2><p>Aucun jeton n’est nécessaire.</p></div>
-        </header>
-        <div className="tremplin-how__follow-art" aria-hidden="true" />
-        <div className="tremplin-how__follow-card">
-          <span className="tremplin-how__follow-heart"><Heart aria-hidden="true" /></span>
-          <div className="tremplin-how__follow-copy">
-            <h3>Un artiste te plaît&nbsp;?</h3>
-            <p>Ouvre son profil et appuie sur «&nbsp;Suivre gratuitement&nbsp;».<br />Tu retrouveras tout dans Mes artistes.</p>
-            <button type="button" className={followDemo ? "is-followed" : ""} aria-pressed={followDemo} onClick={() => setFollowDemo((value) => !value)}><Heart aria-hidden="true" /><span>{followDemo ? "Artiste suivi ✓" : "Suivre gratuitement"}</span><ArrowRight aria-hidden="true" /></button>
-            <small role="status">{followDemo ? "Tu retrouveras ses vidéos, ses Rooms et ses actualités dans Mes artistes." : "Soutiens sans contrainte. Reste libre. Découvre plus."}</small>
-          </div>
-          <ul aria-label="Ce que tu peux suivre gratuitement">
-            <li><button type="button" onClick={() => onOpenRoute(SCENE_ROUTE)}><Clapperboard aria-hidden="true" /><span>Nouvelles vidéos</span><ArrowRight aria-hidden="true" /></button></li>
-            <li><button type="button" onClick={() => onOpenRoute("/rooms")}><Radio aria-hidden="true" /><span>Prochaines Rooms</span><ArrowRight aria-hidden="true" /></button></li>
-            <li><button type="button" onClick={() => onOpenRoute("/tremplin/mes-artistes")}><CalendarDays aria-hidden="true" /><span>Actualités</span><ArrowRight aria-hidden="true" /></button></li>
-          </ul>
-        </div>
-      </section>
-
-      <TremplinGradeProgression id="tremplin-grades">
-        <details className="tremplin-how__grade-method"><summary>Comment un grade est-il attribué ?</summary>
-        <aside className="tremplin-how__prior-career"><strong>Reconnaissance du parcours antérieur</strong><p>Un artiste déjà professionnel peut être positionné directement au niveau correspondant à sa carrière après vérification de son parcours antérieur. L’évaluation peut prendre en compte son identité, ses crédits, ses œuvres, ses représentations et ses collaborations.</p><small>À partir du niveau 2, l’artiste peut déposer une demande de jeton de talent. MeeWav peut l’accepter ou la refuser après vérification.</small></aside>
-        </details>
-      </TremplinGradeProgression>
-
-      <section id="tremplin-token-mw" className="tremplin-how__section is-token" aria-labelledby="tremplin-token-mw-title" tabIndex={-1}>
-        <div className="tremplin-how__mw-essential">
-          <div className="tremplin-how__mw-artist-art" aria-hidden="true" />
-          <header className="tremplin-how__mw-heading">
-            <span aria-hidden="true">3</span>
-            <div>
-              <small className="tremplin-how__mw-kicker">LES JETONS DE TALENT, SIMPLEMENT</small>
-              <h2 id="tremplin-token-mw-title">Le jeton de talent, <em>simplement.</em></h2>
-              <p><strong>Une façon payante et facultative de donner de la force à un projet.</strong><span>Tu découvres d’abord gratuitement l’artiste et son parcours.</span></p>
-            </div>
-          </header>
-
-          <div className="tremplin-how__mw-main">
-            <div className="tremplin-how__mw-visual">
-              <div className="tremplin-how__mw-coin-art" role="img" aria-label="Jeton de talent MeeWav en verre violet, posé sur la roche" />
-              <span className="tremplin-how__mw-verified"><ShieldCheck aria-hidden="true" /> Lié à un artiste vérifié</span>
-            </div>
-
-            <div className="tremplin-how__mw-explanation">
-              <ol className="tremplin-how__mw-timeline">
-                <li><span>1</span><div><strong>Tu choisis ton montant</strong><p>Dans les limites affichées.</p></div></li>
-                <li><span>2</span><div><strong>Tu vois le récapitulatif</strong><p>Jetons estimés, frais, part artiste et total.</p></div></li>
-                <li><span>3</span><div><strong>Tu confirmes ou tu annules</strong><p>Rien n’est acheté avant ta confirmation.</p></div></li>
-              </ol>
-              <div className="tremplin-how__mw-assurances" aria-label="Repères essentiels des jetons de talent">
-                <span><Rocket aria-hidden="true" />Facultatif</span><span><Eye aria-hidden="true" />Part de l’artiste visible</span><span><Shield aria-hidden="true" />Aucun gain garanti</span>
-              </div>
-              <p className="tremplin-how__mw-risk-note">La valeur peut varier et la revente peut ne pas être immédiate.</p>
-            </div>
-          </div>
-        </div>
-
-        <section className="tremplin-how__mw-before" aria-labelledby="tremplin-mw-before-title">
-          <header>
-            <div>
-              <small>AVANT DE CONFIRMER</small>
-              <h3 id="tremplin-mw-before-title">Avant de confirmer, tu vois tout.</h3>
-              <p>Le montant, les jetons estimés, les frais, la part de l’artiste et les conditions de revente sont affichés avant l’achat.</p>
-            </div>
-            <button type="button" aria-expanded={tokenSummaryOpen} aria-controls="tremplin-mw-summary-example" onClick={() => setTokenSummaryOpen((value) => !value)}>Voir un exemple de récapitulatif <ArrowRight aria-hidden="true" /></button>
-          </header>
-          <ul aria-label="Informations visibles avant confirmation"><li><FileText aria-hidden="true" /> Montant</li><li><Database aria-hidden="true" /> Jetons estimés</li><li><Info aria-hidden="true" /> Frais</li><li><UserRound aria-hidden="true" /> Part artiste</li><li><Clock3 aria-hidden="true" /> Revente</li></ul>
-          {tokenSummaryOpen ? (
-            <div id="tremplin-mw-summary-example" className="tremplin-how__mw-summary-example" role="region" aria-label="Exemple pédagogique de récapitulatif">
-              <span>Exemple pédagogique — aucune transaction n’est effectuée.</span>
-              <dl>
-                <div><dt>Montant choisi</dt><dd>{euros(TREMPLIN_EDUCATIONAL_SUMMARY_FIXTURE.amountCents / 100)}</dd></div>
-                <div><dt>Jetons estimés</dt><dd>{new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(TREMPLIN_EDUCATIONAL_SUMMARY_FIXTURE.estimatedTokenHundredths / 100)} jetons</dd></div>
-                <div><dt>Frais</dt><dd>{euros(TREMPLIN_EDUCATIONAL_SUMMARY_FIXTURE.feesCents / 100)}</dd></div>
-                <div><dt>Part destinée à l’artiste</dt><dd>{euros(TREMPLIN_EDUCATIONAL_SUMMARY_FIXTURE.artistShareCents / 100)}</dd></div>
-                <div><dt>Total débité</dt><dd>{euros(TREMPLIN_EDUCATIONAL_SUMMARY_FIXTURE.totalDebitCents / 100)}</dd></div>
-                <div><dt>Revente</dt><dd>{TREMPLIN_EDUCATIONAL_SUMMARY_FIXTURE.resaleLabel}</dd></div>
-              </dl>
-            </div>
-          ) : null}
-        </section>
-
-        <section className="tremplin-how__mw-conclusion" aria-labelledby="tremplin-mw-conclusion-title">
-          <div>
-            <small>TU CONNAIS MAINTENANT L’ESSENTIEL</small>
-            <h3 id="tremplin-mw-conclusion-title">La musique d’abord. La force, seulement si tu le souhaites.</h3>
-            <p>Découvre les artistes gratuitement et suis ceux qui te plaisent. Si tu veux donner de la force à un projet, tu peux ensuite acheter ses jetons de talent.</p>
-          </div>
-          <footer className="tremplin-how__mw-conclusion-actions">
-            <div>
-              <button type="button" className="is-primary" onClick={() => { trackTremplinEvent("how_it_works_completed"); onDiscover(); }}>Découvrir les artistes <ArrowRight aria-hidden="true" /></button>
-              <button type="button" className="is-secondary" onClick={() => { trackTremplinEvent("how_it_works_completed"); onHome(); }}>Retour à l’accueil</button>
-            </div>
-            <button ref={tokenRulesTriggerRef} type="button" className="is-tertiary" aria-haspopup="dialog" aria-expanded={tokenRulesOpen} onClick={openTokenRules}>Consulter les règles détaillées <ChevronRight aria-hidden="true" /></button>
-          </footer>
-        </section>
-
-      </section>
-
-      {tokenRulesOpen ? (
-        <div className="tremplin-how__rules-backdrop" role="presentation" onClick={() => setTokenRulesOpen(false)}>
-          <section ref={tokenRulesDialogRef} className="tremplin-how__rules-dialog" role="dialog" aria-modal="true" aria-labelledby="tremplin-mw-rules-title" onClick={(event) => event.stopPropagation()}>
-            <header>
-              <div><span className="tremplin-how__kicker">RÈGLES DÉTAILLÉES</span><h2 id="tremplin-mw-rules-title">Comprendre les jetons de talent.</h2><p>Les informations essentielles restent visibles avant chaque opération.</p></div>
-              <button ref={tokenRulesCloseRef} type="button" aria-label="Fermer les règles détaillées" onClick={() => setTokenRulesOpen(false)}><X aria-hidden="true" /></button>
-            </header>
-            <div className="tremplin-how__mw-details" aria-label="Détails des jetons de talent">
-              {TOKEN_EDUCATION_DETAILS.map((detail) => {
-                const isOpen = openTokenDetail === detail.id;
-                const triggerId = `tremplin-mw-detail-${detail.id}-trigger`;
-                const panelId = `tremplin-mw-detail-${detail.id}-panel`;
-                return <section key={detail.id}><h3><button id={triggerId} type="button" aria-expanded={isOpen} aria-controls={panelId} onClick={() => setOpenTokenDetail(isOpen ? null : detail.id)}><span>{detail.title}</span><ChevronRight aria-hidden="true" /></button></h3>{isOpen ? <div id={panelId} role="region" aria-labelledby={triggerId}><p>{detail.copy}</p></div> : null}</section>;
-              })}
-            </div>
-          </section>
-        </div>
-      ) : null}
-
-      {videoOpen ? (
-        <div className="tremplin-how__video-backdrop" role="presentation">
-          <section ref={videoDialogRef} className="tremplin-how__video-dialog" role="dialog" aria-modal="true" aria-labelledby="tremplin-how-video-title">
-            <header>
-              <div><span className="tremplin-how__kicker">MEEWAV EN VIDÉO</span><h2 id="tremplin-how-video-title">Découvre l’écosystème MeeWav.</h2></div>
-              <button ref={videoCloseRef} type="button" className="tremplin-how__video-close" aria-label="Fermer la présentation vidéo" onClick={() => setVideoOpen(false)}><X aria-hidden="true" /></button>
-            </header>
-            <video
-              data-tremplin-video-slot
-              controls
-              preload="metadata"
-              playsInline
-              aria-label="Vidéo de présentation de l’écosystème MeeWav"
-              poster={featuredArtist.artwork}
-            >
-              <source src={MEEWAV_ECOSYSTEM_VIDEO_SRC} type="video/mp4" />
-              Ton navigateur ne peut pas lire cette vidéo.
-            </video>
-            <details className="tremplin-how__video-transcript">
-              <summary>Lire le résumé en texte</summary>
-              <p>Tu découvres les artistes dans les six Rooms, sur La Scène et dans le Globe. Le Tremplin rassemble leur profil et leur parcours. Tu peux les suivre gratuitement. Certains artistes vérifiés disposent aussi d’un jeton de talent achetable et revendable. Une partie du montant, les frais, les conditions de revente et les risques sont affichés avant confirmation. Le prix peut baisser et tu peux perdre de l’argent.</p>
-            </details>
-          </section>
-        </div>
-      ) : null}
+      </details>
     </div>
-  );
+  </article>;
 }

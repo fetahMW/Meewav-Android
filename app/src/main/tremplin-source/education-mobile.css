@@ -1,124 +1,93 @@
-/* Mobile guide: retain the Web content and interactions, remove desktop scale. */
-#root .mobile-tremplin .tremplin-how { width: 100%; max-width: none; margin: 0; padding: 0; gap: 16px; --how-surface-border: #c8bcdf30; --how-surface-panel: linear-gradient(140deg,#191820ed,#0b0b11f5 70%); --how-surface-inset: #101016bc; }
-#root .mobile-tremplin .tremplin-how :is(button,a,summary) { touch-action: manipulation; }
-#root .mobile-tremplin .tremplin-how :is(h1,h2,h3,p) { text-wrap: pretty; }
-#root .mobile-tremplin .tremplin-how :is(h2,h3) { color: #f3f0f8; }
-#root .mobile-tremplin .tremplin-how em { color: #bda6e6; -webkit-text-fill-color: #bda6e6; background: none; }
-#root .mobile-tremplin .tremplin-how > .tremplin-how__hero { padding: 18px 16px; margin: 0; border-radius: 18px; text-align: left; box-shadow: inset 0 1px #ffffff0d; }
-#root .mobile-tremplin .tremplin-how__kicker { font-size: 9px; letter-spacing: .13em; }
-#root .mobile-tremplin .tremplin-how__hero h1 { margin: 8px 0; font-size: 28px; line-height: 1.1; letter-spacing: -.035em; }
-#root .mobile-tremplin .tremplin-how__hero > p { font-size: 13px; line-height: 1.5; margin: 10px 0 0; }
-#root .mobile-tremplin .tremplin-how__hero-actions { display: grid; grid-template-columns: 1fr 1.2fr; gap: 8px; margin-top: 16px; }
-#root .mobile-tremplin .tremplin-how__hero-actions :is(a,button) { min-width: 0; min-height: 44px; padding: 8px; font-size: 11px; gap: 6px; border-radius: 12px; box-shadow: none; }
-#root .mobile-tremplin .tremplin-how__hero-actions a { background: var(--mobile-violet-cta); border-color: var(--mobile-cta-rim); }
-#root .mobile-tremplin .tremplin-how__hero-actions svg { width: 17px; height: 17px; flex-shrink: 0; }
-#root .mobile-tremplin .tremplin-how__hero .tremplin-how__hero-note { font-size: 10px; font-weight: 400; line-height: 1.45; align-items: flex-start; margin-top: 13px; color: #b3adbf; }
-#root .mobile-tremplin .tremplin-how__hero-note svg { width: 16px; height: 16px; }
-#root .mobile-tremplin .tremplin-how .mobile-tremplin-section { margin: 0; top: -12px; border-radius: 12px; }
-#root .mobile-tremplin .tremplin-how > :is(.tremplin-how__section,.tremplin-gateway__levels) { scroll-margin-top: 70px; }
-#root .mobile-tremplin .tremplin-how :is(#tremplin-discovery,#tremplin-follow,#tremplin-grades) { padding: 16px; border-radius: 18px; margin: 0; min-height: 0; box-shadow: inset 0 1px #ffffff0d; }
-#root .mobile-tremplin .tremplin-how__section-heading { display: grid; grid-template-columns: 28px minmax(0,1fr); gap: 10px; margin: 0 0 14px; }
-#root .mobile-tremplin .tremplin-how__section-heading > span { width: 28px; height: 28px; border-radius: 9px; font-size: 13px; box-shadow: none; background: #4f359e24; }
-#root .mobile-tremplin .tremplin-how__section-heading small { font-size: 8px; letter-spacing: .1em; }
-#root .mobile-tremplin .tremplin-how__section-heading h2 { font-size: 21px; line-height: 1.2; margin: 6px 0; }
-#root .mobile-tremplin .tremplin-how__section-heading p { font-size: 12px; line-height: 1.5; margin: 8px 0 0; }
-#root .mobile-tremplin .tremplin-how :is(.tremplin-how__discovery-art,.tremplin-how__discovery-signature,.tremplin-how__follow-art,.tremplin-gateway__grade-art) { display: none; }
-#root .mobile-tremplin .tremplin-how #tremplin-discovery .tremplin-how__channels { display: grid; grid-template-columns: minmax(0,1fr); gap: 10px; margin: 0; }
-#root .mobile-tremplin .tremplin-how #tremplin-discovery .tremplin-how__channels article { display: grid; grid-template-columns: 72px minmax(0,1fr); grid-template-rows: auto auto auto; column-gap: 12px; row-gap: 4px; min-height: 0; padding: 12px; border: 1px solid #c8bcdf20; border-radius: 14px; box-shadow: none; }
-#root .mobile-tremplin .tremplin-how #tremplin-discovery .tremplin-how__channel-art { position: relative; inset: auto; width: 72px; height: 86px; grid-row: 1 / 4; margin: 0; border-radius: 10px; background-size: cover; background-position: center; mask-image: none; }
-#root .mobile-tremplin .tremplin-how #tremplin-discovery .tremplin-how__channels h3 { grid-column: 2; font-size: 15px; margin: 0; line-height: 1.3; }
-#root .mobile-tremplin .tremplin-how #tremplin-discovery .tremplin-how__channels p { grid-column: 2; font-size: 11px; line-height: 1.45; margin: 0; }
-#root .mobile-tremplin .tremplin-how #tremplin-discovery .tremplin-how__channels button { grid-column: 2; min-width: 0; min-height: 44px; margin: 0; padding: 5px 0; justify-content: flex-start; text-align: left; font-size: 11px; border: 0; border-radius: 0; background: none; color: #c5b1e7; box-shadow: none; }
-#root .mobile-tremplin .tremplin-how #tremplin-discovery .tremplin-how__channels button svg { display: none; }
-#root .mobile-tremplin .tremplin-how #tremplin-follow .tremplin-how__follow-card { display: block; padding: 0; background: none; box-shadow: none; border: 0; }
-#root .mobile-tremplin .tremplin-how__follow-heart { display: none; }
-#root .mobile-tremplin .tremplin-how #tremplin-follow .tremplin-how__follow-copy h3 { font-size: 17px; margin: 0 0 8px; }
-#root .mobile-tremplin .tremplin-how #tremplin-follow .tremplin-how__follow-copy p { font-size: 12px; line-height: 1.5; margin: 0 0 12px; }
-#root .mobile-tremplin .tremplin-how #tremplin-follow .tremplin-how__follow-copy > button { min-height: 44px; width: 100%; padding: 10px; font-size: 12px; border-radius: 12px; background: var(--mobile-violet-cta); box-shadow: none; }
-#root .mobile-tremplin .tremplin-how #tremplin-follow .tremplin-how__follow-copy small { display: block; font-size: 10px; line-height: 1.45; margin: 10px 0; }
-#root .mobile-tremplin .tremplin-how #tremplin-follow .tremplin-how__follow-card ul { display: grid; grid-template-columns: 1fr; gap: 0; margin: 10px 0 0; padding: 0; }
-#root .mobile-tremplin .tremplin-how #tremplin-follow .tremplin-how__follow-card li button { width: 100%; min-height: 44px; padding: 6px 0; font-size: 12px; background: none; border: 0; border-top: 1px solid #c8bcdf18; box-shadow: none; border-radius: 0; }
-#root .mobile-tremplin .tremplin-how #tremplin-follow .tremplin-how__follow-card li svg { width: 18px; height: 18px; }
-#root .mobile-tremplin .tremplin-how #tremplin-grades .tremplin-gateway__progression-header { display: block; }
-#root .mobile-tremplin .tremplin-how #tremplin-grades .tremplin-public-home__section-heading { padding: 0; text-align: left; }
-#root .mobile-tremplin .tremplin-how #tremplin-grades h2 { font-size: 21px; line-height: 1.2; margin: 10px 0; }
-#root .mobile-tremplin .tremplin-how #tremplin-grades .tremplin-public-home__levels-kicker { font-size: 9px; letter-spacing: .07em; }
-#root .mobile-tremplin .tremplin-how #tremplin-grades .tremplin-public-home__section-heading p { font-size: 12px; line-height: 1.5; }
-#root .mobile-tremplin .tremplin-how #tremplin-grades .tremplin-public-home__levels-clarification { font-size: 10px; line-height: 1.5; margin-top: 10px; }
-#root .mobile-tremplin .tremplin-how #tremplin-grades .tremplin-public-home__level-track { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; padding: 0; margin: 16px 0; overflow: visible; }
-#root .mobile-tremplin .tremplin-how #tremplin-grades .tremplin-gateway__prestige-bridges { display: none; }
-#root .mobile-tremplin .tremplin-how #tremplin-grades .tremplin-gateway__grade-card { min-width: 0; width: auto; min-height: 106px; height: auto; padding: 8px 3px; gap: 4px; transform: none; border-radius: 12px; box-shadow: none; background: #111017; border: 1px solid #c8bcdf24; }
-#root .mobile-tremplin .tremplin-how #tremplin-grades .tremplin-gateway__grade-card.is-active { border-color: var(--grade-light); background: #1b1727; }
-#root .mobile-tremplin .tremplin-how #tremplin-grades .tremplin-gateway__grade-card::before,#root .mobile-tremplin .tremplin-how #tremplin-grades .tremplin-gateway__grade-card::after { display: none; }
-#root .mobile-tremplin .tremplin-how #tremplin-grades .mw-grade-badge { --mw-grade-size: 48px !important; width: 48px; height: 48px; }
-#root .mobile-tremplin .tremplin-how #tremplin-grades .tremplin-public-home__level-stage { font-size: 9px; }
-#root .mobile-tremplin .tremplin-how #tremplin-grades .tremplin-gateway__grade-card strong { font-size: 10px; }
-#root .mobile-tremplin .tremplin-how #tremplin-grades :is(.tremplin-gateway__grade-description,.tremplin-gateway__grade-caption) { display: none; }
-#root .mobile-tremplin .tremplin-how #tremplin-grades .tremplin-public-home__level-note { display: flex; padding: 12px; min-height: 0; gap: 10px; margin: 0; border-radius: 12px; box-shadow: none; }
-#root .mobile-tremplin .tremplin-how #tremplin-grades .tremplin-public-home__level-note p { font-size: 11px; line-height: 1.5; margin: 0; }
-#root .mobile-tremplin .tremplin-how #tremplin-grades .tremplin-public-home__level-note p strong { font-size: 12px; }
-#root .mobile-tremplin .tremplin-how #tremplin-grades .tremplin-gateway__grade-principles { display: none; }
-#root .mobile-tremplin .tremplin-how__grade-method { margin-top: 12px; font-size: 12px; }
-#root .mobile-tremplin .tremplin-how__grade-method summary { padding: 10px 0; min-height: 44px; }
-#root .mobile-tremplin .tremplin-how__prior-career { padding: 12px; font-size: 12px; line-height: 1.5; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw { padding: 0; gap: 14px; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw :is(.tremplin-how__mw-essential,.tremplin-how__mw-before,.tremplin-how__mw-conclusion) { padding: 16px; border-radius: 18px; box-shadow: inset 0 1px #ffffff0d; margin-top: 14px; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw .tremplin-how__mw-artist-art { display: none; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw .tremplin-how__mw-heading h2 { font-size: 23px; line-height: 1.2; margin-top: 12px; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw .tremplin-how__mw-heading p { max-width: none; font-size: 12px; line-height: 1.5; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw .tremplin-how__mw-heading p strong { font-size: 13px; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw .tremplin-how__mw-main { gap: 14px; margin-top: 14px; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw .tremplin-how__mw-visual { height: 130px; aspect-ratio: auto; border-radius: 12px; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw .tremplin-how__mw-timeline { gap: 10px; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw .tremplin-how__mw-timeline li { min-height: 0; padding: 0; gap: 10px; grid-template-columns: 26px 1fr; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw .tremplin-how__mw-timeline li > span { width: 26px; height: 26px; font-size: 12px; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw .tremplin-how__mw-timeline li strong { font-size: 13px; padding: 0; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw .tremplin-how__mw-timeline li p { font-size: 11px; margin-top: 3px; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw .tremplin-how__mw-assurances { gap: 8px; padding-top: 14px; margin-top: 5px; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw .tremplin-how__mw-risk-note { font-size: 11px; line-height: 1.5; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw :is(.tremplin-how__mw-before,.tremplin-how__mw-conclusion) h3 { font-size: 20px; line-height: 1.25; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw :is(.tremplin-how__mw-before,.tremplin-how__mw-conclusion) p { font-size: 12px; line-height: 1.5; max-width: none; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw .tremplin-how__mw-before > header { gap: 12px; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw .tremplin-how__mw-before > header button { min-height: 44px; font-size: 12px; border-radius: 12px; background: var(--mobile-violet-cta); box-shadow: none; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw .tremplin-how__mw-before > ul { display: flex; flex-wrap: wrap; gap: 8px 12px; margin-top: 12px; padding-top: 12px; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw .tremplin-how__mw-before > ul li { min-height: 24px; font-size: 10px; gap: 5px; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw .tremplin-how__mw-before > ul svg { width: 15px; height: 15px; flex-basis: 15px; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw .tremplin-how__mw-summary-example { padding: 12px; border-radius: 12px; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw .tremplin-how__mw-summary-example dl { grid-template-columns: 1fr; gap: 0; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw .tremplin-how__mw-summary-example dl > div { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw .tremplin-how__mw-summary-example :is(dt,dd) { font-size: 11px; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw .tremplin-how__mw-conclusion-actions { margin-top: 12px; gap: 8px; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw .tremplin-how__mw-conclusion-actions button { min-height: 44px; border-radius: 12px; font-size: 12px; padding: 10px; box-shadow: none; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw .tremplin-how__mw-conclusion-actions .is-primary { background: var(--mobile-violet-cta); }
-#root .mobile-tremplin .tremplin-how :is(.tremplin-how__rules-backdrop,.tremplin-how__video-backdrop) { position: fixed; z-index: 100; inset: 0; padding: 12px; background: #030309a8; backdrop-filter: blur(12px); align-items: center; }
-#root .mobile-tremplin .tremplin-how :is(.tremplin-how__rules-dialog,.tremplin-how__video-dialog) { width: 100%; max-height: calc(100dvh - 24px); overflow-y: auto; padding: 16px; border-radius: 20px; background: #101016f5; border: 1px solid #c8bcdf40; }
-#root .mobile-tremplin .tremplin-how :is(.tremplin-how__rules-dialog,.tremplin-how__video-dialog) > header { display: grid; grid-template-columns: minmax(0,1fr) 44px; gap: 12px; }
-#root .mobile-tremplin .tremplin-how :is(.tremplin-how__rules-dialog,.tremplin-how__video-dialog) h2 { font-size: 21px; line-height: 1.2; }
-#root .mobile-tremplin .tremplin-how :is(.tremplin-how__rules-dialog,.tremplin-how__video-dialog) > header button { width: 44px; height: 44px; min-width: 0; padding: 10px; }
-#root .mobile-tremplin .tremplin-how__mw-details h3 button { min-height: 48px; font-size: 13px; padding: 10px; }
-#root .mobile-tremplin .tremplin-how__mw-details p { font-size: 12px; line-height: 1.6; }
-/* The native header already clips the content; the desktop fade darkens titles. */
-#root .mobile-tremplin .tremplin-scroll:has(.tremplin-how),#root .mobile-tremplin .tremplin-scroll:has(.tremplin-my-dashboard) { mask-image: none; -webkit-mask-image: none; }
-#root .mobile-tremplin .tremplin-how { display: grid; grid-template-columns: minmax(0,1fr); }
-#root .mobile-tremplin .tremplin-how > .tremplin-how__hero { display: block; min-height: 0; }
-#root .mobile-tremplin .tremplin-how .tremplin-how__hero > * { max-width: none; }
-#root .mobile-tremplin .tremplin-how #tremplin-grades .tremplin-gateway__grade-card { display: flex; flex-direction: column; justify-content: center; align-items: center; }
-#root .mobile-tremplin .tremplin-how #tremplin-grades h2 span { color: #bda6e6; -webkit-text-fill-color: #bda6e6; background: none; }
-#root .mobile-tremplin .tremplin-how #tremplin-discovery .tremplin-how__channel-art { background-size: 650% auto; background-position: 16% 44%; }
-#root .mobile-tremplin .tremplin-how #tremplin-discovery .is-scene .tremplin-how__channel-art { background-position: 54% 44%; }
-#root .mobile-tremplin .tremplin-how #tremplin-discovery .is-globe .tremplin-how__channel-art { background-position: 91% 44%; }
-#root .mobile-tremplin .tremplin-how #tremplin-discovery::after,#root .mobile-tremplin .tremplin-how #tremplin-discovery .tremplin-how__channels :is(article,button)::after { display: none; }
-#root .mobile-tremplin .tremplin-how #tremplin-follow :is(.tremplin-how__follow-copy > button,.tremplin-how__follow-card li button)::after { display: none; }
-#root .mobile-tremplin .tremplin-how #tremplin-token-mw .tremplin-how__mw-timeline li > span { color: #c5b1e7; border-color: #bfa5e14a; background: #4f359e24; box-shadow: none; }
-/* Pixel-exact crops of the existing Web illustration; no duplicate embedded labels. */
-#root .mobile-tremplin .tremplin-how #tremplin-discovery .tremplin-how__channel-art { background-size: 1120% auto; background-position: 25% 49%; }
-#root .mobile-tremplin .tremplin-how #tremplin-discovery .is-scene .tremplin-how__channel-art { background-position: 60% 49%; }
-#root .mobile-tremplin .tremplin-how #tremplin-discovery .is-globe .tremplin-how__channel-art { background-position: 90% 49%; }
-#root .mobile-tremplin .tremplin-how__hero h1 { text-align: left; }
+/* Comprendre: one reading surface, with optional explanations opening in place. */
+#root .mobile-tremplin .tremplin-guide {
+  width: 100%; min-width: 0; margin: 0; padding: 20px 16px 4px;
+  border: 1px solid #bdb3d51e; border-radius: 22px;
+  background: linear-gradient(155deg, #19191fe8, #0d0d12f5 48%, #101015f5);
+  box-shadow: inset 0 1px #ffffff08, 0 10px 28px #00000024;
+  color: #f3f0f8;
+}
+#root .mobile-tremplin .tremplin-guide :is(button,summary) { touch-action: manipulation; }
+#root .mobile-tremplin .tremplin-guide :is(button,summary,[role=button]):focus-visible { outline: 2px solid #bda6e6; outline-offset: 3px; }
+#root .mobile-tremplin .tremplin-guide :is(h1,h2,h3,p) { text-wrap: pretty; }
+#root .mobile-tremplin .tg-intro > span { color: #b6a1dc; font-size: 9px; font-weight: 650; letter-spacing: .15em; }
+#root .mobile-tremplin .tg-intro h1 { margin: 8px 0; text-align: left; color: #f6f4fa; font-size: clamp(24px,6.7vw,32px); line-height: 1.14; letter-spacing: -.035em; }
+#root .mobile-tremplin .tg-intro p { margin: 0; color: #aca9b7; font-size: 13px; line-height: 1.5; }
+/* Original Web crop: scale both dimensions together, never force its height. */
+#root .mobile-tremplin .tg-illustration {
+  display: block; width: 100%; height: auto; aspect-ratio: 552 / 320; margin: 18px 0;
+  border: 0; border-radius: 14px;
+  background: url('/images/tremplin/tremplin-token-guide-reference.png') 8.276% 45.04% / 231.522% 251.25% no-repeat;
+}
+#root .mobile-tremplin .tg-steps { display: grid; gap: 18px; list-style: none; margin: 0; padding: 0; }
+#root .mobile-tremplin .tremplin-guide .tg-steps > li {
+  display: grid; grid-template-columns: 30px minmax(0,1fr); align-items: start; gap: 10px;
+  position: relative; width: auto; min-height: 0; height: auto; margin: 0; padding: 0;
+  border: 0; border-radius: 0; background: none; box-shadow: none; container-type: normal;
+  scroll-margin-top: 16px;
+}
+#root .mobile-tremplin .tremplin-guide .tg-steps > li::after { display: none; }
+#root .mobile-tremplin .tg-steps > li > span { display: flex; justify-content: center; padding-top: 2px; color: #b49bdc; }
+#root .mobile-tremplin .tg-steps h2 { margin: 0 0 4px; color: #f2f0f7; font-size: 15px; font-weight: 650; line-height: 1.3; }
+#root .mobile-tremplin .tg-steps p { margin: 0; color: #aaa7b3; font-size: 13px; line-height: 1.45; }
+#root .mobile-tremplin .tg-essential { margin: 18px 0 14px; padding-top: 14px; border-top: 1px solid #c6b5e218; color: #a7a3b2; font-size: 11px; line-height: 1.5; }
+#root .mobile-tremplin .tg-primary {
+  display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; min-height: 48px;
+  padding: 12px; border: 1px solid var(--mobile-cta-rim); border-radius: 13px;
+  background: var(--mobile-violet-cta); color: #f9f7fd; font-size: 13px; font-weight: 650;
+  box-shadow: inset 0 1px #ffffff16, 0 5px 14px #00000024;
+}
+#root .mobile-tremplin .tg-details { margin-top: 18px; }
+#root .mobile-tremplin .tremplin-guide .tg-details > details {
+  display: block; width: 100%; min-width: 0; margin: 0; padding: 0;
+  border: 0; border-top: 1px solid #c6b5e21a; border-radius: 0;
+  background: none; box-shadow: none; container-type: normal; scroll-margin-top: 16px;
+}
+#root .mobile-tremplin .tg-details > details > summary {
+  display: flex; align-items: center; gap: 9px; min-height: 54px; padding: 12px 0;
+  list-style: none; cursor: pointer; font-size: 13px; line-height: 1.4; font-weight: 550; color: #d3cedf;
+}
+#root .mobile-tremplin .tg-details > details > summary::-webkit-details-marker { display: none; }
+#root .mobile-tremplin .tg-details > details > summary > span { flex: 1; }
+#root .mobile-tremplin .tg-details > details > summary > svg { flex-shrink: 0; color: #ae99d1; }
+#root .mobile-tremplin .tg-details > details[open] > summary > svg:last-child { transform: rotate(90deg); }
+#root .mobile-tremplin .tg-answer { padding: 0 0 18px; }
+#root .mobile-tremplin .tg-answer video { display: block; width: 100%; height: auto; max-height: 65dvh; object-fit: contain; border-radius: 12px; background: #050507; }
+#root .mobile-tremplin .tg-answer > section + section { margin-top: 18px; }
+#root .mobile-tremplin .tg-answer h3 { margin: 0 0 6px; font-size: 14px; color: #eeebf5; line-height: 1.4; }
+#root .mobile-tremplin .tg-answer p { margin: 0; color: #ada9b8; font-size: 12px; line-height: 1.6; }
+#root .mobile-tremplin .tg-destinations { display: grid; gap: 4px; }
+#root .mobile-tremplin .tg-destinations button { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 0; width: 100%; border: 0; border-radius: 0; background: none; text-align: left; box-shadow: none; }
+#root .mobile-tremplin .tg-destinations button > span { flex: 1; }
+#root .mobile-tremplin .tg-destinations button > svg { flex-shrink: 0; color: #af99d5; }
+#root .mobile-tremplin .tg-destinations strong { display: block; font-size: 13px; color: #efecf7; }
+#root .mobile-tremplin .tg-destinations small { display: block; margin-top: 4px; color: #aaa5b7; font-size: 11px; line-height: 1.5; }
+#root .mobile-tremplin .tg-example { padding-top: 16px; border-top: 1px solid #c6b5e21a; }
+#root .mobile-tremplin .tg-example dl { margin: 12px 0 0; }
+#root .mobile-tremplin .tg-example dl > div { display: flex; justify-content: space-between; gap: 16px; padding: 8px 0; border-bottom: 1px solid #ffffff08; font-size: 11px; line-height: 1.5; }
+#root .mobile-tremplin .tg-example dt { color: #a8a3b6; }
+#root .mobile-tremplin .tg-example dd { margin: 0; color: #e5dfef; text-align: right; max-width: 62%; }
+/* Preserve the actual coloured, interactive badges inside the optional answer. */
+#root .mobile-tremplin .tremplin-guide .tremplin-gateway__levels { width: 100%; min-width: 0; padding: 0; margin: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
+#root .mobile-tremplin .tremplin-guide .tremplin-gateway__progression-header { display: block; }
+#root .mobile-tremplin .tremplin-guide .tremplin-public-home__section-heading { padding: 0; text-align: left; }
+#root .mobile-tremplin .tremplin-guide .tremplin-public-home__section-heading h2 { font-size: 18px; line-height: 1.3; margin: 0 0 10px; }
+#root .mobile-tremplin .tremplin-guide .tremplin-public-home__section-heading h2 span { color: #bda6e6; -webkit-text-fill-color: #bda6e6; background: none; }
+#root .mobile-tremplin .tremplin-guide .tremplin-public-home__section-heading p { font-size: 12px; line-height: 1.5; }
+#root .mobile-tremplin .tremplin-guide .tremplin-public-home__levels-clarification { display: block; margin: 10px 0; font-size: 11px; line-height: 1.5; }
+#root .mobile-tremplin .tremplin-guide :is(.tremplin-gateway__grade-art,.tremplin-gateway__prestige-bridges,.tremplin-public-home__levels-kicker,.tremplin-gateway__grade-principles) { display: none; }
+#root .mobile-tremplin .tremplin-guide .tremplin-public-home__level-track { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; padding: 0; margin: 14px 0; overflow: visible; }
+#root .mobile-tremplin .tremplin-guide .tremplin-gateway__grade-card { display: flex; flex-direction: column; justify-content: center; align-items: center; min-width: 0; width: auto; min-height: 106px; height: auto; padding: 8px 3px; gap: 4px; transform: none; border-radius: 12px; box-shadow: none; background: #121217; border: 1px solid #c8bcdf24; }
+#root .mobile-tremplin .tremplin-guide .tremplin-gateway__grade-card.is-active { border-color: var(--grade-light); background: #1b1727; }
+#root .mobile-tremplin .tremplin-guide .tremplin-gateway__grade-card::before,#root .mobile-tremplin .tremplin-guide .tremplin-gateway__grade-card::after { display: none; }
+#root .mobile-tremplin .tremplin-guide .mw-grade-badge { --mw-grade-size: 48px !important; width: 48px; height: 48px; }
+#root .mobile-tremplin .tremplin-guide .tremplin-public-home__level-stage { font-size: 9px; }
+#root .mobile-tremplin .tremplin-guide .tremplin-gateway__grade-card strong { font-size: 10px; }
+#root .mobile-tremplin .tremplin-guide :is(.tremplin-gateway__grade-description,.tremplin-gateway__grade-caption) { display: none; }
+#root .mobile-tremplin .tremplin-guide .tremplin-public-home__level-note { display: flex; align-items: flex-start; padding: 12px; min-height: 0; gap: 10px; margin: 0; border-radius: 12px; box-shadow: none; background: #ffffff04; }
+#root .mobile-tremplin .tremplin-guide .tremplin-public-home__level-note p { font-size: 11px; line-height: 1.5; margin: 0; }
+#root .mobile-tremplin .tremplin-guide .tremplin-public-home__level-note p strong { font-size: 12px; }
+#root .mobile-tremplin .tremplin-guide .tg-career { margin-top: 12px; font-size: 11px; }
+#root .mobile-tremplin .tremplin-scroll:has(.tremplin-guide),#root .mobile-tremplin .tremplin-scroll:has(.tremplin-my-dashboard) { mask-image: none; -webkit-mask-image: none; }
 #root .mobile-tremplin .mobile-tremplin-section > button { border-radius: 11px; }
 #root .mobile-tremplin .mobile-tremplin-section > button:focus:not(:focus-visible) { outline: none; }
 #root .mobile-tremplin .mobile-tremplin-section > button:focus-visible { outline: 1px solid #bda6e6; outline-offset: -3px; }
-#root .mobile-tremplin .tremplin-page:has(.tremplin-how [role=dialog]) { z-index: 90; }
-#root .mobile-tremplin .tremplin-scroll:has(.tremplin-how [role=dialog]) { z-index: 95; overflow-y: hidden; }
-#root .mobile-tremplin .tremplin-how :is(.tremplin-how__rules-dialog,.tremplin-how__video-dialog) > header p { font-size: 12px; line-height: 1.5; }
-#root .mobile-tremplin .tremplin-how :is(.tremplin-how__rules-dialog,.tremplin-how__video-dialog) button:focus-visible { outline: 1px solid #bda6e6; outline-offset: 2px; }

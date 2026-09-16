@@ -1140,6 +1140,13 @@ export default function TremplinPage() {
     const targetId = decodeURIComponent(location.hash.slice(1));
     const frame = requestAnimationFrame(() => {
       const target = document.getElementById(targetId);
+      // Deep links from Home reveal the optional explanation before scrolling.
+      if (target instanceof HTMLDetailsElement) target.open = true;
+      let ancestor = target?.parentElement;
+      while (ancestor) {
+        if (ancestor instanceof HTMLDetailsElement) ancestor.open = true;
+        ancestor = ancestor.parentElement;
+      }
       target?.scrollIntoView({ behavior: "smooth", block: "start" });
       target?.focus({ preventScroll: true });
     });

@@ -120,3 +120,19 @@ chargement local de la vidéo (readyState 4, sans erreur média), activation pui
 retrait d’un rappel, filtre d’activité et retour en haut après changement de rubrique.
 Les états modifiés pour la vérification ont été rétablis. Les images du guide
 réutilisent les illustrations existantes, sans réduction de leur résolution.
+
+## Comprendre — lecture simplifiée
+
+La composition à chapitres ci-dessus est remplacée par une seule surface de lecture :
+une courte introduction, l’illustration originale, trois étapes (découvrir, suivre
+sans payer, soutenir facultativement) et un CTA Découvrir. Les détails deviennent
+quatre lignes dépliables sur place : vidéo, destinations, grades et jetons. Plus de
+sélecteur de chapitres ni de modales vidéo/règles sur cet onglet. Fermer la ligne
+vidéo arrête sa lecture. Les liens directs ouvrent la bonne explication avant de
+défiler ; les destinations, grades interactifs, exemple chiffré et événement de
+fin de lecture restent câblés.
+
+L’illustration conserve le recadrage Web avec son ratio 552/320. La hauteur fixe
+qui l’aplatissait est supprimée, sans modification du fichier ni de sa résolution.
+Cette passe porte sur la présentation ; aucune nouvelle recette visuelle ou
+fonctionnelle automatique n’est lancée. Compilation uniquement pour livraison.
