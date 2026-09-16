@@ -11,6 +11,7 @@ import {
   FilePenLine,
   Heart,
   Home,
+  Maximize2,
   MessageCircle,
   PackageOpen,
   Plus,
@@ -680,6 +681,7 @@ export default function MarketPage() {
   const [demoJoinedCollectives, setDemoJoinedCollectives] = useState<Set<string>>(() => new Set());
   const [selectedProduct, setSelectedProduct] = useState<MarketProductView | null>(null);
   const [detailProductIds, setDetailProductIds] = useState<string[]>([]);
+  const [mediaZoomed, setMediaZoomed] = useState(false);
   const [drawer, setDrawer] = useState<DrawerView>(null);
   const [popover, setPopover] = useState<PopoverView>(null);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
@@ -744,6 +746,7 @@ export default function MarketPage() {
   const detailModalRef = useRef<HTMLElement>(null);
   const detailScrollRef = useRef<HTMLDivElement>(null);
   const detailTriggerRef = useRef<HTMLElement | null>(null);
+  const mediaExpandButtonRef = useRef<HTMLButtonElement | null>(null);
   const listingUploadCacheRef = useRef<Map<string, string>>(new Map());
   const listingIdempotencyKeyRef = useRef<string | null>(null);
   const listingPublishInFlightRef = useRef(false);
@@ -808,6 +811,11 @@ export default function MarketPage() {
       }
       if (event.defaultPrevented) return;
       if (event.key !== "Escape") return;
+      if (mediaZoomed) {
+        setMediaZoomed(false);
+        window.requestAnimationFrame(() => mediaExpandButtonRef.current?.focus());
+        return;
+      }
       if (document.querySelector(".market-cart-panel, .market-listing-composer, .market-intents, .market-filters-panel")) return;
       setDrawer(null);
       setSelectedProduct(null);
@@ -819,7 +827,7 @@ export default function MarketPage() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [navigate, requestedListingId]);
+  }, [mediaZoomed, navigate, requestedListingId]);
 
   useEffect(() => {
     if (!popover) return;
@@ -897,6 +905,10 @@ export default function MarketPage() {
       backgroundLayers.forEach((layer) => layer.removeAttribute("inert"));
     };
   }, [hasSelectedProduct]);
+
+  useEffect(() => {
+    if (!selectedProduct) setMediaZoomed(false);
+  }, [selectedProduct]);
 
   const queryNormalized = query.trim().toLocaleLowerCase("fr-FR");
   const appliedFilterCount = Math.max(
@@ -1054,6 +1066,13 @@ export default function MarketPage() {
     setDetailProductIds([]);
     if (requestedListingId) navigate("/market", { replace: true });
     window.requestAnimationFrame(() => detailTriggerRef.current?.focus());
+  };
+
+  const openMediaZoom = () => setMediaZoomed(true);
+
+  const closeMediaZoom = () => {
+    setMediaZoomed(false);
+    window.requestAnimationFrame(() => mediaExpandButtonRef.current?.focus());
   };
 
   const navigateProduct = (direction: -1 | 1) => {
@@ -1297,7 +1316,7 @@ export default function MarketPage() {
   };
 
   const actionLabel = selectedProduct?.pillarId === "rental"
-    ? marketLive.active ? "Envoyer la demande" : "Réserver ces dates"
+    ? marketLive.active ? "Envoyer la demande" : "Réserver"
     : selectedProduct?.pillarId === "services"
       ? marketLive.active
         ? selectedProduct.service?.kind === "ticket" ? "Demander cette place" : "Envoyer la demande"
@@ -1595,7 +1614,7 @@ export default function MarketPage() {
               <img src={currentUserAvatar} alt="" />
               <span className="market-brand__presence" aria-hidden="true" />
             </button>
-          </div></div>
+          </div></div>
           {sellerDraftsOpen ? (
             <MarketSellerDraftCenter
               key={draftCenterRevision}
@@ -1962,6 +1981,15 @@ export default function MarketPage() {
 
           <div className="market-product-modal__media">
             <img src={selectedProduct.imageUrl} alt={selectedProduct.imageAlt} />
+            <button
+              type="button"
+              ref={mediaExpandButtonRef}
+              className="market-product-modal__media-expand"
+              aria-label="Agrandir la photo"
+              onClick={openMediaZoom}
+            >
+              <Maximize2 aria-hidden="true" />
+            </button>
             <span className="market-badge">{selectedProduct.badge ?? selectedProduct.conditionLabel}</span>
             {showSellerIdentityPlaque && (
               <div
@@ -2118,6 +2146,29 @@ export default function MarketPage() {
             </footer>
           </div>
         </article>
+      )}
+
+      {selectedProduct && mediaZoomed && (
+        <div
+          className="market-product-modal__zoom"
+          data-market-pillar={selectedProduct.pillarId}
+          data-market-service-kind={selectedProduct.service?.kind}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Photo agrandie : ${selectedProduct.title}`}
+          onClick={closeMediaZoom}
+        >
+          <img src={selectedProduct.imageUrl} alt={selectedProduct.imageAlt} />
+          <button
+            type="button"
+            className="market-product-modal__zoom-close"
+            aria-label="Fermer la photo agrandie"
+            onClick={closeMediaZoom}
+            autoFocus
+          >
+            <X aria-hidden="true" />
+          </button>
+        </div>
       )}
 
       {drawer === "cart" && (

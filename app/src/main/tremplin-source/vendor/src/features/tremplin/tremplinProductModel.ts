@@ -32,7 +32,7 @@ export type TremplinTokenLifecycleStage =
 export type TremplinContextAction = {
   label: string;
   detail: string;
-  destination: "understand" | "application" | "dashboard";
+  destination: "home" | "application" | "dashboard";
 };
 
 /**
@@ -262,7 +262,7 @@ export function getTremplinContextAction(userState: TremplinUserState): Tremplin
     return {
       label: "Voir les conditions d’accès",
       detail: "Le niveau 2 ouvre la demande",
-      destination: "understand",
+      destination: "home",
     };
   }
   if (userState === "talent-eligible") {
@@ -289,7 +289,7 @@ export function getTremplinContextAction(userState: TremplinUserState): Tremplin
   return {
     label: "Je suis artiste",
     detail: "Découvrir les conditions",
-    destination: "understand",
+    destination: "home",
   };
 }
 

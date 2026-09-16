@@ -165,6 +165,9 @@ vers le bas de 56 px la replie, une remontée de 28 px la révèle ; les scrolls
 programmatiques et les carrousels horizontaux ne déclenchent pas ce comportement.
 Les gestes courts ont un seuil pour éviter les oscillations. Une action manuelle
 suspend brièvement l’automatisme. La réduction des animations est respectée.
+La poignée n’a plus de conteneur visible : seul le chevron flotte au-dessus
+du dock, avec une ombre portée discrète ; la zone tactile de 64 × 28 px est
+conservée. Bundles des cinq features reconstruits.
 
 Dans une conversation la navbar commence repliée et reste manuelle, afin que
 la lecture ne fasse pas bouger le champ de message. Le champ et son contenu sont
@@ -175,3 +178,49 @@ Rooms conserve son message de disponibilité, sans route fictive.
 Le fond Marketplace en essai utilise désormais la variante utilisateur (4),
 `ChatGPT Image 12 sept. 2026, 23_51_01 1 (4).png`, sans changement des autres fonds.
 Compilation de livraison ; pas de tests ni de nouvelle inspection visuelle automatique.
+
+## Fond Marketplace — nouvelle variante, 16 septembre 2026
+
+L’essai utilise maintenant la même image que le Tremplin, `/images/meewav-acoustic-violet-background.png`, déjà présente dans les assets Market et trackée par le manifeste ; la surcharge `mobile.css` pointe vers ce fichier. Le périmètre reste le Marketplace uniquement ; le fond initial et `background-mobile-trial.png` restent disponibles pour revenir en arrière.
+
+## Accents Marketplace et chargement vinyle — 16 septembre 2026
+
+À la demande de l’utilisateur, les accents par pilier du site sont rétablis
+en palette choisie : Neuf saphir `#5D7FF2`, Occasion orange ambré `#E08F45`,
+Location lagon `#35C2C4`, Services améthyste `#B07CE8`, billetterie/Rooms
+framboise `#E56B8C`, Achat groupé émeraude `#34B78F`. Les badges des cartes,
+le bouton panier de la navbar (icône, badge, halo) et l’icône d’action des
+miniatures suivent l’accent du pilier — la miniature hérite de la couleur
+de sa propre carte, la navbar de l’onglet actif. Vérifié par captures
+Samsung : Neuf bleu et Occasion orange sur panier, miniatures et chips.
+Le fond Marketplace revient à l’image acoustique violette du Tremplin après
+l’essai utilisateur refusé ; `background-mobile-trial.png` reste en réserve.
+Le chargement entre features affiche le même disque vinyle que le globe :
+`scripts/feature-loading.mjs` injecte le markup statique (rotation par
+keyframes CSS, sans JS) dans chaque `index.html` généré ; React le remplace
+au montage. Les cinq bundles et l’APK sont reconstruits.
+L’icône de l’onglet actif de la topbar (`market-pillar-tabs`) reprend
+également la couleur de sa chip via `--meewav-pillar-tab-accent` — accent
+défini par onglet dans `MARKET_NAV_ITEMS`, donc Accueil reste blanc
+`#f7f5ff` quand il est actif.
+Le catalogue des onglets passe en **une seule colonne de cartes
+horizontales** (demande utilisateur, validé par captures sur les 5
+piliers) : vignette carrée ~122 px en `cover` à gauche, fondu du bord
+droit vers le corps, cœur flottant sur la vignette, eyebrow et badge à
+l’accent du pilier, prix fort + disque d’action accentué en bas à droite.
+Les media queries ≥600 px gardent `1fr`. Les rails de l’accueil
+(`market-mini`, `market-home-hero`) ne sont pas touchés.
+Pour gagner de la place, la rangée de chips de filtres
+(`market-filter-chips`) et le portrait (`market-brand__portrait`) sont
+masqués en mobile — les filtres restent accessibles via l’icône
+réglages de la recherche.
+La fiche produit gagne un **zoom photo plein écran** : bouton expand
+`Maximize2` empilé sous le bouton fermer en haut à droite de la media,
+overlay `fixed inset: 0` (au-dessus de la status bar en edge-to-edge)
+au z-index 52010, image en `contain`, fermeture au tap, au bouton X ou
+à Échap, focus restauré sur le bouton expand ; le bouton de l’overlay
+dégage `env(safe-area-inset-top)`. Le CTA location hors-live passe de
+« Réserver ces dates » à « Réserver ». Bundle Market reconstruit ;
+l’APK n’a pas pu être recompilé ici (`JAVA_HOME` absent), à refaire en
+local pour tester sur appareil.
+

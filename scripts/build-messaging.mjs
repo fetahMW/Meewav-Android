@@ -5,6 +5,7 @@ import { readFile, writeFile, mkdir, readdir, copyFile, stat, unlink } from 'nod
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { applyMessagingBrand } from './messaging-brand.mjs';
+import { featureLoadingHtml } from './feature-loading.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const web = resolve(root, '../Meewav-Web');
@@ -128,7 +129,7 @@ await copyFile(join(source, 'mobile.css'), join(output, 'mobile.css'));
 await copyAsset(join(root, 'app/src/main/assets/globe-vinyle/ui/images/earth_specular.jpg'), 'ui/images/earth_specular.jpg');
 // CSP is completed by the native interceptor with the configured Supabase
 // origin. No service URL, key or session is written into the shipped document.
-await writeFile(join(output, 'index.html'), `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="dark"><title>Meewav — Messagerie</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/messaging/assets/main.css"><link rel="stylesheet" href="/messaging/mobile.css"></head><body><div id="root"><div class="mobile-message-error" role="status">Ouverture de la messagerie…</div></div><script type="module" src="/messaging/assets/main.js"></script></body></html>`);
+await writeFile(join(output, 'index.html'), `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="dark"><title>Meewav — Messagerie</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/messaging/assets/main.css"><link rel="stylesheet" href="/messaging/mobile.css"></head><body><div id="root">${featureLoadingHtml('Ouverture de la messagerie…')}</div><script type="module" src="/messaging/assets/main.js"></script></body></html>`);
 async function list(folder) {
   for (const entry of await readdir(folder, { withFileTypes: true })) {
     const path = join(folder, entry.name);

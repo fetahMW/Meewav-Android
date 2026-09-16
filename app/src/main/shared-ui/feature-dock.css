@@ -11,11 +11,11 @@
 .feature-dock-host .feature-dock-toggle {
   position: absolute; top: 0; left: 50%; transform: translateX(-50%);
   display: grid; place-items: center; width: 64px; height: 28px; padding: 0;
-  border: 1px solid #c6b3e222; border-bottom: 0; border-radius: 16px 16px 0 0;
-  color: #cbc3db; background: #16111fb8; backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px); pointer-events: auto;
+  border: 0; border-radius: 0;
+  color: #cbc3db; background: transparent;
+  pointer-events: auto;
 }
-.feature-dock-host .feature-dock-toggle svg { width: 20px; height: 20px; }
+.feature-dock-host .feature-dock-toggle svg { width: 20px; height: 20px; filter: drop-shadow(0 1px 2px #000a); }
 .feature-dock-host .profile-bottom-dock {
   position: absolute; z-index: 1; inset: auto 0 0; height: 76px;
   display: grid; grid-template-columns: minmax(0,1fr) 72px minmax(0,1fr);

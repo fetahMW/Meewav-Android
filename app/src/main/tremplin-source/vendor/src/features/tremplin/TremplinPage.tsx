@@ -56,7 +56,6 @@ import { trackTremplinEvent } from "./tremplinAnalytics";
 import { TREMPLIN_FEATURE_FLAGS } from "./tremplinFeatureFlags";
 import { loadConnectedTremplinFollows, persistTremplinFollow } from "./tremplinFollowService";
 import { readTremplinPersistedSet, writeTremplinPersistedSet } from "./tremplinPersistence";
-import TremplinPublicHome from "./TremplinMobileHome";
 import TremplinTokenEducation, { TremplinCurveExplainer } from "./TremplinTokenEducation";
 import TremplinTokenFlow from "./TremplinTokenFlow";
 import TremplinTokenChange24h from "./TremplinTokenChange24h";
@@ -68,10 +67,8 @@ import {
   TREMPLIN_DISCOVERY_TOKEN_UI,
 } from "./tremplinDiscoveryToken";
 import {
-  getTremplinContextAction,
   getTremplinTokenLifecycleStage,
   type TremplinTokenLifecycleStage,
-  type TremplinUserState,
 } from "./tremplinProductModel";
 import {
   tremplinArtists,
@@ -94,7 +91,7 @@ import "./tremplin-token-page.css";
 import "./tremplin-my-artists-premium.css";
 import TremplinMobileSectionSelect from "./TremplinMobileSectionSelect";
 
-type TremplinView = "home" | "discover" | "understand" | "myArtists" | "application" | "dashboard";
+type TremplinView = "home" | "discover" | "myArtists" | "application" | "dashboard";
 type TokenOperationMode = "buy" | "sell";
 type MyArtistsTab = "overview" | "tokens" | "followed" | "rooms" | "activity" | "now" | "mw";
 type MyArtistsMwTab = "holdings" | "history" | "documents";
@@ -169,14 +166,12 @@ const TOKEN_LIFECYCLE_PRESENTATION: Readonly<Record<
 const TREMPLIN_NAV_ITEMS: readonly ViewDefinition[] = [
   { id: "home", label: "Accueil", icon: Home, accent: "#b79cff" },
   { id: "discover", label: "Découvrir", icon: Sparkles, accent: "#b79cff" },
-  { id: "understand", label: "Comprendre", icon: Info, accent: "#b79cff" },
   { id: "myArtists", label: "Mes artistes", icon: Heart, accent: "#b79cff" },
 ];
 
 const TREMPLIN_VIEW_ROUTES: Readonly<Record<TremplinView, string>> = {
   home: "/tremplin",
   discover: "/tremplin/decouvrir",
-  understand: "/tremplin/comprendre",
   myArtists: "/tremplin/mes-artistes",
   application: "/tremplin/demande",
   dashboard: "/tremplin/mon-jeton",
@@ -480,7 +475,7 @@ function _LegacyHomeView({
           <div className="tremplin-token-hero__eyebrow"><span><Rocket /></span><b>Tremplin</b></div>
           <h1>Découvre les artistes <em>par leur musique</em></h1>
           <p>Écoute leurs créations, suis gratuitement leur parcours et consulte leur jeton de talent seulement si tu le souhaites.</p>
-          <div className="tremplin-token-hero__actions"><button type="button" className="tremplin-primary-cta" onClick={() => onNavigate("discover")}><Sparkles /> Découvrir les artistes</button><button type="button" className="tremplin-secondary-cta" onClick={() => onNavigate("understand")}><Info /> Comprendre le Tremplin</button></div>
+          <div className="tremplin-token-hero__actions"><button type="button" className="tremplin-primary-cta" onClick={() => onNavigate("discover")}><Sparkles /> Découvrir les artistes</button><button type="button" className="tremplin-secondary-cta" onClick={() => onNavigate("home")}><Info /> Comprendre le Tremplin</button></div>
           <div className="tremplin-token-risk"><AlertTriangle /><span>Les jetons peuvent prendre ou perdre de la valeur. Aucun résultat financier n’est garanti.</span></div>
         </div>
         <button type="button" className="tremplin-token-hero__visual" onClick={() => onOpen(featured.artist)} aria-label={`Découvrir ${featured.artist.name}`}>
@@ -497,7 +492,7 @@ function _LegacyHomeView({
       <ArtistRail title="En direct ou bientôt en Room" description="Entrez d’abord dans leur univers musical, puis découvrez le fonctionnement de leur jeton." pairs={rooms} favorites={favorites} playingArtistId={playingArtistId} onOpen={onOpen} onFavorite={onFavorite} onToggleAudio={onToggleAudio} />
 
       <section className="tremplin-token-home__education">
-        <div className="tremplin-section-heading"><div><span className="tremplin-kicker">Comprendre avant toute opération</span><h2>Acheter, revendre, comprendre pourquoi la valeur évolue.</h2><p>Une démonstration pédagogique, avec les frais, le risque et les protections visibles.</p></div><button type="button" className="tremplin-section-link" onClick={() => onNavigate("understand")}>Tout comprendre <ChevronRight /></button></div>
+        <div className="tremplin-section-heading"><div><span className="tremplin-kicker">Comprendre avant toute opération</span><h2>Acheter, revendre, comprendre pourquoi la valeur évolue.</h2><p>Une démonstration pédagogique, avec les frais, le risque et les protections visibles.</p></div><button type="button" className="tremplin-section-link" onClick={() => onNavigate("home")}>Tout comprendre <ChevronRight /></button></div>
         <TremplinCurveExplainer compact />
       </section>
 
@@ -1136,7 +1131,7 @@ export default function TremplinPage() {
   }, [activeView, location.search]);
 
   useEffect(() => {
-    if (activeView !== "understand" || !location.hash) return undefined;
+    if (activeView !== "home" || !location.hash) return undefined;
     const targetId = decodeURIComponent(location.hash.slice(1));
     const frame = requestAnimationFrame(() => {
       const target = document.getElementById(targetId);
@@ -1218,12 +1213,6 @@ export default function TremplinPage() {
   const activeToolbarId = selectedArtist && profileOrigin
     ? getTremplinViewFromPath(profileOrigin.split(/[?#]/)[0])
     : selectedArtist ? "discover" : activeView;
-  const effectiveUserState: TremplinUserState = activeView === "application"
-    ? "application-pending"
-    : activeView === "dashboard"
-      ? "token-active"
-      : viewer.userState;
-  const contextAction = getTremplinContextAction(effectiveUserState);
   const toggleFavorite = (artistId: string) => {
     const following = !favorites.has(artistId);
     const artist = tremplinArtists.find(({ id }) => id === artistId);
@@ -1279,20 +1268,9 @@ export default function TremplinPage() {
     setSelectedArtist(null);
     setHomeWallRailId(null);
     setActiveView(view);
-    if (view === "understand" || view === "application" || view === "dashboard") setPlayingArtistId(null);
+    if (view === "home" || view === "application" || view === "dashboard") setPlayingArtistId(null);
     navigate(`${TREMPLIN_VIEW_ROUTES[view]}${anchorId ? `#${anchorId}` : ""}`);
     if (!anchorId) requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" }));
-  };
-  const focusHomeSearch = (query = "") => {
-    setDiscoveryState((current) => ({ ...current, query }));
-    setSelectedArtist(null);
-    setHomeWallRailId(null);
-    setActiveView("discover");
-    const params = new URLSearchParams();
-    if (query.trim()) params.set("q", query.trim());
-    navigate(`${TREMPLIN_VIEW_ROUTES.discover}${params.size ? `?${params.toString()}` : ""}`);
-    requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" }));
-    window.setTimeout(() => document.getElementById("tremplin-home-search")?.focus(), 80);
   };
   const updateMyArtistsSessionState = (next: MyArtistsSessionState) => {
     setMyArtistsSessionState(next);
@@ -1397,34 +1375,15 @@ export default function TremplinPage() {
       if (token) return <ArtistDetail artist={selectedArtist} token={token} favorite={favorites.has(selectedArtist.id)} playing={playingArtistId === selectedArtist.id} onBack={closeArtist} backLabel={getArtistReturnLabel(location.state)} onFavorite={() => toggleFavorite(selectedArtist.id)} onTrade={(mode) => openFlow(selectedArtist, mode)} onToggleAudio={() => toggleAudio(selectedArtist.id)} onOpenRoom={() => openRoom(selectedArtist)} />;
     }
     if (isArtistRoutePath(location.pathname)) return <ArtistNotFound onBack={closeArtist} backLabel={getArtistReturnLabel(location.state)} />;
-    if (activeView === "understand") return (
-      <TremplinTokenEducation
-        onDiscover={() => changeView("discover")}
-        onHome={() => changeView("home")}
-        onOpenRoute={(route) => navigate(route)}
-      />
-    );
     if (activeView === "myArtists") return <MyArtistsView favorites={favorites} initialTab={myArtistsNavigation.tab} initialMwTab={myArtistsNavigation.mwTab} onOpen={openArtist} onTrade={openFlow} onOpenRoom={openRoom} onDiscover={() => changeView("discover")} onNotify={setToast} onNavigationChange={updateMyArtistsNavigation} sessionState={myArtistsSessionState} onSessionStateChange={updateMyArtistsSessionState} />;
     if (activeView === "application") return <TremplinTokenWorkspace mode="application" onClose={closeWorkspace} onApplicationSubmitted={() => setToast("Simulation terminée : aucune demande réelle n’a été envoyée.")} />;
     if (activeView === "dashboard") return <TremplinTokenWorkspace mode="dashboard" onClose={closeWorkspace} />;
     if (activeView === "home") {
       return (
-        <TremplinPublicHome
-          playingArtistId={playingArtistId}
-          followedArtistIds={favorites}
-          userState={effectiveUserState}
-          onToggleArtistAudio={toggleAudio}
-          onOpenArtist={openArtist}
-          onOpenArtistSupport={(artist) => openArtist(artist, "profile-support")}
-          onMyArtists={() => changeView("myArtists")}
-          onUnderstand={() => changeView("understand")}
-          onUnderstandGrades={() => changeView("understand", "tremplin-grades")}
-          onUnderstandToken={() => changeView("understand", "tremplin-token-mw")}
+        <TremplinTokenEducation
+          onDiscover={() => changeView("discover")}
+          onHome={() => changeView("home")}
           onOpenRoute={(route) => navigate(route)}
-          onSearch={focusHomeSearch}
-          artistActionLabel={contextAction.label}
-          artistActionDetail={contextAction.detail}
-          onArtistAction={() => changeView(contextAction.destination)}
         />
       );
     }
@@ -1496,7 +1455,7 @@ export default function TremplinPage() {
             <button type="button" className="tremplin-account-button" aria-label={`Ouvrir Mes artistes pour ${viewer.displayName}`} title={viewer.displayName} onClick={() => changeView("myArtists")}><img src={viewer.avatarUrl} alt="" /><span /></button>
           </div>
         </header>
-        <div className={`tremplin-scroll${!selectedArtist && (activeView === "application" || activeView === "dashboard") ? " is-workspace" : ""}${!selectedArtist && activeView === "discover" && homeWallRailId !== null ? " is-home-wall" : ""}${!selectedArtist && activeView === "understand" ? " is-understand" : ""}`} ref={scrollRef}>
+        <div className={`tremplin-scroll${!selectedArtist && (activeView === "application" || activeView === "dashboard") ? " is-workspace" : ""}${!selectedArtist && activeView === "discover" && homeWallRailId !== null ? " is-home-wall" : ""}${!selectedArtist && activeView === "home" ? " is-understand" : ""}`} ref={scrollRef}>
           {flow ? <TremplinTokenFlow artist={flow.artist} token={flow.token} initialMode={flow.mode} backLabel={getTremplinReturnLabel(location.state)} onClose={closeFlow} onConfirm={(operation) => { setToast(`${operation.operation === "purchase" ? "Achat" : "Revente"} simulé pour ${flow.artist.name}. Aucune transaction réelle n’a été effectuée.`); }} /> : mainContent}
         </div>
       </div>
