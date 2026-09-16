@@ -5,14 +5,13 @@ import { X } from 'lucide-react';
 import { configure, updateToken, type MobileConfig } from './runtime';
 import FeatureDock, { featureItems } from '../shared-ui/FeatureDock';
 
-const native = (destination: string) => location.assign(`https://appassets.androidplatform.net/native/${destination}`);
+const native = (destination: string, route?: string) => location.assign(`https://appassets.androidplatform.net/native/${destination}${route ? `?route=${encodeURIComponent(route)}` : ""}`);
 function Shell({ Page }: { Page: React.ComponentType }) {
   const route = useLocation();
   const navigate = useNavigate();
   const [notice, setNotice] = useState('');
   useEffect(() => {
-    if (route.pathname.startsWith('/messages')) native('messages');
-    else if (route.pathname.startsWith('/tremplin')) native('tremplin');
+    if (['messages','tremplin','market','scene'].includes(route.pathname.split('/')[1])) native(route.pathname.split('/')[1], route.pathname + route.search + route.hash);
     else if (!route.pathname.startsWith('/profile')) native('globe');
   }, [route.pathname]);
   useEffect(() => {
@@ -28,7 +27,7 @@ function Shell({ Page }: { Page: React.ComponentType }) {
     <Page />
     <FeatureDock active="profile" onSelect={id => {
       if (id === 'profile') navigate('/profile');
-      else if (['messages','tremplin','globe'].includes(id)) native(id);
+      else if (['messages','tremplin','market','scene','globe'].includes(id)) native(id);
       else setNotice(`${featureItems.find(item => item.id === id)?.label} n’est pas encore disponible dans cette version Android.`);
     }} />
     {notice && <aside className="mobile-profile-notice" role="status">{notice}<button aria-label="Fermer" onClick={() => setNotice('')}><X size={18}/></button></aside>}

@@ -2,6 +2,7 @@ package com.meewav.android.features.messaging
 
 import android.Manifest
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.Uri
@@ -30,6 +31,8 @@ import androidx.activity.SystemBarStyle
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.meewav.android.BuildConfig
 import com.meewav.android.app.MeewavApplication
@@ -52,6 +55,9 @@ open class MessagingActivity : ComponentActivity() {
     private val PAGE get() = "$ORIGIN/$assetSurface/index.html"
     private lateinit var web: WebView
     private lateinit var container: FrameLayout
+    private var fullscreenView: View? = null
+    private var fullscreenCallback: WebChromeClient.CustomViewCallback? = null
+    private var orientationBeforeVideo = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
     private var pageReady = false
     private var started = false
     private var resumed = false
@@ -147,7 +153,7 @@ open class MessagingActivity : ComponentActivity() {
                 // BytePlus reads DOM storage during module initialization. The
                 // Auth client still has persistSession=false; refresh tokens
                 // remain exclusively in the native encrypted session manager.
-                domStorageEnabled = assetSurface in setOf("messaging", "tremplin")
+                domStorageEnabled = assetSurface in setOf("messaging", "tremplin", "market", "scene")
                 databaseEnabled = false
                 allowFileAccess = false; allowContentAccess = true
                 allowFileAccessFromFileURLs = false; allowUniversalAccessFromFileURLs = false
@@ -159,6 +165,20 @@ open class MessagingActivity : ComponentActivity() {
         }
         container.addView(web, FrameLayout.LayoutParams(-1, -1))
         web.webChromeClient = object : WebChromeClient() {
+            override fun onShowCustomView(view: View, callback: CustomViewCallback) {
+                if (assetSurface != "scene" || fullscreenView != null) { callback.onCustomViewHidden(); return }
+                fullscreenView = view
+                fullscreenCallback = callback
+                orientationBeforeVideo = requestedOrientation
+                requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                web.visibility = View.GONE
+                container.addView(view, FrameLayout.LayoutParams(-1, -1))
+                WindowCompat.getInsetsController(window, container).apply {
+                    systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                    hide(WindowInsetsCompat.Type.systemBars())
+                }
+            }
+            override fun onHideCustomView() { closeFullscreenVideo() }
             override fun onShowFileChooser(view: WebView, callback: ValueCallback<Array<Uri>>, params: FileChooserParams): Boolean {
                 if (view.url != PAGE) return false
                 fileResult?.onReceiveValue(null); fileResult = callback
@@ -220,10 +240,12 @@ open class MessagingActivity : ComponentActivity() {
                 }
                 if (request.isForMainFrame && request.method == "GET" && request.url.scheme == "https"
                     && request.url.host == "appassets.androidplatform.net"
-                    && request.url.path in setOf("/native/messages", "/native/profile", "/native/tremplin")) {
+                    && request.url.path in setOf("/native/messages", "/native/profile", "/native/tremplin", "/native/market", "/native/scene")) {
                     val destination = when (request.url.path) {
                         "/native/profile" -> com.meewav.android.features.profile.ProfileActivity::class.java
                         "/native/tremplin" -> com.meewav.android.features.tremplin.TremplinActivity::class.java
+                        "/native/market" -> com.meewav.android.features.market.MarketActivity::class.java
+                        "/native/scene" -> com.meewav.android.features.scene.SceneActivity::class.java
                         else -> MessagingActivity::class.java
                     }
                     startActivity(Intent(this@MessagingActivity, destination)
@@ -266,6 +288,8 @@ open class MessagingActivity : ComponentActivity() {
                 if (request.isForMainFrame) showUnavailable(when (assetSurface) {
                     "profile" -> "Le profil n’a pas pu s’ouvrir."
                     "tremplin" -> "Le Tremplin n’a pas pu s’ouvrir."
+                    "market" -> "Le Marketplace n’a pas pu s’ouvrir."
+                    "scene" -> "La Scène n’a pas pu s’ouvrir."
                     else -> "La messagerie n’a pas pu s’ouvrir."
                 })
             }
@@ -303,7 +327,8 @@ open class MessagingActivity : ComponentActivity() {
         }
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (pageReady && started) web.evaluateJavascript("window.meewavMessaging?.back?.()", null) else finish()
+                if (fullscreenView != null) closeFullscreenVideo()
+                else if (pageReady && started) web.evaluateJavascript("window.meewavMessaging?.back?.()", null) else finish()
             }
         })
         web.loadUrl(PAGE)
@@ -327,6 +352,18 @@ open class MessagingActivity : ComponentActivity() {
                 }
             }
         } else if (!preview) showUnavailable("Connecte-toi à Meewav pour retrouver tes conversations.")
+    }
+
+    private fun closeFullscreenVideo() {
+        val view = fullscreenView ?: return
+        fullscreenView = null
+        container.removeView(view)
+        web.visibility = View.VISIBLE
+        requestedOrientation = orientationBeforeVideo
+        WindowCompat.getInsetsController(window, container).show(WindowInsetsCompat.Type.systemBars())
+        val callback = fullscreenCallback
+        fullscreenCallback = null
+        callback?.onCustomViewHidden()
     }
 
     private fun sendConfiguration() {
@@ -396,6 +433,7 @@ open class MessagingActivity : ComponentActivity() {
         super.onPause()
     }
     override fun onStop() {
+        closeFullscreenVideo()
         stopped = true
         voicePermissionId = null; voice.abort()
         mediaPermissionRequest?.deny(); mediaPermissionRequest = null

@@ -15,13 +15,13 @@ function Shell({ Page }: { Page: React.ComponentType }) {
   const [notice, setNotice] = useState('');
   const select = (id: string) => {
     if (id === 'tremplin') navigate('/tremplin');
-    else if (['profile', 'messages', 'globe'].includes(id)) native(id);
+    else if (['profile', 'messages', 'market', 'scene', 'globe'].includes(id)) native(id);
     else setNotice(`${featureItems.find(item => item.id === id)?.label ?? 'Cette destination'} n’est pas encore disponible dans cette version Android.`);
   };
   useEffect(() => {
     if (route.pathname.startsWith('/tremplin')) return;
     const destination = route.pathname.split('/')[1];
-    if (['messages', 'profile'].includes(destination)) native(destination, route.pathname + route.search);
+    if (['messages', 'profile', 'market', 'scene'].includes(destination)) native(destination, route.pathname + route.search);
     else if (['globe', 'mon-globe'].includes(destination)) native('globe');
     else setNotice(`${featureItems.find(item => item.id === destination)?.label ?? 'Cette destination'} n’est pas encore disponible dans cette version Android.`);
     navigate(-1);

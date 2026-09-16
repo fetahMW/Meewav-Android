@@ -27,6 +27,8 @@ class MainActivity : ComponentActivity() {
     companion object {
         const val EXTRA_OPEN_GLOBE = "com.meewav.android.OPEN_GLOBE"
         const val EXTRA_OPEN_MESSAGES = "com.meewav.android.OPEN_MESSAGES"
+        const val EXTRA_OPEN_MARKET = "com.meewav.android.OPEN_MARKET"
+        const val EXTRA_OPEN_SCENE = "com.meewav.android.OPEN_SCENE"
         const val EXTRA_OPEN_TREMPLIN = "com.meewav.android.OPEN_TREMPLIN"
         const val EXTRA_LIVE_AUTH = "com.meewav.android.LIVE_AUTH"
         // Temporary Profile workshop entry. Set false to restore authentication.
@@ -40,6 +42,8 @@ class MainActivity : ComponentActivity() {
             && !intent.getBooleanExtra(EXTRA_LIVE_AUTH, false)
             && !intent.getBooleanExtra(EXTRA_OPEN_GLOBE, false)) {
             val workshop = when {
+                intent.getBooleanExtra(EXTRA_OPEN_MARKET, false) -> com.meewav.android.features.market.MarketActivity::class.java
+                intent.getBooleanExtra(EXTRA_OPEN_SCENE, false) -> com.meewav.android.features.scene.SceneActivity::class.java
                 intent.getBooleanExtra(EXTRA_OPEN_TREMPLIN, false) -> com.meewav.android.features.tremplin.TremplinActivity::class.java
                 intent.getBooleanExtra(EXTRA_OPEN_MESSAGES, false) -> MessagingActivity::class.java
                 else -> ProfileActivity::class.java
