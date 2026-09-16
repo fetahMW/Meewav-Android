@@ -1,0 +1,60 @@
+/* Native discovery: no desktop carousel arrows or fixed-height nested cards. */
+#root .mobile-tremplin .tremplin-home-discovery { --discovery-copy-inset: 0px; }
+#root .mobile-tremplin .tremplin-home-discovery .meewav-rail-edges { display: none; }
+#root .mobile-tremplin .tremplin-home-rail__viewport-shell { margin-inline: 0; }
+#root .mobile-tremplin .tremplin-home-rail { margin-top: 14px; padding-top: 0; }
+#root .mobile-tremplin .tremplin-home-rail.is-featured { --tremplin-rail-card-width: min(84vw,330px); margin-top: 0; }
+#root .mobile-tremplin .tremplin-home-rail.is-featured .tremplin-home-rail__track > div { height: auto; align-self: stretch; }
+#root .mobile-tremplin .tremplin-home-rail__header { padding-inline: 0; gap: 12px; }
+#root .mobile-tremplin .tremplin-home-rail__header > div > h2 { font-size: 20px; line-height: 1.2; margin: 5px 0; }
+#root .mobile-tremplin .tremplin-home-rail__header > div > p { font-size: 11px; line-height: 1.5; margin: 4px 0; }
+#root .mobile-tremplin .tremplin-home-rail__header > div > span { font-size: 9px; letter-spacing: .1em; }
+#root .mobile-tremplin .tremplin-home-rail__header-actions { gap: 0; }
+#root .mobile-tremplin .tremplin-home-rail__more { min-height: 38px; color: #c6b5e1; }
+#root .mobile-tremplin .tremplin-home-rail__more svg { display: none; }
+.td-featured { display: flex; flex-direction: column; gap: 11px; height: 100%; min-height: 0; padding: 13px; border: 1px solid #c8bcdf38; border-radius: 18px; background: linear-gradient(140deg,#191820e8,#0b0b11f2 65%); box-shadow: inset 0 1px #ffffff10,0 5px 14px #0003; color: #f2eef7; box-sizing: border-box; }
+.td-featured button { font: inherit; color: inherit; cursor: pointer; }
+.td-featured-top { display: grid; grid-template-columns: 99px minmax(0,1fr); gap: 12px; align-items: center; }
+.td-featured-art { position: relative; height: 112px; overflow: hidden; border-radius: 12px; }
+.td-featured-art img { width: 100%; height: 100%; object-fit: cover; object-position: center 28%; }
+.td-featured-art > button { position: absolute; inset: 0; border: 0; background: transparent; }
+.td-featured-art .td-featured-play { inset: auto 6px 6px auto; display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid #c8bcdf60; border-radius: 50%; background: #12111bcc; backdrop-filter: blur(12px); }
+.td-featured-identity { min-width: 0; }
+.td-featured-badge { display: flex; align-items: center; justify-content: space-between; gap: 5px; height: 32px; }
+.td-featured-badge > span { color: #baa6d7; font-size: 8px; letter-spacing: .1em; }
+.td-featured-identity > button { display: block; max-width: 100%; padding: 5px 0; text-align: left; border: 0; background: transparent; }
+#root .td-featured h3 { margin: 0; font-size: 18px; font-weight: 650; line-height: 1.2; letter-spacing: -.025em; }
+#root .td-featured-identity p { font-size: 11px; line-height: 1.35; margin: 2px 0 5px; color: #c8c0d4; }
+.td-featured-identity small { font-size: 10px; line-height: 1.4; color: #9791a4; }
+.td-featured-project { display: grid; gap: 4px; }
+.td-featured-project > span { font-size: 8px; letter-spacing: .1em; color: #a69ab7; }
+.td-featured-project > strong { font-size: 13px; line-height: 1.4; font-weight: 550; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.td-featured .td-featured-token { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 59px; padding: 9px 0; margin-top: auto; border: 0; border-block: 1px solid #c8bcdf20; border-radius: 0; background: transparent; text-align: left; }
+.td-featured-token > span { min-width: 0; display: grid; gap: 4px; color: #c6b8db; font-size: 10px; }
+.td-featured-token small { color: #9891a4; font-size: 9px; line-height: 1.35; }
+.td-featured-token .td-featured-value { flex-shrink: 0; text-align: right; }
+.td-featured-value > strong { font-size: 17px; color: #f4f0f8; }
+.td-featured-token .tremplin-token-change24h { font-size: 9px; }
+.td-featured footer { display: flex; align-items: center; gap: 8px; }
+.td-featured footer button { display: flex; justify-content: center; align-items: center; height: 42px; padding: 0; min-width: 42px; border-radius: 12px; border: 1px solid #c8bcdf26; background: #15131d; }
+.td-featured footer .td-featured-primary { flex: 1; padding-inline: 10px; background: var(--mobile-violet-cta); border-color: var(--mobile-cta-rim); font-size: 12px; font-weight: 600; }
+.td-featured-follow[aria-pressed="true"] { color: #c7afea; border-color: #a28acb70; }
+/* Keep the approved 210px thumbnail chassis; redistribute its existing rows. */
+#root .mobile-tremplin .tremplin-project-mini { height: 210px; }
+#root .mobile-tremplin .tremplin-project-mini__body { padding: 9px 10px; gap: 0; }
+#root .mobile-tremplin .tremplin-project-mini__body header { min-height: 30px; }
+#root .mobile-tremplin .tremplin-project-mini__body header strong { font-size: 13px; -webkit-line-clamp: 1; }
+#root .mobile-tremplin .tremplin-project-mini__discipline { -webkit-line-clamp: 1; margin: 2px 0; font-size: 10px; }
+#root .mobile-tremplin .tremplin-project-mini__city { font-size: 9px; line-height: 1.4; }
+#root .mobile-tremplin .tremplin-project-mini__project { -webkit-line-clamp: 1; margin: 5px 0; font-size: 11px; line-height: 1.5; }
+#root .mobile-tremplin .td-mini-token { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 5px; min-height: 42px; width: 100%; padding: 5px 0; margin-top: auto; border: 0; border-top: 1px solid #c8bcdf20; background: transparent; text-align: left; }
+.td-mini-token > span:first-child { display: grid; gap: 3px; }
+.td-mini-token small { font-size: 8px; line-height: 1.25; color: #a99abc; }
+.td-mini-token > span > strong { font-size: 13px; font-weight: 650; color: #f3eef8; }
+.td-mini-token .tremplin-token-change24h { display: grid; justify-items: end; gap: 1px; font-size: 8px; }
+.td-mini-token .tremplin-token-change24h > span[aria-hidden] { display: none; }
+.td-mini-token .td-mini-status { font-size: 9px; color: #bba8d4; line-height: 1.4; }
+#root .mobile-tremplin .tremplin-project-mini__body footer { margin-top: 0; min-height: 32px; }
+#root .mobile-tremplin .tremplin-project-mini__body footer button { min-height: 32px; }
+#root .mobile-tremplin .tremplin-project-mini__body footer .tremplin-project-mini__follow { width: 32px; height: 32px; }
+.tm-artist-copy footer .tm-price { color: #f2eefa; font-size: 12px; white-space: nowrap; }

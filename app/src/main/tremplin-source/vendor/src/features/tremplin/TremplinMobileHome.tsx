@@ -4,6 +4,7 @@ import type { TremplinPublicHomeProps } from './TremplinPublicHome';
 import { tremplinArtists } from './tremplinArtistData';
 import { getTremplinTokenLifecycleStage, isPublicTremplinTalent } from './tremplinProductModel';
 import { getTremplinArtistToken } from './tremplinTokenData';
+import { formatTremplinTokenPrice } from './tremplinDiscoveryToken';
 import { getTremplinProjectSnapshot } from './tremplinProjectData';
 import { getTremplinProfessionLabel } from './tremplinRoleData';
 import { TREMPLIN_HOME_TOKEN_STATUS_UI } from './tremplinHomeTokenStatus';
@@ -74,10 +75,11 @@ export default function TremplinMobileHome(props: TremplinPublicHomeProps) {
           const project = getTremplinProjectSnapshot(artist);
           const stage = getTremplinTokenLifecycleStage(artist);
           const status = TREMPLIN_HOME_TOKEN_STATUS_UI[stage];
+          const token = getTremplinArtistToken(artist.id);
           const playing = props.playingArtistId === artist.id;
           return <article className="tm-artist" key={artist.id}>
             <div className="tm-artwork"><button aria-label={`Voir le projet de ${artist.name}`} onClick={() => openArtist(artist)}><img src={artist.artwork || artist.portrait} alt="" loading="lazy" /></button><span>{artist.city}</span><button className="tm-preview" aria-label={`${playing ? 'Mettre en pause' : 'Écouter'} ${artist.name}`} onClick={() => props.onToggleArtistAudio(artist.id)}>{playing ? <Pause size={18} /> : <Play size={18} fill="currentColor" />}</button></div>
-            <div className="tm-artist-copy"><header><div><h3>{artist.name}</h3><p>{getTremplinProfessionLabel(artist)} · {artist.styles[0]}</p></div><MeewavGradeBadge level={artist.gradeLevel} variant="icon" size="sm" /></header><p className="tm-project">{project.headline}</p><footer><span>{status.label}</span><button aria-label={`Découvrir ${artist.name}`} onClick={() => openArtist(artist)}><ArrowRight size={18} /></button></footer></div>
+            <div className="tm-artist-copy"><header><div><h3>{artist.name}</h3><p>{getTremplinProfessionLabel(artist)} · {artist.styles[0]}</p></div><MeewavGradeBadge level={artist.gradeLevel} variant="icon" size="sm" /></header><p className="tm-project">{project.headline}</p><footer><span>{status.label}</span>{status.showPrice && token && <strong className="tm-price">{formatTremplinTokenPrice(token.currentValueEur)}</strong>}<button aria-label={`Découvrir ${artist.name}`} onClick={() => openArtist(artist)}><ArrowRight size={18} /></button></footer></div>
           </article>;
         })}
       </div>
@@ -103,3 +105,4 @@ export default function TremplinMobileHome(props: TremplinPublicHomeProps) {
     </dialog>
   </div>;
 }
+
