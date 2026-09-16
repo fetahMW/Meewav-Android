@@ -136,3 +136,21 @@ L’illustration conserve le recadrage Web avec son ratio 552/320. La hauteur fi
 qui l’aplatissait est supprimée, sans modification du fichier ni de sa résolution.
 Cette passe porte sur la présentation ; aucune nouvelle recette visuelle ou
 fonctionnelle automatique n’est lancée. Compilation uniquement pour livraison.
+
+## Trois onglets — fusion Accueil et Comprendre
+
+À la demande explicite de l’utilisateur, le Tremplin ne présente plus que trois
+onglets : Accueil, Découvrir, Mes artistes. L’onglet Comprendre est retiré et sa
+surface de lecture devient l’Accueil : introduction, illustration, trois étapes,
+CTA Découvrir, puis les lignes dépliables vidéo, destinations et jetons.
+
+L’explication des six grades n’est plus repliée : `TremplinGradeProgression`
+s’affiche directement dans l’Accueil, entre le CTA et les lignes dépliables,
+avec la note sur la reconnaissance d’un parcours antérieur. L’ancre
+`#tremplin-grades` est conservée pour les liens profonds.
+
+La route `/tremplin/comprendre` n’est plus enregistrée : les anciens liens
+retombent sur l’Accueil. Les destinations `understand` du modèle produit
+renvoient désormais vers `home`. Les compositions `TremplinMobileHome` et
+`TremplinPublicHome` restent dans le dépôt pour référence, sans être importées.
+Compilation Android réussie ; aucune recette visuelle automatique n’est lancée.

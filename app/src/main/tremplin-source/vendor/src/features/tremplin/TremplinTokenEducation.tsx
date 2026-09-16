@@ -237,6 +237,9 @@ export default function TremplinTokenEducation({ onDiscover, onOpenRoute }: Trem
     </ol>
     <p className="tg-essential">Le prix peut baisser. Aucun gain n’est garanti et la revente peut prendre du temps.</p>
     <button type="button" className="tg-primary" onClick={() => { trackTremplinEvent("how_it_works_completed"); onDiscover(); }}>Découvrir les artistes <ArrowRight size={18} /></button>
+    <TremplinGradeProgression id="tremplin-grades">
+      <p className="tg-career">Un parcours professionnel antérieur peut être reconnu après vérification. Dès le niveau 2, une demande de jeton est possible ; MeeWav reste libre de l’accepter ou de la refuser.</p>
+    </TremplinGradeProgression>
     <div className="tg-details">
       <details onToggle={event => setVideoOpen(event.currentTarget.open)}>
         <summary><PlayCircle size={18} /><span>En vidéo · 1 min 40</span><ChevronRight size={17} /></summary>
@@ -245,12 +248,6 @@ export default function TremplinTokenEducation({ onDiscover, onOpenRoute }: Trem
       <details>
         <summary><span>Où trouver les artistes ?</span><ChevronRight size={17} /></summary>
         <div className="tg-answer tg-destinations">{DISCOVERY_CHANNELS.map(({id,icon: Icon,title,detail,route}) => <button key={id} type="button" onClick={() => onOpenRoute(route)}><Icon size={20} /><span><strong>{title}</strong><small>{detail}</small></span><ArrowRight size={16} /></button>)}</div>
-      </details>
-      <details id="tremplin-grades" tabIndex={-1}>
-        <summary><span>À quoi servent les grades ?</span><ChevronRight size={17} /></summary>
-        <div className="tg-answer"><TremplinGradeProgression id="tremplin-grade-explanation">
-          <p className="tg-career">Un parcours professionnel antérieur peut être reconnu après vérification. Dès le niveau 2, une demande de jeton est possible ; MeeWav reste libre de l’accepter ou de la refuser.</p>
-        </TremplinGradeProgression></div>
       </details>
       <details id="tremplin-token-mw" tabIndex={-1}>
         <summary><span>Comment fonctionnent les jetons ?</span><ChevronRight size={17} /></summary>
