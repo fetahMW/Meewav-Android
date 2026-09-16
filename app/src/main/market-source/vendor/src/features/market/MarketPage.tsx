@@ -797,6 +797,47 @@ export default function MarketPage() {
   }, [toast]);
 
   useEffect(() => {
+    const menu = (event: Event) => {
+      const action = (event as CustomEvent<string>).detail;
+      if (action === "cart") {
+        event.preventDefault();
+        setSelectedProduct(null);
+        setPopover(null);
+        setDrawer("cart");
+        return;
+      }
+      if (action === "favorites") {
+        event.preventDefault();
+        setSelectedProduct(null);
+        setPopover(null);
+        setDrawer(null);
+        setSellerDraftsOpen(false);
+        setShowFavoritesOnly(true);
+        setMarketFilters((filters) => ({ ...filters, favoritesOnly: true }));
+        setViewMode("catalog");
+        return;
+      }
+      if (action === "listings") {
+        event.preventDefault();
+        if (!marketLive.active) {
+          setToast("Les brouillons du compte sont disponibles avec une session Supabase.");
+          return;
+        }
+        setSelectedProduct(null);
+        setPopover(null);
+        setDrawer(null);
+        setShowFavoritesOnly(false);
+        setMarketFilters((filters) => ({ ...filters, favoritesOnly: false }));
+        setQuery("");
+        setSellerDraftsOpen(true);
+        window.requestAnimationFrame(resetMarketScroll);
+      }
+    };
+    window.addEventListener("meewav:feature-menu", menu);
+    return () => window.removeEventListener("meewav:feature-menu", menu);
+  }, [marketLive.active]);
+
+  useEffect(() => {
     const onKeyDown = (event: globalThis.KeyboardEvent) => {
       if (
         (event.metaKey || event.ctrlKey)

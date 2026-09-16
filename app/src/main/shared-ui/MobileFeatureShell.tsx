@@ -1,15 +1,24 @@
 import React, { Component, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, X } from 'lucide-react';
+import { ClipboardList, Heart, History, Menu, Package, Settings, ShoppingCart, Undo2, X } from 'lucide-react';
 import FeatureDock from './FeatureDock';
 import { configure, updateToken, type MobileConfig } from '../profile-source/runtime';
 
 const native = (destination: string, route?: string) => location.assign(`https://appassets.androidplatform.net/native/${destination}${route ? `?route=${encodeURIComponent(route)}` : ''}`);
+const FEATURE_MENU_ITEMS = [
+  { action: 'transactions', label: 'Historique des transactions', icon: History },
+  { action: 'orders', label: 'Mes commandes', icon: Package },
+  { action: 'listings', label: 'Mes annonces', icon: ClipboardList },
+  { action: 'favorites', label: 'Mes favoris', icon: Heart },
+  { action: 'cart', label: 'Mon panier', icon: ShoppingCart },
+  { action: 'settings', label: 'Réglages', icon: Settings },
+] as const;
 export function mountFeature(id: 'market' | 'scene', title: string, load: () => Promise<{ default: React.ComponentType }>) {
   function Shell({ Page }: { Page: React.ComponentType }) {
     const route = useLocation(), navigate = useNavigate();
     const [notice, setNotice] = useState('');
+    const [menuOpen, setMenuOpen] = useState(false);
     const back = () => {
       if (document.fullscreenElement) { void document.exitFullscreen(); return; }
       const close = [...document.querySelectorAll<HTMLButtonElement>('[role="dialog"]:not([aria-hidden="true"]) button[aria-label^="Fermer"]')]
@@ -20,6 +29,19 @@ export function mountFeature(id: 'market' | 'scene', title: string, load: () => 
       else if (route.pathname !== `/${id}` || route.search) navigate(`/${id}`, { replace: true });
       else native('back');
     };
+    const menuAction = (action: string) => {
+      setMenuOpen(false);
+      if (action === 'back') { back(); return; }
+      if (window.dispatchEvent(new CustomEvent('meewav:feature-menu', { detail: action, cancelable: true }))) {
+        setNotice('Cette section sera disponible dans une prochaine étape.');
+      }
+    };
+    useEffect(() => {
+      if (!menuOpen) return;
+      const close = (event: KeyboardEvent) => { if (event.key === 'Escape') setMenuOpen(false); };
+      window.addEventListener('keydown', close);
+      return () => window.removeEventListener('keydown', close);
+    }, [menuOpen]);
     useEffect(() => { (window as any).meewavMessaging.back = back; }, [route]);
     useEffect(() => {
       const destination = route.pathname.split('/')[1];
@@ -35,7 +57,14 @@ export function mountFeature(id: 'market' | 'scene', title: string, load: () => 
       return () => window.clearTimeout(timer);
     }, [notice]);
     return <div className={`mobile-profile mobile-feature mobile-${id}`}>
-      <button className="mobile-feature-back" aria-label="Retour" onClick={back}><ArrowLeft /></button>
+      <button className="mobile-feature-back" aria-label="Menu" aria-haspopup="menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(open => !open)}><Menu /></button>
+      {menuOpen && <>
+        <button className="mobile-feature-menu-backdrop" aria-hidden="true" tabIndex={-1} onClick={() => setMenuOpen(false)} />
+        <nav className="mobile-feature-menu" aria-label="Menu rapide">
+          {FEATURE_MENU_ITEMS.map(item => <button key={item.action} type="button" role="menuitem" onClick={() => menuAction(item.action)}><item.icon aria-hidden="true" /><span>{item.label}</span></button>)}
+          <button type="button" role="menuitem" className="mobile-feature-menu__back" onClick={() => menuAction('back')}><Undo2 aria-hidden="true" /><span>Retour</span></button>
+        </nav>
+      </>}
       <button className="mobile-profile-close" aria-label="Fermer l’application" onClick={() => native('close-app')}><X /></button>
       <Page />
       <FeatureDock active={id} onSelect={destination => {
