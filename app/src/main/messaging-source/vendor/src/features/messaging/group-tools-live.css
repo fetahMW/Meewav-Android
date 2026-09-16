@@ -1,0 +1,34 @@
+/* Durable tools use the established group materials without the demo's
+   two-column hero, which reserves space for fictional session participants. */
+.messaging-page .agw-panel .agw-tools-live .agw-next-session {
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 0;
+}
+.messaging-page .agw-panel .agw-tools-live .agw-next-session__primary {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  min-width: 0;
+  padding: 22px;
+  border-right: 0;
+}
+.messaging-page .agw-panel .agw-tools-live .agw-decision-card { padding: 0; }
+.messaging-page .agw-panel .agw-tools-live .agw-next-session__primary h3 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.messaging-page .agw-panel .agw-tools-live .agw-next-session__primary p { margin: 0; }
+.messaging-page .agw-panel .agw-tools-live .agw-next-session__actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.messaging-page .agw-panel .agw-tools-live .agw-vote-options {
+  grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr));
+  margin: 0;
+}
+.messaging-page .agw-panel .agw-tools-live .agw-vote-options button { overflow-wrap: anywhere; }
+.messaging-page .agw-panel .agw-tools-live .agw-primary-button {
+  background: var(--meewav-violet-urbain-cta, linear-gradient(135deg, #4f359e, #4c2fa9));
+  border-color: var(--meewav-violet-urbain-rim, #6243c057);
+}
+.messaging-page .agw-panel .agw-tools-live button { min-height: 44px; }

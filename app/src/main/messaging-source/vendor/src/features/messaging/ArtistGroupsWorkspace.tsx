@@ -63,6 +63,7 @@ import type {
   MessagingArtistGroupVisibility,
 } from "./messaging.groups.types";
 import { playMessageSound } from "./messagingSounds";
+import GroupToolsLive from "./GroupToolsLive";
 import "./artist-groups-workspace.css";
 
 type GroupPanel = "chat" | "planning" | "members" | "decisions" | "projects" | "settings";
@@ -1423,8 +1424,15 @@ export default function ArtistGroupsWorkspace({
   const renderActivePanel = () => {
     if (!activeGroup || !panel) return null;
     if (panel.view === "chat") return renderChat(activeGroup);
-    if (liveMode && panel.view === "planning") return renderUnavailablePanel(activeGroup, "planning", "Planning du groupe", "Les sessions nécessitent le futur backend de planning.");
-    if (liveMode && panel.view === "decisions") return renderUnavailablePanel(activeGroup, "decisions", "Décisions du groupe", "Les votes nécessitent le futur backend de décisions.");
+    if (liveMode && (panel.view === "planning" || panel.view === "decisions")) return (
+      <PanelShell className={`agw-panel--${panel.view}`} title={activeGroup.name}
+        eyebrow={panel.view === "planning" ? "PLANNING DU GROUPE" : "DÉCISIONS DU GROUPE"}
+        onBack={() => openPanel(activeGroup.id, "chat")} toolbar={renderGroupToolbar(activeGroup, panel.view)}
+        sideActions={renderGroupSideAction(activeGroup, panel.view)} hideClose>
+        <GroupToolsLive key={`${activeGroup.id}:${panel.view}`} groupId={activeGroup.id}
+          kind={panel.view === "planning" ? "session" : "decision"} revision={activeGroup} readOnly={activeGroup.server?.lifecycle !== "active"} />
+      </PanelShell>
+    );
     if (liveMode && panel.view === "projects") return renderUnavailablePanel(activeGroup, "projects", "Projets liés", "Les liens avec les projets nécessitent leur contrat serveur dédié.");
     if (panel.view === "planning") return renderPlanning(activeGroup);
     if (panel.view === "members") return renderMembers(activeGroup);
