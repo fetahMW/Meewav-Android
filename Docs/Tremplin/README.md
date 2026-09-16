@@ -88,3 +88,27 @@ Les données et callbacks proviennent toujours du Tremplin Web importé. Les
 captures demandées sont conservées localement sous
 `app/build/reports/tremplin/discover/` (non versionnées). Cette passe concerne
 la présentation mobile, sans changer les simulations ni leur câblage serveur.
+
+## Comprendre et Mes artistes — adaptation mobile du 16 septembre
+
+Passe demandée avec captures sur le Samsung, conservées localement dans
+`app/build/reports/tremplin/final-tabs/` (non versionnées).
+
+Comprendre conserve le contenu pédagogique Web et ses interactions : introduction
+courte, sélecteur de chapitres, illustrations recadrées par CSS, cartes de
+navigation horizontales, six grades tactiles, exemple chiffré et règles détaillées.
+Les grilles et hauteurs fixes Web sont remplacées par du contenu à hauteur naturelle.
+Les panneaux vidéo et règles restent défilables et passent devant la navigation.
+Le sélecteur suit le chapitre affiché pendant le défilement.
+
+Mes artistes garde les fixtures investisseurs et les callbacks existants. Aperçu
+regroupe les indicateurs dans une seule surface et les jetons dans un rail tactile.
+Les autres rubriques accèdent directement à leur contenu via le sélecteur : jetons,
+artistes suivis, Rooms et activité. Les opérations sont des lignes mobiles avec
+montant et statut visibles, sans tableau de 720 px. Les filtres, rappels, liens
+profils et parcours de jetons sont conservés. Chaque changement de rubrique
+revient au haut du contenu. Matériaux noir/gris, CTA violet urbain et bandeaux
+translucides restent cohérents avec Profil et Messagerie.
+
+La compilation Android réussit. Cette passe de présentation et d’interactions
+locales ne constitue pas une validation du serveur ni des transactions de jetons.

@@ -264,6 +264,24 @@ export default function TremplinTokenEducation({
   const tokenRulesDialogRef = useRef<HTMLElement>(null);
   const featuredArtist = tremplinArtists[0];
 
+  useEffect(() => {
+    const scroller = document.querySelector('.tremplin-scroll');
+    if (!scroller) return;
+    let frame = 0;
+    const updateChapter = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const top = scroller.getBoundingClientRect().top + 110;
+        const ids = ['tremplin-discovery', 'tremplin-follow', 'tremplin-grades', 'tremplin-token-mw'];
+        const current = ids.filter(id => (document.getElementById(id)?.getBoundingClientRect().top ?? Infinity) <= top).at(-1);
+        if (current) setChapter(current);
+      });
+    };
+    scroller.addEventListener('scroll', updateChapter, { passive: true });
+    updateChapter();
+    return () => { scroller.removeEventListener('scroll', updateChapter); cancelAnimationFrame(frame); };
+  }, []);
+
   const openTokenRules = () => {
     setOpenTokenDetail(null);
     setTokenRulesOpen(true);

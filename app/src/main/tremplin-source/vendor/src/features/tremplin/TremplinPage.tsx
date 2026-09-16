@@ -957,6 +957,7 @@ function MyArtistsView({
   const changeTab = (nextTab: MyArtistsTab) => {
     setTab(nextTab);
     onNavigationChange(nextTab, "holdings");
+    requestAnimationFrame(() => document.querySelector('.tremplin-scroll')?.scrollTo({ top: 0, behavior: 'instant' }));
   };
   const markRead = (activityId: string) => onSessionStateChange({ ...sessionState, readUpdateIds: new Set(readUpdateIds).add(activityId) });
   const markAllRead = () => onSessionStateChange({ ...sessionState, readUpdateIds: new Set(fixture.activities.map(({ id }) => id)) });

@@ -85,3 +85,10 @@
 #root .mobile-tremplin .tremplin-my-dashboard__empty { padding: 22px 16px; min-height: 0; border-radius: 18px; background: #121018e6; }
 #root .mobile-tremplin .tremplin-my-dashboard__empty p { font-size: 13px; line-height: 1.5; }
 #root .mobile-tremplin .tremplin-my-dashboard__empty button { min-height: 44px; background: var(--mobile-violet-cta); border-radius: 12px; }
+#root .mobile-tremplin .tremplin-my-dashboard__rooms article footer { grid-template-columns: repeat(2,minmax(0,1fr)); }
+#root .mobile-tremplin .tremplin-my-dashboard__rooms article { box-shadow: none; }
+#root .mobile-tremplin .tremplin-my-dashboard__followed article > .mw-grade-badge { --mw-grade-size: 32px !important; width: 32px; height: 32px; }
+#root .mobile-tremplin .tremplin-my-dashboard__feed-filters .is-checkbox { background: none; box-shadow: none; border: 0; padding: 0; }
+#root .mobile-tremplin .tremplin-my-dashboard__operations article { min-width: 0; width: 100%; }
+#root .mobile-tremplin .tremplin-my-dashboard__operations { overflow: visible; }
+#root .mobile-tremplin .tremplin-my-dashboard__activity article::before { display: none; }

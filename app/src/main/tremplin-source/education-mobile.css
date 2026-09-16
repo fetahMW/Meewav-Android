@@ -97,3 +97,28 @@
 #root .mobile-tremplin .tremplin-how :is(.tremplin-how__rules-dialog,.tremplin-how__video-dialog) > header button { width: 44px; height: 44px; min-width: 0; padding: 10px; }
 #root .mobile-tremplin .tremplin-how__mw-details h3 button { min-height: 48px; font-size: 13px; padding: 10px; }
 #root .mobile-tremplin .tremplin-how__mw-details p { font-size: 12px; line-height: 1.6; }
+/* The native header already clips the content; the desktop fade darkens titles. */
+#root .mobile-tremplin .tremplin-scroll:has(.tremplin-how),#root .mobile-tremplin .tremplin-scroll:has(.tremplin-my-dashboard) { mask-image: none; -webkit-mask-image: none; }
+#root .mobile-tremplin .tremplin-how { display: grid; grid-template-columns: minmax(0,1fr); }
+#root .mobile-tremplin .tremplin-how > .tremplin-how__hero { display: block; min-height: 0; }
+#root .mobile-tremplin .tremplin-how .tremplin-how__hero > * { max-width: none; }
+#root .mobile-tremplin .tremplin-how #tremplin-grades .tremplin-gateway__grade-card { display: flex; flex-direction: column; justify-content: center; align-items: center; }
+#root .mobile-tremplin .tremplin-how #tremplin-grades h2 span { color: #bda6e6; -webkit-text-fill-color: #bda6e6; background: none; }
+#root .mobile-tremplin .tremplin-how #tremplin-discovery .tremplin-how__channel-art { background-size: 650% auto; background-position: 16% 44%; }
+#root .mobile-tremplin .tremplin-how #tremplin-discovery .is-scene .tremplin-how__channel-art { background-position: 54% 44%; }
+#root .mobile-tremplin .tremplin-how #tremplin-discovery .is-globe .tremplin-how__channel-art { background-position: 91% 44%; }
+#root .mobile-tremplin .tremplin-how #tremplin-discovery::after,#root .mobile-tremplin .tremplin-how #tremplin-discovery .tremplin-how__channels :is(article,button)::after { display: none; }
+#root .mobile-tremplin .tremplin-how #tremplin-follow :is(.tremplin-how__follow-copy > button,.tremplin-how__follow-card li button)::after { display: none; }
+#root .mobile-tremplin .tremplin-how #tremplin-token-mw .tremplin-how__mw-timeline li > span { color: #c5b1e7; border-color: #bfa5e14a; background: #4f359e24; box-shadow: none; }
+/* Pixel-exact crops of the existing Web illustration; no duplicate embedded labels. */
+#root .mobile-tremplin .tremplin-how #tremplin-discovery .tremplin-how__channel-art { background-size: 1120% auto; background-position: 25% 49%; }
+#root .mobile-tremplin .tremplin-how #tremplin-discovery .is-scene .tremplin-how__channel-art { background-position: 60% 49%; }
+#root .mobile-tremplin .tremplin-how #tremplin-discovery .is-globe .tremplin-how__channel-art { background-position: 90% 49%; }
+#root .mobile-tremplin .tremplin-how__hero h1 { text-align: left; }
+#root .mobile-tremplin .mobile-tremplin-section > button { border-radius: 11px; }
+#root .mobile-tremplin .mobile-tremplin-section > button:focus:not(:focus-visible) { outline: none; }
+#root .mobile-tremplin .mobile-tremplin-section > button:focus-visible { outline: 1px solid #bda6e6; outline-offset: -3px; }
+#root .mobile-tremplin .tremplin-page:has(.tremplin-how [role=dialog]) { z-index: 90; }
+#root .mobile-tremplin .tremplin-scroll:has(.tremplin-how [role=dialog]) { z-index: 95; overflow-y: hidden; }
+#root .mobile-tremplin .tremplin-how :is(.tremplin-how__rules-dialog,.tremplin-how__video-dialog) > header p { font-size: 12px; line-height: 1.5; }
+#root .mobile-tremplin .tremplin-how :is(.tremplin-how__rules-dialog,.tremplin-how__video-dialog) button:focus-visible { outline: 1px solid #bda6e6; outline-offset: 2px; }
