@@ -65,7 +65,6 @@ export function mountFeature(id: 'market' | 'scene' | 'rooms', title: string, lo
           <button type="button" role="menuitem" className="mobile-feature-menu__back" onClick={() => menuAction('back')}><Undo2 aria-hidden="true" /><span>Retour</span></button>
         </nav>
       </>}
-      <button className="mobile-profile-close" aria-label="Fermer l’application" onClick={() => native('close-app')}><X /></button>
       <Page />
       <FeatureDock active={id} onSelect={destination => {
         if (destination === id) navigate(`/${id}`);

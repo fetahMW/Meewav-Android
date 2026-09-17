@@ -26,7 +26,6 @@ function Shell({ Page }: { Page: React.ComponentType }) {
     };
   }, [route, navigate]);
   return <div className="mobile-profile">
-    <button className="mobile-profile-close" aria-label="Fermer l’application" onClick={() => native('close-app')}><X /></button>
     <Page />
     <FeatureDock active="profile" onSelect={id => {
       if (id === 'profile') navigate('/profile');

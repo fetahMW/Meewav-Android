@@ -58,7 +58,6 @@ function Shell({ Page }: { Page: React.ComponentType }) {
         <button onClick={() => native('close-app')}><X size={17} /> Quitter le Tremplin</button>
       </nav>
     </>}
-    <button className="mobile-profile-close" aria-label="Fermer l’application" onClick={() => native('close-app')}><X /></button>
     <Page />
     <FeatureDock active="tremplin" onSelect={select} />
     {notice && <aside className="mobile-profile-notice" role="status">{notice}<button aria-label="Fermer" onClick={() => setNotice('')}><X size={18} /></button></aside>}
