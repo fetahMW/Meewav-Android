@@ -12,7 +12,7 @@ function Shell({ Page }: { Page: React.ComponentType }) {
   const [notice, setNotice] = useState('');
   useEffect(() => {
     if (route.pathname.startsWith('/profile')) return;
-    if (['messages','tremplin','market','scene'].includes(route.pathname.split('/')[1])) native(route.pathname.split('/')[1], route.pathname + route.search + route.hash);
+    if (['messages','tremplin','market','scene','rooms'].includes(route.pathname.split('/')[1])) native(route.pathname.split('/')[1], route.pathname + route.search + route.hash);
     else if (['/globe','/mon-globe'].includes(route.pathname)) native('globe');
     navigate(-1);
   }, [route.pathname]);
@@ -30,7 +30,7 @@ function Shell({ Page }: { Page: React.ComponentType }) {
     <Page />
     <FeatureDock active="profile" onSelect={id => {
       if (id === 'profile') navigate('/profile');
-      else if (['messages','tremplin','market','scene','globe'].includes(id)) native(id);
+      else if (['messages','tremplin','market','scene','rooms','globe'].includes(id)) native(id);
       else setNotice(`${featureItems.find(item => item.id === id)?.label} n’est pas encore disponible dans cette version Android.`);
     }} />
     {notice && <aside className="mobile-profile-notice" role="status">{notice}<button aria-label="Fermer" onClick={() => setNotice('')}><X size={18}/></button></aside>}

@@ -625,7 +625,7 @@ export default function ShortsVideoPlayer({
   const beginVerticalSwipe = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
     if (!isVertical || event.pointerType === "mouse") return;
     const target = event.target instanceof Element ? event.target : null;
-    if (target?.closest("button, input, .shorts-player-controls, .shorts-player-frame__top")) return;
+    if (target?.closest("button, input, a, select, .shorts-player-controls, .shorts-player-frame__top, .scene-short-info-sheet, .scene-vertical-context")) return;
     verticalSwipeConsumedRef.current = false;
     verticalSwipeStartRef.current = {
       pointerId: event.pointerId,
@@ -1291,6 +1291,9 @@ export default function ShortsVideoPlayer({
         ref={surfaceRef}
         className="shorts-player-surface"
         aria-label="Vidéo et informations"
+        onPointerDown={beginVerticalSwipe}
+        onPointerUp={completeVerticalSwipe}
+        onPointerCancel={() => { verticalSwipeStartRef.current = null; }}
       >
         <div
           ref={frameRef}
@@ -1302,9 +1305,6 @@ export default function ShortsVideoPlayer({
             item.secondaryVideo ? `is-layout-${multicamLayout}` : "",
           ].filter(Boolean).join(" ")}
           tabIndex={-1}
-          onPointerDown={beginVerticalSwipe}
-          onPointerUp={completeVerticalSwipe}
-          onPointerCancel={() => { verticalSwipeStartRef.current = null; }}
           onMouseLeave={() => {
             if (isPlaying && !settingsOpen) setControlsVisible(false);
           }}
@@ -1364,6 +1364,7 @@ export default function ShortsVideoPlayer({
               event.currentTarget.volume = volume;
               event.currentTarget.muted = isMuted;
               event.currentTarget.playbackRate = playbackRate;
+              event.currentTarget.dataset.orientation = event.currentTarget.videoWidth < event.currentTarget.videoHeight ? "portrait" : "landscape";
               setDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0);
               applyInitialTime(event.currentTarget);
             }}

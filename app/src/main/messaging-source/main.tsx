@@ -54,7 +54,7 @@ function MobileShell({ Page }: { Page: React.ComponentType }) {
   useEffect(() => {
     const destination = current.pathname.split('/')[1];
     if (destination === 'messages') return;
-    if (['profile','tremplin','market','scene','globe'].includes(destination)) native(destination, current.pathname + current.search);
+    if (['profile','tremplin','market','scene','rooms','globe'].includes(destination)) native(destination, current.pathname + current.search);
     else setNavigationNotice(true);
     navigate(-1);
   }, [current.pathname]);
@@ -95,7 +95,6 @@ function MobileShell({ Page }: { Page: React.ComponentType }) {
     <VideoCalls />
     <FeatureDock active="messages" compact={detail} onSelect={id => {
       if (id === 'messages') { setDetail(false); window.dispatchEvent(new Event('meewav:messaging-list')); }
-      else if (id === 'rooms') setNavigationNotice(true);
       else native(id);
     }} />
     {navigationNotice && <div className="mobile-download-error" role="status">Cette destination sera disponible prochainement.<button onClick={() => setNavigationNotice(false)}>Fermer</button></div>}

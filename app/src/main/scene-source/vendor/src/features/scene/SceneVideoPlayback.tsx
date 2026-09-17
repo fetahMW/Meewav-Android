@@ -7,10 +7,14 @@ const AD_SOURCE = "/media/tremplin/ecosysteme-meewav.mp4";
 const SKIP_AFTER = 5;
 const AD_LENGTH = 15;
 
-/** Each opened video gets the same MeeWav house ad; content tracking starts afterwards. */
+/** The house ad plays once per session — never inside the vertical Shorts feed,
+ *  where it would break the swipe flow. */
+let prerollPlayedThisSession = false;
+
 export default function SceneVideoPlayback(props: ShortsVideoPlayerProps) {
-  const [adFinished, setAdFinished] = useState(false);
-  return adFinished ? <ShortsVideoPlayer {...props} /> : <ScenePreroll {...props} onFinished={() => setAdFinished(true)} />;
+  const isVerticalItem = props.item.presentationFormat === "vertical" || props.item.format === "portrait";
+  const [adFinished, setAdFinished] = useState(isVerticalItem || prerollPlayedThisSession);
+  return adFinished ? <ShortsVideoPlayer {...props} /> : <ScenePreroll {...props} onFinished={() => { prerollPlayedThisSession = true; setAdFinished(true); }} />;
 }
 
 export function ScenePreroll({ item, presentation, collapsed, recommendations, onClose, onFinished }: ShortsVideoPlayerProps & { onFinished: () => void }) {

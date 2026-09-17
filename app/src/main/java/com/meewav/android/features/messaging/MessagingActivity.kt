@@ -153,7 +153,7 @@ open class MessagingActivity : ComponentActivity() {
                 // BytePlus reads DOM storage during module initialization. The
                 // Auth client still has persistSession=false; refresh tokens
                 // remain exclusively in the native encrypted session manager.
-                domStorageEnabled = assetSurface in setOf("messaging", "tremplin", "market", "scene")
+                domStorageEnabled = assetSurface in setOf("messaging", "tremplin", "market", "scene", "rooms")
                 databaseEnabled = false
                 allowFileAccess = false; allowContentAccess = true
                 allowFileAccessFromFileURLs = false; allowUniversalAccessFromFileURLs = false
@@ -240,12 +240,13 @@ open class MessagingActivity : ComponentActivity() {
                 }
                 if (request.isForMainFrame && request.method == "GET" && request.url.scheme == "https"
                     && request.url.host == "appassets.androidplatform.net"
-                    && request.url.path in setOf("/native/messages", "/native/profile", "/native/tremplin", "/native/market", "/native/scene")) {
+                    && request.url.path in setOf("/native/messages", "/native/profile", "/native/tremplin", "/native/market", "/native/scene", "/native/rooms")) {
                     val destination = when (request.url.path) {
                         "/native/profile" -> com.meewav.android.features.profile.ProfileActivity::class.java
                         "/native/tremplin" -> com.meewav.android.features.tremplin.TremplinActivity::class.java
                         "/native/market" -> com.meewav.android.features.market.MarketActivity::class.java
                         "/native/scene" -> com.meewav.android.features.scene.SceneActivity::class.java
+                        "/native/rooms" -> com.meewav.android.features.rooms.RoomsActivity::class.java
                         else -> MessagingActivity::class.java
                     }
                     startActivity(Intent(this@MessagingActivity, destination)
@@ -296,6 +297,7 @@ open class MessagingActivity : ComponentActivity() {
                     "tremplin" -> "Le Tremplin n’a pas pu s’ouvrir."
                     "market" -> "Le Marketplace n’a pas pu s’ouvrir."
                     "scene" -> "La Scène n’a pas pu s’ouvrir."
+                    "rooms" -> "Les Rooms n’ont pas pu s’ouvrir."
                     else -> "La messagerie n’a pas pu s’ouvrir."
                 })
             }

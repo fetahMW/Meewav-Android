@@ -7,9 +7,13 @@
 #root .mobile-scene .scene-browse-toggle svg { width: 20px; height: 20px; }
 #root .mobile-scene .mobile-scene-tools .scene-context-search { flex: 1; min-width: 0; width: auto; margin: 0; }
 #root .mobile-scene .mobile-scene-tools :is(.meewav-search-filter-bar,.search-input-shell) { min-width: 0; width: 100%; min-height: 42px; height: 42px; border-radius: 13px; }
-#root .mobile-scene .mobile-scene-tools .search-input-shell { display: flex; gap: 6px; padding: 0 8px; background: #0c0d15a6; border: 1px solid #b9a6d52b; }
+#root .mobile-scene .mobile-scene-tools .meewav-search-filter-bar { background: #0c0d15a6; border: 1px solid #b9a6d52b; box-shadow: none; }
+#root .mobile-scene .mobile-scene-tools .search-input-shell { display: flex; gap: 6px; padding: 0 8px; background: none; border: 0; box-shadow: none; }
 #root .mobile-scene .mobile-scene-tools input { font-size: 13px; min-width: 0; width: 100%; padding: 0; min-height: 40px; }
 #root .mobile-scene .mobile-scene-tools .meewav-search-filter-bar__shortcut { display: none; }
+/* Trait d'onglet : même mécanique centrée que Tremplin/Profil (left:50% +
+   translateX(-50%)), au lieu du left/right 26% de feature-mobile qui le décentrait. */
+#root .mobile-scene .shorts-pillar-tabs > button.is-active::after { left: 50%; right: auto; width: 56px; margin: 0; transform: translateX(-50%); }
 #root .mobile-scene .shorts-topbar__actions { display: flex; flex-shrink: 0; gap: 0; position: static; }
 #root .mobile-scene .shorts-topbar__actions :is(button,.shorts-create-button) { min-width: 34px; width: 34px; height: 44px; min-height: 44px; padding: 8px; border: 0; border-radius: 10px; background: none; box-shadow: none; }
 #root .mobile-scene .shorts-topbar__actions .shorts-create-button :is(span,b) { display: none; }
@@ -33,15 +37,29 @@
 #root .mobile-scene .scene-video-card__meta { font-size: 11px; color: #a29dac; }
 #root .mobile-scene .scene-home-feed__shorts { margin: 24px 0; }
 #root .mobile-scene .scene-home-feed__shorts h2 { font-size: 19px; }
-#root .mobile-scene .scene-home-feed__shorts-track { gap: 10px; scrollbar-width: none; }
-#root .mobile-scene .scene-home-feed__shorts-track > * { flex: 0 0 46%; min-width: 148px; }
+#root .mobile-scene .scene-home-feed__shorts-track { gap: 10px; scrollbar-width: none; align-items: flex-start; }
+#root .mobile-scene .scene-home-feed__shorts-track > * { flex: 0 0 38%; min-width: 130px; }
+/* content-visibility:auto keeps the remembered intrinsic size (~430px) for
+   offscreen cards and stretches the whole rail — force real layout instead. */
+#root .mobile-scene .scene-vertical-card { content-visibility: visible; contain-intrinsic-size: none; }
+#root .mobile-scene .scene-vertical-card__meta { padding-top: 7px; }
 #root .mobile-scene :is(.shorts-wall__grid,.scene-explore__grid) { grid-template-columns: minmax(0,1fr); gap: 22px; }
-#root .mobile-scene :is(.scene-vertical-collection__grid,.scene-vertical-search-results .shorts-wall__grid) { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+#root .mobile-scene :is(.scene-vertical-collection__grid,.scene-vertical-search-results .shorts-wall__grid,.scene-explore__catalog.is-vertical,.is-vertical-collection .shorts-wall__grid) { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px 10px; }
 #root .mobile-scene :is(.shorts-section-heading,.shorts-wall__header) { gap: 10px; margin: 14px 0; }
 #root .mobile-scene :is(.shorts-section-heading,.shorts-wall__header) h2 { font-size: 21px; line-height: 1.2; }
 #root .mobile-scene :is(.shorts-section-heading,.shorts-wall__header) p { font-size: 12px; line-height: 1.5; }
 #root .mobile-scene .shorts-contentbar { padding: 8px 0 12px; margin: 0; min-height: 0; background: transparent; border: 0; }
+/* Explorer : une seule ligne de chips — le contentbar devient le scroller
+   horizontal et ses groupes internes sont aplatis dedans. */
+#root .mobile-scene .shorts-contentbar.is-explore { display: flex; flex-wrap: nowrap; align-items: center; gap: 6px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+#root .mobile-scene .shorts-contentbar.is-explore :is(.scene-explore__compact-controls,.scene-vertical-collection__filters,.scene-browse-chips-shell,.scene-browse-chips) { display: contents; }
+#root .mobile-scene .shorts-contentbar.is-explore :is(.scene-explore__media-tabs,.scene-explore__editorial-tabs,.scene-explore__result-count,.scene-explore__sort-control,.scene-vertical-collection__filters button,.scene-explore__media-tabs button,.scene-browse-chips button) { flex: 0 0 auto; }
+#root .mobile-scene .shorts-contentbar.is-explore .meewav-rail-edges { display: none; }
+#root .mobile-scene .shorts-contentbar.is-explore .scene-browse-chips button { min-height: 40px; padding: 8px 10px; font-size: 12px; border-radius: 10px; color: #d2cedc; background: #24242c; border: 1px solid #ffffff08; }
+#root .mobile-scene .shorts-contentbar.is-explore .scene-browse-chips button[aria-pressed=true] { background: #ded9e8; color: #17131f; }
 #root .mobile-scene .scene-explore__compact-controls { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+#root .mobile-scene .shorts-contentbar.is-explore .scene-explore__compact-controls { flex-wrap: nowrap; }
+#root .mobile-scene .shorts-contentbar.is-explore .scene-explore__sort-control { order: 10; margin-left: 0; flex: 0 0 auto; }
 #root .mobile-scene .scene-explore__compact-controls button { min-height: 40px; padding: 8px 10px; font-size: 12px; }
 #root .mobile-scene .scene-explore__result-count { font-size: 11px; }
 #root .mobile-scene .scene-explore__sort-control { margin-left: auto; max-width: 160px; }
@@ -76,8 +94,39 @@
 #root .mobile-scene .scene-watch-queue { background: #16171d; border-color: #baa3da27; }
 #root .mobile-scene .shorts-player-layer.is-miniplayer { position: fixed; z-index: 510; inset: auto 10px 90px auto; width: min(260px,72vw); padding: 0; }
 #root .mobile-scene .shorts-player-layer.is-vertical-feed { position: fixed; z-index: 52000; inset: 0; margin: 0; padding: 0; height: 100%; width: 100%; background: #060609; }
-#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-surface { display: block; width: 100%; height: 100%; min-height: 0; max-height: 100%; border-radius: 0; }
-#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-frame { width: 100%; height: 100%; max-height: none; border-radius: 0; }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-surface { position: relative; display: block; width: 100%; height: 100dvh; min-height: 0; max-height: none; overflow: hidden; border-radius: 0; background: #000; }
+/* WebView bug: a positioned frame breaks hardware video paint (black screen).
+   Keep the frame static so the absolutely-positioned video resolves against the
+   surface, which has the same box. */
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-frame { position: static; width: 100%; height: 100%; max-height: none; margin: 0; border-radius: 0; }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-video { object-fit: cover; }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-video[data-orientation="landscape"] { object-fit: contain; }
+/* Feed verticale façon TikTok : infos en bas à gauche, actions en rail à droite,
+   timeline fine en bas, contrôles riches masqués (tap = lecture/pause). */
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-details { position: absolute; z-index: 6; inset: auto 0 0; display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: end; gap: 6px 8px; width: 100%; height: auto; max-height: none; min-width: 0; padding: 72px 8px calc(26px + env(safe-area-inset-bottom, 0px)) 12px; overflow: visible; border: 0; border-radius: 0; background: linear-gradient(transparent, rgba(4,4,10,.5) 42%, rgba(4,4,10,.94)); }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-details__toolbar { grid-column: 2; grid-row: 1; align-self: end; display: flex; flex-direction: column; flex-wrap: nowrap; align-items: center; gap: 14px; width: auto; }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-reactions--player { flex-direction: column; gap: 14px; }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-reactions--player .shorts-reaction { min-width: 0; width: 46px; height: auto; min-height: 0; padding: 0; gap: 3px; flex-direction: column; border: 0; background: none; box-shadow: none; }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-reactions--player .shorts-reaction__icon { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; background: rgba(16,15,22,.62); border: 1px solid rgba(255,255,255,.09); }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-reactions--player .shorts-reaction__icon svg { width: 22px; height: 22px; }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-reactions--player .shorts-reaction__label { display: none; }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-reactions--player .shorts-reaction__count { padding: 0; border: 0; font-size: 10px; font-weight: 700; color: rgba(240,236,248,.78); }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-details__actions { display: flex; flex-direction: column; flex-wrap: nowrap; align-items: center; gap: 10px; width: auto; }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-details__actions > button { width: 46px; height: 46px; min-height: 46px; padding: 0; gap: 0; border-radius: 50%; font-size: 0; background: rgba(16,15,22,.62); border: 1px solid rgba(255,255,255,.09); }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-details__actions > button svg { width: 20px; height: 20px; }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-details__actions > button.is-collab { background: rgba(96,52,178,.66); border-color: rgba(190,140,255,.3); }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .scene-short-publication { grid-column: 1; grid-row: 1; align-self: end; min-width: 0; padding: 0; border: 0; background: none; }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .scene-short-publication h2 { font-size: 15px; line-height: 1.25; }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .scene-short-publication__description { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 12px; }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-details__meta { display: none; }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-controls { position: absolute; z-index: 7; inset: auto 0 0; padding: 0; border: 0; background: none; }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-controls__row { display: none; }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-timeline { display: block; padding: 0 4px; }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-timeline input { min-height: 18px; height: 18px; }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .scene-vertical-player__navigation { top: 96px; right: 8px; transform: none; }
+/* WebView bug: backdrop-filter inside an overflow:hidden container paints the
+   clipped region black — strip it from the feed chrome (backgrounds stay opaque). */
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-surface :is(.scene-vertical-player__navigation > button,.shorts-player-settings__menu,.scene-short-toast,[class*="__badge"]) { -webkit-backdrop-filter: none; backdrop-filter: none; }
 #root .mobile-scene .scene-watch-unavailable { margin: 0; padding: 78px 16px 108px; }
 #root .mobile-scene .scene-navigation-progress { top: 98px; left: 0; z-index: 510; }
 #root .mobile-scene :is(.shorts-filter-panel,.shorts-create-dialog,.shorts-creator-drawer,.scene-comments-drawer) { max-width: 100%; width: 100%; min-width: 0; max-height: calc(100dvh - 12px); border-radius: 22px 22px 0 0; background: #111218f5; }

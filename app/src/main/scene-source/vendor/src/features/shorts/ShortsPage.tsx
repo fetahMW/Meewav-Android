@@ -3646,13 +3646,15 @@ function SceneWorkspace() {
         </SceneWatchMenu>}
         {showBrowseNavigation && <>
           <SceneBrowseNavigation active={browseActive} subscriptions={subscriptions} canPublish={canPublish} onNavigate={() => { if (window.innerWidth <= 1100) setBrowseMenuOpen(false); }} />
-          <SceneBrowseChips>
-            <button aria-pressed={activeTab === "home" && activeFilterCount === 0 && !profileArtistReference && !showHistoryOnly && !showSavedOnly} onClick={() => showTab("home")}>Tous</button>
-            {SCENE_CONTENT_TYPE_OPTIONS.map((option) => <button key={option.id} aria-pressed={filters.contentTypes.length === 1 && filters.contentTypes[0] === option.id} onClick={() => commitSceneFilters({ ...getSceneDefaultFilters(false), contentTypes: [option.id] })}>{option.label}</button>)}
-            {SCENE_STYLE_OPTIONS.filter(({ id }) => ["rap", "rnb", "jazz", "pop", "rock", "electro", "soul"].includes(id)).map((option) => <button key={option.id} aria-pressed={filters.styles.length === 1 && filters.styles[0] === option.id} onClick={() => commitSceneFilters({ ...getSceneDefaultFilters(false), styles: [option.id] })}>{option.label}</button>)}
-            <button aria-pressed={filters.sort === "recent"} onClick={() => commitSceneFilters({ ...getSceneDefaultFilters(false), sort: "recent" })}>Publiées récemment</button>
-            <button aria-pressed={showHistoryOnly} onClick={openWatchHistory}>Regardées</button>
-          </SceneBrowseChips>
+          {activeTab !== "explore" && (
+            <SceneBrowseChips>
+              <button aria-pressed={activeTab === "home" && activeFilterCount === 0 && !profileArtistReference && !showHistoryOnly && !showSavedOnly} onClick={() => showTab("home")}>Tous</button>
+              {SCENE_CONTENT_TYPE_OPTIONS.map((option) => <button key={option.id} aria-pressed={filters.contentTypes.length === 1 && filters.contentTypes[0] === option.id} onClick={() => commitSceneFilters({ ...getSceneDefaultFilters(false), contentTypes: [option.id] })}>{option.label}</button>)}
+              {SCENE_STYLE_OPTIONS.filter(({ id }) => ["rap", "rnb", "jazz", "pop", "rock", "electro", "soul"].includes(id)).map((option) => <button key={option.id} aria-pressed={filters.styles.length === 1 && filters.styles[0] === option.id} onClick={() => commitSceneFilters({ ...getSceneDefaultFilters(false), styles: [option.id] })}>{option.label}</button>)}
+              <button aria-pressed={filters.sort === "recent"} onClick={() => commitSceneFilters({ ...getSceneDefaultFilters(false), sort: "recent" })}>Publiées récemment</button>
+              <button aria-pressed={showHistoryOnly} onClick={openWatchHistory}>Regardées</button>
+            </SceneBrowseChips>
+          )}
         </>}
 
         {watchRoute && !selectedVideo && <section className="scene-watch-unavailable" aria-live="polite"><h1>{catalogLoading ? "Chargement de la vidéo…" : "Cette vidéo n’est pas disponible."}</h1>{!catalogLoading && <><p>Elle est inaccessible ou absente du catalogue public.</p><button onClick={() => setCatalogAttempt((value) => value + 1)}>Réessayer</button><a href={SCENE_ROUTE}>Retour à La Scène</a></>}</section>}
@@ -3674,6 +3676,7 @@ function SceneWorkspace() {
                 >
 
                   {activeTab === "explore" ? (
+                    <>
                     <div className="scene-explore__compact-controls">
                       <div className="scene-explore__media-tabs" role="group" aria-label="Format des créations">
                         <button
@@ -3733,26 +3736,34 @@ function SceneWorkspace() {
                         </select>
                       </label>
                     </div>
+                    <SceneBrowseChips>
+                      <button aria-pressed={activeTab === "home" && activeFilterCount === 0 && !profileArtistReference && !showHistoryOnly && !showSavedOnly} onClick={() => showTab("home")}>Tous</button>
+                      {SCENE_CONTENT_TYPE_OPTIONS.map((option) => <button key={option.id} aria-pressed={filters.contentTypes.length === 1 && filters.contentTypes[0] === option.id} onClick={() => commitSceneFilters({ ...getSceneDefaultFilters(false), contentTypes: [option.id] })}>{option.label}</button>)}
+                      {SCENE_STYLE_OPTIONS.filter(({ id }) => ["rap", "rnb", "jazz", "pop", "rock", "electro", "soul"].includes(id)).map((option) => <button key={option.id} aria-pressed={filters.styles.length === 1 && filters.styles[0] === option.id} onClick={() => commitSceneFilters({ ...getSceneDefaultFilters(false), styles: [option.id] })}>{option.label}</button>)}
+                      <button aria-pressed={filters.sort === "recent"} onClick={() => commitSceneFilters({ ...getSceneDefaultFilters(false), sort: "recent" })}>Publiées récemment</button>
+                      <button aria-pressed={showHistoryOnly} onClick={openWatchHistory}>Regardées</button>
+                    </SceneBrowseChips>
+                    </>
                   ) : null}
                   <MeewavActiveFilterChips filters={activeSceneFilterChips} onClear={clearFilters} />
+                  {exploreMediaMode === "vertical" ? (
+                    <nav className="scene-vertical-collection__filters" aria-label="Filtrer les Shorts">
+                      {SCENE_VERTICAL_QUICK_FILTERS.map((option) => (
+                        <button
+                          key={option.id}
+                          type="button"
+                          aria-pressed={verticalQuickFilter === option.id}
+                          onClick={() => {
+                            setVerticalQuickFilter(option.id);
+                            writeRouteState({ verticalType: option.id === "all" ? null : option.id }, true);
+                          }}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </nav>
+                  ) : null}
                 </section>
-                {activeTab === "explore" && exploreMediaMode === "vertical" ? (
-                  <nav className="scene-vertical-collection__filters" aria-label="Filtrer les Shorts">
-                    {SCENE_VERTICAL_QUICK_FILTERS.map((option) => (
-                      <button
-                        key={option.id}
-                        type="button"
-                        aria-pressed={verticalQuickFilter === option.id}
-                        onClick={() => {
-                          setVerticalQuickFilter(option.id);
-                          writeRouteState({ verticalType: option.id === "all" ? null : option.id }, true);
-                        }}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </nav>
-                ) : null}
               </>
             ) : null}
 

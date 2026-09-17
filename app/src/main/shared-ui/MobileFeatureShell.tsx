@@ -14,7 +14,7 @@ const FEATURE_MENU_ITEMS = [
   { action: 'cart', label: 'Mon panier', icon: ShoppingCart },
   { action: 'settings', label: 'Réglages', icon: Settings },
 ] as const;
-export function mountFeature(id: 'market' | 'scene', title: string, load: () => Promise<{ default: React.ComponentType }>) {
+export function mountFeature(id: 'market' | 'scene' | 'rooms', title: string, load: () => Promise<{ default: React.ComponentType }>) {
   function Shell({ Page }: { Page: React.ComponentType }) {
     const route = useLocation(), navigate = useNavigate();
     const [notice, setNotice] = useState('');
@@ -46,7 +46,7 @@ export function mountFeature(id: 'market' | 'scene', title: string, load: () => 
     useEffect(() => {
       const destination = route.pathname.split('/')[1];
       if (destination === id) return;
-      if (['messages','profile','tremplin','market','scene'].includes(destination)) native(destination, route.pathname + route.search + route.hash);
+      if (['messages','profile','tremplin','market','scene','rooms'].includes(destination)) native(destination, route.pathname + route.search + route.hash);
       else if (['globe','mon-globe'].includes(destination)) native('globe');
       else setNotice('Cette destination sera disponible dans une prochaine étape.');
       navigate(-1);
@@ -69,7 +69,6 @@ export function mountFeature(id: 'market' | 'scene', title: string, load: () => 
       <Page />
       <FeatureDock active={id} onSelect={destination => {
         if (destination === id) navigate(`/${id}`);
-        else if (destination === 'rooms') setNotice('Les Rooms seront intégrées dans une prochaine étape.');
         else native(destination);
       }} />
       {notice && <aside className="mobile-profile-notice" role="status">{notice}<button aria-label="Fermer" onClick={() => setNotice('')}><X size={18} /></button></aside>}

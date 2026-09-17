@@ -219,12 +219,13 @@ private class AuthGlobeController(private val fullScene: Boolean) {
                 override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                     if (fullScene && request.isForMainFrame && request.method == "GET"
                         && request.url.scheme == "https" && request.url.host == "appassets.androidplatform.net"
-                        && request.url.path in setOf("/native/messages", "/native/profile", "/native/tremplin", "/native/market", "/native/scene")) {
+                        && request.url.path in setOf("/native/messages", "/native/profile", "/native/tremplin", "/native/market", "/native/scene", "/native/rooms")) {
                         val destination = when (request.url.path) {
                             "/native/profile" -> ProfileActivity::class.java
                             "/native/tremplin" -> com.meewav.android.features.tremplin.TremplinActivity::class.java
                         "/native/market" -> com.meewav.android.features.market.MarketActivity::class.java
                         "/native/scene" -> com.meewav.android.features.scene.SceneActivity::class.java
+                        "/native/rooms" -> com.meewav.android.features.rooms.RoomsActivity::class.java
                             else -> MessagingActivity::class.java
                         }
                         val defaultRoute = request.url.path.orEmpty().removePrefix("/native")

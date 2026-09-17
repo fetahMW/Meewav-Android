@@ -83,7 +83,8 @@
 #root .mobile-tremplin .tremplin-statistics__filters button[aria-pressed="true"] { background: #8b93d414; border-color: #8b93d473; color: #b7bdf0; box-shadow: inset 0 1px #ffffff0d,0 4px 14px #00000030; }
 #root .mobile-tremplin .tremplin-statistics__filters button[data-sort="holders"] { border-color: #a78bfa5e; background: linear-gradient(135deg, #7a5cff, #a78bfa); color: #fff; box-shadow: inset 0 1px #ffffff33, 0 4px 14px #7a5cff40; }
 #root .mobile-tremplin .tremplin-statistics__filters button[data-sort="holders"][aria-pressed="true"] { background: linear-gradient(135deg, #8b6dff, #b394ff); border-color: #c9b6ff; color: #fff; box-shadow: inset 0 1px #ffffff40, 0 0 18px #8b6dff59; }
-#root .mobile-tremplin .tremplin-statistics__list { gap: 0; }
+#root .mobile-tremplin .tremplin-statistics__list { gap: 0; padding: 4px 12px; border: 1px solid #bda3e526; border-radius: 18px; background: linear-gradient(165deg,#1c1d28cc,#12131bda); box-shadow: inset 0 1px #ffffff0c, 0 10px 26px #00000040; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+#root .mobile-tremplin .tremplin-statistics__row { padding-inline: 2px; }
 #root .mobile-tremplin .tremplin-statistics__list li + li { border-top: 1px solid #8b93d422; }
 #root .mobile-tremplin .tremplin-statistics__row { grid-template-columns: 28px 46px minmax(0,1fr) 16px; gap: 12px; padding: 14px 2px; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
 #root .mobile-tremplin .tremplin-statistics__row:active { background: #8b93d40d; }

@@ -17,9 +17,9 @@ export default function TremplinStatistics({ sort, onSortChange, onOpen }: {
   return <section className="tremplin-statistics" aria-labelledby="tremplin-statistics-title">
     <header className="tremplin-statistics__header">
       <span className="tremplin-statistics__eyebrow"><ChartNoAxesColumnIncreasing aria-hidden="true" /> Jetons de talent</span>
-      <h1 id="tremplin-statistics-title">Classements nationaux</h1>
+      <h1 id="tremplin-statistics-title">Top jetons de talent</h1>
       <span className="tremplin-statistics__country"><MapPin aria-hidden="true" /> France <b>DÉMO</b></span>
-      <p>Données fictives issues des profils et jetons locaux de démonstration. Aucun cours réel ni classement officiel.</p>
+      <p>Classement des jetons émis par les artistes — pas un classement des artistes eux-mêmes. Données fictives issues des profils et jetons locaux de démonstration. Aucun cours réel ni classement officiel.</p>
     </header>
     <div className="tremplin-statistics__filters" role="group" aria-label="Trier le classement">
       {TREMPLIN_STATISTICS_SORTS.map(({ id, label }) => <button key={id} type="button" data-sort={id} aria-pressed={sort === id} onClick={() => onSortChange(id)}>{label}</button>)}

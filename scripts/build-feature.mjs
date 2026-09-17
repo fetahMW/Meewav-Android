@@ -10,8 +10,8 @@ import { featureLoadingHtml } from './feature-loading.mjs';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const web = resolve(root, '../Meewav-Web');
 const surface = process.argv[2];
-if (!['market', 'scene'].includes(surface)) throw Error('Usage: node scripts/build-feature.mjs market|scene [--import-web]');
-const title = surface === 'market' ? 'Marketplace' : 'La Scène';
+if (!['market', 'scene', 'rooms'].includes(surface)) throw Error('Usage: node scripts/build-feature.mjs market|scene|rooms [--import-web]');
+const title = { market: 'Marketplace', scene: 'La Scène', rooms: 'Rooms' }[surface];
 const source = join(root, `app/src/main/${surface}-source`);
 const vendor = join(source, 'vendor');
 const output = join(root, `app/src/main/assets/${surface}`);
@@ -76,7 +76,7 @@ if (syncAssets) {
   // Literal public paths, including emoticon manifest entries and their trees.
   for (const entry of Object.keys(result.metafile.inputs)) {
     const path = resolve(root, entry);
-    if ((!within(join(web, 'src'), path) && !within(vendor, path)) || !/\.(tsx?|css|json|jsx?)$/.test(path)) continue;
+    if ((!within(join(web, 'src'), path) && !within(vendor, path) && !within(source, path)) || !/\.(tsx?|css|json|jsx?)$/.test(path)) continue;
     const text = await readFile(path, 'utf8');
     for (const match of text.matchAll(/["'`(](\/(?:images|avatars|assets|emoticons|audio|media|fonts)\/[^"'`)\r\n$]+)/g)) {
       if (!syncMediaOnly || match[1].startsWith('/media/')) publicAssets.add(match[1].slice(1));

@@ -28,15 +28,15 @@
   background: var(--profile-dock-glass); border: 1px solid #a99bbb1c;
   border-top-color: #b19bc42b; border-bottom: 0;
   backdrop-filter: blur(22px) saturate(1.15); -webkit-backdrop-filter: blur(22px) saturate(1.15);
-  /* Globe scoop: the main circle is bridged to the top edge by two small
-     overlapping circles, so the notch shoulders are rounded, not pointed. */
-  mask-image:
-    linear-gradient(#000 0 0),
-    radial-gradient(circle 34px at 50% 10px,#000 33px,transparent 34.5px),
-    radial-gradient(circle 14px at calc(50% - 42px) 14px,#000 13px,transparent 14.5px),
-    radial-gradient(circle 14px at calc(50% + 42px) 14px,#000 13px,transparent 14.5px);
-  -webkit-mask-composite: source-over, destination-out, destination-out, destination-out;
-  mask-composite: add, subtract, subtract, subtract;
+  /* Globe scoop: a single SVG mask carves a bowl-shaped notch whose shoulders
+     meet the top edge tangentially — rounded, not pointed. One image, no
+     mask-composite (unsupported in the Android WebView). */
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 86' preserveAspectRatio='none'%3E%3Cpath fill='%23000' d='M0 0H41C45 0 46.5 2 47.6 5C48.8 16 46.5 44 50 44C53.5 44 51.2 16 52.4 5C53.5 2 55 0 59 0H100V86H0Z'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 86' preserveAspectRatio='none'%3E%3Cpath fill='%23000' d='M0 0H41C45 0 46.5 2 47.6 5C48.8 16 46.5 44 50 44C53.5 44 51.2 16 52.4 5C53.5 2 55 0 59 0H100V86H0Z'/%3E%3C/svg%3E");
+  mask-size: 100% 100%;
+  -webkit-mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
   box-shadow: inset 0 1px 1px #b7a0ce08,inset 0 -1px #0003,0 -3px 14px #08061124;
   pointer-events: none;
 }
