@@ -44,7 +44,25 @@ export type PreProfileDemoArtist = {
   };
 };
 
-export const DEMO_PREPROFILE_SHORTS: PreProfileDemoArtist["shorts"] = [];
+const shortLivePulseUrl = new URL("media/preprofile-demo/short-live-pulse.webp", document.baseURI).href;
+const shortStudioSessionUrl = new URL("media/preprofile-demo/short-studio-session.webp", document.baseURI).href;
+
+export const DEMO_PREPROFILE_SHORTS: PreProfileDemoArtist["shorts"] = [
+  {
+    id: "dj-turntable",
+    mediaUrl: new URL("media/preprofile-demo/dj-turntable.mp4", document.baseURI).href,
+    thumbnailUrl: shortStudioSessionUrl,
+    duration: "0:12",
+    title: "DJ turntable",
+  },
+  {
+    id: "female-guitarist",
+    mediaUrl: new URL("media/preprofile-demo/female-guitarist.mp4", document.baseURI).href,
+    thumbnailUrl: shortLivePulseUrl,
+    duration: "0:08",
+    title: "Session guitare",
+  },
+];
 
 export const DEMO_PREPROFILE_AUDIOS: PreProfileDemoArtist["audios"] = [
   {

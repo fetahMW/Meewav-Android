@@ -74,8 +74,8 @@ export default function TremplinPreProfile({ artist, anchor, followed, onClose, 
 
   const margin = 16, leftGuard = 10;
   const mobile = mobileArtistPanel(viewport);
-  const scale = mobile?.scale ?? Math.min(1, (viewport.width - leftGuard - margin * 2) / 413, (viewport.height - 104) / 588);
-  const width = 413 * scale, height = 588 * scale;
+  const scale = mobile?.scale ?? Math.min(1, (viewport.width - leftGuard - margin * 2) / 413, (viewport.height - 104) / 530);
+  const width = 413 * scale, height = 530 * scale;
   const gapFromAnchor = -20;
   const arrowSize = 8;
   const right = anchor.x + anchor.clearance + gapFromAnchor + arrowSize;
@@ -121,7 +121,7 @@ export default function TremplinPreProfile({ artist, anchor, followed, onClose, 
     style={{ left: mobile?.left ?? popupLeft, top: mobile?.top ?? popupTop, transform: `scale(${scale})`,
       ...(mobile ? { width: mobile.width, height: mobile.height,
         '--mw-bubble-w': `${mobile.width}px`, '--mw-bubble-h': `${mobile.height}px` } : {}),
-      "--mw-arrow-y": `${Math.max(40, Math.min(548, (anchor.y - popupTop) / scale))}px` } as CSSProperties}
+      "--mw-arrow-y": `${Math.max(40, Math.min(490, (anchor.y - popupTop) / scale))}px` } as CSSProperties}
     onPointerDown={(event) => event.stopPropagation()} onClick={(event) => event.stopPropagation()}>
     <PreProfileFrame arrow>
       <HoverPreProfileContent artist={preArtist} demoFollow showMapPin={false}

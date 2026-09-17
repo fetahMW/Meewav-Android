@@ -1,8 +1,8 @@
 /* Portrait tap pre-profile — the globe's ring-artist-preprofile bubble,
    anchored to the tapped portrait, sliding in from the opposite side. */
 .tremplin-preprofile {
-  --mw-bubble-w: 413px; --mw-bubble-h: 588px;
-  position: fixed; z-index: 15940; width: 413px; height: 588px;
+  --mw-bubble-w: 413px; --mw-bubble-h: 530px;
+  position: fixed; z-index: 15940; width: 413px; height: 530px;
   transform-origin: top left; pointer-events: auto;
   color: #eee; -webkit-user-select: none; user-select: none;
 }
@@ -38,3 +38,54 @@
 @keyframes tremplin-preprofile-in-right { from { translate: 115% 0; opacity: .4; } to { translate: 0 0; opacity: 1; } }
 @keyframes tremplin-preprofile-in-left { from { translate: -115% 0; opacity: .4; } to { translate: 0 0; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .tremplin-preprofile { animation: none; } }
+
+/* Compacter media thumbnails inside the smaller bubble. */
+.tremplin-preprofile .mw-preprofile__preview[data-active-tab="overview"] { flex-basis: 94px; max-height: 98px; }
+.tremplin-preprofile .mw-preprofile__overview-card { height: 94px; }
+.tremplin-preprofile .mw-preprofile__overview-short-action { grid-template-columns: 68px minmax(0, 1fr); gap: 8px; padding: 7px; }
+.tremplin-preprofile .mw-preprofile__overview-thumb { width: 68px; height: 80px; }
+.tremplin-preprofile .mw-preprofile__overview-audio-head,
+.tremplin-preprofile .mw-preprofile__overview-copy { padding: 7px 9px; }
+.tremplin-preprofile .mw-preprofile__audio-card,
+.tremplin-preprofile .mw-preprofile__audio-cover-card { min-height: 74px; }
+.tremplin-preprofile .mw-preprofile__audio-thumb,
+.tremplin-preprofile .mw-preprofile__audio-cover { width: 62px; height: 62px; }
+
+/* Breathing room between actions, tabs and media cards. */
+.tremplin-preprofile .mw-preprofile__actions { margin-top: 12px; }
+.tremplin-preprofile .mw-preprofile__lower-stage { margin-top: 12px; }
+.tremplin-preprofile .mw-preprofile__media-stage { gap: 12px; }
+
+/* MeeWav violet: portrait ring and collab CTA (full black-glass chain needed
+   to override the visitor defaults). */
+.tremplin-preprofile .mw-hover-preprofile-bubble__shell.is-black-glass .mw-preprofile.is-visitor .mw-preprofile__portrait-shell,
+.tremplin-preprofile .mw-preprofile__portrait-shell {
+  border-color: transparent;
+  background:
+    linear-gradient(#0b071b, #0b071b) padding-box,
+    linear-gradient(145deg, #8b3dff 0%, #5b00e0 54%, #3d00b8 100%) border-box;
+  box-shadow:
+    0 0 0 2px rgba(91, 0, 224, 0.32),
+    0 0 14px rgba(139, 61, 255, 0.55),
+    0 10px 24px rgba(2, 1, 13, 0.34);
+}
+.tremplin-preprofile .mw-hover-preprofile-bubble__shell.is-black-glass .mw-preprofile:is(.is-visitor, .is-owner) .mw-preprofile__collab-button,
+.tremplin-preprofile .mw-preprofile__collab-button {
+  border: 1px solid transparent; color: #fff;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.11), transparent 34%) padding-box,
+    radial-gradient(circle at 11% 0%, rgba(226,208,255,.2), transparent 38%) padding-box,
+    radial-gradient(circle at 88% 118%, rgba(122,18,232,.38), transparent 48%) padding-box,
+    linear-gradient(112deg, #7a1fff 0%, #5b00d6 52%, #4200a8 100%) padding-box,
+    linear-gradient(110deg, rgba(216,189,255,.85), rgba(139,61,255,.8), rgba(91,0,196,.78)) border-box;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 0 20px rgba(122,18,232,.42);
+}
+.tremplin-preprofile .mw-preprofile__collab-icon {
+  border: 1px solid rgba(216,189,255,.72); border-radius: 9px; color: #fff;
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255,255,255,.3), transparent 38%),
+    linear-gradient(145deg, #a855ff, #7a12e8 42%, #4c00e0);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.24), 0 0 0 2px rgba(168,85,255,.2), 0 0 18px rgba(122,18,232,.72);
+}
+.tremplin-preprofile .mw-preprofile__collab-copy strong { color: #fff; }
+.tremplin-preprofile .mw-preprofile__collab-copy small { color: rgba(236,222,255,.82); }

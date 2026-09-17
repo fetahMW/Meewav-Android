@@ -39,6 +39,7 @@ import MeewavPillarTabs from "../../components/navigation/MeewavPillarTabs";
 import { useAuth } from "../auth/AuthContext";
 import { isLocalAuthPreviewEnabled } from "../auth/localAuthPreview";
 import { MeewavGradeBadge } from "../grades/MeewavGradeBadge";
+import { getGradeBadgeMeta } from "../grades/gradeBadges";
 import MeewavPrimaryNav from "../globe/components/MeewavPrimaryNav";
 import {
   MON_GLOBE_HOST_POSITION_NAVIGATION_STATE,
@@ -792,9 +793,11 @@ function ArtistDetail({
   const nextRoomIsUpcoming = new Date(token.nextRoom.startsAt).getTime() > Date.now();
   const [supportOpen, setSupportOpen] = useState(location.hash === "#profile-support" || location.hash === "#profile-token-statistics");
   const [statisticsOpen, setStatisticsOpen] = useState(location.hash === "#profile-token-statistics");
+  const [gradeOpen, setGradeOpen] = useState(location.hash === "#profile-grade");
   useEffect(() => {
     if (location.hash === "#profile-support" || location.hash === "#profile-token-statistics") setSupportOpen(true);
     if (location.hash === "#profile-token-statistics") setStatisticsOpen(true);
+    if (location.hash === "#profile-grade") setGradeOpen(true);
     const sectionId = location.hash.slice(1);
     if (!sectionId) return;
     window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
@@ -807,7 +810,7 @@ function ArtistDetail({
       trackTremplinEvent("support_tab_opened", { artistId: artist.id });
     }
     if (sectionId === "profile-token-statistics") setStatisticsOpen(true);
-    if (sectionId === "profile-grade") trackTremplinEvent("grade_explanation_opened", { artistId: artist.id });
+    if (sectionId === "profile-grade") { setGradeOpen(true); trackTremplinEvent("grade_explanation_opened", { artistId: artist.id }); }
     navigate(`${location.pathname}${location.search}#${sectionId}`, { replace: true, state: location.state });
     requestAnimationFrame(() => document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
@@ -839,10 +842,9 @@ function ArtistDetail({
       </nav>
 
       <section id="profile-creations" className="tremplin-token-artist__creations" aria-labelledby="profile-creations-title">
-        <div className="tremplin-section-heading"><div><span className="tremplin-kicker">Créations</span><h2 id="profile-creations-title">Écouter avant d’aller plus loin</h2><p>Une création mise en avant et les dernières publications de ce profil.</p></div></div>
+        <div className="tremplin-section-heading"><div><span className="tremplin-kicker">Créations</span><h2 id="profile-creations-title">Écouter avant d’aller plus loin</h2><p>La création mise en avant sur ce profil.</p></div></div>
         <div className="tremplin-token-artist__creation-grid">
           <article className="is-featured"><img src={artist.artwork} alt="" /><div><small>Extrait · {artist.audio.durationLabel}</small><h3>{artist.audio.title}</h3><p>{artist.audio.subtitle}</p></div><button type="button" onClick={onToggleAudio} aria-label={playing ? `Mettre ${artist.audio.title} en pause` : `Écouter ${artist.audio.title}`}>{playing ? <Pause /> : <Play />} {playing ? "Mettre en pause" : "Écouter l’extrait"}</button></article>
-          {artist.updates.slice(0, 2).map((update) => <article key={`creation-${update.id}`}><span><Sparkles /></span><div><small>{update.dateLabel}</small><h3>{update.title}</h3><p>{update.summary}</p></div></article>)}
         </div>
       </section>
 
@@ -853,14 +855,17 @@ function ArtistDetail({
 
       <section id="profile-rooms" className="tremplin-token-artist__room"><span><Radio /></span><div><small>{nextRoomIsUpcoming ? "Prochaine activité dans les espaces live" : "Dernière Room documentée"}</small><h2>{token.nextRoom.title}</h2><p>{token.nextRoom.dateLabel} · {token.nextRoom.accessLabel}{nextRoomIsUpcoming ? ` · ${token.nextRoom.interestedCount.toLocaleString("fr-FR")} personnes intéressées` : " · Cette Room est terminée"}</p></div><button type="button" className="tremplin-secondary-cta" onClick={onOpenRoom}>{nextRoomIsUpcoming ? "Voir sa prochaine Room" : "Découvrir les Rooms"} <ChevronRight /></button></section>
 
-      <section id="profile-journey" className="tremplin-token-artist__updates"><div className="tremplin-section-heading"><div><span className="tremplin-kicker">Journal de parcours</span><h2>Les étapes qui racontent son projet</h2><p>Vidéos de La Scène, Rooms, performances et collaborations sont replacées dans le temps.</p></div></div><div>{artist.updates.map((update) => <article id={`etape-${update.id}`} key={update.id}><span><Rocket /></span><time>{update.dateLabel}</time><h3>{update.title}</h3><p>{update.summary}</p><small><Info /> Étape déclarée par ce profil de démonstration</small></article>)}</div></section>
+      <section id="profile-journey" className="tremplin-token-artist__updates"><div className="tremplin-section-heading"><div><span className="tremplin-kicker">Journal de parcours</span><h2>Les étapes qui racontent son projet</h2><p>Vidéos de La Scène, Rooms, performances et collaborations, déclarées par ce profil.</p></div></div><div>{artist.updates.map((update) => <article id={`etape-${update.id}`} key={update.id}><span><Rocket /></span><time>{update.dateLabel}</time><h3>{update.title}</h3><p>{update.summary}</p></article>)}</div></section>
 
       <section className="tremplin-token-artist__facts" aria-label="Repères publics du parcours">
         <div><span className="tremplin-kicker">Des faits simples</span><h2>Repères publics du parcours</h2><p>Des éléments compréhensibles, sans score opaque ni courbe d’audience.</p></div>
         <dl><div><dt>Étapes publiées</dt><dd>{artist.updates.length}</dd></div><div><dt>Repères documentés</dt><dd>{project.proofPoints.length}</dd></div><div><dt>Abonnés MeeWav</dt><dd>{artist.community.memberCount.toLocaleString("fr-FR")}</dd></div><div><dt>Dernière publication</dt><dd>{latestUpdate?.dateLabel ?? "À venir"}</dd></div></dl>
       </section>
 
-      <div id="profile-grade"><TremplinGradeSystem artist={artist} /></div>
+      <details id="profile-grade" className="tremplin-token-artist__grade-disclosure" open={gradeOpen} onToggle={(event) => setGradeOpen(event.currentTarget.open)}>
+        <summary><span><MeewavGradeBadge level={artist.gradeLevel} size="xs" variant="icon" /><span><small>Grade MeeWav</small><strong>Niveau {artist.gradeLevel} · {getGradeBadgeMeta(artist.gradeLevel).label}</strong></span></span><em>Comprendre le grade</em></summary>
+        <TremplinGradeSystem artist={artist} />
+      </details>
 
       <details id="profile-support" className="tremplin-token-artist__support-disclosure" open={supportOpen} onToggle={(event) => setSupportOpen(event.currentTarget.open)}>
         <summary><span><MeewavTokenIcon title="Jeton Meewav" /><span><small>Espace payant et facultatif</small><strong>Jeton de talent</strong></span></span><em>{isTokenActive ? "Consulter les règles et les options" : tokenLifecycle.availability}</em></summary>

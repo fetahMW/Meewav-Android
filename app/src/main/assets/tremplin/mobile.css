@@ -92,5 +92,42 @@
 #root .mobile-tremplin .tremplin-statistics__metrics [data-selected="true"] { background: #45dfa812; }
 #root .mobile-tremplin .tremplin-statistics__chevron { color: #8f95ab; }
 #root .mobile-tremplin .tremplin-statistics__empty { border-color: #8b93d43d; }
+/* Page artiste « Voir le projet » — surfaces graphite, accent bleu-violet
+   unifié au lieu de la couleur par artiste, densité resserrée. */
+#root .mobile-tremplin .tremplin-token-artist { --artist-accent: #8b93d4; --artist-secondary: #6b76c9; }
+#root .mobile-tremplin .tremplin-token-artist > section { margin-top: 12px; }
+#root .mobile-tremplin .tremplin-token-artist :is(.tremplin-token-artist__hero,.tremplin-token-artist__hero-token,.tremplin-token-artist__creations,.tremplin-token-artist__project,.tremplin-token-artist__room,.tremplin-token-artist__updates article,.tremplin-token-artist__facts,.tremplin-token-artist__support-disclosure,.tremplin-token-artist__grade-disclosure,.tremplin-token-artist__token,.tremplin-token-artist__protections,.tremplin-token-artist__trade-cta,.tremplin-token-artist__support-purpose,.tremplin-token-artist__value-history,.tremplin-token-artist__creation-grid > article,.tremplin-token-artist__token-section) {
+  border: 1px solid #8b93d42e; border-radius: 18px;
+  background: linear-gradient(160deg,#1a1c21,#101115 48%,#0a0b0e);
+  box-shadow: inset 0 1px #ffffff12, 0 10px 22px #00000038;
+}
+#root .mobile-tremplin .tremplin-token-artist :is(.tremplin-token-artist__creations,.tremplin-token-artist__project,.tremplin-token-artist__room,.tremplin-token-artist__updates,.tremplin-token-artist__facts,.tremplin-token-artist__protections,.tremplin-token-artist__trade-cta) { padding: 14px; }
+#root .mobile-tremplin .tremplin-token-artist .tremplin-section-heading h2,
+#root .mobile-tremplin .tremplin-token-artist :is(.tremplin-token-artist__project h2,.tremplin-token-artist__facts h2,.tremplin-token-artist__room h2) { font-size: 19px; line-height: 1.2; }
+#root .mobile-tremplin .tremplin-token-artist .tremplin-kicker { color: #9aa3c7; }
+#root .mobile-tremplin .tremplin-token-artist__portrait { border-radius: 14px; max-height: 320px; }
+#root .mobile-tremplin .tremplin-token-artist__portrait img { max-height: 320px; object-fit: cover; object-position: top; }
+#root .mobile-tremplin .tremplin-token-artist__creation-grid { gap: 10px; }
+#root .mobile-tremplin .tremplin-token-artist__creation-grid > article { padding: 12px; }
+#root .mobile-tremplin .tremplin-token-artist__creation-grid img { border-radius: 10px; }
+#root .mobile-tremplin .tremplin-token-artist__updates > div:last-child { gap: 10px; }
+#root .mobile-tremplin .tremplin-token-artist__updates article { padding: 12px 14px; }
+#root .mobile-tremplin .tremplin-token-artist__updates article h3 { font-size: 15px; }
+#root .mobile-tremplin .tremplin-token-artist__updates article p { font-size: 12.5px; }
+#root .mobile-tremplin .tremplin-token-artist__facts dl > div { border-radius: 12px; background: #ffffff05; padding: 10px 12px; }
+#root .mobile-tremplin .tremplin-token-artist__hero-token { padding: 14px; }
+#root .mobile-tremplin .tremplin-token-artist__hero-token .tremplin-kicker { color: #a9b0d8; }
+#root .mobile-tremplin .tremplin-token-artist__support-disclosure > summary,
+#root .mobile-tremplin .tremplin-token-artist__grade-disclosure > summary { padding: 12px 14px; cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+#root .mobile-tremplin .tremplin-token-artist__grade-disclosure > summary::-webkit-details-marker { display: none; }
+#root .mobile-tremplin .tremplin-token-artist__grade-disclosure > summary > span { display: flex; align-items: center; gap: 10px; min-width: 0; }
+#root .mobile-tremplin .tremplin-token-artist__grade-disclosure > summary span span { display: grid; gap: 1px; }
+#root .mobile-tremplin .tremplin-token-artist__grade-disclosure > summary small { color: #9aa3c7; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; }
+#root .mobile-tremplin .tremplin-token-artist__grade-disclosure > summary strong { color: #f2f3f8; font-size: 13.5px; }
+#root .mobile-tremplin .tremplin-token-artist__grade-disclosure > summary em { color: #8b93d4; font-size: 11px; font-style: normal; white-space: nowrap; }
+#root .mobile-tremplin .tremplin-token-artist__grade-disclosure[open] > summary { border-bottom: 1px solid #8b93d41f; }
+#root .mobile-tremplin .tremplin-token-artist__grade-disclosure .tremplin-grade-system { margin-top: 12px; padding: 0 14px 14px; border: 0; background: transparent; box-shadow: none; }
+#root .mobile-tremplin .tremplin-token-artist__token dl > div { border-radius: 10px; background: #ffffff05; }
+#root .mobile-tremplin .tremplin-token-artist__protections li { border-color: #8b93d424; background: #ffffff04; }
 @media (max-width: 360px) { #root .mobile-tremplin .tremplin-pillar-tabs button strong { font-size: 9px; } }
 @media (prefers-reduced-motion: reduce) { #root .mobile-tremplin * { scroll-behavior: auto !important; } }

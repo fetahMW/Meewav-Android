@@ -121,6 +121,10 @@ await writeFile(join(output, 'THIRD_PARTY_NOTICES.txt'), notices);
 await copyFile(join(source, 'mobile.css'), join(output, 'mobile.css'));
 await copyFile(join(root, 'app/src/main/profile-source/mobile.css'), join(output, 'profile-chrome.css'));
 await copyAsset(join(root, 'app/src/main/assets/globe-vinyle/ui/images/earth_specular.jpg'), 'ui/images/earth_specular.jpg');
+// Pre-profile demo media shared with the globe bundle (video thumbnails are
+// not in Web/public, they live in the vendored globe assets).
+for (const name of ['dj-turntable.mp4', 'female-guitarist.mp4', 'short-live-pulse.webp', 'short-studio-session.webp'])
+  await copyAsset(join(web, `vendor/globe-vinyle/assets/ui/preprofile-demo/${name}`), `media/preprofile-demo/${name}`);
 // CSP is completed by the native interceptor with the configured Supabase
 // origin. No service URL, key or session is written into the shipped document.
 await writeFile(join(output, 'index.html'), `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="dark"><title>Meewav — Tremplin</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/tremplin/assets/main.css"><link rel="stylesheet" href="/tremplin/profile-chrome.css"><link rel="stylesheet" href="/tremplin/mobile.css"></head><body><div id="root">${featureLoadingHtml('Ouverture du Tremplin…')}</div><script type="module" src="/tremplin/assets/main.js"></script></body></html>`);
