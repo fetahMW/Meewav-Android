@@ -16,7 +16,7 @@ export const TREMPLIN_DISCOVERY_TOKEN_UI: Readonly<Record<
   observation: {
     label: "Parcours en observation",
     helper: "Aucun jeton actif",
-    primaryAction: "Voir le parcours",
+    primaryAction: "Voir le profil",
     showPrice: false,
     showChange24h: false,
   },

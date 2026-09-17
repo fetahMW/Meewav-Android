@@ -53,8 +53,9 @@
 #root .mobile-tremplin .tremplin-project-mini__audio { border-color: #8b93d45e; background: #0d0e12e0; }
 #root .mobile-tremplin .tremplin-project-mini__discipline { color: #c2c4dd; }
 #root .mobile-tremplin .tremplin-project-mini__city { color: #b3aede; }
-#root .mobile-tremplin .tremplin-project-mini__body footer button { color: #cdc5f0; }
-#root .mobile-tremplin .tremplin-project-mini__body footer .tremplin-project-mini__follow { border-color: #7d6fd452; }
+#root .mobile-tremplin .tremplin-project-mini__body footer { gap: 8px; margin-top: 6px; }
+#root .mobile-tremplin .tremplin-project-mini__body footer > button:first-child { flex: 1 1 auto; justify-content: center; height: 34px; min-height: 34px; padding: 0 10px; border: 1px solid var(--mobile-cta-rim, #8b93d466); border-radius: 10px; background: var(--mobile-violet-cta, linear-gradient(160deg,#7b5ce8,#5a44b8)); color: #fff; font-size: 10.5px; font-weight: 620; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#root .mobile-tremplin .tremplin-project-mini__body footer .tremplin-project-mini__follow { flex: 0 0 auto; border-color: #7d6fd452; }
 #root .mobile-tremplin .tremplin-project-mini__follow[aria-pressed="true"] { color: #a78bfa; }
 #root .mobile-tremplin .tremplin-project-mini__body { padding: 9px 10px; gap: 0; }
 #root .mobile-tremplin .tremplin-project-mini__body header { min-height: 30px; }

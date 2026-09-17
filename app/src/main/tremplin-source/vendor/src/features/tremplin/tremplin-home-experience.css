@@ -2061,12 +2061,12 @@
 }
 
 .tremplin-home-detail__audio > i b {
-  width: 2px;
+  width: 3px;
   height: var(--wave-height, 18%);
-  flex: 1 1 2px;
-  max-width: 3px;
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--talent-accent) 68%, #c7adff);
+  flex: 1 1 3px;
+  max-width: 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--talent-accent) 55%, #9aa3c7);
 }
 
 .tremplin-home-detail__audio > em {

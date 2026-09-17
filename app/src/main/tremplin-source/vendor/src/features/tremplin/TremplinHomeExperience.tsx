@@ -482,6 +482,7 @@ function HeroProjectCard({ entry, playing, followed, eager = false, instanceId, 
     project.nextMilestone ? `Prochaine étape : ${project.nextMilestone}` : null,
   ].find((candidate) => candidate && normalize(candidate) !== normalize(project.headline)) ?? null;
   const titleId = `mobile-featured-${instanceId}`;
+  const tokenCta = stage === "active" ? "Voir le jeton" : stage === "launch" ? "Jeton bientôt disponible" : stage === "suspended" ? "Jeton suspendu" : stage === "verification" ? "Jeton en vérification" : "Jeton à l’étude";
   return <article className="td-featured" data-tremplin-card data-artist-id={artist.id} data-token-stage={stage} aria-labelledby={titleId}>
     <div className="td-featured-top">
       <div className="td-featured-art"><img src={artist.artwork} alt="" loading={eager ? 'eager' : 'lazy'} /><button tabIndex={controlsTabIndex} aria-label={`Voir le profil de ${artist.name}`} onClick={onOpen} /><span className="td-featured-duration">{artist.audio.durationLabel}</span><button className="td-featured-play" tabIndex={controlsTabIndex} aria-label={`${playing ? 'Mettre en pause' : 'Écouter'} ${artist.name}`} onClick={onToggleAudio}>{playing ? <Pause size={17} /> : <Play size={17} fill="currentColor" />}</button></div>
@@ -489,7 +490,7 @@ function HeroProjectCard({ entry, playing, followed, eager = false, instanceId, 
     </div>
     <div className="td-featured-project"><span>SON PROJET</span><strong>{project.headline}</strong>{projectDescription ? <p>{projectDescription}</p> : null}</div>
     <button className="td-featured-token" tabIndex={controlsTabIndex} onClick={onOpenToken} aria-label={`${status.primaryAction} de ${artist.name}`}><i className="td-featured-token-icon" aria-hidden="true">{stage === "active" ? <MeewavTokenIcon /> : <span />}</i><span>{status.label}<small>{status.showPrice && entry.token ? entry.token.symbol : status.helper}</small>{status.showPrice ? <small className="td-featured-updated">{formatTremplinTokenUpdatedAt(snapshot.updatedAt)}</small> : null}</span>{status.showPrice && entry.token ? <span className="td-featured-value"><strong>{formatTremplinTokenPrice(entry.token.currentValueEur)}</strong><TremplinTokenChange24h value={snapshot.changePercent} /></span> : null}</button>
-    <footer><button className="td-featured-primary" tabIndex={controlsTabIndex} onClick={onOpen}>Voir le projet</button>{status.showPrice && <button className="td-featured-statistics" tabIndex={controlsTabIndex} aria-label={`Statistiques du jeton de ${artist.name}`} onClick={onOpenStatistics}><ChartNoAxesCombined size={19} /></button>}<button className="td-featured-follow" tabIndex={controlsTabIndex} aria-label={`${followed ? 'Ne plus suivre' : 'Suivre'} ${artist.name}`} aria-pressed={followed} onClick={onToggleFollow}><Heart size={19} fill={followed ? 'currentColor' : 'none'} /></button></footer>
+    <footer><button className="td-featured-primary" tabIndex={controlsTabIndex} onClick={onOpenToken}>{tokenCta}</button>{status.showPrice && <button className="td-featured-statistics" tabIndex={controlsTabIndex} aria-label={`Statistiques du jeton de ${artist.name}`} onClick={onOpenStatistics}><ChartNoAxesCombined size={19} /></button>}<button className="td-featured-follow" tabIndex={controlsTabIndex} aria-label={`${followed ? 'Ne plus suivre' : 'Suivre'} ${artist.name}`} aria-pressed={followed} onClick={onToggleFollow}><Heart size={19} fill={followed ? 'currentColor' : 'none'} /></button></footer>
   </article>;
 }
 
@@ -517,7 +518,7 @@ function ProjectMiniCard({ entry, playing, followed, eager = false, instanceId, 
       <button className="td-mini-token" type="button" tabIndex={controlsTabIndex} onClick={onOpenToken} aria-label={`${tokenUi.primaryAction} de ${entry.artist.name}`}>
         {tokenUi.showPrice && entry.token ? <><span><small>{entry.token.symbol} · Jeton actif</small><strong>{formatTremplinTokenPrice(entry.token.currentValueEur)}</strong></span><TremplinTokenChange24h value={token24h.changePercent} /></> : <span className="td-mini-status">{tokenUi.label}</span>}
       </button>
-      <footer><button type="button" tabIndex={controlsTabIndex} onClick={onOpen}>Voir le projet</button><button className="tremplin-project-mini__follow" type="button" tabIndex={controlsTabIndex} onClick={onToggleFollow} aria-label={`${followed ? "Ne plus suivre" : "Suivre"} ${entry.artist.name}`} aria-pressed={followed}><Heart size={14} fill={followed ? "currentColor" : "none"} /></button></footer>
+      <footer><button type="button" tabIndex={controlsTabIndex} onClick={onOpenToken}>{stage === "active" ? "Voir le jeton" : stage === "launch" ? "Jeton bientôt disponible" : stage === "suspended" ? "Jeton suspendu" : stage === "verification" ? "Jeton en vérification" : "Jeton à l’étude"}</button><button className="tremplin-project-mini__follow" type="button" tabIndex={controlsTabIndex} onClick={onToggleFollow} aria-label={`${followed ? "Ne plus suivre" : "Suivre"} ${entry.artist.name}`} aria-pressed={followed}><Heart size={14} fill={followed ? "currentColor" : "none"} /></button></footer>
     </div>
   </article>;
 }
@@ -1513,7 +1514,7 @@ export default function TremplinHomeExperience({
               >
                 <span>{activePlayingArtistId === selectedEntry.artist.id ? <Pause fill="currentColor" /> : <Play fill="currentColor" />}</span>
                 <div><strong>{selectedEntry.artist.audio.title}</strong><small>{selectedEntry.artist.audio.subtitle}</small></div>
-                <i aria-hidden="true">{selectedEntry.artist.audio.waveform.slice(0, 42).map((height, index) => <b key={index} style={{ "--wave-height": `${Math.max(16, height * 100)}%` } as CSSProperties} />)}</i>
+                <i aria-hidden="true">{selectedEntry.artist.audio.waveform.slice(0, 42).map((height, index) => <b key={index} style={{ "--wave-height": `${Math.round(16 + height * 84)}%` } as CSSProperties} />)}</i>
                 <em><Headphones size={14} /> {selectedEntry.artist.audio.durationLabel}</em>
               </button>
 

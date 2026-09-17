@@ -430,11 +430,11 @@
 
 .tremplin-token-card__audio i,
 .tremplin-token-artist__audio i {
-  width: 2px;
+  width: 3px;
   min-height: 3px;
-  flex: 1 1 auto;
+  flex: 1 1 3px;
   border-radius: 999px;
-  background: rgba(160, 138, 226, 0.38);
+  background: rgba(158, 164, 210, 0.4);
   transform-origin: center;
 }
 
