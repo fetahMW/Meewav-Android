@@ -1377,7 +1377,7 @@ export default function MarketPage() {
       ? (selectedProduct.collective?.daysRemaining ?? 0) <= 0
         ? "Campagne terminée"
         : joinedCollectives.has(selectedProduct.id) ? "Participation enregistrée" : "Rejoindre l’achat groupé"
-      : "Ajouter au panier";
+      : "Panier";
   const selectedActionKey = selectedProduct
     ? selectedProduct.pillarId === "rental"
       ? `rental:${selectedProduct.id}`

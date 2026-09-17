@@ -12,7 +12,7 @@ export type TremplinStatisticsEntry = {
 export const TREMPLIN_STATISTICS_SORTS: readonly { id: TremplinStatisticsSort; label: string }[] = [
   { id: "value", label: "Valeur" },
   { id: "progression7d", label: "Progression 7j" },
-  { id: "holders", label: "Classement MeeWav France" },
+  { id: "holders", label: "Communauté" },
 ];
 
 export function getTremplinStatisticsRanking(

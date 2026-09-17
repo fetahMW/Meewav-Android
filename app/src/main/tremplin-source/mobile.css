@@ -59,7 +59,7 @@
 #root .mobile-tremplin .tremplin-scroll :is(.tremplin-token-home,.tremplin-token-artist,.tremplin-my-dashboard,.tremplin-home-discovery,.tremplin-token-education) { min-width: 0; max-width: 100%; margin-inline: 0; }
 #root .mobile-tremplin .tremplin-scroll.is-home-wall .tremplin-home-discovery { height: auto; min-height: 100%; }
 #root .mobile-tremplin .tremplin-my-dashboard__header h1 { font-size: 27px; line-height: 1.2; }
-#root .mobile-tremplin .tremplin-token-artist__hero { grid-template-columns: minmax(0,1fr); gap: 16px; padding: 16px; }
+#root .mobile-tremplin .tremplin-token-artist__hero { grid-template-columns: minmax(0,1fr); gap: 16px; padding: 0; }
 #root .mobile-tremplin .tremplin-token-artist__hero h1 { font-size: 28px; }
 #root .mobile-tremplin .tremplin-token-artist__section-nav { position: sticky; top: -12px; z-index: 10; padding: 8px; gap: 4px; border: 1px solid #bda3e52c; border-radius: 14px; background: var(--profile-selector-glass); backdrop-filter: blur(22px); display: flex; overflow-x: auto; scrollbar-width: none; }
 #root .mobile-tremplin .tremplin-token-artist__section-nav :is(a,button) { flex-shrink: 0; min-height: 44px; display: inline-flex; align-items: center; padding: 6px 10px; font-size: 12px; }
@@ -80,31 +80,41 @@
 #root .mobile-tremplin .tremplin-statistics__header h1 { font-size: 26px; }
 #root .mobile-tremplin .tremplin-statistics__filters { gap: 8px; }
 #root .mobile-tremplin .tremplin-statistics__filters button { flex: 1 1 44%; min-height: 42px; border: 1px solid #8b93d433; border-radius: 14px; background: #14161cd9; color: #c6c9d6; box-shadow: inset 0 1px #ffffff0a; }
-#root .mobile-tremplin .tremplin-statistics__filters button[aria-pressed="true"] { background: #45dfa812; border-color: #45dfa873; color: #7ce8bd; box-shadow: inset 0 1px #ffffff0d,0 4px 14px #00000030; }
+#root .mobile-tremplin .tremplin-statistics__filters button[aria-pressed="true"] { background: #8b93d414; border-color: #8b93d473; color: #b7bdf0; box-shadow: inset 0 1px #ffffff0d,0 4px 14px #00000030; }
 #root .mobile-tremplin .tremplin-statistics__filters button[data-sort="holders"] { border-color: #a78bfa5e; background: linear-gradient(135deg, #7a5cff, #a78bfa); color: #fff; box-shadow: inset 0 1px #ffffff33, 0 4px 14px #7a5cff40; }
 #root .mobile-tremplin .tremplin-statistics__filters button[data-sort="holders"][aria-pressed="true"] { background: linear-gradient(135deg, #8b6dff, #b394ff); border-color: #c9b6ff; color: #fff; box-shadow: inset 0 1px #ffffff40, 0 0 18px #8b6dff59; }
-#root .mobile-tremplin .tremplin-statistics__list { gap: 10px; }
-#root .mobile-tremplin .tremplin-statistics__row { grid-template-columns: 28px 46px minmax(0,1fr) 16px; gap: 12px; padding: 13px 14px; border: 1px solid #8b93d42e; border-radius: 18px; background: linear-gradient(160deg,#1a1c21,#101115 48%,#0a0b0e); box-shadow: inset 0 1px #ffffff12,0 10px 22px #00000038; }
-#root .mobile-tremplin .tremplin-statistics__row:active { border-color: #8b93d459; background: linear-gradient(160deg,#1e2027,#121318 48%,#0b0c10); }
+#root .mobile-tremplin .tremplin-statistics__list { gap: 0; }
+#root .mobile-tremplin .tremplin-statistics__list li + li { border-top: 1px solid #8b93d422; }
+#root .mobile-tremplin .tremplin-statistics__row { grid-template-columns: 28px 46px minmax(0,1fr) 16px; gap: 12px; padding: 14px 2px; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+#root .mobile-tremplin .tremplin-statistics__row:active { background: #8b93d40d; }
 #root .mobile-tremplin .tremplin-statistics__rank { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: #ffffff09; font-size: 12px; }
-#root .mobile-tremplin .tremplin-statistics__list li:first-child .tremplin-statistics__rank { background: #45dfa81a; }
+#root .mobile-tremplin .tremplin-statistics__list li:first-child .tremplin-statistics__rank { background: #8b6dff26; }
 #root .mobile-tremplin .tremplin-statistics__row img { border: 1px solid #8b93d433; }
 #root .mobile-tremplin .tremplin-statistics__metrics { padding-top: 11px; border-top: 1px solid #8b93d41f; }
 #root .mobile-tremplin .tremplin-statistics__metrics > span { padding: 8px 10px; border-radius: 10px; background: #ffffff05; }
-#root .mobile-tremplin .tremplin-statistics__metrics [data-selected="true"] { background: #45dfa812; }
+#root .mobile-tremplin .tremplin-statistics__metrics [data-selected="true"] { background: #8b93d412; }
 #root .mobile-tremplin .tremplin-statistics__chevron { color: #8f95ab; }
 #root .mobile-tremplin .tremplin-statistics__empty { border-color: #8b93d43d; }
 /* Page artiste « Voir le projet » — surfaces graphite, accent bleu-violet
    unifié au lieu de la couleur par artiste, densité resserrée. */
 #root .mobile-tremplin .tremplin-token-artist { --artist-accent: #8b93d4; --artist-secondary: #6b76c9; }
 #root .mobile-tremplin .tremplin-token-artist > section,
-#root .mobile-tremplin .tremplin-token-artist > details { margin-top: 12px; }
-#root .mobile-tremplin .tremplin-token-artist :is(.tremplin-token-artist__hero,.tremplin-token-artist__hero-token,.tremplin-token-artist__activity,.tremplin-token-artist__support-disclosure,.tremplin-token-artist__grade-disclosure,.tremplin-token-artist__token,.tremplin-token-artist__protections,.tremplin-token-artist__trade-cta,.tremplin-token-artist__support-purpose,.tremplin-token-artist__value-history,.tremplin-token-artist__token-section) {
+#root .mobile-tremplin .tremplin-token-artist > details { margin-top: 0; }
+/* Pas de conteneur gris : les sections flottent sur le fond de scène, séparées par des filets. */
+#root .mobile-tremplin .tremplin-token-artist :is(.tremplin-token-artist__hero,.tremplin-token-artist__activity,.tremplin-token-artist__support-disclosure,.tremplin-token-artist__grade-disclosure) { border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+#root .mobile-tremplin .tremplin-token-artist > section + section,
+#root .mobile-tremplin .tremplin-token-artist > section + details,
+#root .mobile-tremplin .tremplin-token-artist > details + details,
+#root .mobile-tremplin .tremplin-token-artist > details { border-top: 1px solid #8b93d422; padding-top: 16px; margin-top: 16px; }
+#root .mobile-tremplin .tremplin-token-artist > details > summary { padding: 0 0 2px; }
+/* Les vignettes restent des cartes de verre flottantes sur le fond. */
+#root .mobile-tremplin .tremplin-token-artist :is(.tremplin-token-artist__hero-token,.tremplin-token-artist__token,.tremplin-token-artist__protections,.tremplin-token-artist__trade-cta,.tremplin-token-artist__support-purpose,.tremplin-token-artist__value-history,.tremplin-token-artist__token-section) {
   border: 1px solid #8b93d42e; border-radius: 18px;
-  background: linear-gradient(160deg,#1a1c21d9,#101115d9 48%,#0a0b0ed9);
+  background: linear-gradient(160deg,#1a1c21cc,#101115cc 48%,#0a0b0ecc);
   box-shadow: inset 0 1px #ffffff12, 0 10px 22px #00000038;
 }
-#root .mobile-tremplin .tremplin-token-artist :is(.tremplin-token-artist__activity,.tremplin-token-artist__protections,.tremplin-token-artist__trade-cta) { padding: 14px; }
+#root .mobile-tremplin .tremplin-token-artist :is(.tremplin-token-artist__activity,.tremplin-token-artist__protections,.tremplin-token-artist__trade-cta) { padding: 0; }
+#root .mobile-tremplin .tremplin-token-artist :is(.tremplin-token-artist__protections,.tremplin-token-artist__trade-cta) { padding: 14px; }
 #root .mobile-tremplin .tremplin-token-artist .tremplin-section-heading h2 { font-size: 19px; line-height: 1.2; }
 #root .mobile-tremplin .tremplin-token-artist .tremplin-section-heading p { font-size: 12px; }
 #root .mobile-tremplin .tremplin-token-artist .tremplin-kicker { color: #9aa3c7; }
@@ -138,17 +148,19 @@
 #root .mobile-tremplin .tremplin-token-artist__stats strong { color: #f2f4fa; font-size: 12.5px; font-weight: 720; line-height: 1.3; }
 #root .mobile-tremplin .tremplin-token-artist__stats article > span { color: #8f94a8; font-size: 9px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; }
 
-/* Lecteur audio — pochette + progression */
-#root .mobile-tremplin .tremplin-token-artist__audio { grid-template-columns: 62px minmax(0, 1fr); gap: 13px; margin-top: 14px; padding: 12px; border: 1px solid #8b93d433; border-radius: 17px; background: linear-gradient(160deg, #1f222bf2, #0f1118f2); box-shadow: inset 0 1px 0 #ffffff0d; }
-#root .mobile-tremplin .tremplin-token-artist__audio > div:nth-child(2) { align-content: center; gap: 4px; }
-#root .mobile-tremplin .tremplin-token-artist__audio > div:last-child { display: grid; height: auto; align-items: center; align-content: center; gap: 4px; overflow: visible; }
-#root .mobile-tremplin .tremplin-token-artist__audio-art { position: relative; width: 62px; height: 62px; border-radius: 13px; overflow: hidden; box-shadow: 0 8px 18px #00000073; }
-#root .mobile-tremplin .tremplin-token-artist__audio-art::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px #ffffff24; }
+/* Lecteur audio — une ligne compacte : pochette+play | titre+barre */
+#root .mobile-tremplin .tremplin-token-artist__audio { grid-template-columns: 44px minmax(0, 1fr); gap: 10px; align-items: center; margin-top: 12px; padding: 8px 10px; border: 1px solid #8b93d42e; border-radius: 14px; background: linear-gradient(160deg, #1d2029cc, #0e1016cc); box-shadow: inset 0 1px 0 #ffffff0d; }
+#root .mobile-tremplin .tremplin-token-artist__audio > div:nth-child(2) { align-content: center; gap: 3px; min-width: 0; }
+#root .mobile-tremplin .tremplin-token-artist__audio > div:last-child { display: grid; grid-column: auto; height: auto; align-items: center; align-content: center; gap: 3px; overflow: visible; }
+#root .mobile-tremplin .tremplin-token-artist__audio-art { position: relative; width: 44px; height: 44px; border-radius: 11px; overflow: hidden; box-shadow: 0 6px 14px #00000066; }
+#root .mobile-tremplin .tremplin-token-artist__audio-art::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px #ffffff24; pointer-events: none; }
 #root .mobile-tremplin .tremplin-token-artist__audio-art img { display: block; width: 100%; height: 100%; object-fit: cover; }
-#root .mobile-tremplin .tremplin-token-artist__audio-art button { position: absolute; inset: 0; margin: auto; display: grid; width: 33px; height: 33px; place-items: center; padding: 0; border: 1px solid #ffffff4d; border-radius: 50%; background: #160f38cc; color: #fff; }
-#root .mobile-tremplin .tremplin-token-artist__audio-art button svg { width: 13px; height: 13px; }
-#root .mobile-tremplin .tremplin-token-artist__audio-track { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
-#root .mobile-tremplin .tremplin-token-artist__audio-track i { flex: 1; display: block; width: auto; height: 5px; border-radius: 99px; background: #ffffff14; overflow: hidden; font-style: normal; }
+#root .mobile-tremplin .tremplin-token-artist__audio-art button { position: absolute; inset: 0; margin: auto; z-index: 1; display: grid; width: 26px; height: 26px; place-items: center; padding: 0; border: 1px solid #ffffff4d; border-radius: 50%; background: #160f38d9; color: #fff; }
+#root .mobile-tremplin .tremplin-token-artist__audio-art button svg { width: 11px; height: 11px; }
+#root .mobile-tremplin .tremplin-token-artist__audio > div:nth-child(2) strong { font-size: 12.5px; }
+#root .mobile-tremplin .tremplin-token-artist__audio > div:nth-child(2) span { font-size: 10px; }
+#root .mobile-tremplin .tremplin-token-artist__audio-track { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
+#root .mobile-tremplin .tremplin-token-artist__audio-track i { flex: 1; display: block; width: auto; height: 4px; border-radius: 99px; background: #ffffff14; overflow: hidden; font-style: normal; }
 #root .mobile-tremplin .tremplin-token-artist__audio-track b { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #7a5cff, #a78bfa); transition: width .25s linear; }
 #root .mobile-tremplin .tremplin-token-artist__audio-track time { flex: 0 0 auto; color: #9aa0b5; font-size: 10px; font-variant-numeric: tabular-nums; }
 #root .mobile-tremplin .tremplin-token-artist__actions { display: flex; gap: 8px; }
@@ -156,7 +168,9 @@
 #root .mobile-tremplin .tremplin-token-artist__hero-token { padding: 14px; }
 #root .mobile-tremplin .tremplin-token-artist__hero-token .tremplin-kicker { color: #a9b0d8; }
 #root .mobile-tremplin .tremplin-token-artist__support-disclosure > summary,
-#root .mobile-tremplin .tremplin-token-artist__grade-disclosure > summary { padding: 12px 14px; cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+#root .mobile-tremplin .tremplin-token-artist__grade-disclosure > summary { padding: 0 2px; cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+#root .mobile-tremplin .tremplin-token-artist__grade-disclosure[open] > summary,
+#root .mobile-tremplin .tremplin-token-artist__support-disclosure[open] > summary { padding-bottom: 12px; border-bottom: 1px solid #8b93d422; }
 #root .mobile-tremplin .tremplin-token-artist__grade-disclosure > summary::-webkit-details-marker { display: none; }
 #root .mobile-tremplin .tremplin-token-artist__grade-disclosure > summary > span { display: flex; align-items: center; gap: 10px; min-width: 0; }
 #root .mobile-tremplin .tremplin-token-artist__grade-disclosure > summary span span { display: grid; gap: 1px; }
