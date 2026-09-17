@@ -71,8 +71,8 @@ type RoomsHomeFilters = {
   musicStyle: string;
   gradeLevels: number[];
   accessType: "all" | RoomsHomeAccessType;
-  language: "all" | "fr" | "en";
-  followedOnly: boolean;
+  cities: string[];
+  districts: string[];
 };
 
 const EMPTY_FILTERS: RoomsHomeFilters = {
@@ -81,9 +81,15 @@ const EMPTY_FILTERS: RoomsHomeFilters = {
   musicStyle: "all",
   gradeLevels: [],
   accessType: "all",
-  language: "all",
-  followedOnly: false,
+  cities: [],
+  districts: [],
 };
+
+const ROOMS_HOME_CITIES = [...new Set(ROOMS_HOME_CATALOG.map((room) => room.city).filter((city): city is string => Boolean(city)))];
+const ROOMS_HOME_DISTRICTS_BY_CITY = ROOMS_HOME_CITIES.reduce<Record<string, string[]>>((acc, city) => {
+  acc[city] = [...new Set(ROOMS_HOME_CATALOG.filter((room) => room.city === city).map((room) => room.district).filter((district): district is string => Boolean(district)))];
+  return acc;
+}, {});
 
 function normalized(value: string) {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("fr");
@@ -123,8 +129,8 @@ function roomMatchesFilters(room: RoomsHomeRoom, query: string, filters: RoomsHo
   if (filters.musicStyle !== "all" && room.musicStyle !== filters.musicStyle) return false;
   if (filters.gradeLevels.length > 0 && (!room.gradeLevel || !filters.gradeLevels.includes(room.gradeLevel))) return false;
   if (filters.accessType !== "all" && room.accessType !== filters.accessType) return false;
-  if (filters.language !== "all" && room.language !== filters.language) return false;
-  if (filters.followedOnly && !room.isFollowedHost) return false;
+  if (filters.cities.length > 0 && (!room.city || !filters.cities.includes(room.city))) return false;
+  if (filters.districts.length > 0 && (!room.district || !filters.districts.includes(room.district))) return false;
   return true;
 }
 
@@ -134,8 +140,8 @@ function filterCount(filters: RoomsHomeFilters) {
     + filters.gradeLevels.length
     + (filters.musicStyle === "all" ? 0 : 1)
     + (filters.accessType === "all" ? 0 : 1)
-    + (filters.language === "all" ? 0 : 1)
-    + (filters.followedOnly ? 1 : 0);
+    + filters.cities.length
+    + filters.districts.length;
 }
 
 function toggleValue<T>(values: readonly T[], value: T): T[] {
@@ -235,15 +241,26 @@ export function RoomsHome({ collectionSlug = null, roomType, onOpenRoom }: Rooms
       label: filters.accessType === "members" ? "Membres" : filters.accessType === "invitation" ? "Invitation" : "Public",
       onRemove: () => setFilters((current) => ({ ...current, accessType: "all" })),
     });
-    if (filters.language !== "all") chips.push({
-      id: "language",
-      label: filters.language === "fr" ? "Français" : "English",
-      onRemove: () => setFilters((current) => ({ ...current, language: "all" })),
+    filters.cities.forEach((city) => {
+      chips.push({
+        id: `city:${city}`,
+        label: city,
+        onRemove: () => setFilters((current) => ({
+          ...current,
+          cities: current.cities.filter((value) => value !== city),
+          districts: current.districts.filter((value) => !(ROOMS_HOME_DISTRICTS_BY_CITY[city] ?? []).includes(value)),
+        })),
+      });
     });
-    if (filters.followedOnly) chips.push({
-      id: "followed",
-      label: "Artistes suivis",
-      onRemove: () => setFilters((current) => ({ ...current, followedOnly: false })),
+    filters.districts.forEach((district) => {
+      chips.push({
+        id: `district:${district}`,
+        label: district,
+        onRemove: () => setFilters((current) => ({
+          ...current,
+          districts: current.districts.filter((value) => value !== district),
+        })),
+      });
     });
     return chips;
   }, [filters]);
@@ -598,28 +615,54 @@ export function RoomsHome({ collectionSlug = null, roomType, onOpenRoom }: Rooms
           </div>
         </MeewavFilterSection>
 
-        <MeewavFilterSection label="Langue et affinité" summary={draftFilters.followedOnly ? "Artistes suivis" : "Toutes"}>
-          <div className="meewav-filter-choice-grid">
-            {(["all", "fr", "en"] as const).map((language) => (
+        <MeewavFilterSection
+          label="Par lieu"
+          summary={draftFilters.cities.length === 0
+            ? "Partout en France"
+            : draftFilters.cities.length === 1
+              ? (draftFilters.districts.length > 0 ? draftFilters.districts.join(", ") : draftFilters.cities[0])
+              : `${draftFilters.cities.length} villes`}
+        >
+          <div className="meewav-filter-choice-grid" role="group" aria-label="Filtrer par ville">
+            {ROOMS_HOME_CITIES.map((city) => (
               <button
-                key={language}
+                key={city}
                 type="button"
-                className={`meewav-filter-choice${draftFilters.language === language ? " is-active" : ""}`}
-                aria-pressed={draftFilters.language === language}
-                onClick={() => setDraftFilters((current) => ({ ...current, language }))}
+                className={`meewav-filter-choice${draftFilters.cities.includes(city) ? " is-active" : ""}`}
+                aria-pressed={draftFilters.cities.includes(city)}
+                onClick={() => setDraftFilters((current) => {
+                  const removing = current.cities.includes(city);
+                  return {
+                    ...current,
+                    cities: toggleValue(current.cities, city),
+                    districts: removing
+                      ? current.districts.filter((value) => !(ROOMS_HOME_DISTRICTS_BY_CITY[city] ?? []).includes(value))
+                      : current.districts,
+                  };
+                })}
               >
-                {language === "all" ? "Toutes les langues" : language === "fr" ? "Français" : "English"}
+                {city}
               </button>
             ))}
-            <button
-              type="button"
-              className={`meewav-filter-choice${draftFilters.followedOnly ? " is-active" : ""}`}
-              aria-pressed={draftFilters.followedOnly}
-              onClick={() => setDraftFilters((current) => ({ ...current, followedOnly: !current.followedOnly }))}
-            >
-              Mes artistes suivis
-            </button>
           </div>
+          {draftFilters.cities.length === 1 ? (
+            <div className="meewav-filter-choice-grid rooms-home-filter__districts" role="group" aria-label={`Quartiers de ${draftFilters.cities[0]}`}>
+              {(ROOMS_HOME_DISTRICTS_BY_CITY[draftFilters.cities[0]] ?? []).map((district) => (
+                <button
+                  key={district}
+                  type="button"
+                  className={`meewav-filter-choice${draftFilters.districts.includes(district) ? " is-active" : ""}`}
+                  aria-pressed={draftFilters.districts.includes(district)}
+                  onClick={() => setDraftFilters((current) => ({
+                    ...current,
+                    districts: toggleValue(current.districts, district),
+                  }))}
+                >
+                  {district}
+                </button>
+              ))}
+            </div>
+          ) : null}
         </MeewavFilterSection>
       </MeewavFilterPanel>
 

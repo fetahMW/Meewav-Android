@@ -258,5 +258,8 @@
 #root .mobile-rooms .rooms-home-card--featured .rooms-home-card__title { font-size: 1rem; }
 #root .mobile-rooms .rooms-home-card__host { margin-top: 0; }
 #root .mobile-rooms .rooms-home-card__host-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Filtre « Par lieu » — les quartiers se détachent sous les villes. */
+#root .mobile-rooms .rooms-home-filter__districts { margin-top: .55rem; padding-top: .55rem; border-top: 1px dashed rgba(255,255,255,.14); }
 #root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__audience,
 #root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__duration { font-size: .6rem; padding: .22rem .4rem; }

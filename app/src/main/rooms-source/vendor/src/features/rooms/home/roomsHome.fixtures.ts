@@ -342,9 +342,25 @@ function score(base: number, index: number, batchIndex: number, step: number) {
 
 function createRoomBatch(seed: RoomBatchSeed, batchIndex: number): RoomsHomeRoom[] {
   const cities = ["Paris", "Lyon", "Marseille", "Bordeaux", "Lille", "Nantes", "Toulouse", "Strasbourg", "Rennes", "Montpellier", "Nice", "Rouen"];
+  const districtsByCity: Record<string, string[]> = {
+    Paris: ["Le Marais", "Montmartre", "Belleville", "Saint-Germain"],
+    Lyon: ["Croix-Rousse", "Confluence", "Part-Dieu", "Vieux Lyon"],
+    Marseille: ["Le Panier", "Cours Julien", "La Joliette", "Castellane"],
+    Bordeaux: ["Chartrons", "Saint-Michel", "Bastide", "Saint-Pierre"],
+    Lille: ["Vieux-Lille", "Wazemmes", "Saint-Sauveur", "Moulins"],
+    Nantes: ["Bouffay", "Chantenay", "Procé", "Doulon"],
+    Toulouse: ["Carmes", "Saint-Cyprien", "Compans", "Minimes"],
+    Strasbourg: ["Krutenau", "Petite France", "Neudorf", "Contades"],
+    Rennes: ["Centre", "Saint-Martin", "Maurepas", "Villejean"],
+    Montpellier: ["Écusson", "Antigone", "Port Marianne", "Celleneuve"],
+    Nice: ["Vieux-Nice", "Le Port", "Libération", "Cimiez"],
+    Rouen: ["Vieux-Marché", "Saint-Marc", "Sainte-Catherine", "Sapins"],
+  };
   return Array.from({ length: 48 }, (_, index) => {
     const originalIndex = index % seed.titles.length;
     const city = cities[(index + batchIndex * 2) % cities.length];
+    const cityDistricts = districtsByCity[city];
+    const district = cityDistricts[(index + batchIndex) % cityDistricts.length];
     const title = seed.titles[originalIndex];
     const artist = SCENE_DEMO_ARTISTS[(seed.artistOffset + index) % SCENE_DEMO_ARTISTS.length];
     const mediaFormat = index % 2 === 1 ? "vertical" : "horizontal";
@@ -377,6 +393,7 @@ function createRoomBatch(seed: RoomBatchSeed, batchIndex: number): RoomsHomeRoom
       language: index % 7 === 5 ? "en" : "fr",
       country: "FR",
       city,
+      district,
       tags: [...seed.tags, artist.style.toLocaleLowerCase("fr")],
       startedAt: new Date(Date.now() - elapsedMinutes * 60_000).toISOString(),
       isFollowedHost: globalIndex % 3 !== 2,

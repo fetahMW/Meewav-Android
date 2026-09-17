@@ -160,16 +160,13 @@ export default function VerticalMediaCard({
 
         {item.isAiArtist ? <span className="scene-vertical-card__format">Artiste IA</span> : null}
         <span className="scene-vertical-card__duration">{item.duration}</span>
+        <span className="scene-vertical-card__views">{item.views}</span>
         {isSaved ? <span className="scene-vertical-card__saved"><Bookmark fill="currentColor" /> Sélection</span> : null}
         {typeof progressPercent === "number" ? (
           <span className="scene-vertical-card__progress" aria-label={`Lecture à ${Math.round(progressPercent)} %`}>
             <i style={{ width: `${Math.max(0, Math.min(100, progressPercent))}%` }} />
           </span>
         ) : null}
-
-        <div className="scene-vertical-card__title">
-          <h3>{item.title}</h3>
-        </div>
 
         <button
           ref={optionsRef}
@@ -219,10 +216,11 @@ export default function VerticalMediaCard({
 
       <div className="scene-vertical-card__meta">
         <div>
+          <h3 className="scene-vertical-card__heading">{item.title}</h3>
           <p>
+            <img className="scene-vertical-card__avatar" src={item.artistPortrait ?? item.image} alt="" loading="lazy" decoding="async" />
             <button type="button" onClick={() => onViewProfile(item)}>{item.artist}</button>
           </p>
-          <span>{item.views} · {publishedLabel}</span>
         </div>
       </div>
 

@@ -1219,6 +1219,20 @@ function VideoCard({
             {viewingState}
           </span>
         ) : null}
+        <span className="scene-video-card__views"><i>{item.views}</i><i>{publishedLabel ?? scenePublishedLabel(item)}</i></span>
+        <button
+          ref={optionsRef}
+          type="button"
+          className="shorts-card-options"
+          aria-label={`Actions pour ${item.title}`}
+          title="Plus d’options"
+          aria-expanded={menuOpen}
+          aria-haspopup="menu"
+          aria-controls={menuId}
+          onClick={() => onToggleMenu(item)}
+        >
+          <MoreVertical />
+        </button>
       </div>
       <div className="shorts-landscape-card__copy scene-video-card__body">
         <div className="scene-video-card__avatar-slot">
@@ -1250,24 +1264,7 @@ function VideoCard({
               title={`Grade MeeWav de ${item.artist}`}
             />
           </p>
-          <span className="shorts-video-card__meta">
-            <i>{item.views}</i>
-            <i>{publishedLabel ?? scenePublishedLabel(item)}</i>
-          </span>
         </div>
-        <button
-          ref={optionsRef}
-          type="button"
-          className="shorts-card-options"
-          aria-label={`Actions pour ${item.title}`}
-          title="Plus d’options"
-          aria-expanded={menuOpen}
-          aria-haspopup="menu"
-          aria-controls={menuId}
-          onClick={() => onToggleMenu(item)}
-        >
-          <MoreVertical />
-        </button>
         <FloatingSceneCardMenu
           anchorRef={optionsRef}
           id={menuId}

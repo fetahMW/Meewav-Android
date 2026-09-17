@@ -39,6 +39,7 @@ export type RoomsHomeRoom = {
   language: string;
   country: string;
   city?: string;
+  district?: string;
   tags: readonly string[];
   startedAt: string;
   isFollowedHost: boolean;
