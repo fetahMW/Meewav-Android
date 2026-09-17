@@ -10,6 +10,8 @@
 .mobile-tremplin-menu hr { width: 100%; margin: 4px 0; border: 0; border-top: 1px solid #ffffff12; }
 #root .mobile-tremplin .tremplin-page { position: absolute; z-index: auto; inset: 0; min-height: 0; width: 100%; --tremplin-nav-space: 0px; --tremplin-primary-band-height: 100px; --tremplin-header-height: 0px; --tremplin-secondary-band-height: 0px; }
 #root .mobile-tremplin .tremplin-primary-rail { display: none; }
+/* Voile graphite : on garde la texture de la scène, on retire le violet. */
+#root .mobile-tremplin .tremplin-page__background { background: linear-gradient(180deg,rgba(6,7,11,.86),rgba(6,7,11,.93)), #000 url("/images/meewav-acoustic-violet-background.png") center / cover no-repeat; }
 #root .mobile-tremplin .tremplin-shell { inset: 0; display: block; padding: 0; }
 #root .mobile-tremplin .tremplin-topbar {
   position: absolute; z-index: 30; inset: 0 0 auto; display: grid;
