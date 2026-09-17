@@ -188,7 +188,7 @@ const SERVICE_CATEGORIES: MarketCategory[] = [
 ];
 
 const PILLAR_META: Record<MarketPillarId, { icon: LucideIcon; accent: string; short: string }> = {
-  new: { icon: PackageCheck, accent: "91, 124, 255", short: "Produit neuf, stock et garantie" },
+  new: { icon: PackageCheck, accent: "162, 112, 240", short: "Produit neuf, stock et garantie" },
   used: { icon: Repeat2, accent: "233, 162, 59", short: "État réel et histoire du matériel" },
   rental: { icon: CalendarDays, accent: "39, 194, 209", short: "Tarifs, caution et calendrier" },
   services: { icon: Sparkles, accent: "198, 91, 255", short: "Talent, Room ou billetterie" },
@@ -974,7 +974,7 @@ export default function MarketListingComposer({
   if (dismissed) return null;
 
   return (
-    <div className="market-listing-composer" data-pillar={pillar} style={{ "--listing-accent": pillarMeta.accent } as CSSProperties}>
+    <div className="market-listing-composer" data-pillar={pillar} style={{ "--listing-accent": "162, 112, 240" } as CSSProperties}>
       <div className="market-listing-composer__backdrop" aria-hidden="true" />
       <div
         className="market-listing-composer__dialog"
