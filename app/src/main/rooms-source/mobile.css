@@ -1,17 +1,220 @@
-#root .mobile-rooms .rooms-page { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding: 64px 16px calc(var(--feature-dock-inset, 104px) + 24px); box-sizing: border-box; }
-#root .mobile-rooms .rooms-page__background { position: fixed; inset: 0; background-position: center; background-size: cover; background-repeat: no-repeat; background-color: #0b0a12; }
-#root .mobile-rooms .rooms-page__background::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, #0b0a12cc, #0b0a1233 30%, #0b0a12cc 78%, #0b0a12f2); }
-#root .mobile-rooms .rooms-page__header { position: relative; display: flex; align-items: center; gap: 14px; padding: 6px 4px 20px; }
-#root .mobile-rooms .rooms-page__logo { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 14px; background: linear-gradient(160deg, #7b5cd6, #4a2f96); box-shadow: 0 6px 18px #4a2f9666, inset 0 1px 0 #ffffff2e; color: #f1ebff; }
-#root .mobile-rooms .rooms-page__header h1 { margin: 0; font-size: 26px; font-weight: 750; letter-spacing: .01em; color: #f4f0ff; }
-#root .mobile-rooms .rooms-page__header p { margin: 2px 0 0; font-size: 13px; color: #cfc6e6b8; }
-#root .mobile-rooms .rooms-page__list { position: relative; display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
-#root .mobile-rooms .rooms-page__room { display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 14px; border: 1px solid #b9a6d526; border-radius: 18px; background: linear-gradient(165deg, #171427d9, #0f0d1acc); box-shadow: 0 10px 26px #00000045, inset 0 1px 0 #ffffff14; color: #ece6fb; text-align: left; font: inherit; cursor: pointer; }
-#root .mobile-rooms .rooms-page__room:active { transform: scale(.985); }
-#root .mobile-rooms .rooms-page__room:disabled { cursor: default; opacity: .72; }
-#root .mobile-rooms .rooms-page__room-icon { display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; border-radius: 13px; background: #a675f51f; border: 1px solid #a675f533; color: #c9aefc; }
-#root .mobile-rooms .rooms-page__room-copy { display: grid; gap: 3px; min-width: 0; flex: 1; }
-#root .mobile-rooms .rooms-page__room-copy strong { font-size: 15.5px; font-weight: 680; }
-#root .mobile-rooms .rooms-page__room-copy small { font-size: 12px; color: #c5bbe0a8; }
-#root .mobile-rooms .rooms-page__room-soon { flex: 0 0 auto; padding: 4px 10px; border-radius: 100px; font-size: 11px; font-weight: 650; letter-spacing: .03em; color: #cbb8f5; background: #a675f51c; border: 1px solid #a675f52e; }
-#root .mobile-rooms .rooms-page__room > svg { color: #b9a6d58c; }
+/* Rooms : même châssis que Marketplace — topbar fixe (marque + onglets scrollables)
+   et même fond que la page d'accueil Market (image acoustique sur #000, sans voile).
+   Les icônes restent neutres au repos et s'alimentent de la couleur de leur room
+   quand leur onglet est actif (Accueil blanc, chaque pièce sa teinte). */
+#root .mobile-rooms .rooms-page { position: absolute; inset: 0; overflow: hidden; }
+#root .mobile-rooms .rooms-page__background { position: absolute; z-index: -1; inset: 0; background: #000 center / cover no-repeat; }
+#root .mobile-rooms .rooms-pillar-tabs > button { flex: 0 0 25%; min-width: 0; max-width: 25%; }
+#root .mobile-rooms .rooms-pillar-tabs::-webkit-scrollbar { display: none; }
+#root .mobile-rooms .rooms-pillar-tabs > button.is-active .meewav-pillar-tabs__icon { color: var(--meewav-pillar-tab-accent); }
+#root .mobile-rooms .rooms-pillar-tabs > button.is-active::after { left: 50%; right: auto; width: 44px; transform: translateX(-50%); }
+
+/* ── Accueil Netflix : la home occupe tout l'espace sous la topbar ── */
+#root .mobile-rooms .rooms-page__home { position: absolute; z-index: 1; inset: 100px 0 0; min-height: 0; }
+#root .mobile-rooms .rooms-home { scrollbar-width: none; }
+#root .mobile-rooms .rooms-home::-webkit-scrollbar { display: none; }
+#root .mobile-rooms .rooms-home__ambient { display: none; }
+
+/* Contrôles : recherche compacte + chips de format ; le bouton « Lancer une Room »
+   du header web est remplacé par le FAB façon iOS au-dessus du dock. */
+#root .mobile-rooms .rooms-home__controls { min-height: 0; padding: 10px 14px 6px; gap: 8px; flex-wrap: wrap; backdrop-filter: none; -webkit-backdrop-filter: none; background: #07060d; border: 0; z-index: 10; }
+#root .mobile-rooms .rooms-home__search-wrap { flex: 1 1 100%; min-width: 0; }
+#root .mobile-rooms .rooms-home__search.meewav-search-filter-bar.is-flow { width: 100%; min-height: 40px; }
+#root .mobile-rooms .rooms-home__control-actions { display: flex; gap: 8px; align-items: center; }
+#root .mobile-rooms .rooms-home__format { display: flex; gap: 6px; }
+#root .mobile-rooms .rooms-home__format > button { min-height: 32px; padding: 0 12px; font-size: 11px; }
+#root .mobile-rooms .rooms-home__launch { display: none; }
+#root .mobile-rooms .rooms-home__discovery { padding: 2px 16px 8px; font-size: 11px; }
+#root .mobile-rooms .rooms-home__demo-label { display: none; }
+
+/* FAB « Créer une Room » — bulle violette posée au-dessus du dock. */
+#root .mobile-rooms .rooms-page__launch-fab { position: fixed; z-index: 30; right: 16px; bottom: 118px; width: 56px; height: 56px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 50%; background: #8d5cff40; color: #fff; box-shadow: 0 0 14px #8d5cff66, 0 0 3px #8d5cff66, inset 0 1px 0 #ffffff24; }
+#root .mobile-rooms .rooms-page__launch-fab svg { width: 28px; height: 28px; }
+#root .mobile-rooms .rooms-page__launch-fab:active { transform: scale(.94); }
+
+/* Toast « live bientôt » au-dessus du dock. */
+#root .mobile-rooms .rooms-page__notice { position: fixed; z-index: 40; left: 50%; bottom: 118px; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; max-width: min(88vw,340px); padding: 10px 14px; border-radius: 14px; background: #171225f0; border: 1px solid #b79cff30; color: #efeaf8; font-size: 12px; line-height: 1.35; box-shadow: 0 12px 30px #000a; }
+#root .mobile-rooms .rooms-page__notice button { display: grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 8px; background: none; color: #b7bac3; flex: 0 0 auto; }
+
+/* Sheet du séquenceur de lancement (fond + conteneur bas d'écran façon iOS). */
+.rooms-home-launch-dialog { position: fixed; z-index: 460; inset: 0; display: flex; align-items: flex-end; justify-content: center; background: #05040acc; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.rooms-home-launch-dialog .launch-room-sheet { position: relative; width: 100%; max-width: 520px; height: 92%; display: flex; flex-direction: column; border-radius: 20px 20px 0 0; background: linear-gradient(180deg,#14101f,#0b0812); border: 1px solid #b79cff26; border-bottom: 0; overflow: hidden; }
+.rooms-home-launch-dialog .launch-room-sheet__header { display: flex; align-items: center; gap: 12px; padding: 16px 18px 4px; color: #fff; }
+.rooms-home-launch-dialog .launch-room-sheet__header strong { flex: 1; font-size: 20px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rooms-home-launch-dialog .launch-room-sheet__badge { width: 14px; height: 14px; border-radius: 4px; flex: 0 0 auto; box-shadow: 0 0 10px #ffffff33; }
+.rooms-home-launch-dialog .launch-room-sheet__header button { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 10px; background: none; }
+.rooms-home-launch-dialog .launch-room-sheet__body { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; padding: 4px 20px 28px; }
+.rooms-home-launch-dialog .launch-room-sheet__body::-webkit-scrollbar { display: none; }
+
+/* NeonTabBar — une pastille par room, accent propre quand sélectionnée. */
+.rooms-home-launch-dialog .launch-tabs { display: flex; gap: 8px; padding: 12px 18px 4px; overflow-x: auto; scrollbar-width: none; }
+.rooms-home-launch-dialog .launch-tabs::-webkit-scrollbar { display: none; }
+.rooms-home-launch-dialog .launch-tabs > button { flex: 0 0 auto; padding: 8px 14px; border-radius: 999px; border: 1px solid #ffffff1c; background: #ffffff08; color: #b7bac3; font-size: 11px; font-weight: 700; letter-spacing: .08em; transition: color .2s, border-color .2s, box-shadow .2s; }
+
+/* Indicateur d'étapes — « 1. IDENTITÉ › 2. CHECK-UP › 3. ACCÈS ». */
+.rooms-home-launch-dialog .launch-steps { display: flex; align-items: center; justify-content: center; gap: 2px; padding: 10px 0 6px; color: #ffffff30; }
+.rooms-home-launch-dialog .launch-steps > span { font-size: 11px; font-weight: 500; letter-spacing: .05em; color: #ffffff66; opacity: .4; transition: opacity .3s; }
+.rooms-home-launch-dialog .launch-steps > span.is-active { color: #fff; font-weight: 700; opacity: 1; text-shadow: 0 0 10px #ffffff80; }
+
+/* Champs d'identité. */
+.rooms-home-launch-dialog .launch-field__label { display: flex; align-items: center; gap: 12px; margin: 14px 0 8px; color: #fff; font-size: 14px; font-weight: 400; }
+.rooms-home-launch-dialog .launch-field__label svg { flex: 0 0 auto; }
+.rooms-home-launch-dialog .launch-input { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid #ffffff1c; background: #ffffff08; color: #fff; font-size: 14px; font-family: inherit; outline: none; }
+.rooms-home-launch-dialog .launch-input:focus { border-color: #ffffff40; }
+.rooms-home-launch-dialog .launch-input::placeholder { color: #ffffff3d; }
+.rooms-home-launch-dialog .launch-input--area { resize: none; }
+.rooms-home-launch-dialog .launch-separator { border: 0; border-top: 1px dashed #ffffff1f; margin: 18px 0 4px; }
+.rooms-home-launch-dialog .launch-section-title { margin: 16px 0 8px; color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .1em; }
+.rooms-home-launch-dialog .launch-hint { margin: 4px 0 10px; color: #ffffff8a; font-size: 12px; font-style: italic; }
+
+/* Sélecteurs valeur (BPM/Gamme/Mesure, Caméra/Qualité). */
+.rooms-home-launch-dialog .launch-selectors { display: flex; gap: 12px; }
+.rooms-home-launch-dialog .launch-select { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; padding: 8px 12px; border-radius: 10px; border: 1px solid #ffffff1c; background: #ffffff08; }
+.rooms-home-launch-dialog .launch-select > span { font-size: 10px; font-weight: 700; letter-spacing: .08em; color: #ffffff70; text-transform: uppercase; }
+.rooms-home-launch-dialog .launch-select > strong { color: #fff; font-size: 15px; }
+.rooms-home-launch-dialog .launch-select > select { appearance: none; border: 0; background: transparent; color: #fff; font-size: 13px; font-family: inherit; outline: none; }
+.rooms-home-launch-dialog .launch-select > select option { background: #14101f; color: #fff; }
+.rooms-home-launch-dialog .launch-select--static { flex: 0 0 70px; }
+
+/* Interrupteur monétisation / monitoring. */
+.rooms-home-launch-dialog .launch-toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 12px 0; }
+.rooms-home-launch-dialog .launch-toggle-row__copy { display: flex; flex-direction: column; gap: 2px; }
+.rooms-home-launch-dialog .launch-toggle-row__copy > span { color: #fff; font-size: 14px; }
+.rooms-home-launch-dialog .launch-toggle-row__copy > small { color: #ffffff70; font-size: 11px; }
+.rooms-home-launch-dialog .launch-switch { position: relative; width: 44px; height: 26px; flex: 0 0 auto; padding: 0; border: 0; border-radius: 999px; background: #ffffff1f; transition: background .2s; }
+.rooms-home-launch-dialog .launch-switch > span { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform .2s; }
+.rooms-home-launch-dialog .launch-switch.is-on > span { transform: translateX(18px); }
+
+/* Modules cliquables (régisseur, jukebox, objectif, boucle…). */
+.rooms-home-launch-dialog .launch-module { display: flex; align-items: center; gap: 14px; width: 100%; padding: 12px 14px; margin: 8px 0; border-radius: 12px; border: 1px solid #ffffff14; background: #ffffff0a; color: #fff; text-align: left; transition: border-color .2s; }
+.rooms-home-launch-dialog .launch-module__icon { display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 auto; border-radius: 9px; background: #ffffff0d; }
+.rooms-home-launch-dialog .launch-module__copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.rooms-home-launch-dialog .launch-module__copy > strong { font-size: 13px; font-weight: 600; }
+.rooms-home-launch-dialog .launch-module__copy > small { font-size: 11px; color: #ffffff70; }
+.rooms-home-launch-dialog .launch-module > svg { color: #ffffff4d; transition: transform .2s; flex: 0 0 auto; }
+.rooms-home-launch-dialog .launch-module--regisseur.is-confirmed { border-color: #00e67655; background: #00e67614; }
+.rooms-home-launch-dialog .launch-module--loop { background: linear-gradient(135deg,#7c4dff,#651fff); border-color: transparent; box-shadow: 0 4px 10px #651fff4d; }
+.rooms-home-launch-dialog .launch-module--loop .launch-module__icon { background: #ffffff1f; color: #fff; }
+.rooms-home-launch-dialog .launch-module--loop .launch-module__copy > small { color: #ffffffb3; }
+.rooms-home-launch-dialog .launch-module__children { display: flex; flex-direction: column; gap: 6px; margin: -2px 0 8px; padding: 10px 12px; border-radius: 0 0 12px 12px; background: #ffffff08; border: 1px solid #ffffff14; border-top: 0; }
+.rooms-home-launch-dialog .launch-module__child { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 9px; border: 1px solid #ffffff1a; background: #ffffff08; color: #fff; font-size: 12px; }
+
+/* Cases à cocher (options Cage). */
+.rooms-home-launch-dialog .launch-checkbox-row { display: flex; gap: 12px; margin: 8px 0; }
+.rooms-home-launch-dialog .launch-checkbox { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #ffffff1f; background: #ffffff08; color: #b7bac3; font-size: 13px; font-weight: 600; transition: all .2s; }
+.rooms-home-launch-dialog .launch-checkbox.is-on { background: #ffffff0f; }
+
+/* Check-up. */
+.rooms-home-launch-dialog .launch-quick-pass { display: flex; align-items: center; gap: 10px; width: 100%; margin: 6px 0 14px; padding: 12px 16px; border-radius: 12px; border: 1px solid; background: #ffffff08; font-size: 13px; font-weight: 600; }
+.rooms-home-launch-dialog .launch-quick-pass > span { flex: 1; text-align: left; }
+.rooms-home-launch-dialog .launch-checkup-status { display: flex; align-items: center; gap: 10px; padding: 16px; border-radius: 16px; background: #ff9d4d0d; border: 1px solid #ff9d4d33; color: #ffab5e; }
+.rooms-home-launch-dialog .launch-checkup-status.is-ready { background: #3ddc840d; border-color: #3ddc8433; color: #5ce79b; }
+.rooms-home-launch-dialog .launch-checkup-status__copy { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.rooms-home-launch-dialog .launch-checkup-status__copy > strong { color: #fff; font-size: 14px; font-weight: 600; }
+.rooms-home-launch-dialog .launch-checkup-status__copy > span { font-size: 11px; font-weight: 700; letter-spacing: .1em; }
+.rooms-home-launch-dialog .launch-chip { padding: 4px 10px; border-radius: 999px; border: 1px solid #ffffff1f; color: #ffffff66; font-size: 10px; font-weight: 700; }
+.rooms-home-launch-dialog .launch-chip.is-ok { border-color: #3ddc8455; color: #5ce79b; }
+.rooms-home-launch-dialog .launch-mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.rooms-home-launch-dialog .launch-mode { display: flex; flex-direction: column; gap: 6px; padding: 14px; border-radius: 14px; border: 1px solid #ffffff1a; background: #ffffff07; color: #fff; text-align: left; transition: border-color .2s; }
+.rooms-home-launch-dialog .launch-mode > strong { font-size: 14px; }
+.rooms-home-launch-dialog .launch-mode > small { font-size: 11px; color: #ffffff70; line-height: 1.35; }
+.rooms-home-launch-dialog .launch-mode.is-selected { background: #ffffff0d; }
+.rooms-home-launch-dialog .launch-mic { display: flex; flex-direction: column; gap: 8px; }
+.rooms-home-launch-dialog .launch-mic__row { display: flex; justify-content: space-between; color: #fff; font-size: 13px; }
+.rooms-home-launch-dialog .launch-mic__row > strong { font-size: 11px; letter-spacing: .1em; color: #5ce79b; }
+.rooms-home-launch-dialog .launch-mic__row > strong.is-hot { color: #ff6d6d; }
+.rooms-home-launch-dialog .launch-mic__meter { height: 8px; border-radius: 999px; background: #ffffff14; overflow: hidden; }
+.rooms-home-launch-dialog .launch-mic__meter > span { display: block; height: 100%; border-radius: 999px; transition: width .08s linear; }
+.rooms-home-launch-dialog .launch-checklist { list-style: none; margin: 16px 0 4px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.rooms-home-launch-dialog .launch-checklist > li { display: flex; align-items: center; gap: 12px; color: #ffffff61; font-size: 13px; }
+.rooms-home-launch-dialog .launch-checklist > li svg { color: #ffffff3d; }
+.rooms-home-launch-dialog .launch-checklist > li.is-ok { color: #fff; }
+.rooms-home-launch-dialog .launch-checklist > li.is-ok svg { color: #5ce79b; }
+
+/* Boutons d'action. */
+.rooms-home-launch-dialog .launch-actions { display: flex; gap: 12px; margin-top: 20px; }
+.rooms-home-launch-dialog .launch-actions > span { flex: 1; }
+.rooms-home-launch-dialog .launch-btn { flex: 1; min-height: 46px; padding: 0 18px; border: 0; border-radius: 12px; font-size: 14px; font-weight: 700; color: #0b0812; font-family: inherit; }
+.rooms-home-launch-dialog .launch-btn--ghost { background: #ffffff12; color: #fff; }
+.rooms-home-launch-dialog .launch-btn--accent:disabled { background: #ffffff14; color: #ffffff4d; }
+.rooms-home-launch-dialog .launch-btn--golive { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 52px; font-size: 16px; letter-spacing: .04em; }
+.rooms-home-launch-dialog .launch-btn--skip { display: block; margin: 14px auto 0; padding: 8px 16px; border: 0; background: none; color: #ffffff66; font-size: 13px; font-family: inherit; }
+
+/* Étape finale « Prêt à lancer ». */
+.rooms-home-launch-dialog .launch-golive { display: flex; flex-direction: column; padding-top: 24px; }
+.rooms-home-launch-dialog .launch-golive__hero { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 28px; }
+.rooms-home-launch-dialog .launch-golive__hero > strong { color: #fff; font-size: 24px; font-weight: 700; }
+.rooms-home-launch-dialog .launch-golive__hero > span { font-size: 18px; font-weight: 600; }
+.rooms-home-launch-dialog .launch-summary { padding: 16px; border-radius: 12px; border: 1px solid; background: #ffffff0a; margin-bottom: 24px; }
+.rooms-home-launch-dialog .launch-summary > span { display: block; margin-bottom: 10px; color: #ffffffb3; font-size: 12px; font-weight: 700; }
+.rooms-home-launch-dialog .launch-summary dl { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.rooms-home-launch-dialog .launch-summary dl > div { display: flex; justify-content: space-between; }
+.rooms-home-launch-dialog .launch-summary dt { color: #ffffff70; font-size: 13px; }
+.rooms-home-launch-dialog .launch-summary dd { margin: 0; color: #fff; font-size: 13px; font-weight: 600; }
+
+/* Countdown 3-2-1-GO — overlay plein sheet, glow accent, fade to black. */
+.rooms-home-launch-dialog .launch-countdown { position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; background: #000000eb; transition: background .3s, opacity .25s; }
+.rooms-home-launch-dialog .launch-countdown.is-fadeout { background: #000; opacity: 0; }
+.rooms-home-launch-dialog .launch-countdown__init { margin-top: 60px; text-align: center; font-size: 12px; font-weight: 600; letter-spacing: .25em; font-family: "Courier New", monospace; opacity: .7; animation: launch-blink .6s ease-in-out infinite alternate; }
+.rooms-home-launch-dialog .launch-countdown__label { position: absolute; top: 50%; left: 0; right: 0; transform: translateY(-118px); text-align: center; font-size: 22px; font-weight: 800; letter-spacing: .14em; }
+.rooms-home-launch-dialog .launch-countdown__center { position: absolute; inset: 0; display: grid; place-items: center; }
+.rooms-home-launch-dialog .launch-countdown__number { color: #fff; font-size: 120px; font-weight: 900; animation: launch-pop .45s cubic-bezier(.34,1.56,.64,1) both; }
+.rooms-home-launch-dialog .launch-countdown__ring { position: absolute; width: 200px; height: 200px; border-radius: 50%; border: 2px solid; animation: launch-pop .45s cubic-bezier(.34,1.56,.64,1) both; }
+.rooms-home-launch-dialog .launch-countdown__go { font-size: 100px; font-weight: 900; letter-spacing: .08em; animation: launch-pop .45s cubic-bezier(.34,1.56,.64,1) both; }
+.rooms-home-launch-dialog .launch-countdown__cancel { position: absolute; bottom: 56px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: 8px; border: 1px solid #ffffff26; background: #ffffff14; color: #ffffff80; font-size: 12px; font-weight: 600; letter-spacing: .12em; }
+@keyframes launch-pop { from { transform: scale(.3); } to { transform: scale(1); } }
+@keyframes launch-blink { from { opacity: .3; } to { opacity: 1; } }
+
+/* Grille « Voir tout » : même règle que les rails — carte desktop pleine
+   largeur (comme le feed Scène), verticale = moitié de large en portrait 3/4. */
+#root .mobile-rooms .rooms-home-collection__grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; padding: 0 14px 120px; }
+#root .mobile-rooms .rooms-home-collection__grid .rooms-home-card { --rooms-home-card-width: 100%; }
+#root .mobile-rooms .rooms-home-collection__grid .rooms-home-card--horizontal-media { grid-column: 1 / -1; }
+#root .mobile-rooms .rooms-home-collection__grid .rooms-home-card--vertical-media { grid-column: span 1; }
+#root .mobile-rooms .rooms-home-collection__grid .rooms-home-card--vertical-media .rooms-home-card__media { aspect-ratio: 3/4; flex: 0 0 auto; }
+
+/* Bouton « Voir tout » : le web masque le libellé sous 580px — on le réaffiche. */
+#root .mobile-rooms .rooms-home-rail__more { width: auto; padding: 0 .64rem 0 .76rem; gap: .38rem; }
+#root .mobile-rooms .rooms-home-rail__more span { position: static; width: auto; height: auto; padding: 0; overflow: visible; clip: auto; white-space: normal; border: 0; }
+#root .mobile-rooms .rooms-home-collection__intro { padding: 4px 16px 12px; }
+#root .mobile-rooms .rooms-home-collection__intro h1 { font-size: 19px; }
+#root .mobile-rooms .rooms-home__back { margin: 6px 14px; }
+
+/* Les rails laissent respirer le dock (espace de défilement final). */
+#root .mobile-rooms .rooms-home__rails { padding-bottom: 118px; }
+
+/* ── Miniatures façon Scène : rail mixte ──
+   Mêmes formats que La Scène : la carte desktop = 84vw paysage 16/9 (comme la
+   grande carte du feed Scène) et la verticale = exactement la moitié de large
+   (42vw = le format des shorts), même hauteur, média portrait plein cadre.
+   La hauteur s'aligne toute seule : les cartes du rail s'étirent au plus grand. */
+#root .mobile-rooms .rooms-home-card { --rooms-home-card-width: min(84vw, 340px); --rooms-home-card-media-ratio: 16 / 9; }
+#root .mobile-rooms .rooms-home-card--featured { --rooms-home-card-width: min(90vw, 430px); }
+#root .mobile-rooms .rooms-home-card--vertical-media { --rooms-home-card-width: calc(min(84vw, 340px) / 2); }
+#root .mobile-rooms .rooms-home-card--featured.rooms-home-card--vertical-media { --rooms-home-card-width: calc(min(90vw, 430px) / 2); }
+#root .mobile-rooms .rooms-home-card__action { display: flex; flex-direction: column; height: 100%; }
+#root .mobile-rooms .rooms-home-card__media { flex: 1 1 auto; min-height: 0; }
+#root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__media { aspect-ratio: 3 / 4; }
+#root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__vertical-stage { position: static; display: block; height: 100%; }
+#root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__vertical-ambient,
+#root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__vertical-stage::before,
+#root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__vertical-stage::after { display: none; }
+#root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__vertical-window { position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; border: 0; box-shadow: none; }
+#root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__body { min-height: 0; padding: 8px 10px 10px; }
+#root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__title { font-size: .82rem; }
+#root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__host { margin-top: 0; font-size: .66rem; }
+#root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__avatar { width: 1.15rem; height: 1.15rem; font-size: .44rem; }
+#root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__room-type { font-size: .54rem; padding: .18rem .42rem .16rem; }
+/* Bandeau optimisé — le chip room et la ville remontent sur l'image
+   (haut-gauche / haut-droite), le titre tient sur une ligne, le corps se
+   réduit au portrait + nom. Valable pour miniatures et grandes cartes. */
+#root .mobile-rooms .rooms-home-card__room-type { position: absolute; z-index: 4; top: .62rem; left: .72rem; }
+#root .mobile-rooms .rooms-home-card__city { position: absolute; z-index: 4; top: .66rem; right: .72rem; padding: .26rem .5rem; border-radius: .5rem; background: rgba(4,4,10,.66); border: 1px solid rgba(255,255,255,.11); color: rgba(252,250,255,.88); font-size: .64rem; font-weight: 750; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+#root .mobile-rooms .rooms-home-card__body { min-height: 0; padding: .55rem .72rem .62rem; gap: .3rem; }
+#root .mobile-rooms .rooms-home-card--featured .rooms-home-card__body { min-height: 0; padding: .6rem .8rem .7rem; }
+#root .mobile-rooms .rooms-home-card__title { display: block; block-size: auto; font-size: .9rem; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-wrap: nowrap; }
+#root .mobile-rooms .rooms-home-card--featured .rooms-home-card__title { font-size: 1rem; }
+#root .mobile-rooms .rooms-home-card__host { margin-top: 0; }
+#root .mobile-rooms .rooms-home-card__host-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__audience,
+#root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__duration { font-size: .6rem; padding: .22rem .4rem; }

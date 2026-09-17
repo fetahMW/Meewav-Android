@@ -1,37 +1,79 @@
-import { useNavigate } from 'react-router-dom';
-import { ChevronRight, DoorOpen, GraduationCap, Home, MapPin, Mic, Play, Waves } from 'lucide-react';
+import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { createPortal } from 'react-dom';
+import { DoorOpen, GraduationCap, Home, MapPin, Mic, Play, Plus, Waves, X } from 'lucide-react';
+import MeewavPillarBrand from '../market-source/vendor/src/components/navigation/MeewavPillarBrand';
+import MeewavPillarTabs, { type MeewavPillarTabItem } from '../market-source/vendor/src/components/navigation/MeewavPillarTabs';
+import RoomsHome from './vendor/src/features/rooms/home/RoomsHome';
+import LaunchRoomSheet from './vendor/src/features/rooms/launch/LaunchRoomSheet';
+import type { RoomsHomeRoom, RoomsHomeRoomType } from './vendor/src/features/rooms/home/roomsHome.types';
 
 const ROOMS = [
-  { id: 'scene', name: 'La Scène', tagline: 'Vidéos, shorts et directs de la communauté', Icon: Play, ready: true },
-  { id: 'cage', name: 'La Cage', tagline: 'Studio et sessions d’enregistrement', Icon: Mic },
-  { id: 'wave', name: 'La Wave', tagline: 'Création collaborative et jams', Icon: Waves },
-  { id: 'classe', name: 'La Classe', tagline: 'Apprendre et progresser ensemble', Icon: GraduationCap },
-  { id: 'place', name: 'La Place', tagline: 'Le rendez-vous public de la communauté', Icon: MapPin },
-  { id: 'loge', name: 'La Loge', tagline: 'Les coulisses des artistes', Icon: DoorOpen },
+  { id: 'scene', name: 'La Scène', Icon: Play, accent: '#8d5cff' },
+  { id: 'cage', name: 'La Cage', Icon: Mic, accent: '#e16e78' },
+  { id: 'wave', name: 'La Wave', Icon: Waves, accent: '#61d8ff' },
+  { id: 'classe', name: 'La Classe', Icon: GraduationCap, accent: '#5086ff' },
+  { id: 'place', name: 'La Place', Icon: MapPin, accent: '#45dfa8' },
+  { id: 'loge', name: 'La Loge', Icon: DoorOpen, accent: '#f6d381' },
 ] as const;
 
+type RoomTab = 'home' | (typeof ROOMS)[number]['id'];
+
 export default function RoomsPage() {
-  const navigate = useNavigate();
+  const location = useLocation();
+  const [tab, setTab] = useState<RoomTab>('home');
+  const [sequencerOpen, setSequencerOpen] = useState(false);
+  const [roomNotice, setRoomNotice] = useState('');
+  const collectionSlug = location.pathname.startsWith('/rooms/collections/')
+    ? decodeURIComponent(location.pathname.split('/')[3] ?? '')
+    : null;
+  const items: MeewavPillarTabItem<RoomTab>[] = [
+    { id: 'home', label: 'Accueil', icon: Home, accent: '#f7f5ff' },
+    ...ROOMS.map(({ id, name, Icon, accent }) => ({ id, label: name, icon: Icon, accent })),
+  ];
+  const notice = (message: string) => {
+    setRoomNotice(message);
+    window.setTimeout(() => setRoomNotice(''), 4000);
+  };
+  const openRoom = (room: RoomsHomeRoom) => {
+    notice(`« ${room.title} » — le live arrive bientôt sur Android.`);
+  };
   return <div className="rooms-page">
     <div className="rooms-page__background" aria-hidden="true"
       style={{ backgroundImage: `url('/images/meewav-acoustic-violet-background.png')` }} />
-    <header className="rooms-page__header">
-      <span className="rooms-page__logo" aria-hidden="true"><Home size={22} /></span>
-      <div>
-        <h1>Rooms</h1>
-        <p>Six pièces, une seule maison.</p>
-      </div>
+    <header className="rooms-topbar">
+      <div className="rooms-brand"><MeewavPillarBrand pillar="Rooms" /></div>
+      <MeewavPillarTabs className="rooms-pillar-tabs" items={items} activeId={tab}
+        ariaLabel="Pièces de la maison MeeWav" visibleCount={4}
+        onSelect={(id) => setTab(id)} />
     </header>
-    <ul className="rooms-page__list">
-      {ROOMS.map(({ id, name, tagline, Icon, ready }) => <li key={id}>
-        <button type="button" className="rooms-page__room" disabled={!ready}
-          aria-label={ready ? `Ouvrir ${name}` : `${name} — bientôt disponible`}
-          onClick={() => ready && navigate(`/${id}`)}>
-          <span className="rooms-page__room-icon" aria-hidden="true"><Icon size={20} /></span>
-          <span className="rooms-page__room-copy"><strong>{name}</strong><small>{tagline}</small></span>
-          {ready ? <ChevronRight size={18} aria-hidden="true" /> : <span className="rooms-page__room-soon">Bientôt</span>}
-        </button>
-      </li>)}
-    </ul>
+    <div className="rooms-page__home">
+      <RoomsHome
+        roomType={tab === 'home' ? undefined : (tab as RoomsHomeRoomType)}
+        collectionSlug={collectionSlug}
+        onOpenRoom={openRoom}
+      />
+    </div>
+    {!sequencerOpen ? (
+      <button
+        type="button"
+        className="rooms-page__launch-fab"
+        aria-label="Créer une Room"
+        onClick={() => setSequencerOpen(true)}
+      >
+        <Plus aria-hidden="true" />
+      </button>
+    ) : null}
+    {sequencerOpen ? createPortal((
+      <div className="rooms-home-launch-dialog" role="presentation"
+        onMouseDown={(event) => { if (event.target === event.currentTarget) setSequencerOpen(false); }}>
+        <LaunchRoomSheet
+          initialType={tab === 'home' ? undefined : (tab as RoomsHomeRoomType)}
+          onClose={() => setSequencerOpen(false)}
+          onLaunched={(label) => notice(`${label} — ta Room est prête, le live arrive bientôt sur Android.`)}
+        />
+      </div>
+    ), document.body) : null}
+    {roomNotice ? <aside className="rooms-page__notice" role="status"><span>{roomNotice}</span><button aria-label="Fermer" onClick={() => setRoomNotice('')}><X size={16} /></button></aside> : null}
   </div>;
 }

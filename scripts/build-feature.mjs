@@ -60,7 +60,7 @@ if (importing) {
   }, null, 2) + '\n');
 }
 
-const types = { '.html':'text/html', '.js':'application/javascript', '.css':'text/css', '.json':'application/json', '.svg':'image/svg+xml', '.png':'image/png', '.jpg':'image/jpeg', '.jpeg':'image/jpeg', '.webp':'image/webp', '.gif':'image/gif', '.mp3':'audio/mpeg', '.wav':'audio/wav', '.m4a':'audio/mp4', '.mp4':'video/mp4', '.woff2':'font/woff2', '.ttf':'font/ttf', '.txt':'text/plain' };
+const types = { '.html':'text/html', '.js':'application/javascript', '.css':'text/css', '.json':'application/json', '.svg':'image/svg+xml', '.png':'image/png', '.jpg':'image/jpeg', '.jpeg':'image/jpeg', '.webp':'image/webp', '.gif':'image/gif', '.mp3':'audio/mpeg', '.wav':'audio/wav', '.m4a':'audio/mp4', '.aac':'audio/aac', '.mp4':'video/mp4', '.woff2':'font/woff2', '.ttf':'font/ttf', '.txt':'text/plain' };
 const assets = {};
 const copyAsset = async (path, name) => {
   const target = join(output, name); await mkdir(dirname(target), { recursive: true }); await copyFile(path, target);

@@ -2,6 +2,18 @@
   "source": "Meewav-Web/public (Inter: existing Android asset)",
   "files": [
     {
+      "path": "audio/3-2-1.aac",
+      "sha256": "c221209f2a6110509b4e068146e70dd10a5fcf4f4938880fe92bf6055527e54d"
+    },
+    {
+      "path": "audio/impact fx.wav",
+      "sha256": "75a76f000e64e5d4b99c1df05a85cbb8322cb276da6db3298e2c678161d80621"
+    },
+    {
+      "path": "audio/impact-fx.aac",
+      "sha256": "bd732b1bd4d73c4b7192ebc46ffe4c20d29d56edbe7175a2a9bd8e1319900843"
+    },
+    {
       "path": "audio/rooms/wave-test-pack/Afro_100BPM_A_minor/Loops_8bars/Afro_FullMix_A_100BPM_8bars.wav",
       "sha256": "86bac70c76953bb2c01a035e965296e38e8195fa5de0be6dfa217f40403ba58e"
     },
@@ -790,6 +802,10 @@
       "sha256": "4d67d4b48db1ed40adb01a1e51f3afc8757abdb2213077e6f49a15505725c7a8"
     },
     {
+      "path": "images/meewav-static-space-test.png",
+      "sha256": "cb34db5bda57bb92910c4df819dcd0a314362b35628c31b8a73fe6876c57aeee"
+    },
+    {
       "path": "images/preprofile/portraits/profile-01.webp",
       "sha256": "b805363350fa01239b9e7ad0bdace8bb2f9327de277425e24af7675ac79cd5dd"
     },
@@ -940,6 +956,10 @@
     {
       "path": "images/preprofile/portraits/profile-38.webp",
       "sha256": "af07c092a5df4a10bfdcf3953e08b5b36c2e30d230bea35c0f4c08733452c09c"
+    },
+    {
+      "path": "images/rooms/rooms-home-acoustic-2026-06-08.png",
+      "sha256": "d640225075806069034276e4adcba8dcdb1ea270e8458814db67e52ff152ecb7"
     },
     {
       "path": "images/shorts/catalog/freestyle-alma-dance.webp",
@@ -2028,6 +2048,410 @@
     {
       "path": "images/shorts/walls/vertical-premium/vertical-warehouse-dj.webp",
       "sha256": "ea44258e9203e01b23d04edb75c56d9adafd606fa0602a8d7e2fc0fdb5c65fb0"
+    },
+    {
+      "path": "images/tremplin/artists/generated/adrien-kora-afro-jazz-saint-denis-v1.webp",
+      "sha256": "978896a863597f77094144d03a460654edacbad30233d9282e7a35c6dd3b55ed"
+    },
+    {
+      "path": "images/tremplin/artists/generated/ai-afrofuturist-artist-amina-sola.webp",
+      "sha256": "c25396fabfeb2c342b4aad1294a0139511e3ee5047e478d6caf92c4f112e8a77"
+    },
+    {
+      "path": "images/tremplin/artists/generated/ai-ambient-composer-naoko-serein.webp",
+      "sha256": "72874938c369e9871dcd71b6b859ae7856a4ddc5f8caf16922f047dfc9796ff0"
+    },
+    {
+      "path": "images/tremplin/artists/generated/ai-beatmaker-kairo-grid.webp",
+      "sha256": "ba9bb4ccce8a06e868024d21fa459467c508e5ff83cce3eeabda867401daa499"
+    },
+    {
+      "path": "images/tremplin/artists/generated/ai-film-composer-nabil-orsen.webp",
+      "sha256": "73b1671be21527acf0e5d8fcf080ee35f77e6f65d382fb0e982200c1df4ba94c"
+    },
+    {
+      "path": "images/tremplin/artists/generated/ai-rap-artist-samra-flux.webp",
+      "sha256": "9d6cea92b75ceafc712f0242b28a75417acc5e70a6b48de45eb08c5d7bf510e7"
+    },
+    {
+      "path": "images/tremplin/artists/generated/ai-synth-rnb-singer-luma-vale.webp",
+      "sha256": "0447615cb42b0b55c1518167b8f73210f1f98716c983ee97da233921e88af433"
+    },
+    {
+      "path": "images/tremplin/artists/generated/aicha-sol-coach-vocal-gospel-nimes-v1.webp",
+      "sha256": "1d5ba27729a01ac6a5b2cee1771e92c0768a09b4b1dd38506f3ec5462d51575a"
+    },
+    {
+      "path": "images/tremplin/artists/generated/aina-sol-dj-productrice-afro-house-bordeaux-v1.webp",
+      "sha256": "a44b2df0bf6816be1141527094c09682a511ae5cd3d8f5f79cc0314d5a00c8de"
+    },
+    {
+      "path": "images/tremplin/artists/generated/anjali-veyra-danseuse-choregraphe-nice-v1.webp",
+      "sha256": "7b923c9cd68f01579b88c8c8411dd4ab7bb7442cf16760785edce14d2dfb5ddd"
+    },
+    {
+      "path": "images/tremplin/artists/generated/artist-afrobeat-trumpeter-jonas-reef.webp",
+      "sha256": "ba67d549b81f73185504e9673c5c144674e164cc1da867ebff2ea240b0899564"
+    },
+    {
+      "path": "images/tremplin/artists/generated/artist-alt-metal-drummer-kenji-ravel.webp",
+      "sha256": "cfe855313a3d229fea8dcc3c6dcc50c4a99468216ecfe11a276cc202028d5df3"
+    },
+    {
+      "path": "images/tremplin/artists/generated/artist-folk-songwriter-alba-roche.webp",
+      "sha256": "dbdc37d3bcc96bec4b6156ea854f58e3d12ba11699f95375ecd1602ae9dafbbb"
+    },
+    {
+      "path": "images/tremplin/artists/generated/artist-modern-rai-singer-nassim-halim.webp",
+      "sha256": "bd882b871e5fb1c4a2951ba67e86afa32aca7138054dfd02dbf6a7a541fdb514"
+    },
+    {
+      "path": "images/tremplin/artists/generated/artist-reggae-dub-singer-noah-belair.webp",
+      "sha256": "8364dac65670cfdaa6503fb03543af8086973775f53c30f6153572ddbfbfe668"
+    },
+    {
+      "path": "images/tremplin/artists/generated/artist-tuareg-rock-singer-bilal-dune.webp",
+      "sha256": "f01bb5f59c574cc446ced587b368634bb0c0568dc144cd735863abd54fe79628"
+    },
+    {
+      "path": "images/tremplin/artists/generated/cassandre-bleu-harp-strasbourg-v1.webp",
+      "sha256": "cfac3698fd3122eca5d76589d3031bf9e096d55ffc4d34eaf4446a2f06df2248"
+    },
+    {
+      "path": "images/tremplin/artists/generated/clara-volt-sound-design-v1.webp",
+      "sha256": "d8ed8540c6733e9b3eb91aeb88cdbede3d14f37e4d73bded238dd16ae43e2d95"
+    },
+    {
+      "path": "images/tremplin/artists/generated/elio-serra-ingenieur-son-montpellier-v1.webp",
+      "sha256": "9b6710514420add64cc0b63b24dfc11da6d1eb045dc3169bccd787d8b075a102"
+    },
+    {
+      "path": "images/tremplin/artists/generated/eliott-marek-modular-producer-poitiers-v1.webp",
+      "sha256": "10291f2c1a138f62a39c1013392bbf1cbd899a8075997dcf6c01f031f85dcfb6"
+    },
+    {
+      "path": "images/tremplin/artists/generated/gael-ferran-guitariste-flamenco-jazz-perpignan-v1.webp",
+      "sha256": "1b558a2ab9223cdc79091d974defe08bc8d054170aa0bf2d6196df521fefc8c8"
+    },
+    {
+      "path": "images/tremplin/artists/generated/hugo-quartz-chanteur-shoegaze-le-mans-v1.webp",
+      "sha256": "c18a8671fc1b6aede60f729909a0f96e34542cde6798835a8c70f14b1b0e21fe"
+    },
+    {
+      "path": "images/tremplin/artists/generated/idriss-ngoma-percussionniste-world-rennes-v1.webp",
+      "sha256": "6b6cc58b388268a6cca1c0507b989da78257dfd49d32e3c97184a21dc88021f9"
+    },
+    {
+      "path": "images/tremplin/artists/generated/idriss-noor-oud-compositeur-paris-v1.webp",
+      "sha256": "eafe7b79e5463b0cb948a69c3b893c6fafea44f530123022d940f4662272ef05"
+    },
+    {
+      "path": "images/tremplin/artists/generated/ilyes-pulse-beatboxer-cergy-v1.webp",
+      "sha256": "a5ff44d07f0bbcef9dadfaba27e724333b1365b199784fedf81feb8d393ce04b"
+    },
+    {
+      "path": "images/tremplin/artists/generated/ilyne-k-rappeuse-drill-lille-v1.webp",
+      "sha256": "35a5a540bb4b685de2be2691b775c8b0b57626d5b300e0cdb766b62588d090e6"
+    },
+    {
+      "path": "images/tremplin/artists/generated/imani-kader-saxophonist-montpellier-v1.webp",
+      "sha256": "8cfdb98bd36e6e1b831b45c789594f2dd8c9076bf18940da300571bc60d17445"
+    },
+    {
+      "path": "images/tremplin/artists/generated/ines-raku-drummer-marseille-v1.webp",
+      "sha256": "65cdab78b3addfc5ed9965b6443b2671d436be320e5f50417313b8cb7d567611"
+    },
+    {
+      "path": "images/tremplin/artists/generated/june-kairo-dj-drum-bass-amiens-v1.webp",
+      "sha256": "088a666cd870660223da471073293d9110c1471314e2c943a4704a15a5552e91"
+    },
+    {
+      "path": "images/tremplin/artists/generated/kelya-v-urban-pop-toulouse-v1.webp",
+      "sha256": "fcb64422cfc6d13222922966ed0fb357bd8b139bb6570cb05b7a8f23a6409496"
+    },
+    {
+      "path": "images/tremplin/artists/generated/kenza-loba-dj-amapiano-aubervilliers-v1.webp",
+      "sha256": "8360dd567ec6775c004192fb27756a61ca3bbb881e7de50746e1ad92db356cc5"
+    },
+    {
+      "path": "images/tremplin/artists/generated/leon-vasseur-music-director-rouen-v1.webp",
+      "sha256": "eac629a1d18f0454ffdfabf19c639a07a32817110f8d95740bf7e02929462a43"
+    },
+    {
+      "path": "images/tremplin/artists/generated/liora-fado-rappeuse-drill-toulouse-v1.webp",
+      "sha256": "840a29c500ce21b4d4448670e0c25a6d0c11f8375760338340ffdd333ac646d9"
+    },
+    {
+      "path": "images/tremplin/artists/generated/louna-saphir-violoncelliste-neo-classique-metz-v1.webp",
+      "sha256": "82505613bc7701d726b5b54fcab083b746becd2e26ee0b3ff51a3c5af08b71bd"
+    },
+    {
+      "path": "images/tremplin/artists/generated/maia-kuroda-violoniste-neo-classique-nantes-v1.webp",
+      "sha256": "4c8ae312cbffc6710e5ebf7cc3ea0fba7a0a279be458552328ca5be469c4b69d"
+    },
+    {
+      "path": "images/tremplin/artists/generated/malik-soren-chanteur-soul-strasbourg-v1.webp",
+      "sha256": "5f1b623cb85917848d16049db6bc2d50c79b24053e5b23991d24765762e4bb7b"
+    },
+    {
+      "path": "images/tremplin/artists/generated/mariam-delta-productrice-gqom-roubaix-v1.webp",
+      "sha256": "c88f5bf7efadde1d89740746d88bf970077a75e8a4101b8f5503f850b3c00fbb"
+    },
+    {
+      "path": "images/tremplin/artists/generated/miko-reve-productrice-hyperpop-paris-v1.webp",
+      "sha256": "0b79bfcbe074199c46397ac17f0c06a1a65498b7ea029e1604970aaca78e75b3"
+    },
+    {
+      "path": "images/tremplin/artists/generated/milo-kanza-double-bassist-dijon-v1.webp",
+      "sha256": "d5781c4d8c132c8edd985f527206974286be917b9ab8e2959d5e3743d3412dc5"
+    },
+    {
+      "path": "images/tremplin/artists/generated/mina-roze-pop-soul-lyon-v1.webp",
+      "sha256": "a46fa2ef12e4932d976b7ac1b724df525e23229bbdf8450585660497cf8407e9"
+    },
+    {
+      "path": "images/tremplin/artists/generated/naya-oris-boom-bap-rapper-grenoble-v1.webp",
+      "sha256": "8002411efc527859ac59fd310e74517dd9b72a817c993498b52c209236f5faf7"
+    },
+    {
+      "path": "images/tremplin/artists/generated/nils-bensaid-trompettiste-jazz-paris-v1.webp",
+      "sha256": "eabbbe0e43b32be654613cacbe6a75c2e08013befe99bd29fc7329264f3e1f18"
+    },
+    {
+      "path": "images/tremplin/artists/generated/noa-prism-live-coding-nonbinary-paris-v1.webp",
+      "sha256": "1c630fe0cd399caf83562944623b659b3aa6be47d0a165e4ae7d5abd31c4a5b1"
+    },
+    {
+      "path": "images/tremplin/artists/generated/oumar-lines-reggae-bassist-fort-de-france-v1.webp",
+      "sha256": "ed6fb44f1d1de5886049b0474d5d63d557d078d64fa9c0b109e8d08d3a7ea98d"
+    },
+    {
+      "path": "images/tremplin/artists/generated/rania-vox-lyric-electro-singer-avignon-v1.webp",
+      "sha256": "7a381b6b6c950b8525b3f3ab54fa62a6c90eb00f4818bcf5e00fda240a6cf34b"
+    },
+    {
+      "path": "images/tremplin/artists/generated/samir-octave-chanteur-funk-orleans-v1.webp",
+      "sha256": "73d337f0be85f2674869df71815ded0bcff3d912ae7d872931750704da29cdf1"
+    },
+    {
+      "path": "images/tremplin/artists/generated/tess-aoki-music-video-director-vj-rennes-v1.webp",
+      "sha256": "1b3b732c8db9abd8a3def0b4c98915124c5dfd582fefe667fe94e6d99adf1dcf"
+    },
+    {
+      "path": "images/tremplin/artists/generated/thea-novak-pianist-nancy-v2.webp",
+      "sha256": "ec1ddf4fc3e2af959d4996f98754c5474888e96cf5da0e324dc81b29e3f6eeef"
+    },
+    {
+      "path": "images/tremplin/artists/generated/yacine-kermor-accordeoniste-electro-clermont-ferrand-v1.webp",
+      "sha256": "5bbfbcd35dcacdd16cd7f4b73776c53450f41b800e45d56e13bb66461db6bf9f"
+    },
+    {
+      "path": "images/tremplin/artists/maya-chen-studio-v1.webp",
+      "sha256": "36be166e1e8628c56a019709ded96c307bf41ab122e13a2213b1dbc7d220a16c"
+    },
+    {
+      "path": "images/tremplin/artists/wall-2026/alex-serein-art-pop-paris-v1.webp",
+      "sha256": "e1754b9a2f90f2e27274a7f0f6307fcea704af64f8a72a476d231048f3ca77a1"
+    },
+    {
+      "path": "images/tremplin/artists/wall-2026/dario-silva-latin-pop-perpignan-v1.webp",
+      "sha256": "3a01eced86b962442be19669473ade92f19c9dd2c70d3627711b9effa6567b79"
+    },
+    {
+      "path": "images/tremplin/artists/wall-2026/leila-nouri-rai-pop-lyon-v1.webp",
+      "sha256": "181d6afe1cc50485aca62063c93965d114ca1928b452e856d58d75d6add64e9a"
+    },
+    {
+      "path": "images/tremplin/artists/wall-2026/meryem-kaal-indie-rai-montpellier-v1.webp",
+      "sha256": "e56a7a88f1594bf495d79890bf7f6028f90c9799989ba702057beac9dfd0756e"
+    },
+    {
+      "path": "images/tremplin/artists/wall-2026/rayan-sable-chanson-soul-toulouse-v1.webp",
+      "sha256": "eadfd98d514bd669e436782f064fc6c9734b049684369c79aafe9e7e93eb3724"
+    },
+    {
+      "path": "images/tremplin/artists/wall-2026/theo-lune-alt-pop-angers-v1.webp",
+      "sha256": "6fee6a53304a3d5c8a870cccd9deef4ef02e9eef59bdab84e5247782e9c40526"
+    },
+    {
+      "path": "images/tremplin/artists/wall-2026/valerie-dias-soul-jazz-nancy-v1.webp",
+      "sha256": "a61d36d282efe194af48066b5e2b0caf8c2af7d5c508d52b9559f656afc37a29"
+    },
+    {
+      "path": "images/tremplin/artists/wall-2026/yasmine-dune-amapiano-dj-lyon-v1.webp",
+      "sha256": "9a34e7137109c102ec50ec0db0de8db4c3106034a91ca3a167dc303b13542ab3"
+    },
+    {
+      "path": "images/tremplin/professions/mael-nox-beatmaker-saint-denis-v1.webp",
+      "sha256": "5b42659a0a46e1e96a91d6a6918f53394347aa464c73e100de09bbcea0c7177c"
+    },
+    {
+      "path": "images/tremplin/professions/nora-valen-art-director-lille-v1.webp",
+      "sha256": "2b8da93bb087f805b96689b12c9a982497dcf25e0093d9362e2b9a65b6b31106"
+    },
+    {
+      "path": "images/V4/accordéoniste.png",
+      "sha256": "3b685f89291e66402d69ab2309930028290ed9b94bd5a4ac29b45e3e85a7b868"
+    },
+    {
+      "path": "images/V4/Auteur parolier.png",
+      "sha256": "8f7d18cf16ece375324aa66846f7328341a4443ac1b3767d20c9019b4177c98b"
+    },
+    {
+      "path": "images/V4/Bassiste.png",
+      "sha256": "3f6b94737c40aec339480cb2a0b8e57fb195e4fc7e68bdef12f699991b27c47f"
+    },
+    {
+      "path": "images/V4/batteurs, batteuses.png",
+      "sha256": "086b24a8be8a30ec5a0446ef927496eb43b8ef4e5259a718781d89ad06de8f89"
+    },
+    {
+      "path": "images/V4/Beatboxer.png",
+      "sha256": "b5a356efde513ff723888b64faecbd7d4f232a2d0de8f2927cf01fca7fabd13e"
+    },
+    {
+      "path": "images/V4/Beatmaker.png",
+      "sha256": "b615d3a8b1c155f876403dc6b80346a13baa9dae149d0ccb4d514a46dda8c5d7"
+    },
+    {
+      "path": "images/V4/Chanteur, rappeur..png",
+      "sha256": "0d407abfdb42de4c91d63aa3fe6cbd8e261ee146689d561a350d17d6f6655602"
+    },
+    {
+      "path": "images/V4/Chanteuse, rappeuse.png",
+      "sha256": "f70cd83b46d73be6b7d22c2ff702cc61ab24f3271d3c7657f309ab72a3c08375"
+    },
+    {
+      "path": "images/V4/Coatch vocal.png",
+      "sha256": "5fd5344882d42654371c2a77092d59e0341cd2d825fe453f6de555693056c813"
+    },
+    {
+      "path": "images/V4/Compositeur.png",
+      "sha256": "ffd6f621f1840ecb2e01228c137706bc00d21cafea76a09c7f5826b37bbea82e"
+    },
+    {
+      "path": "images/V4/danseurs.png",
+      "sha256": "6fbc19dbc9cb4466f43f01913c2ef4f4f294d92fb0c7002cf06074e6b4dd0ada"
+    },
+    {
+      "path": "images/V4/danseuse.png",
+      "sha256": "d94dcc6d785085fccd1287972c606cd601da2799fd16cf37868c6f0c1030bcc7"
+    },
+    {
+      "path": "images/V4/Direction artistique V2.png",
+      "sha256": "96fab46075f8324a462c125447ff75d81d0d1927a178f19ec898f7024d88f953"
+    },
+    {
+      "path": "images/V4/DJ.png",
+      "sha256": "0f492a84faa494ce88afdd85134cb8d54371109703ed2a23a4f601dae717616c"
+    },
+    {
+      "path": "images/V4/Guitariste acoustique.png",
+      "sha256": "b94a2eac12361123b9cbc3e8b52ba423519d0eebce2959de035a799612ffa198"
+    },
+    {
+      "path": "images/V4/Guitariste électrique..png",
+      "sha256": "e2b5370562b4f1eaf904df87eac9db4196119ec4ea8fdee2ae7e13eb0e390720"
+    },
+    {
+      "path": "images/V4/Ingénieur du son.png",
+      "sha256": "58e4e9401cffa65bf4c966be59ce38fac5b3e2ee1679b9d24579f66f662fb4b1"
+    },
+    {
+      "path": "images/V4/Instrumentiste à cordes V2.png",
+      "sha256": "7ad413a59b1d49e9911ef7d467d2725dc9cabb2334c164b841808e6e11066fbb"
+    },
+    {
+      "path": "images/V4/Instrumentiste à cordes.png",
+      "sha256": "be83c5a0c45b645ffb6707ec1fed84f6ef7286ea8f1cd6543f736bc67a527b5a"
+    },
+    {
+      "path": "images/V4/Instrumentiste à cuivre..png",
+      "sha256": "11920c42c98291127ec2dcb8a97924d2386f26fbb8ab4b14b4cc95ba537feedb"
+    },
+    {
+      "path": "images/V4/Instruments a vent.png",
+      "sha256": "c72f519e5bcf1b03948a9ad4aeb06a802e0807ad24d658ccc86a0a5ce100a70c"
+    },
+    {
+      "path": "images/V4/Label.png",
+      "sha256": "9f655aee410c18171fd4fc6799935c723df582dc5bf6cc9a6cacfae9daea3475"
+    },
+    {
+      "path": "images/V4/Ménagement.png",
+      "sha256": "aded7a749218c23d76ed671b1224b553628d2ae1867ec7519e5c81230c002dbf"
+    },
+    {
+      "path": "images/V4/Organisation Scénique.png",
+      "sha256": "586bd025d3b5f64e19a5563e210b65d213a8497f5bbce7605464fabbb610137d"
+    },
+    {
+      "path": "images/V4/percussionniste.png",
+      "sha256": "d0fb918b2f9549e9b234677e4d548c3f873471e363e6c47c492745671c6996bd"
+    },
+    {
+      "path": "images/V4/Pianiste..png",
+      "sha256": "dc5d5b6d9f33f5425a507c589d1d9a6132317bf25839dba7ab26b70c51532df7"
+    },
+    {
+      "path": "images/V4/Producteur musicalv2.png",
+      "sha256": "9861f176630bb2e6b398ff9405b353d08ae0041da50708c1334f8ded52169e23"
+    },
+    {
+      "path": "images/V4/Sound designer.png",
+      "sha256": "4d72d1563150c92efc45990ed373dd5aeecad148e64ad7a0461880834863bcd9"
+    },
+    {
+      "path": "images/V4/Studio d'enregistrement.png",
+      "sha256": "aaec883e43072d62ef44e530a78f988dbe589c767928527f24f0bce86c71756e"
+    },
+    {
+      "path": "images/V4/Utilisateur.png",
+      "sha256": "a0fc7b43ae30ee83374c2d5d4bec6aaffe98c35b7dbf092d8e5375fbb3dd3601"
+    },
+    {
+      "path": "images/V4/Utilisatrice.png",
+      "sha256": "9e5f2b4531bd0e4b15df2031c3a5df19ca3404d225285149203f1422d4784f80"
+    },
+    {
+      "path": "images/V4/vidéaste clipper.png",
+      "sha256": "e984692a2e474fa53b444af1bd5f13172a81e5cc0ba49fe8223020f46ac40847"
+    },
+    {
+      "path": "images/V4/Violoniste.png",
+      "sha256": "1e88f7981d3ad414f79f05957ff1721380beea2713d140b854a680a8cea858c7"
+    },
+    {
+      "path": "media/preprofile-demo/dj-turntable.mp4",
+      "sha256": "f260c462b9e079a8cce770f252f9ef5ca7aa465a0c448cb199da8936e8737866"
+    },
+    {
+      "path": "media/preprofile-demo/female-guitarist.mp4",
+      "sha256": "299aee6f06028dd88c71594c99bac873bc34e309b06cb6a0f02f84db84d0bc0e"
+    },
+    {
+      "path": "media/shorts-demo/landscape-dj.mp4",
+      "sha256": "adbd58252779582af036eaff3b1046e7e619c22b612a31a0ee0bfe6c6ac71e8c"
+    },
+    {
+      "path": "media/shorts-demo/landscape-guitar.mp4",
+      "sha256": "129b35701aa0610b987fe72c6634905156318a64633cf40e5aa03b2dacbb8e34"
+    },
+    {
+      "path": "media/shorts-demo/landscape-roundtable.mp4",
+      "sha256": "86f4076a50bd13754ec0316e9a6a8708767b85e59ad303f7eadaf5ac8cc4545a"
+    },
+    {
+      "path": "media/shorts-demo/portrait-producer.mp4",
+      "sha256": "4aa299fbfacdca9943c200e511a31be2e9a892cc994689811fd87cd4a70f46b9"
+    },
+    {
+      "path": "media/shorts-demo/portrait-studio-rap.mp4",
+      "sha256": "85a8ab0a8a02c8ae5cedce59d03a70754614714c0aa01b21a7319a88a8f4ec68"
+    },
+    {
+      "path": "media/shorts-demo/portrait-vocal-session.mp4",
+      "sha256": "30675055e15ec7e481b80a8599203900669ee83e47bd52001f5aa612f9d0c883"
     },
     {
       "path": "meewav-emojis/v2/webp/256/applaudissements.webp",

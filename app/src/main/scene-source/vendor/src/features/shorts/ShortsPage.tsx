@@ -227,10 +227,10 @@ const SCENE_TV_LAUNCH_READY = SCENE_TV_LAUNCH_DECISION.available;
 
 const SCENE_TABS: readonly MeewavPillarTabItem<SceneTabId>[] = [
   { id: "home", label: "Accueil", icon: Home, accent: "#f7f5ff" },
-  { id: "explore", label: "Explorer", icon: Compass, accent: "#f7f5ff" },
+  { id: "explore", label: "Explorer", icon: Compass, accent: "#61d8ff" },
   { id: "following", label: "Suivis", icon: Heart, accent: "#c56cff" },
   ...(SCENE_TV_LAUNCH_READY
-    ? [{ id: "tv" as const, label: "TV", icon: Tv, accent: "#f7f5ff" }]
+    ? [{ id: "tv" as const, label: "TV", icon: Tv, accent: "#f6d381" }]
     : []),
 ];
 

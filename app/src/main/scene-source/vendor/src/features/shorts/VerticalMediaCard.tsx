@@ -20,8 +20,6 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
 } from "react";
-import { MeewavGradeBadge } from "../grades/MeewavGradeBadge";
-import { GRADE_BADGES } from "../grades/gradeBadges";
 import FloatingSceneCardMenu from "./FloatingSceneCardMenu";
 import type { ShortsVideoItem } from "./shorts-wall-data";
 
@@ -173,6 +171,19 @@ export default function VerticalMediaCard({
           <h3>{item.title}</h3>
         </div>
 
+        <button
+          ref={optionsRef}
+          type="button"
+          className="scene-vertical-card__options"
+          aria-label={`Plus d’options pour ${item.title}`}
+          aria-expanded={menuOpen}
+          aria-haspopup="menu"
+          aria-controls={menuId}
+          onClick={(event) => { event.stopPropagation(); onToggleMenu(item); }}
+        >
+          <MoreVertical />
+        </button>
+
         {previewReady ? (
           <div className="scene-vertical-card__preview-actions" onClick={stopCardClick}>
             <button
@@ -210,29 +221,9 @@ export default function VerticalMediaCard({
         <div>
           <p>
             <button type="button" onClick={() => onViewProfile(item)}>{item.artist}</button>
-            <MeewavGradeBadge
-              level={item.gradeLevel}
-              size="xs"
-              variant="icon"
-              labelMode="none"
-              className="scene-vertical-card__grade"
-              title={`Niveau ${item.gradeLevel} — ${GRADE_BADGES[item.gradeLevel].label}`}
-            />
           </p>
           <span>{item.views} · {publishedLabel}</span>
         </div>
-        <button
-          ref={optionsRef}
-          type="button"
-          className="scene-vertical-card__options"
-          aria-label={`Plus d’options pour ${item.title}`}
-          aria-expanded={menuOpen}
-          aria-haspopup="menu"
-          aria-controls={menuId}
-          onClick={() => onToggleMenu(item)}
-        >
-          <MoreVertical />
-        </button>
       </div>
 
       <FloatingSceneCardMenu
