@@ -22,7 +22,7 @@ export default function TremplinStatistics({ sort, onSortChange, onOpen }: {
       <p>Données fictives issues des profils et jetons locaux de démonstration. Aucun cours réel ni classement officiel.</p>
     </header>
     <div className="tremplin-statistics__filters" role="group" aria-label="Trier le classement">
-      {TREMPLIN_STATISTICS_SORTS.map(({ id, label }) => <button key={id} type="button" aria-pressed={sort === id} onClick={() => onSortChange(id)}>{label}</button>)}
+      {TREMPLIN_STATISTICS_SORTS.map(({ id, label }) => <button key={id} type="button" data-sort={id} aria-pressed={sort === id} onClick={() => onSortChange(id)}>{label}</button>)}
     </div>
     <p className="tremplin-statistics__summary" role="status">{entries.length} jetons actifs · {sortLabel} · Ordre décroissant</p>
     <ol className="tremplin-statistics__list" aria-label={`Classement par ${sortLabel}`}>

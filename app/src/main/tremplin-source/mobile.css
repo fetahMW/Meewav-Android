@@ -81,6 +81,8 @@
 #root .mobile-tremplin .tremplin-statistics__filters { gap: 8px; }
 #root .mobile-tremplin .tremplin-statistics__filters button { flex: 1 1 44%; min-height: 42px; border: 1px solid #8b93d433; border-radius: 14px; background: #14161cd9; color: #c6c9d6; box-shadow: inset 0 1px #ffffff0a; }
 #root .mobile-tremplin .tremplin-statistics__filters button[aria-pressed="true"] { background: #45dfa812; border-color: #45dfa873; color: #7ce8bd; box-shadow: inset 0 1px #ffffff0d,0 4px 14px #00000030; }
+#root .mobile-tremplin .tremplin-statistics__filters button[data-sort="holders"] { border-color: #a78bfa5e; background: linear-gradient(135deg, #7a5cff, #a78bfa); color: #fff; box-shadow: inset 0 1px #ffffff33, 0 4px 14px #7a5cff40; }
+#root .mobile-tremplin .tremplin-statistics__filters button[data-sort="holders"][aria-pressed="true"] { background: linear-gradient(135deg, #8b6dff, #b394ff); border-color: #c9b6ff; color: #fff; box-shadow: inset 0 1px #ffffff40, 0 0 18px #8b6dff59; }
 #root .mobile-tremplin .tremplin-statistics__list { gap: 10px; }
 #root .mobile-tremplin .tremplin-statistics__row { grid-template-columns: 28px 46px minmax(0,1fr) 16px; gap: 12px; padding: 13px 14px; border: 1px solid #8b93d42e; border-radius: 18px; background: linear-gradient(160deg,#1a1c21,#101115 48%,#0a0b0e); box-shadow: inset 0 1px #ffffff12,0 10px 22px #00000038; }
 #root .mobile-tremplin .tremplin-statistics__row:active { border-color: #8b93d459; background: linear-gradient(160deg,#1e2027,#121318 48%,#0b0c10); }
