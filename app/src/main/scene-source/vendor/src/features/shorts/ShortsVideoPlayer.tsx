@@ -1,6 +1,7 @@
 import LiveActionBurst from "../rooms/place/LiveActionBurst";
 import {
   AlertTriangle,
+  Bookmark,
   BriefcaseBusiness,
   CalendarDays,
   ChevronDown,
@@ -8,7 +9,6 @@ import {
   Expand,
   ExternalLink,
   Gauge,
-  Heart,
   Hash,
   Link2,
   LoaderCircle,
@@ -346,6 +346,7 @@ export default function ShortsVideoPlayer({
   const initialTimeAppliedItemRef = useRef<string | null>(null);
   const verticalSwipeStartRef = useRef<{ pointerId: number; x: number; y: number } | null>(null);
   const verticalSwipeConsumedRef = useRef(false);
+  const verticalSwipeDraggingRef = useRef(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -634,17 +635,51 @@ export default function ShortsVideoPlayer({
     };
   }, [isVertical]);
 
+  const resetVerticalSwipeOffset = useCallback(() => {
+    const surface = surfaceRef.current;
+    if (!surface) return;
+    surface.style.transition = "transform .28s cubic-bezier(.2,.8,.25,1)";
+    surface.style.transform = "";
+    window.setTimeout(() => {
+      if (surfaceRef.current) surfaceRef.current.style.transition = "";
+    }, 300);
+  }, []);
+
+  const moveVerticalSwipe = useCallback((event: ReactPointerEvent<HTMLElement>) => {
+    const start = verticalSwipeStartRef.current;
+    if (!start || start.pointerId !== event.pointerId) return;
+    const deltaX = event.clientX - start.x;
+    const deltaY = event.clientY - start.y;
+    if (!verticalSwipeDraggingRef.current) {
+      if (Math.abs(deltaY) < 12 || Math.abs(deltaY) <= Math.abs(deltaX)) return;
+      verticalSwipeDraggingRef.current = true;
+      try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* noop */ }
+    }
+    const surface = surfaceRef.current;
+    if (surface) surface.style.transform = `translateY(${(deltaY * 0.55).toFixed(1)}px)`;
+  }, []);
+
+  useEffect(() => {
+    const surface = surfaceRef.current;
+    if (surface) { surface.style.transition = ""; surface.style.transform = ""; }
+    verticalSwipeDraggingRef.current = false;
+  }, [item.id]);
+
   const completeVerticalSwipe = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
     const start = verticalSwipeStartRef.current;
     verticalSwipeStartRef.current = null;
     if (!start || start.pointerId !== event.pointerId) return;
+    const wasDragging = verticalSwipeDraggingRef.current;
+    verticalSwipeDraggingRef.current = false;
+    resetVerticalSwipeOffset();
     const deltaX = event.clientX - start.x;
     const deltaY = event.clientY - start.y;
-    if (Math.abs(deltaY) < 64 || Math.abs(deltaY) < Math.abs(deltaX) * 1.15) return;
+    const threshold = wasDragging ? 72 : 64;
+    if (Math.abs(deltaY) < threshold || Math.abs(deltaY) < Math.abs(deltaX) * 1.15) return;
     verticalSwipeConsumedRef.current = true;
     if (deltaY < 0) onNext?.();
     else onPrevious?.();
-  }, [onNext, onPrevious]);
+  }, [onNext, onPrevious, resetVerticalSwipeOffset]);
 
   const seekBy = useCallback((delta: number) => {
     const video = videoRef.current;
@@ -1292,8 +1327,9 @@ export default function ShortsVideoPlayer({
         className="shorts-player-surface"
         aria-label="Vidéo et informations"
         onPointerDown={beginVerticalSwipe}
+        onPointerMove={moveVerticalSwipe}
         onPointerUp={completeVerticalSwipe}
-        onPointerCancel={() => { verticalSwipeStartRef.current = null; }}
+        onPointerCancel={() => { verticalSwipeStartRef.current = null; verticalSwipeDraggingRef.current = false; resetVerticalSwipeOffset(); }}
       >
         <div
           ref={frameRef}
@@ -1645,33 +1681,12 @@ export default function ShortsVideoPlayer({
           </div>
         </div>
 
-        {isVertical ? (
-          <nav className="scene-vertical-player__navigation" aria-label="Parcourir les Shorts">
-            <button
-              type="button"
-              disabled={!previousItem || !onPrevious}
-              aria-label={previousItem ? `Création précédente : ${previousItem.title}` : "Aucune création précédente"}
-              onClick={onPrevious}
-            >
-              <ChevronUp />
-            </button>
-            {verticalPosition ? (
-              <span aria-label={`Création ${verticalPosition.index} sur ${verticalPosition.total}`}>
-                <strong>{String(verticalPosition.index).padStart(2, "0")}</strong>
-                <i />
-                <small>{String(verticalPosition.total).padStart(2, "0")}</small>
-              </span>
-            ) : null}
-            <button
-              type="button"
-              disabled={!nextItem || !onNext}
-              aria-label={nextItem ? `Création suivante : ${nextItem.title}` : "Aucune création suivante"}
-              onClick={onNext}
-            >
-              <ChevronDown />
-            </button>
-            <em>Balaye pour continuer</em>
-          </nav>
+        {isVertical && verticalPosition ? (
+          <span className="scene-vertical-player__position" aria-label={`Création ${verticalPosition.index} sur ${verticalPosition.total}`}>
+            <strong>{String(verticalPosition.index).padStart(2, "0")}</strong>
+            <i />
+            <small>{String(verticalPosition.total).padStart(2, "0")}</small>
+          </span>
         ) : null}
 
         {!isMiniplayer ? (
@@ -1717,11 +1732,12 @@ export default function ShortsVideoPlayer({
                   disabled={!onToggleSaved}
                   onClick={onToggleSaved}
                 >
-                  <Heart fill={isSaved ? "currentColor" : "none"} />
+                  <Bookmark fill={isSaved ? "currentColor" : "none"} />
                   {isWatch ? isSaved ? "Enregistré" : "Enregistrer" : isSaved ? "Dans ma sélection" : "Ma sélection"}
                 </button>
                 <button
                   type="button"
+                  className="shorts-action-comment"
                   onClick={() => {
                     if (isWatch) {
                       document.getElementById("scene-watch-comments")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1757,13 +1773,13 @@ export default function ShortsVideoPlayer({
                   <UsersRound /> Voir le profil
                 </button>
                 </div></details> : <>
-                <button
+                {!isVertical && <button
                   type="button"
                   disabled={!onContact}
                   onClick={onContact}
                 >
                   <MessageCircle /> Contacter
-                </button>
+                </button>}
                 <button
                   type="button"
                   className="shorts-player-action is-collab"

@@ -17,6 +17,11 @@
 #root .mobile-scene .shorts-topbar__actions { display: flex; flex-shrink: 0; gap: 0; position: static; }
 #root .mobile-scene .shorts-topbar__actions :is(button,.shorts-create-button) { min-width: 34px; width: 34px; height: 44px; min-height: 44px; padding: 8px; border: 0; border-radius: 10px; background: none; box-shadow: none; }
 #root .mobile-scene .shorts-topbar__actions .shorts-create-button :is(span,b) { display: none; }
+#root .mobile-scene .shorts-topbar__actions .scene-topbar-publish { display: none; }
+#root .mobile-scene .shorts-topbar__actions .scene-topbar-studio { width: auto; min-width: 0; height: 36px; min-height: 36px; align-self: center; padding: 0 14px; gap: 7px; border: 1px solid #b79cff2e; border-radius: 10px; background: linear-gradient(135deg,#6d4fd0,#4c2fa9); color: #f6f3ff; box-shadow: 0 8px 18px #4c2fa966, inset 0 1px 0 #ffffff2e; }
+#root .mobile-scene .shorts-topbar__actions .scene-topbar-studio svg { display: none; }
+#root .mobile-scene .shorts-topbar__actions .scene-topbar-studio span { display: inline; font-size: 12px; font-weight: 700; letter-spacing: .01em; color: inherit; }
+#root .mobile-scene .shorts-topbar__actions .scene-topbar-studio > b { position: static; display: grid; place-items: center; min-width: 16px; width: auto; height: 16px; padding: 0 4px; margin: 0; border-radius: 8px; background: #ffffff38; color: #fff; font-size: 9px; font-weight: 800; line-height: 1; }
 #root .mobile-scene .shorts-topbar__actions svg { width: 18px; height: 18px; }
 #root .mobile-scene .scene-browse-chips-shell { position: fixed; top: 154px; left: 0; right: 0; z-index: 480; }
 #root .mobile-scene .scene-browse-chips { height: 48px; padding: 6px 12px; gap: 8px; background: var(--profile-selector-glass); backdrop-filter: blur(24px); scrollbar-width: none; }
@@ -44,7 +49,9 @@
 #root .mobile-scene .scene-vertical-card { content-visibility: visible; contain-intrinsic-size: none; }
 #root .mobile-scene .scene-vertical-card__meta { padding-top: 7px; }
 #root .mobile-scene :is(.shorts-wall__grid,.scene-explore__grid) { grid-template-columns: minmax(0,1fr); gap: 22px; }
-#root .mobile-scene :is(.scene-vertical-collection__grid,.scene-vertical-search-results .shorts-wall__grid,.scene-explore__catalog.is-vertical,.is-vertical-collection .shorts-wall__grid) { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px 10px; }
+#root .mobile-scene :is(.scene-vertical-collection__grid,.scene-vertical-search-results .shorts-wall__grid,.scene-explore__catalog.is-vertical,.is-vertical-collection .shorts-wall__grid) { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px 8px; }
+#root .mobile-scene .scene-vertical-card__media { aspect-ratio: 3/4; }
+#root .mobile-scene .scene-vertical-card__meta p > button, #root .mobile-scene .scene-vertical-card__meta p { font-size: 10px; }
 #root .mobile-scene :is(.shorts-section-heading,.shorts-wall__header) { gap: 10px; margin: 14px 0; }
 #root .mobile-scene :is(.shorts-section-heading,.shorts-wall__header) h2 { font-size: 21px; line-height: 1.2; }
 #root .mobile-scene :is(.shorts-section-heading,.shorts-wall__header) p { font-size: 12px; line-height: 1.5; }
@@ -59,11 +66,10 @@
 #root .mobile-scene .shorts-contentbar.is-explore .scene-browse-chips button[aria-pressed=true] { background: #ded9e8; color: #17131f; }
 #root .mobile-scene .scene-explore__compact-controls { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
 #root .mobile-scene .shorts-contentbar.is-explore .scene-explore__compact-controls { flex-wrap: nowrap; }
-#root .mobile-scene .shorts-contentbar.is-explore .scene-explore__sort-control { order: 10; margin-left: 0; flex: 0 0 auto; }
+/* Le tri vit dans le panneau de filtres (section Tri) — plus de bouton Pertinence visible. */
+#root .mobile-scene .scene-explore__sort-control { display: none; }
 #root .mobile-scene .scene-explore__compact-controls button { min-height: 40px; padding: 8px 10px; font-size: 12px; }
-#root .mobile-scene .scene-explore__result-count { font-size: 11px; }
-#root .mobile-scene .scene-explore__sort-control { margin-left: auto; max-width: 160px; }
-#root .mobile-scene .scene-explore__sort-control select { font-size: 12px; }
+#root .mobile-scene .scene-explore__result-count { font-size: 11px; white-space: nowrap; }
 #root .mobile-scene .scene-browse-nav { position: fixed; z-index: 51001; top: 154px; bottom: 88px; left: 0; width: min(300px,85vw); padding: 12px; border: 1px solid #c1add72a; border-radius: 0 18px 18px 0; background: #0f1018ed; backdrop-filter: blur(26px); overflow-y: auto; scrollbar-width: none; }
 #root .mobile-scene .is-browse-collapsed .shorts-shell > .scene-browse-nav { display: none; }
 #root .mobile-scene .scene-watch-menu { position: fixed; z-index: 51002; inset: 154px 0 88px; }
@@ -93,7 +99,9 @@
 #root .mobile-scene .scene-watch-suggestion__play strong { font-size: 13px; line-height: 1.3; }
 #root .mobile-scene .scene-watch-queue { background: #16171d; border-color: #baa3da27; }
 #root .mobile-scene .shorts-player-layer.is-miniplayer { position: fixed; z-index: 510; inset: auto 10px 90px auto; width: min(260px,72vw); padding: 0; }
-#root .mobile-scene .shorts-player-layer.is-vertical-feed { position: fixed; z-index: 52000; inset: 0; margin: 0; padding: 0; height: 100%; width: 100%; background: #060609; }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed { position: fixed; z-index: 52000; inset: 0; margin: 0; padding: 0; height: 100%; width: 100%; background: #060609; overflow: hidden; }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed :is(.shorts-player-frame,.shorts-player-details) { touch-action: pan-x; }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-surface { will-change: transform; }
 #root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-surface { position: relative; display: block; width: 100%; height: 100dvh; min-height: 0; max-height: none; overflow: hidden; border-radius: 0; background: #000; }
 /* WebView bug: a positioned frame breaks hardware video paint (black screen).
    Keep the frame static so the absolutely-positioned video resolves against the
@@ -106,7 +114,7 @@
 #root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-details { position: absolute; z-index: 6; inset: auto 0 0; display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: end; gap: 6px 8px; width: 100%; height: auto; max-height: none; min-width: 0; padding: 72px 8px calc(26px + env(safe-area-inset-bottom, 0px)) 12px; overflow: visible; border: 0; border-radius: 0; background: linear-gradient(transparent, rgba(4,4,10,.5) 42%, rgba(4,4,10,.94)); }
 #root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-details__toolbar { grid-column: 2; grid-row: 1; align-self: end; display: flex; flex-direction: column; flex-wrap: nowrap; align-items: center; gap: 14px; width: auto; }
 #root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-reactions--player { flex-direction: column; gap: 14px; }
-#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-reactions--player .shorts-reaction { min-width: 0; width: 46px; height: auto; min-height: 0; padding: 0; gap: 3px; flex-direction: column; border: 0; background: none; box-shadow: none; }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-reactions--player .shorts-reaction { flex: 0 0 auto; min-width: 0; width: 46px; height: auto; min-height: 60px; padding: 0; gap: 3px; flex-direction: column; justify-content: flex-start; border: 0; background: none; box-shadow: none; }
 #root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-reactions--player .shorts-reaction__icon { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; background: rgba(16,15,22,.62); border: 1px solid rgba(255,255,255,.09); }
 #root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-reactions--player .shorts-reaction__icon svg { width: 22px; height: 22px; }
 #root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-reactions--player .shorts-reaction__label { display: none; }
@@ -122,7 +130,8 @@
 #root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-controls { position: absolute; z-index: 7; inset: auto 0 0; padding: 0; border: 0; background: none; }
 #root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-controls__row { display: none; }
 #root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-timeline { display: block; padding: 0 4px; }
-#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-timeline input { min-height: 18px; height: 18px; }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-timeline { height: 22px; }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-timeline input { min-height: 4px; height: 4px; }
 #root .mobile-scene .shorts-player-layer.is-vertical-feed .scene-vertical-player__navigation { top: 96px; right: 8px; transform: none; }
 /* WebView bug: backdrop-filter inside an overflow:hidden container paints the
    clipped region black — strip it from the feed chrome (backgrounds stay opaque). */
@@ -142,8 +151,18 @@
 #root .mobile-scene .shorts-player-controls button { width: 38px; height: 42px; padding: 9px; }
 #root .mobile-scene .shorts-player-volume input { display: none; }
 #root .mobile-scene .shorts-player-time { font-size: 10px; white-space: nowrap; margin-left: 4px; }
-#root .mobile-scene .shorts-player-controls button[aria-label="Mode image dans l’image"],#root .mobile-scene .shorts-player-controls button[aria-label*="cinéma"] { display: none; }
-#root .mobile-scene .shorts-player-timeline input { min-height: 24px; }
+#root .mobile-scene :is(.shorts-player-controls,.scene-tv-player__controls) :is(button[aria-label="Mode image dans l’image"],button[aria-label*="cinéma"],button[aria-label*="mini-lecteur"]) { display: none; }
+/* Player watch 16:9 : vidéo collée sous la barre d'outils, pilule de sauts sous
+   le bloc vidéo, contrôles sur une seule ligne pour garder la timeline en bas. */
+#root .mobile-scene .shorts-player-layer.is-watch .shorts-player-surface { order: -1; }
+#root .mobile-scene .shorts-player-layer.is-watch .scene-watch-jumps { position: static; margin: 10px 12px 0; }
+#root .mobile-scene .shorts-player-layer.is-watch .shorts-player-controls__row { flex-wrap: nowrap; }
+#root .mobile-scene .shorts-player-layer.is-watch .shorts-player-controls { padding: 4px 8px; }
+/* Mini-lecteur : la règle vendor nth-last-child(2) masque le bouton « Agrandir »
+   (le bouton cinéma n'existe pas dans ce mode) — on le réaffiche. */
+#root .mobile-scene .shorts-player-layer.is-miniplayer .shorts-player-controls__right > button[aria-label="Agrandir le lecteur"] { display: grid; }
+#root .mobile-scene .shorts-player-timeline input { min-height: 4px; height: 4px; }
+#root .mobile-scene .shorts-player-timeline input::-webkit-slider-thumb { opacity: 1; width: 11px; height: 11px; }
 #root .mobile-scene .shorts-player-settings__menu { max-height: 55dvh; overflow-y: auto; background: #111219f5; }
 #root .mobile-scene .shorts-create-layer { position: fixed; z-index: 52000; inset: 0; }
 #root .mobile-scene .shorts-create-drawer { position: absolute; inset: 10px 0 0; width: 100%; max-width: 100%; height: auto; min-height: 0; border-radius: 22px 22px 0 0; background: #111217; }
@@ -174,6 +193,8 @@ body:has(.mobile-scene) .meewav-filter-panel__backdrop.is-open { position: fixed
 body:has(.mobile-scene) .artist-filter-panel.is-open { position: fixed; z-index: 53001; inset: 10px 0 0; transform: none; width: 100%; min-width: 0; max-width: none; height: auto; max-height: none; display: flex; flex-direction: column; pointer-events: auto; border: 1px solid #b8a5d536; border-radius: 24px 24px 0 0; background: #111217; box-shadow: 0 -10px 40px #0005; }
 body:has(.mobile-scene) .artist-filter-panel .side-panel__header { padding: 16px; min-height: 0; gap: 12px; }
 body:has(.mobile-scene) .artist-filter-panel__headingIcon,body:has(.mobile-scene) .artist-filter-panel__eyebrow { display: none; }
+/* headingIcon masqué : sans ça la colonne 46px du grid reste et écrase le titre. */
+body:has(.mobile-scene) :is(#scene-filter-panel,.artist-filter-panel) .artist-filter-panel__heading { grid-template-columns: minmax(0,1fr); flex: 1 1 auto; min-width: 0; }
 body:has(.mobile-scene) .artist-filter-panel h2 { font-size: 22px; line-height: 1.2; }
 body:has(.mobile-scene) .artist-filter-panel__headingCopy p { font-size: 12px; line-height: 1.5; margin: 6px 0 0; }
 body:has(.mobile-scene) .artist-filter-panel__body { min-height: 0; flex: 1; padding: 8px 16px 16px; overflow-y: auto; }
@@ -186,3 +207,21 @@ body:has(.mobile-scene) .artist-filter-panel__actions button { min-width: 0; fle
 body:has(.mobile-scene) .artist-filter-panel__apply { background: var(--mobile-violet-cta); }
 body:has(.mobile-scene) .artist-filter-panel__selectionHint { font-size: 11px; margin: 0; padding: 8px 16px; }
 body:has(.mobile-scene) .scene-card-menu { max-width: calc(100vw - 24px); background: #14151ef5; }
+
+/* === Feed verticale epuree : compteur seul, sans chevrons === */
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .scene-vertical-player__position { position: absolute; z-index: 8; top: calc(14px + env(safe-area-inset-top, 0px)); right: 12px; display: flex; align-items: center; gap: 5px; color: rgba(225,216,237,.55); font-variant-numeric: tabular-nums; pointer-events: none; }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .scene-vertical-player__position strong { color: #fff; font-size: 11px; }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .scene-vertical-player__position i { width: 12px; height: 1px; background: rgba(255,255,255,.22); }
+#root .mobile-scene .shorts-player-layer.is-vertical-feed .scene-vertical-player__position small { font-size: 8px; }
+
+/* === Accueil : miniatures verticales compactes, sans trait violet === */
+#root .mobile-scene .scene-home-feed__shorts-track > * { flex: 0 0 112px; min-width: 112px; }
+#root .mobile-scene .scene-home-feed__shorts .scene-vertical-card__media { border-color: rgba(255,255,255,.07); box-shadow: 0 10px 26px rgba(0,0,0,.32); }
+#root .mobile-scene .scene-vertical-card__progress { display: none; }
+
+/* === Bandeau transparent + degrade violet en dessous === */
+#root .mobile-scene .shorts-topbar { background: transparent !important; border-bottom: 0 !important; box-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+#root .mobile-scene .mobile-scene-tools { background: linear-gradient(180deg, rgba(109,79,208,.34), rgba(76,47,169,.10) 62%, rgba(76,47,169,0)); border-bottom-color: transparent; }
+
+/* === Un seul burger : celui de La Scene === */
+#root .mobile-scene > .mobile-feature-back { display: none; }

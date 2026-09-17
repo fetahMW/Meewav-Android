@@ -3631,7 +3631,7 @@ function SceneWorkspace() {
                   onClick={() => navigate(SCENE_STUDIO_ROUTE)}
                 >
                   <LayoutDashboard />
-                  <span>Mon Studio</span>
+                  <span>Studio</span>
                   <b aria-label="3 actions à traiter">3</b>
                 </button>
               </>
