@@ -17,15 +17,18 @@
 
 /* Contrôles : recherche compacte + chips de format ; le bouton « Lancer une Room »
    du header web est remplacé par le FAB façon iOS au-dessus du dock. */
-#root .mobile-rooms .rooms-home__controls { min-height: 0; padding: 10px 14px 6px; gap: 8px; flex-wrap: wrap; backdrop-filter: none; -webkit-backdrop-filter: none; background: #07060d; border: 0; z-index: 10; }
-#root .mobile-rooms .rooms-home__search-wrap { flex: 1 1 100%; min-width: 0; }
+/* Bandeaux recherche + filtres : verre transparent + flou, comme La Scène. */
+#root .mobile-rooms .rooms-home__controls { min-height: 0; padding: 10px 14px 6px; gap: 8px; flex-wrap: wrap; background: var(--profile-selector-glass); backdrop-filter: blur(24px) saturate(1.12); -webkit-backdrop-filter: blur(24px) saturate(1.12); border: 0; border-bottom: 1px solid #c7b8df14; z-index: 10; }
+/* Une seule ligne : recherche + 3 chips grises de format (style La Scène). */
+#root .mobile-rooms .rooms-home__controls { flex-wrap: nowrap; flex-direction: row; align-items: center; }
+#root .mobile-rooms .rooms-home__search-wrap { flex: 1 1 0; min-width: 0; }
 #root .mobile-rooms .rooms-home__search.meewav-search-filter-bar.is-flow { width: 100%; min-height: 40px; }
-#root .mobile-rooms .rooms-home__control-actions { display: flex; gap: 8px; align-items: center; }
-#root .mobile-rooms .rooms-home__format { display: flex; gap: 6px; }
-#root .mobile-rooms .rooms-home__format > button { min-height: 32px; padding: 0 12px; font-size: 11px; }
+#root .mobile-rooms .rooms-home__control-actions { display: flex; gap: 6px; align-items: center; flex: 0 0 auto; width: auto; justify-content: flex-end; }
+#root .mobile-rooms .rooms-home__format { display: flex; gap: 5px; padding: 0; border: 0; background: none; box-shadow: none; flex: 0 0 auto; }
+#root .mobile-rooms .rooms-home__format > button { min-height: 34px; padding: 7px 9px; font-size: 11px; font-weight: 650; border-radius: 9px; color: #d2cedc; background: #24242c; border: 1px solid #ffffff08; box-shadow: none; letter-spacing: 0; white-space: nowrap; }
+#root .mobile-rooms .rooms-home__format > button.is-active { background: #ded9e8; color: #17131f; border-color: transparent; transform: none; box-shadow: none; }
 #root .mobile-rooms .rooms-home__launch { display: none; }
-#root .mobile-rooms .rooms-home__discovery { padding: 2px 16px 8px; font-size: 11px; }
-#root .mobile-rooms .rooms-home__demo-label { display: none; }
+#root .mobile-rooms .rooms-home__discovery { display: none; }
 
 /* FAB « Créer une Room » — bulle violette posée au-dessus du dock. */
 #root .mobile-rooms .rooms-page__launch-fab { position: fixed; z-index: 30; right: 16px; bottom: 118px; width: 56px; height: 56px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 50%; background: #8d5cff40; color: #fff; box-shadow: 0 0 14px #8d5cff66, 0 0 3px #8d5cff66, inset 0 1px 0 #ffffff24; }

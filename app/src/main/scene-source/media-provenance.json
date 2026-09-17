@@ -3672,6 +3672,10 @@
     {
       "path": "meewav-emojis/webp/256/vinyle-notes.webp",
       "sha256": "567d5fcfdd2592fd59c65c418461e25c26392897f771d3151beb88a229412a5f"
+    },
+    {
+      "path": "ui/images/earth_specular.jpg",
+      "sha256": "2df48906732d7a458b2d0a7cdec51a829262307c6bdee4cfdf079a4dd7c71c69"
     }
   ]
 }

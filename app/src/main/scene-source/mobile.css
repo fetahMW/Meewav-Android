@@ -83,9 +83,9 @@
 #root .mobile-scene .shorts-contentbar { padding: 8px 0 12px; margin: 0; min-height: 0; background: transparent; border: 0; }
 /* Explorer : une seule ligne de chips — le contentbar devient le scroller
    horizontal et ses groupes internes sont aplatis dedans. */
-#root .mobile-scene .shorts-contentbar.is-explore { display: flex; flex-wrap: nowrap; align-items: center; gap: 6px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
-#root .mobile-scene .shorts-contentbar.is-explore :is(.scene-explore__compact-controls,.scene-vertical-collection__filters,.scene-browse-chips-shell,.scene-browse-chips) { display: contents; }
-#root .mobile-scene .shorts-contentbar.is-explore :is(.scene-explore__media-tabs,.scene-explore__editorial-tabs,.scene-explore__result-count,.scene-explore__sort-control,.scene-vertical-collection__filters button,.scene-explore__media-tabs button,.scene-browse-chips button) { flex: 0 0 auto; }
+#root .mobile-scene .shorts-contentbar.is-explore { position: fixed; top: 154px; left: 0; right: 0; z-index: 480; display: flex; flex-wrap: nowrap; align-items: center; gap: 6px; height: 48px; padding: 6px 12px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; background: var(--profile-selector-glass); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-bottom: 1px solid #c7b8df14; }
+#root .mobile-scene .shorts-contentbar.is-explore :is(.scene-explore__compact-controls,.scene-vertical-collection__filters,.scene-browse-chips-shell,.scene-browse-chips,.artist-filter-active-chips) { display: contents; }
+#root .mobile-scene .shorts-contentbar.is-explore :is(.scene-explore__media-tabs,.scene-explore__editorial-tabs,.scene-explore__result-count,.scene-explore__sort-control,.scene-vertical-collection__filters button,.scene-explore__media-tabs button,.scene-browse-chips button,.artist-filter-active-chips > *) { flex: 0 0 auto; }
 #root .mobile-scene .shorts-contentbar.is-explore .meewav-rail-edges { display: none; }
 #root .mobile-scene .shorts-contentbar.is-explore .scene-browse-chips button { min-height: 40px; padding: 8px 10px; font-size: 12px; border-radius: 10px; color: #d2cedc; background: #24242c; border: 1px solid #ffffff08; }
 #root .mobile-scene .shorts-contentbar.is-explore .scene-browse-chips button[aria-pressed=true] { background: #ded9e8; color: #17131f; }

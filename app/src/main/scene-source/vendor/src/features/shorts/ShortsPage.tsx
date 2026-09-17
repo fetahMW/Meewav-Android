@@ -3510,6 +3510,15 @@ function SceneWorkspace() {
     : isCreatorStudioRoute ? "studio" : profileArtistReference ?? (exploreMediaMode === "vertical" && activeTab === "explore" ? "shorts" : activeTab);
   const browseHomeVideos = Array.from(new Map([...publishedItems, ...SHORTS_WALLS["for-you"].items, ...allVideos].filter((item) => item.format !== "portrait" && item.presentationFormat !== "vertical").map((item) => [item.id, item])).values());
   const browseShorts = allVideos.filter((item) => item.format === "portrait" || item.presentationFormat === "vertical");
+  const replayRoomItems = allVideos
+    .filter((item) => item.contentTypeLabel === "Replay de Room")
+    .sort((a, b) => Number(b.format === "portrait" || b.presentationFormat === "vertical") - Number(a.format === "portrait" || a.presentationFormat === "vertical"));
+  const freestyleShortItems = browseShorts.filter((item) => ["Freestyle", "Coulisses", "Session", "DJ set", "Danse", "Cover"].includes(item.contentTypeLabel ?? ""));
+  const homeVerticalRails = [
+    { id: "shorts", title: "Shorts", to: "/scene/explore?media=vertical", items: browseShorts },
+    { id: "room-replays", title: "Replay de Room", to: "/scene/explore?type=room-replay", items: replayRoomItems },
+    { id: "freestyles", title: "Freestyles & Coulisses", to: "/scene/explore?type=freestyle", items: freestyleShortItems },
+  ];
 
   return (
     <main className={`shorts-page scene-page has-unified-header${activeTab !== "tv" || watchRoute ? " is-document" : ""}${watchRoute ? " has-watch-page" : ""}${isCreatorStudioRoute ? " is-creator-studio" : ""}${showBrowseNavigation ? ` has-browse-nav${browseMenuOpen ? "" : " is-browse-collapsed"}` : ""}`} aria-label={SCENE_NAME}>
@@ -4228,7 +4237,7 @@ function SceneWorkspace() {
               <>
                 <SceneHomeFeed
                   videos={browseHomeVideos}
-                  shorts={browseShorts}
+                  rails={homeVerticalRails}
                   renderVideo={(item) => <VideoCard
                     key={item.id} item={item} onSelect={openVideo}
                     isSaved={savedIds.has(item.id)} menuOpen={openMenuId === item.id}

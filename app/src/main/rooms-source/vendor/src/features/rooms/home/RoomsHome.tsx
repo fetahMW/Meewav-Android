@@ -415,14 +415,6 @@ export function RoomsHome({ collectionSlug = null, roomType, onOpenRoom }: Rooms
         </div>
       </header>
 
-      {!isCollectionView ? (
-        <div className="rooms-home__discovery">
-          <span className="rooms-home__live-dot" aria-hidden="true" />
-          <strong>{filteredCatalog.length} Room{filteredCatalog.length > 1 ? "s" : ""} en direct</strong>
-          <span>France · {roomType ? ROOM_TYPE_OPTIONS.find((option) => option.value === roomType)?.label : "Tous les univers"}</span><small className="rooms-home__demo-label">Présentation · directs simulés</small>
-        </div>
-      ) : null}
-
       {!isCollectionView && activeFilterChips.length > 0 ? (
         <div className="rooms-home__active-filters">
           <MeewavActiveFilterChips filters={activeFilterChips} onClear={resetAllFilters} />
