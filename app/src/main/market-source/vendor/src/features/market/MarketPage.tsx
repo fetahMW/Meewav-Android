@@ -52,6 +52,7 @@ import {
   MARKET_PILLARS,
   MARKET_FEATURED_PRODUCT_IDS,
   MARKET_HOME_RAILS,
+  MARKET_TAB_LEAD_PRODUCT_IDS,
   getMarketProductsByPillar,
   initialMarketCart,
   initialMarketFavorites,
@@ -996,9 +997,18 @@ export default function MarketPage() {
   }, [activeFilter, baseProducts, favorites, isAllCatalog, marketFilters, marketLive.active, queryNormalized, showFavoritesOnly]);
 
   const wallProducts = useMemo(() => {
-    if (queryNormalized || showFavoritesOnly || appliedFilterCount > 0 || isAllCatalog) return visibleProducts;
-    return buildMarketWallSequence(visibleProducts);
-  }, [appliedFilterCount, isAllCatalog, queryNormalized, showFavoritesOnly, visibleProducts]);
+    const ordered = queryNormalized || showFavoritesOnly || appliedFilterCount > 0 || isAllCatalog
+      ? visibleProducts
+      : buildMarketWallSequence(visibleProducts);
+    if (queryNormalized || showFavoritesOnly || isAllCatalog) return ordered;
+    const leadIds = MARKET_TAB_LEAD_PRODUCT_IDS[activePillar] ?? [];
+    if (leadIds.length === 0) return ordered;
+    const leadSet = new Set(leadIds);
+    const leads = leadIds
+      .map((id) => ordered.find((product) => product.id === id))
+      .filter((product): product is MarketProductView => Boolean(product));
+    return [...leads, ...ordered.filter((product) => !leadSet.has(product.id))];
+  }, [activePillar, appliedFilterCount, isAllCatalog, queryNormalized, showFavoritesOnly, visibleProducts]);
 
   const cartCount = useMemo(
     () => [...cart.values()].reduce((total, quantity) => total + quantity, 0),
@@ -1009,7 +1019,7 @@ export default function MarketPage() {
       .filter((action) => action.startsWith("cart:"))
       .map((action) => action.slice("cart:".length)),
   ), [marketLive.pendingActions]);
-  const heroProduct = marketProducts.find((product) => product.id === "new-moog-subsequent-37") ?? marketProducts[0];
+  const heroProduct = marketProducts.find((product) => product.id === "new-apollo-twin-x") ?? marketProducts[0];
   const heroCollective = marketProducts.find((product) => product.id === "collective-arturia-minifreak");
   const isHome = !sellerDraftsOpen
     && viewMode === "home"
@@ -1370,13 +1380,11 @@ export default function MarketPage() {
     : selectedProduct?.pillarId === "services"
       ? marketLive.active
         ? selectedProduct.service?.kind === "ticket" ? "Demander cette place" : "Envoyer la demande"
-        : selectedProduct.service?.kind === "ticket"
-          ? "Prendre ma place"
-          : selectedProduct.service?.kind === "room" ? "Réserver la Room" : "Réserver la prestation"
+        : "Réserver"
     : selectedProduct?.pillarId === "collective"
       ? (selectedProduct.collective?.daysRemaining ?? 0) <= 0
         ? "Campagne terminée"
-        : joinedCollectives.has(selectedProduct.id) ? "Participation enregistrée" : "Rejoindre l’achat groupé"
+        : joinedCollectives.has(selectedProduct.id) ? "Participation enregistrée" : "Rejoindre"
       : "Panier";
   const selectedActionKey = selectedProduct
     ? selectedProduct.pillarId === "rental"
@@ -1604,13 +1612,7 @@ export default function MarketPage() {
             />
           </div>
 
-
-        </header>
-
-        <div ref={marketScrollRef} className="market-scroll">
-          <div className="market-mobile-utility">
-            <h1>{sellerDraftsOpen ? 'Mes annonces' : showFavoritesOnly ? 'Mes favoris' : isHome ? 'À découvrir' : MARKET_PILLARS.find((pillar) => pillar.id === activePillar)?.label ?? 'Catalogue'}</h1>
-            <div className="market-topbar__actions">
+          <div className="market-topbar__actions">
             <button
               type="button"
               className={`market-icon-button ${showFavoritesOnly ? "is-active" : ""}`}
@@ -1642,15 +1644,6 @@ export default function MarketPage() {
               {!marketLive.active ? <span className="market-icon-button__badge">3</span> : null}
             </button>
             <button
-              type="button"
-              className="market-icon-button market-cart-button"
-              aria-label="Ouvrir le panier"
-              onClick={() => { setSelectedProduct(null); setDrawer("cart"); setPopover(null); }}
-            >
-              <ShoppingCart aria-hidden="true" />
-              {cartCount > 0 && <span className="market-icon-button__badge">{cartCount}</span>}
-            </button>
-            <button
               ref={marketCenterTriggerRef}
               type="button"
               className="market-brand__portrait"
@@ -1664,7 +1657,24 @@ export default function MarketPage() {
               <img src={currentUserAvatar} alt="" />
               <span className="market-brand__presence" aria-hidden="true" />
             </button>
-          </div></div>
+            <button
+              type="button"
+              className="market-icon-button market-cart-button"
+              aria-label="Ouvrir le panier"
+              onClick={() => { setSelectedProduct(null); setDrawer("cart"); setPopover(null); }}
+            >
+              <ShoppingCart aria-hidden="true" />
+              {cartCount > 0 && <span className="market-icon-button__badge">{cartCount}</span>}
+            </button>
+          </div>
+        </header>
+
+        <div ref={marketScrollRef} className="market-scroll">
+          {sellerDraftsOpen || showFavoritesOnly ? (
+            <div className="market-mobile-utility">
+              <h1>{sellerDraftsOpen ? 'Mes annonces' : 'Mes favoris'}</h1>
+            </div>
+          ) : null}
           {sellerDraftsOpen ? (
             <MarketSellerDraftCenter
               key={draftCenterRevision}
@@ -1826,7 +1836,7 @@ export default function MarketPage() {
                       <button type="button" className="market-product-card__main" onClick={() => openProduct(product, wallProducts)} aria-label={`Voir ${product.title}`}>
                         <div className="market-product-card__visual">
                           <img src={product.imageUrl} alt={product.imageAlt} loading="lazy" decoding="async" />
-                          <span className="market-badge">{product.badge ?? marketPillarLabels[product.pillarId]}</span>
+                          <span className="market-badge">{marketPillarLabels[product.pillarId]}</span>
                         </div>
                         <div className="market-product-card__body">
                           <span className="market-product-card__category">{product.category}</span>
@@ -2020,7 +2030,7 @@ export default function MarketPage() {
             <ChevronRight aria-hidden="true" />
           </button>
           <div className="market-product-modal__media">
-            <img src={selectedProduct.imageUrl} alt={selectedProduct.imageAlt} />
+            <img key={selectedProduct.id} src={selectedProduct.imageUrl} alt={selectedProduct.imageAlt} />
             <button
               type="button"
               ref={mediaExpandButtonRef}
@@ -2030,7 +2040,7 @@ export default function MarketPage() {
             >
               <Maximize2 aria-hidden="true" />
             </button>
-            <span className="market-badge">{selectedProduct.badge ?? selectedProduct.conditionLabel}</span>
+            <span className="market-badge">{marketPillarLabels[selectedProduct.pillarId]}</span>
             {showSellerIdentityPlaque && (
               <div
                 className={`market-product-modal__seller-identity ${selectedSellerGradeLevel === null ? "is-grade-hidden" : ""}`}

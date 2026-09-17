@@ -1171,8 +1171,8 @@ export const MARKET_HOME_RAILS: MarketHomeRail[] = [
     title: "Le prochain son commence ici",
     description: "Trente références neuves sélectionnées pour composer, enregistrer et performer.",
     productIds: [
-      "new-moog-subsequent-37", "new-apollo-twin-x", "new-shure-sm7b", "new-beyerdynamic-dt770",
-      "new-focusrite-scarlett", "new-audient-id14", "new-neumann-tlm103", "new-korg-minilogue",
+      "new-neumann-tlm103", "new-korg-minilogue", "new-moog-subsequent-37", "new-apollo-twin-x",
+      "new-shure-sm7b", "new-beyerdynamic-dt770", "new-focusrite-scarlett", "new-audient-id14",
       "new-nord-stage-4", "new-pioneer-flx10",
     ],
   },
@@ -1225,6 +1225,44 @@ export const MARKET_HOME_RAILS: MarketHomeRail[] = [
     ],
   },
 ];
+
+/**
+ * Annonces mises en avant en tête de chaque onglet du catalogue.
+ * Sélection validée : visuels variés en entrée de liste par pilier.
+ */
+export const MARKET_TAB_LEAD_PRODUCT_IDS: Record<MarketPillarId, readonly string[]> = {
+  new: [
+    "new-focusrite-scarlett-vocal",
+    "new-rode-nt1a-complete",
+    "new-ath-m50x-limited-blue",
+    "new-fender-strat-player-ii",
+  ],
+  used: [
+    "used-fender-telecaster",
+    "used-prs-custom-24",
+    "used-adam-a7x",
+    "used-pioneer-ddj1000",
+    "used-zoom-h6",
+  ],
+  rental: [
+    "rental-audient-id14-travel",
+    "rental-focusrite-mobile-vocal",
+    "rental-rode-nt1a-voice-pack",
+    "rental-beyerdynamic-six-pack",
+  ],
+  services: [
+    "service-coaching-sound-design",
+    "service-coaching-guitar-tone",
+    "service-room-drum-tracking",
+    "service-room-live-rehearsal",
+  ],
+  collective: [
+    "collective-m-audio-oxygen",
+    "collective-ath-m50x",
+    "collective-rode-nt1a",
+    "collective-nord-stage",
+  ],
+};
 
 export const featuredMarketProductIds = [...MARKET_FEATURED_PRODUCT_IDS];
 

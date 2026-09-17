@@ -8,6 +8,7 @@ import {
   Camera,
   Check,
   CheckCircle2,
+  ChevronLeft,
   ChevronRight,
   Clock3,
   FileImage,
@@ -188,7 +189,7 @@ const SERVICE_CATEGORIES: MarketCategory[] = [
 ];
 
 const PILLAR_META: Record<MarketPillarId, { icon: LucideIcon; accent: string; short: string }> = {
-  new: { icon: PackageCheck, accent: "162, 112, 240", short: "Produit neuf, stock et garantie" },
+  new: { icon: PackageCheck, accent: "91, 124, 255", short: "Produit neuf, stock et garantie" },
   used: { icon: Repeat2, accent: "233, 162, 59", short: "État réel et histoire du matériel" },
   rental: { icon: CalendarDays, accent: "39, 194, 209", short: "Tarifs, caution et calendrier" },
   services: { icon: Sparkles, accent: "198, 91, 255", short: "Talent, Room ou billetterie" },
@@ -512,6 +513,9 @@ export default function MarketListingComposer({
   const [publicationResult, setPublicationResult] = useState<MarketListingPublicationResult | null>(null);
   const [publishing, setPublishing] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const closeTimerRef = useRef<number | null>(null);
+  const [draftChipTucked, setDraftChipTucked] = useState(false);
   const fileInputId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const mobilePreviewTriggerRef = useRef<HTMLButtonElement>(null);
@@ -619,8 +623,7 @@ export default function MarketListingComposer({
           return;
         }
         if (!publishedRef.current) persistDraftSnapshot(false);
-        setDismissed(true);
-        onCloseRef.current?.();
+        startClosing();
         return;
       }
 
@@ -961,20 +964,32 @@ export default function MarketListingComposer({
     }
   }
 
+  function startClosing() {
+    if (closing) return;
+    setClosing(true);
+    closeTimerRef.current = window.setTimeout(() => {
+      setDismissed(true);
+      onCloseRef.current?.();
+    }, 320);
+  }
+
+  useEffect(() => () => {
+    if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
+  }, []);
+
   function closeComposer() {
     if (publishingRef.current) {
       setNotice("Enregistrement en cours : attendez la confirmation avant de fermer.");
       return;
     }
     if (!publishedRef.current) persistDraftSnapshot(false);
-    setDismissed(true);
-    onClose?.();
+    startClosing();
   }
 
   if (dismissed) return null;
 
   return (
-    <div className="market-listing-composer" data-pillar={pillar} style={{ "--listing-accent": "162, 112, 240" } as CSSProperties}>
+    <div className={`market-listing-composer${closing ? " is-closing" : ""}`} data-pillar={pillar} style={{ "--listing-accent": "109, 79, 208" } as CSSProperties}>
       <div className="market-listing-composer__backdrop" aria-hidden="true" />
       <div
         className="market-listing-composer__dialog"
@@ -1000,7 +1015,6 @@ export default function MarketListingComposer({
           </div>
 
           <div className="market-listing-composer__header-actions">
-            <button type="button" className="market-listing-composer__ghost" onClick={saveDraft} disabled={publishing || published}><Save size={17} /> Brouillon</button>
             <button type="button" className="market-listing-composer__close" onClick={closeComposer} disabled={publishing} aria-label="Fermer le compositeur"><X size={21} /></button>
           </div>
         </header>
@@ -1397,6 +1411,11 @@ export default function MarketListingComposer({
             )}
           </div>
         </footer>
+
+        <div className="market-listing-composer__draft-chip" data-tucked={draftChipTucked ? "true" : "false"}>
+          <button type="button" className="market-listing-composer__draft-save" onClick={saveDraft} disabled={publishing || published}><Save size={15} /> Brouillon</button>
+          <button type="button" className="market-listing-composer__draft-tab" onClick={() => setDraftChipTucked(tucked => !tucked)} aria-label={draftChipTucked ? "Déplier l’action brouillon" : "Replier l’action brouillon"}>{draftChipTucked ? <ChevronLeft size={15} /> : <ChevronRight size={15} />}</button>
+        </div>
       </div>
     </div>
   );
