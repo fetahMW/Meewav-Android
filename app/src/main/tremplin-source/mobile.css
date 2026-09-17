@@ -121,6 +121,36 @@
 #root .mobile-tremplin .tremplin-token-artist__activity-title { flex: 1 1 auto; min-width: 0; color: #e7e9f1; font-size: 12.5px; line-height: 1.35; }
 #root .mobile-tremplin .tremplin-token-artist__activity-table .is-room .tremplin-token-artist__activity-when { color: #8b93d4; font-weight: 640; }
 #root .mobile-tremplin .tremplin-token-artist__activity-table .is-room svg { flex: 0 0 auto; align-self: center; width: 15px; height: 15px; color: #8f94a8; }
+
+/* Statistiques récentes — tuiles métriques teintées */
+#root .mobile-tremplin .tremplin-token-artist__stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin-top: 14px; }
+#root .mobile-tremplin .tremplin-token-artist__stats article { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; min-width: 0; padding: 11px; border-radius: 14px; background: linear-gradient(165deg, #20232cf2, #101218f2); box-shadow: inset 0 1px 0 #ffffff0d; }
+#root .mobile-tremplin .tremplin-token-artist__stats .is-growth { border: 1px solid #45dfa830; }
+#root .mobile-tremplin .tremplin-token-artist__stats .is-engagement { border: 1px solid #b18cff30; }
+#root .mobile-tremplin .tremplin-token-artist__stats .is-activity { border: 1px solid #7ab5ff30; }
+#root .mobile-tremplin .tremplin-token-artist__stat-icon { display: grid; width: 31px; height: 31px; place-items: center; border-radius: 10px; }
+#root .mobile-tremplin .tremplin-token-artist__stat-icon svg { width: 15px; height: 15px; }
+#root .mobile-tremplin .tremplin-token-artist__stats .is-growth .tremplin-token-artist__stat-icon { background: #45dfa81f; color: #5ee8b5; box-shadow: 0 0 16px #45dfa82b; }
+#root .mobile-tremplin .tremplin-token-artist__stats .is-engagement .tremplin-token-artist__stat-icon { background: #b18cff1f; color: #c5a3ff; box-shadow: 0 0 16px #b18cff2b; }
+#root .mobile-tremplin .tremplin-token-artist__stats .is-activity .tremplin-token-artist__stat-icon { background: #7ab5ff1f; color: #8fc3ff; box-shadow: 0 0 16px #7ab5ff2b; }
+#root .mobile-tremplin .tremplin-token-artist__stats strong { color: #f2f4fa; font-size: 12.5px; font-weight: 720; line-height: 1.3; }
+#root .mobile-tremplin .tremplin-token-artist__stats article > span { color: #8f94a8; font-size: 9px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; }
+
+/* Lecteur audio — pochette + progression */
+#root .mobile-tremplin .tremplin-token-artist__audio { grid-template-columns: 62px minmax(0, 1fr); gap: 13px; margin-top: 14px; padding: 12px; border: 1px solid #8b93d433; border-radius: 17px; background: linear-gradient(160deg, #1f222bf2, #0f1118f2); box-shadow: inset 0 1px 0 #ffffff0d; }
+#root .mobile-tremplin .tremplin-token-artist__audio > div:nth-child(2) { align-content: center; gap: 4px; }
+#root .mobile-tremplin .tremplin-token-artist__audio > div:last-child { display: grid; height: auto; align-items: center; align-content: center; gap: 4px; overflow: visible; }
+#root .mobile-tremplin .tremplin-token-artist__audio-art { position: relative; width: 62px; height: 62px; border-radius: 13px; overflow: hidden; box-shadow: 0 8px 18px #00000073; }
+#root .mobile-tremplin .tremplin-token-artist__audio-art::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px #ffffff24; }
+#root .mobile-tremplin .tremplin-token-artist__audio-art img { display: block; width: 100%; height: 100%; object-fit: cover; }
+#root .mobile-tremplin .tremplin-token-artist__audio-art button { position: absolute; inset: 0; margin: auto; display: grid; width: 33px; height: 33px; place-items: center; padding: 0; border: 1px solid #ffffff4d; border-radius: 50%; background: #160f38cc; color: #fff; }
+#root .mobile-tremplin .tremplin-token-artist__audio-art button svg { width: 13px; height: 13px; }
+#root .mobile-tremplin .tremplin-token-artist__audio-track { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+#root .mobile-tremplin .tremplin-token-artist__audio-track i { flex: 1; display: block; width: auto; height: 5px; border-radius: 99px; background: #ffffff14; overflow: hidden; font-style: normal; }
+#root .mobile-tremplin .tremplin-token-artist__audio-track b { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #7a5cff, #a78bfa); transition: width .25s linear; }
+#root .mobile-tremplin .tremplin-token-artist__audio-track time { flex: 0 0 auto; color: #9aa0b5; font-size: 10px; font-variant-numeric: tabular-nums; }
+#root .mobile-tremplin .tremplin-token-artist__actions { display: flex; gap: 8px; }
+#root .mobile-tremplin .tremplin-token-artist__actions > * { flex: 1; }
 #root .mobile-tremplin .tremplin-token-artist__hero-token { padding: 14px; }
 #root .mobile-tremplin .tremplin-token-artist__hero-token .tremplin-kicker { color: #a9b0d8; }
 #root .mobile-tremplin .tremplin-token-artist__support-disclosure > summary,

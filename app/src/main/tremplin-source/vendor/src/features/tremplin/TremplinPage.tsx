@@ -765,6 +765,7 @@ function ArtistDetail({
   token,
   favorite,
   playing,
+  audioProgress,
   onBack,
   backLabel,
   onFavorite,
@@ -774,6 +775,7 @@ function ArtistDetail({
 }: ArtistTokenPair & {
   favorite: boolean;
   playing: boolean;
+  audioProgress: { currentTime: number; duration: number };
   onBack: () => void;
   backLabel: string;
   onFavorite: () => void;
@@ -790,6 +792,9 @@ function ArtistDetail({
   const isTokenActive = tokenLifecycleStage === "active";
   const project = getTremplinProjectSnapshot(artist);
   const nextRoomIsUpcoming = new Date(token.nextRoom.startsAt).getTime() > Date.now();
+  const audienceMetric = artist.metrics.find((metric) => metric.family === "audience") ?? artist.metrics[0];
+  const parcoursMetric = artist.metrics.find((metric) => metric.family === "parcours") ?? artist.metrics[1];
+  const audioProgressPercent = playing && audioProgress.duration > 0 ? Math.min(100, Math.max(0, audioProgress.currentTime / audioProgress.duration * 100)) : 0;
   const [supportOpen, setSupportOpen] = useState(location.hash === "#profile-support" || location.hash === "#profile-token-statistics");
   const [statisticsOpen, setStatisticsOpen] = useState(location.hash === "#profile-token-statistics");
   const [gradeOpen, setGradeOpen] = useState(location.hash === "#profile-grade");
@@ -826,7 +831,7 @@ function ArtistDetail({
       <button type="button" className="tremplin-back-button" onClick={onBack}><ArrowLeft /> {backLabel}</button>
       <section id="profile-overview" className="tremplin-token-artist__hero">
         <div className="tremplin-token-artist__portrait"><img src={artist.portrait} alt={`Portrait de ${artist.name}`} /><button type="button" className="tremplin-token-artist__portrait-play" onClick={onToggleAudio} aria-label={playing ? `Mettre ${artist.audio.title} en pause` : `Écouter ${artist.audio.title}`}><span>{playing ? <Pause /> : <Play />}</span><strong>{playing ? "En écoute" : `Écouter · ${artist.audio.durationLabel}`}</strong></button><span>{artist.stageLabel}</span></div>
-        <div className="tremplin-token-artist__story"><span className="tremplin-kicker">{artist.styles.join(" · ")}</span><div className="tremplin-token-artist__name"><h1>{artist.name}</h1><button type="button" className="tremplin-token-artist__grade-inline" onClick={() => navigateToSection("profile-grade")} aria-label={`Comprendre le grade Niveau ${artist.gradeLevel} de ${artist.name}`}><MeewavGradeBadge level={artist.gradeLevel} size="sm" variant="icon" /><span>Niveau {artist.gradeLevel} · {getGradeBadgeMeta(artist.gradeLevel).label}</span></button></div><p className="tremplin-token-artist__meta"><MapPin /> {artist.city} · {artist.disciplines.join(" · ")}</p><p className="tremplin-token-artist__community"><UsersRound /> {artist.community.memberCount.toLocaleString("fr-FR")} abonnés sur MeeWav</p><p className="tremplin-token-artist__bio">{artist.biography}</p><div className="tremplin-token-artist__audio"><button type="button" onClick={onToggleAudio} aria-label={playing ? `Mettre ${artist.audio.title} en pause` : `Écouter ${artist.audio.title}`}>{playing ? <Pause /> : <Play />}</button><div><strong>{artist.audio.title}</strong><span>{artist.audio.subtitle} · {artist.audio.durationLabel}</span></div><div className={playing ? "is-playing" : ""} aria-hidden="true">{artist.audio.waveform.slice(0, 36).map((height, index) => <i key={index} style={{ height: `${Math.round(16 + height * 84)}%` }} />)}</div></div><div className="tremplin-token-artist__actions"><button type="button" className={`tremplin-primary-cta${favorite ? " is-followed" : ""}`} aria-pressed={favorite} aria-label={favorite ? `Ne plus suivre ${artist.name}` : `Suivre ${artist.name}`} onClick={onFavorite}><Heart fill={favorite ? "currentColor" : "none"} /> {favorite ? "Suivi ✓" : "Suivre gratuitement"}</button></div></div>
+        <div className="tremplin-token-artist__story"><span className="tremplin-kicker">{artist.styles.join(" · ")}</span><div className="tremplin-token-artist__name"><h1>{artist.name}</h1><button type="button" className="tremplin-token-artist__grade-inline" onClick={() => navigateToSection("profile-grade")} aria-label={`Comprendre le grade Niveau ${artist.gradeLevel} de ${artist.name}`}><MeewavGradeBadge level={artist.gradeLevel} size="sm" variant="icon" /><span>Niveau {artist.gradeLevel} · {getGradeBadgeMeta(artist.gradeLevel).label}</span></button></div><p className="tremplin-token-artist__meta"><MapPin /> {artist.city} · {artist.disciplines.join(" · ")}</p><p className="tremplin-token-artist__community"><UsersRound /> {artist.community.memberCount.toLocaleString("fr-FR")} abonnés sur MeeWav</p><div className="tremplin-token-artist__stats" aria-label={`Statistiques récentes de ${artist.name}`}><article className="is-growth"><span className="tremplin-token-artist__stat-icon"><TrendingUp aria-hidden="true" /></span><strong>+{artist.community.newMembers30Days}</strong><span>abonnés ce mois-ci</span></article>{audienceMetric ? <article className="is-engagement"><span className="tremplin-token-artist__stat-icon"><Sparkles aria-hidden="true" /></span><strong>{audienceMetric.indicator}</strong><span>engouement</span></article> : null}{parcoursMetric ? <article className="is-activity"><span className="tremplin-token-artist__stat-icon"><Music2 aria-hidden="true" /></span><strong>{parcoursMetric.indicator}</strong><span>participation</span></article> : null}</div><div className="tremplin-token-artist__audio"><div className="tremplin-token-artist__audio-art"><img src={artist.artwork} alt="" /><button type="button" onClick={onToggleAudio} aria-label={playing ? `Mettre ${artist.audio.title} en pause` : `Écouter ${artist.audio.title}`}>{playing ? <Pause /> : <Play />}</button></div><div><strong>{artist.audio.title}</strong><span>{artist.audio.subtitle}</span><div className="tremplin-token-artist__audio-track"><i aria-hidden="true"><b style={{ width: `${audioProgressPercent}%` }} /></i><time>{formatAudioClock(playing ? audioProgress.currentTime : 0)} / {artist.audio.durationLabel}</time></div></div></div><div className="tremplin-token-artist__actions"><button type="button" className={`tremplin-primary-cta${favorite ? " is-followed" : ""}`} aria-pressed={favorite} aria-label={favorite ? `Ne plus suivre ${artist.name}` : `Suivre ${artist.name}`} onClick={onFavorite}><Heart fill={favorite ? "currentColor" : "none"} /> {favorite ? "Suivi ✓" : "Suivre"}</button><button type="button" className="tremplin-secondary-cta" onClick={() => navigateToSection("profile-journey")}>Voir le profil</button></div></div>
         <aside className="tremplin-token-artist__hero-token" data-token-stage={tokenLifecycleStage} aria-label={`Résumé du jeton de talent de ${artist.name}`}>
           <span className="tremplin-kicker">{tokenDiscoveryUi.label}</span>
           {isTokenActive ? <div className="tremplin-token-artist__hero-token-symbol"><MeewavTokenIcon /><strong>{token.symbol}</strong></div> : null}
@@ -875,6 +880,11 @@ function ArtistDetail({
       </details>
     </div>
   );
+}
+
+function formatAudioClock(seconds: number) {
+  const safe = Number.isFinite(seconds) && seconds > 0 ? Math.floor(seconds) : 0;
+  return `${Math.floor(safe / 60)}:${String(safe % 60).padStart(2, "0")}`;
 }
 
 function formatFixtureDecimal(value: string, suffix = "€") {
@@ -1403,7 +1413,7 @@ export default function TremplinPage() {
   const mainContent = (() => {
     if (selectedArtist) {
       const token = getTremplinArtistToken(selectedArtist.id);
-      if (token) return <ArtistDetail artist={selectedArtist} token={token} favorite={favorites.has(selectedArtist.id)} playing={playingArtistId === selectedArtist.id} onBack={closeArtist} backLabel={getArtistReturnLabel(location.state)} onFavorite={() => toggleFavorite(selectedArtist.id)} onTrade={(mode) => openFlow(selectedArtist, mode)} onToggleAudio={() => toggleAudio(selectedArtist.id)} onOpenRoom={() => openRoom(selectedArtist)} />;
+      if (token) return <ArtistDetail artist={selectedArtist} token={token} favorite={favorites.has(selectedArtist.id)} playing={playingArtistId === selectedArtist.id} audioProgress={audioProgress} onBack={closeArtist} backLabel={getArtistReturnLabel(location.state)} onFavorite={() => toggleFavorite(selectedArtist.id)} onTrade={(mode) => openFlow(selectedArtist, mode)} onToggleAudio={() => toggleAudio(selectedArtist.id)} onOpenRoom={() => openRoom(selectedArtist)} />;
     }
     if (isArtistRoutePath(location.pathname)) return <ArtistNotFound onBack={closeArtist} backLabel={getArtistReturnLabel(location.state)} />;
     if (activeView === "myArtists") return <MyArtistsView favorites={favorites} initialTab={myArtistsNavigation.tab} initialMwTab={myArtistsNavigation.mwTab} onOpen={openArtist} onTrade={openFlow} onOpenRoom={openRoom} onDiscover={() => changeView("discover")} onNotify={setToast} onNavigationChange={updateMyArtistsNavigation} sessionState={myArtistsSessionState} onSessionStateChange={updateMyArtistsSessionState} />;
