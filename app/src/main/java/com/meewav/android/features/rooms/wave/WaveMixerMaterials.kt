@@ -317,46 +317,14 @@ fun Modifier.activeCapsule(cornerRadius: Dp): Modifier = drawBehind {
     if (w <= 0f || h <= 0f) return@drawBehind
     val r = cornerRadius.toPx().coerceAtMost(minOf(w, h) / 2f)
 
-    // Ombre violette.
-    softShadow(Offset.Zero, size, r, 4f * density, WaveMixerTheme.capsuleAccent.copy(alpha = 0.12f), dy = 2f * density)
-    // Intérieur violet assombri — moins illuminé que la capsule Simple/Pro.
+    // Capsule épurée et moderne : remplissage violet propre + liseré fin.
     drawRoundRect(
-        WaveMixerTheme.capsuleAccent.copy(alpha = 0.13f),
+        WaveMixerTheme.capsuleAccent.copy(alpha = 0.22f),
         cornerRadius = CornerRadius(r)
     )
-    // Reflet elliptique i=0.065.
-    drawRoundRect(hardwareReflectionBrush(0.065f, w, h), cornerRadius = CornerRadius(r))
-    // Stroke violet profond (même teinte que la capsule Simple/Pro).
-    drawRoundRect(WaveMixerTheme.capsuleAccent.copy(alpha = 0.85f), cornerRadius = CornerRadius(r), style = Stroke(width = 0.75f * density))
-    // Stroke diagonal capsuleAccentSoft.
     drawRoundRect(
-        Brush.linearGradient(
-            0f to WaveMixerTheme.capsuleAccentSoft.copy(alpha = 0.70f),
-            0.38f to WaveMixerTheme.capsuleAccentSoft.copy(alpha = 0.55f),
-            0.70f to WaveMixerTheme.capsuleAccent.copy(alpha = 0.30f),
-            1f to WaveMixerTheme.capsuleAccent.copy(alpha = 0.52f),
-            start = Offset(0f, 0f), end = Offset(w, h)
-        ),
-        cornerRadius = CornerRadius(r), style = Stroke(width = 0.4f * density)
-    )
-    // Stroke interne à inset 1.25.
-    val inset = 1.25f * density
-    drawRoundRect(
-        WaveMixerTheme.capsuleAccent.copy(alpha = 0.16f),
-        topLeft = Offset(inset, inset), size = Size(w - inset * 2, h - inset * 2),
-        cornerRadius = CornerRadius((r - inset).coerceAtLeast(0f)),
-        style = Stroke(width = 0.33f * density)
-    )
-    // Lueur basse : capsule h0.8, gradient horizontal, marges h10.
-    val glowH = 0.8f * density
-    drawRoundRect(
-        Brush.horizontalGradient(
-            0f to Color.Transparent, 0.28f to WaveMixerTheme.capsuleAccent, 0.5f to WaveMixerTheme.capsuleAccentSoft,
-            0.72f to WaveMixerTheme.capsuleAccent, 1f to Color.Transparent
-        ),
-        topLeft = Offset(10f * density, h - glowH - 0.5f * density),
-        size = Size(w - 20f * density, glowH),
-        cornerRadius = CornerRadius(glowH / 2f)
+        WaveMixerTheme.capsuleAccent.copy(alpha = 0.40f),
+        cornerRadius = CornerRadius(r), style = Stroke(width = 0.6f * density)
     )
 }
 

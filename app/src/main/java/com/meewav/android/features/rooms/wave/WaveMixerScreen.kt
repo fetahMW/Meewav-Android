@@ -11,6 +11,8 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -34,9 +36,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,11 +58,18 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.meewav.android.R
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 
 private fun white(a: Float) = Color.White.copy(alpha = a)
 
@@ -83,8 +95,8 @@ fun WaveMixerScreen(onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
     // FX.
     var isPro by remember { mutableStateOf(false) }
     var monitoring by remember { mutableStateOf(false) }
-    var autotuneOn by remember { mutableStateOf(true) }
-    var reverbOn by remember { mutableStateOf(true) }
+    var autotuneOn by remember { mutableStateOf(false) }
+    var reverbOn by remember { mutableStateOf(false) }
     var reverbValue by remember { mutableStateOf(0.15f) }
     var tuneKey by remember { mutableStateOf("A") }
     var tuneScale by remember { mutableStateOf("Mineur") }
@@ -97,19 +109,96 @@ fun WaveMixerScreen(onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
     // Piste principale + multipiste.
     var hasTrack by remember { mutableStateOf(false) }
     var trackName by remember { mutableStateOf<String?>(null) }
+    var trackUri by remember { mutableStateOf<android.net.Uri?>(null) }
+    var trackDurationMs by remember { mutableStateOf(0L) }
+    var trackSamples by remember { mutableStateOf<List<WaveformSample>>(emptyList()) }
+    var trackAnalyzing by remember { mutableStateOf(false) }
+    var playProgress by remember { mutableStateOf(0f) }
     var extraLaneCount by remember { mutableStateOf(2) }
+    val context = LocalContext.current
     // Sélecteur de fichier audio (bouton upload + lanes « Importer »).
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
-            trackName = uri.lastPathSegment?.substringAfterLast('/')?.substringAfterLast(':')
+            // Nom réel du fichier via le provider (pas l'id de document).
+            trackName = runCatching {
+                context.contentResolver.query(
+                    uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME),
+                    null, null, null
+                )?.use { c -> if (c.moveToFirst()) c.getString(0) else null }
+            }.getOrNull() ?: uri.lastPathSegment?.substringAfterLast('/')
+            trackUri = uri
+            // Durée réelle via MediaMetadataRetriever.
+            trackDurationMs = runCatching {
+                val mmr = android.media.MediaMetadataRetriever()
+                mmr.setDataSource(context, uri)
+                val d = mmr.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 0L
+                mmr.release()
+                d
+            }.getOrDefault(0L)
+            trackSamples = emptyList()
+            trackAnalyzing = true
+            playProgress = 0f
             hasTrack = true
         }
     }
+    // Waveform réelle — decode PCM + buckets min/max/RMS (MWAudioAnalysis iOS).
+    LaunchedEffect(trackUri) {
+        val uri = trackUri ?: return@LaunchedEffect
+        val decoded = withContext(Dispatchers.IO) {
+            WaveAudioAnalysis.analyze(context, uri)
+        }
+        trackSamples = decoded
+        trackAnalyzing = false
+    }
+    // Lecture réelle — MediaPlayer sur l'URI importée (son audible).
+    var mediaPlayer by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
+    DisposableEffect(trackUri) {
+        onDispose { mediaPlayer?.release(); mediaPlayer = null }
+    }
+    val onTogglePlay: () -> Unit = {
+        if (!hasTrack) {
+            isPlaying = !isPlaying
+        } else if (isPlaying) {
+            mediaPlayer?.pause()
+            isPlaying = false
+        } else {
+            val mp = mediaPlayer ?: trackUri?.let { u ->
+                runCatching {
+                    android.media.MediaPlayer().apply {
+                        setDataSource(context, u)
+                        prepare()
+                        setOnCompletionListener {
+                            isPlaying = false; playProgress = 0f
+                            seekTo(0); pause()
+                        }
+                    }
+                }.getOrNull()
+            }
+            mediaPlayer = mp
+            if (mp != null) {
+                mp.start()
+                isPlaying = true
+            } else {
+                isPlaying = false
+            }
+        }
+    }
+    // Progression réelle : currentPosition -> playProgress (ticker 50 ms).
+    LaunchedEffect(isPlaying) {
+        while (isPlaying) {
+            val mp = mediaPlayer
+            if (mp != null && trackDurationMs > 0) {
+                playProgress = (mp.currentPosition.toFloat() / trackDurationMs).coerceIn(0f, 1f)
+            }
+            delay(50)
+        }
+    }
     val onImport: () -> Unit = { importLauncher.launch(arrayOf("audio/*")) }
+    var showLeaveConfirm by remember { mutableStateOf(false) }
 
     Box(Modifier.fillMaxSize().mixerSurfaceBackground()) {
         Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
-            WaveHeader(title = "La Wave", onBack = onBack, onClose = onClose)
+            WaveHeader(title = "Freestyle session — Luma invite", onBack = { showLeaveConfirm = true }, onClose = { showLeaveConfirm = true })
             WaveVideo(cameraOff = true)
             // Zone grise du mixeur : couvre la barre d'onglets ET le corps.
             Column(
@@ -149,20 +238,69 @@ fun WaveMixerScreen(onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
                         onSelectKey = { tuneKey = it; selector = null },
                         onSelectScale = { tuneScale = it; selector = null },
                         privacyPublic = privacyPublic, onPrivacy = { privacyPublic = !privacyPublic },
-                        isPlaying = isPlaying, onPlay = { isPlaying = !isPlaying },
+                        isPlaying = isPlaying, onPlay = onTogglePlay,
                         loopOn = loopOn, onLoop = { loopOn = !loopOn },
                         multitrack = multitrack, onMultitrack = { multitrack = !multitrack },
                         hasTrack = hasTrack, trackName = trackName,
+                        trackDurationMs = trackDurationMs, trackSamples = trackSamples,
+                        playProgress = playProgress,
                         onImport = onImport,
                         extraLaneCount = extraLaneCount,
                         onAddLane = { extraLaneCount++ },
                         onRemoveLane = { if (extraLaneCount > 0) extraLaneCount-- },
                         onImportPack = onImport,
                     )
+                    WaveTab.CHAT -> WaveChatPanel(Modifier.fillMaxSize())
                     else -> WaveTabPlaceholder(activeTab)
                 }
                 }
             }
+        }
+        if (showLeaveConfirm) {
+            AlertDialog(
+                onDismissRequest = { showLeaveConfirm = false },
+                containerColor = Color(0xFF14121C),
+                title = {
+                    Text(
+                        "Quitter le live ?",
+                        color = WaveMixerTheme.pearl,
+                        fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
+                        fontFamily = WaveMixerTheme.fontFamily
+                    )
+                },
+                text = {
+                    Text(
+                        "Tu es sur le point de quitter le live.",
+                        color = white(0.72f),
+                        fontSize = 13.sp,
+                        fontFamily = WaveMixerTheme.fontFamily
+                    )
+                },
+                confirmButton = {
+                    Text(
+                        "Quitter",
+                        color = Color(0xFFFF536C),
+                        fontSize = 13.sp, fontWeight = FontWeight.Bold,
+                        fontFamily = WaveMixerTheme.fontFamily,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { showLeaveConfirm = false; onClose() }
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                    )
+                },
+                dismissButton = {
+                    Text(
+                        "Rester",
+                        color = WaveMixerTheme.pearl,
+                        fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+                        fontFamily = WaveMixerTheme.fontFamily,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { showLeaveConfirm = false }
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                    )
+                }
+            )
         }
     }
 }
@@ -173,37 +311,65 @@ fun WaveMixerScreen(onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
 
 @Composable
 private fun WaveHeader(title: String, onBack: () -> Unit, onClose: () -> Unit) {
-    Box(
-        Modifier.fillMaxWidth().height(39.dp),
-        contentAlignment = Alignment.Center
-    ) {
+    Box(Modifier.fillMaxWidth().height(44.dp).padding(horizontal = 6.dp)) {
+        // Chevron retour à gauche.
+        Box(
+            Modifier
+                .align(Alignment.CenterStart)
+                .size(36.dp)
+                .clickable(onClick = onBack),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(WaveIcons.ChevronLeft, null, tint = Color.White, modifier = Modifier.size(17.dp))
+        }
         Text(
-            title,
-            color = WaveMixerTheme.pearl,
-            fontSize = 16.sp, fontWeight = FontWeight.Medium,
-            fontFamily = WaveMixerTheme.fontFamily, maxLines = 1
+            title, color = WaveMixerTheme.pearl,
+            fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+            fontFamily = WaveMixerTheme.fontFamily, maxLines = 1,
+            modifier = Modifier.align(Alignment.Center)
         )
-        Row(Modifier.fillMaxSize()) {
-            HeaderIconButton(icon = WaveIcons.ChevronLeft, onClick = onBack)
-            Spacer(Modifier.weight(1f))
-            HeaderIconButton(icon = WaveIcons.Close, onClick = onClose)
+        // Share + croix — prévient avant de quitter le live.
+        Row(
+            Modifier.align(Alignment.CenterEnd),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                Modifier
+                    .size(36.dp)
+                    .clickable { },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(WaveIcons.Share, null, tint = Color.White, modifier = Modifier.size(15.dp))
+            }
+            Box(
+                Modifier
+                    .size(36.dp)
+                    .clickable(onClick = onClose),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(WaveIcons.Close, null, tint = Color.White, modifier = Modifier.size(16.dp))
+            }
         }
     }
 }
 
 @Composable
-private fun HeaderIconButton(icon: ImageVector, onClick: () -> Unit) {
-    Box(
-        Modifier
-            .size(44.dp)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick
-            ),
-        contentAlignment = Alignment.Center
+private fun HeaderCounter(value: String, tint: Color? = null, icon: ImageVector? = null, imageRes: Int? = null) {
+    Row(
+        Modifier.padding(horizontal = 4.dp).height(26.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, null, tint = Color.White, modifier = Modifier.size(17.dp))
+        if (imageRes != null) {
+            Image(painterResource(imageRes), null, modifier = Modifier.size(14.dp))
+        } else if (icon != null && tint != null) {
+            Icon(icon, null, tint = tint, modifier = Modifier.size(12.dp))
+        }
+        Spacer(Modifier.width(4.dp))
+        Text(
+            value, color = white(0.88f),
+            fontSize = 10.sp, fontWeight = FontWeight.Bold,
+            fontFamily = WaveMixerTheme.fontFamily
+        )
     }
 }
 
@@ -213,6 +379,13 @@ private fun HeaderIconButton(icon: ImageVector, onClick: () -> Unit) {
 
 @Composable
 private fun WaveVideo(cameraOff: Boolean) {
+    // Chronomètre fictif qui défile depuis l'ouverture de l'écran.
+    var elapsed by remember { mutableStateOf(12L * 60L + 47L) }
+    LaunchedEffect(Unit) {
+        while (true) { delay(1000L); elapsed++ }
+    }
+    val clock = "%02d:%02d:%02d".format(elapsed / 3600, (elapsed % 3600) / 60, elapsed % 60)
+
     Box(
         Modifier
             .fillMaxWidth()
@@ -233,41 +406,66 @@ private fun WaveVideo(cameraOff: Boolean) {
                 drawRect(white(0.16f), topLeft = Offset(0f, size.height - lw), size = Size(size.width, lw))
             }
     ) {
-        if (cameraOff) {
-            Column(
-                Modifier.align(Alignment.Center),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Icon(
-                    WaveIcons.CameraOff, null,
-                    tint = Color.White,
-                    modifier = Modifier
-                        .size(34.dp)
-                        .drawBehind {
-                            // Lueur violette douce (radiale) sous l'icône.
-                            drawCircle(
-                                Brush.radialGradient(
-                                    0f to WaveMixerTheme.capsuleAccent.copy(alpha = 0.45f),
-                                    1f to Color.Transparent
-                                ),
-                                radius = size.minDimension * 1.5f
-                            )
-                        }
-                )
-                Text(
-                    "CAMERA COUPEE",
-                    color = white(0.55f),
-                    fontSize = 10.sp, fontWeight = FontWeight.Bold,
-                    fontFamily = WaveMixerTheme.fontFamily,
-                    letterSpacing = 1.sp
-                )
-            }
+        // Retour vidéo — boucle muette (démo : dj-turntable / landscape-dj).
+        AndroidView(
+            factory = { ctx ->
+                android.widget.VideoView(ctx).apply {
+                    setVideoURI(android.net.Uri.parse("android.resource://" + ctx.packageName + "/" + R.raw.wave_live_loop))
+                    setOnPreparedListener { mp ->
+                        mp.isLooping = true
+                        mp.setVolume(0f, 0f)
+                        start()
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxSize()
+        )
+        // Chip chrono — haut-gauche, verre sombre translucide + point rouge.
+        Row(
+            Modifier
+                .align(Alignment.TopStart)
+                .padding(top = 8.dp, start = 10.dp)
+                .clip(RoundedCornerShape(50))
+                .background(Color(0xFF04040A).copy(alpha = 0.48f))
+                .border(1.dp, white(0.10f), RoundedCornerShape(50))
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                Modifier.size(6.dp).drawBehind {
+                    drawCircle(Color(0xFFFF536C).copy(alpha = 0.25f), radius = size.minDimension / 2f)
+                    drawCircle(Color(0xFFFF536C), radius = size.minDimension * 0.32f)
+                }
+            )
+            Spacer(Modifier.width(5.dp))
+            Text(
+                clock, color = Color.White,
+                fontSize = 9.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.6.sp,
+                fontFamily = WaveMixerTheme.fontFamily
+            )
         }
-        // Bouton expand haut-droite.
-        Box(
+        // Chip « LA WAVE » — haut-droite, recette rooms-home-card__room-type (accent #27C2D1).
+        Row(
             Modifier
                 .align(Alignment.TopEnd)
+                .padding(top = 8.dp, end = 10.dp)
+                .clip(RoundedCornerShape(50))
+                .background(Color(0xFF060712).copy(alpha = 0.52f))
+                .background(Color(0xFF27C2D1).copy(alpha = 0.10f))
+                .border(1.dp, Color(0xFF27C2D1).copy(alpha = 0.42f), RoundedCornerShape(50))
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "LA WAVE", color = Color(0xFF27C2D1),
+                fontSize = 8.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp,
+                fontFamily = WaveMixerTheme.fontFamily
+            )
+        }
+        // Bouton expand — coin inférieur droit.
+        Box(
+            Modifier
+                .align(Alignment.BottomEnd)
                 .padding(8.dp)
                 .size(34.dp)
                 .clip(CircleShape)
@@ -374,6 +572,7 @@ private fun MixerBody(
     loopOn: Boolean, onLoop: () -> Unit,
     multitrack: Boolean, onMultitrack: () -> Unit,
     hasTrack: Boolean, trackName: String?,
+    trackDurationMs: Long, trackSamples: List<WaveformSample>, playProgress: Float, trackAnalyzing: Boolean = false,
     onImport: () -> Unit,
     extraLaneCount: Int,
     onAddLane: () -> Unit,
@@ -388,7 +587,8 @@ private fun MixerBody(
             val slot = (cw - 6.dp) / 4f
             // Strip Micro sous le slot Chat, Audio sous le slot Mixeur.
             WaveChannelStrip(
-                label = "Micro", icon = WaveIcons.Mic,
+                label = "Luma", icon = WaveIcons.Mic,
+                portraitRes = R.drawable.wave_artist_luma,
                 gain = micGain, muted = micMuted, isMic = true,
                 onGainChange = onMicGain, onToggleMute = onMicMute,
                 modifier = Modifier.offset(x = 3.dp).width(slot).fillMaxHeight()
@@ -431,6 +631,7 @@ private fun MixerBody(
             loopOn = loopOn, onLoop = onLoop,
             multitrack = multitrack, onMultitrack = onMultitrack,
             hasTrack = hasTrack, trackName = trackName,
+            trackDurationMs = trackDurationMs, trackSamples = trackSamples, playProgress = playProgress, trackAnalyzing = trackAnalyzing,
             onImport = onImport,
             extraLaneCount = extraLaneCount,
             onAddLane = onAddLane, onRemoveLane = onRemoveLane, onImportPack = onImportPack,
@@ -453,6 +654,7 @@ private fun MixerBody(
                 loopOn = loopOn, onLoop = onLoop,
                 multitrack = multitrack, onMultitrack = onMultitrack,
                 hasTrack = hasTrack, trackName = trackName,
+                trackDurationMs = trackDurationMs, trackSamples = trackSamples, playProgress = playProgress, trackAnalyzing = trackAnalyzing,
                 onImport = onImport,
                 extraLaneCount = extraLaneCount,
                 onAddLane = onAddLane, onRemoveLane = onRemoveLane, onImportPack = onImportPack,
@@ -492,7 +694,9 @@ private fun FxColumn(
             Spacer(Modifier.width(8.dp))
             HeadphoneButton(enabled = monitoring, onToggle = onMonitoring)
         }
-        if (selector == null) {
+        if (isPro) {
+            ProPluginsPanel(Modifier.fillMaxWidth().weight(1f))
+        } else if (selector == null) {
             // Carte Autotune.
             FxCard(
                 title = "Autotune", icon = WaveIcons.Waveform,
@@ -531,6 +735,51 @@ private fun FxColumn(
                 modifier = Modifier.fillMaxWidth().weight(1f)
             )
         }
+    }
+}
+
+/* ------------------------------------------------------------------------- */
+/* Panneau Pro — Effets voix + ajout de plugin (parité iOS proPanel).          */
+/* ------------------------------------------------------------------------- */
+
+@Composable
+private fun ProPluginsPanel(modifier: Modifier = Modifier) {
+    Column(
+        modifier.verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            "Effets voix",
+            color = white(0.86f),
+            fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
+            fontFamily = WaveMixerTheme.fontFamily
+        )
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .height(40.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .satinControl(10.dp)
+                .clickable { },
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(WaveIcons.Add, null, tint = white(0.88f), modifier = Modifier.size(13.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(
+                "Ajouter un plugin",
+                color = white(0.88f),
+                fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
+                fontFamily = WaveMixerTheme.fontFamily
+            )
+        }
+        Text(
+            "Aucun plugin disponible.",
+            color = white(0.48f),
+            fontSize = 10.sp, fontWeight = FontWeight.Bold,
+            fontFamily = WaveMixerTheme.fontFamily,
+            modifier = Modifier.padding(top = 4.dp)
+        )
     }
 }
 
@@ -687,6 +936,7 @@ private fun MixerDeck(
     loopOn: Boolean, onLoop: () -> Unit,
     multitrack: Boolean, onMultitrack: () -> Unit,
     hasTrack: Boolean, trackName: String?,
+    trackDurationMs: Long, trackSamples: List<WaveformSample>, playProgress: Float, trackAnalyzing: Boolean = false,
     onImport: () -> Unit,
     extraLaneCount: Int,
     onAddLane: () -> Unit,
@@ -712,7 +962,7 @@ private fun MixerDeck(
                         .height(32.dp)
                         .width(54.dp)
                         .clip(RoundedCornerShape(10.dp))
-                        .then(if (privacyPublic) Modifier.roomsStudioCapsule(10.dp) else Modifier.satinControl(10.dp))
+                        .then(if (privacyPublic) Modifier.roomsStudioCapsule(10.dp) else Modifier.hardwareSurface(6.dp, raised = true, reflection = 0.085f))
                         .clickable(onClick = onPrivacy),
                     contentAlignment = Alignment.Center
                 ) {
@@ -749,7 +999,7 @@ private fun MixerDeck(
                 Spacer(Modifier.weight(1f))
                 if (hasTrack) {
                     Text(
-                        "0:00.000 / 0:00.000",
+                        "${formatTrackTime((trackDurationMs * playProgress).toLong())} / ${formatTrackTime(trackDurationMs)}",
                         color = WaveMixerTheme.secondary, fontSize = 10.sp,
                         fontWeight = FontWeight.Medium, fontFamily = WaveMixerTheme.fontFamily
                     )
@@ -764,7 +1014,7 @@ private fun MixerDeck(
                         .padding(horizontal = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    DeckMainLane(hasTrack = hasTrack, onImport = onImport)
+                    DeckMainLane(hasTrack = hasTrack, onImport = onImport, samples = trackSamples, progress = playProgress, analyzing = trackAnalyzing)
                     repeat(extraLaneCount) { index ->
                         DeckExtraLane(onImport = onImport, onRemove = { onRemoveLane(index) })
                     }
@@ -783,6 +1033,7 @@ private fun MixerDeck(
             } else {
                 DeckMainLane(
                     hasTrack = hasTrack, onImport = onImport,
+                    samples = trackSamples, progress = playProgress, analyzing = trackAnalyzing,
                     modifier = Modifier.padding(horizontal = 8.dp).padding(bottom = 8.dp)
                 )
             }
@@ -795,7 +1046,14 @@ private fun MixerDeck(
 /* ------------------------------------------------------------------------- */
 
 @Composable
-private fun DeckMainLane(hasTrack: Boolean, onImport: () -> Unit, modifier: Modifier = Modifier) {
+private fun DeckMainLane(
+    hasTrack: Boolean,
+    onImport: () -> Unit,
+    samples: List<WaveformSample> = emptyList(),
+    progress: Float = 0f,
+    analyzing: Boolean = false,
+    modifier: Modifier = Modifier
+) {
     Box(
         modifier
             .fillMaxWidth()
@@ -803,7 +1061,7 @@ private fun DeckMainLane(hasTrack: Boolean, onImport: () -> Unit, modifier: Modi
             .clip(RoundedCornerShape(12.dp))
             .background(white(0.035f))
             .border(1.dp, white(0.07f), RoundedCornerShape(12.dp))
-            .clickable(onClick = onImport),
+            .then(if (!hasTrack) Modifier.clickable(onClick = onImport) else Modifier),
         contentAlignment = Alignment.Center
     ) {
         if (!hasTrack) {
@@ -816,8 +1074,62 @@ private fun DeckMainLane(hasTrack: Boolean, onImport: () -> Unit, modifier: Modi
                     fontWeight = FontWeight.SemiBold, fontFamily = WaveMixerTheme.fontFamily
                 )
             }
+        } else if (analyzing || samples.isEmpty()) {
+            Text(
+                if (analyzing) "Analyse du son…" else "Waveform indisponible",
+                color = white(0.55f), fontSize = 11.sp,
+                fontWeight = FontWeight.Medium, fontFamily = WaveMixerTheme.fontFamily
+            )
+        } else {
+            // MWDetailedAudioWaveform : traits très fins, peak + rms, jouée en accent.
+            Canvas(Modifier.fillMaxSize().padding(horizontal = 10.dp, vertical = 3.dp)) {
+                val maxColumns = maxOf(128, (size.width * 3f).toInt())
+                val count = minOf(samples.size, maxColumns)
+                val step = size.width / count
+                val barW = maxOf(0.35f, step * 0.72f)
+                val centerY = size.height * 0.5f
+                val half = maxOf(1f, size.height * 0.50f)
+                val gain = 1.5f
+                val progressX = size.width * progress.coerceIn(0f, 1f)
+                drawLine(white(0.08f), Offset(0f, centerY), Offset(size.width, centerY), 1f)
+                for (i in 0 until count) {
+                    // Aggregation iOS : min des min, max des max, moyenne des rms.
+                    val s0 = (i.toLong() * samples.size / count).toInt()
+                    val s1 = maxOf(s0 + 1, ((i + 1).toLong() * samples.size / count).toInt().coerceAtMost(samples.size))
+                    var mn = 0f; var mx = 0f; var rs = 0f; var rc = 0
+                    for (j in s0 until s1) {
+                        val s = samples[j]
+                        mn = minOf(mn, s.minPeak); mx = maxOf(mx, s.maxPeak); rs += s.rms; rc++
+                    }
+                    val rms = if (rc > 0) rs / rc else 0f
+                    val x = i * step + (step - barW) * 0.5f
+                    val played = x <= progressX
+                    // Barre RMS (lueur de fond).
+                    val rmsH = maxOf(1f, minOf(1f, rms * gain) * half)
+                    drawRoundRect(
+                        color = if (played) WaveMixerTheme.faderViolet.copy(alpha = 0.30f) else white(0.11f),
+                        topLeft = Offset(x, centerY - rmsH),
+                        size = Size(barW, rmsH * 2f),
+                        cornerRadius = CornerRadius(maxOf(0.5f, barW * 0.5f))
+                    )
+                    // Trait peak fin par-dessus.
+                    val top = centerY - minOf(1f, maxOf(mx, 0f) * gain) * half
+                    val bottom = centerY + minOf(1f, maxOf(kotlin.math.abs(mn), 0f) * gain) * half
+                    drawRoundRect(
+                        color = if (played) WaveMixerTheme.faderViolet else white(0.30f),
+                        topLeft = Offset(x, minOf(top, bottom)),
+                        size = Size(barW, maxOf(1.4f, kotlin.math.abs(bottom - top))),
+                        cornerRadius = CornerRadius(maxOf(0.5f, barW * 0.5f))
+                    )
+                }
+            }
         }
     }
+}
+
+private fun formatTrackTime(ms: Long): String {
+    val s = (ms / 1000).coerceAtLeast(0)
+    return "%d:%02d".format(s / 60, s % 60)
 }
 
 @Composable
@@ -929,7 +1241,7 @@ private fun DeckPlayButton(isPlaying: Boolean, enabled: Boolean, onClick: () -> 
             Modifier
                 .size(36.dp)
                 .clip(CircleShape)
-                .satinControl(18.dp, isPlay = true)
+                .hardwareSurface(18.dp, raised = true, reflection = 0.085f)
                 .alpha(if (enabled) 1f else 0.4f),
             contentAlignment = Alignment.Center
         ) {

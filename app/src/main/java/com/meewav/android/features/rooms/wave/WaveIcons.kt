@@ -2,9 +2,11 @@ package com.meewav.android.features.rooms.wave
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.CreateNewFolder
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.GraphicEq
@@ -19,11 +21,21 @@ import androidx.compose.material.icons.filled.OpenInFull
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.PowerSettingsNew
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Redeem
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Redeem
 import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.SpaceDashboard
+import androidx.compose.material.icons.filled.SpaceDashboard
 import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SentimentSatisfied
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.VideocamOff
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VolumeOff
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
@@ -57,4 +69,13 @@ object WaveIcons {
     val Layers: ImageVector = Icons.Filled.Layers
     val Add: ImageVector = Icons.Filled.Add
     val Folder: ImageVector = Icons.Filled.CreateNewFolder
+    val Star: ImageVector = Icons.Filled.Star
+    val Heart: ImageVector = Icons.Filled.Favorite
+    val Eye: ImageVector = Icons.Filled.Visibility
+    val Send: ImageVector = Icons.AutoMirrored.Filled.Send
+    val Emoji: ImageVector = Icons.Filled.SentimentSatisfied
+    val Share: ImageVector = Icons.Filled.Share
+    val Gift: ImageVector = Icons.Filled.Redeem
+    val Dashboard: ImageVector = Icons.Filled.SpaceDashboard
+    val Bell: ImageVector = Icons.Filled.Notifications
 }

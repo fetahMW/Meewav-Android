@@ -2,6 +2,7 @@ package com.meewav.android.features.rooms.wave
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -41,6 +42,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
@@ -154,22 +156,44 @@ fun WaveMeter(level: Float, modifier: Modifier = Modifier) {
     Box(
         modifier
             .fillMaxHeight()
-            .width(4.dp)
+            .width(6.dp)
             .drawBehind {
-                drawRoundRect(white(0.06f), cornerRadius = CornerRadius(3f * density))
-                val visH = size.height * lvl
-                if (visH > 0f) {
-                    // Dégradé ancré sur la hauteur pleine : bleu en bas → rose en haut
-                    // (le niveau ne révèle que la portion basse, comme iOS).
+                // Échelle à segments : petits rectangles empilés, allumés jusqu'au niveau.
+                val segH = 4f * density
+                val gap = 2f * density
+                val pitch = segH + gap
+                val n = ((size.height + gap) / pitch).toInt().coerceAtLeast(1)
+                val litH = size.height * lvl
+                val r = size.width / 2f
+                for (i in 0 until n) {
+                    val dist = i * pitch
+                    val segTop = size.height - dist - segH
+                    val lit = dist < litH
+                    val color = if (lit) meterColorAt(dist / size.height) else white(0.06f)
                     drawRoundRect(
-                        Brush.verticalGradient(*WaveMixerTheme.meterStops, startY = size.height, endY = 0f),
-                        topLeft = Offset(0f, size.height - visH),
-                        size = Size(size.width, visH),
-                        cornerRadius = CornerRadius(3f * density)
+                        color,
+                        topLeft = Offset(0f, segTop),
+                        size = Size(size.width, segH),
+                        cornerRadius = CornerRadius(r)
                     )
                 }
             }
     )
+}
+
+/** Échantillonne le dégradé du vu-mètre : bleu en bas (t=0) → rose en haut (t=1). */
+private fun meterColorAt(t: Float): Color {
+    val stops = WaveMixerTheme.meterStops
+    val tc = t.coerceIn(0f, 1f)
+    var lo = stops.first()
+    var hi = stops.last()
+    for (s in stops) {
+        if (s.first <= tc) lo = s
+        if (s.first >= tc) { hi = s; break }
+    }
+    val span = hi.first - lo.first
+    val f = if (span <= 0f) 0f else (tc - lo.first) / span
+    return lerp(lo.second, hi.second, f.coerceIn(0f, 1f))
 }
 
 /* ------------------------------------------------------------------------- */
@@ -215,6 +239,7 @@ fun WaveChannelStrip(
     gain: Float,
     muted: Boolean,
     isMic: Boolean,
+    portraitRes: Int? = null,
     onGainChange: (Float) -> Unit,
     onToggleMute: () -> Unit,
     modifier: Modifier = Modifier,
@@ -226,29 +251,37 @@ fun WaveChannelStrip(
     ) {
         Row(
             modifier = Modifier.height(32.dp).fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
+            horizontalArrangement = if (portraitRes != null) Arrangement.Start else Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(icon, null, tint = white(0.86f), modifier = Modifier.size(11.dp))
-            Spacer(Modifier.width(4.dp))
+            if (portraitRes != null) {
+                Image(
+                    painter = painterResource(portraitRes),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(CircleShape)
+                )
+            } else {
+                Icon(icon, null, tint = white(0.86f), modifier = Modifier.size(11.dp))
+            }
+            Spacer(Modifier.width(5.dp))
             Text(
                 label,
                 color = white(0.86f),
-                fontSize = 11.sp,
+                fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
                 fontFamily = WaveMixerTheme.fontFamily,
                 maxLines = 1
             )
         }
-        // Cluster : mètre 4 + gap 6 + fader 28, centré horizontalement.
+        // Fader seul, centré — le vu-mètre est retiré pour alléger l'interface mobile.
         Row(
             modifier = Modifier.weight(1f),
             verticalAlignment = Alignment.Bottom,
             horizontalArrangement = Arrangement.Center
         ) {
-            // Le mètre suit la position du fader (gain) ; coupé à 0 quand mute.
-            WaveMeter(level = if (muted) 0f else gain)
-            Spacer(Modifier.width(6.dp))
             WaveFader(
                 value = gain,
                 onValueChange = onGainChange,
@@ -386,8 +419,8 @@ fun TuneSelectorField(
             Modifier
                 .fillMaxWidth()
                 .height(30.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .satinControl(8.dp)
+                .clip(RoundedCornerShape(6.dp))
+                .hardwareSurface(6.dp, raised = true, reflection = 0.085f)
                 .clickable(onClick = onClick)
                 .padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -434,8 +467,8 @@ fun ReverbSlider(
             Modifier
                 .fillMaxWidth()
                 .height(30.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .satinControl(8.dp)
+                .clip(RoundedCornerShape(6.dp))
+                .hardwareSurface(6.dp, raised = true, reflection = 0.085f)
         ) {
             val w = constraints.maxWidth.toFloat()
             val d = LocalDensity.current
