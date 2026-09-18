@@ -7,7 +7,7 @@ import {
   useState,
   type MouseEvent,
 } from "react";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Plus, Search, SlidersHorizontal, X } from "lucide-react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
@@ -163,6 +163,8 @@ export function RoomsHome({ collectionSlug = null, roomType, onOpenRoom }: Rooms
   });
   const launchDialogCloseRef = useRef<HTMLButtonElement | null>(null);
   const filterTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [format, setFormat] = useState<RoomsHomeFormatFilter>(initialSnapshotRef.current.format);
   const [launchDialogOpen, setLaunchDialogOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -171,8 +173,8 @@ export function RoomsHome({ collectionSlug = null, roomType, onOpenRoom }: Rooms
   const [draftFilters, setDraftFilters] = useState<RoomsHomeFilters>(EMPTY_FILTERS);
   const collection = collectionSlug ? getRoomsHomeCollectionBySlug(collectionSlug) : undefined;
   const isCollectionView = Boolean(collectionSlug);
-  const activeFilterCount = filterCount(filters);
   const draftFilterCount = filterCount(draftFilters);
+  const activeFilterCount = filterCount(filters);
 
   const filteredCatalog = useMemo(
     () => ROOMS_HOME_CATALOG.filter((room) => room.country === "FR" && (!roomType || room.roomType === roomType) && roomMatchesFilters(room, query, filters)),
@@ -314,16 +316,18 @@ export function RoomsHome({ collectionSlug = null, roomType, onOpenRoom }: Rooms
     updateRoomsHomeSessionSnapshot({ format: nextFormat });
   };
 
-  const toggleFilters = () => {
-    if (!filterOpen) {
-      setDraftFilters({
-        ...filters,
-        roomTypes: [...filters.roomTypes],
-        avatarStyles: [...filters.avatarStyles],
-        gradeLevels: [...filters.gradeLevels],
-      });
-    }
-    setFilterOpen((current) => !current);
+  useEffect(() => {
+    if (searchOpen) searchInputRef.current?.focus();
+  }, [searchOpen]);
+
+  const openFiltersPanel = () => {
+    setDraftFilters({
+      ...filters,
+      roomTypes: [...filters.roomTypes],
+      avatarStyles: [...filters.avatarStyles],
+      gradeLevels: [...filters.gradeLevels],
+    });
+    setFilterOpen(true);
   };
 
   const resetAllFilters = () => {
@@ -359,7 +363,7 @@ export function RoomsHome({ collectionSlug = null, roomType, onOpenRoom }: Rooms
     >
       <div className="rooms-home__ambient" aria-hidden="true" />
 
-      <header className="rooms-home__controls">
+      <header className={`rooms-home__controls${searchOpen ? " is-search-open" : ""}`}>
         {isCollectionView ? (
           <button type="button" className="rooms-home__back" onClick={returnHome}>
             <ArrowLeft aria-hidden="true" />
@@ -367,21 +371,36 @@ export function RoomsHome({ collectionSlug = null, roomType, onOpenRoom }: Rooms
           </button>
         ) : (
           <div className="rooms-home__search-wrap">
-            <MeewavSearchFilterBar
-              query={query}
-              placeholder="Rechercher une room…"
-              inputAriaLabel="Rechercher une Room, un artiste ou un style"
-              onQueryChange={(event) => setQuery(event.target.value)}
-              onClear={() => setQuery("")}
-              onToggleFilters={toggleFilters}
-              filterOpen={filterOpen}
-              filterActive={activeFilterCount > 0}
-              activeFilterCount={activeFilterCount}
-              filterPanelId="rooms-home-filter-panel"
-              filterTriggerRef={filterTriggerRef}
-              placement="flow"
-              className="rooms-home__search"
-            />
+            <button
+              type="button"
+              className="rooms-home__search-toggle"
+              aria-label="Rechercher une Room, un artiste ou un style"
+              aria-expanded={searchOpen}
+              onClick={() => setSearchOpen(true)}
+            >
+              <Search aria-hidden="true" />
+            </button>
+            <div className="rooms-home__search-expand" aria-hidden={!searchOpen}>
+              <MeewavSearchFilterBar
+                query={query}
+                placeholder="Rechercher une room…"
+                inputAriaLabel="Rechercher une Room, un artiste ou un style"
+                onQueryChange={(event) => setQuery(event.target.value)}
+                onClear={() => setQuery("")}
+                onInputKeyDown={(event) => { if (event.key === "Escape") setSearchOpen(false); }}
+                inputRef={searchInputRef}
+                placement="flow"
+                className="rooms-home__search"
+              />
+              <button
+                type="button"
+                className="rooms-home__search-close"
+                aria-label="Fermer la recherche"
+                onClick={() => setSearchOpen(false)}
+              >
+                <X aria-hidden="true" />
+              </button>
+            </div>
           </div>
         )}
 
@@ -413,6 +432,23 @@ export function RoomsHome({ collectionSlug = null, roomType, onOpenRoom }: Rooms
             </button>
           ) : null}
         </div>
+
+        {!isCollectionView ? (
+          <button
+            ref={filterTriggerRef}
+            type="button"
+            className={`rooms-home__filters-toggle${filterOpen || activeFilterCount > 0 ? " is-active" : ""}`}
+            aria-label={filterOpen ? "Fermer les filtres" : "Filtrer les Rooms"}
+            aria-expanded={filterOpen}
+            aria-controls="rooms-home-filter-panel"
+            onClick={openFiltersPanel}
+          >
+            <SlidersHorizontal aria-hidden="true" />
+            {activeFilterCount > 0 ? (
+              <span className="rooms-home__filters-count">{activeFilterCount}</span>
+            ) : null}
+          </button>
+        ) : null}
       </header>
 
       {!isCollectionView && activeFilterChips.length > 0 ? (

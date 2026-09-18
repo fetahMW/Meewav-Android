@@ -1,10 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from "react";
 import {
   AudioLines,
   BookOpen,
+  Check,
   CheckCircle2,
+  ChevronDown,
   ChevronRight,
+  Crown,
   Flag,
+  Gavel,
   Headphones,
   ListMusic,
   Lock,
@@ -12,12 +16,18 @@ import {
   Music,
   Rocket,
   SlidersHorizontal,
+  Swords,
+  Timer,
+  Trophy,
   Upload,
+  UserPlus,
+  Users,
   Video,
   Wifi,
   X,
   Zap,
 } from "lucide-react";
+import GlobeLoading from "../../../../vendor/meewav-vinyl/src/GlobeLoading";
 import type { RoomsHomeRoomType } from "../home/roomsHome.types";
 
 type LaunchRoomSheetProps = {
@@ -46,6 +56,64 @@ const GAMME_OPTIONS = [
 ];
 const MESURE_OPTIONS = ["2/4", "3/4", "4/4", "5/4", "6/8", "7/8", "9/8", "12/8"];
 
+/* Formats La Cage — parité avec le séquenceur web (features/rooms/launch/cageLaunch.ts). */
+type CageFormat = "tournament" | "championship" | "open-mic" | "open-mic-battle";
+const CAGE_FORMAT_LABELS: Record<CageFormat, string> = {
+  tournament: "Tournoi à élimination",
+  championship: "Championnat · classement",
+  "open-mic": "Open Mic libre · passages individuels",
+  "open-mic-battle": "Open Mic Battle · le gagnant reste",
+};
+const CAGE_FORMAT_DESCRIPTIONS: Record<CageFormat, string> = {
+  tournament: "Un tableau à élimination : chaque confrontation qualifie un gagnant vers le tour suivant, jusqu'à la finale.",
+  championship: "Un calendrier de rencontres et un classement par victoires. Tous les participants conservent leurs rencontres ; les ex æquo restent visibles.",
+  "open-mic-battle": "Deux artistes s'affrontent. Le gagnant reste sur scène, le perdant sort et le challenger suivant monte.",
+  "open-mic": "Un ordre de passage, un artiste à la fois. Chaque performance est individuelle, sans adversaire ni élimination.",
+};
+const CAGE_FORMAT_META: Record<CageFormat, { icon: typeof Mic; tint: string; short: string; tagline: string }> = {
+  tournament: { icon: Trophy, tint: "#e16e78", short: "Tournoi", tagline: "Élimination directe" },
+  championship: { icon: Crown, tint: "#f6d381", short: "Championnat", tagline: "Classement par victoires" },
+  "open-mic": { icon: Mic, tint: "#f0b27a", short: "Open Mic libre", tagline: "Passages individuels" },
+  "open-mic-battle": { icon: Swords, tint: "#ff7a3d", short: "Open Mic Battle", tagline: "Le gagnant reste" },
+};
+const CAGE_FORMAT_ORDER: CageFormat[] = ["tournament", "championship", "open-mic", "open-mic-battle"];
+const CAGE_TITLE_LABELS: Record<CageFormat, string> = {
+  tournament: "Titre du Tournoi",
+  championship: "Titre du Championnat",
+  "open-mic": "Titre de l'Open Mic",
+  "open-mic-battle": "Titre de l'Open Mic Battle",
+};
+const CAGE_ROSTER_LABELS = {
+  prepared: "Roster préparé",
+  "first-eligible": "Premiers inscrits éligibles",
+  manual: "Sélection manuelle",
+  random: "Tirage parmi les présents",
+} as const;
+const CAGE_FEEDBACK_LABELS = {
+  appreciation: "Appréciation sans classement",
+  scored: "Note du public avec classement",
+  none: "Sans vote ni classement",
+} as const;
+const CAGE_FEEDBACK_NOTES: Record<keyof typeof CAGE_FEEDBACK_LABELS, string> = {
+  appreciation: "Chaque viewer peut envoyer un soutien au passage. Aucun classement n'est calculé.",
+  scored: "Chaque viewer attribue une note de 1 à 5. Le classement indique la moyenne et le nombre de notes ; les ex æquo sont conservés.",
+  none: "À la fin du passage, la régie prépare la suite sans vote ni classement.",
+};
+const CAGE_PARTICIPANT_COUNTS = [2, 4, 8, 12, 16, 24, 32, 64];
+const CAGE_PASSAGE_DURATIONS = [60, 90, 120, 180, 240, 300];
+const CAGE_ROUND_COUNTS = [1, 2, 3, 5];
+
+/* Contacts de la messagerie — miroir de demoContacts (messagingDemoData.ts). */
+type JuryContact = { id: string; name: string; role: string; avatar: string; online: boolean };
+const JURY_CONTACTS: JuryContact[] = [
+  { id: "user_1", name: "Echo Flow", role: "Artiste", avatar: "/avatars/chanteur-rappeur.png", online: true },
+  { id: "user_2", name: "Neon Pulse", role: "Beatmaker", avatar: "/avatars/beatmaker.png", online: false },
+  { id: "user_3", name: "Stellar Vibe", role: "DJ / Producteur", avatar: "/avatars/dj.png", online: true },
+  { id: "user_4", name: "Lisa Music", role: "Mixeur", avatar: "/avatars/ingenieur-son.png", online: false },
+  { id: "user_5", name: "The Producer", role: "Producteur", avatar: "/avatars/compositeur.png", online: true },
+  { id: "user_6", name: "Vocal Queen", role: "Artiste / Auteur", avatar: "/avatars/chanteuse-rappeuse.png", online: false },
+];
+
 const CHECKUP_STORAGE_KEY = "meewav-rooms-last-checkup";
 
 type MicState = "idle" | "requesting" | "granted" | "denied";
@@ -67,6 +135,63 @@ function SectionTitle({ children }: { children: string }) {
   return <p className="launch-section-title">{children}</p>;
 }
 
+type LaunchSelectOption = { value: string; label: string; disabled?: boolean };
+
+function LaunchSelect({ label, value, options, onChange }: {
+  label: string;
+  value: string;
+  options: LaunchSelectOption[];
+  onChange: (value: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: Event) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    window.addEventListener("pointerdown", close, true);
+    return () => window.removeEventListener("pointerdown", close, true);
+  }, [open]);
+
+  const current = options.find((option) => option.value === value)?.label ?? value;
+
+  return (
+    <div ref={rootRef} className={`launch-select launch-select--picker${open ? " is-open" : ""}`}>
+      <span>{label}</span>
+      <button
+        type="button"
+        className="launch-select__trigger"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+      >
+        <strong>{current}</strong>
+        <ChevronDown aria-hidden="true" size={14} />
+      </button>
+      {open ? (
+        <div className="launch-select__menu" role="listbox" aria-label={label}>
+          {options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              role="option"
+              aria-selected={option.value === value}
+              disabled={option.disabled}
+              className={`launch-select__option${option.value === value ? " is-selected" : ""}`}
+              onClick={() => { onChange(option.value); setOpen(false); }}
+            >
+              <span>{option.label}</span>
+              {option.value === value ? <Check aria-hidden="true" size={14} /> : null}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaunched }: LaunchRoomSheetProps) {
   const initialIndex = useMemo(() => {
     const index = LAUNCH_TABS.findIndex((tab) => tab.id === initialType);
@@ -84,8 +209,21 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
   const [mesure, setMesure] = useState("4/4");
   const [monetization, setMonetization] = useState(false);
   const [regisseur, setRegisseur] = useState<"none" | "pending" | "confirmed">("none");
+  const [juryIds, setJuryIds] = useState<string[]>([]);
+  const [juryOpen, setJuryOpen] = useState(false);
+  const [juryInvited, setJuryInvited] = useState(false);
+  const [juryInviteSent, setJuryInviteSent] = useState(false);
   const [cageCagnotte, setCageCagnotte] = useState(false);
   const [cageCadeau, setCageCadeau] = useState(false);
+  const [cageFormat, setCageFormat] = useState<CageFormat>("tournament");
+  const [cageParticipants, setCageParticipants] = useState(16);
+  const [cageRoster, setCageRoster] = useState<keyof typeof CAGE_ROSTER_LABELS>("manual");
+  const [cageFeedback, setCageFeedback] = useState<keyof typeof CAGE_FEEDBACK_LABELS>("appreciation");
+  const [cagePerfMode, setCagePerfMode] = useState<"successive" | "alternating" | "simultaneous">("successive");
+  const [cageRounds, setCageRounds] = useState(1);
+  const [cagePassageDuration, setCagePassageDuration] = useState(90);
+  const [cageVoting, setCageVoting] = useState<"public" | "jury" | "mixed">("public");
+  const [cageTieBreak, setCageTieBreak] = useState<"sudden-death" | "replay">("sudden-death");
   const [loopExpanded, setLoopExpanded] = useState(false);
   const [moduleStates, setModuleStates] = useState<Record<string, boolean>>({});
 
@@ -105,6 +243,7 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
   const micStreamRef = useRef<MediaStream | null>(null);
   const micRafRef = useRef(0);
   const micContextRef = useRef<AudioContext | null>(null);
+  const tabsNavRef = useRef<HTMLElement | null>(null);
 
   const accent = LAUNCH_TABS[selectedTab].accent;
   const roomLabel = LAUNCH_TABS[selectedTab].label;
@@ -164,6 +303,27 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
     stopMic();
   };
 
+  /* Rail d'onglets auto-défilant : garde l'onglet précédent visible, révèle les suivants (comme les pill-tabs du Marketplace). */
+  useEffect(() => {
+    const nav = tabsNavRef.current;
+    if (!nav || nav.children.length === 0) return;
+    const tabWidth = (nav.children[0] as HTMLElement).offsetWidth || 1;
+    const visibleCount = Math.max(1, Math.floor(nav.clientWidth / tabWidth));
+    const firstVisible = Math.max(0, Math.min(selectedTab - 1, LAUNCH_TABS.length - visibleCount));
+    const target = nav.children[firstVisible] as HTMLElement | undefined;
+    if (!target) return;
+    nav.scrollTo({ left: target.offsetLeft, behavior: "smooth" });
+  }, [selectedTab]);
+
+  const cageOpenMic = cageFormat === "open-mic";
+  const cageBracketSlots = cageFormat === "tournament" ? 2 ** Math.ceil(Math.log2(Math.max(cageParticipants, 2))) : cageParticipants;
+
+  const selectCageFormat = (format: CageFormat) => {
+    setCageFormat(format);
+    if (format === "open-mic") setCageParticipants((count) => Math.max(count, 1));
+    else setCageParticipants((count) => Math.max(count, 2));
+  };
+
   const goToStep = (next: number) => {
     if (next === 2) markCheckupDone();
     if (next !== 1) stopMic();
@@ -209,6 +369,25 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
     </>
   );
 
+  const selectedJuryNames = JURY_CONTACTS.filter((contact) => juryIds.includes(contact.id)).map((contact) => contact.name);
+  const juryRow = (
+    <>
+      <FieldLabel icon={Gavel}>Jury</FieldLabel>
+      <button
+        type="button"
+        className={`launch-module launch-module--jury${juryIds.length > 0 ? " is-confirmed" : ""}`}
+        onClick={() => setJuryOpen(true)}
+      >
+        <span className="launch-module__icon" style={{ color: accent }}><Gavel aria-hidden="true" size={18} /></span>
+        <span className="launch-module__copy">
+          <strong>{juryIds.length === 0 ? "Choisir un jury" : juryInviteSent ? `Jury invité · ${juryIds.length} membre${juryIds.length > 1 ? "s" : ""}` : `${juryIds.length} juré${juryIds.length > 1 ? "s" : ""} sélectionné${juryIds.length > 1 ? "s" : ""}`}</strong>
+          <small>{juryIds.length === 0 ? "Optionnel — des jurés de ta messagerie ou par invitation." : selectedJuryNames.join(", ")}</small>
+        </span>
+        <ChevronRight aria-hidden="true" size={16} />
+      </button>
+    </>
+  );
+
   const moduleButton = (key: string, icon: typeof Mic, label: string, hint: string) => (
     <button
       type="button"
@@ -238,21 +417,15 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
             <FieldLabel icon={SlidersHorizontal}>Caractéristiques</FieldLabel>
             <div className="launch-selectors">
               <label className="launch-select launch-select--static"><span>BPM</span><strong>120</strong></label>
-              <label className="launch-select"><span>Gamme</span>
-                <select value={gamme} onChange={(event) => setGamme(event.target.value)}>
-                  {GAMME_OPTIONS.map((option) => <option key={option}>{option}</option>)}
-                </select>
-              </label>
-              <label className="launch-select"><span>Mesure</span>
-                <select value={mesure} onChange={(event) => setMesure(event.target.value)}>
-                  {MESURE_OPTIONS.map((option) => <option key={option}>{option}</option>)}
-                </select>
-              </label>
+              <LaunchSelect label="Gamme" value={gamme} options={GAMME_OPTIONS.map((option) => ({ value: option, label: option }))} onChange={setGamme} />
+              <LaunchSelect label="Mesure" value={mesure} options={MESURE_OPTIONS.map((option) => ({ value: option, label: option }))} onChange={setMesure} />
             </div>
             <DottedSeparator />
             {monetizationRow}
             <DottedSeparator />
             {regisseurRow}
+            <DottedSeparator />
+            {juryRow}
             <DottedSeparator />
             <FieldLabel icon={Zap}>Boucle d'Amorçage</FieldLabel>
             <button type="button" className="launch-module launch-module--loop" onClick={() => setLoopExpanded((value) => !value)}>
@@ -271,10 +444,122 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
       case "cage":
         return (
           <>
-            <FieldLabel icon={Mic}>Titre du Tournoi</FieldLabel>
-            <input className="launch-input" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Titre du Tournoi ou Championnat..." />
+            <FieldLabel icon={Trophy}>{CAGE_TITLE_LABELS[cageFormat]}</FieldLabel>
+            <input className="launch-input" value={title} onChange={(event) => setTitle(event.target.value)} placeholder={`${CAGE_TITLE_LABELS[cageFormat]}...`} />
+            <DottedSeparator />
+            <FieldLabel icon={Trophy}>Format</FieldLabel>
+            <div className="launch-format-grid" role="radiogroup" aria-label="Format">
+              {CAGE_FORMAT_ORDER.map((format) => {
+                const meta = CAGE_FORMAT_META[format];
+                const Icon = meta.icon;
+                const active = cageFormat === format;
+                return (
+                  <button
+                    key={format}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    className={`launch-format${active ? " is-active" : ""}`}
+                    style={active ? { borderColor: `${meta.tint}99`, boxShadow: `0 0 18px ${meta.tint}38, inset 0 0 14px ${meta.tint}12`, background: `${meta.tint}14` } : undefined}
+                    onClick={() => selectCageFormat(format)}
+                  >
+                    <span className="launch-format__icon" style={active ? { color: meta.tint, background: `${meta.tint}1f`, borderColor: `${meta.tint}55` } : undefined}>
+                      <Icon aria-hidden="true" size={18} />
+                    </span>
+                    <span className="launch-format__copy">
+                      <strong style={active ? { color: meta.tint } : undefined}>{meta.short}</strong>
+                      <small>{meta.tagline}</small>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="launch-hint">{CAGE_FORMAT_LABELS[cageFormat]} — {CAGE_FORMAT_DESCRIPTIONS[cageFormat]}</p>
+            <div className="launch-selectors">
+              <LaunchSelect
+                label="Participants"
+                value={String(cageParticipants)}
+                options={(cageOpenMic ? [1, ...CAGE_PARTICIPANT_COUNTS] : CAGE_PARTICIPANT_COUNTS).map((count) => ({ value: String(count), label: `${count} participant${count > 1 ? "s" : ""}` }))}
+                onChange={(value) => setCageParticipants(Number(value))}
+              />
+              <LaunchSelect
+                label="Sélection du roster"
+                value={cageRoster}
+                options={Object.entries(CAGE_ROSTER_LABELS).map(([value, label]) => ({ value, label }))}
+                onChange={(value) => setCageRoster(value as keyof typeof CAGE_ROSTER_LABELS)}
+              />
+            </div>
+            {cageFormat === "tournament" && cageBracketSlots > cageParticipants ? (
+              <p className="launch-hint">{cageParticipants} participants · tableau de {cageBracketSlots} places · {cageBracketSlots - cageParticipants} BYE à autoriser dans le règlement.</p>
+            ) : null}
+            <DottedSeparator />
+            {cageOpenMic ? (
+              <>
+                <FieldLabel icon={Mic}>Après chaque passage</FieldLabel>
+                <LaunchSelect
+                  label="Après chaque passage"
+                  value={cageFeedback}
+                  options={Object.entries(CAGE_FEEDBACK_LABELS).map(([value, label]) => ({ value, label }))}
+                  onChange={(value) => setCageFeedback(value as keyof typeof CAGE_FEEDBACK_LABELS)}
+                />
+                <p className="launch-hint">{CAGE_FEEDBACK_NOTES[cageFeedback]}</p>
+              </>
+            ) : (
+              <>
+                <FieldLabel icon={Users}>Règlement des rencontres</FieldLabel>
+                <div className="launch-selectors">
+                  <LaunchSelect
+                    label="Performances"
+                    value={cagePerfMode}
+                    options={[
+                      { value: "successive", label: "Passages successifs" },
+                      { value: "alternating", label: "Performances alternées" },
+                      { value: "simultaneous", label: "Duel simultané" },
+                    ]}
+                    onChange={(value) => setCagePerfMode(value as typeof cagePerfMode)}
+                  />
+                  <LaunchSelect
+                    label="Manches par rencontre"
+                    value={String(cageRounds)}
+                    options={CAGE_ROUND_COUNTS.map((count) => ({ value: String(count), label: `${count} manche${count > 1 ? "s" : ""}` }))}
+                    onChange={(value) => setCageRounds(Number(value))}
+                  />
+                </div>
+                <div className="launch-selectors">
+                  <LaunchSelect
+                    label="Décision des rencontres"
+                    value={cageVoting}
+                    options={[
+                      { value: "public", label: "Vote du public" },
+                      { value: "jury", label: "Jury · à configurer", disabled: true },
+                      { value: "mixed", label: "Public et jury · à configurer", disabled: true },
+                    ]}
+                    onChange={(value) => setCageVoting(value as typeof cageVoting)}
+                  />
+                  <LaunchSelect
+                    label="Égalité"
+                    value={cageTieBreak}
+                    options={[
+                      { value: "sudden-death", label: "Sudden Death · nouvelle manche" },
+                      { value: "replay", label: "Rejouer la rencontre" },
+                    ]}
+                    onChange={(value) => setCageTieBreak(value as typeof cageTieBreak)}
+                  />
+                </div>
+              </>
+            )}
+            <div className="launch-selectors">
+              <LaunchSelect
+                label="Durée d'un passage"
+                value={String(cagePassageDuration)}
+                options={CAGE_PASSAGE_DURATIONS.map((seconds) => ({ value: String(seconds), label: `${seconds} secondes` }))}
+                onChange={(value) => setCagePassageDuration(Number(value))}
+              />
+            </div>
             <DottedSeparator />
             {regisseurRow}
+            <DottedSeparator />
+            {juryRow}
             <DottedSeparator />
             <FieldLabel icon={SlidersHorizontal}>Options</FieldLabel>
             <div className="launch-checkbox-row">
@@ -294,6 +579,10 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
             <DottedSeparator />
             {monetizationRow}
             <DottedSeparator />
+            {regisseurRow}
+            <DottedSeparator />
+            {juryRow}
+            <DottedSeparator />
             <SectionTitle>🎬 SCÉNARIO DU LIVE (OPTIONNEL)</SectionTitle>
             <p className="launch-hint">Programme des moments clés avant de monter sur scène.</p>
             {moduleButton("support", Flag, "Programmer un Objectif de Soutien", "Fixe un palier à atteindre pendant le live.")}
@@ -309,6 +598,10 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
             <DottedSeparator />
             {monetizationRow}
             <DottedSeparator />
+            {regisseurRow}
+            <DottedSeparator />
+            {juryRow}
+            <DottedSeparator />
             <FieldLabel icon={Flag}>Objectif de Soutien</FieldLabel>
             {moduleButton("goal", Flag, "Paramétrer un Objectif de Soutien", "Un palier communautaire pour ta place.")}
           </>
@@ -322,6 +615,10 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
             <input className="launch-input" value={subtitle} onChange={(event) => setSubtitle(event.target.value)} placeholder="Thème / Accroche (optionnel)..." />
             <DottedSeparator />
             {monetizationRow}
+            <DottedSeparator />
+            {regisseurRow}
+            <DottedSeparator />
+            {juryRow}
             <DottedSeparator />
             <FieldLabel icon={ListMusic}>Préparation de la Loge</FieldLabel>
             {moduleButton("jukebox", ListMusic, "Charger une Playlist pour le Jukebox", "L'ambiance sonore de ton salon.")}
@@ -337,6 +634,10 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
             <textarea className="launch-input launch-input--area" rows={4} value={subtitle} onChange={(event) => setSubtitle(event.target.value)} placeholder="Description des objectifs..." />
             <DottedSeparator />
             {monetizationRow}
+            <DottedSeparator />
+            {regisseurRow}
+            <DottedSeparator />
+            {juryRow}
             <DottedSeparator />
             <FieldLabel icon={BookOpen}>Matériel pédagogique</FieldLabel>
             {moduleButton("resource", Upload, "Upload la ressource de référence", "PDF, partition ou fichier audio du cours.")}
@@ -429,16 +730,8 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
 
       <SectionTitle>VIDÉO</SectionTitle>
       <div className="launch-selectors">
-        <label className="launch-select"><span>Caméra</span>
-          <select value={cameraSource} onChange={(event) => setCameraSource(event.target.value)}>
-            <option>Auto</option><option>Avant</option><option>Arrière</option>
-          </select>
-        </label>
-        <label className="launch-select"><span>Qualité</span>
-          <select value={videoQuality} onChange={(event) => setVideoQuality(event.target.value)}>
-            <option>Auto</option><option>Économie</option><option>Haute</option>
-          </select>
-        </label>
+        <LaunchSelect label="Caméra" value={cameraSource} options={["Auto", "Avant", "Arrière"].map((option) => ({ value: option, label: option }))} onChange={setCameraSource} />
+        <LaunchSelect label="Qualité" value={videoQuality} options={["Auto", "Économie", "Haute"].map((option) => ({ value: option, label: option }))} onChange={setVideoQuality} />
       </div>
 
       <ul className="launch-checklist">
@@ -468,6 +761,12 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
         <span>Résumé</span>
         <dl>
           <div><dt>Room</dt><dd>{roomLabel}</dd></div>
+          {LAUNCH_TABS[selectedTab].id === "cage" ? (
+            <>
+              <div><dt>Format</dt><dd>{CAGE_FORMAT_LABELS[cageFormat]}</dd></div>
+              <div><dt>Participants</dt><dd>{cageParticipants} · {CAGE_ROSTER_LABELS[cageRoster]}</dd></div>
+            </>
+          ) : null}
           <div><dt>Configuration</dt><dd>{isReady ? "Check-up validé" : "Check-up ignoré"}</dd></div>
           <div><dt>Monétisation</dt><dd>{monetization ? "Activée" : "Désactivée"}</dd></div>
         </dl>
@@ -480,7 +779,7 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
   );
 
   return (
-    <div className="launch-room-sheet" role="dialog" aria-modal="true" aria-label="Créer une Room">
+    <div className="launch-room-sheet" role="dialog" aria-modal="true" aria-label="Créer une Room" style={{ "--launch-accent": accent } as CSSProperties}>
       <header className="launch-room-sheet__header">
         <span className="launch-room-sheet__badge" style={{ background: accent }} aria-hidden="true" />
         <strong>Créer une Room</strong>
@@ -489,7 +788,7 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
         </button>
       </header>
 
-      <nav className="launch-tabs" aria-label="Type de Room" style={{ scrollbarWidth: "none" }}>
+      <nav ref={tabsNavRef} className="launch-tabs" aria-label="Type de Room" style={{ scrollbarWidth: "none" }}>
         {LAUNCH_TABS.map((tab, index) => (
           <button
             key={tab.id}
@@ -521,9 +820,68 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
         ) : null}
       </div>
 
+      {juryOpen ? (
+        <div className="launch-jury" role="dialog" aria-modal="true" aria-label="Choisir un jury">
+          <header className="launch-jury__header">
+            <strong>Choisir un jury</strong>
+            <button type="button" aria-label="Fermer" onClick={() => setJuryOpen(false)} style={{ color: accent }}>
+              <X aria-hidden="true" size={18} />
+            </button>
+          </header>
+          <p className="launch-jury__hint">Sélectionne des jurés parmi tes contacts de messagerie, ou envoie-leur une invitation.</p>
+          <div className="launch-jury__list">
+            {JURY_CONTACTS.map((contact) => {
+              const selected = juryIds.includes(contact.id);
+              return (
+                <button
+                  key={contact.id}
+                  type="button"
+                  className={`launch-jury__contact${selected ? " is-selected" : ""}`}
+                  style={selected ? { borderColor: `${accent}88`, background: `${accent}12` } : undefined}
+                  onClick={() => setJuryIds((current) => current.includes(contact.id) ? current.filter((id) => id !== contact.id) : [...current, contact.id])}
+                >
+                  <span className="launch-jury__avatar">
+                    <img src={contact.avatar} alt="" loading="lazy" />
+                    <i className={contact.online ? "is-online" : ""} aria-hidden="true" />
+                  </span>
+                  <span className="launch-jury__meta">
+                    <strong>{contact.name}</strong>
+                    <small>{contact.role} · {contact.online ? "en ligne" : "hors ligne"}</small>
+                  </span>
+                  <span className="launch-jury__check" style={selected ? { background: accent, borderColor: accent } : undefined} aria-hidden="true">
+                    {selected ? <Check size={12} /> : null}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <button
+            type="button"
+            className="launch-jury__invite"
+            onClick={() => setJuryInvited((value) => !value)}
+          >
+            <UserPlus aria-hidden="true" size={16} />
+            <span>{juryInvited ? "Invitation prête — elle partira à l'ouverture de la room" : "Inviter quelqu'un qui n'est pas dans tes contacts"}</span>
+          </button>
+          <div className="launch-jury__footer">
+            <button
+              type="button"
+              className="launch-btn launch-btn--accent"
+              style={{ background: accent }}
+              onClick={() => {
+                if (juryIds.length > 0 || juryInvited) setJuryInviteSent(true);
+                setJuryOpen(false);
+              }}
+            >
+              {juryIds.length > 0 ? `Envoyer ${juryIds.length} invitation${juryIds.length > 1 ? "s" : ""}` : "Valider"}
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       {launching ? (
-        <LaunchCountdown
-          accent={accent}
+        <LaunchVinylTransition
+          roomLabel={roomLabel}
           onCancel={() => setLaunching(false)}
           onComplete={() => {
             setLaunching(false);
@@ -536,56 +894,23 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
   );
 }
 
-function LaunchCountdown({ accent, onCancel, onComplete }: { accent: string; onCancel: () => void; onComplete: () => void }) {
-  const [number, setNumber] = useState(3);
-  const [showGo, setShowGo] = useState(false);
-  const [fadeOut, setFadeOut] = useState(false);
+const LAUNCH_TRANSITION_MS = 2200;
+
+function LaunchVinylTransition({ roomLabel, onCancel, onComplete }: { roomLabel: string; onCancel: () => void; onComplete: () => void }) {
   const cancelledRef = useRef(false);
 
   useEffect(() => {
-    const sfx = new Audio("/audio/3-2-1.aac");
-    void sfx.play().catch(() => undefined);
-    const vibrate = (pattern: number | number[]) => { try { navigator.vibrate?.(pattern); } catch { /* noop */ } };
-    vibrate(40);
-    const interval = window.setInterval(() => {
-      if (cancelledRef.current) return;
-      setNumber((current) => {
-        if (current > 1) {
-          vibrate(40);
-          return current - 1;
-        }
-        window.clearInterval(interval);
-        setShowGo(true);
-        vibrate([60, 40, 120]);
-        const impact = new Audio("/audio/impact-fx.aac");
-        void impact.play().catch(() => undefined);
-        window.setTimeout(() => { if (!cancelledRef.current) setFadeOut(true); }, 400);
-        window.setTimeout(() => { if (!cancelledRef.current) onComplete(); }, 600);
-        return current;
-      });
-    }, 1000);
+    const timer = window.setTimeout(() => { if (!cancelledRef.current) onComplete(); }, LAUNCH_TRANSITION_MS);
     return () => {
       cancelledRef.current = true;
-      window.clearInterval(interval);
-      sfx.pause();
+      window.clearTimeout(timer);
     };
   }, [onComplete]);
 
   return (
-    <div className={`launch-countdown${fadeOut ? " is-fadeout" : ""}`} role="alert" aria-live="assertive">
-      <p className="launch-countdown__init" style={{ color: accent }}>INITIALISATION DU FLUX...</p>
-      {!showGo ? <p className="launch-countdown__label" style={{ color: accent }}>DIFFUSION LIVE DANS</p> : null}
-      <div className="launch-countdown__center">
-        {showGo ? (
-          <span className="launch-countdown__go" style={{ color: accent, textShadow: `0 0 40px ${accent}99` }}>GO</span>
-        ) : (
-          <>
-            <span key={number} className="launch-countdown__number" style={{ textShadow: `0 0 30px ${accent}80, 0 0 60px ${accent}4d` }}>{number}</span>
-            <span key={`ring-${number}`} className="launch-countdown__ring" style={{ borderColor: `${accent}26` }} />
-          </>
-        )}
-      </div>
-      <button type="button" className="launch-countdown__cancel" onClick={() => { cancelledRef.current = true; onCancel(); }}>
+    <div className="launch-transition" role="alert" aria-live="assertive">
+      <GlobeLoading label={`Ouverture de ${roomLabel}…`} />
+      <button type="button" className="launch-transition__cancel" onClick={() => { cancelledRef.current = true; onCancel(); }}>
         <X aria-hidden="true" size={14} /> ANNULER
       </button>
     </div>

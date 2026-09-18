@@ -30,11 +30,11 @@ type MeewavSearchFilterBarProps = {
   onInputKeyDown?: KeyboardEventHandler<HTMLInputElement>;
   onFormBlur?: FocusEventHandler<HTMLFormElement>;
   onClear: () => void;
-  onToggleFilters: () => void;
-  filterOpen: boolean;
+  onToggleFilters?: () => void;
+  filterOpen?: boolean;
   filterActive?: boolean;
   activeFilterCount?: number;
-  filterPanelId: string;
+  filterPanelId?: string;
   formRef?: RefObject<HTMLFormElement | null>;
   inputRef?: RefObject<HTMLInputElement | null>;
   filterTriggerRef?: RefObject<HTMLButtonElement | null>;
@@ -131,24 +131,26 @@ export function MeewavSearchFilterBar({
           {shortcutHint}
         </kbd>
       ) : null}
-      <button
-        ref={filterTriggerRef}
-        onBlur={(event) => delete event.currentTarget.dataset.pointerFocusRestored}
-        onKeyDown={(event) => delete event.currentTarget.dataset.pointerFocusRestored}
-        className={`search-filter-button ${filterOpen || filterActive ? "is-active" : ""}`}
-        type="button"
-        onMouseDown={(event) => event.preventDefault()}
-        onClick={onToggleFilters}
-        aria-label={filterOpen ? "Fermer les filtres" : "Ouvrir les filtres"}
-        aria-expanded={filterOpen}
-        aria-controls={filterPanelId}
-        title="Filtres"
-      >
-        <SlidersHorizontal size={15} aria-hidden="true" />
-        {activeFilterCount > 0 ? (
-          <span className="search-filter-button__count">{activeFilterCount}</span>
-        ) : null}
-      </button>
+      {onToggleFilters ? (
+        <button
+          ref={filterTriggerRef}
+          onBlur={(event) => delete event.currentTarget.dataset.pointerFocusRestored}
+          onKeyDown={(event) => delete event.currentTarget.dataset.pointerFocusRestored}
+          className={`search-filter-button ${filterOpen || filterActive ? "is-active" : ""}`}
+          type="button"
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={onToggleFilters}
+          aria-label={filterOpen ? "Fermer les filtres" : "Ouvrir les filtres"}
+          aria-expanded={filterOpen}
+          aria-controls={filterPanelId}
+          title="Filtres"
+        >
+          <SlidersHorizontal size={15} aria-hidden="true" />
+          {activeFilterCount > 0 ? (
+            <span className="search-filter-button__count">{activeFilterCount}</span>
+          ) : null}
+        </button>
+      ) : null}
     </form>
   );
 }
