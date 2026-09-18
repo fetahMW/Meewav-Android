@@ -280,10 +280,11 @@ button:disabled { opacity: .4; cursor: default; }
 /* Black/graphite foundation: violet is an active accent, not a tinted backdrop. */
 #root .mobile-messaging { --group-ink: #08090b; --group-surface: linear-gradient(150deg,#222429,#111215); --group-rim: #ffffff20; --group-muted: #a3a5ae; }
 #root .mobile-messaging .messaging-page,
-#root .mobile-messaging-header,
-#root .mobile-messaging .mw-chat-header,
-#root .mobile-messaging .mw-conversation-rail { background: #08090b; }
-#root .mobile-messaging .messaging-page__backdrop { display: none; }
+#root .mobile-messaging-header { background: linear-gradient(110deg,#19122fb8,#0b0816a8 75%); backdrop-filter: blur(20px) saturate(1.1); -webkit-backdrop-filter: blur(20px) saturate(1.1); }
+#root .mobile-messaging .mw-chat-header { background: #0b0a11b8; backdrop-filter: blur(20px) saturate(1.1); -webkit-backdrop-filter: blur(20px) saturate(1.1); }
+#root .mobile-messaging .mw-conversation-rail { background: transparent; }
+#root .mobile-messaging .messaging-page__backdrop { display: block; opacity: 1; background: linear-gradient(180deg, rgba(8,9,11,.42), rgba(8,9,11,.6) 45%, rgba(8,9,11,.82)), url('/images/meewav-acoustic-violet-background.png') center / cover no-repeat; }
+#root .mobile-messaging .messaging-page__backdrop::after { display: none; }
 #root .mobile-messaging-header { border-bottom-color: #ffffff12; }
 #root .mobile-messaging-header small { color: #a3a5ae; }
 #root .mobile-messaging-header > button,
