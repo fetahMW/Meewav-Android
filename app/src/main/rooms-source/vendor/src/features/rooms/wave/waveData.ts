@@ -473,7 +473,7 @@ export const AUTOTUNE_KEYS = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "
 export const AUTOTUNE_SCALES = [
   { id: "chromatic", label: "Chromatique" },
   { id: "major", label: "Majeure" },
-  { id: "minor", label: "Mineure" },
+  { id: "minor", label: "Mineur" },
 ] as const;
 export const AUTOTUNE_RANGES = [
   { id: "wide", label: "Large" },
@@ -549,6 +549,7 @@ export const SFX_PADS = [
 
 export const WAVE_ROOM = {
   id: "room-la-wave",
+  name: "La Wave",
   title: "La Wave — Marée haute",
   host: WAVE_HOST,
   viewersCount: 1284,
@@ -562,9 +563,9 @@ export type WaveTab = "chat" | "mix" | "wave" | "coulisses";
 
 export const WAVE_TABS: { id: WaveTab; label: string }[] = [
   { id: "chat", label: "Chat" },
-  { id: "mix", label: "Mix" },
+  { id: "mix", label: "Mixeur" },
   { id: "wave", label: "Wave" },
-  { id: "coulisses", label: "Coulisses" },
+  { id: "coulisses", label: "Invités" },
 ];
 
 export interface WaveChatMessage {

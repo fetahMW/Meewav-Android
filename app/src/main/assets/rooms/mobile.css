@@ -375,6 +375,8 @@
    ════════════════════════════════════════════════════════════════════════════ */
 
 #root .mobile-rooms .wv-room { position: fixed; inset: 0; z-index: 51020; display: flex; flex-direction: column; background: #0E0E10; color: #fff; overflow: hidden; }
+/* La room Wave est plein écran : le dock global de l'app disparaît tant qu'elle est ouverte. */
+body:has(.wv-room) .feature-dock-host { display: none !important; }
 #root .mobile-rooms .wv-spin { animation: wv-spin 0.9s linear infinite; }
 @keyframes wv-spin { to { transform: rotate(360deg); } }
 
@@ -605,7 +607,7 @@
 #root .mobile-rooms .wvs-status--inspiration { background: rgba(0,229,255,.12); color: #00E5FF; }
 
 /* ── Mix — header ── */
-#root .mobile-rooms .wvm { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+#root .mobile-rooms .wvm { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
 #root .mobile-rooms .wvm-head { position: relative; display: flex; align-items: center; height: 34px; padding: 0 16px; flex: none; }
 #root .mobile-rooms .wvm-head-left { display: flex; align-items: center; gap: 7px; flex: 1; }
 #root .mobile-rooms .wvm-head-title { font-size: 12px; font-weight: 900; letter-spacing: 1.2px; color: rgba(255,255,255,.56); }
@@ -615,34 +617,87 @@
 #root .mobile-rooms .wvm-dot { width: 5px; height: 5px; border-radius: 50%; border: 0; background: rgba(255,255,255,.2); padding: 0; }
 #root .mobile-rooms .wvm-dot.is-active { background: #fff; }
 #root .mobile-rooms .wvm-head-right { display: flex; align-items: center; gap: 7px; flex: 1; justify-content: flex-end; }
-#root .mobile-rooms .wvm-util { height: 28px; min-width: 32px; padding: 0 8px; border-radius: 9px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.05); color: rgba(255,255,255,.6); font-size: 9px; font-weight: 900; display: inline-flex; align-items: center; justify-content: center; }
-#root .mobile-rooms .wvm-util.is-on { background: rgba(0,229,255,.13); border-color: rgba(0,229,255,.45); color: #00E5FF; }
-#root .mobile-rooms .wvm-util--preset { color: #C9B3F5; border-color: rgba(126,68,227,.4); background: rgba(126,68,227,.12); letter-spacing: .5px; }
+#root .mobile-rooms .wvm-util { height: 28px; min-width: 30px; padding: 0 9px; border-radius: 999px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06); color: rgba(255,255,255,.66); font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; gap: 3px; }
+#root .mobile-rooms .wvm-util.is-on { background: rgba(126,68,227,.2); border-color: rgba(126,68,227,.5); color: #fff; }
+#root .mobile-rooms .wvm-util--preset { color: #fff; border-color: rgba(255,255,255,.14); background: rgba(255,255,255,.07); letter-spacing: .5px; font-weight: 600; font-size: 10px; }
+
+/* ── Mix — cartes effets simples (iOS simpleEffectCard) ── */
+#root .mobile-rooms .wvm-simple { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-top: 1px; }
+#root .mobile-rooms .wvm-simple-card { border-radius: 16px; border: 1px solid rgba(255,255,255,.09); background: linear-gradient(160deg, rgba(255,255,255,.05), rgba(255,255,255,.02)); overflow: hidden; flex: none; }
+#root .mobile-rooms .wvm-simple-card.is-on { border-color: rgba(126,68,227,.4); }
+#root .mobile-rooms .wvm-simple-card-head { display: flex; align-items: center; gap: 8px; padding: 10px 11px 8px; }
+#root .mobile-rooms .wvm-simple-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.18); flex: none; }
+#root .mobile-rooms .wvm-simple-card.is-on .wvm-simple-dot { background: #2FE6A6; box-shadow: 0 0 6px rgba(47,230,166,.7); }
+#root .mobile-rooms .wvm-simple-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex: none; color: rgba(255,255,255,.62); background: rgba(255,255,255,.06); }
+#root .mobile-rooms .wvm-simple-card.is-on .wvm-simple-icon { color: #C9B3F5; background: rgba(126,68,227,.18); }
+#root .mobile-rooms .wvm-simple-title { flex: 1; font-size: 13px; font-weight: 600; color: rgba(255,255,255,.92); }
+#root .mobile-rooms .wvm-simple-power { width: 26px; height: 26px; border-radius: 50%; border: 0; background: rgba(255,255,255,.09); color: rgba(255,255,255,.4); display: flex; align-items: center; justify-content: center; flex: none; }
+#root .mobile-rooms .wvm-simple-power.is-on { background: #7E44E3; color: #fff; box-shadow: 0 0 10px rgba(126,68,227,.5); }
+#root .mobile-rooms .wvm-simple-card-body { padding: 0 11px 12px; display: flex; flex-direction: column; gap: 8px; }
+#root .mobile-rooms .wvm-tune-fields { display: flex; gap: 8px; }
+#root .mobile-rooms .wvm-tune-field { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+#root .mobile-rooms .wvm-tune-field-label { font-size: 11px; font-weight: 500; color: rgba(255,255,255,.52); padding-left: 2px; }
+#root .mobile-rooms .wvm-tune-field-box { display: flex; align-items: center; gap: 6px; height: 38px; padding: 0 11px; border-radius: 10px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.05); }
+#root .mobile-rooms .wvm-tune-field-value { flex: 1; text-align: left; font-size: 13px; font-weight: 600; color: #fff; }
+#root .mobile-rooms .wvm-tune-field-box svg { color: rgba(255,255,255,.5); flex: none; }
+/* reverb */
+#root .mobile-rooms .wvm-reverb { display: flex; flex-direction: column; gap: 5px; }
+#root .mobile-rooms .wvm-reverb-labels { display: flex; justify-content: space-between; font-size: 10px; font-weight: 500; color: rgba(255,255,255,.46); }
+#root .mobile-rooms .wvm-reverb-track { position: relative; height: 26px; touch-action: none; }
+#root .mobile-rooms .wvm-reverb-track::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); height: 6px; border-radius: 999px; background: rgba(255,255,255,.1); }
+#root .mobile-rooms .wvm-reverb-fill { position: absolute; left: 0; top: 50%; transform: translateY(-50%); height: 6px; background: linear-gradient(90deg, #7E44E3, #B48CF2); border-radius: 999px; }
+#root .mobile-rooms .wvm-reverb-knob { position: absolute; top: 50%; width: 18px; height: 18px; border-radius: 50%; background: #fff; transform: translate(-50%,-50%); box-shadow: 0 2px 6px rgba(0,0,0,.5); }
+/* selector panel */
+#root .mobile-rooms .wvm-selector { border-radius: 16px; border: 1px solid rgba(126,68,227,.3); background: linear-gradient(160deg, #17131f, #0e0c13); overflow: hidden; flex: none; }
+#root .mobile-rooms .wvm-selector-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; }
+#root .mobile-rooms .wvm-selector-title { flex: 1; font-size: 12px; font-weight: 600; color: #fff; }
+#root .mobile-rooms .wvm-selector-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 0 11px 11px; }
+#root .mobile-rooms .wvm-selector-list { display: flex; flex-direction: column; gap: 2px; padding: 0 6px 8px; }
+#root .mobile-rooms .wvm-selector-btn { height: 34px; border-radius: 9px; border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.04); color: rgba(255,255,255,.68); font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+#root .mobile-rooms .wvm-selector-btn.is-active { background: rgba(126,68,227,.3); border-color: rgba(126,68,227,.6); color: #fff; }
+#root .mobile-rooms .wvm-selector-list .wvm-selector-btn { justify-content: flex-start; padding: 0 12px; font-weight: 500; }
+#root .mobile-rooms .wvm-selector-btn--wide { width: 100%; }
+#root .mobile-rooms .wvm-selector-icon { color: #C9B3F5; flex: none; }
+#root .mobile-rooms .wvm-selector-close { width: 24px; height: 24px; border-radius: 50%; border: 0; background: rgba(255,255,255,.08); color: rgba(255,255,255,.6); display: flex; align-items: center; justify-content: center; flex: none; }
+
+/* reverb — l'input range pilote le remplissage + knob visuels */
+#root .mobile-rooms .wvm-reverb-track input[type="range"] { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 2; -webkit-appearance: none; appearance: none; }
+#root .mobile-rooms .wvm-reverb.is-off { opacity: .45; }
+
+/* console Pro */
+#root .mobile-rooms .wvm-pro { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
+
+/* indicateurs de page Traitement/Live */
+#root .mobile-rooms .wvm-pagedots { position: absolute; top: 6px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; z-index: 4; }
+
+/* placeholder caméra coupée (host) */
+#root .mobile-rooms .wv-video-camoff { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: #0a0a0c; color: rgba(255,255,255,.5); z-index: 3; }
+#root .mobile-rooms .wv-video-camoff-label { font-size: 9px; font-weight: 900; letter-spacing: 2px; color: rgba(255,255,255,.42); }
 
 /* ── Mix — page traitement ── */
 #root .mobile-rooms .wvm-page { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 0 16px; }
-#root .mobile-rooms .wvm-treatment { flex: 1.5; min-height: 0; display: flex; gap: 0; padding-top: 8px; }
-#root .mobile-rooms .wvm-strips { display: flex; gap: 14px; align-items: stretch; }
-#root .mobile-rooms .wvm-divider { width: 1px; background: rgba(255,255,255,.08); margin: 4px 12px; flex: none; }
-#root .mobile-rooms .wvm-strip { width: 62px; display: flex; flex-direction: column; align-items: center; gap: 7px; }
-#root .mobile-rooms .wvm-strip-label { font-size: 9px; font-weight: 900; letter-spacing: .8px; color: rgba(255,255,255,.6); }
-#root .mobile-rooms .wvm-strip-body { flex: 1; min-height: 0; display: flex; gap: 8px; align-items: stretch; }
-#root .mobile-rooms .wvm-meter { width: 6px; border-radius: 999px; background: rgba(255,255,255,.06); overflow: hidden; display: flex; align-items: flex-end; }
-#root .mobile-rooms .wvm-meter-fill { width: 100%; background: linear-gradient(to top, #2FE6A6, #00E5FF 65%, #FF2E3B 92%); transition: height .09s linear; }
-#root .mobile-rooms .wvm-fader { position: relative; flex: 1; touch-action: none; }
-#root .mobile-rooms .wvm-fader-track { position: absolute; inset: 0; border-radius: 999px; background: rgba(255,255,255,.06); overflow: hidden; }
+#root .mobile-rooms .wvm-treatment { flex: 1; min-height: 0; display: flex; gap: 0; padding-top: 10px; }
+#root .mobile-rooms .wvm-strips { width: 44%; flex: none; display: flex; justify-content: space-evenly; align-items: stretch; }
+#root .mobile-rooms .wvm-divider { width: 1px; background: rgba(255,255,255,.07); margin: 6px 0 6px 14px; flex: none; }
+#root .mobile-rooms .wvm-strip { width: 46px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+#root .mobile-rooms .wvm-strip-head { display: flex; align-items: center; justify-content: center; gap: 4px; height: 30px; font-size: 11px; font-weight: 600; color: rgba(255,255,255,.86); }
+#root .mobile-rooms .wvm-strip-body { flex: 1; min-height: 0; display: flex; gap: 6px; align-items: stretch; justify-content: center; }
+#root .mobile-rooms .wvm-meter { width: 4px; border-radius: 999px; background: rgba(255,255,255,.06); overflow: hidden; display: flex; align-items: flex-end; }
+#root .mobile-rooms .wvm-meter-fill { width: 100%; background: linear-gradient(to top, rgba(126,68,227,.45), #7E44E3 62%, #E8B86D 84%, #FF2E3B); transition: height .09s linear; }
+#root .mobile-rooms .wvm-fader { position: relative; width: 28px; touch-action: none; }
+#root .mobile-rooms .wvm-fader-track { position: absolute; left: 50%; top: 0; bottom: 0; width: 5px; transform: translateX(-50%); border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; }
 #root .mobile-rooms .wvm-fader-fill { position: absolute; bottom: 0; width: 100%; background: linear-gradient(to top, #7E44E3, #B48CF2); }
-#root .mobile-rooms .wvm-fader-thumb { position: absolute; left: 50%; transform: translate(-50%, 50%); width: 26px; height: 12px; border-radius: 6px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.5); }
-#root .mobile-rooms .wvm-strip-mute { width: 100%; height: 28px; border-radius: 9px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.05); color: rgba(255,255,255,.55); font-size: 8px; font-weight: 900; letter-spacing: .5px; }
-#root .mobile-rooms .wvm-strip-mute.is-on { background: rgba(255,46,59,.18); border-color: rgba(255,46,59,.5); color: #FF2E3B; }
-#root .mobile-rooms .wvm-strip.is-muted { opacity: .6; }
+#root .mobile-rooms .wvm-fader-thumb { position: absolute; left: 50%; transform: translate(-50%, 50%); width: 26px; height: 44px; border-radius: 13px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.55), inset 0 -1px 2px rgba(0,0,0,.12); }
+#root .mobile-rooms .wvm-strip-mute { width: 44px; height: 24px; border-radius: 6px; border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.08); color: rgba(255,255,255,.74); display: flex; align-items: center; justify-content: center; }
+#root .mobile-rooms .wvm-strip-mute.is-on { color: #FF2E3B; border-color: rgba(255,46,59,.4); }
+#root .mobile-rooms .wvm-strip.is-muted .wvm-fader-fill { background: rgba(255,255,255,.14); }
 
 /* ── Mix — colonne FX ── */
-#root .mobile-rooms .wvm-fx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
-#root .mobile-rooms .wvm-fx-util { display: flex; justify-content: flex-end; height: 30px; }
-#root .mobile-rooms .wvm-mode { display: flex; gap: 4px; padding: 3px; border-radius: 10px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); }
-#root .mobile-rooms .wvm-mode-btn { height: 22px; padding: 0 11px; border-radius: 8px; border: 0; background: none; color: rgba(255,255,255,.5); font-size: 8px; font-weight: 900; letter-spacing: .6px; }
-#root .mobile-rooms .wvm-mode-btn.is-active { background: rgba(126,68,227,.4); color: #fff; }
+#root .mobile-rooms .wvm-fx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; padding-left: 14px; }
+#root .mobile-rooms .wvm-fx-util { display: flex; align-items: center; gap: 7px; justify-content: flex-end; height: 30px; flex: none; }
+#root .mobile-rooms .wvm-mode { display: flex; gap: 2px; padding: 2px; border-radius: 999px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); height: 28px; align-items: center; }
+#root .mobile-rooms .wvm-mode-btn { height: 100%; padding: 0 12px; border-radius: 999px; border: 0; background: none; color: rgba(255,255,255,.46); font-size: 12px; font-weight: 500; display: flex; align-items: center; }
+#root .mobile-rooms .wvm-mode-btn.is-active { background: rgba(126,68,227,.55); color: #fff; font-weight: 600; }
 #root .mobile-rooms .wvm-fx-head { display: flex; align-items: center; justify-content: space-between; }
 #root .mobile-rooms .wvm-fx-title { font-size: 8px; font-weight: 900; letter-spacing: 1px; color: #7E44E3; }
 #root .mobile-rooms .wvm-fx-summary { font-size: 7px; font-weight: 900; color: rgba(255,255,255,.42); letter-spacing: .5px; }
@@ -659,19 +714,24 @@
 #root .mobile-rooms .wvm-fx-add { height: 34px; border-radius: 12px; border: 1px dashed rgba(126,68,227,.4); background: rgba(126,68,227,.06); color: #C9B3F5; font-size: 9px; font-weight: 800; }
 
 /* ── Mix — deck ── */
-#root .mobile-rooms .wvm-deck { flex: none; display: flex; flex-direction: column; gap: 6px; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); }
-#root .mobile-rooms .wvm-deck-head { display: flex; align-items: center; gap: 7px; }
-#root .mobile-rooms .wvm-deck-kicker { font-size: 8px; font-weight: 900; letter-spacing: 1px; color: #7E44E3; }
-#root .mobile-rooms .wvm-deck-title { flex: 1; font-size: 10px; font-weight: 700; color: rgba(255,255,255,.66); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#root .mobile-rooms .wvm-deck-loop { width: 26px; height: 26px; border-radius: 8px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.05); color: rgba(255,255,255,.5); display: flex; align-items: center; justify-content: center; }
-#root .mobile-rooms .wvm-deck-loop.is-on { color: #00E5FF; border-color: rgba(0,229,255,.45); background: rgba(0,229,255,.1); }
-#root .mobile-rooms .wvm-deck-wave { position: relative; height: 54px; display: flex; align-items: center; gap: 2px; padding: 0 2px; border-radius: 11px; background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.07); touch-action: none; }
+#root .mobile-rooms .wvm-deck { flex: none; display: flex; flex-direction: column; gap: 7px; margin: 6px 0 calc(8px + env(safe-area-inset-bottom)); padding: 10px 12px 12px; border-radius: 18px; border: 1px solid rgba(255,255,255,.09); background: linear-gradient(160deg, rgba(255,255,255,.045), rgba(255,255,255,.02)); }
+/* transport */
+#root .mobile-rooms .wvm-deck-transport { display: flex; align-items: center; gap: 7px; justify-content: center; }
+#root .mobile-rooms .wvm-tr-prive { height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06); color: rgba(255,255,255,.62); font-size: 12px; font-weight: 500; }
+#root .mobile-rooms .wvm-tr-prive.is-on { background: rgba(126,68,227,.22); border-color: rgba(126,68,227,.5); color: #fff; }
+#root .mobile-rooms .wvm-tr-btn { width: 32px; height: 30px; border-radius: 999px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.05); color: rgba(255,255,255,.68); display: flex; align-items: center; justify-content: center; flex: none; }
+#root .mobile-rooms .wvm-tr-btn.is-on { color: #C9B3F5; border-color: rgba(126,68,227,.5); background: rgba(126,68,227,.16); }
+#root .mobile-rooms .wvm-tr-btn--play { width: 40px; height: 40px; background: #7E44E3; border-color: #7E44E3; color: #fff; box-shadow: 0 3px 12px rgba(126,68,227,.5); }
+#root .mobile-rooms .wvm-tr-btn:disabled { opacity: .45; }
+/* piste principale */
+#root .mobile-rooms .wvm-deck-label { font-size: 11px; font-weight: 600; color: rgba(255,255,255,.5); padding: 0 2px; }
+#root .mobile-rooms .wvm-deck-lane { position: relative; height: 46px; display: flex; align-items: center; gap: 2px; padding: 0 8px; border-radius: 11px; background: rgba(255,255,255,.045); border: 1px solid rgba(255,255,255,.08); touch-action: none; }
 #root .mobile-rooms .wvm-deck-bar { flex: 1; min-width: 2px; border-radius: 2px; background: rgba(255,255,255,.16); }
 #root .mobile-rooms .wvm-deck-bar.is-filled { background: #7E44E3; }
 #root .mobile-rooms .wvm-deck-playhead { position: absolute; top: 4px; bottom: 4px; width: 1.5px; background: #fff; box-shadow: 0 0 6px rgba(255,255,255,.7); }
-#root .mobile-rooms .wvm-deck-foot { display: flex; align-items: center; gap: 9px; }
-#root .mobile-rooms .wvm-deck-play { width: 40px; height: 40px; border-radius: 50%; border: 0; background: #7E44E3; color: #fff; display: flex; align-items: center; justify-content: center; }
-#root .mobile-rooms .wvm-deck-time { font-size: 10px; font-weight: 700; color: rgba(255,255,255,.5); font-variant-numeric: tabular-nums; }
+#root .mobile-rooms .wvm-deck-import { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; color: rgba(255,255,255,.5); font-size: 12px; font-weight: 500; }
+#root .mobile-rooms .wvm-deck-foot { display: flex; align-items: center; justify-content: flex-end; gap: 9px; }
+#root .mobile-rooms .wvm-deck-time { font-size: 10px; font-weight: 600; color: rgba(255,255,255,.42); font-variant-numeric: tabular-nums; }
 
 /* ── Mix — soundboard ── */
 #root .mobile-rooms .wvm-live { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding-top: 10px; }

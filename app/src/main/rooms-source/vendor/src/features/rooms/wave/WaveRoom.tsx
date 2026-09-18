@@ -387,6 +387,12 @@ function WaveVideoSection({ isViewer }: { isViewer: boolean }) {
         playsInline
         muted={muted}
       />
+      {!isViewer && !camOn && (
+        <div className="wv-video-camoff">
+          <VideoOff size={30} strokeWidth={1.8} />
+          <span className="wv-video-camoff-label">CAMERA COUPÉE</span>
+        </div>
+      )}
       <div className={`wv-video-overlay${controlsVisible ? " is-visible" : ""}`}>
         <div className="wv-video-top">
           {isViewer ? (
@@ -548,7 +554,7 @@ export default function WaveRoom({ isViewer = false, roomTitle, onClose }: WaveR
     setVisitedTabs((v) => (v.has(tab) ? v : new Set(v).add(tab)));
   }, []);
 
-  const title = roomTitle ?? WAVE_ROOM.title;
+  const title = WAVE_ROOM.name;
 
   // Viewer sans invitation : l'onglet Mix est désactivé (iOS viewerDisabledTabs)
   const [isGuestOnStage] = useState(false);
