@@ -7,7 +7,7 @@ import {
   useState,
   type MouseEvent,
 } from "react";
-import { ArrowLeft, Plus, Search, SlidersHorizontal, X } from "lucide-react";
+import { ArrowLeft, Heart, History, Plus, Search, SlidersHorizontal, X } from "lucide-react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
@@ -51,6 +51,28 @@ const FORMAT_OPTIONS: ReadonlyArray<{ value: RoomsHomeFormatFilter; label: strin
   { value: "horizontal", label: "Horizontal" },
   { value: "vertical", label: "Vertical" },
 ];
+
+type RoomsFeedScope = "all" | "following" | "recent";
+
+const ROOMS_RECENT_KEY = "meewav:rooms:recent";
+
+const readRecentRoomIds = (): string[] => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(ROOMS_RECENT_KEY) ?? "[]");
+    return Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === "string") : [];
+  } catch { return []; }
+};
+
+const pushRecentRoom = (id: string) => {
+  try {
+    localStorage.setItem(ROOMS_RECENT_KEY, JSON.stringify([id, ...readRecentRoomIds().filter((value) => value !== id)].slice(0, 20)));
+  } catch { /* stockage indisponible */ }
+};
+
+const SCOPE_META: Record<Exclude<RoomsFeedScope, "all">, { label: string; Icon: typeof Heart }> = {
+  following: { label: "Rooms que tu suis", Icon: Heart },
+  recent: { label: "Vues récemment", Icon: History },
+};
 
 const ROOM_TYPE_OPTIONS: ReadonlyArray<{ value: RoomsHomeRoomType; label: string }> = [
   { value: "loge", label: "La Loge" },
@@ -171,14 +193,17 @@ export function RoomsHome({ collectionSlug = null, roomType, onOpenRoom }: Rooms
   const [filterOpen, setFilterOpen] = useState(false);
   const [filters, setFilters] = useState<RoomsHomeFilters>(EMPTY_FILTERS);
   const [draftFilters, setDraftFilters] = useState<RoomsHomeFilters>(EMPTY_FILTERS);
+  const [feedScope, setFeedScope] = useState<RoomsFeedScope>("all");
+  const [recentIds, setRecentIds] = useState<string[]>([]);
   const collection = collectionSlug ? getRoomsHomeCollectionBySlug(collectionSlug) : undefined;
   const isCollectionView = Boolean(collectionSlug);
   const draftFilterCount = filterCount(draftFilters);
   const activeFilterCount = filterCount(filters);
 
   const filteredCatalog = useMemo(
-    () => ROOMS_HOME_CATALOG.filter((room) => room.country === "FR" && (!roomType || room.roomType === roomType) && roomMatchesFilters(room, query, filters)),
-    [filters, query, roomType],
+    () => ROOMS_HOME_CATALOG.filter((room) => room.country === "FR" && (!roomType || room.roomType === roomType) && roomMatchesFilters(room, query, filters)
+      && (feedScope === "following" ? room.isFollowedHost : feedScope === "recent" ? recentIds.includes(room.id) : true)),
+    [filters, query, roomType, feedScope, recentIds],
   );
   const draftResultCount = useMemo(
     () => ROOMS_HOME_CATALOG.filter((room) => room.country === "FR" && (!roomType || room.roomType === roomType) && roomMatchesFilters(room, query, draftFilters)).length,
@@ -335,8 +360,19 @@ export function RoomsHome({ collectionSlug = null, roomType, onOpenRoom }: Rooms
     setDraftFilters(EMPTY_FILTERS);
   };
 
+  useEffect(() => {
+    const onMenu = (event: Event) => {
+      const action = (event as CustomEvent<string>).detail;
+      if (action === "rooms-following") { event.preventDefault(); setRecentIds([]); setFeedScope("following"); }
+      else if (action === "rooms-recent") { event.preventDefault(); setRecentIds(readRecentRoomIds()); setFeedScope("recent"); }
+    };
+    window.addEventListener("meewav:feature-menu", onMenu);
+    return () => window.removeEventListener("meewav:feature-menu", onMenu);
+  }, []);
+
   const openRoom = (room: RoomsHomeRoom) => {
     savePosition();
+    pushRecentRoom(room.id);
     onOpenRoom?.(room);
   };
 
@@ -451,6 +487,13 @@ export function RoomsHome({ collectionSlug = null, roomType, onOpenRoom }: Rooms
         ) : null}
       </header>
 
+      {!isCollectionView && feedScope !== "all" ? (
+        <div className="rooms-home__scope" role="status">
+          {(() => { const { Icon, label } = SCOPE_META[feedScope]; return <><Icon aria-hidden="true" size={13} /><span>{label} · {filteredCatalog.length} Room{filteredCatalog.length > 1 ? "s" : ""}</span></>; })()}
+          <button type="button" aria-label="Tout afficher" onClick={() => setFeedScope("all")}><X aria-hidden="true" size={13} /></button>
+        </div>
+      ) : null}
+
       {!isCollectionView && activeFilterChips.length > 0 ? (
         <div className="rooms-home__active-filters">
           <MeewavActiveFilterChips filters={activeFilterChips} onClear={resetAllFilters} />
@@ -510,7 +553,13 @@ export function RoomsHome({ collectionSlug = null, roomType, onOpenRoom }: Rooms
             />
           ))}
           {rails.some(({ items }) => items.length > 0) ? null : (
-            <div className="rooms-home__empty" role="status">Aucune Room avec ces critères. Essaie un autre format ou efface les filtres.</div>
+            <div className="rooms-home__empty" role="status">
+              {feedScope === "recent"
+                ? "Tu n'as pas encore ouvert de Room — tes dernières visites apparaîtront ici."
+                : feedScope === "following"
+                  ? "Tu ne suis aucune Room pour le moment."
+                  : "Aucune Room avec ces critères. Essaie un autre format ou efface les filtres."}
+            </div>
           )}
         </main>
       )}

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, 
 import {
   AudioLines,
   BookOpen,
+  Camera,
   Check,
   CheckCircle2,
   ChevronDown,
@@ -14,7 +15,9 @@ import {
   Lock,
   Mic,
   Music,
+  RefreshCw,
   Rocket,
+  ShieldCheck,
   SlidersHorizontal,
   Swords,
   Timer,
@@ -771,8 +774,8 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
           <div><dt>Monétisation</dt><dd>{monetization ? "Activée" : "Désactivée"}</dd></div>
         </dl>
       </div>
-      <button type="button" className="launch-btn launch-btn--golive" style={{ background: `linear-gradient(135deg, ${accent}, ${accent}cc)` }} onClick={() => setLaunching(true)}>
-        GO EN LIVE <Rocket aria-hidden="true" size={18} />
+      <button type="button" className="launch-btn launch-btn--golive" style={{ background: `linear-gradient(135deg, ${accent}, ${accent}cc)` }} onClick={() => goToStep(3)}>
+        Entrer dans la Green Room <Rocket aria-hidden="true" size={18} />
       </button>
       <button type="button" className="launch-btn--skip" onClick={() => setStep(1)}>← Retour au Check-up</button>
     </div>
@@ -808,10 +811,14 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
         <span className={step === 1 ? "is-active" : ""}>2. CHECK-UP</span>
         <ChevronRight size={16} />
         <span className={step === 2 ? "is-active" : ""}>3. ACCÈS</span>
+        <ChevronRight size={16} />
+        <span className={step === 3 ? "is-active" : ""}>4. GREEN ROOM</span>
       </div>
 
       <div className="launch-room-sheet__body">
-        {step === 0 ? renderIdentity() : step === 1 ? renderCheckup() : renderGoLive()}
+        {step === 0 ? renderIdentity() : step === 1 ? renderCheckup() : step === 2 ? renderGoLive() : (
+          <GreenHouse roomLabel={roomLabel} accent={accent} onBack={() => setStep(2)} onReady={() => setLaunching(true)} />
+        )}
         {step === 0 ? (
           <div className="launch-actions">
             <span />
@@ -895,6 +902,225 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
 }
 
 const LAUNCH_TRANSITION_MS = 2200;
+
+/* Green Room privée — réglages finaux avant le direct (port de place/GreenHouse.tsx du web). */
+function GreenHouse({ roomLabel, accent, onBack, onReady }: { roomLabel: string; accent: string; onBack: () => void; onReady: () => void }) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const contextRef = useRef<AudioContext | null>(null);
+  const meterTimerRef = useRef(0);
+  const mountedRef = useRef(true);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [level, setLevel] = useState(0);
+  const [heard, setHeard] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
+  const [latency, setLatency] = useState<number | null>(null);
+  const [online, setOnline] = useState(() => (typeof navigator === "undefined" ? true : navigator.onLine !== false));
+  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+  const [cameraId, setCameraId] = useState("");
+  const [microphoneId, setMicrophoneId] = useState("");
+  const [devicesChanged, setDevicesChanged] = useState(false);
+  const [tracksValid, setTracksValid] = useState(false);
+
+  const ready = Boolean(stream && tracksValid && !devicesChanged && online && latency !== null && latency < 1500 && heard && confirmed);
+
+  const stopPreview = useCallback(() => {
+    if (meterTimerRef.current) window.clearInterval(meterTimerRef.current);
+    meterTimerRef.current = 0;
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+    void contextRef.current?.close().catch(() => undefined);
+    contextRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    const syncNetwork = () => { setOnline(navigator.onLine !== false); setLatency(null); };
+    window.addEventListener("offline", syncNetwork);
+    window.addEventListener("online", syncNetwork);
+    const onDeviceChange = () => { setDevicesChanged(true); setConfirmed(false); };
+    navigator.mediaDevices?.addEventListener?.("devicechange", onDeviceChange);
+    return () => {
+      mountedRef.current = false;
+      stopPreview();
+      window.removeEventListener("offline", syncNetwork);
+      window.removeEventListener("online", syncNetwork);
+      navigator.mediaDevices?.removeEventListener?.("devicechange", onDeviceChange);
+    };
+  }, [stopPreview]);
+
+  useEffect(() => {
+    if (!stream || !videoRef.current) return;
+    videoRef.current.srcObject = stream;
+    void videoRef.current.play().catch(() => undefined);
+    const check = () => setTracksValid(stream.getTracks().length >= 2 && stream.getTracks().every((track) => track.readyState === "live" && track.enabled && !track.muted));
+    check();
+    stream.getTracks().forEach((track) => { track.addEventListener("ended", check); track.addEventListener("mute", check); track.addEventListener("unmute", check); });
+    try {
+      const context = new AudioContext();
+      contextRef.current = context;
+      const analyser = context.createAnalyser();
+      analyser.fftSize = 256;
+      context.createMediaStreamSource(stream).connect(analyser);
+      const samples = new Uint8Array(analyser.fftSize);
+      meterTimerRef.current = window.setInterval(() => {
+        analyser.getByteTimeDomainData(samples);
+        const rms = Math.sqrt(samples.reduce((sum, value) => sum + ((value - 128) / 128) ** 2, 0) / samples.length);
+        setLevel(Math.min(100, Math.round(rms * 400)));
+      }, 80);
+    } catch { /* vumètre indisponible */ }
+    return () => {
+      stream.getTracks().forEach((track) => { track.removeEventListener("ended", check); track.removeEventListener("mute", check); track.removeEventListener("unmute", check); });
+    };
+  }, [stream]);
+
+  const testConnection = useCallback(async () => {
+    setLatency(null);
+    setError("");
+    try {
+      const start = performance.now();
+      const response = await fetch("index.html", { cache: "no-store", signal: AbortSignal.timeout(5000) });
+      if (!response.ok || navigator.onLine === false) throw new Error();
+      if (mountedRef.current) setLatency(Math.round(performance.now() - start));
+    } catch {
+      if (mountedRef.current) setError("Connexion non validée. Vérifie ton réseau et relance le test.");
+    }
+  }, []);
+
+  const start = useCallback(async () => {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    setConfirmed(false);
+    setHeard(false);
+    stopPreview();
+    setStream(null);
+    setTracksValid(false);
+    try {
+      const next = await navigator.mediaDevices.getUserMedia({
+        video: cameraId ? { deviceId: { ideal: cameraId } } : true,
+        audio: microphoneId ? { deviceId: { ideal: microphoneId } } : true,
+      });
+      if (!mountedRef.current) { next.getTracks().forEach((track) => track.stop()); return; }
+      streamRef.current = next;
+      setStream(next);
+      setDevicesChanged(false);
+      const available = await navigator.mediaDevices.enumerateDevices();
+      if (!mountedRef.current) return;
+      setDevices(available);
+      void testConnection();
+    } catch {
+      if (mountedRef.current) setError("Caméra ou micro inaccessible. Autorise leur accès, vérifie qu'ils sont disponibles, puis réessaie.");
+    } finally {
+      if (mountedRef.current) setBusy(false);
+    }
+  }, [busy, cameraId, microphoneId, stopPreview, testConnection]);
+
+  const playTone = useCallback(async () => {
+    const context = new AudioContext();
+    await context.resume();
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    gain.gain.setValueAtTime(0.06, context.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.6);
+    oscillator.frequency.value = 440;
+    oscillator.connect(gain).connect(context.destination);
+    oscillator.start();
+    oscillator.stop(context.currentTime + 0.65);
+    oscillator.onended = () => { void context.close(); };
+  }, []);
+
+  const videoInputs = devices.filter((device) => device.kind === "videoinput");
+  const audioInputs = devices.filter((device) => device.kind === "audioinput");
+
+  return (
+    <section className="green-house" aria-label="Green Room privée">
+      <div className="green-house__head">
+        <span className="green-house__mark" style={{ background: `${accent}1f`, color: accent }}><ShieldCheck aria-hidden="true" size={18} /></span>
+        <div>
+          <small style={{ color: accent }}>GREEN ROOM · PRIVÉ</small>
+          <strong>Tes réglages avant le direct</strong>
+          <p>Ton aperçu reste sur cet appareil.</p>
+        </div>
+      </div>
+
+      <div className="green-house__preview">
+        {stream ? <video ref={videoRef} autoPlay muted playsInline /> : <div className="green-house__placeholder"><Camera aria-hidden="true" size={26} /><span>Cadre ton image, trouve ton son.</span></div>}
+        <span className="green-house__private">Aperçu privé</span>
+      </div>
+
+      <button type="button" className="green-house__start" style={{ borderColor: `${accent}55`, color: accent }} disabled={busy} onClick={() => void start()}>
+        <RefreshCw aria-hidden="true" size={15} />
+        {busy ? "Vérification…" : stream ? "Relancer les vérifications" : "Activer caméra et micro"}
+      </button>
+
+      {devices.length > 0 ? (
+        <div className="launch-selectors">
+          <LaunchSelect
+            label="Caméra"
+            value={cameraId}
+            options={[{ value: "", label: "Par défaut" }, ...videoInputs.map((device, index) => ({ value: device.deviceId, label: device.label || `Caméra ${index + 1}` }))]}
+            onChange={(value) => { setCameraId(value); setDevicesChanged(true); setConfirmed(false); }}
+          />
+          <LaunchSelect
+            label="Microphone"
+            value={microphoneId}
+            options={[{ value: "", label: "Par défaut" }, ...audioInputs.map((device, index) => ({ value: device.deviceId, label: device.label || `Microphone ${index + 1}` }))]}
+            onChange={(value) => { setMicrophoneId(value); setDevicesChanged(true); setConfirmed(false); }}
+          />
+        </div>
+      ) : null}
+      {devices.length > 0 ? <p className="launch-hint">Relance les vérifications après un changement de périphérique.</p> : null}
+
+      <div className="green-house__checks">
+        <article>
+          <Mic aria-hidden="true" size={16} style={{ color: accent }} />
+          <strong>Ton micro</strong>
+          <div className="green-house__meter"><span style={{ width: `${level}%`, background: level > 85 ? "#ff6d6d" : accent }} /></div>
+          <span className="green-house__note">Parle : le niveau doit bouger.</span>
+        </article>
+        <article>
+          <Wifi aria-hidden="true" size={16} style={{ color: online ? accent : "#ff6d6d" }} />
+          <strong>Ta connexion</strong>
+          <b>{!online ? "Hors ligne" : latency === null ? "À tester" : `${latency} ms`}</b>
+          <span className="green-house__note">Réseau {latency !== null && latency < 1500 ? "disponible" : "à vérifier"}</span>
+          <button type="button" onClick={() => void testConnection()}>Retester</button>
+        </article>
+      </div>
+
+      <button type="button" className="green-house__sound" onClick={() => void playTone().catch(() => setError("La sortie audio est indisponible."))}>
+        <Headphones aria-hidden="true" size={16} />
+        Tester le son du casque
+      </button>
+
+      <label className="green-house__confirm">
+        <input type="checkbox" checked={heard} onChange={(event) => setHeard(event.target.checked)} />
+        <span>J'entends le son et mon micro réagit.</span>
+      </label>
+      <label className="green-house__confirm">
+        <input type="checkbox" checked={confirmed} disabled={!stream || devicesChanged} onChange={(event) => setConfirmed(event.target.checked)} />
+        <span>Mon cadrage et mon niveau sonore sont prêts.</span>
+      </label>
+
+      {error ? <p role="alert" className="green-house__error">{error}</p> : null}
+
+      <div className="launch-actions">
+        <button type="button" className="launch-btn launch-btn--ghost" onClick={onBack}>Précédent</button>
+        <button
+          type="button"
+          className="launch-btn launch-btn--golive"
+          disabled={!ready || busy}
+          style={ready ? { background: `linear-gradient(135deg, ${accent}, ${accent}cc)` } : undefined}
+          onClick={onReady}
+        >
+          Ouvrir {roomLabel} <Rocket aria-hidden="true" size={18} />
+        </button>
+      </div>
+    </section>
+  );
+}
 
 function LaunchVinylTransition({ roomLabel, onCancel, onComplete }: { roomLabel: string; onCancel: () => void; onComplete: () => void }) {
   const cancelledRef = useRef(false);

@@ -1,19 +1,32 @@
 import React, { Component, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
-import { ClipboardList, Heart, History, Menu, Package, Settings, ShoppingCart, Undo2, X } from 'lucide-react';
+import { ClipboardList, Crown, Heart, History, Menu, Package, Settings, ShoppingCart, Undo2, X } from 'lucide-react';
 import FeatureDock from './FeatureDock';
 import { configure, updateToken, type MobileConfig } from '../profile-source/runtime';
 
 const native = (destination: string, route?: string) => location.assign(`https://appassets.androidplatform.net/native/${destination}${route ? `?route=${encodeURIComponent(route)}` : ''}`);
-const FEATURE_MENU_ITEMS = [
-  { action: 'transactions', label: 'Historique des transactions', icon: History },
-  { action: 'orders', label: 'Mes commandes', icon: Package },
-  { action: 'listings', label: 'Mes annonces', icon: ClipboardList },
-  { action: 'favorites', label: 'Mes favoris', icon: Heart },
-  { action: 'cart', label: 'Mon panier', icon: ShoppingCart },
-  { action: 'settings', label: 'Réglages', icon: Settings },
-] as const;
+const FEATURE_MENU_ITEMS = {
+  market: [
+    { action: 'transactions', label: 'Historique des transactions', icon: History },
+    { action: 'orders', label: 'Mes commandes', icon: Package },
+    { action: 'listings', label: 'Mes annonces', icon: ClipboardList },
+    { action: 'favorites', label: 'Mes favoris', icon: Heart },
+    { action: 'cart', label: 'Mon panier', icon: ShoppingCart },
+    { action: 'settings', label: 'Réglages', icon: Settings },
+  ],
+  scene: [
+    { action: 'scene-favorites', label: 'Mes favoris', icon: Heart },
+    { action: 'scene-history', label: 'Historique de visionnage', icon: History },
+    { action: 'settings', label: 'Réglages', icon: Settings },
+  ],
+  rooms: [
+    { action: 'rooms-mine', label: 'Mes Rooms', icon: Crown },
+    { action: 'rooms-following', label: 'Rooms que je suis', icon: Heart },
+    { action: 'rooms-recent', label: 'Vues récemment', icon: History },
+    { action: 'settings', label: 'Réglages', icon: Settings },
+  ],
+} as const;
 export function mountFeature(id: 'market' | 'scene' | 'rooms', title: string, load: () => Promise<{ default: React.ComponentType }>) {
   function Shell({ Page }: { Page: React.ComponentType }) {
     const route = useLocation(), navigate = useNavigate();
@@ -61,7 +74,7 @@ export function mountFeature(id: 'market' | 'scene' | 'rooms', title: string, lo
       {menuOpen && <>
         <button className="mobile-feature-menu-backdrop" aria-hidden="true" tabIndex={-1} onClick={() => setMenuOpen(false)} />
         <nav className="mobile-feature-menu" aria-label="Menu rapide">
-          {FEATURE_MENU_ITEMS.map(item => <button key={item.action} type="button" role="menuitem" onClick={() => menuAction(item.action)}><item.icon aria-hidden="true" /><span>{item.label}</span></button>)}
+          {FEATURE_MENU_ITEMS[id].map(item => <button key={item.action} type="button" role="menuitem" onClick={() => menuAction(item.action)}><item.icon aria-hidden="true" /><span>{item.label}</span></button>)}
           <button type="button" role="menuitem" className="mobile-feature-menu__back" onClick={() => menuAction('back')}><Undo2 aria-hidden="true" /><span>Retour</span></button>
         </nav>
       </>}
