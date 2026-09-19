@@ -8,6 +8,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -548,7 +552,7 @@ private fun WaveChatSocialRail(
     onReturnToLive: () -> Unit,
 ) {
     var menuOpen by remember { mutableStateOf(false) }
-    Column(
+    BoxWithConstraints(
         modifier
             .clip(RoundedCornerShape(14.dp))
             .background(
@@ -557,7 +561,10 @@ private fun WaveChatSocialRail(
                 )
             )
             .border(0.7.dp, white(0.10f), RoundedCornerShape(14.dp))
-            .padding(vertical = 8.dp),
+    ) {
+    Column(
+        Modifier.fillMaxWidth().verticalScroll(rememberScrollState())
+            .heightIn(min = maxHeight).padding(vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceEvenly
     ) {
@@ -591,6 +598,7 @@ private fun WaveChatSocialRail(
         ChatRailItem(icon = WaveIcons.Star, tint = Color(0xFFF3BF49), value = "86")
         ChatRailItem(icon = WaveIcons.Heart, tint = Color(0xFFFF64AA), value = "1,2k")
         ChatRailItem(icon = WaveIcons.Eye, tint = Color(0xFF9A63FF), value = "312")
+    }
     }
 }
 
@@ -724,15 +732,15 @@ private fun WaveChatComposer(
         Modifier
             .fillMaxWidth()
             .padding(horizontal = 3.dp)
-            .height(52.dp),
+            .height(52.dp)
+            .chatComposerGlass(focused = focused),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(0.dp),
     ) {
         Row(
             Modifier
                 .weight(1f)
                 .height(50.dp)
-                .chatComposerGlass(focused = focused)
                 .padding(start = 16.dp, end = 2.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -777,16 +785,15 @@ private fun WaveChatComposer(
         }
         Box(
             Modifier
-                .size(48.dp)
-                .chatComposerGlass(key = true, focused = focused || emojiOpen)
-                .clip(RoundedCornerShape(16.dp))
+                .size(44.dp)
+                .clip(CircleShape)
                 .clickable(enabled = canSend, onClick = onSend),
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                WaveIcons.Send, "Envoyer",
-                tint = if (focused || emojiOpen) Color(0xFFE3DDFF) else Color(0xFFBDBDCE),
-                modifier = Modifier.size(21.dp)
+                WaveIcons.Envelope, "Envoyer",
+                tint = WaveMixerTheme.capsuleAccentSoft.copy(alpha = if (canSend) 1f else .48f),
+                modifier = Modifier.size(23.dp)
             )
         }
     }

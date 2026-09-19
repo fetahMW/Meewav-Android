@@ -26,6 +26,8 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -50,6 +52,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -59,6 +62,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.viewinterop.AndroidView
@@ -86,6 +91,8 @@ enum class WaveTab(val label: String, val icon: ImageVector) {
 
 @Composable
 fun WaveMixerScreen(onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
     var activeTab by remember { mutableStateOf(WaveTab.MIXEUR) }
     // Canaux.
     var micGain by remember { mutableStateOf(0.72f) }
@@ -197,9 +204,17 @@ fun WaveMixerScreen(onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
     var showLeaveConfirm by remember { mutableStateOf(false) }
 
     Box(Modifier.fillMaxSize().mixerSurfaceBackground()) {
-        Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
+        BoxWithConstraints(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().imePadding()) {
+        // Insets follow the Samsung IME animation directly, with no second animation.
+        // Crop the existing preview only when Chat needs room; keep the video mounted.
+        val fullVideoHeight = maxWidth * 9f / 16f
+        val videoViewportHeight = if (activeTab == WaveTab.CHAT)
+            (maxHeight - 305.dp).coerceIn(0.dp, fullVideoHeight) else fullVideoHeight
+        Column(Modifier.fillMaxSize()) {
             WaveHeader(title = "Freestyle session — Luma invite", onBack = { showLeaveConfirm = true }, onClose = { showLeaveConfirm = true })
-            WaveVideo(cameraOff = true)
+            Box(Modifier.fillMaxWidth().height(videoViewportHeight).clipToBounds()) {
+                WaveVideo(cameraOff = true, modifier = Modifier.requiredHeight(fullVideoHeight))
+            }
             // Zone grise du mixeur : couvre la barre d'onglets ET le corps.
             Column(
                 Modifier
@@ -209,7 +224,13 @@ fun WaveMixerScreen(onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
             ) {
                 WaveTabBar(
                     active = activeTab,
-                    onSelect = { activeTab = it },
+                    onSelect = {
+                        if (it != WaveTab.CHAT) {
+                            focusManager.clearFocus()
+                            keyboardController?.hide()
+                        }
+                        activeTab = it
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp)
@@ -255,6 +276,7 @@ fun WaveMixerScreen(onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
                 }
                 }
             }
+        }
         }
         if (showLeaveConfirm) {
             AlertDialog(
@@ -378,7 +400,7 @@ private fun HeaderCounter(value: String, tint: Color? = null, icon: ImageVector?
 /* ------------------------------------------------------------------------- */
 
 @Composable
-private fun WaveVideo(cameraOff: Boolean) {
+private fun WaveVideo(cameraOff: Boolean, modifier: Modifier = Modifier) {
     // Chronomètre fictif qui défile depuis l'ouverture de l'écran.
     var elapsed by remember { mutableStateOf(12L * 60L + 47L) }
     LaunchedEffect(Unit) {
@@ -387,7 +409,7 @@ private fun WaveVideo(cameraOff: Boolean) {
     val clock = "%02d:%02d:%02d".format(elapsed / 3600, (elapsed % 3600) / 60, elapsed % 60)
 
     Box(
-        Modifier
+        modifier
             .fillMaxWidth()
             .aspectRatio(16f / 9f)
             .padding(0.dp)

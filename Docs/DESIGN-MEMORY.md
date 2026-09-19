@@ -254,3 +254,10 @@ Compilation de livraison uniquement ; rendu à valider par l'utilisateur.
 - Remplace le double conteneur du composer web par une seule capsule gris translucide et une touche d'envoi distincte.
 - Envoi violet basé sur capsuleAccent (#7E44E3), suppression du dégradé bleu électrique.
 - Rail d'indicateurs affiné, indicateurs répartis régulièrement en hauteur sans séparateurs superflus.
+
+### Saisie chat et clavier Samsung — 19 septembre 2026
+- Capsule de saisie étendue sur toute la largeur ; enveloppe violette intégrée, sans bouton carré externe.
+- La Wave consomme les insets du clavier avec imePadding, après ceux de navigation, sans seconde animation.
+- En Chat, le retour vidéo reste monté à sa taille d'origine mais sa fenêtre se réduit si nécessaire pour laisser place aux messages et au champ. Retour au cadrage normal à la fermeture du clavier.
+- Rail défilable quand la hauteur disponible diminue ; quitter Chat replie le clavier.
+- Compilation de livraison ; comportement visuel à apprécier sur Samsung par l'utilisateur.
