@@ -312,3 +312,8 @@ Compilation de livraison uniquement ; rendu à valider par l'utilisateur.
 - Suivi automatique actif à l'ouverture ; le défilement manuel le suspend et révèle Revenir au direct. Les nouveaux messages restent reçus.
 - Exemple de don de KÉO (10 euros) dans la cloche ; notifications toujours de démonstration locale.
 
+
+### Navigation secondaire des invités
+- Demandes à gauche, Coulisses au centre, Scène à droite. Coulisses reste l'ouverture par défaut.
+- Libellés et compteurs discrets sans châssis ni capsules, fin repère violet fondu ; cibles tactiles 44 dp conservées.
+

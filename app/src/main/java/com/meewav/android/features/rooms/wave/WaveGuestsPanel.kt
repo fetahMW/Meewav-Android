@@ -123,23 +123,30 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
     } }
     val selectedGuests = shown.filter { it.id in state.selected }
     DisposableEffect(Unit) { onDispose { state.cancelDrag(); state.backstageBounds = androidx.compose.ui.geometry.Rect.Zero } }
-    Column(modifier.padding(top = 10.dp, bottom = 8.dp)) {
-        Row(Modifier.fillMaxWidth().hifiBlackSurface(14.dp).padding(3.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-            listOf("Coulisses", "Invitations", "Scène").forEachIndexed { index, title ->
+    Column(modifier.padding(top = 2.dp, bottom = 8.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            listOf(1 to "Demandes", 0 to "Coulisses", 2 to "Scène").forEach { (index, title) ->
                 val count = state.guests.count { when(index) {
                     0 -> it.location == WaveGuestLocation.BACKSTAGE
                     1 -> it.location == WaveGuestLocation.INVITED || it.location == WaveGuestLocation.REQUESTED
                     else -> it.location == WaveGuestLocation.STAGE
                 } }
-                Box(Modifier.weight(1f).height(42.dp).clip(RoundedCornerShape(11.dp))
-                    .then(if (index == page) Modifier.activeCapsule(11.dp) else Modifier)
+                Box(Modifier.weight(1f).height(44.dp).clip(RoundedCornerShape(8.dp))
                     .clickable { page = index; state.selected = emptySet() }, contentAlignment = Alignment.Center) {
-                    Text("$title · $count", fontSize = 11.sp, color = Color.White.copy(alpha = if (page == index) 1f else .55f))
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                        Text(title, fontSize = 11.sp, fontWeight = if (page == index) FontWeight.SemiBold else FontWeight.Normal,
+                            color = Color.White.copy(alpha = if (page == index) .95f else .5f))
+                        Text(count.toString(), fontSize = 9.sp, color = if (page == index) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .35f))
+                    }
+                    if (page == index) Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 5.dp)
+                        .width(32.dp).height(2.dp).background(
+                            androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(Color.Transparent, WaveMixerTheme.capsuleAccentSoft, Color.Transparent)),
+                            RoundedCornerShape(50)))
                 }
             }
         }
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(if (page == 0) "Glisse un invité vers la vidéo" else if (page == 2) "3 invités maximum sur scène" else "Invitations et demandes du public",
+            Text(if (page == 0) "Glisse un invité vers la vidéo" else if (page == 2) "3 invités maximum sur scène" else "Demandes de participation",
                 modifier = Modifier.weight(1f), color = Color.White.copy(alpha = .48f), fontSize = 11.sp)
             TextButton(onClick = { inviteOpen = true }) { Text("+ Inviter", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 12.sp) }
         }
