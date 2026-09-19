@@ -278,3 +278,8 @@ Compilation de livraison uniquement ; rendu à valider par l'utilisateur.
 - Saisie native EditText avec ImageSpan : les assets Meewav remplacent visuellement les références [[mw:...]], un caractère éditable par image, insertion à la sélection et envoi sérialisé compatible avec les messages existants.
 - Conservation de la composition IME quand le brouillon ne change pas, limite de 1000 caractères sérialisés. Aucun remplacement du brouillon pendant une simple recomposition Compose.
 - Compilation de livraison, sans QA automatique.
+
+### Outils Wave : mise en avant et formats binaires — 19 septembre 2026
+- Ajout de Mise en avant : choix parmi les messages du host, snapshot fixé hors du flux défilant, sans expiration, conservé au niveau de l'écran lors des changements d'onglets. Retrait/remplacement explicite ; suppression du message épinglé le retire aussi du bandeau.
+- Émojis rendus dans le bandeau et dans la liste de sélection. Message long résumé sur deux lignes ; intégralité disponible dans Mise en avant.
+- Sondages : exactement Oui/Non, Pour/Contre, Pouce vers le haut/Pouce vers le bas (icônes bleues). Suppression du choix multiple et des notes 5/10. Démo locale inchangée, pas de vote serveur.

@@ -168,7 +168,7 @@ private val emojiTokenRegex = Regex("\\[\\[mw:([a-z0-9-]+)\\]\\]")
 
 /* Rend [[mw:name]] en image inline (MeeWavRichText web). */
 @Composable
-private fun chatAnnotatedText(content: String): Pair<AnnotatedString, Map<String, InlineTextContent>> {
+internal fun chatAnnotatedText(content: String): Pair<AnnotatedString, Map<String, InlineTextContent>> {
     val inline = mutableMapOf<String, InlineTextContent>()
     val text = buildAnnotatedString {
         var last = 0
@@ -198,7 +198,11 @@ private fun messageClock(ms: Long): String =
     java.text.SimpleDateFormat("HH:mm", java.util.Locale.FRANCE).format(java.util.Date(ms))
 
 @Composable
-fun WaveChatPanel(modifier: Modifier = Modifier) {
+fun WaveChatPanel(
+    modifier: Modifier = Modifier,
+    pinnedMessage: WaveChatMessage? = null,
+    onPinMessage: (WaveChatMessage?) -> Unit = {},
+) {
     val now = remember { System.currentTimeMillis() }
     val mountedAt = remember { System.currentTimeMillis() }
     var nextId by remember { mutableLongStateOf(9L) }
@@ -276,8 +280,27 @@ fun WaveChatPanel(modifier: Modifier = Modifier) {
     }
 
     BoxWithConstraints(modifier.fillMaxSize().padding(bottom = 6.dp)) {
-        val emojiWallHeight = (maxHeight - 110.dp).coerceIn(92.dp, 220.dp)
+        val emojiWallHeight = (maxHeight - 110.dp - if (pinnedMessage != null) 86.dp else 0.dp).coerceIn(92.dp, 220.dp)
         Column(Modifier.fillMaxSize()) {
+            pinnedMessage?.let { pinned ->
+                Row(
+                    Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 6.dp)
+                        .hifiBlackSurface(12.dp).clip(RoundedCornerShape(12.dp))
+                        .clickable { toolsOpen = true }.padding(start = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f).padding(vertical = 8.dp)) {
+                        Text("Mise en avant · ${pinned.userName}", color = chatAccent, fontSize = 10.sp,
+                            fontWeight = FontWeight.SemiBold)
+                        val (text, images) = chatAnnotatedText(pinned.content)
+                        Text(text, inlineContent = images, color = chatTextWhite, fontSize = 12.sp,
+                            maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                    }
+                    Box(Modifier.size(44.dp).clickable { onPinMessage(null) }, contentAlignment = Alignment.Center) {
+                        Icon(WaveIcons.Close, "Retirer la mise en avant", tint = white(.6f), modifier = Modifier.size(16.dp))
+                    }
+                }
+            }
             Row(Modifier.weight(1f).fillMaxWidth()) {
                 Box(Modifier.weight(1f).fillMaxSize()) {
                     LazyColumn(
@@ -378,6 +401,9 @@ fun WaveChatPanel(modifier: Modifier = Modifier) {
                 },
                 onStop = { livePoll = livePoll?.copy(endsAt = System.currentTimeMillis()) },
                 onNewPoll = { livePoll = null },
+                hostMessages = messages.filter { it.isHost && !it.isSystem },
+                pinnedMessage = pinnedMessage,
+                onPin = onPinMessage,
             )
         }
 
@@ -386,8 +412,9 @@ fun WaveChatPanel(modifier: Modifier = Modifier) {
             WaveMessageActionSheet(
                 message = msg,
                 onDismiss = { actionMessage = null },
-                onPin = { actionMessage = null },
+                onPin = { if (msg.isHost) onPinMessage(msg); actionMessage = null },
                 onDelete = {
+                    if (pinnedMessage?.id == msg.id) onPinMessage(null)
                     messages = messages.filter { it.id != msg.id }
                     actionMessage = null
                 }
@@ -678,7 +705,7 @@ private fun WaveMessageActionSheet(
                 )
             }
             ChatSheetDivider()
-            SheetAction(label = "Épingler le message", accent = chatAccent, onClick = onPin)
+            if (message.isHost) SheetAction(label = "Mettre en avant", accent = chatAccent, onClick = onPin)
             SheetAction(label = "Supprimer le message", accent = Color(0xFFFF536C), onClick = onDelete)
             ChatSheetDivider()
             SheetAction(label = "Mode lent · @${message.userName} (30 s)", onClick = onDismiss)

@@ -94,6 +94,8 @@ fun WaveMixerScreen(onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     var activeTab by remember { mutableStateOf(WaveTab.MIXEUR) }
+    // Keep the highlighted snapshot even if the live feed trims old messages or tabs change.
+    var pinnedChatMessage by remember { mutableStateOf<WaveChatMessage?>(null) }
     // Canaux.
     var micGain by remember { mutableStateOf(0.72f) }
     var audioGain by remember { mutableStateOf(0.62f) }
@@ -271,7 +273,10 @@ fun WaveMixerScreen(onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
                         onRemoveLane = { if (extraLaneCount > 0) extraLaneCount-- },
                         onImportPack = onImport,
                     )
-                    WaveTab.CHAT -> WaveChatPanel(Modifier.fillMaxSize())
+                    WaveTab.CHAT -> WaveChatPanel(
+                        Modifier.fillMaxSize(), pinnedMessage = pinnedChatMessage,
+                        onPinMessage = { pinnedChatMessage = it },
+                    )
                     else -> WaveTabPlaceholder(activeTab)
                 }
                 }
