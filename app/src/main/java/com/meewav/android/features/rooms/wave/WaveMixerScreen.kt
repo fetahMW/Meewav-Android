@@ -1055,10 +1055,14 @@ private fun MixerDeck(
                     maxLines = 1
                 )
                 if (hasTrack) Text(musicLabel, color = WaveMixerTheme.capsuleAccentSoft, fontSize = 9.sp, maxLines = 1)
-                Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.width(12.dp))
                 if (hasTrack) {
                     Text(
                         "${formatTrackTime((trackDurationMs * playProgress).toLong())} / ${formatTrackTime(trackDurationMs)}",
+                        modifier = Modifier.width(88.dp),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.End,
+                        style = androidx.compose.ui.text.TextStyle(fontFeatureSettings = "tnum"),
+                        maxLines = 1,
                         color = WaveMixerTheme.secondary, fontSize = 10.sp,
                         fontWeight = FontWeight.Medium, fontFamily = WaveMixerTheme.fontFamily
                     )
