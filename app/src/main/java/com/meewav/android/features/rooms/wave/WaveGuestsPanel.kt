@@ -174,7 +174,8 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
         Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             if (multiSelect || state.selected.isNotEmpty()) {
-                Row(Modifier.weight(1f).height(40.dp).hifiBlackSurface(12.dp)
+                Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                Row(Modifier.height(32.dp).hifiBlackSurface(12.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .border(1.dp, WaveMixerTheme.capsuleAccentSoft.copy(alpha = .45f), RoundedCornerShape(12.dp))
                     .clickable { state.selected = emptySet(); multiSelect = false }
@@ -183,6 +184,7 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                     Icon(Icons.Filled.CheckBox, null, tint = WaveMixerTheme.capsuleAccentSoft, modifier = Modifier.size(18.dp))
                     Text("Annuler la sélection", color = Color.White, fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold, maxLines = 1)
+                }
                 }
             } else if (page == 1) {
                 Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
