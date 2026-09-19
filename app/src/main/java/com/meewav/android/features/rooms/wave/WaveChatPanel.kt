@@ -304,7 +304,6 @@ fun WaveChatPanel(
         lastSeenMessageId = messages.lastOrNull()?.id
     }
     BoxWithConstraints(modifier.fillMaxSize().padding(bottom = 6.dp)) {
-        val emojiWallHeight = (maxHeight - 110.dp - if (pinnedMessage != null) 86.dp else 0.dp).coerceIn(92.dp, 220.dp)
         Column(Modifier.fillMaxSize()) {
             pinnedMessage?.let { pinned ->
                 Row(
@@ -388,8 +387,8 @@ fun WaveChatPanel(
             // Mur d'emoji maison — panneau au-dessus du composer.
             if (emojiWallOpen) {
                 MwEmojiWall(
-                    height = emojiWallHeight,
-                    onSelect = { name -> emojiInput.insert(name) },
+                    height = 360.dp,
+                    onSelect = { name -> emojiInput.insert(name); emojiWallOpen = false },
                     onClose = { emojiWallOpen = false },
                 )
             }
@@ -400,7 +399,7 @@ fun WaveChatPanel(
                 emojiInput = emojiInput,
                 emojiOpen = emojiWallOpen,
                 onDraftChange = { draft = it },
-                onToggleEmoji = { emojiWallOpen = !emojiWallOpen },
+                onToggleEmoji = { emojiInput.hideKeyboard(); emojiWallOpen = !emojiWallOpen },
                 onSend = {
                     val text = draft.trim()
                     if (text.isNotEmpty()) {
@@ -569,7 +568,11 @@ private fun WaveChatRow(
 
 /* Mur d'emoji maison — grille des 50 emoticons customs (mw-emoticon-wall web). */
 @Composable
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 private fun MwEmojiWall(height: Dp, onSelect: (String) -> Unit, onClose: () -> Unit) {
+    androidx.compose.material3.ModalBottomSheet(onDismissRequest = onClose,
+        sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = Color(0xFF111216), dragHandle = null) {
     Column(
         Modifier
             .fillMaxWidth()
@@ -593,7 +596,7 @@ private fun MwEmojiWall(height: Dp, onSelect: (String) -> Unit, onClose: () -> U
             }
         }
         LazyVerticalGrid(
-            columns = GridCells.Fixed(6),
+            columns = GridCells.Adaptive(48.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
@@ -614,6 +617,8 @@ private fun MwEmojiWall(height: Dp, onSelect: (String) -> Unit, onClose: () -> U
             }
         }
     }
+}
+
 }
 
 /* Compact Hi-Fi rail: same black chassis as the Chat / Mixeur navbar. */

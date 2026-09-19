@@ -19,6 +19,10 @@ import androidx.compose.ui.viewinterop.AndroidView
 internal class WaveEmojiInputController {
     internal var editor: WaveEmojiEditText? = null
     fun insert(name: String) { editor?.insertEmoji(name) }
+    fun hideKeyboard() { editor?.let {
+        (it.context.getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager).hideSoftInputFromWindow(it.windowToken, 0)
+        it.clearFocus()
+    } }
 }
 
 private class MeewavEmojiSpan(val name: String, drawable: android.graphics.drawable.Drawable) :
