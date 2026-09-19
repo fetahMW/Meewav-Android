@@ -3,6 +3,12 @@ import { ArtistProfileCard } from './vendor/globe-vinyle/shared/src/RingArtistPr
 import './guest-preprofile.css';
 
 const root = createRoot(document.getElementById('root')!);
+// Keep the original Globe card's definite dimensions: percentage heights collapse
+// through its nested glass layers. Scale only the outer card to the dialog viewport.
+const fitCard = () => document.documentElement.style.setProperty('--guest-profile-scale',
+  String(Math.min(innerWidth / 413, innerHeight / 588, 1)));
+fitCard();
+window.addEventListener('resize', fitCard);
 window.addEventListener('meewav:navigate', () => { location.href = '/native/contact'; });
 window.addEventListener('meewav:guest-profile', (event) => {
 const guest = (event as CustomEvent<{id: string; name: string; grade: number}>).detail;
