@@ -8,6 +8,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material.icons.filled.WifiOff
+import androidx.compose.material.icons.filled.NetworkCheck
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -90,7 +93,7 @@ internal fun WaveGuestStage(state: WaveGuestState, interactive: Boolean,
         if (state.overStage && state.dragged?.location == WaveGuestLocation.BACKSTAGE) {
             Box(Modifier.fillMaxSize().background(WaveMixerTheme.capsuleAccent.copy(alpha = .15f))
                 .border(2.dp, WaveMixerTheme.capsuleAccentSoft)) {
-                Text(if (state.canDrop) "Relâcher pour monter" else "Scène complète · 3 invités maximum",
+                Text(if (state.dragged?.connected == false) "Connexion perdue · attendre la reconnexion" else if (state.canDrop) "Relâcher pour monter" else "Scène complète · 3 invités maximum",
                     modifier = Modifier.align(Alignment.Center).background(Color.Black.copy(alpha = .8f)).padding(10.dp),
                     color = Color.White, fontSize = 12.sp)
             }
@@ -196,8 +199,8 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                         horizontalAlignment = Alignment.CenterHorizontally) {
                         Image(painterResource(guest.portrait), guest.name, modifier = Modifier.fillMaxWidth().aspectRatio(1.35f).clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Crop)
                         Text(guest.name, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text(if (guest.appeared && guest.location == WaveGuestLocation.BACKSTAGE) "Déjà passé" else guest.location.label,
-                            color = Color.White.copy(alpha = .45f), fontSize = 8.sp, maxLines = 1)
+                        if (guest.location == WaveGuestLocation.BACKSTAGE) GuestHealth(guest)
+                        else Text(guest.location.label, color = Color.White.copy(alpha = .45f), fontSize = 8.sp, maxLines = 1)
                     }
                 }
             }
@@ -218,7 +221,7 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
     }
     val preview = state.guests.find { it.id == state.previewId }
     if (preview != null) GuestPreviewSheet(state, preview)
-    if (filtersOpen) WaveGuestFilterSheet(state, participants, onDismiss = { filtersOpen = false })
+    if (filtersOpen) WaveGuestFilterSheet(state, participants, isRequests = page == 1, onDismiss = { filtersOpen = false })
     if (inviteOpen) {
         ModalBottomSheet(onDismissRequest = { inviteOpen = false }, containerColor = Color(0xFF101114), contentColor = Color.White) {
             Column(Modifier.fillMaxWidth().heightIn(max = 500.dp).verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -261,20 +264,21 @@ private fun GuestPreviewSheet(state: WaveGuestState, guest: WaveGuest) {
                 GuestControl(if (guest.mic) "Micro actif" else "Micro coupé", Modifier.weight(1f), { state.toggleMic(guest.id) }) { Icon(if (guest.mic) WaveIcons.Mic else WaveIcons.MicOff, null, modifier = Modifier.size(18.dp)) }
                 GuestControl(if (guest.camera) "Caméra active" else "Caméra coupée", Modifier.weight(1f), { state.toggleCamera(guest.id) }) { Icon(if (guest.camera) Icons.Filled.Videocam else WaveIcons.CameraOff, null, modifier = Modifier.size(18.dp)) }
             }
+            GuestHealth(guest)
             val target = when (guest.location) {
                 WaveGuestLocation.REQUESTED -> WaveGuestLocation.INVITED
                 WaveGuestLocation.INVITED, WaveGuestLocation.STAGE -> WaveGuestLocation.BACKSTAGE
                 WaveGuestLocation.BACKSTAGE -> WaveGuestLocation.STAGE
             }
             Button(onClick = { state.move(setOf(guest.id), target); if (state.guests.find { it.id == guest.id }?.location == target) state.previewId = null },
-                enabled = target != WaveGuestLocation.STAGE || state.onStage.size < 3,
+                enabled = target != WaveGuestLocation.STAGE || (state.onStage.size < 3 && guest.connected),
                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = WaveMixerTheme.capsuleAccent)) {
                 Text(when (guest.location) {
                     WaveGuestLocation.REQUESTED -> "Accepter la candidature"
                     WaveGuestLocation.INVITED -> "Passer en coulisses"
                     WaveGuestLocation.STAGE -> "Redescendre en coulisses"
-                    else -> if (state.onStage.size == 3) "Scène complète" else "Faire monter sur scène"
+                    else -> if (!guest.connected) "En attente de reconnexion" else if (state.onStage.size == 3) "Scène complète" else "Faire monter sur scène"
                 })
             }
             if (guest.location == WaveGuestLocation.BACKSTAGE) TextButton(onClick = { state.move(setOf(guest.id), WaveGuestLocation.INVITED); state.previewId = null }) { Text("Renvoyer en préparation", color = Color.White.copy(alpha = .6f)) }
@@ -292,5 +296,17 @@ private fun GuestControl(label: String, modifier: Modifier, onClick: () -> Unit,
     Row(modifier.hifiBlackSurface(12.dp).clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick).padding(12.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         icon(); Text(label, fontSize = 11.sp)
+    }
+}
+
+@Composable
+private fun GuestHealth(guest: WaveGuest) {
+    val warning = !guest.connected || (guest.latencyMs ?: 999) > 80 || !guest.mic || !guest.camera
+    val tint = if (!guest.connected) Color(0xFFE29A9D) else if (warning) Color(0xFFC9AE76) else Color(0xFF92BCA7)
+    val icon = if (!guest.connected) Icons.Filled.WifiOff else if ((guest.latencyMs ?: 999) > 80) Icons.Filled.NetworkCheck
+        else if (!guest.mic) WaveIcons.MicOff else if (!guest.camera) WaveIcons.CameraOff else Icons.Filled.CheckCircle
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+        Icon(icon, null, tint = tint, modifier = Modifier.size(11.dp))
+        Text(guest.healthLabel, color = tint, fontSize = 8.sp, maxLines = 2, lineHeight = 10.sp)
     }
 }

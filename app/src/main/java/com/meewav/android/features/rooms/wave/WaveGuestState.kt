@@ -17,7 +17,19 @@ internal data class WaveGuest(
     val sourceAspectRatio: Float = 9f / 16f,
     val gradeLevel: Int = 1,
     val latencyMs: Int? = null,
+    val connected: Boolean = true,
 )
+
+internal val WaveGuest.healthLabel: String get() = when {
+    !connected -> "Connexion perdue"
+    latencyMs == null -> "Signal inconnu"
+    latencyMs > 160 -> "Signal faible · ${latencyMs} ms"
+    latencyMs > 80 -> "Latence · ${latencyMs} ms"
+    !mic -> "Micro coupé"
+    !camera -> "Caméra coupée"
+    appeared -> "Déjà passé"
+    else -> "Prêt à monter"
+}
 
 /** Native demo room state. No RTC or Supabase success is inferred from a local move. */
 internal class WaveGuestState {
@@ -34,9 +46,16 @@ internal class WaveGuestState {
         WaveGuest("malik", "MALIK NOX", "Auteur", R.drawable.wave_chat_artist_6, WaveGuestLocation.REQUESTED),
         WaveGuest("alya", "ALYA FLOW", "Productrice", R.drawable.wave_chat_artist_7, WaveGuestLocation.REQUESTED),
     )
+    private val extraNames = listOf("LINA V.", "NOAM A.", "Ruby Resonance", "Neon Pulse", "JUNE VELVET", "KORA N.", "AMIRA SEN", "YASSA GROOVE")
+    private fun demoGuest(index: Int, location: WaveGuestLocation): WaveGuest {
+        val source = initialGuests[index % initialGuests.size]
+        return source.copy(id = "demo-${location.name}-$index", name = extraNames[index % extraNames.size] + if (index >= 8) " · ${index / 8 + 1}" else "",
+            location = location, gradeLevel = index % 6 + 1, latencyMs = listOf(32, 58, 210, 125, 45, 68)[index % 6],
+            connected = index % 9 != 2, mic = index % 7 != 3, camera = index % 8 != 4)
+    }
     var guests by mutableStateOf(initialGuests.mapIndexed { index, guest ->
         guest.copy(gradeLevel = index % 6 + 1, latencyMs = listOf(35, 65, 110, 48)[index % 4])
-    })
+    } + List(20) { demoGuest(it, WaveGuestLocation.BACKSTAGE) } + List(38) { demoGuest(it, WaveGuestLocation.REQUESTED) })
         private set
     var filters by mutableStateOf(WaveGuestFilters())
     val availableInvites get() = (initialGuests + listOf(
@@ -57,7 +76,7 @@ internal class WaveGuestState {
     val overStage get() = dragId != null && stageBounds.contains(dragPoint)
     val overBackstage get() = dragId != null && backstageBounds.contains(dragPoint)
     val canDrop get() = when (dragged?.location) {
-        WaveGuestLocation.BACKSTAGE -> overStage && onStage.size < 3
+        WaveGuestLocation.BACKSTAGE -> overStage && onStage.size < 3 && dragged?.connected == true
         WaveGuestLocation.STAGE -> overBackstage
         else -> false
     }
@@ -83,6 +102,10 @@ internal class WaveGuestState {
             WaveGuestLocation.REQUESTED -> false
         } }
         if (allowed.isEmpty()) return
+        if (target == WaveGuestLocation.STAGE && allowed.any { !it.connected }) {
+            notice = "Connexion perdue · attendre la reconnexion avant de monter sur scène"
+            return
+        }
         if (target == WaveGuestLocation.STAGE && onStage.size + allowed.size > 3) {
             notice = "Scène complète · 3 invités maximum"
             return

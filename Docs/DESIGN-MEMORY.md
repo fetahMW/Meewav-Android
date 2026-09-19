@@ -335,3 +335,10 @@ Compilation de livraison uniquement ; rendu à valider par l'utilisateur.
 - Brouillon avant application, compteur de résultats, Tout effacer. OU au sein d'une catégorie, ET entre catégories, comme sur le web. Filtres sur Demandes/Coulisses/Scène ; ils ne retirent personne de la vidéo.
 - Niveaux et latences du roster sont explicitement des données de démonstration.
 
+
+### Coulisses peuplées et filtres mobiles
+- 24 profils en coulisses et plus de 32 demandes en démo. États illustrés connexion perdue, signal faible, latence, micro/caméra coupés ; une connexion perdue bloque la montée sur scène.
+- Filtre en LazyColumn, décodage de miniatures hors du fil UI avec cache, images originales conservées. CTA violet assourdi #453677.
+- Six vrais badges exportés directement du composant SVG React canonique via scripts/export-wave-grade-badges.cjs.
+- Sélection des 8/16/32 premières demandes correspondant aux filtres, uniquement dans Demandes, appliquée au bouton inférieur sans accepter automatiquement.
+
