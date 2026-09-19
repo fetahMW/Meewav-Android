@@ -106,7 +106,7 @@ internal fun WaveArtistPortrait(artist: String) {
 }
 
 @Composable
-internal fun WaveRoleChip(category: String) {
+internal fun WaveRoleChip(category: String, expanded: Boolean = false, active: Boolean = true) {
     val color = when (category) {
         "Drums" -> Color(0xFFFFAB32)
         "Basse" -> Color(0xFF43EF9E)
@@ -116,9 +116,12 @@ internal fun WaveRoleChip(category: String) {
         "Acapella" -> Color(0xFFFF70B8)
         else -> Color(0xFFFFDC50)
     }
-    Text(category, color = color, fontSize = 9.sp, fontWeight = FontWeight.Medium,
-        modifier = Modifier.clip(RoundedCornerShape(5.dp)).background(color.copy(alpha = .23f))
-            .border(.5.dp, color.copy(alpha = .62f), RoundedCornerShape(5.dp)).padding(horizontal = 6.dp, vertical = 2.dp), maxLines = 1)
+    Text(category, color = if (active) color else Color(0xFF777781), fontSize = if (expanded) 12.sp else 9.sp, fontWeight = FontWeight.Medium,
+        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+        modifier = Modifier.then(if (expanded) Modifier.fillMaxWidth() else Modifier)
+            .clip(RoundedCornerShape(if (expanded) 8.dp else 5.dp)).background(if (active) color.copy(alpha = .23f) else Color(0xFF17181D))
+            .border(.5.dp, if (active) color.copy(alpha = .62f) else Color(0xFF33343B), RoundedCornerShape(if (expanded) 8.dp else 5.dp))
+            .padding(horizontal = 6.dp, vertical = if (expanded) 9.dp else 2.dp), maxLines = 1)
 }
 
 /** Horizontal slop is handled by Compose; vertical list scrolling retains its gesture. */

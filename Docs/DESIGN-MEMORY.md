@@ -397,3 +397,7 @@ Le lecteur Wave possède son propre bouton haut-parleur animé et son propre vol
 - Ouvert/Fermé à gauche ; filtre à droite avec les chips de catégories existants, multi-sélection et statut dans le filtre.
 - Composition compacte : chip au-dessus des commandes Mute/Solo, volume avec le curseur du mixeur.
 - Duel en épées croisées ; catégories alignées à gauche dans une colonne fixe dans le choix du duel. Vote explicitement nommé. Halo actif Base/Boucle/Mix renforcé.
+
+### Filtre Propositions
+- Grille 3 x 3 : sept catégories existantes et commandes Tout/Aucun. Chips agrandis, colorés si actifs et gris si éteints, sans cases ni statuts.
+- Sélection liée aux catégories acceptées mémorisées. Intervalle des propositions à 7 dp ; indication gauche supprimer / droite vote entre Ouvert et filtre.

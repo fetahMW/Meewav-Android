@@ -51,7 +51,6 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
     var importMenu by remember { mutableStateOf(false) }
     var importDestination by remember { mutableStateOf(WaveImportDestination.PROPOSALS) }
     var filterMenu by remember { mutableStateOf(false) }
-    var categories by remember { mutableStateOf(setOf<String>()) }
     var duration by remember { mutableIntStateOf(30) }
     var durationMenu by remember { mutableStateOf(false) }
     var selectedVote by remember { mutableStateOf<String?>(null) }
@@ -116,32 +115,41 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
             0 -> {
                 Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
                     WaveIntakeChip(state.intakeOpen, state::toggleIntake)
-                    Spacer(Modifier.weight(1f))
+                    Text("← Supprimer · Vote →", color = muted, fontSize = 10.sp, maxLines = 2,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        modifier = Modifier.weight(1f).padding(horizontal = 4.dp))
                     ToolIcon(Icons.Default.Tune, "Filtrer les boucles") { filterMenu = !filterMenu }
                     ToolIcon(Icons.Default.Add, "Importer une proposition", enabled = !state.importing) { importMenu = true }
                 }
                 AnimatedVisibility(filterMenu) {
-                    Column(Modifier.fillMaxWidth().hifiBlackSurface(12.dp).padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            listOf(WaveProposalStatus.PENDING, WaveProposalStatus.ACCEPTED, WaveProposalStatus.ARCHIVED).forEach { status ->
-                                TextButton(onClick = { filter = status }) { Text(status.label, color = if (filter == status) soft else muted, fontSize = 11.sp) }
-                            }
-                        }
-                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            state.categories.forEach { category ->
-                                Row(Modifier.clickable { categories = if (category in categories) categories - category else categories + category }.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    WaveRoleChip(category)
-                                    if (category in categories) Icon(Icons.Default.Check, "Sélectionné", tint = soft, modifier = Modifier.size(16.dp))
+                    Column(Modifier.fillMaxWidth().hifiBlackSurface(12.dp).padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        (state.categories + listOf("Tout", "Aucun")).chunked(3).forEach { row ->
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                row.forEach { category ->
+                                    val active = when (category) {
+                                        "Tout" -> state.acceptedCategories.containsAll(state.categories)
+                                        "Aucun" -> state.acceptedCategories.isEmpty()
+                                        else -> category in state.acceptedCategories
+                                    }
+                                    Box(Modifier.weight(1f).height(44.dp).clickable {
+                                        val next = when (category) {
+                                            "Tout" -> state.categories.toSet()
+                                            "Aucun" -> emptySet()
+                                            else -> if (active) state.acceptedCategories - category else state.acceptedCategories + category
+                                        }
+                                        state.submissionRules(next, state.requestedBars, state.editorialDirection)
+                                    }, contentAlignment = Alignment.Center) {
+                                        WaveRoleChip(category, expanded = true, active = active)
+                                    }
                                 }
                             }
                         }
-                        if (categories.isNotEmpty()) TextButton(onClick = { categories = emptySet() }) { Text("Toutes les catégories", color = soft, fontSize = 11.sp) }
                     }
                 }
                 if (state.importing) LinearProgressIndicator(Modifier.fillMaxWidth(), color = soft, trackColor = Color(0xFF23242B))
-                val proposals = state.proposals(filter).filter { categories.isEmpty() || it.category in categories }
+                val proposals = state.proposals(WaveProposalStatus.PENDING).filter { it.category in state.acceptedCategories }
                 if (proposals.isEmpty()) EmptyWorkspace("Aucune proposition ici", "Les boucles classées apparaîtront dans cette liste.", Modifier.weight(1f))
-                else LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp), contentPadding = PaddingValues(bottom = 10.dp)) {
+                else LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(7.dp), contentPadding = PaddingValues(bottom = 10.dp)) {
                     items(proposals, key = { it.id }) { clip ->
                         if (clip.packId != null && proposals.firstOrNull { it.packId == clip.packId }?.id == clip.id) {
                             Row(Modifier.fillMaxWidth().padding(top = 2.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically) {
