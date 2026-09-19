@@ -29,9 +29,15 @@ internal fun GuestPreProfile(state: WaveGuestState, guest: WaveGuest) {
                 WebView(context).apply {
                     setBackgroundColor(android.graphics.Color.TRANSPARENT)
                     settings.javaScriptEnabled = true
+                    settings.domStorageEnabled = true
                     settings.allowFileAccess = false
                     settings.allowContentAccess = false
                     webViewClient = object : WebViewClient() {
+                        override fun onPageFinished(view: WebView, url: String) {
+                            if (url != "https://appassets.androidplatform.net/globe-vinyle/guest-preprofile.html") return
+                            val payload = JSONObject().put("id", guest.id).put("name", guest.name).put("grade", guest.gradeLevel)
+                            view.evaluateJavascript("window.dispatchEvent(new CustomEvent('meewav:guest-profile',{detail:$payload}))", null)
+                        }
                         override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                             if (request.isForMainFrame && request.url.host == "appassets.androidplatform.net") {
                                 if (request.url.path == "/native/contact") {
@@ -48,8 +54,7 @@ internal fun GuestPreProfile(state: WaveGuestState, guest: WaveGuest) {
                             return fullGlobeAsset(context, request, manifest)
                         }
                     }
-                    val data = "id=${Uri.encode(guest.id)}&name=${Uri.encode(guest.name)}&grade=${guest.gradeLevel}"
-                    loadUrl("https://appassets.androidplatform.net/globe-vinyle/guest-preprofile.html#$data")
+                    loadUrl("https://appassets.androidplatform.net/globe-vinyle/guest-preprofile.html")
                 }
             }, onRelease = { it.stopLoading(); it.destroy() })
     }
