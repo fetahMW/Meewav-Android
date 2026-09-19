@@ -29,6 +29,12 @@ internal fun waveStageFrames(ids: List<String>, portraitIds: Set<String>, mode: 
     val ordered = listOf(primary) + ids.filter { it != primary }
     fun rect(x: Float, y: Float, w: Float, h: Float) = Rect(x, y, x + w, y + h)
     if (mode == WaveComposition.SOLO || ids.size == 1) return mapOf(primary to rect(0f, 0f, 1f, 1f))
+    // Mobile portrait duo: two full-width halves, independent of source orientation.
+    // Focus selects who is on top; Solo deliberately keeps a single participant.
+    if (ids.size == 2 && tallViewport) {
+        val duo = if (mode == WaveComposition.FOCUS) ordered else ids
+        return duo.mapIndexed { i, id -> id to rect(0f, i * .5f, 1f, .5f) }.toMap()
+    }
     if (mode == WaveComposition.FOCUS) {
         return ordered.mapIndexed { i, id -> id to if (tallViewport) {
             if (i == 0) rect(0f, 0f, 1f, .72f)
@@ -40,9 +46,6 @@ internal fun waveStageFrames(ids: List<String>, portraitIds: Set<String>, mode: 
     }
     val vertical = ids.filter { it in portraitIds }
     val wide = ids.filter { it !in portraitIds }
-    if (ids.size == 2 && tallViewport && vertical.isEmpty()) {
-        return ids.mapIndexed { i, id -> id to rect(0f, i * .5f, 1f, .5f) }.toMap()
-    }
     if (vertical.size == ids.size && (!tallViewport || ids.size == 2)) {
         return ids.mapIndexed { i, id -> id to rect(i.toFloat() / ids.size, 0f, 1f / ids.size, 1f) }.toMap()
     }

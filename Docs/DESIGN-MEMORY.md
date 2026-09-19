@@ -325,3 +325,7 @@ Compilation de livraison uniquement ; rendu à valider par l'utilisateur.
 - Sources toujours locales (boucle host et portraits démo). Ni RTC, ni synchronisation Supabase, ni auto-director audio ne sont annoncés comme raccordés. BytePlus reste différé.
 - Référence : Meewav-Web PlaceStage.tsx, placeStageLayoutEngine.ts, placeStageLayout.css. Compilation de livraison uniquement, aucune QA automatique.
 
+
+### Plein écran mobile à deux
+- En portrait, deux personnes occupent chacune une moitié pleine largeur : haut/bas, indépendamment du format des sources. Ensemble et Mise en avant suivent cette règle ; Solo conserve une personne.
+
