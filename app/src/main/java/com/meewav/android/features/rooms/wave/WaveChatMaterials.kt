@@ -11,7 +11,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
-/** One translucent grey input capsule; a separate violet send key. */
+/** Near-black translucent input capsule with a restrained grey reflection. */
 internal fun Modifier.chatComposerGlass(
     key: Boolean = false,
     focused: Boolean = false,
@@ -27,13 +27,13 @@ internal fun Modifier.chatComposerGlass(
             )
         } else {
             Brush.verticalGradient(
-                0f to Color(0xFF80838C).copy(alpha = .27f),
-                .5f to Color(0xFF565962).copy(alpha = .21f),
-                1f to Color(0xFF35373F).copy(alpha = .25f),
+                0f to Color(0xFF202125).copy(alpha = .88f),
+                .5f to Color(0xFF131417).copy(alpha = .86f),
+                1f to Color(0xFF0C0D10).copy(alpha = .90f),
             )
         }
         val reflection = Brush.radialGradient(
-            listOf(Color.White.copy(alpha = if (key) .10f else .045f), Color.Transparent),
+            listOf(Color.White.copy(alpha = if (key) .10f else .025f), Color.Transparent),
             center = Offset(size.width * .25f, -size.height), radius = size.width.coerceAtLeast(size.height),
         )
         onDrawBehind {
@@ -43,7 +43,7 @@ internal fun Modifier.chatComposerGlass(
     }.border(
         .7.dp,
         Brush.verticalGradient(listOf(
-            (if (key) WaveMixerTheme.capsuleAccentSoft else Color.White).copy(alpha = .24f),
+            (if (key) WaveMixerTheme.capsuleAccentSoft else Color.White).copy(alpha = if (key) .24f else .15f),
             Color.White.copy(alpha = .07f),
             Color.White.copy(alpha = .12f),
         )),
