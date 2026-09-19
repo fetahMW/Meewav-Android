@@ -37,6 +37,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.meewav.android.R
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -158,6 +160,7 @@ internal fun RowScope.SwipeAction(label: String, icon: ImageVector, active: Bool
 @Composable
 internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState, composition: Boolean,
     onDetail: () -> Unit, onAction: () -> Unit) {
+    val download = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("audio/*")) { uri -> if (uri != null) state.download(clip.id, uri) }
     val voice = state.snapshot.voices.find { it.id == clip.id }
     val cue = state.snapshot.cue == clip.id
     val queued = if (composition) voice?.phase == "Prochaine mesure" else state.snapshot.pendingCandidate == clip.id
@@ -176,7 +179,16 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
             WaveArtistPortrait(clip.artist)
             Column(Modifier.weight(1f)) {
                 Text(clip.title, color = ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(clip.artist, color = secondary, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(clip.artist, color = secondary, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, false))
+                    val grade = when (clip.artist) {
+                        "AZUR" -> R.drawable.wave_grade_4
+                        "SOLEN", "LUMA" -> R.drawable.wave_grade_3
+                        "KÉO", "NOAM A." -> R.drawable.wave_grade_2
+                        else -> R.drawable.wave_grade_1
+                    }
+                    Image(painterResource(grade), "Grade de ${clip.artist}", modifier = Modifier.size(24.dp))
+                }
                 Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     WaveRoleChip(clip.category)
                     if (composition) Text(if (clip.solo) "SOLO" else if (clip.mute) "MUTE" else if (queued) "À la mesure" else if (clip.repeats == -1) "∞" else "${clip.repeats}×",
@@ -187,8 +199,10 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
             if (!composition) WaveRoundPlay(playing, clip.id in state.preparing, progress, if (composition) "Lancer ou arrêter ${clip.title}" else "Écouter ${clip.title}", queued, stopIcon = false) {
                 if (composition) onAction() else state.preview(clip.id)
             }
-            if (!composition) WaveControl(if (clip.inComposition) Icons.Default.Check else if (clip.status == WaveProposalStatus.ARCHIVED) Icons.Default.Restore else Icons.Default.Add,
-                "Prendre ou restaurer ${clip.title}", active = clip.inComposition, enabled = !clip.inComposition, onClick = onAction)
+            if (!composition) WaveControl(Icons.Default.FileDownload, "Télécharger ${clip.title}") {
+                val extension = clip.source.substringAfterLast('.', "wav").substringBefore('?').takeIf { it in listOf("wav", "mp3", "m4a", "aac", "ogg", "flac") } ?: "wav"
+                download.launch("${clip.title.replace('/', '-') }.$extension")
+            }
             else WaveControl(Icons.Default.MoreHoriz, "Options de ${clip.title}", onClick = onDetail)
         }
         AnimatedVisibility(selected) { WaveMixControls(clip, state) }

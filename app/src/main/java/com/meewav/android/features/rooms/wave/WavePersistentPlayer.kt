@@ -59,7 +59,7 @@ internal fun WaveMasterPlayer(state: WaveCompositionState, onImport: (WaveImport
     val progress = if (snapshot.cue != null) snapshot.cueProgress else
         (snapshot.frame.toFloat() / state.durationFrames).coerceIn(0f, 1f)
     val peaks = if (snapshot.cue != null) state.prepared[snapshot.cue]?.peaks.orEmpty() else state.masterPeaks
-    LaunchedEffect(state.compositionPage, state.referenceId, state.listeningMode) { rail = PlayerRail.READOUT; bases = false; volumeOpen = false }
+    LaunchedEffect(state.page, state.referenceId, state.listeningMode) { rail = PlayerRail.READOUT; bases = false; volumeOpen = false }
     Column(Modifier.fillMaxWidth().hifiBlackSurface(17.dp).padding(horizontal = 10.dp, vertical = 4.dp)) {
         Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(48.dp).waveTactileClick {
@@ -230,7 +230,12 @@ internal fun WaveMasterPlayer(state: WaveCompositionState, onImport: (WaveImport
 private fun PlayerCurtain(visible: Boolean, content: @Composable () -> Unit) {
     AnimatedVisibility(visible, modifier = Modifier.fillMaxSize(),
         enter = slideInHorizontally(tween(320, easing = curtain)) { it } + fadeIn(tween(100)),
-        exit = slideOutHorizontally(tween(320, easing = curtain)) { it } + fadeOut(tween(150))) { content() }
+        exit = slideOutHorizontally(tween(320, easing = curtain)) { it } + fadeOut(tween(150))) {
+        Box(Modifier.fillMaxSize().then(if (!visible) Modifier.clearAndSetSemantics { } else Modifier)
+            .pointerInput(visible) {
+                if (!visible) awaitPointerEventScope { while (true) awaitPointerEvent(androidx.compose.ui.input.pointer.PointerEventPass.Initial).changes.forEach { it.consume() } }
+            }) { content() }
+    }
 }
 
 private fun waveClock(frame: Long): String = "%02d:%02d".format(frame / 48_000 / 60, frame / 48_000 % 60)

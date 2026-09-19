@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import kotlin.math.max
 
 private val soft = WaveMixerTheme.capsuleAccentSoft
@@ -74,7 +75,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
             section = if (importDestination == WaveImportDestination.VOTE) 1 else 0
         }
     }
-    LaunchedEffect(section) { state.setPage(section == 2) }
+    LaunchedEffect(section) { state.navigatePage(section); settings = false; revealed = null }
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().height(42.dp), verticalAlignment = Alignment.CenterVertically) {
             listOf("Propositions", "Vote", "Composition").forEachIndexed { index, label ->
@@ -98,19 +99,16 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
             }
         }
         state.snapshot.error?.let { Text(it, color = danger, fontSize = 11.sp) }
+        Box(Modifier.weight(1f).fillMaxWidth()) {
+        Column(Modifier.fillMaxSize().then(if (settings) Modifier.clearAndSetSemantics { } else Modifier)) {
         when (section) {
             2 -> {
                 val composition = state.clips.filter { it.inComposition }
                 if (composition.isEmpty()) EmptyWorkspace("Ta composition commence ici", "Prends une boucle dans Propositions ou importe ton audio.", Modifier.weight(1f))
                 else LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(7.dp), contentPadding = PaddingValues(bottom = 8.dp)) {
                     items(composition, key = { it.id }) { clip ->
-                        WaveSwipeActions(clip.id, revealed, { revealed = it }, modifier = Modifier.animateItem(), actions = { close ->
-                            SwipeAction("Mute", Icons.Default.VolumeOff, clip.mute) { state.mute(clip.id); close() }
-                            SwipeAction("Solo", Icons.Default.Headphones, clip.solo) { state.solo(clip.id); close() }
-                            SwipeAction("Retirer", Icons.Default.Close) { state.remove(clip.id); close() }
-                        }) {
                             WaveLoopCard(clip, state, composition = true, onDetail = { detail = clip.id }, onAction = { state.launch(clip.id) })
-                        }
+
                     }
                 }
             }
@@ -146,7 +144,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                                 }
                                 ToolIcon(if (state.snapshot.cue == "pack:${clip.packId}") Icons.Default.Stop else Icons.Default.Headphones,
                                     "Écouter le pack complet", enabled = state.preparingPack != clip.packId) { state.previewPack(clip.packId) }
-                                ToolIcon(Icons.Default.LibraryAdd, "Prendre toute la composition", enabled = state.adoptingPack == null) { state.takePack(clip.packId) }
+                                ToolIcon(Icons.Default.LibraryAdd, "Proposer les pistes au vote", enabled = state.adoptingPack == null) { state.takePack(clip.packId) }
                             }
                         }
                         WaveProposalSwipe(clip.id, revealed, { revealed = it }, onAccept = { state.queueVote(clip.id) },
@@ -211,6 +209,14 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                 }
             }
         }
+        }
+        if (settings) {
+            Box(Modifier.matchParentSize().background(Color.Black.copy(alpha = .55f)).clickable { settings = false })
+            Column(Modifier.align(Alignment.TopCenter).fillMaxWidth().hifiBlackSurface(14.dp)) {
+                WaveRulesPanel(state) { settings = false }
+            }
+        }
+        }
         Row(Modifier.fillMaxWidth().height(24.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(if (state.snapshot.cue != null) "Écoute privée · composition atténuée" else if (state.publicRoute) "Sortie publique · diffusion non raccordée" else "Atelier privé · non diffusé", color = muted, fontSize = 9.sp, modifier = Modifier.weight(1f))
             if (state.snapshot.cue != null) Text("Arrêter", color = soft, fontSize = 10.sp, modifier = Modifier.clickable { state.stopPreview() }.padding(4.dp))
@@ -251,7 +257,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text(selected.packTitle ?: "Composition", color = muted, fontSize = 11.sp, modifier = Modifier.weight(1f))
                         ToolIcon(Icons.Default.Headphones, "Écouter la composition entière") { state.previewPack(packId) }
-                        ToolIcon(Icons.Default.LibraryAdd, "Prendre tous les éléments", enabled = state.adoptingPack == null) { state.takePack(packId) }
+                        ToolIcon(Icons.Default.LibraryAdd, "Proposer les éléments au vote", enabled = state.adoptingPack == null) { state.takePack(packId) }
                     }
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -327,7 +333,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
             }
         }
     }
-    if (settings) WorkspaceSheet(sheetHeight, { settings = false }) { WaveRulesPanel(state) { settings = false } }
+
     if (state.followVote) WorkspaceSheet(sheetHeight.coerceAtMost(320.dp), { state.followVote = false }) {
         Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("Suivi du vote", color = foreground, fontSize = 18.sp)

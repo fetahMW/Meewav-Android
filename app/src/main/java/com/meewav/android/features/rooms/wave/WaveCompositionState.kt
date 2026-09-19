@@ -30,6 +30,7 @@ internal data class WaveDemoVote(val clipId: String, val duration: Int, val ends
 internal data class WaveVoteResult(val roundId: String, val clipId: String, val accepted: Boolean, val yes: Int, val no: Int)
 internal data class WaveDawExport(val id: String, val uri: String, val title: String, val bpm: Double, val key: String, val sources: List<String>)
 internal data class WaveDawDraft(val uri: Uri, val export: WaveDawExport)
+internal data class WaveCompositionLayer(val id: String, val submissionId: String, val submissionVersion: String, val roundId: String)
 internal data class WaveMixPin(val id: String, val clipId: String, val baseId: String, val startBar: Int, val bars: Int)
 
 /** Local workshop mirrors iOS live-set state. Demo votes are explicitly local, never public ballots. */
@@ -70,6 +71,14 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
         }
     }
     fun cancelExport() { exportJob?.cancel() }
+    fun download(id: String, destination: Uri) {
+        val clip = clips.find { it.id == id } ?: return
+        scope.launch {
+            try { withContext(Dispatchers.IO) { WaveArrangementExport.copy(context, clip.source, destination) }; notice = "${clip.title} enregistré." }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (error: Exception) { notice = error.message ?: "Enregistrement impossible." }
+        }
+    }
     fun export(uri: Uri, archive: Boolean = false, focusedBase: String? = null) {
         if (exportJob?.isActive == true) return
         val selected = if (focusedBase != null) clips.filter { it.id == focusedBase }
@@ -116,6 +125,7 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
     var notice by mutableStateOf<String?>(null)
     var vote by mutableStateOf<WaveDemoVote?>(null); private set
     var voteHistory by mutableStateOf<List<WaveVoteResult>>(emptyList()); private set
+    var layers by mutableStateOf<Map<String, WaveCompositionLayer>>(emptyMap()); private set
     var followVote by mutableStateOf(false)
     var acceptedCategories by mutableStateOf(setOf("Basse", "Drums", "Mélodie", "Accords", "Nappe", "Acapella", "FX")); private set
     var requestedBars by mutableIntStateOf(8); private set
@@ -139,6 +149,8 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
     var preparingPack by mutableStateOf<String?>(null); private set
     var listeningMode by mutableStateOf(WaveListeningMode.BASE); private set
     var compositionPage by mutableStateOf(false); private set
+    var page by mutableIntStateOf(0); private set
+    private var workflowGeneration = 0
     var referenceId by mutableStateOf<String?>(null); private set
     var candidateId by mutableStateOf<String?>(null); private set
     var loopBars by mutableIntStateOf(0); private set
@@ -196,6 +208,11 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
         editorialDirection = preferences.getString("direction", "") ?: ""
         // Add newly ported demo sources without overwriting user imports or decisions.
         clips = clips + waveDemoProposals().filter { demo -> clips.none { it.id == demo.id } }
+        clips.filter { it.inComposition }.forEach { clip ->
+            val round = voteHistory.lastOrNull { it.clipId == clip.id && it.accepted }
+                ?: WaveVoteResult("demo-seed:${clip.id}", clip.id, true, 1, 0).also { voteHistory = voteHistory + it }
+            if (clip.id !in layers) layers = layers + (clip.id to WaveCompositionLayer(UUID.randomUUID().toString(), clip.id, clip.id, round.roundId))
+        }
         save()
         audio.tempo(bpm)
         clips.filter { it.inComposition }.forEach { prepare(it.id) }
@@ -244,6 +261,9 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
             json.optJSONArray("votes")?.let { list -> voteHistory = (0 until list.length()).map { i -> list.getJSONObject(i).let {
                 WaveVoteResult(it.getString("round"), it.getString("clip"), it.getBoolean("accepted"), it.getInt("yes"), it.getInt("no"))
             } } }
+            json.optJSONArray("layers")?.let { list -> layers = (0 until list.length()).associate { i -> list.getJSONObject(i).let {
+                it.getString("submission") to WaveCompositionLayer(it.getString("id"), it.getString("submission"), it.getString("version"), it.getString("round"))
+            } } }
             val array = json.getJSONArray("clips")
             clips = List(array.length()) { i -> array.getJSONObject(i).let {
                 WaveCompositionClip(it.getString("id"), it.getString("title"), it.getString("artist"), it.getString("source"), it.getString("category"),
@@ -269,7 +289,8 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
         val arrangements = JSONObject(); baseArrangements.forEach { (id, sources) -> arrangements.put(id, JSONArray(sources.toList())) }
         val exports = JSONArray(); dawExports.forEach { exports.put(JSONObject().put("id", it.id).put("uri", it.uri).put("title", it.title).put("bpm", it.bpm).put("key", it.key).put("sources", JSONArray(it.sources))) }
         val history = JSONArray(); voteHistory.forEach { history.put(JSONObject().put("round", it.roundId).put("clip", it.clipId).put("accepted", it.accepted).put("yes", it.yes).put("no", it.no)) }
-        preferences.edit().putString("state", JSONObject().put("baked", baked).put("arrangements", arrangements).put("dawExports", exports).put("votes", history)
+        val layerData = JSONArray(); layers.values.forEach { layerData.put(JSONObject().put("id", it.id).put("submission", it.submissionId).put("version", it.submissionVersion).put("round", it.roundId)) }
+        preferences.edit().putString("state", JSONObject().put("layers", layerData).put("baked", baked).put("arrangements", arrangements).put("dawExports", exports).put("votes", history)
             .put("pins", savedPins).put("referenceId", referenceId ?: "").put("bpm", bpm).put("key", key).put("open", open).put("clips", array).toString()).apply()
     }
     private fun update(id: String, change: (WaveCompositionClip) -> WaveCompositionClip) {
@@ -361,7 +382,11 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
                 }
                 preparedActions.remove(id)?.invoke()
             } catch (cancelled: CancellationException) { throw cancelled }
-            catch (e: Exception) { preparedActions.remove(id); transportPending = false; errors = errors + (id to (e.message ?: "Audio indisponible")) }
+            catch (e: Exception) {
+                preparedActions.remove(id); transportPending = false
+                if (candidateId == id) candidateId = snapshot.candidate
+                errors = errors + (id to (e.message ?: "Audio indisponible"))
+            }
             finally { preparing = preparing - id }
         }
     }
@@ -413,15 +438,19 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
         }
         syncLoop()
     }    private fun syncLoop() = audio.loop((durationFrames * loopRange.start).toLong(), if (loopEnabled && referenceReady) (durationFrames * loopRange.endInclusive).toLong() else 0)
-    fun setPage(composition: Boolean) {
-        compositionPage = composition; stopPreview(); selectedPinId = null
-        if (!composition) listeningMode = WaveListeningMode.BASE
+    fun navigatePage(next: Int) {
+        if (page == next) return
+        workflowGeneration++
+        val leavingComposition = compositionPage && next != 2
+        page = next; compositionPage = next == 2; stopPreview(); selectedPinId = null
+        if (leavingComposition) listeningMode = WaveListeningMode.BASE
         audio.monitor(listeningMode, compositionPage); syncLoop()
     }
     fun listen(mode: WaveListeningMode) { listeningMode = mode; audio.monitor(mode, compositionPage) }
     fun setCue() { cueFrame = snapshot.frame; notice = "Point de reprise mémorisé." }
     fun returnToCue() = audio.seek(if (loopEnabled) (loopRange.start * durationFrames).toLong() else cueFrame)
     fun toggleRoute() {
+        transportPending = false
         if (snapshot.cue != null && !snapshot.cuePaused) audio.pausePreview()
         if (snapshot.running) audio.toggleClock()
         publicRoute = !publicRoute
@@ -515,6 +544,9 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
         if (clips.count { it.inComposition } >= 20) { notice = "La composition contient déjà 20 pistes."; return }
         val clip = clips.find { it.id == id } ?: return
         if (clip.inComposition) return
+        val round = voteHistory.lastOrNull { it.clipId == id && it.accepted }
+        if (round == null) { queueVote(id); notice = "La proposition doit d’abord passer au vote."; return }
+        layers = layers + (id to WaveCompositionLayer(UUID.randomUUID().toString(), id, id, round.roundId))
         update(id) { it.copy(status = WaveProposalStatus.ACCEPTED, inComposition = true) }; prepare(id)
     }
     fun remove(id: String) { audio.remove(id); pins = pins.filterNot { it.clipId == id }; selectedPinId = null; update(id) { it.copy(inComposition = false, mute = false, solo = false) } }
@@ -585,36 +617,10 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
         }
     }
     fun takePack(id: String) {
-        if (adoptingPack != null) return
-        val members = clips.filter { it.packId == id }
-        if (members.isEmpty()) return
-        if (clips.count { it.inComposition } + members.count { !it.inComposition } > 20) {
-            notice = "Ce pack dépasserait les 20 pistes. Prends ses éléments séparément."; return
-        }
-        adoptingPack = id
-        scope.launch {
-            try {
-                // Resolve every component before committing any adoption, as in the iOS controller.
-                val decoded = withContext(Dispatchers.IO) {
-                    decodeLock.withLock { members.associate { it.id to WaveCompositionDecoder.decode(context, it.source) } }
-                }
-                prepared = prepared + decoded
-                if (clips.count { it.inComposition && it.packId != id } + members.size > 20) {
-                    notice = "La composition est pleine. Aucun élément du pack n’a été ajouté."; return@launch
-                }
-                clips = clips.map { if (it.packId == id) it.copy(inComposition = true, status = WaveProposalStatus.ACCEPTED) else it }
-                save()
-                members.forEach { member ->
-                    audio.prepare(member.id, decoded.getValue(member.id), member.repeats)
-                    audio.mix(member.id, member.mute, member.solo, member.gain, member.repeats)
-                }
-                notice = "Composition chargée · aucune piste lancée."
-            } catch (cancelled: CancellationException) { throw cancelled }
-            catch (e: Exception) { notice = e.message ?: "Le pack n’a pas pu être chargé." }
-            finally { adoptingPack = null }
-        }
-    }
-    private suspend fun importAudio(uri: Uri, packId: String? = null, packTitle: String? = null, importedTitle: String? = null,
+        stopPreview()
+        clips = clips.map { if (it.packId == id && !it.inComposition) it.copy(status = WaveProposalStatus.VOTE) else it }
+        notice = "Les éléments du pack sont prêts pour le vote."; save()
+    }    private suspend fun importAudio(uri: Uri, packId: String? = null, packTitle: String? = null, importedTitle: String? = null,
         destination: WaveImportDestination = WaveImportDestination.PROPOSALS) {
             val name = withContext(Dispatchers.IO) { runCatching {
                 context.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)?.use {
@@ -641,7 +647,10 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
         if (clips.find { it.id == id }?.isBase != true && replacementId == null && clips.count { it.inComposition } >= 20) {
             notice = "Choisis une piste à remplacer : la composition contient déjà 20 pistes."; return
         }
-        if (id !in prepared) { prepare(id) { startVote(id, seconds, replacementId, demonstration) }; return }
+        if (id !in prepared) {
+            val generation = workflowGeneration
+            prepare(id) { if (generation == workflowGeneration && clips.any { it.id == id && it.status == WaveProposalStatus.VOTE }) startVote(id, seconds, replacementId, demonstration) }; return
+        }
         stopPreview()
         vote = WaveDemoVote(id, seconds, android.os.SystemClock.elapsedRealtime() + seconds * 1000L, replacementId = replacementId)
         lastVerdict = null
@@ -661,7 +670,7 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
         voteHistory = voteHistory + WaveVoteResult(current.id, current.clipId,
             current.yes + current.no > 0 && current.yes.toDouble() / (current.yes + current.no) >= .60, current.yes, current.no)
         if (current.yes + current.no > 0 && current.yes.toDouble() / (current.yes + current.no) >= .60) {
-            if (current.replacementId == null && clips.count { it.inComposition } >= 20) {
+            if (clips.find { it.id == current.clipId }?.isBase != true && current.replacementId == null && clips.count { it.inComposition } >= 20) {
                 lastVerdict = "$name : vote favorable, composition pleine. Libère une piste pour l’ajouter."; return
             }
             current.replacementId?.let(::remove)

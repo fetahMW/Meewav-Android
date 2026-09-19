@@ -374,3 +374,8 @@ Le lecteur permanent Wave demandé se trouve sur Meewav-iOS origin/wave/host-har
 Wave : les chips de catégorie (Drums, Basse, Mélodie, Accords, Nappe, Acapella, FX) doivent être vifs et saturés, uniquement les chips. Garder les cartes noires et les CTA dans le violet urbain. Le bouton du sélecteur de boucle doit toujours pouvoir ouvrir son rail animé, même sans base ; seuls les choix audio non disponibles sont désactivés. Import lecteur : icône classique de téléchargement, flèche vers le bas sur un trait.
 
 Wave : l’état sélectionné Base / Boucle / Mix utilise exactement roomsStudioCapsule, le matériau violet du sélecteur Simple / Pro (capsuleAccent #7E44E3, fond 22 %, contour 38 %). Ne pas remettre de fond prune ou de violet approchant.
+
+## Wave — décision utilisateur du 19 septembre 2026
+
+Base / Boucle / Mix doit reprendre le noir HiFi des boutons microphone et haut-parleur placés sous les faders : hardwareSurface(6.dp, raised = true, reflection = 0.085f). Cette consigne remplace le matériau violet Simple / Pro précédemment demandé pour ce sélecteur.
+Le lecteur Wave possède son propre bouton haut-parleur animé et son propre volume, avec le même cap de fader perle strié que le Mixeur. Le fader audio du Mixeur ne doit jamais modifier le volume du lecteur Wave. Les deux lecteurs restent des instances indépendantes.
