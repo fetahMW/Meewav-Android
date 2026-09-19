@@ -9,7 +9,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -46,7 +45,7 @@ internal fun WaveGuestActionBar(state: WaveGuestState, guests: List<WaveGuest>, 
                 enabled && state.jury.size + guests.size <= 6, Modifier.weight(1f)) {
                 state.move(ids, WaveGuestLocation.JURY); onClear()
             }
-            GuestAction(if (page == 1) "Refuser" else "Retirer", Icons.Outlined.DeleteOutline, enabled, Modifier.weight(1f)) {
+            GuestAction(if (page == 1) "Refuser" else "Retirer", WaveIcons.Close, enabled, Modifier.weight(1f), tint = Color(0xFFE99A9E)) {
                 if (page == 1) state.refuseRequests(ids) else state.remove(ids)
                 onClear()
             }
@@ -80,10 +79,10 @@ internal fun WaveGuestActionBar(state: WaveGuestState, guests: List<WaveGuest>, 
 }
 
 @Composable
-private fun GuestAction(label: String, icon: ImageVector, enabled: Boolean, modifier: Modifier, onClick: () -> Unit) {
+private fun GuestAction(label: String, icon: ImageVector, enabled: Boolean, modifier: Modifier, tint: Color = WaveMixerTheme.capsuleAccentSoft, onClick: () -> Unit) {
     Column(modifier.height(48.dp).clickable(enabled = enabled, onClick = onClick), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center) {
-        val color = if (enabled) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .25f)
+        val color = if (enabled) tint else Color.White.copy(alpha = .25f)
         Icon(icon, label, tint = color, modifier = Modifier.size(18.dp))
         Spacer(Modifier.height(4.dp))
         Text(label, fontSize = 9.sp, color = color, maxLines = 1)
