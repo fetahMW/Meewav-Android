@@ -1,5 +1,10 @@
 # Atelier Wave Android — référence corrigée le 19 septembre 2026
 
+> Mise à jour : le guide fourni ensuite inclut des modifications iOS non commitées.
+> L'[audit détaillé du guide](AUDIT-WAVE-GUIDE-ANDROID-2026-09-19.md) constate un portage
+> partiel et documente les écarts fonctionnels. Les éléments ci-dessous décrivent
+> les composants introduits, sans constituer une validation de parité mécanique.
+
 Branche Android : `codex/wave-tools-ios`.
 
 ## Source de référence
