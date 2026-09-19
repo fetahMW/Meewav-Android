@@ -159,7 +159,7 @@ internal fun RowScope.SwipeAction(label: String, icon: ImageVector, active: Bool
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState, composition: Boolean,
-    onDetail: () -> Unit, onAction: () -> Unit) {
+    onMessage: () -> Unit = {}) {
     val download = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("audio/*")) { uri -> if (uri != null) state.download(clip.id, uri) }
     var confirmRemoval by remember(clip.id) { mutableStateOf(false) }
     val voice = state.snapshot.voices.find { it.id == clip.id }
@@ -174,9 +174,8 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
     val opacity by animateFloatAsState(if (dimmed) .50f else 1f, tween(170), label = "Audibilité")
     Column(Modifier.fillMaxWidth().hifiBlackSurface(13.dp).graphicsLayer { alpha = opacity }
         .border(.75.dp, if (selected) accent.copy(alpha = .45f) else Color.Transparent, RoundedCornerShape(13.dp))
-        .combinedClickable(onClick = { if (composition) state.selectMix(clip.id) else onDetail() },
-            onLongClick = if (composition) null else onDetail)
-        .padding(horizontal = 10.dp, vertical = 8.dp)) {
+        .then(if (composition) Modifier.clickable { state.selectMix(clip.id) } else Modifier)
+        .padding(horizontal = 10.dp, vertical = if (composition) 8.dp else 6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
             WaveArtistPortrait(clip.artist)
             Column(Modifier.weight(1f)) {
@@ -199,8 +198,9 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
                 }
             }
             if (!composition) WaveRoundPlay(playing, clip.id in state.preparing, progress, if (composition) "Lancer ou arrêter ${clip.title}" else "Écouter ${clip.title}", queued, stopIcon = false) {
-                if (composition) onAction() else state.preview(clip.id)
+                state.preview(clip.id)
             }
+            if (!composition) WaveControl(Icons.Default.ChatBubbleOutline, "Envoyer un message à ${clip.artist}") { onMessage() }
             if (!composition) WaveControl(Icons.Default.FileDownload, "Télécharger ${clip.title}") {
                 val extension = clip.source.substringAfterLast('.', "wav").substringBefore('?').takeIf { it in listOf("wav", "mp3", "m4a", "aac", "ogg", "flac") } ?: "wav"
                 download.launch("${clip.title.replace('/', '-') }.$extension")

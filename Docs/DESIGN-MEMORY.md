@@ -387,3 +387,7 @@ Le lecteur Wave possède son propre bouton haut-parleur animé et son propre vol
 - Propositions utilise le composant Ouvert/Fermé des demandes invités (WaveIntakeChip), point vert/rouge adouci.
 - Vote : surfaces de commande 34 dp, Message/Vote/Duel en boutons carrés à icône. Le duel sélectionne une boucle validée de Composition ; elle ne disparaît qu'en cas de victoire du remplacement. Ce parcours demeure un vote local de démonstration, pas un vote public serveur.
 - Composition : Mute/Solo toujours visibles et centrés ; tap sur la carte déplie volume/épingles. Plus de menu trois-points ni de bottom sheet de détails pour ces cartes. Croix en haut à droite avec confirmation explicite avant retrait d'une boucle validée.
+
+### Wave propositions
+- Bulle Message directe vers la conversation de l'auteur ; espacement 4 dp et padding vertical 6 dp.
+- Plus de bottom sheet au toucher des cartes ; Composition conserve son dépliage intégré.

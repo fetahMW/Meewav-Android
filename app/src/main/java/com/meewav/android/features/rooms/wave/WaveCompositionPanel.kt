@@ -45,9 +45,7 @@ private val danger = Color(0xFFC88B90)
 internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) {
     var section by rememberSaveable { mutableIntStateOf(0) }
     var revealed by remember { mutableStateOf<String?>(null) }
-    var rejectId by remember { mutableStateOf<String?>(null) }
     var filter by remember { mutableStateOf(WaveProposalStatus.PENDING) }
-    var detail by remember { mutableStateOf<String?>(null) }
     var messageArtist by remember { mutableStateOf<String?>(null) }
     var settings by remember { mutableStateOf(false) }
     var importMenu by remember { mutableStateOf(false) }
@@ -109,7 +107,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                 if (composition.isEmpty()) EmptyWorkspace("Ta composition commence ici", "Prends une boucle dans Propositions ou importe ton audio.", Modifier.weight(1f))
                 else LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(7.dp), contentPadding = PaddingValues(bottom = 8.dp)) {
                     items(composition, key = { it.id }) { clip ->
-                            WaveLoopCard(clip, state, composition = true, onDetail = { detail = clip.id }, onAction = { state.launch(clip.id) })
+                            WaveLoopCard(clip, state, composition = true)
 
                     }
                 }
@@ -134,7 +132,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                 if (state.importing) LinearProgressIndicator(Modifier.fillMaxWidth(), color = soft, trackColor = Color(0xFF23242B))
                 val proposals = state.proposals(filter)
                 if (proposals.isEmpty()) EmptyWorkspace("Aucune proposition ici", "Les boucles classées apparaîtront dans cette liste.", Modifier.weight(1f))
-                else LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(bottom = 10.dp)) {
+                else LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp), contentPadding = PaddingValues(bottom = 10.dp)) {
                     items(proposals, key = { it.id }) { clip ->
                         if (clip.packId != null && proposals.firstOrNull { it.packId == clip.packId }?.id == clip.id) {
                             Row(Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -149,9 +147,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                         }
                         WaveProposalSwipe(clip.id, revealed, { revealed = it }, onAccept = { state.queueVote(clip.id) },
                             onReject = { state.archive(clip.id, it) }) {
-                            WaveLoopCard(clip, state, composition = false, onDetail = { detail = clip.id }, onAction = {
-                                if (filter == WaveProposalStatus.ARCHIVED) state.pending(clip.id) else state.queueVote(clip.id)
-                            })
+                            WaveLoopCard(clip, state, composition = false, onMessage = { messageArtist = clip.artist })
                         }
                     }
                 }
@@ -236,75 +232,6 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
             }
             }
         }
-    }
-    val selected = state.clips.find { it.id == detail }
-    if (selected != null) {
-        var reasonOpen by remember(selected.id) { mutableStateOf(false) }
-        var reason by remember(selected.id) { mutableStateOf("") }
-        WorkspaceSheet(sheetHeight, onDismiss = { detail = null; state.stopPreview() }) {
-            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(selected.title, color = foreground, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
-                Text("${selected.artist} · ${selected.musical}", color = muted, fontSize = 12.sp)
-                selected.packId?.let { packId ->
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Text(selected.packTitle ?: "Composition", color = muted, fontSize = 11.sp, modifier = Modifier.weight(1f))
-                        ToolIcon(Icons.Default.Headphones, "Écouter la composition entière") { state.previewPack(packId) }
-                        ToolIcon(Icons.Default.LibraryAdd, "Proposer les éléments au vote", enabled = state.adoptingPack == null) { state.takePack(packId) }
-                    }
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    ToolIcon(if (state.snapshot.cue == selected.id) Icons.Default.Stop else Icons.Default.PlayArrow, "Écoute privée") { state.preview(selected.id) }
-                    ClipWaveform(state.prepared[selected.id]?.peaks.orEmpty(), if (state.snapshot.cue == selected.id) state.snapshot.cueProgress else 0f, Modifier.weight(1f).height(50.dp), state.snapshot.cue == selected.id)
-                }
-                state.errors[selected.id]?.let { Text(it, color = danger, fontSize = 11.sp) }
-                if (selected.id in state.preparing) LinearProgressIndicator(Modifier.fillMaxWidth(), color = soft, trackColor = Color(0xFF23242B))
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    WaveClipKind.entries.forEach { kind -> CompactAction(kind.label, selected.kind == kind) { state.kind(selected.id, kind) } }
-                }
-                var categoriesOpen by remember { mutableStateOf(false) }
-                Box {
-                    TextButton(onClick = { categoriesOpen = true }) { Text("${selected.category} ▾", color = soft) }
-                    DropdownMenu(categoriesOpen, { categoriesOpen = false }, containerColor = Color(0xFF17181E)) {
-                        state.categories.forEach { category -> DropdownMenuItem(text = { Text(category, color = foreground) }, onClick = { state.category(selected.id, category); categoriesOpen = false }) }
-                    }
-                }
-                if (selected.inComposition) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        CompactAction(if (selected.repeats == -1) "Boucle ∞" else "${selected.repeats}×", false) { state.repeat(selected.id) }
-                        CompactAction("SOLO", selected.solo) { state.solo(selected.id) }
-                        CompactAction("MUTE", selected.mute) { state.mute(selected.id) }
-                    }
-                    Text("Volume de la piste", color = muted, fontSize = 11.sp)
-                    Slider(selected.gain, { state.gain(selected.id, it) }, colors = SliderDefaults.colors(thumbColor = soft, activeTrackColor = primary))
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        CompactAction("Monter", false) { state.move(selected.id, -1) }
-                        CompactAction("Descendre", false) { state.move(selected.id, 1) }
-                        CompactAction("Retirer", false) { state.remove(selected.id); detail = null }
-                    }
-                } else {
-                    Button(onClick = { state.queueVote(selected.id); detail = null; state.stopPreview(); section = 1 }, modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = primary, contentColor = Color.White)) { Text("Proposer au vote") }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        TextButton(onClick = { state.queueVote(selected.id); detail = null; selectedVote = selected.id; section = 1 }) { Text("Mettre au vote", color = soft) }
-                        TextButton(onClick = { reasonOpen = !reasonOpen }) { Text("Mettre de côté / Refuser", color = danger, fontSize = 11.sp) }
-                    }
-                }
-                if (reasonOpen) {
-                    OutlinedTextField(reason, { reason = it }, label = { Text("Note privée") }, modifier = Modifier.fillMaxWidth(), maxLines = 3,
-                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = foreground, unfocusedTextColor = foreground, focusedBorderColor = soft))
-                    TextButton(onClick = { state.archive(selected.id, reason.ifBlank { "Mise de côté" }); detail = null }) { Text("Classer dans les archives", color = danger) }
-                }
-                if (selected.note.isNotBlank()) Text(selected.note, color = muted, fontSize = 12.sp)
-                Spacer(Modifier.height(12.dp))
-            }
-        }
-    }
-    rejectId?.let { id ->
-        AlertDialog(onDismissRequest = { rejectId = null }, containerColor = Color(0xFF17181E),
-            title = { Text("Passer cette proposition ?", color = foreground) },
-            text = { Text("Elle restera disponible dans les archives privées.", color = muted) },
-            confirmButton = { TextButton(onClick = { state.archive(id, "Proposition passée"); rejectId = null }) { Text("Passer", color = danger) } },
-            dismissButton = { TextButton(onClick = { rejectId = null }) { Text("Annuler", color = soft) } })
     }
     if (importMenu) {
         WorkspaceSheet(sheetHeight.coerceAtMost(260.dp), { importMenu = false }) {
