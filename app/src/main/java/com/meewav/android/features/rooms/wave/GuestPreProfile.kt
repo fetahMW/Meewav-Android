@@ -9,6 +9,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -16,7 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.activity.compose.BackHandler
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.Dp
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,7 +42,7 @@ private const val ProfilePage = "https://appassets.androidplatform.net/globe-vin
 /** One persistent artist sheet, with actions and the shared Globe content as two pages. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun GuestPreProfileHost(state: WaveGuestState) {
+internal fun GuestPreProfileHost(state: WaveGuestState, availableHeight: Dp) {
     val context = LocalContext.current
     val manifest by produceState<JSONObject?>(null, context) {
         value = withContext(Dispatchers.IO) {
@@ -77,14 +78,16 @@ internal fun GuestPreProfileHost(state: WaveGuestState) {
         // Attached and warm without reserving screen space or exposing an accessibility tree.
         ProfileBrowser(content, Modifier.size(1.dp).alpha(0f).semantics { hideFromAccessibility() })
     } else {
-        val sheetHeight = minOf((LocalConfiguration.current.screenHeightDp * .76f).dp, 660.dp)
+        val sheetHeight = availableHeight
         ModalBottomSheet(onDismissRequest = dismiss,
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
             shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
             containerColor = Color(0xFF07090C), contentColor = Color.White,
             dragHandle = null) {
             BackHandler(enabled = guest != null) { state.profilePreviewId = null }
-            Column(Modifier.fillMaxWidth().height(sheetHeight).background(Brush.verticalGradient(
+            Column(Modifier.fillMaxWidth().height(sheetHeight).border(.75.dp, Brush.linearGradient(
+                listOf(Color(0xFF757487), Color(0xFF343440), Color(0xFF1C1D26), Color(0xFF494456))),
+                RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)).background(Brush.verticalGradient(
                 listOf(Color(0xFF24262F), Color(0xFF0B0D12), Color(0xFF030405)), endY = 320f))) {
                 Box(Modifier.fillMaxWidth().height(44.dp), contentAlignment = Alignment.Center) {
                     Box(Modifier.width(44.dp).height(4.dp).clip(RoundedCornerShape(4.dp)).background(Color(0xFF686A7D)))

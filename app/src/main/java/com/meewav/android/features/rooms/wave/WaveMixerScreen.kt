@@ -311,9 +311,9 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                 }
             }
         }
+        GuestPreProfileHost(guestState, (maxHeight - 44.dp - videoViewportHeight - 6.dp).coerceAtLeast(0.dp))
         }
         WaveGuestDragOverlay(guestState)
-        GuestPreProfileHost(guestState)
         if (showLeaveConfirm) {
             AlertDialog(
                 onDismissRequest = { showLeaveConfirm = false },
