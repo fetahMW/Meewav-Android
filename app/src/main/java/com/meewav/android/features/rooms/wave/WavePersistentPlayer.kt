@@ -57,7 +57,7 @@ internal fun WaveMasterPlayer(state: WaveCompositionState, onImport: (WaveImport
     val progress = if (snapshot.cue != null) snapshot.cueProgress else
         (snapshot.frame.toFloat() / state.durationFrames).coerceIn(0f, 1f)
     val peaks = if (snapshot.cue != null) state.prepared[snapshot.cue]?.peaks.orEmpty() else state.masterPeaks
-    LaunchedEffect(state.compositionPage, state.canLoop) { rail = PlayerRail.READOUT; bases = false }
+    LaunchedEffect(state.compositionPage) { rail = PlayerRail.READOUT; bases = false }
     Column(Modifier.fillMaxWidth().hifiBlackSurface(17.dp).padding(horizontal = 10.dp, vertical = 4.dp)) {
         Row(Modifier.fillMaxWidth().height(46.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(44.dp).waveTactileClick {
@@ -121,7 +121,10 @@ internal fun WaveMasterPlayer(state: WaveCompositionState, onImport: (WaveImport
                                 modifier = Modifier.width(88.dp).clickable(onClick = onSettings), maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Text(waveClock(snapshot.frame), color = pearl, fontSize = 10.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.width(38.dp))
                         }
-                        WaveReferenceTimeline(peaks, progress, editingPin != null || (state.loopEnabled && state.canLoop),
+                        if (rail == PlayerRail.LOOP && !state.canLoop) Box(Modifier.fillMaxWidth().height(60.dp), contentAlignment = Alignment.Center) {
+                            Text(if (!state.referenceReady) "Importe une base pour régler sa boucle." else "Choisis Base ou Mix pour régler la boucle.",
+                                color = secondary, fontSize = 11.sp)
+                        } else WaveReferenceTimeline(peaks, progress, editingPin != null || (state.loopEnabled && state.canLoop),
                             editingPin == null && state.loopBars == 0, displayedRange, state.cueFrame.toFloat() / state.durationFrames,
                             onSeek = state::seek, onRange = { if (editingPin != null) state.movePin(it.start) else state.updateLoopRange(it) },
                             modifier = Modifier.fillMaxWidth().height(60.dp).padding(vertical = 6.dp))
@@ -159,7 +162,7 @@ internal fun WaveMasterPlayer(state: WaveCompositionState, onImport: (WaveImport
                                     }
                                 }
                             }
-                            if (rail != PlayerRail.LOOP) WaveControl(Icons.Default.MoveToInbox, "Importer une base ou une boucle au vote", rail == PlayerRail.IMPORT) {
+                            if (rail != PlayerRail.LOOP) WaveControl(Icons.Default.FileDownload, "Importer une base ou une boucle au vote", rail == PlayerRail.IMPORT) {
                                 rail = if (rail == PlayerRail.IMPORT) PlayerRail.READOUT else PlayerRail.IMPORT
                             } else Spacer(Modifier.width(38.dp))
                         }
@@ -168,7 +171,7 @@ internal fun WaveMasterPlayer(state: WaveCompositionState, onImport: (WaveImport
                                 (if (editingPin != null) listOf(4, 8, 16, 32) else listOf(-1, 0, 4, 8, 16, 32)).forEach { bars ->
                                     val selected = if (editingPin != null) editingPin.bars == bars else if (bars == -1) !state.loopEnabled else state.loopEnabled && state.loopBars == bars
                                     val minimumBars = state.candidateId?.let { state.prepared[it]?.frames?.div(state.framesPerBar) } ?: 0.0
-                                    val enabled = bars <= 0 || (bars >= minimumBars - .01 && bars * state.framesPerBar <= state.durationFrames + 1)
+                                    val enabled = state.canLoop && (bars <= 0 || (bars >= minimumBars - .01 && (bars + (editingPin?.startBar ?: 0)) * state.framesPerBar <= state.durationFrames + 1))
                                     Column(Modifier.size(44.dp).clip(RoundedCornerShape(9.dp)).background(if (selected) violet.copy(alpha = .12f) else Color.Transparent)
                                         .clickable(enabled = enabled) { if (editingPin != null) state.resizePin(bars) else state.selectLoop(bars); rail = PlayerRail.READOUT; haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove) },
                                         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
@@ -181,8 +184,11 @@ internal fun WaveMasterPlayer(state: WaveCompositionState, onImport: (WaveImport
                         }
                     }
                     Box(Modifier.size(44.dp), contentAlignment = Alignment.Center) {
-                        WaveControl(Icons.Default.Repeat, "Déplier les réglages de boucle", rail == PlayerRail.LOOP || state.loopEnabled,
-                            enabled = state.canLoop) { rail = if (rail == PlayerRail.LOOP) PlayerRail.READOUT else PlayerRail.LOOP }
+                        WaveControl(Icons.Default.Repeat, if (rail == PlayerRail.LOOP) "Replier les réglages de boucle" else "Déplier les réglages de boucle", rail == PlayerRail.LOOP || state.loopEnabled) {
+                            bases = false
+                            rail = if (rail == PlayerRail.LOOP) PlayerRail.READOUT else PlayerRail.LOOP
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        }
                         if (state.loopEnabled) Text(if (state.loopBars > 0) "${state.loopBars}" else "AB", color = violet, fontSize = 7.sp,
                             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 1.dp))
                     }

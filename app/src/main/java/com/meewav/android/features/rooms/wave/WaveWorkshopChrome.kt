@@ -106,17 +106,17 @@ internal fun WaveArtistPortrait(artist: String) {
 @Composable
 internal fun WaveRoleChip(category: String) {
     val color = when (category) {
-        "Drums" -> Color(0xFFD6A56F)
-        "Basse" -> Color(0xFF84B8A2)
-        "Mélodie" -> Color(0xFF9B9CD4)
-        "Accords" -> Color(0xFF82AFCD)
-        "Nappe" -> Color(0xFFB39BCD)
-        "Acapella" -> Color(0xFFC799A4)
-        else -> Color(0xFFADB5BE)
+        "Drums" -> Color(0xFFFFAB32)
+        "Basse" -> Color(0xFF43EF9E)
+        "Mélodie" -> Color(0xFF9890FF)
+        "Accords" -> Color(0xFF43CFFF)
+        "Nappe" -> Color(0xFFD078FF)
+        "Acapella" -> Color(0xFFFF70B8)
+        else -> Color(0xFFFFDC50)
     }
     Text(category, color = color, fontSize = 9.sp, fontWeight = FontWeight.Medium,
-        modifier = Modifier.clip(RoundedCornerShape(5.dp)).background(color.copy(alpha = .11f))
-            .border(.5.dp, color.copy(alpha = .26f), RoundedCornerShape(5.dp)).padding(horizontal = 6.dp, vertical = 2.dp), maxLines = 1)
+        modifier = Modifier.clip(RoundedCornerShape(5.dp)).background(color.copy(alpha = .23f))
+            .border(.5.dp, color.copy(alpha = .62f), RoundedCornerShape(5.dp)).padding(horizontal = 6.dp, vertical = 2.dp), maxLines = 1)
 }
 
 /** Horizontal slop is handled by Compose; vertical list scrolling retains its gesture. */
