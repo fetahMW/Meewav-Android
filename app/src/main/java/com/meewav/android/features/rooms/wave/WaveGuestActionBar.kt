@@ -26,12 +26,8 @@ internal fun WaveGuestActionBar(state: WaveGuestState, guests: List<WaveGuest>, 
     LaunchedEffect(state.messageRecipientIds) { draft = "" }
     val ids = guests.map { it.id }.toSet()
     val enabled = guests.isNotEmpty()
-    Column(Modifier.fillMaxWidth().padding(top = 6.dp).hifiBlackSurface(14.dp).padding(horizontal = 6.dp)) {
-        Row(Modifier.fillMaxWidth().height(32.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(if (enabled) "${guests.size} sélectionné(s)" else "Sélectionne un invité", modifier = Modifier.weight(1f).padding(start = 8.dp),
-                color = Color.White.copy(alpha = .5f), fontSize = 10.sp)
-        }
-        Row(Modifier.fillMaxWidth().padding(bottom = 4.dp)) {
+    Column(Modifier.fillMaxWidth().padding(top = 6.dp).hifiBlackSurface(14.dp).padding(horizontal = 6.dp, vertical = 4.dp)) {
+        Row(Modifier.fillMaxWidth()) {
             GuestAction("Message", WaveIcons.Envelope, enabled, Modifier.weight(1f)) { state.messageRecipientIds = ids; draft = "" }
             GuestAction("Aperçu", WaveIcons.Eye, guests.size == 1, Modifier.weight(1f)) { state.previewId = guests.single().id }
             if (page == 0) {
