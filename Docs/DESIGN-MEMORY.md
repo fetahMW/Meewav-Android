@@ -272,3 +272,9 @@ Compilation de livraison uniquement ; rendu à valider par l'utilisateur.
 ### Fin de l'essai glow Autotune — 19 septembre 2026
 - Retour utilisateur : mieux sans halo. Halo, contour violet et animation associés retirés ; ne pas les étendre à Réverb.
 - Conservation du châssis noir Hi-Fi et des textes/commandes grisés lorsque les effets sont désactivés.
+
+### Émojis dans la saisie Wave — 19 septembre 2026
+- Croix explicite dans le mur d'émoticônes ; hauteur adaptée à l'espace restant quand le clavier Samsung est ouvert.
+- Saisie native EditText avec ImageSpan : les assets Meewav remplacent visuellement les références [[mw:...]], un caractère éditable par image, insertion à la sélection et envoi sérialisé compatible avec les messages existants.
+- Conservation de la composition IME quand le brouillon ne change pas, limite de 1000 caractères sérialisés. Aucun remplacement du brouillon pendant une simple recomposition Compose.
+- Compilation de livraison, sans QA automatique.

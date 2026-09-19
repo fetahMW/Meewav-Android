@@ -78,6 +78,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import com.meewav.android.R
 
@@ -110,7 +111,7 @@ private val chatTimeGrey = Color.White.copy(alpha = 0.27f)
 private fun white(a: Float) = Color.White.copy(alpha = a)
 
 /* Mur d'emoji maison — 50 emoticons du site web (meewav-emojis v1). */
-private val mwEmojiMap: Map<String, Int> = mapOf(
+internal val mwEmojiMap: Map<String, Int> = mapOf(
     "ampoule-musicale" to R.drawable.mw_e_ampoule_musicale,
     "batterie" to R.drawable.mw_e_batterie,
     "beatpad-en-flamme" to R.drawable.mw_e_beatpad_en_flamme,
@@ -215,6 +216,7 @@ fun WaveChatPanel(modifier: Modifier = Modifier) {
     }
     var toolsOpen by remember { mutableStateOf(false) }
     var livePoll by remember { mutableStateOf<WaveChatPoll?>(null) }
+    val emojiInput = remember { WaveEmojiInputController() }
     var draft by remember { mutableStateOf("") }
     var unreadCount by remember { mutableIntStateOf(0) }
     // Flux live animé — nouveaux messages qui défilent à la vraie vitesse d'un chat.
@@ -273,7 +275,8 @@ fun WaveChatPanel(modifier: Modifier = Modifier) {
         }
     }
 
-    Box(modifier.fillMaxSize().padding(bottom = 6.dp)) {
+    BoxWithConstraints(modifier.fillMaxSize().padding(bottom = 6.dp)) {
+        val emojiWallHeight = (maxHeight - 110.dp).coerceIn(92.dp, 220.dp)
         Column(Modifier.fillMaxSize()) {
             Row(Modifier.weight(1f).fillMaxWidth()) {
                 Box(Modifier.weight(1f).fillMaxSize()) {
@@ -333,16 +336,16 @@ fun WaveChatPanel(modifier: Modifier = Modifier) {
             // Mur d'emoji maison — panneau au-dessus du composer.
             if (emojiWallOpen) {
                 MwEmojiWall(
-                    onSelect = { name ->
-                        val token = "[[mw:$name]]"
-                        draft = if (draft.isEmpty() || draft.endsWith(" ")) "$draft$token" else "$draft $token"
-                    }
+                    height = emojiWallHeight,
+                    onSelect = { name -> emojiInput.insert(name) },
+                    onClose = { emojiWallOpen = false },
                 )
             }
 
             Spacer(Modifier.height(8.dp))
             WaveChatComposer(
                 draft = draft,
+                emojiInput = emojiInput,
                 emojiOpen = emojiWallOpen,
                 onDraftChange = { draft = it },
                 onToggleEmoji = { emojiWallOpen = !emojiWallOpen },
@@ -517,28 +520,34 @@ private fun WaveChatRow(
 
 /* Mur d'emoji maison — grille des 50 emoticons customs (mw-emoticon-wall web). */
 @Composable
-private fun MwEmojiWall(onSelect: (String) -> Unit) {
+private fun MwEmojiWall(height: Dp, onSelect: (String) -> Unit, onClose: () -> Unit) {
     Column(
         Modifier
             .fillMaxWidth()
             .padding(top = 8.dp)
+            .height(height)
             .clip(RoundedCornerShape(14.dp))
             .background(Color(0xFF0D0B16).copy(alpha = 0.96f))
             .border(1.dp, Color(0xFFBE9AEF).copy(alpha = 0.22f), RoundedCornerShape(14.dp))
             .padding(8.dp)
     ) {
-        Text(
-            "EMOTICONS MEEWAV",
-            color = white(0.55f), fontSize = 9.sp,
-            fontWeight = FontWeight.SemiBold, letterSpacing = 0.8.sp,
-            fontFamily = WaveMixerTheme.fontFamily,
-            modifier = Modifier.padding(start = 2.dp, bottom = 6.dp)
-        )
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                "ÉMOTICÔNES MEEWAV", color = white(0.55f), fontSize = 9.sp,
+                fontWeight = FontWeight.SemiBold, letterSpacing = 0.8.sp,
+                fontFamily = WaveMixerTheme.fontFamily,
+                modifier = Modifier.weight(1f).padding(start = 2.dp),
+            )
+            Box(Modifier.size(44.dp).clip(CircleShape).clickable(onClick = onClose),
+                contentAlignment = Alignment.Center) {
+                Icon(WaveIcons.Close, "Fermer les émoticônes", tint = white(0.75f), modifier = Modifier.size(18.dp))
+            }
+        }
         LazyVerticalGrid(
             columns = GridCells.Fixed(6),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(150.dp),
+                .weight(1f),
             horizontalArrangement = Arrangement.spacedBy(2.dp),
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
@@ -701,6 +710,7 @@ private fun ChatSheetDivider() {
 @Composable
 private fun WaveChatComposer(
     draft: String,
+    emojiInput: WaveEmojiInputController,
     emojiOpen: Boolean,
     onDraftChange: (String) -> Unit,
     onToggleEmoji: () -> Unit,
@@ -724,31 +734,13 @@ private fun WaveChatComposer(
                 .padding(start = 16.dp, end = 2.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BasicTextField(
-                value = draft,
-                onValueChange = { onDraftChange(it.take(1_000)) },
-                modifier = Modifier.weight(1f)
-                    .onFocusChanged { focused = it.isFocused }
-                    .semantics { contentDescription = "Écrire un message" },
-                singleLine = true,
-                textStyle = TextStyle(
-                    color = Color(0xFFE4E3EE), fontSize = 13.sp,
-                    fontFamily = WaveMixerTheme.fontFamily
-                ),
-                cursorBrush = SolidColor(Color(0xFFB49AFF)),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                keyboardActions = KeyboardActions(onSend = { if (canSend) onSend() }),
-                decorationBox = { inner ->
-                    Box {
-                        if (draft.isEmpty()) {
-                            Text(
-                                "Écris un message…", color = Color(0xFF9794A6),
-                                fontSize = 13.sp, fontFamily = WaveMixerTheme.fontFamily
-                            )
-                        }
-                        inner()
-                    }
-                }
+            WaveEmojiInput(
+                draft = draft,
+                controller = emojiInput,
+                onDraftChange = onDraftChange,
+                onSend = { if (canSend) onSend() },
+                onFocus = { focused = it },
+                modifier = Modifier.weight(1f).height(44.dp),
             )
             Spacer(Modifier.width(7.dp))
             Box(Modifier.width(1.dp).height(22.dp).background(
