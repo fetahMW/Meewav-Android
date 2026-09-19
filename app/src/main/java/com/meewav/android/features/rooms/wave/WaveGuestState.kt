@@ -103,7 +103,7 @@ internal class WaveGuestState {
         val matching = guests.filter { it.id in ids }
         val allowed = matching.filter { guest -> when (target) {
             WaveGuestLocation.STAGE -> guest.location == WaveGuestLocation.BACKSTAGE
-            WaveGuestLocation.BACKSTAGE -> guest.location == WaveGuestLocation.STAGE || guest.location == WaveGuestLocation.INVITED
+            WaveGuestLocation.BACKSTAGE -> guest.location == WaveGuestLocation.STAGE || guest.location == WaveGuestLocation.INVITED || guest.location == WaveGuestLocation.REQUESTED
             WaveGuestLocation.INVITED -> guest.location == WaveGuestLocation.REQUESTED || guest.location == WaveGuestLocation.BACKSTAGE
             WaveGuestLocation.REQUESTED -> false
         } }
@@ -126,6 +126,15 @@ internal class WaveGuestState {
         }
     }
     fun toggleMic(id: String) { guests = guests.map { if (it.id == id) it.copy(mic = !it.mic) else it } }
+    fun refuseRequests(ids: Set<String>) {
+        val refused = guests.filter { it.id in ids && it.location in setOf(WaveGuestLocation.REQUESTED, WaveGuestLocation.INVITED) }
+        if (refused.isEmpty()) return
+        val refusedIds = refused.map { it.id }.toSet()
+        guests = guests.filterNot { it.id in refusedIds }
+        selected = emptySet()
+        if (previewId in refusedIds) previewId = null
+        notice = "${refused.size} demande(s) refusée(s) · démo locale"
+    }
     fun toggleCamera(id: String) { guests = guests.map { if (it.id == id) it.copy(camera = !it.camera) else it } }
     fun remove(ids: Set<String>) {
         guests = guests.filterNot { it.id in ids }; selected = emptySet()

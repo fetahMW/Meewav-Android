@@ -136,6 +136,7 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
     var page by remember { mutableIntStateOf(0) }
     var inviteOpen by remember { mutableStateOf(false) }
     var filtersOpen by remember { mutableStateOf(false) }
+    var multiSelect by remember { mutableStateOf(false) }
     val participants = state.guests.filter { when (page) {
         0 -> it.location == WaveGuestLocation.BACKSTAGE
         1 -> it.location == WaveGuestLocation.INVITED || it.location == WaveGuestLocation.REQUESTED
@@ -153,7 +154,7 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                     else -> it.location == WaveGuestLocation.STAGE
                 } }
                 Box(Modifier.weight(1f).height(44.dp).clip(RoundedCornerShape(8.dp))
-                    .clickable { page = index; state.selected = emptySet() }, contentAlignment = Alignment.Center) {
+                    .clickable { page = index; state.selected = emptySet(); multiSelect = false }, contentAlignment = Alignment.Center) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                         Text(title, fontSize = 11.sp, fontWeight = if (page == index) FontWeight.SemiBold else FontWeight.Normal,
                             color = Color.White.copy(alpha = if (page == index) .95f else .5f))
@@ -171,6 +172,11 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                 TextButton(onClick = state::toggleRequests, modifier = Modifier.weight(1f)) {
                     Text(if (state.requestsOpen) "Fermer les demandes" else "Ouvrir les demandes",
                         color = WaveMixerTheme.capsuleAccentSoft, fontSize = 11.sp)
+                }
+                TextButton(onClick = { multiSelect = !multiSelect; if (!multiSelect) state.selected = emptySet() },
+                    contentPadding = PaddingValues(horizontal = 5.dp)) {
+                    Text(if (multiSelect) "Terminer" else "Multi-select", fontSize = 11.sp,
+                        color = if (multiSelect) Color.White else WaveMixerTheme.capsuleAccentSoft)
                 }
             } else Text(if (page == 0) "Glisse un invité vers la vidéo" else "3 invités maximum sur scène",
                 modifier = Modifier.weight(1f), color = Color.White.copy(alpha = .48f), fontSize = 11.sp)
@@ -198,11 +204,21 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                         .border(if (guest.id in state.selected) 1.dp else 0.dp, if (guest.id in state.selected) WaveMixerTheme.capsuleAccentSoft else Color.Transparent, RoundedCornerShape(12.dp))
                         .guestDrag(state, guest, state.selected.isEmpty() && guest.location in listOf(WaveGuestLocation.BACKSTAGE, WaveGuestLocation.STAGE))
                         .combinedClickable(
-                            onClick = { if (state.selected.isNotEmpty()) state.selected = if (guest.id in state.selected) state.selected - guest.id else state.selected + guest.id else state.previewId = guest.id },
+                            onClick = { if (page == 1 || multiSelect || state.selected.isNotEmpty()) {
+                                if (page == 1) multiSelect = true
+                                state.selected = if (guest.id in state.selected) state.selected - guest.id else state.selected + guest.id
+                            } else state.previewId = guest.id },
                             onLongClick = { state.selected = state.selected + guest.id },
                         ).padding(8.dp).alpha(if (state.dragId == guest.id) .3f else 1f),
                         horizontalAlignment = Alignment.CenterHorizontally) {
-                        Image(painterResource(guest.portrait), guest.name, modifier = Modifier.fillMaxWidth().aspectRatio(1.35f).clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Crop)
+                        Box {
+                            Image(painterResource(guest.portrait), guest.name, modifier = Modifier.fillMaxWidth().aspectRatio(1.35f).clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Crop)
+                            if (page == 1 && (multiSelect || state.selected.isNotEmpty())) Checkbox(
+                                checked = guest.id in state.selected, onCheckedChange = null,
+                                modifier = Modifier.align(Alignment.TopEnd).padding(3.dp).size(20.dp)
+                                    .background(Color.Black.copy(alpha = .75f), RoundedCornerShape(4.dp)),
+                                colors = CheckboxDefaults.colors(checkedColor = WaveMixerTheme.capsuleAccentSoft))
+                        }
                         Text(guest.name, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         if (guest.location == WaveGuestLocation.BACKSTAGE) GuestHealth(guest)
                         else Text(guest.location.label, color = Color.White.copy(alpha = .45f), fontSize = 8.sp, maxLines = 1)
@@ -210,7 +226,25 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                 }
             }
         }
-        if (selectedGuests.isNotEmpty()) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        if (page == 1 && (multiSelect || selectedGuests.isNotEmpty())) {
+            Column(Modifier.fillMaxWidth().padding(top = 6.dp).hifiBlackSurface(16.dp).padding(horizontal = 8.dp, vertical = 4.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("${selectedGuests.size} sélectionné(s)", fontSize = 11.sp, color = Color.White.copy(alpha = .6f), modifier = Modifier.weight(1f))
+                    TextButton(onClick = { state.selected = emptySet(); multiSelect = false }) { Text("Annuler", fontSize = 11.sp, color = Color.White.copy(alpha = .6f)) }
+                }
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    TextButton(onClick = { state.move(selectedGuests.map { it.id }.toSet(), WaveGuestLocation.BACKSTAGE); multiSelect = false },
+                        enabled = selectedGuests.isNotEmpty(), modifier = Modifier.weight(1f)) {
+                        Text("Passer en coulisses", fontSize = 12.sp, color = if (selectedGuests.isNotEmpty()) WaveMixerTheme.capsuleAccentSoft else Color.Gray)
+                    }
+                    Box(Modifier.width(1.dp).height(20.dp).background(Color.White.copy(alpha = .1f)))
+                    TextButton(onClick = { state.refuseRequests(selectedGuests.map { it.id }.toSet()); multiSelect = false },
+                        enabled = selectedGuests.isNotEmpty(), modifier = Modifier.weight(1f)) {
+                        Text("Refuser", fontSize = 12.sp, color = if (selectedGuests.isNotEmpty()) Color(0xFFE29A9D) else Color.Gray)
+                    }
+                }
+            }
+        } else if (selectedGuests.isNotEmpty()) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = { state.selected = emptySet() }) { Text("Annuler", color = Color.White.copy(alpha = .6f)) }
             Spacer(Modifier.weight(1f))
             val allRequests = selectedGuests.all { it.location == WaveGuestLocation.REQUESTED }

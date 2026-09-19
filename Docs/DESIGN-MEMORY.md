@@ -342,3 +342,9 @@ Compilation de livraison uniquement ; rendu à valider par l'utilisateur.
 - Six vrais badges exportés directement du composant SVG React canonique via scripts/export-wave-grade-badges.cjs.
 - Sélection des 8/16/32 premières demandes correspondant aux filtres, uniquement dans Demandes, appliquée au bouton inférieur sans accepter automatiquement.
 
+
+### Demandes : sélection et barre d'actions
+- Multi-select à côté d'Ouvrir/Fermer les demandes. Tap sur une demande ou appui long active la sélection ; cases visibles et sélection des lots 8/16/32 compatible.
+- Bandeau noir Hi-Fi inférieur : compteur, Annuler, Passer en coulisses, Refuser. Actions désactivées sans sélection. Refuser retire uniquement les demandes sélectionnées ; passage direct en coulisses, sans mise sur scène.
+- Actions locales de démonstration, pas de notification distante envoyée.
+
