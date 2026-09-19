@@ -329,10 +329,11 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
         val pin = nextPin(id) ?: return
         if (pins.none { it.id == pin.id }) pins = pins + pin
         selectedMixId = id; selectPin(pin.id); syncPins(); save()
-    }    fun movePin(progress: Float) {
+    }
+    fun movePin(progress: Float) {
         val pin = selectedPin ?: return
-        val step = pin.bars
-        val last = ((durationFrames / framesPerBar).toInt() - step).coerceAtLeast(0) / step
+        val step = 4
+        val last = ((durationFrames / framesPerBar).toInt() - pin.bars).coerceAtLeast(0) / step
         val start = kotlin.math.floor(progress * durationFrames / framesPerBar / step + .5).toInt().coerceIn(0, last) * step
         replacePin(pin.copy(startBar = start))
     }
@@ -419,8 +420,9 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
         val length = if (bars > 0) (framesPerBar * bars / durationFrames).toFloat().coerceAtMost(1f)
             else (range.endInclusive - range.start).coerceIn(minimum, 1f)
         val start = if (bars > 0) {
-            val lastBlock = kotlin.math.floor((1.0 - length + 0.000001) / length).toInt().coerceAtLeast(0)
-            kotlin.math.floor(range.start / length + .5f).toInt().coerceIn(0, lastBlock) * length
+            val step = (framesPerBar * 4 / durationFrames).toFloat()
+            val lastBlock = kotlin.math.floor((1.0 - length + 0.000001) / step).toInt().coerceAtLeast(0)
+            kotlin.math.floor(range.start / step + .5f).toInt().coerceIn(0, lastBlock) * step
         } else range.start.coerceIn(0f, 1f - length)
         return start..(start + length).coerceAtMost(1f)
     }
@@ -644,6 +646,9 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
     }
     fun startVote(id: String, seconds: Int, replacementId: String?, demonstration: Boolean = true) {
         if (vote != null) return
+        if (replacementId != null && (replacementId == id || clips.none { it.id == replacementId && it.inComposition && !it.isBase })) {
+            notice = "La boucle à remplacer n’est plus dans la composition."; return
+        }
         if (clips.find { it.id == id }?.isBase != true && replacementId == null && clips.count { it.inComposition } >= 20) {
             notice = "Choisis une piste à remplacer : la composition contient déjà 20 pistes."; return
         }

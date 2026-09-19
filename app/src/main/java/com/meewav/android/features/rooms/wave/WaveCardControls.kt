@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.*
 import kotlinx.coroutines.delay
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
@@ -29,7 +30,7 @@ private enum class CardRail { NONE, DURATION, VOLUME, PINS }
 
 @Composable
 internal fun WaveVoteControls(clip: WaveCompositionClip, state: WaveCompositionState, duration: Int,
-    onDuration: (Int) -> Unit, onLaunch: () -> Unit, onMessage: () -> Unit) {
+    onDuration: (Int) -> Unit, onLaunch: () -> Unit, onMessage: () -> Unit, onDuel: () -> Unit) {
     var rail by remember(clip.id) { mutableStateOf(CardRail.NONE) }
     var adjusting by remember { mutableStateOf(false) }
     val interaction = remember { MutableInteractionSource() }
@@ -38,7 +39,7 @@ internal fun WaveVoteControls(clip: WaveCompositionClip, state: WaveCompositionS
     LaunchedEffect(rail, state.auditionGain(clip.id), adjusting, dragged, pressed) { if (rail == CardRail.VOLUME && !adjusting && !dragged && !pressed) { delay(3000); rail = CardRail.NONE } }
     val locked = state.vote != null || clip.id in state.preparing
     val slide = with(LocalDensity.current) { 16.dp.roundToPx() }
-    Row(Modifier.fillMaxWidth().height(44.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+    Row(Modifier.fillMaxWidth().padding(top = 8.dp).height(44.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
         CardCommand(if (rail == CardRail.DURATION) Icons.Default.ChevronLeft else Icons.Default.Timer, "${duration}s", enabled = !locked, modifier = Modifier.width(62.dp)) {
             rail = if (rail == CardRail.DURATION) CardRail.NONE else CardRail.DURATION
         }
@@ -58,8 +59,10 @@ internal fun WaveVoteControls(clip: WaveCompositionClip, state: WaveCompositionS
                             modifier = Modifier.weight(1f), enabled = !locked, onValueChangeFinished = { adjusting = false }, interactionSource = interaction, steps = 99,
                             colors = SliderDefaults.colors(thumbColor = accent, activeTrackColor = accent))
                         else {
-                            CardCommand(Icons.Default.ChatBubbleOutline, "Message", modifier = Modifier.weight(1f), onClick = onMessage)
-                            CardCommand(Icons.Default.HowToVote, "Vote", selected = true, enabled = !locked, modifier = Modifier.weight(1f), onClick = onLaunch)
+                            Spacer(Modifier.weight(1f))
+                            VoteSquare(Icons.Default.ChatBubbleOutline, "Message", enabled = !locked, onClick = onMessage)
+                            VoteSquare(Icons.Default.HowToVote, "Vote", enabled = !locked, onClick = onLaunch)
+                            VoteSquare(Icons.Default.CompareArrows, "Duel de remplacement", enabled = !locked && !clip.isBase, onClick = onDuel)
                         }
                     }
                 }
@@ -105,8 +108,9 @@ internal fun WaveMixControls(clip: WaveCompositionClip, state: WaveCompositionSt
                         CardRail.VOLUME -> Slider(clip.gain, { adjusting = true; state.gain(clip.id, it) },
                             onValueChangeFinished = { adjusting = false }, interactionSource = interaction, steps = 99, colors = SliderDefaults.colors(thumbColor = accent, activeTrackColor = accent))
                         else -> {
-                            CardCommand(null, "M", clip.mute) { state.mute(clip.id) }
-                            CardCommand(null, "S", clip.solo) { state.solo(clip.id) }
+                            Slider(clip.gain, { adjusting = true; state.gain(clip.id, it) },
+                                onValueChangeFinished = { adjusting = false }, interactionSource = interaction, steps = 99,
+                                colors = SliderDefaults.colors(thumbColor = accent, activeTrackColor = accent))
                         }
                     }
                 }
@@ -115,20 +119,39 @@ internal fun WaveMixControls(clip: WaveCompositionClip, state: WaveCompositionSt
         if (rail != CardRail.PINS) WaveControl(Icons.Default.VolumeUp, "Volume de ${clip.title}", rail == CardRail.VOLUME) {
             rail = if (rail == CardRail.VOLUME) CardRail.NONE else CardRail.VOLUME
         }
-        WaveControl(Icons.Default.Close, if (rail == CardRail.PINS) "Supprimer l’épingle" else "Retirer la boucle",
-            enabled = rail != CardRail.PINS || state.selectedPinId != null) {
-            if (rail == CardRail.PINS) state.removePin() else state.remove(clip.id)
+        if (rail == CardRail.PINS) WaveControl(Icons.Default.Close, "Supprimer l’épingle",
+            enabled = state.selectedPinId != null) {
+            state.removePin()
         }
     }
 }
 
 @Composable
 private fun CardCommand(icon: ImageVector?, label: String, selected: Boolean = false, enabled: Boolean = true, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    Row(modifier.height(44.dp).widthIn(min = 44.dp).hifiBlackSurface(8.dp)
+    Row(modifier.height(34.dp).widthIn(min = 34.dp).hifiBlackSurface(8.dp)
+        .border(.6.dp, if (selected) accent.copy(alpha = .4f) else Color.Transparent, RoundedCornerShape(8.dp))
+        .semantics { this.selected = selected }
         .clickable(enabled = enabled, onClick = onClick).padding(horizontal = 7.dp),
         horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically) {
         val tint = (if (selected) accent else text).copy(alpha = if (enabled) 1f else .4f)
         if (icon != null) Icon(icon, label.ifBlank { "Retour" }, tint = tint, modifier = Modifier.size(15.dp))
         if (label.isNotEmpty()) Text(label, color = tint, fontSize = 10.sp, maxLines = 1)
+    }
+}
+
+@Composable
+private fun VoteSquare(icon: ImageVector, label: String, enabled: Boolean, onClick: () -> Unit) {
+    Box(Modifier.size(40.dp).clickable(enabled = enabled, onClick = onClick), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(34.dp).hifiBlackSurface(8.dp), contentAlignment = Alignment.Center) {
+            Icon(icon, label, tint = accent.copy(alpha = if (enabled) 1f else .3f), modifier = Modifier.size(18.dp))
+        }
+    }
+}
+
+@Composable
+internal fun WaveMixHeaderControls(clip: WaveCompositionClip, state: WaveCompositionState) {
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+        CardCommand(null, "Mute", clip.mute, modifier = Modifier.width(44.dp)) { state.mute(clip.id) }
+        CardCommand(null, "Solo", clip.solo, modifier = Modifier.width(44.dp)) { state.solo(clip.id) }
     }
 }

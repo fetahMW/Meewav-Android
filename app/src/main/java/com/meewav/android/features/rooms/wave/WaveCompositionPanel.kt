@@ -56,8 +56,10 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
     var duration by remember { mutableIntStateOf(30) }
     var durationMenu by remember { mutableStateOf(false) }
     var selectedVote by remember { mutableStateOf<String?>(null) }
-    var replacement by remember { mutableStateOf<String?>(null) }
-    var replacementMenu by remember { mutableStateOf(false) }
+
+
+    var duelId by remember { mutableStateOf<String?>(null) }
+    var duelTarget by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
     val folderImporter = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null) {
@@ -126,9 +128,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                         }
                     }
                     Spacer(Modifier.weight(1f))
-                    TextButton(onClick = state::toggleIntake, contentPadding = PaddingValues(horizontal = 4.dp)) {
-                        Text("● ${if (state.intakeOpen) "Ouvert" else "Fermé"}", fontSize = 11.sp, color = if (state.intakeOpen) Color(0xFF86B69B) else danger)
-                    }
+                    WaveIntakeChip(state.intakeOpen, state::toggleIntake)
                     ToolIcon(Icons.Default.Add, "Importer une proposition", enabled = !state.importing) { importMenu = true }
                 }
                 if (state.importing) LinearProgressIndicator(Modifier.fillMaxWidth(), color = soft, trackColor = Color(0xFF23242B))
@@ -166,7 +166,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                     items(candidates, key = { it.id }) { clip ->
                         Column(Modifier.fillMaxWidth().hifiBlackSurface(13.dp)
                             .border(if (selected?.id == clip.id) 1.dp else 0.dp, if (selected?.id == clip.id) soft.copy(alpha = .5f) else Color.Transparent, RoundedCornerShape(12.dp))
-                            .clickable(enabled = state.vote == null) { selectedVote = clip.id; replacement = null }.padding(10.dp)) {
+                            .clickable(enabled = state.vote == null) { selectedVote = clip.id }.padding(10.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
                             WaveArtistPortrait(clip.artist)
                             Column(Modifier.weight(1f)) {
@@ -180,7 +180,8 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                             }
                             AnimatedVisibility(selected?.id == clip.id) {
                                 WaveVoteControls(clip, state, duration, onDuration = { duration = it },
-                                    onLaunch = { state.startVote(clip.id, duration, replacement) }, onMessage = { messageArtist = clip.artist })
+                                    onLaunch = { state.startVote(clip.id, duration, null) }, onMessage = { messageArtist = clip.artist },
+                                    onDuel = { duelId = clip.id; duelTarget = null })
                             }
                         }
                     }
@@ -194,16 +195,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                             TextButton(onClick = { state.demoBallot(false) }) { Text("Contre  ${poll.no}", color = danger) }
                             ToolIcon(Icons.Default.Check, "Clôturer la simulation", onClick = state::finishVote)
                         }
-                    } ?: Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.weight(1f)) {
-                            TextButton(onClick = { replacementMenu = true }) { Text(if (replacement == null) "Ajout au Beat ▾" else "Remplacement ▾", fontSize = 11.sp, color = muted) }
-                            DropdownMenu(replacementMenu, { replacementMenu = false }, containerColor = Color(0xFF17181E)) {
-                                DropdownMenuItem(text = { Text("Ajouter au Beat", color = foreground) }, onClick = { replacement = null; replacementMenu = false })
-                                state.clips.filter { it.inComposition && it.category == clip.category }.forEach { target ->
-                                    DropdownMenuItem(text = { Text("Remplacer ${target.title}", color = foreground) }, onClick = { replacement = target.id; replacementMenu = false })
-                                }
-                            }
-                        }
+                    } ?: Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                         ToolIcon(Icons.Default.Close, "Retirer du vote") { state.pending(clip.id) }
                     }
                 }
@@ -339,16 +331,48 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
             Text("Suivi du vote", color = foreground, fontSize = 18.sp)
             val round = state.vote
             if (round != null) {
-                Text(state.clips.find { it.id == round.clipId }?.title ?: "Proposition", color = foreground)
+                val proposed = state.clips.find { it.id == round.clipId }
+                val incumbent = state.clips.find { it.id == round.replacementId }
+                Text(proposed?.title ?: "Proposition", color = foreground)
+                if (incumbent != null) Text("Face à ${incumbent.title} · ${incumbent.artist}", color = muted)
                 Text("${state.voteSecondsRemaining} s · ${round.yes} pour · ${round.no} contre", color = soft)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { state.demoBallot(true) }) { Text("Pour") }
-                    OutlinedButton(onClick = { state.demoBallot(false) }) { Text("Contre") }
+                    OutlinedButton(onClick = { state.demoBallot(true) }) { Text(if (incumbent != null) "Remplacer" else "Pour") }
+                    OutlinedButton(onClick = { state.demoBallot(false) }) { Text(if (incumbent != null) "Conserver" else "Contre") }
                 }
                 Text("60 % d’approbation · un bulletin par participant", color = muted, fontSize = 12.sp)
             } else Text(state.lastVerdict ?: "Vote terminé", color = soft)
             TextButton(onClick = { state.followVote = false }) { Text("Fermer le suivi", color = soft) }
         }
+    }
+    duelId?.let { id ->
+        val proposed = state.clips.find { it.id == id }
+        val choices = state.clips.filter { it.inComposition && !it.isBase && it.id != id }
+        AlertDialog(onDismissRequest = { duelId = null }, containerColor = Color(0xFF111217),
+            title = { Text("Duel de remplacement", color = foreground) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("${proposed?.title ?: "Cette proposition"} face à une boucle de Composition. La boucle actuelle reste en place jusqu’au résultat.", color = muted)
+                    if (choices.isEmpty()) Text("Aucune boucle validée à défier pour le moment.", color = soft)
+                    else LazyColumn(Modifier.heightIn(max = 280.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(choices, key = { it.id }) { target ->
+                            Row(Modifier.fillMaxWidth().hifiBlackSurface(10.dp).clickable { duelTarget = target.id }.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(duelTarget == target.id, { duelTarget = target.id }, colors = RadioButtonDefaults.colors(selectedColor = soft))
+                                Column(Modifier.weight(1f)) {
+                                    Text(target.title, color = foreground, maxLines = 1, overflow = TextOverflow.Ellipsis, fontSize = 12.sp)
+                                    Text(target.artist, color = muted, fontSize = 10.sp)
+                                }
+                                WaveRoleChip(target.category)
+                            }
+                        }
+                    }
+                    Text("Vote local de démonstration · $duration secondes", color = muted, fontSize = 11.sp)
+                }
+            },
+            confirmButton = { TextButton(onClick = {
+                duelTarget?.let { state.startVote(id, duration, it, demonstration = false) }; duelId = null
+            }, enabled = proposed != null && choices.any { it.id == duelTarget } && state.vote == null) { Text("Lancer le duel", color = soft) } },
+            dismissButton = { TextButton(onClick = { duelId = null }) { Text("Annuler", color = muted) } })
     }
 }
 

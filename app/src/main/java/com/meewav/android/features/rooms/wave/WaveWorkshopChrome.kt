@@ -161,6 +161,7 @@ internal fun RowScope.SwipeAction(label: String, icon: ImageVector, active: Bool
 internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState, composition: Boolean,
     onDetail: () -> Unit, onAction: () -> Unit) {
     val download = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("audio/*")) { uri -> if (uri != null) state.download(clip.id, uri) }
+    var confirmRemoval by remember(clip.id) { mutableStateOf(false) }
     val voice = state.snapshot.voices.find { it.id == clip.id }
     val cue = state.snapshot.cue == clip.id
     val queued = if (composition) voice?.phase == "Prochaine mesure" else state.snapshot.pendingCandidate == clip.id
@@ -173,7 +174,8 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
     val opacity by animateFloatAsState(if (dimmed) .50f else 1f, tween(170), label = "Audibilité")
     Column(Modifier.fillMaxWidth().hifiBlackSurface(13.dp).graphicsLayer { alpha = opacity }
         .border(.75.dp, if (selected) accent.copy(alpha = .45f) else Color.Transparent, RoundedCornerShape(13.dp))
-        .combinedClickable(onClick = { if (composition) state.selectMix(clip.id) else onDetail() }, onLongClick = onDetail)
+        .combinedClickable(onClick = { if (composition) state.selectMix(clip.id) else onDetail() },
+            onLongClick = if (composition) null else onDetail)
         .padding(horizontal = 10.dp, vertical = 8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
             WaveArtistPortrait(clip.artist)
@@ -189,7 +191,7 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
                     }
                     Image(painterResource(grade), "Grade de ${clip.artist}", modifier = Modifier.size(24.dp))
                 }
-                Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                if (!composition) Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     WaveRoleChip(clip.category)
                     if (composition) Text(if (clip.solo) "SOLO" else if (clip.mute) "MUTE" else if (queued) "À la mesure" else if (clip.repeats == -1) "∞" else "${clip.repeats}×",
                         color = secondary, fontSize = 9.sp)
@@ -203,9 +205,21 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
                 val extension = clip.source.substringAfterLast('.', "wav").substringBefore('?').takeIf { it in listOf("wav", "mp3", "m4a", "aac", "ogg", "flac") } ?: "wav"
                 download.launch("${clip.title.replace('/', '-') }.$extension")
             }
-            else WaveControl(Icons.Default.MoreHoriz, "Options de ${clip.title}", onClick = onDetail)
+            else {
+                WaveControl(Icons.Default.Close, "Retirer ${clip.title} de la composition") { confirmRemoval = true }
+            }
+        }
+        if (composition) Box(Modifier.fillMaxWidth().height(42.dp)) {
+            Box(Modifier.align(Alignment.CenterStart)) { WaveRoleChip(clip.category) }
+            Box(Modifier.align(Alignment.Center)) { WaveMixHeaderControls(clip, state) }
         }
         AnimatedVisibility(selected) { WaveMixControls(clip, state) }
         if (clip.id in state.errors) Text(state.errors[clip.id] ?: "Audio indisponible", color = Color(0xFFC88B90), fontSize = 9.sp)
     }
+    if (confirmRemoval) AlertDialog(onDismissRequest = { confirmRemoval = false }, containerColor = Color(0xFF111217),
+        icon = { Icon(Icons.Default.WarningAmber, null, tint = Color(0xFFC88B90)) },
+        title = { Text("Retirer une boucle validée ?", color = ink) },
+        text = { Text("Tu es sur le point de supprimer « ${clip.title} » de la composition. Cette boucle a été validée par le public. Elle cessera de jouer et ses épingles seront retirées.", color = secondary) },
+        confirmButton = { TextButton(onClick = { state.remove(clip.id); confirmRemoval = false }) { Text("Retirer la boucle", color = Color(0xFFC88B90)) } },
+        dismissButton = { TextButton(onClick = { confirmRemoval = false }) { Text("Conserver", color = accent) } })
 }

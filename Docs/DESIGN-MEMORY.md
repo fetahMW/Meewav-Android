@@ -379,3 +379,11 @@ Wave : l’état sélectionné Base / Boucle / Mix utilise exactement roomsStudi
 
 Base / Boucle / Mix doit reprendre le noir HiFi des boutons microphone et haut-parleur placés sous les faders : hardwareSurface(6.dp, raised = true, reflection = 0.085f). Cette consigne remplace le matériau violet Simple / Pro précédemment demandé pour ce sélecteur.
 Le lecteur Wave possède son propre bouton haut-parleur animé et son propre volume, avec le même cap de fader perle strié que le Mixeur. Le fader audio du Mixeur ne doit jamais modifier le volume du lecteur Wave. Les deux lecteurs restent des instances indépendantes.
+
+## Wave — ajustement des commandes (19 septembre 2026)
+
+- Base / Boucle / Mix : conserver le noir HiFi, ajouter uniquement un halo violet doux derrière le segment actif.
+- Nouvelle règle utilisateur, prioritaire sur le guide : déplacement des régions et des épingles fixes par pas de 4 mesures, même avec une longueur 8, 16 ou 32. A–B libre reste continu.
+- Propositions utilise le composant Ouvert/Fermé des demandes invités (WaveIntakeChip), point vert/rouge adouci.
+- Vote : surfaces de commande 34 dp, Message/Vote/Duel en boutons carrés à icône. Le duel sélectionne une boucle validée de Composition ; elle ne disparaît qu'en cas de victoire du remplacement. Ce parcours demeure un vote local de démonstration, pas un vote public serveur.
+- Composition : Mute/Solo toujours visibles et centrés ; tap sur la carte déplie volume/épingles. Plus de menu trois-points ni de bottom sheet de détails pour ces cartes. Croix en haut à droite avec confirmation explicite avant retrait d'une boucle validée.

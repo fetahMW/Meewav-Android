@@ -188,13 +188,7 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                 }
             } else if (page == 1) {
                 Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
-                Box(Modifier.height(44.dp).clickable(onClick = state::toggleRequests), contentAlignment = Alignment.Center) {
-                    Row(Modifier.hifiBlackSurface(14.dp).padding(horizontal = 12.dp, vertical = 7.dp),
-                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                        Box(Modifier.size(6.dp).background(if (state.requestsOpen) Color(0xFF86B69B) else Color(0xFFC88B90), CircleShape))
-                        Text(if (state.requestsOpen) "Ouvert" else "Fermé", color = Color(0xFFD8D8DF), fontSize = 11.sp, maxLines = 1)
-                    }
-                }
+                WaveIntakeChip(state.requestsOpen, state::toggleRequests)
                 }
             } else Text(if (page == 0) "Glisse un invité vers la vidéo" else if (page == 3) "${state.jury.size}/6 membres du jury" else "3 invités maximum sur scène",
                 modifier = Modifier.weight(1f), color = Color.White.copy(alpha = .48f), fontSize = 11.sp)

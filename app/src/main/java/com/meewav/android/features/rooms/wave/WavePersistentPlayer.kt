@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -81,7 +82,11 @@ internal fun WaveMasterPlayer(state: WaveCompositionState, onImport: (WaveImport
                     val selected = state.listeningMode == mode
                     Box(Modifier.weight(1f).height(44.dp).semantics { this.selected = selected; role = Role.Tab }
                         .waveTactileClick { state.listen(mode) }, contentAlignment = Alignment.Center) {
-                        Box(Modifier.fillMaxWidth().padding(horizontal = 2.dp).height(28.dp).clip(RoundedCornerShape(6.dp))
+                        val glow by animateFloatAsState(if (selected) 1f else 0f, tween(180), label = "Halo du mode d’écoute")
+                        Box(Modifier.fillMaxWidth().padding(horizontal = 2.dp).height(28.dp)
+                            .shadow((7 * glow).dp, RoundedCornerShape(6.dp), clip = false,
+                                ambientColor = violet.copy(alpha = .20f), spotColor = violet.copy(alpha = .30f))
+                            .clip(RoundedCornerShape(6.dp))
                             .hardwareSurface(6.dp, raised = true, reflection = 0.085f), contentAlignment = Alignment.Center) {
                             Text(mode.label, color = if (selected) violet else secondary, fontWeight = FontWeight.SemiBold, fontSize = 10.sp)
                         }
