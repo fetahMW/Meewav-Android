@@ -59,14 +59,13 @@ internal fun WaveMasterPlayer(state: WaveCompositionState, onImport: (WaveImport
     val peaks = if (snapshot.cue != null) state.prepared[snapshot.cue]?.peaks.orEmpty() else state.masterPeaks
     LaunchedEffect(state.compositionPage) { rail = PlayerRail.READOUT; bases = false }
     Column(Modifier.fillMaxWidth().hifiBlackSurface(17.dp).padding(horizontal = 10.dp, vertical = 4.dp)) {
-        Row(Modifier.fillMaxWidth().height(46.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(44.dp).waveTactileClick {
+        Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(48.dp).waveTactileClick {
                 expanded = !expanded; bases = false; rail = PlayerRail.READOUT
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             }.semantics { contentDescription = if (expanded) "Replier le lecteur" else "Déplier le lecteur"; role = Role.Button }, contentAlignment = Alignment.Center) {
-                Icon(Icons.Default.GraphicEq, null, tint = secondary, modifier = Modifier.size(20.dp).offset(x = (-5).dp))
                 Icon(Icons.Default.ExpandMore, null, tint = violet,
-                    modifier = Modifier.size(13.dp).offset(x = 13.dp).graphicsLayer { rotationZ = chevron })
+                    modifier = Modifier.size(30.dp).graphicsLayer { rotationZ = chevron })
             }
             if (state.compositionPage) {
                 Row(Modifier.weight(1f).height(44.dp).waveTactileClick { expanded = true; bases = !bases; rail = PlayerRail.READOUT },
