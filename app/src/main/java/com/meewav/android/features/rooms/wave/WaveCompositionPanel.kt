@@ -115,9 +115,20 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, 
             0 -> {
                 Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
                     WaveIntakeChip(state.intakeOpen, state::toggleIntake)
-                    Text("← Supprimer · Vote →", color = muted, fontSize = 10.sp, maxLines = 2,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                        modifier = Modifier.weight(1f).padding(horizontal = 4.dp))
+                    Column(Modifier.weight(1f).padding(horizontal = 6.dp), horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Icon(Icons.Default.Swipe, null, tint = soft, modifier = Modifier.size(14.dp))
+                            Text("Glisser la boucle", color = foreground, fontSize = 10.sp, fontWeight = FontWeight.Medium)
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                            Icon(Icons.Default.ArrowBack, null, tint = danger.copy(alpha = .85f), modifier = Modifier.size(12.dp))
+                            Text("Supprimer", color = muted, fontSize = 9.sp)
+                            Box(Modifier.width(1.dp).height(9.dp).background(muted.copy(alpha = .25f)))
+                            Text("Vote", color = soft, fontSize = 9.sp)
+                            Icon(Icons.Default.ArrowForward, null, tint = soft, modifier = Modifier.size(12.dp))
+                        }
+                    }
                     ToolIcon(Icons.Default.Tune, "Filtrer les boucles") { filterMenu = !filterMenu }
                     ToolIcon(Icons.Default.Add, "Importer une proposition", enabled = !state.importing) { importMenu = true }
                 }

@@ -412,3 +412,5 @@ Le lecteur Wave possède son propre bouton haut-parleur animé et son propre vol
 
 ### Composition — espacement et alignements
 - Intervalle de 8 dp entre boucles. Mute/Solo centrés dans leurs boutons. Chip de catégorie à droite, au-dessus de la croix, séparé des commandes Mute/Solo.
+
+- Guide gestuel Propositions : icône Swipe et titre Glisser la boucle, puis flèche gauche Supprimer / flèche droite Vote, sur deux lignes compactes sans conteneur supplémentaire.
