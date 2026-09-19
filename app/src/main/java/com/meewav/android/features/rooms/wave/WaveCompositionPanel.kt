@@ -11,6 +11,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.ui.input.nestedscroll.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -43,6 +45,41 @@ private val danger = Color(0xFFC88B90)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, onProfile: (String) -> Unit) {
+    var playerExpanded by rememberSaveable { mutableStateOf(false) }
+    var autoCollapsed by remember { mutableStateOf(false) }
+    var manualGraceUntil by remember { mutableLongStateOf(0L) }
+    var downPixels by remember { mutableFloatStateOf(0f) }
+    var returningToTop by remember { mutableStateOf(false) }
+    val proposalList = rememberLazyListState()
+    val proposalScroll = remember {
+        object : NestedScrollConnection {
+            override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
+                if (source != NestedScrollSource.UserInput) return Offset.Zero
+                if (SystemClock.uptimeMillis() < manualGraceUntil) { downPixels = 0f; return Offset.Zero }
+                if (consumed.y > 0f || available.y > 0f) { downPixels = 0f; returningToTop = true }
+                if (consumed.y < 0f && playerExpanded) {
+                    returningToTop = false
+                    downPixels += -consumed.y
+                    if (downPixels >= 40f) {
+                        playerExpanded = false
+                        autoCollapsed = true
+                        downPixels = 0f
+                    }
+                }
+                return Offset.Zero
+            }
+        }
+    }
+    LaunchedEffect(proposalList) {
+        snapshotFlow { Triple(proposalList.firstVisibleItemIndex, proposalList.firstVisibleItemScrollOffset, proposalList.isScrollInProgress && returningToTop) }
+            .collect { (index, offset, scrolling) ->
+                if (index == 0 && offset <= 1 && scrolling && autoCollapsed && SystemClock.uptimeMillis() >= manualGraceUntil) {
+                    playerExpanded = true
+                    autoCollapsed = false
+                    downPixels = 0f
+                }
+            }
+    }
     var section by rememberSaveable { mutableIntStateOf(0) }
     var revealed by remember { mutableStateOf<String?>(null) }
     var filter by remember { mutableStateOf(WaveProposalStatus.PENDING) }
@@ -90,7 +127,12 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, 
                 }
             }
         }
-        WaveMasterPlayer(state, onImport = { destination ->
+        WaveMasterPlayer(expanded = playerExpanded, onExpandedChange = {
+            playerExpanded = it
+            autoCollapsed = false
+            downPixels = 0f
+            manualGraceUntil = SystemClock.uptimeMillis() + 1200L
+        }, state = state, onImport = { destination ->
             importDestination = destination
             importer.launch(arrayOf("audio/*"))
         }, onSettings = { settings = true })
@@ -116,7 +158,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, 
             }
             0 -> {
                 val proposals = state.proposals(WaveProposalStatus.PENDING).filter { it.category in visibleCategories }
-                LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(7.dp), contentPadding = PaddingValues(bottom = 10.dp)) {
+                LazyColumn(Modifier.weight(1f).nestedScroll(proposalScroll), state = proposalList, verticalArrangement = Arrangement.spacedBy(7.dp), contentPadding = PaddingValues(bottom = 10.dp)) {
                     item(key = "proposal-toolbar") {
                 Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
                     WaveIntakeChip(state.intakeOpen, state::toggleIntake)

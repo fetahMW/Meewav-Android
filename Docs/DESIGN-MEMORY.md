@@ -423,3 +423,5 @@ Le lecteur Wave possède son propre bouton haut-parleur animé et son propre vol
 - Chips des boucles : taille commune 68 x 22 dp dans Propositions, Vote et Composition ; couleurs lumineuses, bordure renforcée, texte centré. Chips désactivés du filtre restent gris.
 
 - Chips compacts : capsules 58 x 18 dp, couleurs néon saturées (orange, vert, violet, cyan, rose, jaune). L’atténuation mute/solo touche l’identité de la piste, pas les chips ni les commandes.
+
+- Propositions : auto-repli du lecteur après 40 pixels réellement consommés vers le bas ; mouvement inverse réinitialise le seuil. Réouverture après repli automatique uniquement en remontant au début. Chevron prioritaire avec grâce de 1200 ms, fermeture manuelle non annulée automatiquement. Animation commune au chevron.

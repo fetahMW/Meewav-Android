@@ -44,11 +44,15 @@ private enum class PlayerRail { READOUT, IMPORT, LOOP }
 /** Native adaptation of iOS wave/host-hardware-c97a's persistent workflow deck. */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-internal fun WaveMasterPlayer(state: WaveCompositionState, onImport: (WaveImportDestination) -> Unit, onSettings: () -> Unit) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
+internal fun WaveMasterPlayer(
+    expanded: Boolean, onExpandedChange: (Boolean) -> Unit,state: WaveCompositionState, onImport: (WaveImportDestination) -> Unit, onSettings: () -> Unit) {
+
     var volumeOpen by rememberSaveable { mutableStateOf(false) }
     var bases by remember { mutableStateOf(false) }
     var rail by remember { mutableStateOf(PlayerRail.READOUT) }
+    LaunchedEffect(expanded) {
+        if (!expanded) { bases = false; rail = PlayerRail.READOUT; volumeOpen = false }
+    }
     val chevron by animateFloatAsState(if (expanded) 180f else 0f,
         spring(dampingRatio = .88f, stiffness = 230f), label = "Repli du lecteur")
     val haptic = LocalHapticFeedback.current
@@ -64,14 +68,14 @@ internal fun WaveMasterPlayer(state: WaveCompositionState, onImport: (WaveImport
     Column(Modifier.fillMaxWidth().hifiBlackSurface(17.dp).padding(horizontal = 10.dp, vertical = 4.dp)) {
         Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(48.dp).waveTactileClick {
-                expanded = !expanded; bases = false; rail = PlayerRail.READOUT; volumeOpen = false
+                onExpandedChange(!expanded); bases = false; rail = PlayerRail.READOUT; volumeOpen = false
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             }.semantics { contentDescription = if (expanded) "Replier le lecteur" else "Déplier le lecteur"; role = Role.Button }, contentAlignment = Alignment.Center) {
                 Icon(Icons.Default.ExpandMore, null, tint = violet,
                     modifier = Modifier.size(30.dp).graphicsLayer { rotationZ = chevron })
             }
             if (state.compositionPage) {
-                Row(Modifier.weight(1f).height(44.dp).waveTactileClick { expanded = true; bases = !bases; rail = PlayerRail.READOUT },
+                Row(Modifier.weight(1f).height(44.dp).waveTactileClick { onExpandedChange(true); bases = !bases; rail = PlayerRail.READOUT },
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
                     Text(state.reference?.title ?: "Choisir une base", color = pearl, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
                         maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, false))
