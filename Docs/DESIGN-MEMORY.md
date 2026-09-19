@@ -224,3 +224,18 @@ dégage `env(safe-area-inset-top)`. Le CTA location hors-live passe de
 l’APK n’a pas pu être recompilé ici (`JAVA_HOME` absent), à refaire en
 local pour tester sur appareil.
 
+
+## Wave native — matière noire Hi-Fi, 19 septembre 2026
+
+L'ajout de régie vidéo du commit d8d239c a été annulé (eae6971). La référence
+reste le retour vidéo, le mixeur et le chat natifs de 9233783. Ne pas réintroduire
+le retour vidéo à hauteur variable qui poussait le mixeur.
+
+La navbar du mixeur, les cartes Autotune/Réverb, leur sélecteur et le lecteur
+partagent maintenant `hifiBlackSurface` / `HiFiBlackCard` : noir neutre, bombé
+peu profond, reflet supérieur large et faible, un seul liseré discret. Aucun
+métal brossé en image, aucune gorge ou succession de strokes blancs sur ces
+conteneurs. Les cartes FX gardent leur matière noire même éteintes ; le texte,
+les icônes et les contrôles portent l'état. Les dimensions, le retour vidéo,
+les gestes et le moteur audio restent ceux de la référence native.
+Compilation de livraison uniquement ; rendu à valider par l'utilisateur.

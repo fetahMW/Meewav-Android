@@ -3,6 +3,9 @@ package com.meewav.android.features.rooms.wave
 import android.os.Build
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.draw.shadow
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -23,6 +26,7 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import kotlin.math.max
 
 private fun rgba(hex: Long, alpha: Float): Color = Color(hex).copy(alpha = alpha)
@@ -61,6 +65,48 @@ private fun DrawScope.softShadow(
 
 private fun roundRectPath(size: Size, corner: Float): Path =
     Path().apply { addRoundRect(RoundRect(Rect(Offset.Zero, size), CornerRadius(corner))) }
+
+/** Shared black Hi-Fi shell: a shallow convex face, one soft rim, no chrome
+ * grooves or image texture. Pure drawing: never changes component geometry. */
+fun Modifier.hifiBlackSurface(cornerRadius: Dp): Modifier =
+    shadow(2.dp, RoundedCornerShape(cornerRadius), clip = false,
+        ambientColor = Color.Black, spotColor = Color.Black)
+        .drawWithCache {
+            val w = size.width
+            val h = size.height
+            val r = cornerRadius.toPx().coerceAtMost(minOf(w, h) / 2f)
+            val inset = 0.35.dp.toPx()
+            val face = Brush.verticalGradient(
+                0f to Color(0xFF0C0D0F),
+                0.12f to Color(0xFF1A1B1E),
+                0.32f to Color(0xFF111214),
+                0.65f to Color(0xFF090A0C),
+                0.91f to Color(0xFF050608),
+                1f to Color(0xFF030405),
+                endY = h,
+            )
+            val sides = Brush.horizontalGradient(
+                0f to Color.Black.copy(alpha = .20f),
+                .14f to Color.Transparent,
+                .86f to Color.Transparent,
+                1f to Color.Black.copy(alpha = .20f),
+                endX = w,
+            )
+            val edge = Brush.verticalGradient(
+                0f to white(.16f), .24f to white(.055f),
+                .65f to white(.025f), 1f to Color.Black.copy(alpha = .65f),
+                endY = h,
+            )
+            onDrawBehind {
+                if (w <= inset * 2 || h <= inset * 2) return@onDrawBehind
+                drawRoundRect(face, cornerRadius = CornerRadius(r))
+                drawRoundRect(sides, cornerRadius = CornerRadius(r))
+                drawRoundRect(edge, topLeft = Offset(inset, inset),
+                    size = Size(w - inset * 2, h - inset * 2),
+                    cornerRadius = CornerRadius((r - inset).coerceAtLeast(0f)),
+                    style = Stroke(.7.dp.toPx()))
+            }
+        }
 
 /* ------------------------------------------------------------------------- */
 /* A. Fond d'écran `ClasseWebMixerSurfaceBackground`                          */

@@ -494,8 +494,8 @@ private fun WaveTabBar(
     val shape = RoundedCornerShape(17.dp)
     Box(
         modifier
+            .hifiBlackSurface(17.dp)
             .clip(shape)
-            .hardwareSurface(17.dp, raised = false, reflection = 0.075f, silhouette = true, rimOpacity = 0.5f, shadowOpacity = 0.35f)
             .padding(3.dp)
     ) {
         BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -702,7 +702,6 @@ private fun FxColumn(
                 title = "Autotune", icon = WaveIcons.Waveform,
                 on = autotuneOn, onToggle = onAutotune,
                 modifier = Modifier.fillMaxWidth().weight(1f)
-                    .alpha(if (autotuneOn) 1f else 0.55f)
             ) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     TuneSelectorField(
@@ -722,7 +721,6 @@ private fun FxColumn(
                 title = "Réverb", icon = WaveIcons.Reverb,
                 on = reverbOn, onToggle = onReverb,
                 modifier = Modifier.fillMaxWidth().weight(1f)
-                    .alpha(if (reverbOn) 1f else 0.55f)
             ) {
                 ReverbSlider(value = reverbValue, enabled = reverbOn, onChange = onReverbValue)
             }
@@ -858,7 +856,7 @@ private fun TuneSelectorPanel(
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    MetalCard(modifier, cornerRadius = 12.dp) {
+    HiFiBlackCard(modifier, cornerRadius = 12.dp) {
         Column(Modifier.padding(9.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(
@@ -945,7 +943,7 @@ private fun MixerDeck(
     expanded: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    MetalCard(modifier, cornerRadius = 12.dp) {
+    HiFiBlackCard(modifier, cornerRadius = 12.dp) {
         Column {
             // Transport h56.
             Row(

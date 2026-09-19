@@ -39,11 +39,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -294,42 +291,17 @@ fun WaveChannelStrip(
 }
 
 /* ------------------------------------------------------------------------- */
-/* Châssis métal brossé — PNG ×0.48, clip r, stroke, ombre.                    */
+/* Châssis noir Hi-Fi partagé avec la navbar et le lecteur.                  */
 /* ------------------------------------------------------------------------- */
 
 @Composable
-fun MetalCard(
+fun HiFiBlackCard(
     modifier: Modifier = Modifier,
     cornerRadius: Dp = 12.dp,
     content: @Composable () -> Unit,
 ) {
     val shape = RoundedCornerShape(cornerRadius)
-    Box(modifier.graphicsLayer { shadowElevation = 2f; clip = false }) {
-        // Métal brossé teinté ×0.48 (multiply), rogné en bas (ancré haut).
-        Image(
-            painter = painterResource(R.drawable.wave_hardware_metal),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            alignment = Alignment.TopCenter,
-            modifier = Modifier
-                .matchParentSize()
-                .clip(shape)
-                .drawBehind {
-                    drawRoundRect(
-                        Brush.verticalGradient(0f to white(0.22f), 1f to white(0.08f)),
-                        cornerRadius = CornerRadius(cornerRadius.toPx()),
-                        style = Stroke(width = 0.5f * density)
-                    )
-                },
-            colorFilter = ColorFilter.colorMatrix(
-                ColorMatrix(floatArrayOf(
-                    0.32f, 0f, 0f, 0f, 0f,
-                    0f, 0.32f, 0f, 0f, 0f,
-                    0f, 0f, 0.32f, 0f, 0f,
-                    0f, 0f, 0f, 1f, 0f
-                ))
-            )
-        )
+    Box(modifier.hifiBlackSurface(cornerRadius).clip(shape)) {
         content()
     }
 }
@@ -370,7 +342,7 @@ fun FxCard(
     content: @Composable () -> Unit,
 ) {
     Box(modifier) {
-        MetalCard(Modifier.fillMaxSize(), cornerRadius = 12.dp) {
+        HiFiBlackCard(Modifier.fillMaxSize(), cornerRadius = 12.dp) {
             Column(
                 Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -379,14 +351,14 @@ fun FxCard(
                     Box(Modifier.size(24.dp, 22.dp), contentAlignment = Alignment.Center) {
                         Icon(
                             icon, null,
-                            tint = if (on) WaveMixerTheme.fxAccent else white(0.34f),
+                            tint = if (on) WaveMixerTheme.fxAccent else white(0.46f),
                             modifier = Modifier.size(14.dp)
                         )
                     }
                     Spacer(Modifier.width(6.dp))
                     Text(
                         title,
-                        color = white(if (on) 0.84f else 0.40f),
+                        color = white(if (on) 0.84f else 0.64f),
                         fontSize = 11.sp, fontWeight = FontWeight.SemiBold,
                         fontFamily = WaveMixerTheme.fontFamily, maxLines = 1
                     )
