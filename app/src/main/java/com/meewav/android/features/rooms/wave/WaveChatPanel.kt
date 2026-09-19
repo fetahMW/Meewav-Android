@@ -527,7 +527,7 @@ private fun WaveChatRow(
             Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                "@${message.userName.removePrefix("@")}",
+                "@${message.userName.removePrefix("@").let { if (message.isHost) it.uppercase(java.util.Locale.ROOT) else it }}",
                 color = if (message.isHost) Color(0xFF92CDB0) else chatNameGrey,
                 fontSize = 11.sp, fontWeight = FontWeight.Medium,
                 fontFamily = WaveMixerTheme.fontFamily, maxLines = 1
