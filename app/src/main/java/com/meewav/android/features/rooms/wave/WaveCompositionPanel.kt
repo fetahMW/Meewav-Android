@@ -42,7 +42,7 @@ private val danger = Color(0xFFC88B90)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) {
+internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, onProfile: (String) -> Unit) {
     var section by rememberSaveable { mutableIntStateOf(0) }
     var revealed by remember { mutableStateOf<String?>(null) }
     var filter by remember { mutableStateOf(WaveProposalStatus.PENDING) }
@@ -107,7 +107,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                 if (composition.isEmpty()) EmptyWorkspace("Ta composition commence ici", "Prends une boucle dans Propositions ou importe ton audio.", Modifier.weight(1f))
                 else LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp), contentPadding = PaddingValues(bottom = 8.dp)) {
                     items(composition, key = { it.id }) { clip ->
-                            WaveLoopCard(clip, state, composition = true)
+                            WaveLoopCard(clip, state, composition = true, onProfile = { onProfile(clip.artist) })
 
                     }
                 }
@@ -164,14 +164,14 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                         }
                         WaveProposalSwipe(clip.id, revealed, { revealed = it }, onAccept = { state.queueVote(clip.id) },
                             onReject = { state.archive(clip.id, it) }) {
-                            WaveLoopCard(clip, state, composition = false, onMessage = { messageArtist = clip.artist })
+                            WaveLoopCard(clip, state, composition = false, onMessage = { messageArtist = clip.artist }, onProfile = { onProfile(clip.artist) })
                         }
                     }
                 }
             }
             else -> {
                 val candidates = state.clips.filter { it.status == WaveProposalStatus.VOTE }
-                val selected = candidates.find { it.id == (state.vote?.clipId ?: selectedVote) } ?: candidates.firstOrNull()
+                val selected = candidates.find { it.id == (state.vote?.clipId ?: selectedVote) }
                 Text("Simulation locale · aucun vote public envoyé", color = muted, fontSize = 10.sp, modifier = Modifier.padding(vertical = 8.dp))
                 state.lastVerdict?.let { Text(it, color = soft, fontSize = 11.sp, modifier = Modifier.padding(bottom = 8.dp)) }
                 if (candidates.isEmpty()) EmptyWorkspace("Aucune boucle au vote", "Ouvre une proposition et choisis « Mettre au vote ».", Modifier.weight(1f))
@@ -179,14 +179,15 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                     items(candidates, key = { it.id }) { clip ->
                         Column(Modifier.fillMaxWidth().hifiBlackSurface(13.dp)
                             .border(if (selected?.id == clip.id) 1.dp else 0.dp, if (selected?.id == clip.id) soft.copy(alpha = .5f) else Color.Transparent, RoundedCornerShape(12.dp))
-                            .clickable(enabled = state.vote == null) { selectedVote = clip.id }.padding(10.dp)) {
+                            .clickable(enabled = state.vote == null) { selectedVote = if (selectedVote == clip.id) null else clip.id }.padding(10.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-                            WaveArtistPortrait(clip.artist)
+                            Box(Modifier.clickable { onProfile(clip.artist) }) { WaveArtistPortrait(clip.artist) }
                             Column(Modifier.weight(1f)) {
                                 Text(clip.title, color = foreground, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 Text(clip.artist, color = muted, fontSize = 10.sp)
                             }
                             WaveRoleChip(clip.category)
+                            TextButton(onClick = { state.startVote(clip.id, duration, null) }, enabled = state.vote == null && clip.id !in state.preparing, contentPadding = PaddingValues(horizontal = 6.dp), modifier = Modifier.height(36.dp)) { Text("Vote", color = soft, fontSize = 11.sp) }
                             WaveRoundPlay((state.snapshot.cue == clip.id && !state.snapshot.cuePaused) || (state.snapshot.candidate == clip.id && state.snapshot.running), clip.id in state.preparing,
                                 if (state.snapshot.cue == clip.id) state.snapshot.cueProgress else if (state.snapshot.candidate == clip.id) state.snapshot.candidateProgress else 0f,
                                 "Écouter ${clip.title}", queued = state.snapshot.pendingCandidate == clip.id) { state.preview(clip.id) }

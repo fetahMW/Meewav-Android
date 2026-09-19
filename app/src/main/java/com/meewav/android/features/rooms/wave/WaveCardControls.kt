@@ -59,7 +59,7 @@ internal fun WaveVoteControls(clip: WaveCompositionClip, state: WaveCompositionS
                         else {
                             Spacer(Modifier.weight(1f))
                             VoteSquare(Icons.Default.ChatBubbleOutline, "Message", enabled = !locked, onClick = onMessage)
-                            CardCommand(Icons.Default.HowToVote, "Vote", enabled = !locked, onClick = onLaunch)
+                            CardCommand(null, "Vote", enabled = !locked, onClick = onLaunch)
                             VoteSquare(WaveDuelIcon, "Duel de remplacement", enabled = !locked && !clip.isBase, onClick = onDuel)
                         }
                     }

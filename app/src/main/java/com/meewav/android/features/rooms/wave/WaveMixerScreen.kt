@@ -226,7 +226,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                     )
                     WaveTab.INVITES -> WaveGuestsPanel(guestState, Modifier.fillMaxSize())
                     else -> if (room == RoomModule.WAVE && composition != null) {
-                        WaveCompositionPanel(composition, workshopHeight)
+                        WaveCompositionPanel(composition, workshopHeight, onProfile = guestState::openArtistProfile)
                     } else WaveTabPlaceholder(activeTab, room.toolsLabel)
                 }
                 }

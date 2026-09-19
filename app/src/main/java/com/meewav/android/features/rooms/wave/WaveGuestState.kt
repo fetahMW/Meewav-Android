@@ -72,6 +72,20 @@ internal class WaveGuestState {
     var selected by mutableStateOf(setOf<String>())
     var previewId by mutableStateOf<String?>(null)
     var profilePreviewId by mutableStateOf<String?>(null)
+    var externalProfile by mutableStateOf<WaveGuest?>(null)
+        private set
+    fun openArtistProfile(artist: String) {
+        val guest = guests.firstOrNull { it.name.equals(artist, ignoreCase = true) }
+            ?: WaveGuest("wave-artist-$artist", artist, "Artiste", when (artist) {
+                "LUMA" -> R.drawable.wave_artist_luma
+                "NOAM A." -> R.drawable.wave_chat_artist_8
+                "LINA V." -> R.drawable.wave_chat_artist_9
+                else -> R.drawable.wave_chat_artist_4
+            }, WaveGuestLocation.REQUESTED)
+        externalProfile = guest
+        previewId = null
+        profilePreviewId = guest.id
+    }
     var messageRecipientIds by mutableStateOf<Set<String>>(emptySet())
     var notice by mutableStateOf<String?>(null)
     var dragId by mutableStateOf<String?>(null)

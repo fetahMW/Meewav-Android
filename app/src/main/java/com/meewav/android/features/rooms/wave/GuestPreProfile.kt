@@ -68,7 +68,7 @@ internal fun GuestPreProfileHost(state: WaveGuestState, availableHeight: Dp) {
         lifecycle.addObserver(observer)
         onDispose { lifecycle.removeObserver(observer); content.dispose() }
     }
-    val guest = state.guests.find { it.id == state.profilePreviewId }
+    val guest = state.guests.find { it.id == state.profilePreviewId } ?: state.externalProfile?.takeIf { it.id == state.profilePreviewId }
     val candidate = guest ?: state.guests.find { it.id == state.previewId }
     // Prepare portrait/media while the guest action sheet is already open.
     LaunchedEffect(candidate) { content.show(candidate) }

@@ -162,7 +162,7 @@ internal fun RowScope.SwipeAction(label: String, icon: ImageVector, active: Bool
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState, composition: Boolean,
-    onMessage: () -> Unit = {}) {
+    onMessage: () -> Unit = {}, onProfile: () -> Unit = {}) {
     val download = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("audio/*")) { uri -> if (uri != null) state.download(clip.id, uri) }
     var confirmRemoval by remember(clip.id) { mutableStateOf(false) }
     val voice = state.snapshot.voices.find { it.id == clip.id }
@@ -180,7 +180,7 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
         .then(if (composition) Modifier.clickable { state.selectMix(clip.id) } else Modifier)
         .padding(horizontal = 10.dp, vertical = 5.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-            WaveArtistPortrait(clip.artist)
+            Box(Modifier.clickable(onClick = onProfile)) { WaveArtistPortrait(clip.artist) }
             Column(Modifier.weight(1f)) {
                 Text(clip.title, color = ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -195,6 +195,7 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
                 }
                 if (!composition) Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     WaveRoleChip(clip.category)
+                    TextButton(onClick = { state.queueVote(clip.id) }, contentPadding = PaddingValues(horizontal = 4.dp), modifier = Modifier.height(30.dp)) { Text("Vote", color = accent, fontSize = 11.sp) }
                     if (composition) Text(if (clip.solo) "SOLO" else if (clip.mute) "MUTE" else if (queued) "À la mesure" else if (clip.repeats == -1) "∞" else "${clip.repeats}×",
                         color = secondary, fontSize = 9.sp)
                     else Text(if (clip.id in state.preparing) "Préparation…" else clip.musical, color = secondary, fontSize = 8.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)

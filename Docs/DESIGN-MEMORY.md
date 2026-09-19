@@ -401,3 +401,8 @@ Le lecteur Wave possède son propre bouton haut-parleur animé et son propre vol
 ### Filtre Propositions
 - Grille 3 x 3 : sept catégories existantes et commandes Tout/Aucun. Chips agrandis, colorés si actifs et gris si éteints, sans cases ni statuts.
 - Sélection liée aux catégories acceptées mémorisées. Intervalle des propositions à 7 dp ; indication gauche supprimer / droite vote entre Ouvert et filtre.
+
+### Wave — cartes Vote et pré-profils
+- Vote en texte sans icône, accessible sur les miniatures et à côté du chip des propositions.
+- Toucher une carte de Vote alterne dépliée/repliée, sans sélection automatique de la première carte.
+- Portraits Propositions/Vote/Composition raccordés au bottom sheet pré-profil partagé des invités.
