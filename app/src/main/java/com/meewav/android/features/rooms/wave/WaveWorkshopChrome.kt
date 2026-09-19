@@ -45,13 +45,22 @@ private val ink = Color(0xFFEAE8F0)
 private val secondary = Color(0xFF96949F)
 private val accent = WaveMixerTheme.capsuleAccentSoft
 
+@Composable
+internal fun Modifier.waveTactileClick(onClick: () -> Unit): Modifier {
+    val source = remember { MutableInteractionSource() }
+    val pressed by source.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (pressed) .96f else 1f, spring(dampingRatio = .78f), label = "Pression Wave")
+    val opacity by animateFloatAsState(if (pressed) .78f else 1f, tween(90), label = "Opacité Wave")
+    return graphicsLayer { scaleX = scale; scaleY = scale; alpha = opacity }.clickable(source, indication = null, onClick = onClick)
+}
+
 /** Fixed above the workspace lists. Only the deck folds; transport never scrolls away. */
 @Composable
 internal fun WaveMasterPlayer(state: WaveCompositionState, onImport: () -> Unit, onSettings: () -> Unit) {
     var expanded by rememberSaveable { mutableStateOf(true) }
     val snapshot = state.snapshot
     val duration = state.durationFrames
-    val progress = (snapshot.frame.toFloat() / duration).coerceIn(0f, 1f)
+    val progress = (snapshot.frame % duration).toFloat() / duration
     val peaks = remember(state.prepared, state.clips) { state.masterPeaks }
     Column(Modifier.fillMaxWidth().hifiBlackSurface(17.dp).animateContentSize(spring(stiffness = Spring.StiffnessMediumLow))
         .padding(horizontal = 10.dp, vertical = 5.dp)) {
@@ -159,7 +168,7 @@ private fun WaveMeters(left: Float, right: Float) {
 internal fun WaveControl(icon: ImageVector, label: String, active: Boolean = false, enabled: Boolean = true, onClick: () -> Unit) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (pressed) .90f else 1f, spring(dampingRatio = .72f), label = "Pression")
+    val scale by animateFloatAsState(if (pressed) .96f else 1f, spring(dampingRatio = .78f), label = "Pression")
     val tint by androidx.compose.animation.animateColorAsState(if (active) accent else ink.copy(alpha = .8f), tween(170), label = "État")
     IconButton(onClick, enabled = enabled, interactionSource = interaction,
         modifier = Modifier.size(38.dp).graphicsLayer { scaleX = scale; scaleY = scale }) {
@@ -169,7 +178,7 @@ internal fun WaveControl(icon: ImageVector, label: String, active: Boolean = fal
 
 @Composable
 internal fun WaveRoundPlay(playing: Boolean, loading: Boolean, progress: Float, label: String,
-    queued: Boolean = false, onClick: () -> Unit) {
+    queued: Boolean = false, stopIcon: Boolean = false, onClick: () -> Unit) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(if (pressed) .94f else 1f, spring(dampingRatio = .8f), label = "Lecture")
@@ -179,7 +188,7 @@ internal fun WaveRoundPlay(playing: Boolean, loading: Boolean, progress: Float, 
         .border(.75.dp, Color(0xFF4C4B55), CircleShape)
         .clickable(interactionSource = interaction, indication = null, onClick = onClick), contentAlignment = Alignment.Center) {
         if (loading) CircularProgressIndicator(Modifier.size(19.dp), color = accent, strokeWidth = 1.5.dp)
-        else Icon(if (queued) Icons.Default.Schedule else if (playing) Icons.Default.Pause else Icons.Default.PlayArrow,
+        else Icon(if (queued) Icons.Default.Schedule else if (playing && stopIcon) Icons.Default.Stop else if (playing) Icons.Default.Pause else Icons.Default.PlayArrow,
             label, tint = ink, modifier = Modifier.size(22.dp))
         Canvas(Modifier.fillMaxSize().padding(2.dp)) {
             if (playing || queued) drawArc(accent.copy(alpha = .8f), -90f, 360f * progress.coerceIn(0f, 1f), false, style = Stroke(1.5.dp.toPx(), cap = StrokeCap.Round))
@@ -222,7 +231,7 @@ internal fun WaveRoleChip(category: String) {
 
 /** Horizontal slop is handled by Compose; vertical list scrolling retains its gesture. */
 @Composable
-internal fun WaveSwipeActions(id: String, revealed: String?, onReveal: (String?) -> Unit,
+internal fun WaveSwipeActions(id: String, revealed: String?, onReveal: (String?) -> Unit, modifier: Modifier = Modifier,
     actions: @Composable RowScope.(() -> Unit) -> Unit, content: @Composable () -> Unit) {
     val width = with(LocalDensity.current) { 162.dp.toPx() }
     var drag by remember(id) { mutableFloatStateOf(0f) }
@@ -230,7 +239,7 @@ internal fun WaveSwipeActions(id: String, revealed: String?, onReveal: (String?)
     val target = if (dragging) drag else if (revealed == id) -width else 0f
     val offset by animateFloatAsState(target, if (dragging) snap() else spring(dampingRatio = .86f, stiffness = 420f), label = "Actions de piste")
     val currentRevealed by rememberUpdatedState(revealed)
-    Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).pointerInput(id, width) {
+    Box(modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).pointerInput(id, width) {
         detectHorizontalDragGestures(onDragStart = { dragging = true; drag = if (currentRevealed == id) -width else 0f },
             onHorizontalDrag = { change, delta -> change.consume(); drag = (drag + delta).coerceIn(-width, 0f) },
             onDragEnd = { dragging = false; onReveal(if (drag < -width * .28f) id else null) },
@@ -238,20 +247,24 @@ internal fun WaveSwipeActions(id: String, revealed: String?, onReveal: (String?)
     }) {
         if (offset < -1) Row(Modifier.align(Alignment.CenterEnd).width(162.dp).matchParentSize().padding(start = 0.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) { actions { onReveal(null) } }
-        Box(Modifier.fillMaxWidth().graphicsLayer { translationX = offset }) { content() }
+        Box(Modifier.fillMaxWidth().graphicsLayer { translationX = offset }) {
+            content()
+            if (offset < -8 && !dragging) Box(Modifier.matchParentSize().clickable { onReveal(null) })
+        }
     }
 }
 
 @Composable
 internal fun RowScope.SwipeAction(label: String, icon: ImageVector, active: Boolean = false, onClick: () -> Unit) {
     Column(Modifier.width(54.dp).fillMaxHeight().background(if (active) Color(0xFF302641) else Color(0xFF1C1D23))
-        .clickable(onClick = onClick), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+        .waveTactileClick(onClick), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
         Icon(icon, label, tint = accent, modifier = Modifier.size(19.dp))
         Spacer(Modifier.height(4.dp))
         Text(label, fontSize = 9.sp, color = ink)
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState, composition: Boolean,
     onDetail: () -> Unit, onAction: () -> Unit) {
@@ -265,7 +278,8 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
     val dimmed = composition && (clip.mute || (state.clips.any { it.inComposition && it.solo } && !clip.solo))
     val opacity by animateFloatAsState(if (dimmed) .50f else 1f, tween(170), label = "Audibilité")
     Column(Modifier.fillMaxWidth().hifiBlackSurface(13.dp).graphicsLayer { alpha = opacity }
-        .clickable(onClick = onDetail).padding(horizontal = 10.dp, vertical = 8.dp)) {
+        .combinedClickable(onClick = onDetail, onLongClick = { if (composition) state.repeat(clip.id) else onDetail() })
+        .padding(horizontal = 10.dp, vertical = 8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
             WaveArtistPortrait(clip.artist)
             Column(Modifier.weight(1f)) {
@@ -278,7 +292,7 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
                     else Text(if (clip.id in state.preparing) "Préparation…" else clip.musical, color = secondary, fontSize = 8.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
-            WaveRoundPlay(playing, clip.id in state.preparing, progress, if (composition) "Lancer ou arrêter ${clip.title}" else "Écouter ${clip.title}", queued) {
+            WaveRoundPlay(playing, clip.id in state.preparing, progress, if (composition) "Lancer ou arrêter ${clip.title}" else "Écouter ${clip.title}", queued, stopIcon = true) {
                 if (composition) onAction() else state.preview(clip.id)
             }
             if (!composition) WaveControl(if (clip.inComposition) Icons.Default.Check else if (clip.status == WaveProposalStatus.ARCHIVED) Icons.Default.Restore else Icons.Default.Add,

@@ -47,6 +47,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
     var filter by remember { mutableStateOf(WaveProposalStatus.PENDING) }
     var detail by remember { mutableStateOf<String?>(null) }
     var settings by remember { mutableStateOf(false) }
+    var importMenu by remember { mutableStateOf(false) }
     var filterMenu by remember { mutableStateOf(false) }
     var duration by remember { mutableIntStateOf(30) }
     var durationMenu by remember { mutableStateOf(false) }
@@ -54,15 +55,21 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
     var replacement by remember { mutableStateOf<String?>(null) }
     var replacementMenu by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val folderImporter = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri != null) {
+            runCatching { context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+            state.importFolder(uri); filter = WaveProposalStatus.PENDING; section = 0
+        }
+    }
     val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
         uris.forEach { uri ->
             runCatching { context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
-            state.importAudio(uri)
         }
+        state.importSelection(uris)
         if (uris.isNotEmpty()) { filter = WaveProposalStatus.PENDING; section = 0 }
     }
     Column(Modifier.fillMaxSize()) {
-        WaveMasterPlayer(state, onImport = { importer.launch(arrayOf("audio/*")) }, onSettings = { settings = true })
+        WaveMasterPlayer(state, onImport = { importMenu = true }, onSettings = { settings = true })
         Row(Modifier.fillMaxWidth().height(42.dp), verticalAlignment = Alignment.CenterVertically) {
             listOf("Propositions", "Vote", "Composition").forEachIndexed { index, label ->
                 Column(Modifier.weight(1f).fillMaxHeight().clickable {
@@ -87,7 +94,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                 if (composition.isEmpty()) EmptyWorkspace("Ta composition commence ici", "Prends une boucle dans Propositions ou importe ton audio.", Modifier.weight(1f))
                 else LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(7.dp), contentPadding = PaddingValues(bottom = 8.dp)) {
                     items(composition, key = { it.id }) { clip ->
-                        WaveSwipeActions(clip.id, revealed, { revealed = it }, actions = { close ->
+                        WaveSwipeActions(clip.id, revealed, { revealed = it }, modifier = Modifier.animateItem(), actions = { close ->
                             SwipeAction("Mute", Icons.Default.VolumeOff, clip.mute) { state.mute(clip.id); close() }
                             SwipeAction("Solo", Icons.Default.Headphones, clip.solo) { state.solo(clip.id); close() }
                             SwipeAction("Retirer", Icons.Default.Close) { state.remove(clip.id); close() }
@@ -114,13 +121,25 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                     TextButton(onClick = state::toggleIntake, contentPadding = PaddingValues(horizontal = 4.dp)) {
                         Text("● ${if (state.open) "Ouvert" else "Fermé"}", fontSize = 11.sp, color = if (state.open) Color(0xFF86B69B) else danger)
                     }
-                    ToolIcon(Icons.Default.Add, "Importer une proposition") { importer.launch(arrayOf("audio/*")) }
+                    ToolIcon(Icons.Default.Add, "Importer une proposition", enabled = !state.importing) { importMenu = true }
                 }
+                if (state.importing) LinearProgressIndicator(Modifier.fillMaxWidth(), color = soft, trackColor = Color(0xFF23242B))
                 val proposals = state.clips.filter { it.status == filter }
                 if (proposals.isEmpty()) EmptyWorkspace("Aucune proposition ici", "Les boucles classées apparaîtront dans cette liste.", Modifier.weight(1f))
                 else LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(bottom = 10.dp)) {
                     items(proposals, key = { it.id }) { clip ->
-                        WaveSwipeActions(clip.id, revealed, { revealed = it }, actions = { close ->
+                        if (clip.packId != null && proposals.firstOrNull { it.packId == clip.packId }?.id == clip.id) {
+                            Row(Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Column(Modifier.weight(1f)) {
+                                    Text(clip.packTitle ?: "Composition", color = foreground, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    Text("${state.clips.count { it.packId == clip.packId }} éléments", color = muted, fontSize = 9.sp)
+                                }
+                                ToolIcon(if (state.snapshot.cue == "pack:${clip.packId}") Icons.Default.Stop else Icons.Default.Headphones,
+                                    "Écouter le pack complet", enabled = state.preparingPack != clip.packId) { state.previewPack(clip.packId) }
+                                ToolIcon(Icons.Default.LibraryAdd, "Prendre toute la composition", enabled = state.adoptingPack == null) { state.takePack(clip.packId) }
+                            }
+                        }
+                        WaveSwipeActions(clip.id, revealed, { revealed = it }, modifier = Modifier.animateItem(), actions = { close ->
                             SwipeAction("De côté", Icons.Default.Archive) { state.archive(clip.id, "Mise de côté"); close() }
                             SwipeAction("Passer", Icons.Default.Close) { rejectId = clip.id; close() }
                             SwipeAction("Vote", Icons.Default.HowToVote) { state.queueVote(clip.id); close() }
@@ -140,11 +159,17 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                 if (candidates.isEmpty()) EmptyWorkspace("Aucune boucle au vote", "Ouvre une proposition et choisis « Mettre au vote ».", Modifier.weight(1f))
                 else LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(candidates, key = { it.id }) { clip ->
-                        Row(Modifier.fillMaxWidth().hifiBlackSurface(12.dp)
+                        Row(Modifier.fillMaxWidth().hifiBlackSurface(13.dp)
                             .border(if (selected?.id == clip.id) 1.dp else 0.dp, if (selected?.id == clip.id) soft.copy(alpha = .5f) else Color.Transparent, RoundedCornerShape(12.dp))
-                            .clickable(enabled = state.vote == null) { selectedVote = clip.id; replacement = null }.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Column(Modifier.weight(1f)) { Text(clip.title, color = foreground, fontSize = 13.sp); Text("${clip.artist} · ${clip.category}", color = muted, fontSize = 10.sp) }
-                            ToolIcon(if (state.snapshot.cue == clip.id) Icons.Default.Stop else Icons.Default.PlayArrow, "Écouter ${clip.title}") { state.preview(clip.id) }
+                            .clickable(enabled = state.vote == null) { selectedVote = clip.id; replacement = null }.padding(10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+                            WaveArtistPortrait(clip.artist)
+                            Column(Modifier.weight(1f)) {
+                                Text(clip.title, color = foreground, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text(clip.artist, color = muted, fontSize = 10.sp)
+                                WaveRoleChip(clip.category)
+                            }
+                            WaveRoundPlay(state.snapshot.cue == clip.id, clip.id in state.preparing,
+                                if (state.snapshot.cue == clip.id) state.snapshot.cueProgress else 0f, "Écouter ${clip.title}") { state.preview(clip.id) }
                         }
                     }
                 }
@@ -194,9 +219,16 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
             Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(selected.title, color = foreground, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
                 Text("${selected.artist} · ${selected.musical}", color = muted, fontSize = 12.sp)
+                selected.packId?.let { packId ->
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text(selected.packTitle ?: "Composition", color = muted, fontSize = 11.sp, modifier = Modifier.weight(1f))
+                        ToolIcon(Icons.Default.Headphones, "Écouter la composition entière") { state.previewPack(packId) }
+                        ToolIcon(Icons.Default.LibraryAdd, "Prendre tous les éléments", enabled = state.adoptingPack == null) { state.takePack(packId) }
+                    }
+                }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     ToolIcon(if (state.snapshot.cue == selected.id) Icons.Default.Stop else Icons.Default.PlayArrow, "Écoute privée") { state.preview(selected.id) }
-                    ClipWaveform(state.prepared[selected.id]?.peaks.orEmpty(), 0f, Modifier.weight(1f).height(50.dp), state.snapshot.cue == selected.id)
+                    ClipWaveform(state.prepared[selected.id]?.peaks.orEmpty(), if (state.snapshot.cue == selected.id) state.snapshot.cueProgress else 0f, Modifier.weight(1f).height(50.dp), state.snapshot.cue == selected.id)
                 }
                 state.errors[selected.id]?.let { Text(it, color = danger, fontSize = 11.sp) }
                 if (selected.id in state.preparing) LinearProgressIndicator(Modifier.fillMaxWidth(), color = soft, trackColor = Color(0xFF23242B))
@@ -232,7 +264,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                     }
                 }
                 if (reasonOpen) {
-                    OutlinedTextField(reason, { reason = it }, label = { Text("Retour à l’artiste") }, modifier = Modifier.fillMaxWidth(), maxLines = 3,
+                    OutlinedTextField(reason, { reason = it }, label = { Text("Note privée") }, modifier = Modifier.fillMaxWidth(), maxLines = 3,
                         colors = OutlinedTextFieldDefaults.colors(focusedTextColor = foreground, unfocusedTextColor = foreground, focusedBorderColor = soft))
                     TextButton(onClick = { state.archive(selected.id, reason.ifBlank { "Mise de côté" }); detail = null }) { Text("Classer dans les archives", color = danger) }
                 }
@@ -247,6 +279,24 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
             text = { Text("Elle restera disponible dans les archives privées.", color = muted) },
             confirmButton = { TextButton(onClick = { state.archive(id, "Proposition passée"); rejectId = null }) { Text("Passer", color = danger) } },
             dismissButton = { TextButton(onClick = { rejectId = null }) { Text("Annuler", color = soft) } })
+    }
+    if (importMenu) {
+        WorkspaceSheet(sheetHeight.coerceAtMost(260.dp), { importMenu = false }) {
+            Text("Ajouter à Propositions", color = foreground, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp))
+            listOf("Un ou plusieurs sons" to Icons.Default.MusicNote, "Un pack ZIP" to Icons.Default.LibraryMusic, "Un dossier de pistes" to Icons.Default.Folder).forEachIndexed { index, (label, icon) ->
+                Row(Modifier.fillMaxWidth().clickable {
+                    importMenu = false
+                    when (index) {
+                        0 -> importer.launch(arrayOf("audio/*"))
+                        1 -> importer.launch(arrayOf("application/zip", "application/x-zip-compressed"))
+                        else -> folderImporter.launch(null)
+                    }
+                }.padding(horizontal = 20.dp, vertical = 13.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Icon(icon, null, tint = soft, modifier = Modifier.size(21.dp))
+                    Text(label, color = foreground, fontSize = 13.sp)
+                }
+            }
+        }
     }
     if (settings) {
         var bpm by remember { mutableStateOf(state.bpm.toString()) }
@@ -289,7 +339,7 @@ private fun ToolIcon(icon: ImageVector, label: String, active: Boolean = false, 
 @Composable
 private fun CompactAction(label: String, active: Boolean, onClick: () -> Unit) {
     Box(Modifier.height(32.dp).clip(RoundedCornerShape(8.dp)).background(if (active) primary.copy(alpha = .38f) else Color(0xFF15161B))
-        .border(.5.dp, if (active) soft.copy(alpha = .5f) else Color(0xFF34343F), RoundedCornerShape(8.dp)).clickable(onClick = onClick).padding(horizontal = 10.dp), contentAlignment = Alignment.Center) {
+        .border(.5.dp, if (active) soft.copy(alpha = .5f) else Color(0xFF34343F), RoundedCornerShape(8.dp)).waveTactileClick(onClick).padding(horizontal = 10.dp), contentAlignment = Alignment.Center) {
         Text(label, color = if (active) soft else foreground, fontSize = 10.sp, fontWeight = FontWeight.Medium)
     }
 }

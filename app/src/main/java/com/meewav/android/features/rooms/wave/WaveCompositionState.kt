@@ -20,6 +20,7 @@ internal data class WaveCompositionClip(
     val kind: WaveClipKind = WaveClipKind.LOOP, val status: WaveProposalStatus = WaveProposalStatus.PENDING,
     val inComposition: Boolean = false, val repeats: Int = -1, val mute: Boolean = false,
     val solo: Boolean = false, val gain: Float = .65f, val note: String = "", val musical: String = "124 BPM · A MIN",
+    val packId: String? = null, val packTitle: String? = null,
 )
 internal data class WaveDemoVote(val clipId: String, val duration: Int, val endsAt: Long, val yes: Int = 0, val no: Int = 0, val replacementId: String? = null)
 
@@ -44,13 +45,22 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
     var loopRange by mutableStateOf(0f..1f); private set
     var transportPending by mutableStateOf(false); private set
     private var auditionGeneration = 0
+    var importing by mutableStateOf(false); private set
+    var adoptingPack by mutableStateOf<String?>(null); private set
+    var preparingPack by mutableStateOf<String?>(null); private set
     val durationFrames: Long get() = clips.filter { it.inComposition }.maxOfOrNull {
-        prepared[it.id]?.frames?.toLong() ?: 0L
+        (prepared[it.id]?.frames?.toLong() ?: 0L) * it.repeats.coerceAtLeast(1)
     }?.coerceAtLeast(1) ?: (48_000 * 60L * 32 / bpm)
     val masterPeaks: List<Float> get() {
         val available = clips.filter { it.inComposition && !it.mute && (!clips.any { c -> c.inComposition && c.solo } || it.solo) }
+        val span = durationFrames
         return if (available.isEmpty()) emptyList() else List(96) { index ->
-            available.sumOf { (prepared[it.id]?.peaks?.getOrNull(index) ?: 0f).toDouble() * it.gain }.toFloat().coerceAtMost(1f)
+            val frame = span * index / 96
+            available.sumOf {
+                val pcm = prepared[it.id]
+                if (pcm == null || (it.repeats > 0 && frame >= pcm.frames.toLong() * it.repeats)) 0.0 else
+                    pcm.peaks[((frame % pcm.frames) * 96 / pcm.frames).toInt()].toDouble() * it.gain
+            }.toFloat().coerceAtMost(1f)
         }
     }
     private val decodeLock = Mutex()
@@ -58,7 +68,7 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
     private val manager = context.getSystemService(AudioManager::class.java)
     private val focusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
         .setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build())
-        .setOnAudioFocusChangeListener { change -> if (change != AudioManager.AUDIOFOCUS_GAIN) audio.stop() }.build()
+        .setOnAudioFocusChangeListener { change -> if (change != AudioManager.AUDIOFOCUS_GAIN) scope.launch { stopTransport() } }.build()
     val categories = listOf("Drums", "Basse", "Mélodie", "Accords", "Nappe", "Acapella", "FX")
     init {
         restore()
@@ -101,7 +111,8 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
             clips = List(array.length()) { i -> array.getJSONObject(i).let {
                 WaveCompositionClip(it.getString("id"), it.getString("title"), it.getString("artist"), it.getString("source"), it.getString("category"),
                     WaveClipKind.valueOf(it.getString("kind")), WaveProposalStatus.valueOf(it.getString("status")), it.getBoolean("inComposition"),
-                    it.getInt("repeats"), it.getBoolean("mute"), it.getBoolean("solo"), it.getDouble("gain").toFloat().coerceIn(0f, 1f), it.optString("note"), it.optString("musical"))
+                    it.getInt("repeats"), it.getBoolean("mute"), it.getBoolean("solo"), it.getDouble("gain").toFloat().coerceIn(0f, 1f), it.optString("note"), it.optString("musical"),
+                    it.optString("packId").takeIf(String::isNotBlank), it.optString("packTitle").takeIf(String::isNotBlank))
             } }
         } catch (_: Exception) { clips = fixture(); notice = "L’atelier sauvegardé est illisible. Le pack de démonstration a été ouvert." }
     }
@@ -109,7 +120,8 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
         val array = JSONArray()
         clips.forEach { c -> array.put(JSONObject().put("id", c.id).put("title", c.title).put("artist", c.artist).put("source", c.source)
             .put("category", c.category).put("kind", c.kind.name).put("status", c.status.name).put("inComposition", c.inComposition)
-            .put("repeats", c.repeats).put("mute", c.mute).put("solo", c.solo).put("gain", c.gain).put("note", c.note).put("musical", c.musical)) }
+            .put("repeats", c.repeats).put("mute", c.mute).put("solo", c.solo).put("gain", c.gain).put("note", c.note).put("musical", c.musical)
+            .put("packId", c.packId ?: "").put("packTitle", c.packTitle ?: "")) }
         preferences.edit().putString("state", JSONObject().put("bpm", bpm).put("key", key).put("open", open).put("clips", array).toString()).apply()
     }
     private fun update(id: String, change: (WaveCompositionClip) -> WaveCompositionClip) {
@@ -156,7 +168,7 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
         }
         active.forEach { prepare(it.id, ::startIfReady) }
     }
-    fun stopTransport() { transportPending = false; preparedActions.clear(); auditionGeneration++; audio.stop() }
+    fun stopTransport() { transportPending = false; preparedActions.clear(); auditionGeneration++; preparingPack = null; audio.stop() }
     fun toggleLoop() { loopEnabled = !loopEnabled; syncLoop() }
     fun updateLoopRange(range: ClosedFloatingPointRange<Float>) {
         val start = range.start.coerceIn(0f, .98f)
@@ -168,22 +180,44 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
         val bar = 48_000 * 60.0 * 4 / bpm
         audio.seek((snapshot.frame + direction * bar).toLong().coerceIn(0, durationFrames))
     }
-    fun launch(id: String) { if (focus()) prepare(id) { audio.stopPreview(); audio.launch(id) } }
+    fun launch(id: String) { stopPreview(); if (focus()) prepare(id) { audio.launch(id) } }
     fun preview(id: String) {
         val generation = ++auditionGeneration
         if (focus()) prepare(id) { if (generation == auditionGeneration) prepared[id]?.let { audio.preview(id, it) } }
     }
-    fun stopPreview() { auditionGeneration++; audio.stopPreview() }
+    fun stopPreview() { auditionGeneration++; preparingPack = null; audio.stopPreview() }
+    fun previewPack(id: String) {
+        if (snapshot.cue == "pack:$id" || preparingPack == id) { stopPreview(); return }
+        if (!focus()) return
+        val members = clips.filter { it.packId == id }
+        if (members.isEmpty()) return
+        val generation = ++auditionGeneration
+        preparingPack = id
+        scope.launch {
+            try {
+                val pcm = withContext(Dispatchers.IO) {
+                    decodeLock.withLock {
+                        val inputs = members.map { WaveCompositionDecoder.decode(context, it.source) to it.gain }
+                        WaveCompositionDecoder.mix(context, members.joinToString { "${it.source}:${it.gain}" }, inputs)
+                    }
+                }
+                if (generation == auditionGeneration) audio.preview("pack:$id", pcm)
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (e: Exception) { if (generation == auditionGeneration) notice = e.message ?: "Préécoute du pack impossible." }
+            finally { if (generation == auditionGeneration) preparingPack = null }
+        }
+    }
     fun add(id: String) {
+        if (adoptingPack != null) { notice = "Le pack est en cours de préparation."; return }
         if (clips.count { it.inComposition } >= 20) { notice = "La composition contient déjà 20 pistes."; return }
         val clip = clips.find { it.id == id } ?: return
         if (clip.inComposition) return
         update(id) { it.copy(status = WaveProposalStatus.ACCEPTED, inComposition = true) }; prepare(id)
     }
     fun remove(id: String) { audio.remove(id); update(id) { it.copy(inComposition = false, mute = false, solo = false) } }
-    fun archive(id: String, reason: String) { remove(id); update(id) { it.copy(status = WaveProposalStatus.ARCHIVED, note = reason) }; audio.stopPreview() }
+    fun archive(id: String, reason: String) { remove(id); update(id) { it.copy(status = WaveProposalStatus.ARCHIVED, note = reason) }; stopPreview() }
     fun pending(id: String) { update(id) { it.copy(status = WaveProposalStatus.PENDING, note = "") } }
-    fun queueVote(id: String) { audio.stopPreview(); update(id) { it.copy(status = WaveProposalStatus.VOTE) } }
+    fun queueVote(id: String) { stopPreview(); update(id) { it.copy(status = WaveProposalStatus.VOTE) } }
     fun mute(id: String) = update(id) { it.copy(mute = !it.mute, solo = if (!it.mute) false else it.solo) }
     fun solo(id: String) {
         val enable = clips.find { it.id == id }?.solo != true
@@ -213,14 +247,77 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
         bpm = tempo.coerceIn(40, 240); key = musicalKey; audio.tempo(bpm); save()
     }
     fun toggleIntake() { open = !open; save() }
-    fun importAudio(uri: Uri) {
+    fun importFolder(uri: Uri) {
+        if (importing) return
+        importing = true
+        scope.launch {
+            try {
+                val sources = withContext(Dispatchers.IO) { WaveWorkshopImports.folder(context, uri) }
+                val id = UUID.randomUUID().toString()
+                sources.forEach { importAudio(it.uri, id, "Composition importée · ${sources.size} pistes", it.title) }
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (e: Exception) { notice = e.message ?: "Import du dossier impossible." }
+            finally { importing = false }
+        }
+    }
+    fun importSelection(uris: List<Uri>) {
+        if (importing || uris.isEmpty()) return
+        importing = true
+        scope.launch {
+            try {
+                val pack = if (uris.size > 1) UUID.randomUUID().toString() else null
+                for (uri in uris) {
+                    val name = withContext(Dispatchers.IO) { WaveWorkshopImports.name(context, uri) }
+                    if (name.endsWith(".zip", true)) {
+                        val id = UUID.randomUUID().toString()
+                        val files = withContext(Dispatchers.IO) { WaveWorkshopImports.unpack(context, uri) }
+                        files.forEach { importAudio(it.uri, id, name.substringBeforeLast('.'), it.title) }
+                    } else importAudio(uri, pack, if (pack != null) "Pack importé · ${uris.size} pistes" else null)
+                }
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (e: Exception) { notice = e.message ?: "Import impossible." }
+            finally { importing = false }
+        }
+    }
+    fun takePack(id: String) {
+        if (adoptingPack != null) return
+        val members = clips.filter { it.packId == id }
+        if (members.isEmpty()) return
+        if (clips.count { it.inComposition } + members.count { !it.inComposition } > 20) {
+            notice = "Ce pack dépasserait les 20 pistes. Prends ses éléments séparément."; return
+        }
+        adoptingPack = id
+        scope.launch {
+            try {
+                // Resolve every component before committing any adoption, as in the iOS controller.
+                val decoded = withContext(Dispatchers.IO) {
+                    decodeLock.withLock { members.associate { it.id to WaveCompositionDecoder.decode(context, it.source) } }
+                }
+                prepared = prepared + decoded
+                if (clips.count { it.inComposition && it.packId != id } + members.size > 20) {
+                    notice = "La composition est pleine. Aucun élément du pack n’a été ajouté."; return@launch
+                }
+                clips = clips.map { if (it.packId == id) it.copy(inComposition = true, status = WaveProposalStatus.ACCEPTED) else it }
+                save()
+                members.forEach { member ->
+                    audio.prepare(member.id, decoded.getValue(member.id), member.repeats)
+                    audio.mix(member.id, member.mute, member.solo, member.gain, member.repeats)
+                }
+                notice = "Composition chargée · aucune piste lancée."
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (e: Exception) { notice = e.message ?: "Le pack n’a pas pu être chargé." }
+            finally { adoptingPack = null }
+        }
+    }
+    fun importAudio(uri: Uri, packId: String? = null, packTitle: String? = null, importedTitle: String? = null) {
         scope.launch {
             val name = withContext(Dispatchers.IO) { runCatching {
                 context.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)?.use {
                     if (it.moveToFirst()) it.getString(0) else null
                 }
             }.getOrNull() ?: "Audio importé" }
-            val clip = WaveCompositionClip(UUID.randomUUID().toString(), name, "VOUS", uri.toString(), "Mélodie", musical = "Analyse…")
+            val clip = WaveCompositionClip(UUID.randomUUID().toString(), importedTitle ?: name, "VOUS", uri.toString(), WaveWorkshopImports.category(importedTitle ?: name),
+                musical = "Analyse…", packId = packId, packTitle = packTitle)
             clips = clips + clip; save(); prepare(clip.id)
             withContext(Dispatchers.IO) {
                 WaveAudioAnalysis.analyze(context, uri, onMusicalResult = { value -> withContext(Dispatchers.Main) { update(clip.id) { it.copy(musical = value) } } })
@@ -240,7 +337,7 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
     fun demoBallot(yes: Boolean) { vote = vote?.let { if (yes) it.copy(yes = it.yes + 1) else it.copy(no = it.no + 1) } }
     fun finishVote() {
         val current = vote ?: return
-        vote = null; audio.stopPreview()
+        vote = null; stopPreview()
         val name = clips.find { it.id == current.clipId }?.title ?: "Boucle"
         if (current.yes > current.no) {
             if (current.replacementId == null && clips.count { it.inComposition } >= 20) {

@@ -22,6 +22,41 @@ internal data class WavePcm(val samples: FloatBuffer, val frames: Int, val peaks
 /** One canonical stereo stream per clip. Disk-backed PCM keeps long takes off the heap. */
 internal object WaveCompositionDecoder {
     const val RATE = 48_000
+    suspend fun mix(context: Context, key: String, inputs: List<Pair<WavePcm, Float>>): WavePcm {
+        require(inputs.isNotEmpty())
+        val folder = File(context.cacheDir, "wave-composition").apply { mkdirs() }
+        val hash = MessageDigest.getInstance("SHA-256").digest(key.toByteArray()).joinToString("") { "%02x".format(it) }
+        val file = File(folder, "mix-$hash.pcm")
+        val frames = inputs.maxOf { it.first.frames }
+        val peaks = MutableList(96) { 0f }
+        if (!file.exists()) {
+            val partial = File(folder, "mix-$hash.part")
+            try {
+                FileOutputStream(partial).channel.use { output ->
+                    val block = ByteBuffer.allocateDirect(8192).order(ByteOrder.LITTLE_ENDIAN)
+                    for (start in 0 until frames step 1024) {
+                        coroutineContext.ensureActive(); block.clear()
+                        for (frame in start until min(frames, start + 1024)) {
+                            var l = 0f; var r = 0f
+                            for ((pcm, gain) in inputs) if (frame < pcm.frames) {
+                                l += pcm.samples.get(frame * 2) * gain; r += pcm.samples.get(frame * 2 + 1) * gain
+                            }
+                            block.putFloat(l.coerceIn(-.98f, .98f)); block.putFloat(r.coerceIn(-.98f, .98f))
+                        }
+                        block.flip(); while (block.hasRemaining()) output.write(block)
+                    }
+                }
+                check(partial.renameTo(file)) { "Impossible de préparer la préécoute du pack." }
+            } finally { partial.delete() }
+        }
+        return RandomAccessFile(file, "r").use { opened ->
+            val pcm = opened.channel.map(FileChannel.MapMode.READ_ONLY, 0, opened.length()).order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer()
+            for (bucket in peaks.indices) for (frame in bucket * frames / 96 until (bucket + 1) * frames / 96 step max(1, frames / 9216)) {
+                peaks[bucket] = max(peaks[bucket], max(abs(pcm.get(frame * 2)), abs(pcm.get(frame * 2 + 1))))
+            }
+            WavePcm(pcm, frames, peaks)
+        }
+    }
     suspend fun decode(context: Context, source: String): WavePcm {
         val directory = File(context.cacheDir, "wave-composition").apply { mkdirs() }
         val key = MessageDigest.getInstance("SHA-256").digest(source.toByteArray()).joinToString("") { "%02x".format(it) }
