@@ -132,6 +132,17 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     var playProgress by remember { mutableStateOf(0f) }
     var extraLaneCount by remember { mutableStateOf(2) }
     val context = LocalContext.current
+    val composition = remember(context, room, roomTitle) {
+        if (room == RoomModule.WAVE) WaveCompositionState(context.applicationContext, roomTitle ?: "wave-demo") else null
+    }
+    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
+    DisposableEffect(composition, lifecycle) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_STOP) composition?.suspendAudio()
+        }
+        lifecycle.addObserver(observer)
+        onDispose { lifecycle.removeObserver(observer); composition?.close() }
+    }
     // Sélecteur de fichier audio (bouton upload + lanes « Importer »).
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
@@ -166,6 +177,15 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     }
     // Lecture réelle — MediaPlayer sur l'URI importée (son audible).
     var mediaPlayer by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
+    LaunchedEffect(audioGain, audioMuted, composition) {
+        composition?.audio?.masterGain(if (audioMuted) 0f else audioGain)
+    }
+    LaunchedEffect(composition?.snapshot?.running, composition?.snapshot?.cue) {
+        if (composition?.snapshot?.running == true || composition?.snapshot?.cue != null) {
+            mediaPlayer?.pause()
+            isPlaying = false
+        }
+    }
     DisposableEffect(trackUri) {
         onDispose { mediaPlayer?.release(); mediaPlayer = null }
     }
@@ -176,6 +196,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
             mediaPlayer?.pause()
             isPlaying = false
         } else {
+            composition?.suspendAudio()
             val mp = mediaPlayer ?: trackUri?.let { u ->
                 runCatching {
                     android.media.MediaPlayer().apply {
@@ -233,6 +254,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
         val fullVideoHeight = maxWidth * 9f / 16f
         val videoViewportHeight = if (activeTab == WaveTab.CHAT)
             (maxHeight - if (emojiPanelOpen) 405.dp else 305.dp).coerceIn(0.dp, fullVideoHeight) else fullVideoHeight
+        val workshopHeight = (maxHeight - 44.dp - videoViewportHeight - 6.dp).coerceAtLeast(0.dp)
         Column(Modifier.fillMaxSize()) {
             WaveHeader(title = roomTitle?.takeIf { it.isNotBlank() } ?: if (room == RoomModule.WAVE) "Freestyle session — Luma invite" else room.label,
                 onBack = { showLeaveConfirm = true }, onClose = { showLeaveConfirm = true })
@@ -306,7 +328,9 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                         onEmojiPanelChange = { emojiPanelOpen = it },
                     )
                     WaveTab.INVITES -> WaveGuestsPanel(guestState, Modifier.fillMaxSize())
-                    else -> WaveTabPlaceholder(activeTab, room.toolsLabel)
+                    else -> if (room == RoomModule.WAVE && composition != null) {
+                        WaveCompositionPanel(composition, workshopHeight)
+                    } else WaveTabPlaceholder(activeTab, room.toolsLabel)
                 }
                 }
             }
