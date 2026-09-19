@@ -9,10 +9,14 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.activity.compose.BackHandler
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,8 +28,6 @@ import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -36,7 +38,8 @@ import org.json.JSONObject
 
 private const val ProfilePage = "https://appassets.androidplatform.net/globe-vinyle/guest-preprofile.html"
 
-/** One preloaded Globe card per Wave screen, independent of the video/rail bounds. */
+/** One persistent artist sheet, with actions and the shared Globe content as two pages. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun GuestPreProfileHost(state: WaveGuestState) {
     val context = LocalContext.current
@@ -48,8 +51,8 @@ internal fun GuestPreProfileHost(state: WaveGuestState) {
     val assets = manifest ?: return
     val content = remember(context, assets) {
         GuestProfileContent(context, assets,
-            onClose = { state.profilePreviewId = null },
-            onContact = { id -> state.profilePreviewId = null; state.messageRecipientIds = setOf(id) })
+            onClose = { state.profilePreviewId = null; state.previewId = null },
+            onContact = { id -> state.profilePreviewId = null; state.previewId = null; state.messageRecipientIds = setOf(id) })
     }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     DisposableEffect(content, lifecycle) {
@@ -67,26 +70,42 @@ internal fun GuestPreProfileHost(state: WaveGuestState) {
     val candidate = guest ?: state.guests.find { it.id == state.previewId }
     // Prepare portrait/media while the guest action sheet is already open.
     LaunchedEffect(candidate) { content.show(candidate) }
+    LaunchedEffect(guest?.id) { if (guest == null) content.pauseMedia() }
 
-    if (guest == null) {
+    val dismiss = { state.profilePreviewId = null; state.previewId = null }
+    if (candidate == null) {
         // Attached and warm without reserving screen space or exposing an accessibility tree.
         ProfileBrowser(content, Modifier.size(1.dp).alpha(0f).semantics { hideFromAccessibility() })
     } else {
-        Dialog(onDismissRequest = { state.profilePreviewId = null },
-            properties = DialogProperties(usePlatformDefaultWidth = false)) {
-            BoxWithConstraints(Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center) {
-                Box(Modifier.matchParentSize().clickable(interactionSource = null, indication = null) {
-                    state.profilePreviewId = null
-                })
-                val cardWidth = minOf(maxWidth, maxHeight * (413f / 540f), 413.dp)
-                val cardHeight = cardWidth * (540f / 413f)
-                Box(Modifier.size(cardWidth, cardHeight).clip(RoundedCornerShape(18.dp))
-                    .background(Color(0xFF030405)), contentAlignment = Alignment.Center) {
-                    ProfileBrowser(content, Modifier.fillMaxSize())
-                    if (content.renderedId != guest.id) {
-                        Box(Modifier.fillMaxSize().background(Color(0xFF030405)), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(color = WaveMixerTheme.capsuleAccentSoft,
-                                modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+        val sheetHeight = minOf((LocalConfiguration.current.screenHeightDp * .76f).dp, 660.dp)
+        ModalBottomSheet(onDismissRequest = dismiss,
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+            containerColor = Color(0xFF07090C), contentColor = Color.White,
+            dragHandle = null) {
+            BackHandler(enabled = guest != null) { state.profilePreviewId = null }
+            Column(Modifier.fillMaxWidth().height(sheetHeight).background(Brush.verticalGradient(
+                listOf(Color(0xFF24262F), Color(0xFF0B0D12), Color(0xFF030405)), endY = 320f))) {
+                Box(Modifier.fillMaxWidth().height(44.dp), contentAlignment = Alignment.Center) {
+                    Box(Modifier.width(44.dp).height(4.dp).clip(RoundedCornerShape(4.dp)).background(Color(0xFF686A7D)))
+                    if (guest != null) IconButton(onClick = { state.profilePreviewId = null }, modifier = Modifier.align(Alignment.CenterStart)) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Retour aux actions", tint = WaveMixerTheme.capsuleAccentSoft)
+                    }
+                    IconButton(onClick = dismiss, modifier = Modifier.align(Alignment.CenterEnd)) {
+                        Icon(WaveIcons.Close, "Fermer la fiche artiste")
+                    }
+                }
+                Box(Modifier.fillMaxWidth().weight(1f)) {
+                    if (guest == null) {
+                        GuestPreviewContent(state, candidate)
+                        ProfileBrowser(content, Modifier.size(1.dp).alpha(0f).semantics { hideFromAccessibility() })
+                    } else {
+                        ProfileBrowser(content, Modifier.fillMaxSize())
+                        if (content.renderedId != guest.id) {
+                            Box(Modifier.fillMaxSize().background(Color(0xFF030405)), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator(color = WaveMixerTheme.capsuleAccentSoft,
+                                    modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                            }
                         }
                     }
                 }
@@ -170,8 +189,11 @@ private class GuestProfileContent(context: Context, manifest: JSONObject,
         (view.parent as? ViewGroup)?.removeView(view)
         host.addView(view, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
     }
-    fun pause() {
+    fun pauseMedia() {
         view.evaluateJavascript("document.querySelectorAll('video,audio').forEach(media=>media.pause())", null)
+    }
+    fun pause() {
+        pauseMedia()
         view.onPause()
     }
     fun dispose() { disposed = true; (view.parent as? ViewGroup)?.removeView(view); view.stopLoading(); view.destroy() }

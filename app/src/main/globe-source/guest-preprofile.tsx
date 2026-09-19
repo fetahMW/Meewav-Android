@@ -4,10 +4,10 @@ import { ArtistProfileCard } from './vendor/globe-vinyle/shared/src/RingArtistPr
 import './guest-preprofile.css';
 
 const root = createRoot(document.getElementById('root')!);
-// Android owns the modal's centering and aspect ratio. Web content starts at (0,0)
-// and fits those exact bounds; it never positions itself against the document body.
+// Android owns the single bottom sheet. Fit its width, and allow vertical scrolling
+// on short displays rather than shrinking all controls to fit the available height.
 const fitCard = () => document.documentElement.style.setProperty('--guest-profile-scale',
-  String(Math.min(document.documentElement.clientWidth / 413, document.documentElement.clientHeight / 540, 1)));
+  String(Math.min(document.documentElement.clientWidth / 413, 1)));
 fitCard();
 window.addEventListener('resize', fitCard);
 new ResizeObserver(fitCard).observe(document.documentElement);
@@ -27,7 +27,7 @@ function GuestCard({ guest }: { guest: Guest }) {
     portraitUrl: guest.portrait, gradeLevel: guest.grade,
     anchor: { x: 0, y: 0, clearance: 0, viewportWidth: innerWidth, viewportHeight: innerHeight },
   };
-  return <div className="ring-artist-preprofile" role="dialog" aria-label={`Pré-profil de ${selection.name}`}>
+  return <div className="ring-artist-preprofile" role="region" aria-label={`Pré-profil de ${selection.name}`}>
     <ArtistProfileCard selection={selection} onClose={() => { location.href = '/native/close'; }} />
   </div>;
 }

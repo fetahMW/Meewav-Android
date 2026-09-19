@@ -259,8 +259,6 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
         }
         WaveGuestActionBar(state, selectedGuests, page, onClear = { state.selected = emptySet(); multiSelect = false })
     }
-    val preview = state.guests.find { it.id == state.previewId }
-    if (preview != null) GuestPreviewSheet(state, preview)
     if (filtersOpen) WaveGuestFilterSheet(state, participants, isRequests = page == 1, onDismiss = { filtersOpen = false })
     if (inviteOpen) {
         ModalBottomSheet(onDismissRequest = { inviteOpen = false }, containerColor = Color(0xFF101114), contentColor = Color.White) {
@@ -286,15 +284,18 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun GuestPreviewSheet(state: WaveGuestState, guest: WaveGuest) {
+internal fun GuestPreviewContent(state: WaveGuestState, guest: WaveGuest) {
     var removeRequested by remember(guest.id) { mutableStateOf(false) }
-    ModalBottomSheet(onDismissRequest = { state.previewId = null }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = Color(0xFF101114), contentColor = Color.White) {
-        Column(Modifier.fillMaxWidth().heightIn(max = 550.dp).verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) { Text(guest.name, fontSize = 20.sp, fontWeight = FontWeight.SemiBold); Text(guest.location.label, color = WaveMixerTheme.capsuleAccentSoft, fontSize = 12.sp) }
-                GuestGrade(guest.gradeLevel)
-                IconButton(onClick = { state.previewId = null }) { Icon(WaveIcons.Close, "Fermer l’aperçu") }
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 20.dp, end = 20.dp, bottom = 20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Image(painterResource(guest.portrait), null, modifier = Modifier.size(64.dp).clip(CircleShape), contentScale = ContentScale.Crop)
+                Column(Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(guest.name, modifier = Modifier.weight(1f, fill = false), maxLines = 1, overflow = TextOverflow.Ellipsis, fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
+                        GuestGrade(guest.gradeLevel)
+                    }
+                    Text(guest.location.label, color = WaveMixerTheme.capsuleAccentSoft, fontSize = 12.sp)
+                }
             }
             if (guest.location == WaveGuestLocation.BACKSTAGE || guest.location == WaveGuestLocation.STAGE) {
             Box(Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(16.dp)).background(Color.Black), contentAlignment = Alignment.Center) {
@@ -312,7 +313,7 @@ private fun GuestPreviewSheet(state: WaveGuestState, guest: WaveGuest) {
                 GuestControl("Message", Modifier.weight(1f), { state.previewId = null; state.messageRecipientIds = setOf(guest.id) }) {
                     Icon(WaveIcons.Envelope, null, modifier = Modifier.size(18.dp))
                 }
-                GuestControl("Pré-profil", Modifier.weight(1f), { state.previewId = null; state.profilePreviewId = guest.id }) {
+                GuestControl("Pré-profil", Modifier.weight(1f), { state.profilePreviewId = guest.id }) {
                     Icon(WaveIcons.Eye, null, modifier = Modifier.size(18.dp))
                 }
             }
@@ -335,7 +336,6 @@ private fun GuestPreviewSheet(state: WaveGuestState, guest: WaveGuest) {
             if (guest.location == WaveGuestLocation.BACKSTAGE) TextButton(onClick = { state.move(setOf(guest.id), WaveGuestLocation.INVITED); state.previewId = null }) { Text("Renvoyer en préparation", color = Color.White.copy(alpha = .6f)) }
             TextButton(onClick = { removeRequested = true }) { Text(if (guest.location == WaveGuestLocation.REQUESTED) "Refuser la candidature" else "Retirer l’invité", color = Color(0xFFE99A9E)) }
         }
-    }
     if (removeRequested) AlertDialog(onDismissRequest = { removeRequested = false }, containerColor = Color(0xFF18191E),
         title = { Text("Retirer ${guest.name} ?", color = Color.White) },
         confirmButton = { TextButton(onClick = { state.remove(setOf(guest.id)); removeRequested = false }) { Text("Retirer", color = Color(0xFFE99A9E)) } },
