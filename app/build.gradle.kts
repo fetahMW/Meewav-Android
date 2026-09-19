@@ -22,12 +22,16 @@ require(publicKey.isBlank() || publicKey.startsWith("sb_publishable_")) {
 android {
     namespace = "com.meewav.android"
     compileSdk = 36
+    ndkVersion = "28.2.13676358"
+    externalNativeBuild { cmake { path = file("src/main/cpp/CMakeLists.txt"); version = "3.22.1" } }
     defaultConfig {
         applicationId = "com.meewav.android"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
+        ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64") }
+        buildConfigField("String", "SUPERPOWERED_LICENSE_KEY", quoted(publicSetting("SUPERPOWERED_LICENSE_KEY").ifBlank { "ExampleLicenseKey-WillExpire-OnNextUpdate" }))
         buildConfigField("String", "SUPABASE_URL", quoted(publicSetting("SUPABASE_URL")))
         buildConfigField("String", "SUPABASE_PUBLISHABLE_KEY", quoted(publicKey))
     }

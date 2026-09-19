@@ -37,9 +37,11 @@ object WaveAudioAnalysis {
     /* Analyse synchrone — à appeler hors thread UI (Dispatchers.IO). */
     suspend fun analyze(context: Context, uri: Uri, targetCount: Int = 2048,
         onDuration: suspend (Long) -> Unit = {},
+        onMusicalResult: suspend (String) -> Unit = {},
         onProgress: suspend (List<WaveformSample>) -> Unit = {}): List<WaveformSample> {
         val extractor = MediaExtractor()
         var codec: MediaCodec? = null
+        var musical: MusicalTrackAnalyzer? = null
         try {
             extractor.setDataSource(context, uri, null)
             var format: MediaFormat? = null
@@ -74,6 +76,7 @@ object WaveAudioAnalysis {
                 start()
             }
             val info = MediaCodec.BufferInfo()
+            musical = MusicalTrackAnalyzer(sampleRate, ((durationUs + 999_999) / 1_000_000).toInt())
             var globalFrame = 0L
             var pcmFloat = false
             var inputDone = false
@@ -116,6 +119,7 @@ object WaveAudioAnalysis {
                             buf.position(info.offset)
                             buf.limit(info.offset + info.size)
                             buf.order(ByteOrder.LITTLE_ENDIAN)
+                            musical.consume(buf, info.offset, info.size, channels, pcmFloat)
                             if (pcmFloat) consumeFloat(buf, channels, globalFrame, framesPerBucket, bucketCount, minPeaks, maxPeaks, rmsSums, rmsCounts).also { globalFrame = it }
                             else consumeShort(buf, channels, globalFrame, framesPerBucket, bucketCount, minPeaks, maxPeaks, rmsSums, rmsCounts).also { globalFrame = it }
                         }
@@ -130,12 +134,19 @@ object WaveAudioAnalysis {
                 }
             }
 
-            return normalize(minPeaks, maxPeaks, rmsSums, rmsCounts)
+            // Same reporting policy as MWAudioAnalysisPolicy on iOS main.
+            val finalWaveform = normalize(minPeaks, maxPeaks, rmsSums, rmsCounts)
+            onProgress(finalWaveform)
+            val peak = maxOf(minPeaks.maxOf { abs(it) }, maxPeaks.maxOf { abs(it) })
+            coroutineContext.ensureActive()
+            onMusicalResult(if (globalFrame.toDouble() / sampleRate >= 8 && peak >= .000001f) musical.finish() else "Non détecté")
+            return finalWaveform
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (t: Exception) {
             return emptyList()
         } finally {
+            musical?.close()
             runCatching { codec?.stop() }
             runCatching { codec?.release() }
             runCatching { extractor.release() }

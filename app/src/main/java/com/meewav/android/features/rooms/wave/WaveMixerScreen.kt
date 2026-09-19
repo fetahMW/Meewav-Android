@@ -127,6 +127,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     var trackDurationMs by remember { mutableStateOf(0L) }
     var trackSamples by remember { mutableStateOf<List<WaveformSample>>(emptyList()) }
     var trackAnalyzing by remember { mutableStateOf(false) }
+    var musicLabel by remember { mutableStateOf("BPM / clé…") }
     var importGeneration by remember { mutableStateOf(0) }
     var playProgress by remember { mutableStateOf(0f) }
     var extraLaneCount by remember { mutableStateOf(2) }
@@ -140,6 +141,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
             trackDurationMs = 0L
             trackSamples = emptyList()
             trackAnalyzing = true
+            musicLabel = "BPM / clé…"
             playProgress = 0f
             hasTrack = true
         }
@@ -155,10 +157,12 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
             withContext(Dispatchers.Main) { if (name != null) trackName = name }
             WaveAudioAnalysis.analyze(context, uri,
                 onDuration = { duration -> withContext(Dispatchers.Main) { trackDurationMs = duration } },
+                onMusicalResult = { result -> withContext(Dispatchers.Main) { musicLabel = result } },
                 onProgress = { samples -> withContext(Dispatchers.Main) { trackSamples = samples } })
         }
         trackSamples = decoded
         trackAnalyzing = false
+        if (musicLabel == "BPM / clé…") musicLabel = "Non détecté"
     }
     // Lecture réelle — MediaPlayer sur l'URI importée (son audible).
     var mediaPlayer by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
@@ -286,7 +290,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                         loopOn = loopOn, onLoop = { loopOn = !loopOn },
                         multitrack = multitrack, onMultitrack = { multitrack = !multitrack },
                         hasTrack = hasTrack, trackName = trackName,
-                        trackDurationMs = trackDurationMs, trackSamples = trackSamples, trackAnalyzing = trackAnalyzing,
+                        trackDurationMs = trackDurationMs, trackSamples = trackSamples, trackAnalyzing = trackAnalyzing, musicLabel = musicLabel,
                         playProgress = playProgress,
                         onImport = onImport,
                         extraLaneCount = extraLaneCount,
@@ -610,7 +614,7 @@ private fun MixerBody(
     loopOn: Boolean, onLoop: () -> Unit,
     multitrack: Boolean, onMultitrack: () -> Unit,
     hasTrack: Boolean, trackName: String?,
-    trackDurationMs: Long, trackSamples: List<WaveformSample>, playProgress: Float, trackAnalyzing: Boolean = false,
+    trackDurationMs: Long, trackSamples: List<WaveformSample>, playProgress: Float, trackAnalyzing: Boolean = false, musicLabel: String = "",
     onImport: () -> Unit,
     extraLaneCount: Int,
     onAddLane: () -> Unit,
@@ -684,7 +688,7 @@ private fun MixerBody(
             loopOn = loopOn, onLoop = onLoop,
             multitrack = multitrack, onMultitrack = onMultitrack,
             hasTrack = hasTrack, trackName = trackName,
-            trackDurationMs = trackDurationMs, trackSamples = trackSamples, playProgress = playProgress, trackAnalyzing = trackAnalyzing,
+            trackDurationMs = trackDurationMs, trackSamples = trackSamples, playProgress = playProgress, trackAnalyzing = trackAnalyzing, musicLabel = musicLabel,
             onImport = onImport,
             extraLaneCount = extraLaneCount,
             onAddLane = onAddLane, onRemoveLane = onRemoveLane, onImportPack = onImportPack,
@@ -707,7 +711,7 @@ private fun MixerBody(
                 loopOn = loopOn, onLoop = onLoop,
                 multitrack = multitrack, onMultitrack = onMultitrack,
                 hasTrack = hasTrack, trackName = trackName,
-                trackDurationMs = trackDurationMs, trackSamples = trackSamples, playProgress = playProgress, trackAnalyzing = trackAnalyzing,
+                trackDurationMs = trackDurationMs, trackSamples = trackSamples, playProgress = playProgress, trackAnalyzing = trackAnalyzing, musicLabel = musicLabel,
                 onImport = onImport,
                 extraLaneCount = extraLaneCount,
                 onAddLane = onAddLane, onRemoveLane = onRemoveLane, onImportPack = onImportPack,
@@ -989,7 +993,7 @@ private fun MixerDeck(
     loopOn: Boolean, onLoop: () -> Unit,
     multitrack: Boolean, onMultitrack: () -> Unit,
     hasTrack: Boolean, trackName: String?,
-    trackDurationMs: Long, trackSamples: List<WaveformSample>, playProgress: Float, trackAnalyzing: Boolean = false,
+    trackDurationMs: Long, trackSamples: List<WaveformSample>, playProgress: Float, trackAnalyzing: Boolean = false, musicLabel: String = "",
     onImport: () -> Unit,
     extraLaneCount: Int,
     onAddLane: () -> Unit,
@@ -1045,11 +1049,13 @@ private fun MixerDeck(
             ) {
                 Text(
                     trackName ?: "Piste principale",
+                    modifier = Modifier.weight(1f), overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                     color = WaveMixerTheme.pearl, fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold, fontFamily = WaveMixerTheme.fontFamily,
                     maxLines = 1
                 )
-                Spacer(Modifier.weight(1f))
+                if (hasTrack) Text(musicLabel, color = WaveMixerTheme.capsuleAccentSoft, fontSize = 9.sp, maxLines = 1)
+                Spacer(Modifier.width(8.dp))
                 if (hasTrack) {
                     Text(
                         "${formatTrackTime((trackDurationMs * playProgress).toLong())} / ${formatTrackTime(trackDurationMs)}",
