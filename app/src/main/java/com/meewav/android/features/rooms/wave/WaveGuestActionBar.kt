@@ -45,8 +45,8 @@ internal fun WaveGuestActionBar(state: WaveGuestState, guests: List<WaveGuest>, 
                 GuestAction("Demandes", Icons.Filled.ArrowDownward, enabled, Modifier.weight(1f)) {
                     state.move(ids, WaveGuestLocation.REQUESTED); onClear()
                 }
-            } else GuestAction(if (page == 1) "Greenhouse" else "Coulisses", if (page == 1) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward, enabled, Modifier.weight(1f)) {
-                state.move(ids, if (page == 1) WaveGuestLocation.INVITED else WaveGuestLocation.BACKSTAGE); onClear()
+            } else GuestAction("Coulisses", if (page == 1) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward, enabled, Modifier.weight(1f)) {
+                state.move(ids, WaveGuestLocation.BACKSTAGE); onClear()
             }
             GuestAction(if (page == 1) "Refuser" else "Retirer", Icons.Outlined.DeleteOutline, enabled, Modifier.weight(1f)) {
                 if (page == 1) state.refuseRequests(ids) else state.remove(ids)

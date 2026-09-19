@@ -139,8 +139,7 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
     var multiSelect by remember { mutableStateOf(false) }
     val participants = state.guests.filter { when (page) {
         0 -> it.location == WaveGuestLocation.BACKSTAGE
-        1 -> it.location == WaveGuestLocation.REQUESTED
-        3 -> it.location == WaveGuestLocation.INVITED
+        1 -> it.location == WaveGuestLocation.REQUESTED || it.location == WaveGuestLocation.INVITED
         else -> it.location == WaveGuestLocation.STAGE
     } }
     val shown = participants.filter(state.filters::matches)
@@ -148,11 +147,10 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
     DisposableEffect(Unit) { onDispose { state.cancelDrag(); state.backstageBounds = androidx.compose.ui.geometry.Rect.Zero } }
     Column(modifier.padding(top = 2.dp, bottom = 8.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            listOf(1 to "Demandes", 3 to "Greenhouse", 0 to "Coulisses", 2 to "Scène").forEach { (index, title) ->
+            listOf(1 to "Demandes", 0 to "Coulisses", 2 to "Scène").forEach { (index, title) ->
                 val count = state.guests.count { when(index) {
                     0 -> it.location == WaveGuestLocation.BACKSTAGE
-                    1 -> it.location == WaveGuestLocation.REQUESTED
-        3 -> it.location == WaveGuestLocation.INVITED
+                    1 -> it.location == WaveGuestLocation.REQUESTED || it.location == WaveGuestLocation.INVITED
                     else -> it.location == WaveGuestLocation.STAGE
                 } }
                 Box(Modifier.weight(1f).height(44.dp).clip(RoundedCornerShape(8.dp))
@@ -181,7 +179,7 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                     }
                 }
                 }
-            } else Text(if (page == 0) "Glisse un invité vers la vidéo" else if (page == 3) "Préparer les invités" else "3 invités maximum sur scène",
+            } else Text(if (page == 0) "Glisse un invité vers la vidéo" else "3 invités maximum sur scène",
                 modifier = Modifier.weight(1f), color = Color.White.copy(alpha = .48f), fontSize = 11.sp)
             TextButton(onClick = { inviteOpen = true }, modifier = Modifier.height(44.dp), contentPadding = PaddingValues(horizontal = 6.dp)) { Text("+ Inviter", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 12.sp) }
             BadgedBox(badge = { if (state.filters.count > 0) Badge(containerColor = WaveMixerTheme.capsuleAccent) { Text("${state.filters.count}") } }) {
@@ -250,7 +248,7 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                 val catalog = state.availableInvites
                 if (catalog.isEmpty()) Text("Tous les artistes de cette démo sont déjà invités.")
                 catalog.forEach { guest ->
-                    Row(Modifier.fillMaxWidth().hifiBlackSurface(14.dp).clickable { state.invite(guest); page = 3; inviteOpen = false }.padding(14.dp),
+                    Row(Modifier.fillMaxWidth().hifiBlackSurface(14.dp).clickable { state.invite(guest); page = 1; inviteOpen = false }.padding(14.dp),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         Image(painterResource(guest.portrait), null, modifier = Modifier.size(40.dp).clip(CircleShape), contentScale = ContentScale.Crop)
                         Text(guest.name, modifier = Modifier.weight(1f))
@@ -274,7 +272,7 @@ private fun GuestPreviewSheet(state: WaveGuestState, guest: WaveGuest) {
                 GuestGrade(guest.gradeLevel)
                 IconButton(onClick = { state.previewId = null }) { Icon(WaveIcons.Close, "Fermer l’aperçu") }
             }
-            if (guest.location != WaveGuestLocation.REQUESTED) {
+            if (guest.location == WaveGuestLocation.BACKSTAGE || guest.location == WaveGuestLocation.STAGE) {
             Box(Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(16.dp)).background(Color.Black), contentAlignment = Alignment.Center) {
                 if (guest.camera) Image(painterResource(guest.portrait), null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
                 else Icon(WaveIcons.CameraOff, "Caméra coupée", tint = Color.White.copy(alpha = .5f))
@@ -295,7 +293,7 @@ private fun GuestPreviewSheet(state: WaveGuestState, guest: WaveGuest) {
                 }
             }
             val target = when (guest.location) {
-                WaveGuestLocation.REQUESTED -> WaveGuestLocation.INVITED
+                WaveGuestLocation.REQUESTED -> WaveGuestLocation.BACKSTAGE
                 WaveGuestLocation.INVITED, WaveGuestLocation.STAGE -> WaveGuestLocation.BACKSTAGE
                 WaveGuestLocation.BACKSTAGE -> WaveGuestLocation.STAGE
             }
@@ -304,7 +302,7 @@ private fun GuestPreviewSheet(state: WaveGuestState, guest: WaveGuest) {
                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = WaveMixerTheme.capsuleAccent)) {
                 Text(when (guest.location) {
-                    WaveGuestLocation.REQUESTED -> "Passer en Greenhouse"
+                    WaveGuestLocation.REQUESTED -> "Passer en coulisses"
                     WaveGuestLocation.INVITED -> "Passer en coulisses"
                     WaveGuestLocation.STAGE -> "Redescendre en coulisses"
                     else -> if (!guest.connected) "En attente de reconnexion" else if (state.onStage.size == 3) "Scène complète" else "Faire monter sur scène"

@@ -361,3 +361,9 @@ Compilation de livraison uniquement ; rendu à valider par l'utilisateur.
 - Demandes REQUESTED -> Greenhouse INVITED -> Coulisses BACKSTAGE -> Scène STAGE. Pas de caméra ni de commandes média dans la fiche d'une demande.
 - Fiche avec vrai badge, message privé démo et pré-profil natif compact (portrait, rôle, grade). Greenhouse est désormais un onglet distinct.
 
+
+### Correction explicite : Greenhouse invisible
+- Greenhouse est une étape interne, jamais un onglet ni un libellé utilisateur. Interface : Demandes / Coulisses / Scène. Cette règle remplace l'entrée précédente.
+- Préparation interne conservée ; bouton visible Passer en coulisses. Aucun aperçu caméra pour les profils de la liste Demandes, y compris ceux en préparation.
+- Le module actuel reste une démo locale ; ne pas prétendre avoir raccordé la préparation serveur.
+

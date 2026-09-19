@@ -6,7 +6,7 @@ import androidx.compose.ui.geometry.Rect
 import com.meewav.android.R
 
 internal enum class WaveGuestLocation(val label: String) {
-    REQUESTED("Demande"), INVITED("Greenhouse"), BACKSTAGE("Prêt en coulisses"), STAGE("Sur scène")
+    REQUESTED("Demande"), INVITED("En préparation"), BACKSTAGE("Prêt en coulisses"), STAGE("Sur scène")
 }
 
 internal data class WaveGuest(
@@ -105,7 +105,7 @@ internal class WaveGuestState {
         val matching = guests.filter { it.id in ids }
         val allowed = matching.filter { guest -> when (target) {
             WaveGuestLocation.STAGE -> guest.location == WaveGuestLocation.BACKSTAGE
-            WaveGuestLocation.BACKSTAGE -> guest.location == WaveGuestLocation.STAGE || guest.location == WaveGuestLocation.INVITED
+            WaveGuestLocation.BACKSTAGE -> guest.location == WaveGuestLocation.STAGE || guest.location == WaveGuestLocation.INVITED || guest.location == WaveGuestLocation.REQUESTED
             WaveGuestLocation.INVITED -> guest.location == WaveGuestLocation.REQUESTED || guest.location == WaveGuestLocation.BACKSTAGE
             WaveGuestLocation.REQUESTED -> guest.location == WaveGuestLocation.BACKSTAGE || guest.location == WaveGuestLocation.INVITED
         } }

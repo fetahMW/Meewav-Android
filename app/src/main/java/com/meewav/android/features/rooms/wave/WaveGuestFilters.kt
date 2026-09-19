@@ -98,7 +98,7 @@ internal fun WaveGuestFilterSheet(state: WaveGuestState, participants: List<Wave
                                 } }
                         }
                         else -> listOf("media-ready" to "Prêt à passer · Micro + caméra", "stable" to "Connexion stable · ≤ 80 ms",
-                            "green-house" to "Green House · Déjà préparé").forEach { (id, label) ->
+                            "green-house" to "Déjà préparé").forEach { (id, label) ->
                             item(key = id) { FilterChoice(label, id in draft.readiness,
                                 onClick = { draft = draft.copy(readiness = draft.readiness.toggle(id)) }) {} }
                         }
