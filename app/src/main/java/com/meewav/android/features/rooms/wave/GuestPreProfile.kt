@@ -96,7 +96,7 @@ internal fun GuestPreProfileHost(state: WaveGuestState, availableHeight: Dp) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Retour aux actions", tint = WaveMixerTheme.capsuleAccentSoft)
                     }
                     IconButton(onClick = dismiss, modifier = Modifier.align(Alignment.CenterEnd)) {
-                        Icon(WaveIcons.Close, "Fermer la fiche artiste")
+                        Icon(WaveIcons.Close, "Fermer la fiche artiste", tint = WaveMixerTheme.capsuleAccentSoft.copy(alpha = .72f))
                     }
                 }
                 Box(Modifier.fillMaxWidth().weight(1f)) {
