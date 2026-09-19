@@ -6,8 +6,11 @@ import './guest-preprofile.css';
 const root = createRoot(document.getElementById('root')!);
 // Android owns the single bottom sheet. Fit its width, and allow vertical scrolling
 // on short displays rather than shrinking all controls to fit the available height.
-const fitCard = () => document.documentElement.style.setProperty('--guest-profile-scale',
-  String(Math.min(document.documentElement.clientWidth / 413, 1)));
+const fitCard = () => {
+  const scale = Math.min(document.documentElement.clientWidth / 413, 1);
+  document.documentElement.style.setProperty('--guest-profile-scale', String(scale));
+  document.documentElement.style.setProperty('--guest-profile-height', `${document.documentElement.clientHeight / scale}px`);
+};
 fitCard();
 window.addEventListener('resize', fitCard);
 new ResizeObserver(fitCard).observe(document.documentElement);

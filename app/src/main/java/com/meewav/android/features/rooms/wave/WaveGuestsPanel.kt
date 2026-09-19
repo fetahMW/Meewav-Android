@@ -288,19 +288,19 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
 @Composable
 internal fun GuestPreviewContent(state: WaveGuestState, guest: WaveGuest) {
     var removeRequested by remember(guest.id) { mutableStateOf(false) }
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 20.dp, end = 20.dp, bottom = 20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Column(Modifier.fillMaxSize().padding(start = 16.dp, end = 16.dp, bottom = 10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Image(painterResource(guest.portrait), null, modifier = Modifier.size(64.dp).clip(CircleShape), contentScale = ContentScale.Crop)
+                Image(painterResource(guest.portrait), null, modifier = Modifier.size(52.dp).clip(CircleShape), contentScale = ContentScale.Crop)
                 Column(Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(guest.name, modifier = Modifier.weight(1f, fill = false), maxLines = 1, overflow = TextOverflow.Ellipsis, fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
                         GuestGrade(guest.gradeLevel)
                     }
-                    Text(guest.location.label, color = WaveMixerTheme.capsuleAccentSoft, fontSize = 12.sp)
+                    GuestHealth(guest)
                 }
             }
             if (guest.location == WaveGuestLocation.BACKSTAGE || guest.location == WaveGuestLocation.STAGE) {
-            Box(Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(16.dp)).background(Color.Black), contentAlignment = Alignment.Center) {
+            Box(Modifier.fillMaxWidth().weight(1f).clip(RoundedCornerShape(12.dp)).background(Color.Black), contentAlignment = Alignment.Center) {
                 if (guest.camera && guest.connected) WaveGuestVideo(guest, Modifier.fillMaxSize())
                 else Icon(WaveIcons.CameraOff, "Caméra coupée", tint = Color.White.copy(alpha = .5f))
                 Text("Aperçu de démonstration", modifier = Modifier.align(Alignment.BottomCenter).background(Color.Black.copy(alpha = .75f)).padding(6.dp), fontSize = 10.sp)
@@ -309,7 +309,6 @@ internal fun GuestPreviewContent(state: WaveGuestState, guest: WaveGuest) {
                 GuestControl(if (guest.mic) "Micro actif" else "Micro coupé", Modifier.weight(1f), { state.toggleMic(guest.id) }) { Icon(if (guest.mic) WaveIcons.Mic else WaveIcons.MicOff, null, modifier = Modifier.size(18.dp)) }
                 GuestControl(if (guest.camera) "Caméra active" else "Caméra coupée", Modifier.weight(1f), { state.toggleCamera(guest.id) }) { Icon(if (guest.camera) Icons.Filled.Videocam else WaveIcons.CameraOff, null, modifier = Modifier.size(18.dp)) }
             }
-            GuestHealth(guest)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 GuestControl("Message", Modifier.weight(1f), { state.previewId = null; state.messageRecipientIds = setOf(guest.id) }) {
@@ -326,7 +325,7 @@ internal fun GuestPreviewContent(state: WaveGuestState, guest: WaveGuest) {
             }
             Button(onClick = { state.move(setOf(guest.id), target); if (state.guests.find { it.id == guest.id }?.location == target) state.previewId = null },
                 enabled = target != WaveGuestLocation.STAGE || (state.onStage.size < 3 && guest.connected),
-                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                modifier = Modifier.fillMaxWidth().height(44.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = WaveMixerTheme.capsuleAccent)) {
                 Text(when (guest.location) {
                     WaveGuestLocation.REQUESTED -> "Passer en coulisses"
@@ -335,8 +334,10 @@ internal fun GuestPreviewContent(state: WaveGuestState, guest: WaveGuest) {
                     else -> if (!guest.connected) "En attente de reconnexion" else if (state.onStage.size == 3) "Scène complète" else "Faire monter sur scène"
                 })
             }
-            if (guest.location == WaveGuestLocation.BACKSTAGE) TextButton(onClick = { state.move(setOf(guest.id), WaveGuestLocation.INVITED); state.previewId = null }) { Text("Renvoyer en préparation", color = Color.White.copy(alpha = .6f)) }
-            TextButton(onClick = { removeRequested = true }) { Text(if (guest.location == WaveGuestLocation.REQUESTED) "Refuser la candidature" else "Retirer l’invité", color = Color(0xFFE99A9E)) }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                if (guest.location == WaveGuestLocation.BACKSTAGE) TextButton(modifier = Modifier.height(40.dp), contentPadding = PaddingValues(horizontal = 4.dp), onClick = { state.move(setOf(guest.id), WaveGuestLocation.INVITED); state.previewId = null }) { Text("Renvoyer en préparation", fontSize = 11.sp, color = Color.White.copy(alpha = .6f)) }
+                TextButton(modifier = Modifier.height(40.dp), contentPadding = PaddingValues(horizontal = 4.dp), onClick = { removeRequested = true }) { Text(if (guest.location == WaveGuestLocation.REQUESTED) "Refuser la candidature" else "Retirer l’invité", fontSize = 11.sp, color = Color(0xFFE99A9E)) }
+            }
         }
     if (removeRequested) AlertDialog(onDismissRequest = { removeRequested = false }, containerColor = Color(0xFF18191E),
         title = { Text("Retirer ${guest.name} ?", color = Color.White) },
