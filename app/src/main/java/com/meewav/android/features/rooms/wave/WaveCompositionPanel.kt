@@ -5,6 +5,8 @@ import android.os.SystemClock
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
+import androidx.compose.animation.animateContentSize
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -39,7 +41,9 @@ private val danger = Color(0xFFC88B90)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) {
-    var section by remember { mutableIntStateOf(0) }
+    var section by rememberSaveable { mutableIntStateOf(0) }
+    var revealed by remember { mutableStateOf<String?>(null) }
+    var rejectId by remember { mutableStateOf<String?>(null) }
     var filter by remember { mutableStateOf(WaveProposalStatus.PENDING) }
     var detail by remember { mutableStateOf<String?>(null) }
     var settings by remember { mutableStateOf(false) }
@@ -55,13 +59,14 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
             runCatching { context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
             state.importAudio(uri)
         }
-        if (uris.isNotEmpty()) { filter = WaveProposalStatus.PENDING; section = 1 }
+        if (uris.isNotEmpty()) { filter = WaveProposalStatus.PENDING; section = 0 }
     }
-    Column(Modifier.fillMaxSize().padding(horizontal = 12.dp)) {
+    Column(Modifier.fillMaxSize()) {
+        WaveMasterPlayer(state, onImport = { importer.launch(arrayOf("audio/*")) }, onSettings = { settings = true })
         Row(Modifier.fillMaxWidth().height(42.dp), verticalAlignment = Alignment.CenterVertically) {
-            listOf("Composition", "Propositions", "Vote").forEachIndexed { index, label ->
+            listOf("Propositions", "Vote", "Composition").forEachIndexed { index, label ->
                 Column(Modifier.weight(1f).fillMaxHeight().clickable {
-                    section = index; state.audio.stopPreview()
+                    section = index; revealed = null; state.stopPreview()
                 }, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                     Text(label, color = if (section == index) foreground else muted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(6.dp))
@@ -77,45 +82,22 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
         }
         state.snapshot.error?.let { Text(it, color = danger, fontSize = 11.sp) }
         when (section) {
-            0 -> {
-                Row(Modifier.fillMaxWidth().height(50.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ToolIcon(if (state.snapshot.running) Icons.Default.Stop else Icons.Default.PlayArrow, if (state.snapshot.running) "Arrêter le séquenceur" else "Démarrer l’horloge", state.snapshot.running) { state.transport() }
-                    Column(Modifier.weight(1f)) {
-                        Text("${state.bpm} BPM  ·  ${state.key}", fontSize = 12.sp, color = foreground, fontWeight = FontWeight.SemiBold)
-                        val beat = state.snapshot.frame * state.bpm / (48_000L * 60)
-                        Text(if (state.snapshot.running) "Mesure ${beat / 4 + 1} · Temps ${beat % 4 + 1}" else "Prêt · départ à la mesure", fontSize = 10.sp, color = muted)
-                    }
-                    ToolIcon(Icons.Default.Tune, "Régler le tempo et la tonalité") { settings = true }
-                    ToolIcon(Icons.Default.Add, "Importer des pistes") { importer.launch(arrayOf("audio/*")) }
-                }
+            2 -> {
                 val composition = state.clips.filter { it.inComposition }
                 if (composition.isEmpty()) EmptyWorkspace("Ta composition commence ici", "Prends une boucle dans Propositions ou importe ton audio.", Modifier.weight(1f))
-                else LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(bottom = 10.dp)) {
+                else LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(7.dp), contentPadding = PaddingValues(bottom = 8.dp)) {
                     items(composition, key = { it.id }) { clip ->
-                        val playback = state.snapshot.voices.find { it.id == clip.id }
-                        Column(Modifier.fillMaxWidth().hifiBlackSurface(14.dp).padding(horizontal = 10.dp, vertical = 8.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                                ToolIcon(if (playback?.phase == "En lecture" || playback?.phase == "Prochaine mesure") Icons.Default.Stop else Icons.Default.PlayArrow,
-                                    "Lire ou arrêter ${clip.title}", playback?.phase == "En lecture", clip.id !in state.preparing) { state.launch(clip.id) }
-                                Column(Modifier.weight(1f)) {
-                                    Text(clip.title, color = foreground, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)
-                                    Text("${clip.artist} · ${clip.category}", color = muted, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                }
-                                ToolIcon(Icons.Default.MoreHoriz, "Options de ${clip.title}") { detail = clip.id }
-                            }
-                            ClipWaveform(state.prepared[clip.id]?.peaks.orEmpty(), playback?.progress ?: 0f, Modifier.fillMaxWidth().height(34.dp), active = playback?.phase == "En lecture")
-                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                                Text(if (clip.id in state.preparing) "Préparation…" else if (clip.id in state.errors) "Indisponible" else playback?.phase ?: "Prêt",
-                                    modifier = Modifier.weight(1f), color = if (clip.id in state.errors) danger else muted, fontSize = 9.sp, maxLines = 1)
-                                CompactAction(if (clip.repeats == -1) "∞" else "${clip.repeats}×", active = false) { state.repeat(clip.id) }
-                                CompactAction("SOLO", clip.solo) { state.solo(clip.id) }
-                                CompactAction("MUTE", clip.mute) { state.mute(clip.id) }
-                            }
+                        WaveSwipeActions(clip.id, revealed, { revealed = it }, actions = { close ->
+                            SwipeAction("Mute", Icons.Default.VolumeOff, clip.mute) { state.mute(clip.id); close() }
+                            SwipeAction("Solo", Icons.Default.Headphones, clip.solo) { state.solo(clip.id); close() }
+                            SwipeAction("Retirer", Icons.Default.Close) { state.remove(clip.id); close() }
+                        }) {
+                            WaveLoopCard(clip, state, composition = true, onDetail = { detail = clip.id }, onAction = { state.launch(clip.id) })
                         }
                     }
                 }
             }
-            1 -> {
+            0 -> {
                 Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box {
                         TextButton(onClick = { filterMenu = true }, contentPadding = PaddingValues(horizontal = 4.dp)) {
@@ -138,9 +120,15 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                 if (proposals.isEmpty()) EmptyWorkspace("Aucune proposition ici", "Les boucles classées apparaîtront dans cette liste.", Modifier.weight(1f))
                 else LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(bottom = 10.dp)) {
                     items(proposals, key = { it.id }) { clip ->
-                        ProposalRow(clip, state, onDetail = { detail = clip.id }, onAction = {
-                            if (filter == WaveProposalStatus.ARCHIVED) state.pending(clip.id) else state.add(clip.id)
-                        })
+                        WaveSwipeActions(clip.id, revealed, { revealed = it }, actions = { close ->
+                            SwipeAction("De côté", Icons.Default.Archive) { state.archive(clip.id, "Mise de côté"); close() }
+                            SwipeAction("Passer", Icons.Default.Close) { rejectId = clip.id; close() }
+                            SwipeAction("Vote", Icons.Default.HowToVote) { state.queueVote(clip.id); close() }
+                        }) {
+                            WaveLoopCard(clip, state, composition = false, onDetail = { detail = clip.id }, onAction = {
+                                if (filter == WaveProposalStatus.ARCHIVED) state.pending(clip.id) else state.add(clip.id)
+                            })
+                        }
                     }
                 }
             }
@@ -195,14 +183,14 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
         }
         Row(Modifier.fillMaxWidth().height(24.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(if (state.snapshot.cue != null) "Écoute privée · composition atténuée" else "Atelier privé · non diffusé", color = muted, fontSize = 9.sp, modifier = Modifier.weight(1f))
-            if (state.snapshot.cue != null) Text("Arrêter", color = soft, fontSize = 10.sp, modifier = Modifier.clickable { state.audio.stopPreview() }.padding(4.dp))
+            if (state.snapshot.cue != null) Text("Arrêter", color = soft, fontSize = 10.sp, modifier = Modifier.clickable { state.stopPreview() }.padding(4.dp))
         }
     }
     val selected = state.clips.find { it.id == detail }
     if (selected != null) {
         var reasonOpen by remember(selected.id) { mutableStateOf(false) }
         var reason by remember(selected.id) { mutableStateOf("") }
-        WorkspaceSheet(sheetHeight, onDismiss = { detail = null; state.audio.stopPreview() }) {
+        WorkspaceSheet(sheetHeight, onDismiss = { detail = null; state.stopPreview() }) {
             Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(selected.title, color = foreground, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
                 Text("${selected.artist} · ${selected.musical}", color = muted, fontSize = 12.sp)
@@ -223,6 +211,11 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                     }
                 }
                 if (selected.inComposition) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        CompactAction(if (selected.repeats == -1) "Boucle ∞" else "${selected.repeats}×", false) { state.repeat(selected.id) }
+                        CompactAction("SOLO", selected.solo) { state.solo(selected.id) }
+                        CompactAction("MUTE", selected.mute) { state.mute(selected.id) }
+                    }
                     Text("Volume de la piste", color = muted, fontSize = 11.sp)
                     Slider(selected.gain, { state.gain(selected.id, it) }, colors = SliderDefaults.colors(thumbColor = soft, activeTrackColor = primary))
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -231,10 +224,10 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                         CompactAction("Retirer", false) { state.remove(selected.id); detail = null }
                     }
                 } else {
-                    Button(onClick = { state.add(selected.id); detail = null; state.audio.stopPreview(); section = 0 }, modifier = Modifier.fillMaxWidth(),
+                    Button(onClick = { state.add(selected.id); detail = null; state.stopPreview(); section = 2 }, modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(containerColor = primary, contentColor = Color.White)) { Text("Prendre dans la composition") }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        TextButton(onClick = { state.queueVote(selected.id); detail = null; selectedVote = selected.id; section = 2 }) { Text("Mettre au vote", color = soft) }
+                        TextButton(onClick = { state.queueVote(selected.id); detail = null; selectedVote = selected.id; section = 1 }) { Text("Mettre au vote", color = soft) }
                         TextButton(onClick = { reasonOpen = !reasonOpen }) { Text("Mettre de côté / Refuser", color = danger, fontSize = 11.sp) }
                     }
                 }
@@ -247,6 +240,13 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                 Spacer(Modifier.height(12.dp))
             }
         }
+    }
+    rejectId?.let { id ->
+        AlertDialog(onDismissRequest = { rejectId = null }, containerColor = Color(0xFF17181E),
+            title = { Text("Passer cette proposition ?", color = foreground) },
+            text = { Text("Elle restera disponible dans les archives privées.", color = muted) },
+            confirmButton = { TextButton(onClick = { state.archive(id, "Proposition passée"); rejectId = null }) { Text("Passer", color = danger) } },
+            dismissButton = { TextButton(onClick = { rejectId = null }) { Text("Annuler", color = soft) } })
     }
     if (settings) {
         var bpm by remember { mutableStateOf(state.bpm.toString()) }
@@ -268,20 +268,6 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
 }
 
 @Composable
-private fun ProposalRow(clip: WaveCompositionClip, state: WaveCompositionState, onDetail: () -> Unit, onAction: () -> Unit) {
-    Row(Modifier.fillMaxWidth().hifiBlackSurface(13.dp).clickable(onClick = onDetail).padding(8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        ToolIcon(if (state.snapshot.cue == clip.id) Icons.Default.Stop else Icons.Default.PlayArrow, "Écoute privée de ${clip.title}", state.snapshot.cue == clip.id, clip.id !in state.preparing) { state.preview(clip.id) }
-        Column(Modifier.weight(1f)) {
-            Text(clip.title, color = foreground, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text("${clip.artist} · ${clip.category}", color = muted, fontSize = 10.sp)
-            Text(if (clip.id in state.preparing) "Préparation…" else if (clip.id in state.errors) "Réessayer l’écoute" else clip.musical, color = if (clip.id in state.errors) danger else soft, fontSize = 9.sp)
-        }
-        ToolIcon(if (clip.inComposition) Icons.Default.Check else if (clip.status == WaveProposalStatus.ARCHIVED) Icons.Default.Restore else Icons.Default.Add,
-            if (clip.status == WaveProposalStatus.ARCHIVED) "Remettre à écouter" else "Prendre dans la composition", clip.inComposition, !clip.inComposition, onAction)
-    }
-}
-
-@Composable
 private fun ClipWaveform(peaks: List<Float>, progress: Float, modifier: Modifier, active: Boolean = false) {
     Canvas(modifier) {
         if (peaks.isEmpty()) { drawLine(Color(0xFF373740), Offset(0f, size.height / 2), Offset(size.width, size.height / 2), 1f); return@Canvas }
@@ -297,9 +283,7 @@ private fun ClipWaveform(peaks: List<Float>, progress: Float, modifier: Modifier
 
 @Composable
 private fun ToolIcon(icon: ImageVector, label: String, active: Boolean = false, enabled: Boolean = true, onClick: () -> Unit) {
-    IconButton(onClick, enabled = enabled, modifier = Modifier.size(40.dp)) {
-        Icon(icon, label, tint = if (!enabled) muted.copy(alpha = .35f) else if (active) soft else foreground, modifier = Modifier.size(21.dp))
-    }
+    WaveControl(icon, label, active, enabled, onClick)
 }
 
 @Composable

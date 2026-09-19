@@ -146,43 +146,83 @@ internal object WaveCompositionDecoder {
     }
 }
 
-internal data class WaveVoiceSnapshot(val id: String, val phase: String, val progress: Float)
-internal data class WaveAudioSnapshot(val running: Boolean = false, val frame: Long = 0, val voices: List<WaveVoiceSnapshot> = emptyList(), val cue: String? = null, val error: String? = null)
+internal data class WaveVoiceSnapshot(val id: String, val phase: String, val progress: Float, val remainingFrames: Long = 0)
+internal data class WaveAudioSnapshot(
+    val running: Boolean = false, val frame: Long = 0, val voices: List<WaveVoiceSnapshot> = emptyList(),
+    val cue: String? = null, val error: String? = null, val cueProgress: Float = 0f,
+    val leftPeak: Float = 0f, val rightPeak: Float = 0f, val paused: Boolean = false,
+)
 
-/** Port of the iOS clock/clip policies. A single AudioTrack mixes all voices sample by sample. */
+/** All program voices and the private cue share one audio output and one sample clock. */
 internal class WaveCompositionAudio : AutoCloseable {
-    private data class Voice(val id: String, val pcm: WavePcm, var start: Long = -1, var repeats: Int = -1,
-        var mute: Boolean = false, var solo: Boolean = false, var gain: Float = .7f, var smoothGain: Float = 0f)
+    private data class Voice(val id: String, val pcm: WavePcm, var active: Boolean = false,
+        var waitingUntil: Long = -1, var position: Long = 0, var repeats: Int = -1,
+        var mute: Boolean = false, var solo: Boolean = false, var gain: Float = .65f, var smoothGain: Float = 0f)
     private val commands = ConcurrentLinkedQueue<() -> Unit>()
     private val voices = linkedMapOf<String, Voice>()
     @Volatile private var alive = true
     @Volatile var snapshot = WaveAudioSnapshot(); private set
-    private var clock = 0L; private var running = false; private var bpm = 124
-    private var cue: Voice? = null; private var cueFrame = 0
+    private var clock = 0L
+    private var timeline = 0L
+    private var running = false
+    private var paused = false
+    private var bpm = 124
+    private var loopStart = 0L
+    private var loopEnd = 0L
+    private var cue: Voice? = null
     private var output: AudioTrack? = null
     private var master = 1f
-    fun masterGain(value: Float) = command { master = value.coerceIn(0f, 1f) }
     private fun command(action: () -> Unit) { if (alive) commands.add(action) }
+    fun masterGain(value: Float) = command { master = value.coerceIn(0f, 1f) }
     fun prepare(id: String, pcm: WavePcm, repeats: Int) = command {
         if (id !in voices && voices.size < 20) voices[id] = Voice(id, pcm, repeats = repeats)
     }
     fun remove(id: String) = command { voices.remove(id) }
     fun tempo(value: Int) = command { if (!running) bpm = value.coerceIn(40, 240) }
-    fun toggleClock() = command { if (running) stopInternal() else { running = true; clock = 0 } }
+    fun loop(start: Long, end: Long) = command {
+        loopStart = start.coerceAtLeast(0); loopEnd = if (end > start) end else 0
+    }
+    fun seek(frame: Long) = command {
+        timeline = frame.coerceAtLeast(0)
+        voices.values.forEach {
+            if (it.active) { it.position = timeline; it.waitingUntil = -1; it.smoothGain = 0f }
+        }
+        output?.pause(); output?.flush()
+    }
+    fun toggleClock() = command {
+        if (running) { running = false; paused = true; output?.pause(); output?.flush() }
+        else {
+            if (!paused) voices.values.forEach { it.active = true; it.position = timeline; it.waitingUntil = -1 }
+            running = true; paused = false; cue = null
+        }
+    }
     fun launch(id: String) = command {
         val voice = voices[id] ?: return@command
-        if (voice.start >= 0) { voice.start = -1; return@command }
+        if (voice.active) { voice.active = false; voice.waitingUntil = -1; return@command }
+        voice.active = true; voice.position = 0; voice.smoothGain = 0f
         val barFrames = 4.0 * 60 * WaveCompositionDecoder.RATE / bpm
-        if (!running) { running = true; clock = 0; voice.start = 0 }
-        else voice.start = (ceil((clock + 1) / barFrames) * barFrames).roundToLong()
+        if (!running) { running = true; paused = false; voice.waitingUntil = -1 }
+        else voice.waitingUntil = clock + (ceil((timeline + 1) / barFrames) * barFrames - timeline).roundToLong()
     }
     fun mix(id: String, mute: Boolean, solo: Boolean, gain: Float, repeats: Int) = command {
         voices[id]?.let { it.mute = mute; it.solo = solo; it.gain = gain; it.repeats = repeats }
     }
-    fun preview(id: String, pcm: WavePcm) = command { cue = if (cue?.id == id) null else Voice(id, pcm, gain = .8f); cueFrame = 0 }
+    fun preview(id: String, pcm: WavePcm) = command { cue = if (cue?.id == id) null else Voice(id, pcm, gain = .8f) }
     fun stopPreview() = command { cue = null }
-    fun stop() = command { stopInternal(); cue = null }
-    private fun stopInternal() { running = false; clock = 0; voices.values.forEach { it.start = -1; it.smoothGain = 0f }; output?.pause(); output?.flush() }
+    fun stop() = command {
+        running = false; paused = false; clock = 0; timeline = 0; cue = null
+        voices.values.forEach { it.active = false; it.waitingUntil = -1; it.position = 0; it.smoothGain = 0f }
+        output?.pause(); output?.flush()
+    }
+    private fun publish(left: Float = 0f, right: Float = 0f) {
+        snapshot = WaveAudioSnapshot(running, timeline, voices.values.map {
+            val waiting = it.active && it.waitingUntil > clock
+            WaveVoiceSnapshot(it.id, if (!it.active) "Prêt" else if (waiting) "Prochaine mesure" else if (paused) "En pause" else "En lecture",
+                if (!it.active || waiting) 0f else (it.position % it.pcm.frames).toFloat() / it.pcm.frames,
+                if (waiting) it.waitingUntil - clock else 0)
+        }, cue?.id, cueProgress = cue?.let { it.position.toFloat() / it.pcm.frames } ?: 0f,
+            leftPeak = left, rightPeak = right, paused = paused)
+    }
     private val thread = Thread({
         Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO)
         val block = FloatArray(512 * 2)
@@ -190,7 +230,7 @@ internal class WaveCompositionAudio : AutoCloseable {
             while (alive) {
                 while (true) (commands.poll() ?: break).invoke()
                 if (!alive) break
-                if (!running && cue == null) { snapshot = WaveAudioSnapshot(voices = voices.values.map { WaveVoiceSnapshot(it.id, "Prêt", 0f) }); output?.pause(); Thread.sleep(12); continue }
+                if (!running && cue == null) { publish(); output?.pause(); Thread.sleep(12); continue }
                 val track = output ?: AudioTrack.Builder()
                     .setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build())
                     .setAudioFormat(AudioFormat.Builder().setSampleRate(WaveCompositionDecoder.RATE).setChannelMask(AudioFormat.CHANNEL_OUT_STEREO).setEncoding(AudioFormat.ENCODING_PCM_FLOAT).build())
@@ -198,43 +238,47 @@ internal class WaveCompositionAudio : AutoCloseable {
                     .setBufferSizeInBytes(max(8192, AudioTrack.getMinBufferSize(WaveCompositionDecoder.RATE, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_FLOAT)))
                     .build().also { check(it.state == AudioTrack.STATE_INITIALIZED); output = it }
                 if (track.playState != AudioTrack.PLAYSTATE_PLAYING) track.play()
-                block.fill(0f)
                 val hasSolo = voices.values.any { it.solo }
-                for (voice in voices.values) {
-                    if (!running || voice.start < 0) continue
-                    val targetGain = if (cue != null || voice.mute || (hasSolo && !voice.solo)) 0f else voice.gain
-                    for (i in 0 until 512) {
-                        val elapsed = clock + i - voice.start
-                        if (elapsed < 0) continue
-                        if (voice.repeats > 0 && elapsed >= voice.pcm.frames.toLong() * voice.repeats) { voice.start = -1; break }
-                        voice.smoothGain += (targetGain - voice.smoothGain) * .006f
-                        val source = (elapsed % voice.pcm.frames).toInt() * 2
-                        block[i * 2] += voice.pcm.samples.get(source) * voice.smoothGain
-                        block[i * 2 + 1] += voice.pcm.samples.get(source + 1) * voice.smoothGain
+                val blockVoices = voices.values.toTypedArray()
+                var leftPeak = 0f; var rightPeak = 0f
+                for (i in 0 until 512) {
+                    var left = 0f; var right = 0f
+                    if (running) {
+                        if (loopEnd > loopStart && timeline >= loopEnd) {
+                            timeline = loopStart
+                            voices.values.filter { it.active && it.waitingUntil < 0 }.forEach { it.position = loopStart; it.smoothGain = 0f }
+                        }
+                        for (voice in blockVoices) {
+                            if (!voice.active || voice.waitingUntil > clock) continue
+                            voice.waitingUntil = -1
+                            if (voice.repeats > 0 && voice.position >= voice.pcm.frames.toLong() * voice.repeats) { voice.active = false; continue }
+                            val gain = if (cue != null || voice.mute || (hasSolo && !voice.solo)) 0f else voice.gain
+                            voice.smoothGain += (gain - voice.smoothGain) * .006f
+                            val source = (voice.position % voice.pcm.frames).toInt() * 2
+                            left += voice.pcm.samples.get(source) * voice.smoothGain
+                            right += voice.pcm.samples.get(source + 1) * voice.smoothGain
+                            voice.position++
+                        }
+                        clock++; timeline++
                     }
-                }
-                cue?.let { preview ->
-                    for (i in 0 until 512) {
-                        if (cueFrame >= preview.pcm.frames) { cue = null; break }
-                        val gain = min(1f, cueFrame / 240f) * preview.gain
-                        block[i * 2] += preview.pcm.samples.get(cueFrame * 2) * gain
-                        block[i * 2 + 1] += preview.pcm.samples.get(cueFrame * 2 + 1) * gain
-                        cueFrame++
+                    cue?.let {
+                        if (it.position >= it.pcm.frames) cue = null else {
+                            val gain = min(1f, it.position / 240f) * it.gain
+                            left += it.pcm.samples.get(it.position.toInt() * 2) * gain
+                            right += it.pcm.samples.get(it.position.toInt() * 2 + 1) * gain
+                            it.position++
+                        }
                     }
+                    left = (left * master).coerceIn(-.98f, .98f); right = (right * master).coerceIn(-.98f, .98f)
+                    block[i * 2] = left; block[i * 2 + 1] = right
+                    leftPeak = max(leftPeak, abs(left)); rightPeak = max(rightPeak, abs(right))
                 }
-                // Peak protection: preserve quiet material and bound summed peaks.
-                for (i in block.indices) block[i] = (block[i] * master).coerceIn(-.98f, .98f)
                 var offset = 0
                 while (offset < block.size && alive) {
                     val n = track.write(block, offset, block.size - offset, AudioTrack.WRITE_BLOCKING)
                     check(n > 0) { "La sortie audio est indisponible." }; offset += n
                 }
-                if (running) clock += 512
-                snapshot = WaveAudioSnapshot(running, clock, voices.values.map {
-                    val elapsed = clock - it.start
-                    WaveVoiceSnapshot(it.id, if (it.start < 0) "Prêt" else if (elapsed < 0) "Prochaine mesure" else "En lecture",
-                        if (it.start < 0 || elapsed < 0) 0f else (elapsed % it.pcm.frames).toFloat() / it.pcm.frames)
-                }, cue?.id)
+                publish(leftPeak, rightPeak)
             }
         } catch (_: InterruptedException) { /* Closing. */ }
         catch (e: Exception) { snapshot = WaveAudioSnapshot(error = e.message ?: "Sortie audio indisponible") }

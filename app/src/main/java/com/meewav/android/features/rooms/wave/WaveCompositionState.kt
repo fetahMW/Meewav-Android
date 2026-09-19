@@ -40,6 +40,19 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
     var vote by mutableStateOf<WaveDemoVote?>(null); private set
     var lastVerdict by mutableStateOf<String?>(null); private set
     var voteSecondsRemaining by mutableIntStateOf(0); private set
+    var loopEnabled by mutableStateOf(false); private set
+    var loopRange by mutableStateOf(0f..1f); private set
+    var transportPending by mutableStateOf(false); private set
+    private var auditionGeneration = 0
+    val durationFrames: Long get() = clips.filter { it.inComposition }.maxOfOrNull {
+        prepared[it.id]?.frames?.toLong() ?: 0L
+    }?.coerceAtLeast(1) ?: (48_000 * 60L * 32 / bpm)
+    val masterPeaks: List<Float> get() {
+        val available = clips.filter { it.inComposition && !it.mute && (!clips.any { c -> c.inComposition && c.solo } || it.solo) }
+        return if (available.isEmpty()) emptyList() else List(96) { index ->
+            available.sumOf { (prepared[it.id]?.peaks?.getOrNull(index) ?: 0f).toDouble() * it.gain }.toFloat().coerceAtMost(1f)
+        }
+    }
     private val decodeLock = Mutex()
     private val preparedActions = mutableMapOf<String, () -> Unit>()
     private val manager = context.getSystemService(AudioManager::class.java)
@@ -125,13 +138,42 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
                 }
                 preparedActions.remove(id)?.invoke()
             } catch (cancelled: CancellationException) { throw cancelled }
-            catch (e: Exception) { preparedActions.remove(id); errors = errors + (id to (e.message ?: "Audio indisponible")) }
+            catch (e: Exception) { preparedActions.remove(id); transportPending = false; errors = errors + (id to (e.message ?: "Audio indisponible")) }
             finally { preparing = preparing - id }
         }
     }
-    fun transport() { if (snapshot.running) audio.stop() else if (focus()) audio.toggleClock() }
+    fun transport() {
+        if (snapshot.running || snapshot.paused) { if (focus()) audio.toggleClock(); return }
+        if (transportPending) { transportPending = false; return }
+        val active = clips.filter { it.inComposition }
+        if (active.isEmpty()) { notice = "Prends une boucle dans Propositions pour commencer."; return }
+        if (!focus()) return
+        transportPending = true
+        fun startIfReady() {
+            if (transportPending && active.all { it.id in prepared }) {
+                transportPending = false; syncLoop(); audio.toggleClock()
+            }
+        }
+        active.forEach { prepare(it.id, ::startIfReady) }
+    }
+    fun stopTransport() { transportPending = false; preparedActions.clear(); auditionGeneration++; audio.stop() }
+    fun toggleLoop() { loopEnabled = !loopEnabled; syncLoop() }
+    fun updateLoopRange(range: ClosedFloatingPointRange<Float>) {
+        val start = range.start.coerceIn(0f, .98f)
+        loopRange = start..range.endInclusive.coerceIn(start + .02f, 1f); syncLoop()
+    }
+    private fun syncLoop() = audio.loop((durationFrames * loopRange.start).toLong(), if (loopEnabled) (durationFrames * loopRange.endInclusive).toLong() else 0)
+    fun seek(progress: Float) = audio.seek((progress.coerceIn(0f, 1f) * durationFrames).toLong())
+    fun stepBar(direction: Int) {
+        val bar = 48_000 * 60.0 * 4 / bpm
+        audio.seek((snapshot.frame + direction * bar).toLong().coerceIn(0, durationFrames))
+    }
     fun launch(id: String) { if (focus()) prepare(id) { audio.stopPreview(); audio.launch(id) } }
-    fun preview(id: String) { if (focus()) prepare(id) { prepared[id]?.let { audio.preview(id, it) } } }
+    fun preview(id: String) {
+        val generation = ++auditionGeneration
+        if (focus()) prepare(id) { if (generation == auditionGeneration) prepared[id]?.let { audio.preview(id, it) } }
+    }
+    fun stopPreview() { auditionGeneration++; audio.stopPreview() }
     fun add(id: String) {
         if (clips.count { it.inComposition } >= 20) { notice = "La composition contient déjà 20 pistes."; return }
         val clip = clips.find { it.id == id } ?: return
@@ -208,6 +250,6 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
             lastVerdict = "$name : retenue · ${current.yes} pour / ${current.no} contre"
         } else { pending(current.clipId); lastVerdict = "$name : à réécouter · ${current.yes} pour / ${current.no} contre" }
     }
-    fun suspendAudio() { preparedActions.clear(); audio.stop(); manager.abandonAudioFocusRequest(focusRequest) }
+    fun suspendAudio() { stopTransport(); manager.abandonAudioFocusRequest(focusRequest) }
     override fun close() { suspendAudio(); scope.cancel(); audio.close() }
 }
