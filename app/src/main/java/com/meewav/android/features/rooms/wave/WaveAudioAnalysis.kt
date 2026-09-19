@@ -5,6 +5,10 @@ import android.media.MediaCodec
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.net.Uri
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.CancellationException
+import kotlin.coroutines.coroutineContext
+import android.os.SystemClock
 import java.nio.ByteOrder
 import kotlin.math.abs
 import kotlin.math.max
@@ -31,7 +35,9 @@ data class WaveformSample(
 object WaveAudioAnalysis {
 
     /* Analyse synchrone — à appeler hors thread UI (Dispatchers.IO). */
-    fun analyze(context: Context, uri: Uri, targetCount: Int = 2048): List<WaveformSample> {
+    suspend fun analyze(context: Context, uri: Uri, targetCount: Int = 2048,
+        onDuration: suspend (Long) -> Unit = {},
+        onProgress: suspend (List<WaveformSample>) -> Unit = {}): List<WaveformSample> {
         val extractor = MediaExtractor()
         var codec: MediaCodec? = null
         try {
@@ -50,6 +56,8 @@ object WaveAudioAnalysis {
                 format.getInteger(MediaFormat.KEY_CHANNEL_COUNT) else 1
             val durationUs = if (format.containsKey(MediaFormat.KEY_DURATION))
                 format.getLong(MediaFormat.KEY_DURATION) else 0L
+
+            onDuration(durationUs / 1000)
 
             // buckets iOS : max(512, target) répartis sur la durée totale.
             val totalFrames = max(1L, durationUs * sampleRate / 1_000_000L)
@@ -71,9 +79,11 @@ object WaveAudioAnalysis {
             var inputDone = false
             var outputDone = false
 
+            var lastPublish = 0L
             while (!outputDone) {
+                coroutineContext.ensureActive()
                 if (!inputDone) {
-                    val inIdx = codec.dequeueInputBuffer(10_000)
+                    val inIdx = codec.dequeueInputBuffer(0)
                     if (inIdx >= 0) {
                         val buf = codec.getInputBuffer(inIdx)!!
                         val n = extractor.readSampleData(buf, 0)
@@ -89,7 +99,7 @@ object WaveAudioAnalysis {
                         }
                     }
                 }
-                when (val outIdx = codec.dequeueOutputBuffer(info, 10_000)) {
+                when (val outIdx = codec.dequeueOutputBuffer(info, 1_000)) {
                     MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {
                         val of = codec.outputFormat
                         if (of.containsKey(MediaFormat.KEY_CHANNEL_COUNT))
@@ -100,26 +110,48 @@ object WaveAudioAnalysis {
                     }
                     MediaCodec.INFO_TRY_AGAIN_LATER -> Unit
                     else -> {
+                        if (outIdx < 0) continue
                         if (info.size > 0) {
                             val buf = codec.getOutputBuffer(outIdx)!!
+                            buf.position(info.offset)
+                            buf.limit(info.offset + info.size)
                             buf.order(ByteOrder.LITTLE_ENDIAN)
                             if (pcmFloat) consumeFloat(buf, channels, globalFrame, framesPerBucket, bucketCount, minPeaks, maxPeaks, rmsSums, rmsCounts).also { globalFrame = it }
                             else consumeShort(buf, channels, globalFrame, framesPerBucket, bucketCount, minPeaks, maxPeaks, rmsSums, rmsCounts).also { globalFrame = it }
                         }
                         codec.releaseOutputBuffer(outIdx, false)
+                        val now = SystemClock.elapsedRealtime()
+                        if (globalFrame > 0 && now - lastPublish >= 200) {
+                            onProgress(normalize(minPeaks, maxPeaks, rmsSums, rmsCounts))
+                            lastPublish = now
+                        }
                         if (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) outputDone = true
                     }
                 }
             }
 
+            return normalize(minPeaks, maxPeaks, rmsSums, rmsCounts)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (t: Exception) {
+            return emptyList()
+        } finally {
+            runCatching { codec?.stop() }
+            runCatching { codec?.release() }
+            runCatching { extractor.release() }
+        }
+    }
+
+    private fun normalize(minPeaks: FloatArray, maxPeaks: FloatArray, rmsSums: DoubleArray, rmsCounts: IntArray): List<WaveformSample> {
             // Normalisation par le pic global — exactement comme iOS.
             var peakRef = 0f
-            for (i in 0 until bucketCount) {
+            for (i in 0 until minPeaks.size) {
                 peakRef = max(peakRef, max(abs(minPeaks[i]), abs(maxPeaks[i])))
             }
-            if (peakRef <= 0f) return List(bucketCount) { WaveformSample.Silence }
+            if (peakRef <= 0f) return List(minPeaks.size) { WaveformSample.Silence }
 
-            return List(bucketCount) { i ->
+            return List(minPeaks.size) { i ->
+                if (rmsCounts[i] == 0) return@List WaveformSample.Silence
                 val rms = if (rmsCounts[i] > 0)
                     sqrt(rmsSums[i] / rmsCounts[i]).toFloat() else 0f
                 WaveformSample(
@@ -128,13 +160,7 @@ object WaveAudioAnalysis {
                     rms = max(0.015f, min(1f, (max(rms / peakRef, 0f)).toDouble().pow(0.72).toFloat()))
                 )
             }
-        } catch (t: Throwable) {
-            return emptyList()
-        } finally {
-            runCatching { codec?.stop() }
-            runCatching { codec?.release() }
-            runCatching { extractor.release() }
-        }
+
     }
 
     private fun consumeShort(
@@ -144,14 +170,11 @@ object WaveAudioAnalysis {
         rmsSums: DoubleArray, rmsCounts: IntArray
     ): Long {
         val sb = buf.asShortBuffer()
-        val shorts = ShortArray(sb.remaining())
-        sb.get(shorts)
         var globalFrame = startFrame
-        var i = 0
-        while (i + channels <= shorts.size) {
+        while (sb.remaining() >= channels) {
             var mn = Float.MAX_VALUE; var mx = -Float.MAX_VALUE; var e = 0f
             for (c in 0 until channels) {
-                val s = shorts[i + c] / 32768f
+                val s = sb.get() / 32768f
                 mn = min(mn, s); mx = max(mx, s); e += s * s
             }
             val b = (globalFrame / framesPerBucket).toInt().coerceAtMost(bucketCount - 1)
@@ -159,7 +182,6 @@ object WaveAudioAnalysis {
             if (mx > maxPeaks[b]) maxPeaks[b] = mx
             rmsSums[b] += e / channels; rmsCounts[b]++
             globalFrame++
-            i += channels
         }
         return globalFrame
     }
@@ -171,14 +193,11 @@ object WaveAudioAnalysis {
         rmsSums: DoubleArray, rmsCounts: IntArray
     ): Long {
         val fb = buf.asFloatBuffer()
-        val floats = FloatArray(fb.remaining())
-        fb.get(floats)
         var globalFrame = startFrame
-        var i = 0
-        while (i + channels <= floats.size) {
+        while (fb.remaining() >= channels) {
             var mn = Float.MAX_VALUE; var mx = -Float.MAX_VALUE; var e = 0f
             for (c in 0 until channels) {
-                val s = floats[i + c]
+                val s = fb.get()
                 mn = min(mn, s); mx = max(mx, s); e += s * s
             }
             val b = (globalFrame / framesPerBucket).toInt().coerceAtMost(bucketCount - 1)
@@ -186,7 +205,6 @@ object WaveAudioAnalysis {
             if (mx > maxPeaks[b]) maxPeaks[b] = mx
             rmsSums[b] += e / channels; rmsCounts[b]++
             globalFrame++
-            i += channels
         }
         return globalFrame
     }

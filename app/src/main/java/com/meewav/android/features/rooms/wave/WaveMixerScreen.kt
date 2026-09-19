@@ -127,28 +127,17 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     var trackDurationMs by remember { mutableStateOf(0L) }
     var trackSamples by remember { mutableStateOf<List<WaveformSample>>(emptyList()) }
     var trackAnalyzing by remember { mutableStateOf(false) }
+    var importGeneration by remember { mutableStateOf(0) }
     var playProgress by remember { mutableStateOf(0f) }
     var extraLaneCount by remember { mutableStateOf(2) }
     val context = LocalContext.current
     // Sélecteur de fichier audio (bouton upload + lanes « Importer »).
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
-            // Nom réel du fichier via le provider (pas l'id de document).
-            trackName = runCatching {
-                context.contentResolver.query(
-                    uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME),
-                    null, null, null
-                )?.use { c -> if (c.moveToFirst()) c.getString(0) else null }
-            }.getOrNull() ?: uri.lastPathSegment?.substringAfterLast('/')
+            trackName = uri.lastPathSegment?.substringAfterLast('/')
             trackUri = uri
-            // Durée réelle via MediaMetadataRetriever.
-            trackDurationMs = runCatching {
-                val mmr = android.media.MediaMetadataRetriever()
-                mmr.setDataSource(context, uri)
-                val d = mmr.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 0L
-                mmr.release()
-                d
-            }.getOrDefault(0L)
+            importGeneration++
+            trackDurationMs = 0L
             trackSamples = emptyList()
             trackAnalyzing = true
             playProgress = 0f
@@ -156,10 +145,17 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
         }
     }
     // Waveform réelle — decode PCM + buckets min/max/RMS (MWAudioAnalysis iOS).
-    LaunchedEffect(trackUri) {
+    LaunchedEffect(trackUri, importGeneration) {
         val uri = trackUri ?: return@LaunchedEffect
         val decoded = withContext(Dispatchers.IO) {
-            WaveAudioAnalysis.analyze(context, uri)
+            val name = runCatching {
+                context.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)
+                    ?.use { if (it.moveToFirst()) it.getString(0) else null }
+            }.getOrNull()
+            withContext(Dispatchers.Main) { if (name != null) trackName = name }
+            WaveAudioAnalysis.analyze(context, uri,
+                onDuration = { duration -> withContext(Dispatchers.Main) { trackDurationMs = duration } },
+                onProgress = { samples -> withContext(Dispatchers.Main) { trackSamples = samples } })
         }
         trackSamples = decoded
         trackAnalyzing = false
@@ -290,7 +286,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                         loopOn = loopOn, onLoop = { loopOn = !loopOn },
                         multitrack = multitrack, onMultitrack = { multitrack = !multitrack },
                         hasTrack = hasTrack, trackName = trackName,
-                        trackDurationMs = trackDurationMs, trackSamples = trackSamples,
+                        trackDurationMs = trackDurationMs, trackSamples = trackSamples, trackAnalyzing = trackAnalyzing,
                         playProgress = playProgress,
                         onImport = onImport,
                         extraLaneCount = extraLaneCount,
@@ -1131,7 +1127,7 @@ private fun DeckMainLane(
                     fontWeight = FontWeight.SemiBold, fontFamily = WaveMixerTheme.fontFamily
                 )
             }
-        } else if (analyzing || samples.isEmpty()) {
+        } else if (samples.isEmpty()) {
             Text(
                 if (analyzing) "Analyse du son…" else "Waveform indisponible",
                 color = white(0.55f), fontSize = 11.sp,
