@@ -138,6 +138,7 @@ internal fun WaveMasterPlayer(state: WaveCompositionState, onImport: (WaveImport
                             onSeek = state::seek, onRange = { if (editingPin != null) state.movePin(it.start) else state.updateLoopRange(it) },
                             snap = { state.snapRegion(it, editingPin?.bars ?: state.loopBars) }, editable = state.canLoop,
                             sourceId = state.referenceId, minimum = (4800f / state.durationFrames).coerceAtMost(1f),
+                            onScrubBegin = state::beginScrub, onScrubEnd = state::endScrub,
                             modifier = Modifier.fillMaxWidth().height(60.dp).padding(vertical = 6.dp))
                     }
                 }
@@ -148,7 +149,7 @@ internal fun WaveMasterPlayer(state: WaveCompositionState, onImport: (WaveImport
                             Box(Modifier.weight(1f).fillMaxHeight().clipToBounds()) {
                                 androidx.compose.animation.AnimatedVisibility(rail == PlayerRail.READOUT, enter = fadeIn(tween(140)), exit = fadeOut(tween(80))) {
                                     Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
-                                        val beat = snapshot.frame.coerceAtMost((state.durationFrames - 1).coerceAtLeast(0)) * state.bpm / (48_000L * 60)
+                                        val beat = (snapshot.frame.coerceAtMost((state.durationFrames - 1).coerceAtLeast(0)) * state.bpm / (48_000L * 60)).toLong()
                                         Column(Modifier.weight(1f).combinedClickable(onClick = onSettings, onLongClick = state::setCue)) {
                                             Text(if (editingPin != null) "Épingle · M${editingPin.startBar + 1}" else "Mesure ${beat / 4 + 1} / ${max(1, (state.durationFrames / state.framesPerBar).toInt())}", color = pearl, fontSize = 10.sp, maxLines = 1)
                                             Text(if (editingPin != null) "${editingPin.bars} mesures" else "Temps ${beat % 4 + 1} / 4", color = secondary, fontSize = 9.sp)
@@ -232,13 +233,15 @@ private fun WaveReferenceTimeline(peaks: List<Float>, progress: Float, looping: 
     range: ClosedFloatingPointRange<Float>, cue: Float, onSeek: (Float) -> Unit,
     onRange: (ClosedFloatingPointRange<Float>) -> Unit,
     snap: (ClosedFloatingPointRange<Float>) -> ClosedFloatingPointRange<Float>, editable: Boolean,
-    sourceId: String?, minimum: Float, modifier: Modifier) {
+    sourceId: String?, minimum: Float, onScrubBegin: () -> Unit, onScrubEnd: (Boolean) -> Unit, modifier: Modifier) {
     var draft by remember { mutableStateOf<ClosedFloatingPointRange<Float>?>(null) }
     var scrub by remember { mutableStateOf<Float?>(null) }
     val currentRange by rememberUpdatedState(range)
     val currentSeek by rememberUpdatedState(onSeek)
     val currentSelect by rememberUpdatedState(onRange)
     val currentSnap by rememberUpdatedState(snap)
+    val begin by rememberUpdatedState(onScrubBegin)
+    val end by rememberUpdatedState(onScrubEnd)
     val drawnRange = draft ?: range
     val playhead = scrub ?: progress
     Canvas(modifier.pointerInput(looping, free, editable, sourceId) {
@@ -247,6 +250,7 @@ private fun WaveReferenceTimeline(peaks: List<Float>, progress: Float, looping: 
         var edge = 0
         detectHorizontalDragGestures(onDragStart = { point ->
             startPointer = (point.x / size.width).coerceIn(0f, 1f); original = currentRange
+            if (!looping) begin()
             val threshold = 22.dp.toPx() / size.width
             val da = abs(startPointer - original.start); val db = abs(startPointer - original.endInclusive)
             edge = if (!free) 0 else if (da <= threshold && db <= threshold)
@@ -255,7 +259,7 @@ private fun WaveReferenceTimeline(peaks: List<Float>, progress: Float, looping: 
         }, onHorizontalDrag = { change, _ ->
             change.consume()
             val position = (change.position.x / size.width).coerceIn(0f, 1f)
-            if (!looping) scrub = position else if (editable) {
+            if (!looping) { scrub = position; currentSeek(position) } else if (editable) {
                 val length = original.endInclusive - original.start
                 draft = when (edge) {
                     -1 -> position.coerceAtMost(original.endInclusive - minimum).coerceAtLeast(0f)..original.endInclusive
@@ -263,8 +267,8 @@ private fun WaveReferenceTimeline(peaks: List<Float>, progress: Float, looping: 
                     else -> { val start = (original.start + position - startPointer).coerceIn(0f, (1f - length).coerceAtLeast(0f)); currentSnap(start..start + length) }
                 }
             }
-        }, onDragEnd = { draft?.takeIf { it != currentRange }?.let(currentSelect); scrub?.let(currentSeek); draft = null; scrub = null },
-            onDragCancel = { draft = null; scrub = null })
+        }, onDragEnd = { draft?.takeIf { it != currentRange }?.let(currentSelect); if (scrub != null) end(false); draft = null; scrub = null },
+            onDragCancel = { if (scrub != null) end(true); draft = null; scrub = null })
     }.pointerInput(looping) { detectTapGestures { currentSeek((it.x / size.width).coerceIn(0f, 1f)) } }) {
         repeat(9) { drawLine(Color.White.copy(alpha = .06f), Offset(size.width * it / 8, 0f), Offset(size.width * it / 8, size.height), 1f) }
         if (looping) drawRect(violet.copy(alpha = .12f), Offset(drawnRange.start * size.width, 0f), Size((drawnRange.endInclusive - drawnRange.start) * size.width, size.height))

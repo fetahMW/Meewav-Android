@@ -163,7 +163,7 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
     val queued = if (composition) voice?.phase == "Prochaine mesure" else state.snapshot.pendingCandidate == clip.id
     val playing = if (composition) voice?.phase == "En lecture" else (cue && !state.snapshot.cuePaused) || (state.snapshot.candidate == clip.id && state.snapshot.running)
     val progress = if (composition) {
-        if (queued) 1f - (voice!!.remainingFrames / (48_000f * 60 * 4 / state.bpm)).coerceIn(0f, 1f) else voice?.progress ?: 0f
+        if (queued) 1f - (voice!!.remainingFrames / (48_000f * 60 * 4 / state.bpm)).toFloat().coerceIn(0f, 1f) else voice?.progress ?: 0f
     } else if (cue) state.snapshot.cueProgress else if (state.snapshot.candidate == clip.id) state.snapshot.candidateProgress else 0f
     val dimmed = composition && (clip.mute || (state.clips.any { it.inComposition && it.solo } && !clip.solo))
     val selected = composition && state.selectedMixId == clip.id
@@ -184,7 +184,7 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
                     else Text(if (clip.id in state.preparing) "Préparation…" else clip.musical, color = secondary, fontSize = 8.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
-            WaveRoundPlay(playing, clip.id in state.preparing, progress, if (composition) "Lancer ou arrêter ${clip.title}" else "Écouter ${clip.title}", queued, stopIcon = true) {
+            if (!composition) WaveRoundPlay(playing, clip.id in state.preparing, progress, if (composition) "Lancer ou arrêter ${clip.title}" else "Écouter ${clip.title}", queued, stopIcon = false) {
                 if (composition) onAction() else state.preview(clip.id)
             }
             if (!composition) WaveControl(if (clip.inComposition) Icons.Default.Check else if (clip.status == WaveProposalStatus.ARCHIVED) Icons.Default.Restore else Icons.Default.Add,

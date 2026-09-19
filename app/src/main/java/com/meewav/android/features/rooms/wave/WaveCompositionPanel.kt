@@ -129,12 +129,12 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                     }
                     Spacer(Modifier.weight(1f))
                     TextButton(onClick = state::toggleIntake, contentPadding = PaddingValues(horizontal = 4.dp)) {
-                        Text("● ${if (state.open) "Ouvert" else "Fermé"}", fontSize = 11.sp, color = if (state.open) Color(0xFF86B69B) else danger)
+                        Text("● ${if (state.intakeOpen) "Ouvert" else "Fermé"}", fontSize = 11.sp, color = if (state.intakeOpen) Color(0xFF86B69B) else danger)
                     }
                     ToolIcon(Icons.Default.Add, "Importer une proposition", enabled = !state.importing) { importMenu = true }
                 }
                 if (state.importing) LinearProgressIndicator(Modifier.fillMaxWidth(), color = soft, trackColor = Color(0xFF23242B))
-                val proposals = state.clips.filter { !it.isBase && it.status == filter }
+                val proposals = state.proposals(filter)
                 if (proposals.isEmpty()) EmptyWorkspace("Aucune proposition ici", "Les boucles classées apparaîtront dans cette liste.", Modifier.weight(1f))
                 else LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(bottom = 10.dp)) {
                     items(proposals, key = { it.id }) { clip ->
@@ -149,13 +149,10 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                                 ToolIcon(Icons.Default.LibraryAdd, "Prendre toute la composition", enabled = state.adoptingPack == null) { state.takePack(clip.packId) }
                             }
                         }
-                        WaveSwipeActions(clip.id, revealed, { revealed = it }, modifier = Modifier.animateItem(), actions = { close ->
-                            SwipeAction("De côté", Icons.Default.Archive) { state.archive(clip.id, "Mise de côté"); close() }
-                            SwipeAction("Passer", Icons.Default.Close) { rejectId = clip.id; close() }
-                            SwipeAction("Vote", Icons.Default.HowToVote) { state.queueVote(clip.id); close() }
-                        }) {
+                        WaveProposalSwipe(clip.id, revealed, { revealed = it }, onAccept = { state.queueVote(clip.id) },
+                            onReject = { state.archive(clip.id, it) }) {
                             WaveLoopCard(clip, state, composition = false, onDetail = { detail = clip.id }, onAction = {
-                                if (filter == WaveProposalStatus.ARCHIVED) state.pending(clip.id) else state.add(clip.id)
+                                if (filter == WaveProposalStatus.ARCHIVED) state.pending(clip.id) else state.queueVote(clip.id)
                             })
                         }
                     }
@@ -283,8 +280,8 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                         CompactAction("Retirer", false) { state.remove(selected.id); detail = null }
                     }
                 } else {
-                    Button(onClick = { state.add(selected.id); detail = null; state.stopPreview(); section = 2 }, modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = primary, contentColor = Color.White)) { Text("Prendre dans la composition") }
+                    Button(onClick = { state.queueVote(selected.id); detail = null; state.stopPreview(); section = 1 }, modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = primary, contentColor = Color.White)) { Text("Proposer au vote") }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         TextButton(onClick = { state.queueVote(selected.id); detail = null; selectedVote = selected.id; section = 1 }) { Text("Mettre au vote", color = soft) }
                         TextButton(onClick = { reasonOpen = !reasonOpen }) { Text("Mettre de côté / Refuser", color = danger, fontSize = 11.sp) }
@@ -326,23 +323,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
             }
         }
     }
-    if (settings) {
-        var bpm by remember { mutableStateOf(state.bpm.toString()) }
-        var key by remember { mutableStateOf(state.key) }
-        WorkspaceSheet(sheetHeight, { settings = false }) {
-            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                Text("Grille musicale", color = foreground, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
-                Text("Le tempo règle les départs à la mesure. Il ne modifie pas la vitesse ni la tonalité des fichiers.", color = muted, fontSize = 12.sp)
-                OutlinedTextField(bpm, { bpm = it.filter(Char::isDigit).take(3) }, label = { Text("BPM · 40 à 240") }, singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(focusedTextColor = foreground, unfocusedTextColor = foreground, focusedBorderColor = soft))
-                OutlinedTextField(key, { key = it.take(20) }, label = { Text("Tonalité") }, singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(focusedTextColor = foreground, unfocusedTextColor = foreground, focusedBorderColor = soft))
-                Button(onClick = { state.rules(bpm.toInt(), key); settings = false }, enabled = !state.snapshot.running && bpm.toIntOrNull() in 40..240,
-                    colors = ButtonDefaults.buttonColors(containerColor = primary, contentColor = Color.White)) { Text("Appliquer") }
-                if (state.snapshot.running) Text("Arrête l’horloge pour modifier la grille.", color = soft, fontSize = 12.sp)
-            }
-        }
-    }
+    if (settings) WorkspaceSheet(sheetHeight, { settings = false }) { WaveRulesPanel(state) { settings = false } }
 }
 
 @Composable

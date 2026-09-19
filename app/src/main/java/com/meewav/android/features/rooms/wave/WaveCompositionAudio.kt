@@ -204,7 +204,7 @@ internal class WaveCompositionAudio : AutoCloseable {
     private var timeline = 0L
     private var running = false
     private var paused = false
-    private var bpm = 124
+    private var bpm = 124.0
     private var loopStart = 0L
     private var loopEnd = 0L
     private var cue: Voice? = null
@@ -223,7 +223,7 @@ internal class WaveCompositionAudio : AutoCloseable {
     }
     fun remove(id: String) = command { voices.remove(id) }
     fun placements(id: String, ranges: List<Pair<Long, Long>>) = command { voices[id]?.placements = ranges }
-    fun tempo(value: Int) = command { if (!running) bpm = value.coerceIn(40, 240) }
+    fun tempo(value: Double) = command { if (!running) bpm = value.coerceIn(40.0, 260.0) }
     fun loop(start: Long, end: Long) = command {
         loopStart = start.coerceAtLeast(0); loopEnd = if (end > start) end else 0
     }
