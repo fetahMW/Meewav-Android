@@ -59,7 +59,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.viewinterop.AndroidView
@@ -86,7 +85,7 @@ enum class WaveTab(val label: String, val icon: ImageVector) {
 /* ------------------------------------------------------------------------- */
 
 @Composable
-fun WaveMixerScreen(director: RoomVideoDirector, onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
+fun WaveMixerScreen(onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
     var activeTab by remember { mutableStateOf(WaveTab.MIXEUR) }
     // Canaux.
     var micGain by remember { mutableStateOf(0.72f) }
@@ -200,16 +199,7 @@ fun WaveMixerScreen(director: RoomVideoDirector, onBack: () -> Unit = {}, onClos
     Box(Modifier.fillMaxSize().mixerSurfaceBackground()) {
         Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
             WaveHeader(title = "Freestyle session — Luma invite", onBack = { showLeaveConfirm = true }, onClose = { showLeaveConfirm = true })
-            // Web desktop director + original Room navbar. The mixer and chat
-            // below remain the latest native screens, not the legacy Web room.
-            val screen = LocalConfiguration.current
-            AndroidView(
-                factory = { director.web },
-                modifier = Modifier.fillMaxWidth().height(
-                    if (director.expanded) (screen.screenHeightDp * .55f).dp
-                    else (screen.screenWidthDp * .65f).coerceIn(224f, 300f).dp
-                ),
-            )
+            WaveVideo(cameraOff = true)
             // Zone grise du mixeur : couvre la barre d'onglets ET le corps.
             Column(
                 Modifier
@@ -386,6 +376,109 @@ private fun HeaderCounter(value: String, tint: Color? = null, icon: ImageVector?
 /* ------------------------------------------------------------------------- */
 /* Panneau vidéo 16:9 — cellule clip r8 + camera-off + expand.                 */
 /* ------------------------------------------------------------------------- */
+
+@Composable
+private fun WaveVideo(cameraOff: Boolean) {
+    // Chronomètre fictif qui défile depuis l'ouverture de l'écran.
+    var elapsed by remember { mutableStateOf(12L * 60L + 47L) }
+    LaunchedEffect(Unit) {
+        while (true) { delay(1000L); elapsed++ }
+    }
+    val clock = "%02d:%02d:%02d".format(elapsed / 3600, (elapsed % 3600) / 60, elapsed % 60)
+
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .aspectRatio(16f / 9f)
+            .padding(0.dp)
+            .drawBehind {
+                // Halo blanc 0.11 r10 + 0.045 r22 autour de la cellule.
+                drawRoundRect(white(0.045f), cornerRadius = CornerRadius(22.dp.toPx()))
+                drawRoundRect(white(0.11f), cornerRadius = CornerRadius(10.dp.toPx()))
+            }
+            .padding(0.5.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .mixerSurfaceBackground()
+            .drawBehind {
+                // Cheveux blanc 0.16 (0.7dp) en haut et bas.
+                val lw = 0.7.dp.toPx()
+                drawRect(white(0.16f), size = Size(size.width, lw))
+                drawRect(white(0.16f), topLeft = Offset(0f, size.height - lw), size = Size(size.width, lw))
+            }
+    ) {
+        // Retour vidéo — boucle muette (démo : dj-turntable / landscape-dj).
+        AndroidView(
+            factory = { ctx ->
+                android.widget.VideoView(ctx).apply {
+                    setVideoURI(android.net.Uri.parse("android.resource://" + ctx.packageName + "/" + R.raw.wave_live_loop))
+                    setOnPreparedListener { mp ->
+                        mp.isLooping = true
+                        mp.setVolume(0f, 0f)
+                        start()
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxSize()
+        )
+        // Chip chrono — haut-gauche, verre sombre translucide + point rouge.
+        Row(
+            Modifier
+                .align(Alignment.TopStart)
+                .padding(top = 8.dp, start = 10.dp)
+                .clip(RoundedCornerShape(50))
+                .background(Color(0xFF04040A).copy(alpha = 0.48f))
+                .border(1.dp, white(0.10f), RoundedCornerShape(50))
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                Modifier.size(6.dp).drawBehind {
+                    drawCircle(Color(0xFFFF536C).copy(alpha = 0.25f), radius = size.minDimension / 2f)
+                    drawCircle(Color(0xFFFF536C), radius = size.minDimension * 0.32f)
+                }
+            )
+            Spacer(Modifier.width(5.dp))
+            Text(
+                clock, color = Color.White,
+                fontSize = 9.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.6.sp,
+                fontFamily = WaveMixerTheme.fontFamily
+            )
+        }
+        // Chip « LA WAVE » — haut-droite, recette rooms-home-card__room-type (accent #27C2D1).
+        Row(
+            Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 8.dp, end = 10.dp)
+                .clip(RoundedCornerShape(50))
+                .background(Color(0xFF060712).copy(alpha = 0.52f))
+                .background(Color(0xFF27C2D1).copy(alpha = 0.10f))
+                .border(1.dp, Color(0xFF27C2D1).copy(alpha = 0.42f), RoundedCornerShape(50))
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "LA WAVE", color = Color(0xFF27C2D1),
+                fontSize = 8.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp,
+                fontFamily = WaveMixerTheme.fontFamily
+            )
+        }
+        // Bouton expand — coin inférieur droit.
+        Box(
+            Modifier
+                .align(Alignment.BottomEnd)
+                .padding(8.dp)
+                .size(34.dp)
+                .clip(CircleShape)
+                .background(black44())
+                .border(0.5.dp, white(0.10f), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(WaveIcons.Expand, null, tint = Color.White, modifier = Modifier.size(12.dp))
+        }
+    }
+}
+
+private fun black44() = Color.Black.copy(alpha = 0.44f)
 
 /* ------------------------------------------------------------------------- */
 /* Tab bar — capsule chrome navigation subdued + capsule active animée.        */

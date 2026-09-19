@@ -7,7 +7,6 @@ import MeewavPillarTabs, { type MeewavPillarTabItem } from '../market-source/ven
 import RoomsHome from './vendor/src/features/rooms/home/RoomsHome';
 import LaunchRoomSheet from './vendor/src/features/rooms/launch/LaunchRoomSheet';
 import WaveRoom from './vendor/src/features/rooms/wave/WaveRoom';
-import { previewEnabled } from './runtime';
 import type { RoomsHomeRoom, RoomsHomeRoomType } from './vendor/src/features/rooms/home/roomsHome.types';
 
 const ROOMS = [
@@ -78,12 +77,7 @@ export default function RoomsPage() {
           initialType={tab === 'home' ? undefined : (tab as RoomsHomeRoomType)}
           onClose={() => setSequencerOpen(false)}
           onLaunched={(label, roomType) => {
-            if (roomType === 'wave') {
-              setSequencerOpen(false);
-              if (previewEnabled()) window.location.href = 'https://appassets.androidplatform.net/native/wave-host';
-              else notice('La diffusion Wave sera disponible après le raccordement du transport live Android.');
-              return;
-            }
+            if (roomType === 'wave') { setWaveLive({ isViewer: false, title: label }); return; }
             notice(`${label} — ta Room est prête, le live arrive bientôt sur Android.`);
           }}
         />
