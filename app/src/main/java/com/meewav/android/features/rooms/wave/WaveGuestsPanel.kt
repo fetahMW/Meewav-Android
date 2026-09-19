@@ -2,7 +2,6 @@ package com.meewav.android.features.rooms.wave
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
-import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.shape.CircleShape
@@ -49,11 +48,11 @@ internal fun Modifier.guestDrag(state: WaveGuestState, guest: WaveGuest, enabled
                 onDragStart = { state.beginDrag(guest.id, origin + it); haptic.performHapticFeedback(HapticFeedbackType.LongPress) },
                 onDragCancel = { state.cancelDrag() },
                 onDragEnd = { state.finishDrag() },
-            ) { change, _ ->
-                val movement = change.positionChange()
+            ) { change, verticalAmount ->
                 change.consume()
                 val wasTargeted = state.canDrop
-                state.moveDrag(movement)
+                // The rail owns horizontal gestures; the lifted portrait stays on its vertical axis.
+                state.moveDrag(Offset(0f, verticalAmount))
                 if (!wasTargeted && state.canDrop) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             }
         }
@@ -101,16 +100,14 @@ internal fun WaveGuestStage(state: WaveGuestState, interactive: Boolean,
                     color = Color.White, fontSize = 12.sp)
             }
         }
-        Row(Modifier.align(Alignment.BottomEnd).padding(4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            IconButton(onClick = { directorOpen = true }, modifier = Modifier.size(40.dp)
+            IconButton(onClick = { directorOpen = true }, modifier = Modifier.align(Alignment.BottomStart).padding(4.dp).size(40.dp)
                 .background(Color.Black.copy(alpha = .7f), CircleShape)) {
                 Icon(WaveIcons.More, "Réalisation vidéo", tint = Color.White, modifier = Modifier.size(19.dp))
             }
-            if (onFullscreen != null) IconButton(onClick = onFullscreen, modifier = Modifier.size(40.dp)
+            if (onFullscreen != null) IconButton(onClick = onFullscreen, modifier = Modifier.align(Alignment.BottomEnd).padding(4.dp).size(40.dp)
                 .background(Color.Black.copy(alpha = .7f), CircleShape)) {
                 Icon(WaveIcons.Expand, "Plein écran", tint = Color.White, modifier = Modifier.size(17.dp))
             }
-        }
     }
     if (directorOpen) WaveDirectorSheet(state, onDismiss = { directorOpen = false }, onFullscreen = { onFullscreen?.invoke() })
 }
@@ -174,10 +171,12 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
             horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             if (page == 1) {
                 Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
-                TextButton(onClick = state::toggleRequests, modifier = Modifier.height(44.dp),
-                    contentPadding = PaddingValues(horizontal = 0.dp)) {
-                    Text(if (state.requestsOpen) "Fermer les demandes" else "Ouvrir les demandes",
-                        color = WaveMixerTheme.capsuleAccentSoft, fontSize = 11.sp, maxLines = 1)
+                Box(Modifier.height(44.dp).clickable(onClick = state::toggleRequests), contentAlignment = Alignment.Center) {
+                    Row(Modifier.hifiBlackSurface(14.dp).padding(horizontal = 12.dp, vertical = 7.dp),
+                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                        Box(Modifier.size(6.dp).background(if (state.requestsOpen) Color(0xFF86B69B) else Color(0xFFC88B90), CircleShape))
+                        Text(if (state.requestsOpen) "Ouvert" else "Fermé", color = Color(0xFFD8D8DF), fontSize = 11.sp, maxLines = 1)
+                    }
                 }
                 }
             } else Text(if (page == 0) "Glisse un invité vers la vidéo" else "3 invités maximum sur scène",
