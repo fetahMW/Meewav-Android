@@ -177,13 +177,13 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
     val dimmed = composition && (clip.mute || (state.clips.any { it.inComposition && it.solo } && !clip.solo))
     val selected = composition && state.selectedMixId == clip.id
     val opacity by animateFloatAsState(if (dimmed) .50f else 1f, tween(170), label = "Audibilité")
-    Column(Modifier.fillMaxWidth().hifiBlackSurface(13.dp)
+    Column(Modifier.fillMaxWidth().hifiBlackSurface(13.dp).graphicsLayer { alpha = opacity }
         .border(.75.dp, if (selected) accent.copy(alpha = .45f) else Color.Transparent, RoundedCornerShape(13.dp))
         .then(if (composition) Modifier.clickable { state.selectMix(clip.id) } else Modifier)
         .padding(horizontal = 10.dp, vertical = 5.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-            Box(Modifier.graphicsLayer { alpha = opacity }.clickable(onClick = onProfile)) { WaveArtistPortrait(clip.artist) }
-            Column(Modifier.weight(1f).graphicsLayer { alpha = opacity }) {
+            Box(Modifier.clickable(onClick = onProfile)) { WaveArtistPortrait(clip.artist) }
+            Column(Modifier.weight(1f)) {
                 if (composition) Text(clip.title, color = ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(clip.artist, color = secondary, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, false))

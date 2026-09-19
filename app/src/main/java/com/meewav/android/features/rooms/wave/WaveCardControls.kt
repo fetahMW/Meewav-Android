@@ -90,6 +90,7 @@ internal fun WaveMixControls(clip: WaveCompositionClip, state: WaveCompositionSt
         if (index >= 0) pinScroll.animateScrollTo((with(density) { (index * 52).dp.roundToPx() } - pinScroll.viewportSize / 2).coerceAtLeast(0))
     }
     LaunchedEffect(rail, clip.gain, adjusting, dragged, pressed) { if (rail == CardRail.VOLUME && !adjusting && !dragged && !pressed) { delay(3000); rail = CardRail.NONE } }
+    Column {
     Row(Modifier.fillMaxWidth().height(44.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         if (rail != CardRail.VOLUME) CardCommand(if (rail == CardRail.PINS) Icons.Default.ChevronLeft else Icons.Default.PushPin,
             if (rail == CardRail.PINS) "" else state.pinsFor(clip.id).size.takeIf { it > 0 }?.toString() ?: "∞") {
@@ -121,10 +122,18 @@ internal fun WaveMixControls(clip: WaveCompositionClip, state: WaveCompositionSt
         if (rail != CardRail.PINS) WaveControl(Icons.Default.VolumeUp, "Volume de ${clip.title}", rail == CardRail.VOLUME) {
             rail = if (rail == CardRail.VOLUME) CardRail.NONE else CardRail.VOLUME
         }
-        if (rail == CardRail.PINS) WaveControl(Icons.Default.Close, "Supprimer l’épingle",
-            enabled = state.selectedPinId != null) {
-            state.removePin()
+    }
+    val selectedPin = state.selectedPin?.takeIf { it.clipId == clip.id }
+    if (selectedPin != null) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text("Épingle · mesure ${selectedPin.startBar + 1}", color = secondary, fontSize = 10.sp, modifier = Modifier.weight(1f))
+            TextButton(onClick = { state.selectPin(selectedPin.id); state.removePin() }) {
+                Icon(Icons.Default.Close, null, tint = Color(0xFFC88B90), modifier = Modifier.size(15.dp))
+                Spacer(Modifier.width(4.dp))
+                Text("Désépingler", color = Color(0xFFC88B90), fontSize = 11.sp)
+            }
         }
+    }
     }
 }
 
