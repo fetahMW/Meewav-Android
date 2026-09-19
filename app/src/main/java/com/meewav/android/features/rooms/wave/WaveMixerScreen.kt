@@ -96,6 +96,7 @@ fun WaveMixerScreen(onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
     var activeTab by remember { mutableStateOf(WaveTab.MIXEUR) }
     // Keep the highlighted snapshot even if the live feed trims old messages or tabs change.
     var pinnedChatMessage by remember { mutableStateOf<WaveChatMessage?>(null) }
+    var waveNotificationsRead by remember { mutableStateOf(false) }
     // Canaux.
     var micGain by remember { mutableStateOf(0.72f) }
     var audioGain by remember { mutableStateOf(0.62f) }
@@ -276,6 +277,8 @@ fun WaveMixerScreen(onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
                     WaveTab.CHAT -> WaveChatPanel(
                         Modifier.fillMaxSize(), pinnedMessage = pinnedChatMessage,
                         onPinMessage = { pinnedChatMessage = it },
+                        notificationsRead = waveNotificationsRead,
+                        onReadNotifications = { waveNotificationsRead = true },
                     )
                     else -> WaveTabPlaceholder(activeTab)
                 }

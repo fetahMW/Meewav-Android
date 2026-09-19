@@ -288,3 +288,10 @@ Compilation de livraison uniquement ; rendu à valider par l'utilisateur.
 - Avion en papier pour envoyer ; trois points horizontaux pour ouvrir les outils du chat.
 - Dix portraits locaux repris de la banque Tremplin/Scène (sceneArtistPortraits.ts), artistes ajoutés au flux de démonstration.
 - Avatars existants conservés. Les participants sans image ont un portrait stable ; suppression du fallback avec une lettre.
+
+### Panneaux du chat Wave — 19 septembre 2026
+- Icône Dashboard retirée sous les trois points ; rail recalibré à six emplacements (286 dp max).
+- Cloche reliée à un bottom sheet natif avec notifications de démonstration, portraits, fermeture et défilement. Badge calculé depuis les données ; lecture conservée dans l'écran au changement d'onglet.
+- Appui long : bottom sheet noir Hi-Fi, portrait et aperçu riche du message, sections d'actions espacées, suppression distincte, croix/fermeture par geste. Mise en avant du host et suppression locale conservées.
+- Actions de modération préexistantes toujours sans câblage serveur ; cette passe modifie leur présentation, pas leur mécanique.
+- Compilation de livraison uniquement.

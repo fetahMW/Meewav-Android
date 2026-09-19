@@ -202,6 +202,8 @@ fun WaveChatPanel(
     modifier: Modifier = Modifier,
     pinnedMessage: WaveChatMessage? = null,
     onPinMessage: (WaveChatMessage?) -> Unit = {},
+    notificationsRead: Boolean = false,
+    onReadNotifications: () -> Unit = {},
 ) {
     val now = remember { System.currentTimeMillis() }
     val mountedAt = remember { System.currentTimeMillis() }
@@ -219,6 +221,7 @@ fun WaveChatPanel(
         )
     }
     var toolsOpen by remember { mutableStateOf(false) }
+    var notificationsOpen by remember { mutableStateOf(false) }
     var livePoll by remember { mutableStateOf<WaveChatPoll?>(null) }
     val emojiInput = remember { WaveEmojiInputController() }
     var draft by remember { mutableStateOf("") }
@@ -362,7 +365,12 @@ fun WaveChatPanel(
                         .width(50.dp)
                         .fillMaxSize()
                         .padding(start = 6.dp, top = 6.dp, bottom = 6.dp),
-                    onOpenTools = { toolsOpen = true }
+                    onOpenTools = { toolsOpen = true },
+                    notificationCount = if (notificationsRead) 0 else waveDemoNotifications.size,
+                    onOpenNotifications = {
+                        notificationsOpen = true
+                        onReadNotifications()
+                    },
                 )
             }
 
@@ -397,6 +405,9 @@ fun WaveChatPanel(
             )
         }
 
+        if (notificationsOpen) {
+            WaveNotificationsSheet(onDismiss = { notificationsOpen = false })
+        }
         if (toolsOpen) {
             WaveChatToolsSheet(
                 poll = livePoll,
@@ -601,18 +612,20 @@ private fun MwEmojiWall(height: Dp, onSelect: (String) -> Unit, onClose: () -> U
 private fun WaveChatSocialRail(
     modifier: Modifier = Modifier,
     onOpenTools: () -> Unit,
+    notificationCount: Int,
+    onOpenNotifications: () -> Unit,
 ) {
     BoxWithConstraints(modifier) {
         Column(
-            Modifier.fillMaxWidth().height(maxHeight.coerceAtMost(332.dp))
+            Modifier.fillMaxWidth().height(maxHeight.coerceAtMost(286.dp))
                 .hifiBlackSurface(17.dp).clip(RoundedCornerShape(17.dp))
                 .verticalScroll(rememberScrollState()).padding(vertical = 6.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             RailToolButton(icon = WaveIcons.More, tint = chatAccent, label = "Outils du chat", onClick = onOpenTools)
-            RailToolButton(icon = WaveIcons.Dashboard, tint = white(0.8f), label = "Dashboard")
-            RailToolButton(icon = WaveIcons.Bell, tint = white(0.8f), label = "Notifications", badge = "3")
+            RailToolButton(icon = WaveIcons.Bell, tint = white(0.8f), label = "Notifications",
+                badge = notificationCount.takeIf { it > 0 }?.toString(), onClick = onOpenNotifications)
             Box(Modifier.height(44.dp), contentAlignment = Alignment.Center) { ChatRailItem(imageRes = R.drawable.money_bag, value = "148") }
             Box(Modifier.height(44.dp), contentAlignment = Alignment.Center) { ChatRailItem(icon = WaveIcons.Star, tint = Color(0xFFF3BF49), value = "86") }
             Box(Modifier.height(44.dp), contentAlignment = Alignment.Center) { ChatRailItem(icon = WaveIcons.Heart, tint = Color(0xFFFF64AA), value = "1,2k") }
@@ -670,69 +683,6 @@ private fun ChatRailItem(
             fontFamily = WaveMixerTheme.fontFamily
         )
     }
-}
-
-/* Sheet d'outils message — long-press : épingler / supprimer / modérer. */
-@Composable
-private fun WaveMessageActionSheet(
-    message: WaveChatMessage,
-    onDismiss: () -> Unit,
-    onPin: () -> Unit,
-    onDelete: () -> Unit
-) {
-    Box(Modifier.fillMaxSize()) {
-        Box(
-            Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.5f))
-                .clickable(onClick = onDismiss)
-        )
-        Column(
-            Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 10.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFF14121C))
-                .border(1.dp, white(0.09f), RoundedCornerShape(16.dp))
-        ) {
-            Row(
-                Modifier.fillMaxWidth().padding(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    "@${message.userName}  ·  ${message.content.take(60)}",
-                    color = white(0.55f), fontSize = 11.sp,
-                    fontFamily = WaveMixerTheme.fontFamily, maxLines = 1
-                )
-            }
-            ChatSheetDivider()
-            if (message.isHost) SheetAction(label = "Mettre en avant", accent = chatAccent, onClick = onPin)
-            SheetAction(label = "Supprimer le message", accent = Color(0xFFFF536C), onClick = onDelete)
-            ChatSheetDivider()
-            SheetAction(label = "Mode lent · @${message.userName} (30 s)", onClick = onDismiss)
-            SheetAction(label = "Expulser @${message.userName}", onClick = onDismiss)
-            SheetAction(label = "Bannir @${message.userName}", accent = Color(0xFFFF536C), onClick = onDismiss)
-        }
-    }
-}
-
-@Composable
-private fun SheetAction(label: String, onClick: () -> Unit, accent: Color = white(0.88f)) {
-    Text(
-        label,
-        color = accent, fontSize = 13.sp, fontWeight = FontWeight.Medium,
-        fontFamily = WaveMixerTheme.fontFamily,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 12.dp)
-    )
-}
-
-@Composable
-private fun ChatSheetDivider() {
-    Box(Modifier.fillMaxWidth().height(0.5.dp).background(white(0.08f)))
 }
 
 /* Composer liquid-glass : input-well (champ + bouton emoji -> mur) + send. */
@@ -813,7 +763,7 @@ private val waveArtistPortraits = listOf(
     R.drawable.wave_chat_artist_9,
 )
 
-private fun waveDemoPortrait(userId: String): Int {
+internal fun waveDemoPortrait(userId: String): Int {
     val artistIndex = userId.removePrefix("artist_").toIntOrNull()
     val index = artistIndex ?: when (userId) {
         "u_zoe" -> 0
