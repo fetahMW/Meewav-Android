@@ -6,7 +6,7 @@ import androidx.compose.ui.geometry.Rect
 import com.meewav.android.R
 
 internal enum class WaveGuestLocation(val label: String) {
-    REQUESTED("Candidature"), INVITED("Invitation acceptée"), BACKSTAGE("Prêt en coulisses"), STAGE("Sur scène")
+    REQUESTED("Demande"), INVITED("Greenhouse"), BACKSTAGE("Prêt en coulisses"), STAGE("Sur scène")
 }
 
 internal data class WaveGuest(
@@ -70,6 +70,8 @@ internal class WaveGuestState {
     )).filter { candidate -> guests.none { it.id == candidate.id } }
     var selected by mutableStateOf(setOf<String>())
     var previewId by mutableStateOf<String?>(null)
+    var profilePreviewId by mutableStateOf<String?>(null)
+    var messageRecipientIds by mutableStateOf<Set<String>>(emptySet())
     var notice by mutableStateOf<String?>(null)
     var dragId by mutableStateOf<String?>(null)
         private set
@@ -103,7 +105,7 @@ internal class WaveGuestState {
         val matching = guests.filter { it.id in ids }
         val allowed = matching.filter { guest -> when (target) {
             WaveGuestLocation.STAGE -> guest.location == WaveGuestLocation.BACKSTAGE
-            WaveGuestLocation.BACKSTAGE -> guest.location == WaveGuestLocation.STAGE || guest.location == WaveGuestLocation.INVITED || guest.location == WaveGuestLocation.REQUESTED
+            WaveGuestLocation.BACKSTAGE -> guest.location == WaveGuestLocation.STAGE || guest.location == WaveGuestLocation.INVITED
             WaveGuestLocation.INVITED -> guest.location == WaveGuestLocation.REQUESTED || guest.location == WaveGuestLocation.BACKSTAGE
             WaveGuestLocation.REQUESTED -> guest.location == WaveGuestLocation.BACKSTAGE || guest.location == WaveGuestLocation.INVITED
         } }

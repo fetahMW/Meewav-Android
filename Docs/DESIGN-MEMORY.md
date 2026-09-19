@@ -355,3 +355,9 @@ Compilation de livraison uniquement ; rendu à valider par l'utilisateur.
 - Barre d'actions noire Hi-Fi fixe : Message, Aperçu, Scène/Demandes/Coulisses selon la section, Retirer/Refuser. Commandes désactivées sans sélection ; capacité et connexion vérifiées avant montée.
 - Composer privé avec clavier et historique local par invité pour la démo. Aucune livraison serveur annoncée.
 
+
+### Invités : tap, appui long et Greenhouse
+- Tap simple : sélection unique et fiche d'actions. Appui long : multi-sélection sans fiche ; les taps suivants modifient la sélection.
+- Demandes REQUESTED -> Greenhouse INVITED -> Coulisses BACKSTAGE -> Scène STAGE. Pas de caméra ni de commandes média dans la fiche d'une demande.
+- Fiche avec vrai badge, message privé démo et pré-profil natif compact (portrait, rôle, grade). Greenhouse est désormais un onglet distinct.
+

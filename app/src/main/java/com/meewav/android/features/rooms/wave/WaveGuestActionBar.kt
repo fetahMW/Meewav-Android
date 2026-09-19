@@ -22,8 +22,9 @@ import androidx.compose.ui.unit.sp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun WaveGuestActionBar(state: WaveGuestState, guests: List<WaveGuest>, page: Int, onClear: () -> Unit) {
-    var messageRecipients by remember { mutableStateOf<List<WaveGuest>>(emptyList()) }
+    val messageRecipients = state.guests.filter { it.id in state.messageRecipientIds }
     var draft by remember { mutableStateOf("") }
+    LaunchedEffect(state.messageRecipientIds) { draft = "" }
     val ids = guests.map { it.id }.toSet()
     val enabled = guests.isNotEmpty()
     Column(Modifier.fillMaxWidth().padding(top = 6.dp).hifiBlackSurface(14.dp).padding(horizontal = 6.dp)) {
@@ -35,7 +36,7 @@ internal fun WaveGuestActionBar(state: WaveGuestState, guests: List<WaveGuest>, 
             }
         }
         Row(Modifier.fillMaxWidth().padding(bottom = 4.dp)) {
-            GuestAction("Message", WaveIcons.Envelope, enabled, Modifier.weight(1f)) { messageRecipients = guests; draft = "" }
+            GuestAction("Message", WaveIcons.Envelope, enabled, Modifier.weight(1f)) { state.messageRecipientIds = ids; draft = "" }
             GuestAction("Aperçu", WaveIcons.Eye, guests.size == 1, Modifier.weight(1f)) { state.previewId = guests.single().id }
             if (page == 0) {
                 GuestAction("Scène", Icons.Filled.ArrowUpward, enabled && guests.all { it.connected } && state.onStage.size + guests.size <= 3, Modifier.weight(1f)) {
@@ -44,8 +45,8 @@ internal fun WaveGuestActionBar(state: WaveGuestState, guests: List<WaveGuest>, 
                 GuestAction("Demandes", Icons.Filled.ArrowDownward, enabled, Modifier.weight(1f)) {
                     state.move(ids, WaveGuestLocation.REQUESTED); onClear()
                 }
-            } else GuestAction("Coulisses", if (page == 1) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward, enabled, Modifier.weight(1f)) {
-                state.move(ids, WaveGuestLocation.BACKSTAGE); onClear()
+            } else GuestAction(if (page == 1) "Greenhouse" else "Coulisses", if (page == 1) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward, enabled, Modifier.weight(1f)) {
+                state.move(ids, if (page == 1) WaveGuestLocation.INVITED else WaveGuestLocation.BACKSTAGE); onClear()
             }
             GuestAction(if (page == 1) "Refuser" else "Retirer", Icons.Outlined.DeleteOutline, enabled, Modifier.weight(1f)) {
                 if (page == 1) state.refuseRequests(ids) else state.remove(ids)
@@ -53,13 +54,13 @@ internal fun WaveGuestActionBar(state: WaveGuestState, guests: List<WaveGuest>, 
             }
         }
     }
-    if (messageRecipients.isNotEmpty()) ModalBottomSheet(onDismissRequest = { messageRecipients = emptyList() },
+    if (messageRecipients.isNotEmpty()) ModalBottomSheet(onDismissRequest = { state.messageRecipientIds = emptySet() },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Color(0xFF101114), contentColor = Color.White) {
         Column(Modifier.fillMaxWidth().imePadding().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(if (messageRecipients.size == 1) messageRecipients.first().name else "${messageRecipients.size} invités",
                     modifier = Modifier.weight(1f), fontSize = 16.sp)
-                IconButton(onClick = { messageRecipients = emptyList() }) { Icon(WaveIcons.Close, "Fermer") }
+                IconButton(onClick = { state.messageRecipientIds = emptySet() }) { Icon(WaveIcons.Close, "Fermer") }
             }
             Text("Message privé · Démonstration locale", fontSize = 11.sp, color = Color.White.copy(alpha = .5f))
             if (messageRecipients.size == 1) LazyColumn(Modifier.fillMaxWidth().heightIn(max = 150.dp)) {
