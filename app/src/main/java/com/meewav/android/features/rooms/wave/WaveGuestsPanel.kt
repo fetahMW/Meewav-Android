@@ -345,27 +345,3 @@ private fun GuestGrade(level: Int) {
     Image(painterResource(badges[(level - 1).coerceIn(0, 5)]), "Grade $level", modifier = Modifier.size(42.dp))
 }
 
-@Composable
-private fun GuestPreProfile(state: WaveGuestState, guest: WaveGuest) {
-    AlertDialog(onDismissRequest = { state.profilePreviewId = null }, containerColor = Color(0xFF101114),
-        title = {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Image(painterResource(guest.portrait), null, modifier = Modifier.size(52.dp).clip(CircleShape), contentScale = ContentScale.Crop)
-                Text(guest.name, color = Color.White, fontSize = 18.sp, modifier = Modifier.weight(1f))
-                GuestGrade(guest.gradeLevel)
-            }
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(guest.role, color = Color.White, fontSize = 14.sp)
-                Text(guest.location.label, color = WaveMixerTheme.capsuleAccentSoft, fontSize = 12.sp)
-                Text("Profil de démonstration", color = Color.White.copy(alpha = .45f), fontSize = 11.sp)
-            }
-        },
-        confirmButton = { TextButton(onClick = { state.profilePreviewId = null; state.messageRecipientIds = setOf(guest.id) }) {
-            Text("Message", color = WaveMixerTheme.capsuleAccentSoft)
-        } },
-        dismissButton = { TextButton(onClick = { state.profilePreviewId = null; state.previewId = guest.id }) {
-            Text("Retour", color = Color.White.copy(alpha = .65f))
-        } })
-}

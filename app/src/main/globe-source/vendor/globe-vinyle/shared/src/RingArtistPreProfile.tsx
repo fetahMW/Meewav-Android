@@ -98,7 +98,7 @@ export default function RingArtistPreProfile({ selection, onClose, navigation, p
   </div>, document.body);
 }
 
-function ArtistProfileCard({ selection, onClose, closeButton }: {
+export function ArtistProfileCard({ selection, onClose, closeButton }: {
   selection: PortraitSelection; onClose: () => void; closeButton?: RefObject<HTMLButtonElement | null>;
 }) {
   const [notice, setNotice] = useState('');

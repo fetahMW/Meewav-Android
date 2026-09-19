@@ -23,6 +23,7 @@ const result = await build({
   absWorkingDir: root,
   entryPoints: {
     main: join(source, 'full-globe.tsx'),
+    'guest-preprofile': join(source, 'guest-preprofile.tsx'),
     'border-worker': join(source, 'vendor/globe-vinyle/shared/src/border-worker.mjs'),
     'avatar-population-worker': join(source, 'vendor/globe-vinyle/shared/src/avatar-population-worker.mjs'),
   },
@@ -50,6 +51,8 @@ await writeFile(join(output, 'index.html'), `<!doctype html>
 <meta name="color-scheme" content="dark"><title>Meewav — Globe</title><link rel="icon" href="data:,">
 <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./assets/main.css"><link rel="stylesheet" href="./mobile.css"></head>
 <body><div id="root"></div><script type="module" src="./assets/main.js"></script></body></html>\n`);
+
+await writeFile(join(output, 'guest-preprofile.html'), '<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="./assets/guest-preprofile.css"><div id="root"></div><script type="module" src="./assets/guest-preprofile.js"></script></html>');
 
 // Preserve the complete license text for every third-party package in the bundle.
 const packages = new Map();
