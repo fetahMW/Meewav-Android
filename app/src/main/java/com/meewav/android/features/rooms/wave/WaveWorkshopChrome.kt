@@ -108,18 +108,18 @@ internal fun WaveArtistPortrait(artist: String) {
 @Composable
 internal fun WaveRoleChip(category: String, expanded: Boolean = false, active: Boolean = true, uniform: Boolean = true) {
     val color = when (category) {
-        "Drums" -> Color(0xFFFFC454)
+        "Drums" -> Color(0xFFFF9A16)
         "Basse" -> Color(0xFF43EF9E)
-        "Mélodie" -> Color(0xFFB8ADFF)
-        "Accords" -> Color(0xFF62E2FF)
-        "Nappe" -> Color(0xFFE3A1FF)
-        "Acapella" -> Color(0xFFFF9DCE)
-        else -> Color(0xFFFFDC50)
+        "Mélodie" -> Color(0xFF9B7BFF)
+        "Accords" -> Color(0xFF00DEFF)
+        "Nappe" -> Color(0xFFD34FFF)
+        "Acapella" -> Color(0xFFFF3AA8)
+        else -> Color(0xFFFFE329)
     }
-    Box(Modifier.then(if (expanded) Modifier.fillMaxWidth().height(36.dp) else Modifier.width(68.dp).height(22.dp))
-        .clip(RoundedCornerShape(if (expanded) 8.dp else 5.dp))
-        .background(if (active) color.copy(alpha = .30f) else Color(0xFF17181D))
-        .border(.75.dp, if (active) color.copy(alpha = .85f) else Color(0xFF33343B), RoundedCornerShape(if (expanded) 8.dp else 5.dp)),
+    Box(Modifier.then(if (expanded) Modifier.fillMaxWidth().height(32.dp) else Modifier.width(58.dp).height(18.dp))
+        .clip(RoundedCornerShape(50))
+        .background(if (active) color.copy(alpha = .22f) else Color(0xFF17181D))
+        .border(.75.dp, if (active) color.copy(alpha = .9f) else Color(0xFF33343B), RoundedCornerShape(50)),
         contentAlignment = Alignment.Center) {
         Text(category, color = if (active) color else Color(0xFF777781), fontSize = if (expanded) 12.sp else 9.sp,
             fontWeight = FontWeight.SemiBold, maxLines = 1)
@@ -177,13 +177,13 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
     val dimmed = composition && (clip.mute || (state.clips.any { it.inComposition && it.solo } && !clip.solo))
     val selected = composition && state.selectedMixId == clip.id
     val opacity by animateFloatAsState(if (dimmed) .50f else 1f, tween(170), label = "Audibilité")
-    Column(Modifier.fillMaxWidth().hifiBlackSurface(13.dp).graphicsLayer { alpha = opacity }
+    Column(Modifier.fillMaxWidth().hifiBlackSurface(13.dp)
         .border(.75.dp, if (selected) accent.copy(alpha = .45f) else Color.Transparent, RoundedCornerShape(13.dp))
         .then(if (composition) Modifier.clickable { state.selectMix(clip.id) } else Modifier)
         .padding(horizontal = 10.dp, vertical = 5.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-            Box(Modifier.clickable(onClick = onProfile)) { WaveArtistPortrait(clip.artist) }
-            Column(Modifier.weight(1f)) {
+            Box(Modifier.graphicsLayer { alpha = opacity }.clickable(onClick = onProfile)) { WaveArtistPortrait(clip.artist) }
+            Column(Modifier.weight(1f).graphicsLayer { alpha = opacity }) {
                 if (composition) Text(clip.title, color = ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(clip.artist, color = secondary, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, false))

@@ -421,3 +421,5 @@ Le lecteur Wave possède son propre bouton haut-parleur animé et son propre vol
 - Propositions : catégorie au lieu du titre, identité/grade/BPM/gamme conservés. Vote : chips de largeur commune 68 dp.
 
 - Chips des boucles : taille commune 68 x 22 dp dans Propositions, Vote et Composition ; couleurs lumineuses, bordure renforcée, texte centré. Chips désactivés du filtre restent gris.
+
+- Chips compacts : capsules 58 x 18 dp, couleurs néon saturées (orange, vert, violet, cyan, rose, jaune). L’atténuation mute/solo touche l’identité de la piste, pas les chips ni les commandes.
