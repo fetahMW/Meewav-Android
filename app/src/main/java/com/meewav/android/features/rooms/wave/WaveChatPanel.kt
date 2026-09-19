@@ -501,7 +501,7 @@ private fun WaveChatRow(
     ) {
         Row(
             Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Top
         ) {
             // Existing avatars retained; demo artists always have a stable portrait, never initials.
             Box(
@@ -518,6 +518,8 @@ private fun WaveChatRow(
                 )
             }
             Spacer(Modifier.width(8.dp))
+            Column(Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 "@${message.userName.removePrefix("@")}",
                 color = chatNameGrey,
@@ -548,7 +550,7 @@ private fun WaveChatRow(
             }
             Spacer(Modifier.weight(1f))
 }
-        Spacer(Modifier.height(3.dp))
+        Spacer(Modifier.height(1.dp))
         // Corps du message — blanc, tokens [[mw:name]] rendus en images inline.
         val (annotated, inline) = chatAnnotatedText(message.content)
         Text(
@@ -558,8 +560,10 @@ private fun WaveChatRow(
             fontSize = 12.sp, fontWeight = FontWeight.Normal,
             fontFamily = WaveMixerTheme.fontFamily,
             lineHeight = 17.sp,
-            modifier = Modifier.padding(start = 36.dp)
+            modifier = Modifier.fillMaxWidth()
         )
+            }
+        }
     }
 }
 
