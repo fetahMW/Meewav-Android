@@ -50,7 +50,11 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, 
     var manualGraceUntil by remember { mutableLongStateOf(0L) }
     var downPixels by remember { mutableFloatStateOf(0f) }
     var returningToTop by remember { mutableStateOf(false) }
+    var section by rememberSaveable { mutableIntStateOf(0) }
     val proposalList = rememberLazyListState()
+    val voteList = rememberLazyListState()
+    val compositionList = rememberLazyListState()
+    val activeList = when (section) { 1 -> voteList; 2 -> compositionList; else -> proposalList }
     val proposalScroll = remember {
         object : NestedScrollConnection {
             override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
@@ -70,8 +74,10 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, 
             }
         }
     }
-    LaunchedEffect(proposalList) {
-        snapshotFlow { Triple(proposalList.firstVisibleItemIndex, proposalList.firstVisibleItemScrollOffset, proposalList.isScrollInProgress && returningToTop) }
+    LaunchedEffect(activeList) {
+        downPixels = 0f
+        returningToTop = false
+        snapshotFlow { Triple(activeList.firstVisibleItemIndex, activeList.firstVisibleItemScrollOffset, activeList.isScrollInProgress && returningToTop) }
             .collect { (index, offset, scrolling) ->
                 if (index == 0 && offset <= 1 && scrolling && autoCollapsed && SystemClock.uptimeMillis() >= manualGraceUntil) {
                     playerExpanded = true
@@ -80,7 +86,6 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, 
                 }
             }
     }
-    var section by rememberSaveable { mutableIntStateOf(0) }
     var revealed by remember { mutableStateOf<String?>(null) }
     var filter by remember { mutableStateOf(WaveProposalStatus.PENDING) }
     var messageArtist by remember { mutableStateOf<String?>(null) }
@@ -149,7 +154,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, 
             2 -> {
                 val composition = state.clips.filter { it.inComposition }
                 if (composition.isEmpty()) EmptyWorkspace("Ta composition commence ici", "Prends une boucle dans Propositions ou importe ton audio.", Modifier.weight(1f))
-                else LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(top = 6.dp, bottom = 8.dp)) {
+                else LazyColumn(Modifier.weight(1f).nestedScroll(proposalScroll), state = compositionList, verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(top = 6.dp, bottom = 8.dp)) {
                     items(composition, key = { it.id }) { clip ->
                             WaveLoopCard(clip, state, composition = true, onProfile = { onProfile(clip.artist) })
 
@@ -207,7 +212,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, 
                 val selected = candidates.find { it.id == (state.vote?.clipId ?: selectedVote) }
                 state.lastVerdict?.let { Text(it, color = soft, fontSize = 11.sp, modifier = Modifier.padding(bottom = 8.dp)) }
                 if (candidates.isEmpty()) EmptyWorkspace("Aucune boucle au vote", "Ouvre une proposition et choisis « Mettre au vote ».", Modifier.weight(1f))
-                else LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                else LazyColumn(Modifier.weight(1f).nestedScroll(proposalScroll), state = voteList, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(candidates, key = { it.id }) { clip ->
                         Column(Modifier.fillMaxWidth().hifiBlackSurface(13.dp)
                             .border(if (selected?.id == clip.id) 1.dp else 0.dp, if (selected?.id == clip.id) soft.copy(alpha = .5f) else Color.Transparent, RoundedCornerShape(12.dp))

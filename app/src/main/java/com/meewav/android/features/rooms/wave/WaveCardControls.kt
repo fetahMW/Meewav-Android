@@ -31,6 +31,9 @@ private enum class CardRail { NONE, DURATION, VOLUME, PINS }
 @Composable
 internal fun WaveVoteControls(clip: WaveCompositionClip, state: WaveCompositionState, duration: Int,
     onDuration: (Int) -> Unit, onMessage: () -> Unit, onDuel: () -> Unit) {
+    val download = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.CreateDocument("audio/*")) { uri ->
+        if (uri != null) state.download(clip.id, uri)
+    }
     var rail by remember(clip.id) { mutableStateOf(CardRail.NONE) }
     var adjusting by remember { mutableStateOf(false) }
     val interaction = remember { MutableInteractionSource() }
@@ -40,7 +43,7 @@ internal fun WaveVoteControls(clip: WaveCompositionClip, state: WaveCompositionS
     val locked = state.vote != null || clip.id in state.preparing
     val slide = with(LocalDensity.current) { 16.dp.roundToPx() }
     Row(Modifier.fillMaxWidth().padding(top = 8.dp).height(44.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-        CardCommand(if (rail == CardRail.DURATION) Icons.Default.ChevronLeft else Icons.Default.Timer, "${duration}s", enabled = !locked, modifier = Modifier.width(62.dp)) {
+        CardCommand(if (rail == CardRail.DURATION) Icons.Default.ChevronLeft else Icons.Default.Timer, "${duration}s", enabled = !locked, modifier = Modifier.width(50.dp)) {
             rail = if (rail == CardRail.DURATION) CardRail.NONE else CardRail.DURATION
         }
         Box(Modifier.weight(1f).fillMaxHeight().clipToBounds()) {
@@ -54,11 +57,16 @@ internal fun WaveVoteControls(clip: WaveCompositionClip, state: WaveCompositionS
                         }
                     } else {
                         CardCommand(if (current == CardRail.VOLUME) Icons.Default.ChevronLeft else Icons.Default.VolumeUp,
-                            "${kotlin.math.round(state.auditionGain(clip.id) * 100).toInt()}", enabled = !locked, modifier = Modifier.width(62.dp)) { rail = if (rail == CardRail.VOLUME) CardRail.NONE else CardRail.VOLUME }
+                            "${kotlin.math.round(state.auditionGain(clip.id) * 100).toInt()}", enabled = !locked, modifier = Modifier.width(50.dp)) { rail = if (rail == CardRail.VOLUME) CardRail.NONE else CardRail.VOLUME }
                         if (current == CardRail.VOLUME) WaveOutputFader(state.auditionGain(clip.id), { state.auditionVolume(clip.id, it) }, Modifier.weight(1f).height(40.dp).hifiBlackSurface(9.dp))
                         else {
                             Spacer(Modifier.weight(1f))
                             VoteSquare(Icons.Default.ChatBubbleOutline, "Message", enabled = !locked, onClick = onMessage)
+                            VoteSquare(Icons.Default.ArrowDownward, "Remettre dans Propositions", enabled = !locked) { state.stopPreview(); state.pending(clip.id) }
+                            VoteSquare(Icons.Default.FileDownload, "Télécharger la boucle", enabled = !locked) {
+                                val extension = clip.source.substringAfterLast('.', "wav").substringBefore('?').takeIf { it in listOf("wav", "mp3", "m4a", "aac", "ogg", "flac") } ?: "wav"
+                                download.launch(clip.title.replace('/', '-') + "." + extension)
+                            }
                             VoteSquare(WaveDuelIcon, "Duel de remplacement", enabled = !locked && !clip.isBase, onClick = onDuel)
                         }
                     }
