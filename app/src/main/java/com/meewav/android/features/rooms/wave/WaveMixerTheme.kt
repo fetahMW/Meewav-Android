@@ -18,6 +18,8 @@ object WaveMixerTheme {
     val faderViolet = Color(0xFF8A7FD2)
     /** Accent des capsules RoomsStudio (Simple/Pro, halo caméra, état actif). */
     val capsuleAccent = Color(0xFF7E44E3)
+    /** Violet urbain des CTA principaux, identique au bouton Se connecter. */
+    val primaryCta = Color(0xFF5137A1)
     /** Variante claire de `capsuleAccent` pour les liserés lumineux. */
     val capsuleAccentSoft = Color(0xFFA98EF0)
     val red = Color(0xFFFF2E3B)

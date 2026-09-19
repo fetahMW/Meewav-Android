@@ -326,7 +326,7 @@ internal fun GuestPreviewContent(state: WaveGuestState, guest: WaveGuest) {
             Button(onClick = { state.move(setOf(guest.id), target); if (state.guests.find { it.id == guest.id }?.location == target) state.previewId = null },
                 enabled = target != WaveGuestLocation.STAGE || (state.onStage.size < 3 && guest.connected),
                 modifier = Modifier.fillMaxWidth().height(44.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = WaveMixerTheme.capsuleAccent)) {
+                colors = ButtonDefaults.buttonColors(containerColor = WaveMixerTheme.primaryCta, contentColor = Color.White)) {
                 Text(when (guest.location) {
                     WaveGuestLocation.REQUESTED -> "Passer en coulisses"
                     WaveGuestLocation.INVITED -> "Passer en coulisses"
