@@ -76,9 +76,11 @@ fun Modifier.hifiBlackSurface(cornerRadius: Dp): Modifier =
             val h = size.height
             val r = cornerRadius.toPx().coerceAtMost(minOf(w, h) / 2f)
             val inset = 0.35.dp.toPx()
+            // Start the convex highlight at the top edge, without a dark lip
+            // before the reflection. The remainder of the black face is unchanged.
             val face = Brush.verticalGradient(
-                0f to Color(0xFF0C0D0F),
-                0.12f to Color(0xFF1A1B1E),
+                0f to Color(0xFF1A1B1E),
+                0.12f to Color(0xFF17181B),
                 0.32f to Color(0xFF111214),
                 0.65f to Color(0xFF090A0C),
                 0.91f to Color(0xFF050608),
