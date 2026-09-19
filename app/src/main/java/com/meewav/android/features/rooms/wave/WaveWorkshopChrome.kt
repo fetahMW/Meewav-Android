@@ -174,9 +174,10 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
     val progress = if (composition) {
         if (queued) 1f - (voice!!.remainingFrames / (48_000f * 60 * 4 / state.bpm)).toFloat().coerceIn(0f, 1f) else voice?.progress ?: 0f
     } else if (cue) state.snapshot.cueProgress else if (state.snapshot.candidate == clip.id) state.snapshot.candidateProgress else 0f
-    val dimmed = composition && (clip.mute || (state.clips.any { it.inComposition && it.solo } && !clip.solo))
+    val excludedBySolo = composition && state.clips.any { it.inComposition && it.solo } && !clip.solo
+    val dimmed = composition && clip.mute
     val selected = composition && state.selectedMixId == clip.id
-    val opacity by animateFloatAsState(if (dimmed) .50f else 1f, tween(170), label = "Audibilité")
+    val opacity by animateFloatAsState(if (excludedBySolo) .18f else if (dimmed) .50f else 1f, tween(170), label = "Audibilité")
     Column(Modifier.fillMaxWidth().hifiBlackSurface(13.dp).graphicsLayer { alpha = opacity }
         .border(.75.dp, if (selected) accent.copy(alpha = .45f) else Color.Transparent, RoundedCornerShape(13.dp))
         .then(if (composition) Modifier.clickable { state.selectMix(clip.id) } else Modifier)
