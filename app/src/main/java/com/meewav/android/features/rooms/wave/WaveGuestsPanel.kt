@@ -12,7 +12,7 @@ import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material.icons.filled.NetworkCheck
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Checklist
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -180,13 +180,6 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                         color = WaveMixerTheme.capsuleAccentSoft, fontSize = 11.sp, maxLines = 1)
                 }
                 }
-                IconToggleButton(checked = multiSelect || state.selected.isNotEmpty(),
-                    onCheckedChange = { active -> multiSelect = active; if (!active) state.selected = emptySet() },
-                    modifier = Modifier.size(44.dp).hifiBlackSurface(12.dp)
-                        .border(.5.dp, if (multiSelect || state.selected.isNotEmpty()) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .12f), RoundedCornerShape(12.dp))) {
-                    Icon(Icons.Filled.Checklist, "Sélection multiple", modifier = Modifier.size(20.dp),
-                        tint = if (multiSelect || state.selected.isNotEmpty()) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .7f))
-                }
             } else Text(if (page == 0) "Glisse un invité vers la vidéo" else "3 invités maximum sur scène",
                 modifier = Modifier.weight(1f), color = Color.White.copy(alpha = .48f), fontSize = 11.sp)
             TextButton(onClick = { inviteOpen = true }, modifier = Modifier.height(44.dp), contentPadding = PaddingValues(horizontal = 6.dp)) { Text("+ Inviter", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 12.sp) }
@@ -222,11 +215,16 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                         horizontalAlignment = Alignment.CenterHorizontally) {
                         Box(Modifier.weight(1f)) {
                             Image(painterResource(guest.portrait), guest.name, modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Crop)
-                            if (multiSelect || state.selected.isNotEmpty()) Checkbox(
-                                checked = guest.id in state.selected, onCheckedChange = null,
-                                modifier = Modifier.align(Alignment.TopEnd).padding(3.dp).size(20.dp)
-                                    .background(Color.Black.copy(alpha = .75f), RoundedCornerShape(4.dp)),
-                                colors = CheckboxDefaults.colors(checkedColor = WaveMixerTheme.capsuleAccentSoft))
+                            if (multiSelect || state.selected.isNotEmpty()) {
+                                val checked = guest.id in state.selected
+                                Box(Modifier.align(Alignment.TopEnd).padding(4.dp).size(22.dp)
+                                    .clip(RoundedCornerShape(7.dp))
+                                    .background(if (checked) Color(0xFF453677) else Color.Black.copy(alpha = .75f))
+                                    .border(.75.dp, if (checked) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .35f), RoundedCornerShape(7.dp)),
+                                    contentAlignment = Alignment.Center) {
+                                    if (checked) Icon(Icons.Filled.Check, "Sélectionné", tint = Color.White, modifier = Modifier.size(15.dp))
+                                }
+                            }
                         }
                         Text(guest.name, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         if (guest.location == WaveGuestLocation.BACKSTAGE) GuestHealth(guest)
