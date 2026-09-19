@@ -22,6 +22,7 @@ import com.meewav.android.R
 internal data class WaveDemoNotification(val id: String, val name: String, val text: String, val portrait: Int)
 
 internal val waveDemoNotifications = listOf(
+    WaveDemoNotification("don-keo", "KÉO", "t’a envoyé un don de 10 € · Merci pour ce live !", R.drawable.wave_chat_artist_1),
     WaveDemoNotification("like-luca", "Luca Maris", "a aimé ton live", R.drawable.chat_av_luca),
     WaveDemoNotification("gold-mina", "Mina Lune", "t’a envoyé un Golden Like", R.drawable.chat_av_mina),
     WaveDemoNotification("join-naya", "NAYA K.", "a rejoint le live", R.drawable.wave_chat_artist_0),

@@ -306,3 +306,9 @@ Compilation de livraison uniquement ; rendu à valider par l'utilisateur.
 - Rail noir Hi-Fi centré verticalement entre la navbar principale et la barre de messages ; hauteur compacte bornée à l'espace disponible.
 - Fins séparateurs gris entre actions, indicateurs et partage. Partage Android natif du descriptif de la session de démonstration, sans inventer de lien de room.
 
+
+### Chat live compact
+- Texte rapproché du nom, intermessages réduit, heures supprimées.
+- Suivi automatique actif à l'ouverture ; le défilement manuel le suspend et révèle Revenir au direct. Les nouveaux messages restent reçus.
+- Exemple de don de KÉO (10 euros) dans la cloche ; notifications toujours de démonstration locale.
+

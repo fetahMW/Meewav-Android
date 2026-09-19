@@ -1,6 +1,9 @@
 package com.meewav.android.features.rooms.wave
 
 import android.content.Intent
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -278,22 +281,28 @@ fun WaveChatPanel(
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
-    // Smart-scroll web : on suit le direct seulement si on est déjà en bas (<64px).
-    val isAtLiveEdge by remember {
-        derivedStateOf {
-            val last = listState.layoutInfo.visibleItemsInfo.lastOrNull() ?: return@derivedStateOf true
-            last.index >= messages.size - 1
+    var followingLive by remember { mutableStateOf(true) }
+    val manualScroll = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                if (source == NestedScrollSource.UserInput && available.y != 0f) {
+                    followingLive = false
+                }
+                return Offset.Zero
+            }
         }
     }
-    LaunchedEffect(messages.size) {
+    var lastSeenMessageId by remember { mutableStateOf<Long?>(null) }
+    LaunchedEffect(messages.lastOrNull()?.id, followingLive) {
         if (messages.isEmpty()) return@LaunchedEffect
-        if (isAtLiveEdge) {
-            listState.animateScrollToItem(messages.size - 1)
-        } else {
+        if (followingLive) {
+            unreadCount = 0
+            listState.scrollToItem(messages.lastIndex)
+        } else if (lastSeenMessageId != messages.lastOrNull()?.id) {
             unreadCount++
         }
+        lastSeenMessageId = messages.lastOrNull()?.id
     }
-
     BoxWithConstraints(modifier.fillMaxSize().padding(bottom = 6.dp)) {
         val emojiWallHeight = (maxHeight - 110.dp - if (pinnedMessage != null) 86.dp else 0.dp).coerceIn(92.dp, 220.dp)
         Column(Modifier.fillMaxSize()) {
@@ -335,7 +344,7 @@ fun WaveChatPanel(
                     }
 
                     // « Revenir au direct » — pill flottante quand on a scrollé vers le haut.
-                    if (!isAtLiveEdge) {
+                    if (!followingLive) {
                         Row(
                             Modifier
                                 .align(Alignment.BottomCenter)
@@ -345,7 +354,7 @@ fun WaveChatPanel(
                                 .border(1.dp, chatAccent.copy(alpha = 0.45f), RoundedCornerShape(14.dp))
                                 .clickable {
                                     unreadCount = 0
-                                    scope.launch { listState.animateScrollToItem(messages.size - 1) }
+                                    followingLive = true
                                 }
                                 .padding(horizontal = 12.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically
@@ -488,7 +497,7 @@ private fun WaveChatRow(
             .offset(y = entryOffset)
             .clip(RoundedCornerShape(8.dp))
             .combinedClickable(onClick = {}, onLongClick = onLongPress)
-            .padding(vertical = 8.dp, horizontal = 4.dp)
+            .padding(vertical = 5.dp, horizontal = 4.dp)
     ) {
         Row(
             Modifier.fillMaxWidth(),
@@ -538,13 +547,7 @@ private fun WaveChatRow(
                 )
             }
             Spacer(Modifier.weight(1f))
-            Text(
-                messageClock(message.createdAtMs),
-                color = chatTimeGrey, fontSize = 8.sp,
-                fontWeight = FontWeight.Medium,
-                fontFamily = WaveMixerTheme.fontFamily
-            )
-        }
+}
         Spacer(Modifier.height(3.dp))
         // Corps du message — blanc, tokens [[mw:name]] rendus en images inline.
         val (annotated, inline) = chatAnnotatedText(message.content)
