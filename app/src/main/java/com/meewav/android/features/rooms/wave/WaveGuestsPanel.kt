@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material.icons.filled.NetworkCheck
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -169,22 +170,28 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                 }
             }
         }
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             if (page == 1) {
-                TextButton(onClick = state::toggleRequests, modifier = Modifier.weight(1f)) {
+                Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                TextButton(onClick = state::toggleRequests, modifier = Modifier.height(44.dp),
+                    contentPadding = PaddingValues(horizontal = 0.dp)) {
                     Text(if (state.requestsOpen) "Fermer les demandes" else "Ouvrir les demandes",
-                        color = WaveMixerTheme.capsuleAccentSoft, fontSize = 11.sp)
+                        color = WaveMixerTheme.capsuleAccentSoft, fontSize = 11.sp, maxLines = 1)
                 }
-                TextButton(onClick = { multiSelect = !multiSelect; if (!multiSelect) state.selected = emptySet() },
-                    contentPadding = PaddingValues(horizontal = 5.dp)) {
-                    Text(if (multiSelect) "Terminer" else "Multi-select", fontSize = 11.sp,
-                        color = if (multiSelect) Color.White else WaveMixerTheme.capsuleAccentSoft)
+                }
+                IconToggleButton(checked = multiSelect || state.selected.isNotEmpty(),
+                    onCheckedChange = { active -> multiSelect = active; if (!active) state.selected = emptySet() },
+                    modifier = Modifier.size(44.dp).hifiBlackSurface(12.dp)
+                        .border(.5.dp, if (multiSelect || state.selected.isNotEmpty()) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .12f), RoundedCornerShape(12.dp))) {
+                    Icon(Icons.Filled.Checklist, "Sélection multiple", modifier = Modifier.size(20.dp),
+                        tint = if (multiSelect || state.selected.isNotEmpty()) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .7f))
                 }
             } else Text(if (page == 0) "Glisse un invité vers la vidéo" else "3 invités maximum sur scène",
                 modifier = Modifier.weight(1f), color = Color.White.copy(alpha = .48f), fontSize = 11.sp)
-            TextButton(onClick = { inviteOpen = true }) { Text("+ Inviter", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 12.sp) }
+            TextButton(onClick = { inviteOpen = true }, modifier = Modifier.height(44.dp), contentPadding = PaddingValues(horizontal = 6.dp)) { Text("+ Inviter", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 12.sp) }
             BadgedBox(badge = { if (state.filters.count > 0) Badge(containerColor = WaveMixerTheme.capsuleAccent) { Text("${state.filters.count}") } }) {
-                IconButton(onClick = { filtersOpen = true }) {
+                IconButton(onClick = { filtersOpen = true }, modifier = Modifier.size(44.dp)) {
                     Icon(WaveIcons.Tune, "Filtrer les invités", tint = WaveMixerTheme.capsuleAccentSoft, modifier = Modifier.size(20.dp))
                 }
             }
