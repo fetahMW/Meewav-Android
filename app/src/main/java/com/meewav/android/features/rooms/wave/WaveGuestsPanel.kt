@@ -117,7 +117,7 @@ private fun GuestStageTile(state: WaveGuestState, guest: WaveGuest, interactive:
         .guestDrag(state, guest, interactive)
         .clickable(enabled = interactive) { state.previewId = guest.id }
         .alpha(if (state.dragId == guest.id) .35f else 1f)) {
-        if (guest.camera) Image(painterResource(guest.portrait), null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
+        if (guest.camera && guest.connected) WaveGuestVideo(guest, Modifier.fillMaxSize())
         else Icon(WaveIcons.CameraOff, "Caméra coupée", tint = Color.White.copy(alpha = .55f), modifier = Modifier.align(Alignment.Center).size(26.dp))
         Text("Aperçu démo", color = Color.White.copy(alpha = .65f), fontSize = 8.sp,
             modifier = Modifier.align(Alignment.TopStart).background(Color.Black.copy(alpha = .65f)).padding(4.dp))
@@ -137,6 +137,7 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
     var inviteOpen by remember { mutableStateOf(false) }
     var filtersOpen by remember { mutableStateOf(false) }
     var multiSelect by remember { mutableStateOf(false) }
+    LaunchedEffect(state.selected) { if (state.selected.size > 1) multiSelect = true }
     val participants = state.guests.filter { when (page) {
         0 -> it.location == WaveGuestLocation.BACKSTAGE
         1 -> it.location == WaveGuestLocation.REQUESTED || it.location == WaveGuestLocation.INVITED
@@ -232,7 +233,7 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                 }
             }
         }
-        WaveGuestActionBar(state, selectedGuests, page, onClear = { state.selected = emptySet(); multiSelect = false })
+        WaveGuestActionBar(state, selectedGuests, page, selectionActive = multiSelect || state.selected.isNotEmpty(), onClear = { state.selected = emptySet(); multiSelect = false })
     }
     val preview = state.guests.find { it.id == state.previewId }
     if (preview != null) GuestPreviewSheet(state, preview)
@@ -274,7 +275,7 @@ private fun GuestPreviewSheet(state: WaveGuestState, guest: WaveGuest) {
             }
             if (guest.location == WaveGuestLocation.BACKSTAGE || guest.location == WaveGuestLocation.STAGE) {
             Box(Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(16.dp)).background(Color.Black), contentAlignment = Alignment.Center) {
-                if (guest.camera) Image(painterResource(guest.portrait), null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
+                if (guest.camera && guest.connected) WaveGuestVideo(guest, Modifier.fillMaxSize())
                 else Icon(WaveIcons.CameraOff, "Caméra coupée", tint = Color.White.copy(alpha = .5f))
                 Text("Aperçu de démonstration", modifier = Modifier.align(Alignment.BottomCenter).background(Color.Black.copy(alpha = .75f)).padding(6.dp), fontSize = 10.sp)
             }

@@ -14,7 +14,8 @@ internal data class WaveGuest(
     val location: WaveGuestLocation, val mic: Boolean = true, val camera: Boolean = true,
     val appeared: Boolean = false,
     // Declared format of the local demo source; replace with RTC publication dimensions when connected.
-    val sourceAspectRatio: Float = 9f / 16f,
+    val demoVideo: String = waveGuestDemoVideo(id),
+    val sourceAspectRatio: Float = if (demoVideo.contains("portrait-")) 9f / 16f else 16f / 9f,
     val gradeLevel: Int = 1,
     val latencyMs: Int? = null,
     val connected: Boolean = true,
