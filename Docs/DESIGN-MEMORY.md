@@ -239,3 +239,9 @@ conteneurs. Les cartes FX gardent leur matière noire même éteintes ; le texte
 les icônes et les contrôles portent l'état. Les dimensions, le retour vidéo,
 les gestes et le moteur audio restent ceux de la référence native.
 Compilation de livraison uniquement ; rendu à valider par l'utilisateur.
+
+### Chat Wave Android — champ web, 19 septembre 2026
+- Suppression de l'encart de démonstration épinglé « Envoie ta boucle ».
+- Champ natif adapté de Meewav-Web/src/features/rooms/place/place-chat-composer-glass.css : capsule noire, champ creusé, reflets statiques, touche d'envoi éclairée pendant la saisie, emojis conservés.
+- Rail d'indicateurs conservé ; cadeau remplacé par une roue crantée ouvrant les émoticônes ou le retour au direct.
+- Compilation de livraison uniquement ; appréciation visuelle laissée à l'utilisateur.
