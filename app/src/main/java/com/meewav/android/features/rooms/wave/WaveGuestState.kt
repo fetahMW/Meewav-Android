@@ -34,6 +34,12 @@ internal val WaveGuest.healthLabel: String get() = when {
 /** Native demo room state. No RTC or Supabase success is inferred from a local move. */
 internal class WaveGuestState {
     var composition by mutableStateOf(WaveComposition.ENSEMBLE)
+    var requestsOpen by mutableStateOf(true)
+        private set
+    fun toggleRequests() {
+        requestsOpen = !requestsOpen
+        notice = if (requestsOpen) "Demandes ouvertes · démo locale" else "Demandes fermées · les demandes reçues restent disponibles"
+    }
     var primaryId by mutableStateOf("host")
     val resolvedPrimaryId get() = primaryId.takeIf { id -> id == "host" || onStage.any { it.id == id } } ?: "host"
     private val initialGuests = listOf(

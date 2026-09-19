@@ -167,7 +167,12 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
             }
         }
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(if (page == 0) "Glisse un invité vers la vidéo" else if (page == 2) "3 invités maximum sur scène" else "Demandes de participation",
+            if (page == 1) {
+                TextButton(onClick = state::toggleRequests, modifier = Modifier.weight(1f)) {
+                    Text(if (state.requestsOpen) "Fermer les demandes" else "Ouvrir les demandes",
+                        color = WaveMixerTheme.capsuleAccentSoft, fontSize = 11.sp)
+                }
+            } else Text(if (page == 0) "Glisse un invité vers la vidéo" else "3 invités maximum sur scène",
                 modifier = Modifier.weight(1f), color = Color.White.copy(alpha = .48f), fontSize = 11.sp)
             TextButton(onClick = { inviteOpen = true }) { Text("+ Inviter", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 12.sp) }
             BadgedBox(badge = { if (state.filters.count > 0) Badge(containerColor = WaveMixerTheme.capsuleAccent) { Text("${state.filters.count}") } }) {
