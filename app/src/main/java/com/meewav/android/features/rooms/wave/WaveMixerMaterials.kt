@@ -32,6 +32,17 @@ import kotlin.math.max
 private fun rgba(hex: Long, alpha: Float): Color = Color(hex).copy(alpha = alpha)
 private fun white(a: Float): Color = Color.White.copy(alpha = a)
 
+/** Subtle, static violet light outside the Autotune chassis while enabled. */
+fun Modifier.fxActivationGlow(amount: Float): Modifier = drawBehind {
+    if (amount > 0f) {
+        softShadow(
+            topLeft = Offset.Zero, size = size, corner = 12.dp.toPx(),
+            blur = 7.dp.toPx(),
+            color = WaveMixerTheme.capsuleAccent.copy(alpha = .30f * amount), dy = 0f,
+        )
+    }
+}
+
 private class TileBrush(private val shader: Shader) : ShaderBrush() {
     override fun createShader(size: Size): Shader = shader
 }

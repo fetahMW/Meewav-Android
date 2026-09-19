@@ -701,16 +701,19 @@ private fun FxColumn(
             FxCard(
                 title = "Autotune", icon = WaveIcons.Waveform,
                 on = autotuneOn, onToggle = onAutotune,
+                activationGlow = true,
                 modifier = Modifier.fillMaxWidth().weight(1f)
             ) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     TuneSelectorField(
                         label = "Clé", value = tuneKey,
+                        enabled = autotuneOn,
                         onClick = { onSelector("key") },
                         modifier = Modifier.weight(0.40f)
                     )
                     TuneSelectorField(
                         label = "Gamme", value = tuneScale,
+                        enabled = autotuneOn,
                         onClick = { onSelector("scale") },
                         modifier = Modifier.weight(0.60f)
                     )

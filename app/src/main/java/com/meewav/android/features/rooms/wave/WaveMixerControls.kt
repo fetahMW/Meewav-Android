@@ -1,6 +1,8 @@
 package com.meewav.android.features.rooms.wave
 
 import androidx.compose.foundation.Image
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -339,10 +341,17 @@ fun FxCard(
     on: Boolean,
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
+    activationGlow: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    Box(modifier) {
-        HiFiBlackCard(Modifier.fillMaxSize(), cornerRadius = 12.dp) {
+    val glow by animateFloatAsState(
+        targetValue = if (activationGlow && on) 1f else 0f,
+        animationSpec = tween(200), label = "fxActivationGlow",
+    )
+    Box(modifier.fxActivationGlow(glow)) {
+        HiFiBlackCard(Modifier.fillMaxSize().border(
+            0.7.dp, WaveMixerTheme.capsuleAccent.copy(alpha = glow * 0.38f), RoundedCornerShape(12.dp)
+        ), cornerRadius = 12.dp) {
             Column(
                 Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -351,14 +360,14 @@ fun FxCard(
                     Box(Modifier.size(24.dp, 22.dp), contentAlignment = Alignment.Center) {
                         Icon(
                             icon, null,
-                            tint = if (on) WaveMixerTheme.fxAccent else white(0.46f),
+                            tint = if (on) WaveMixerTheme.fxAccent else white(0.30f),
                             modifier = Modifier.size(14.dp)
                         )
                     }
                     Spacer(Modifier.width(6.dp))
                     Text(
                         title,
-                        color = white(if (on) 0.84f else 0.64f),
+                        color = white(if (on) 0.90f else 0.42f),
                         fontSize = 11.sp, fontWeight = FontWeight.SemiBold,
                         fontFamily = WaveMixerTheme.fontFamily, maxLines = 1
                     )
@@ -381,10 +390,11 @@ fun TuneSelectorField(
     value: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(5.dp)) {
         Text(
-            label, color = white(0.46f), fontSize = 10.sp,
+            label, color = white(if (enabled) 0.60f else 0.32f), fontSize = 10.sp,
             fontWeight = FontWeight.Medium, fontFamily = WaveMixerTheme.fontFamily
         )
         Row(
@@ -398,11 +408,11 @@ fun TuneSelectorField(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                value, color = white(0.94f), fontSize = 13.sp,
+                value, color = white(if (enabled) 0.94f else 0.44f), fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold, fontFamily = WaveMixerTheme.fontFamily
             )
             Spacer(Modifier.weight(1f))
-            Icon(WaveIcons.ChevronDown, null, tint = white(0.40f), modifier = Modifier.size(8.dp))
+            Icon(WaveIcons.ChevronDown, null, tint = white(if (enabled) 0.50f else 0.25f), modifier = Modifier.size(8.dp))
         }
     }
 }
@@ -423,13 +433,13 @@ fun ReverbSlider(
     Column(modifier) {
         Row(Modifier.fillMaxWidth()) {
             Text(
-                "Douce", color = white(0.38f + 0.50f * (1f - v)),
+                "Douce", color = white(if (enabled) 0.38f + 0.50f * (1f - v) else 0.36f),
                 fontSize = 10.sp, fontWeight = FontWeight.Medium,
                 fontFamily = WaveMixerTheme.fontFamily
             )
             Spacer(Modifier.weight(1f))
             Text(
-                "Large", color = white(0.38f + 0.50f * v),
+                "Large", color = white(if (enabled) 0.38f + 0.50f * v else 0.36f),
                 fontSize = 10.sp, fontWeight = FontWeight.Medium,
                 fontFamily = WaveMixerTheme.fontFamily
             )
@@ -485,7 +495,7 @@ fun ReverbSlider(
                         // Remplissage violet jusqu'au thumb.
                         val fillW = (cx - left).coerceAtLeast(0f)
                         if (fillW > 0f) drawRoundRect(
-                            WaveMixerTheme.faderViolet,
+                            if (enabled) WaveMixerTheme.faderViolet else Color(0xFF5B5D65),
                             topLeft = Offset(left, cy - trackH / 2f),
                             size = Size(fillW, trackH),
                             cornerRadius = CornerRadius(trackH / 2f)
@@ -501,7 +511,10 @@ fun ReverbSlider(
                             cornerRadius = CornerRadius(tw / 2f)
                         )
                         drawRoundRect(
-                            Brush.verticalGradient(0f to Color(0xFFD6D8DE), 1f to Color(0xFFAFB3BC)),
+                            Brush.verticalGradient(
+                                0f to if (enabled) Color(0xFFD6D8DE) else Color(0xFF80838B),
+                                1f to if (enabled) Color(0xFFAFB3BC) else Color(0xFF62656D),
+                            ),
                             topLeft = Offset(cx - tw / 2f, cy - th / 2f),
                             size = Size(tw, th),
                             cornerRadius = CornerRadius(tw / 2f)

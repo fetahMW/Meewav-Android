@@ -245,3 +245,7 @@ Compilation de livraison uniquement ; rendu à valider par l'utilisateur.
 - Champ natif adapté de Meewav-Web/src/features/rooms/place/place-chat-composer-glass.css : capsule noire, champ creusé, reflets statiques, touche d'envoi éclairée pendant la saisie, emojis conservés.
 - Rail d'indicateurs conservé ; cadeau remplacé par une roue crantée ouvrant les émoticônes ou le retour au direct.
 - Compilation de livraison uniquement ; appréciation visuelle laissée à l'utilisateur.
+
+### Essai Autotune lumineux — 19 septembre 2026
+- Autotune/Réverb désactivés : titres, icônes, valeurs et curseur atténués en gris, châssis noir conservé.
+- Halo violet discret uniquement autour de l'Autotune activé, transition 200 ms. Essai utilisateur avant éventuelle extension à Réverb ; ne pas généraliser sans son retour.
