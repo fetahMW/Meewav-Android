@@ -91,7 +91,8 @@ enum class WaveTab(val label: String, val icon: ImageVector) {
 /* ------------------------------------------------------------------------- */
 
 @Composable
-fun WaveMixerScreen(onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
+fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = null,
+                    onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     var activeTab by remember { mutableStateOf(WaveTab.MIXEUR) }
@@ -216,7 +217,7 @@ fun WaveMixerScreen(onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
     ) {
         Box(Modifier.fillMaxSize().background(Color.Black).systemBarsPadding()) {
             WaveGuestStage(guestState, interactive = false) {
-                WaveVideo(cameraOff = true, modifier = Modifier.fillMaxSize())
+                WaveVideo(cameraOff = true, modifier = Modifier.fillMaxSize(), roomLabel = room.label)
             }
             androidx.compose.material3.IconButton(onClick = { stageFullscreen = false },
                 modifier = Modifier.align(Alignment.TopEnd).padding(8.dp).background(Color.Black.copy(alpha = .7f), CircleShape)) {
@@ -233,10 +234,11 @@ fun WaveMixerScreen(onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
         val videoViewportHeight = if (activeTab == WaveTab.CHAT)
             (maxHeight - if (emojiPanelOpen) 405.dp else 305.dp).coerceIn(0.dp, fullVideoHeight) else fullVideoHeight
         Column(Modifier.fillMaxSize()) {
-            WaveHeader(title = "Freestyle session — Luma invite", onBack = { showLeaveConfirm = true }, onClose = { showLeaveConfirm = true })
+            WaveHeader(title = roomTitle?.takeIf { it.isNotBlank() } ?: if (room == RoomModule.WAVE) "Freestyle session — Luma invite" else room.label,
+                onBack = { showLeaveConfirm = true }, onClose = { showLeaveConfirm = true })
             Box(Modifier.fillMaxWidth().height(videoViewportHeight).clipToBounds()) {
                 WaveGuestStage(guestState, interactive = activeTab == WaveTab.INVITES, onFullscreen = { stageFullscreen = true }) {
-                    WaveVideo(cameraOff = true, modifier = Modifier.fillMaxSize())
+                    WaveVideo(cameraOff = true, modifier = Modifier.fillMaxSize(), roomLabel = room.label)
                 }
             }
             // Zone grise du mixeur : couvre la barre d'onglets ET le corps.
@@ -247,6 +249,7 @@ fun WaveMixerScreen(onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
                     .mixerBodyBackground()
             ) {
                 WaveTabBar(
+                    toolsLabel = room.toolsLabel,
                     active = activeTab,
                     onSelect = {
                         if (it != WaveTab.CHAT) {
@@ -303,7 +306,7 @@ fun WaveMixerScreen(onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
                         onEmojiPanelChange = { emojiPanelOpen = it },
                     )
                     WaveTab.INVITES -> WaveGuestsPanel(guestState, Modifier.fillMaxSize())
-                    else -> WaveTabPlaceholder(activeTab)
+                    else -> WaveTabPlaceholder(activeTab, room.toolsLabel)
                 }
                 }
             }
@@ -425,7 +428,7 @@ private fun HeaderCounter(value: String, tint: Color? = null, icon: ImageVector?
 /* ------------------------------------------------------------------------- */
 
 @Composable
-private fun WaveVideo(cameraOff: Boolean, modifier: Modifier = Modifier) {
+private fun WaveVideo(cameraOff: Boolean, modifier: Modifier = Modifier, roomLabel: String = "La Wave") {
     // Chronomètre fictif qui défile depuis l'ouverture de l'écran.
     var elapsed by remember { mutableStateOf(12L * 60L + 47L) }
     LaunchedEffect(Unit) {
@@ -508,7 +511,7 @@ private fun WaveVideo(cameraOff: Boolean, modifier: Modifier = Modifier) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "LA WAVE", color = Color(0xFF27C2D1),
+                roomLabel.uppercase(java.util.Locale.FRANCE), color = Color(0xFF27C2D1),
                 fontSize = 8.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp,
                 fontFamily = WaveMixerTheme.fontFamily
             )
@@ -524,6 +527,7 @@ private fun black44() = Color.Black.copy(alpha = 0.44f)
 
 @Composable
 private fun WaveTabBar(
+    toolsLabel: String,
     active: WaveTab,
     onSelect: (WaveTab) -> Unit,
     modifier: Modifier = Modifier,
@@ -574,7 +578,7 @@ private fun WaveTabBar(
                             )
                             Spacer(Modifier.width(5.dp))
                             Text(
-                                tab.label,
+                                if (tab == WaveTab.WAVE) toolsLabel else tab.label,
                                 color = if (isActive) WaveMixerTheme.pearl else WaveMixerTheme.secondary,
                                 fontSize = 10.5.sp,
                                 fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Medium,
@@ -1314,12 +1318,12 @@ private fun DeckPlayButton(isPlaying: Boolean, enabled: Boolean, onClick: () -> 
 /* ------------------------------------------------------------------------- */
 
 @Composable
-private fun WaveTabPlaceholder(tab: WaveTab) {
+private fun WaveTabPlaceholder(tab: WaveTab, toolsLabel: String) {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Icon(tab.icon, null, tint = WaveMixerTheme.muted, modifier = Modifier.size(28.dp))
             Text(
-                tab.label, color = WaveMixerTheme.muted, fontSize = 13.sp,
+                toolsLabel, color = WaveMixerTheme.muted, fontSize = 13.sp,
                 fontWeight = FontWeight.Medium, fontFamily = WaveMixerTheme.fontFamily
             )
         }

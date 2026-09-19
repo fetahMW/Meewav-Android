@@ -23,7 +23,10 @@ class WaveMixerActivity : ComponentActivity() {
             navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.rgb(7, 8, 9)),
         )
         setContent {
-            WaveMixerScreen(onBack = { finish() }, onClose = { finish() })
+            WaveMixerScreen(
+                room = RoomModule.fromRoute(intent.getStringExtra("roomType")) ?: RoomModule.WAVE,
+                roomTitle = intent.getStringExtra("roomTitle"),
+                onBack = { finish() }, onClose = { finish() })
         }
     }
 }

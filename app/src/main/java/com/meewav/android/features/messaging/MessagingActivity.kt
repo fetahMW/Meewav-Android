@@ -238,6 +238,16 @@ open class MessagingActivity : ComponentActivity() {
                     }
                     return true
                 }
+                if (assetSurface == "rooms" && request.isForMainFrame && request.method == "GET"
+                    && request.url.scheme == "https" && request.url.host == "appassets.androidplatform.net"
+                    && request.url.path == "/native/room-session") {
+                    val room = com.meewav.android.features.rooms.wave.RoomModule.fromRoute(request.url.getQueryParameter("type"))
+                    if (room != null) startActivity(Intent(this@MessagingActivity, com.meewav.android.features.rooms.wave.WaveMixerActivity::class.java)
+                        .putExtra("roomType", room.route)
+                        .putExtra("roomTitle", request.url.getQueryParameter("title")?.take(160))
+                        .putExtra("roomId", request.url.getQueryParameter("id")?.take(160)))
+                    return true
+                }
                 if (request.isForMainFrame && request.method == "GET" && request.url.scheme == "https"
                     && request.url.host == "appassets.androidplatform.net"
                     && request.url.path in setOf("/native/messages", "/native/profile", "/native/tremplin", "/native/market", "/native/scene", "/native/rooms")) {

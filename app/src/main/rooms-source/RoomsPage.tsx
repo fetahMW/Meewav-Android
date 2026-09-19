@@ -6,7 +6,7 @@ import MeewavPillarBrand from '../market-source/vendor/src/components/navigation
 import MeewavPillarTabs, { type MeewavPillarTabItem } from '../market-source/vendor/src/components/navigation/MeewavPillarTabs';
 import RoomsHome from './vendor/src/features/rooms/home/RoomsHome';
 import LaunchRoomSheet from './vendor/src/features/rooms/launch/LaunchRoomSheet';
-import WaveRoom from './vendor/src/features/rooms/wave/WaveRoom';
+
 import type { RoomsHomeRoom, RoomsHomeRoomType } from './vendor/src/features/rooms/home/roomsHome.types';
 
 const ROOMS = [
@@ -25,7 +25,6 @@ export default function RoomsPage() {
   const [tab, setTab] = useState<RoomTab>('home');
   const [sequencerOpen, setSequencerOpen] = useState(false);
   const [roomNotice, setRoomNotice] = useState('');
-  const [waveLive, setWaveLive] = useState<null | { isViewer: boolean; title?: string }>(null);
   const collectionSlug = location.pathname.startsWith('/rooms/collections/')
     ? decodeURIComponent(location.pathname.split('/')[3] ?? '')
     : null;
@@ -37,13 +36,11 @@ export default function RoomsPage() {
     setRoomNotice(message);
     window.setTimeout(() => setRoomNotice(''), 4000);
   };
-  const openRoom = (room: RoomsHomeRoom) => {
-    if (room.roomType === 'wave') {
-      setWaveLive({ isViewer: true, title: room.title });
-      return;
-    }
-    notice(`« ${room.title} » — le live arrive bientôt sur Android.`);
+  const openSession = (roomType: RoomsHomeRoomType, title: string, id?: string) => {
+    const params = new URLSearchParams({ type: roomType, title, ...(id ? { id } : {}) });
+    window.location.assign(`/native/room-session?${params}`);
   };
+  const openRoom = (room: RoomsHomeRoom) => openSession(room.roomType, room.title, room.id);
   return <div className="rooms-page">
     <div className="rooms-page__background" aria-hidden="true"
       style={{ backgroundImage: `url('/images/meewav-acoustic-violet-background.png')` }} />
@@ -77,13 +74,12 @@ export default function RoomsPage() {
           initialType={tab === 'home' ? undefined : (tab as RoomsHomeRoomType)}
           onClose={() => setSequencerOpen(false)}
           onLaunched={(label, roomType) => {
-            if (roomType === 'wave') { setWaveLive({ isViewer: false, title: label }); return; }
-            notice(`${label} — ta Room est prête, le live arrive bientôt sur Android.`);
+            setSequencerOpen(false);
+            openSession(roomType, label);
           }}
         />
       </div>
     ), document.body) : null}
-    {waveLive ? <WaveRoom isViewer={waveLive.isViewer} roomTitle={waveLive.title} onClose={() => setWaveLive(null)} /> : null}
     {roomNotice ? <aside className="rooms-page__notice" role="status"><span>{roomNotice}</span><button aria-label="Fermer" onClick={() => setRoomNotice('')}><X size={16} /></button></aside> : null}
   </div>;
 }
