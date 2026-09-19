@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -64,41 +65,56 @@ internal fun WaveGuestDragOverlay(state: WaveGuestState) {
         contentScale = ContentScale.Crop)
 }
 
-/** Same iOS layout rule: host alone, duo, host plus two, then a 2x2 stage. */
+/** Shared stage geometry; controls change composition without resizing the mixer. */
 @Composable
-internal fun WaveGuestStage(state: WaveGuestState, interactive: Boolean, host: @Composable () -> Unit) {
+internal fun WaveGuestStage(state: WaveGuestState, interactive: Boolean,
+                            onFullscreen: (() -> Unit)? = null, host: @Composable () -> Unit) {
+    var directorOpen by remember { mutableStateOf(false) }
     val stage = state.onStage
-    BoxWithConstraints(Modifier.fillMaxSize().onGloballyPositioned { state.stageBounds = it.boundsInRoot() }) {
-        val cellWidth = if (stage.isEmpty()) maxWidth else (maxWidth - 2.dp) / 2
-        val hostHeight = if (stage.size < 3) maxHeight else (maxHeight - 2.dp) / 2
-        // The host stays at the same composition position as guests enter and leave.
-        Box(Modifier.width(cellWidth).height(hostHeight).align(Alignment.TopStart)) { host() }
-        stage.forEachIndexed { index, guest ->
+    BoxWithConstraints(Modifier.fillMaxSize().background(Color(0xFF050608))
+        .onGloballyPositioned { if (interactive) state.stageBounds = it.boundsInRoot() }) {
+        val frames = waveStageFrames(listOf("host") + stage.map { it.id }, stage.filter { it.sourceAspectRatio < 1f }.map { it.id }.toSet(),
+            state.composition, state.resolvedPrimaryId, maxHeight > maxWidth)
+        fun tileModifier(id: String): Modifier {
+            val frame = frames[id] ?: return Modifier.size(0.dp)
+            return Modifier.offset(maxWidth * frame.left, maxHeight * frame.top)
+                .width(maxWidth * frame.width).height(maxHeight * frame.height).padding(1.dp)
+        }
+        // Stable host composition slot: changing the recipe never restarts its player.
+        Box(tileModifier("host").clipToBounds()) { host() }
+        stage.forEach { guest ->
             key(guest.id) {
-                val guestHeight = if (stage.size == 1) maxHeight else (maxHeight - 2.dp) / 2
-                val x = if (stage.size == 3 && index == 1) 0.dp else cellWidth + 2.dp
-                val y = if ((stage.size == 2 && index == 1) || (stage.size == 3 && index > 0)) guestHeight + 2.dp else 0.dp
-                GuestStageTile(state, guest, interactive, Modifier.offset(x, y).width(cellWidth).height(guestHeight))
+                if (guest.id in frames) GuestStageTile(state, guest, interactive, tileModifier(guest.id))
             }
         }
         if (state.overStage && state.dragged?.location == WaveGuestLocation.BACKSTAGE) {
             Box(Modifier.fillMaxSize().background(WaveMixerTheme.capsuleAccent.copy(alpha = .15f))
                 .border(2.dp, WaveMixerTheme.capsuleAccentSoft)) {
                 Text(if (state.canDrop) "Relâcher pour monter" else "Scène complète · 3 invités maximum",
-                    modifier = Modifier.align(Alignment.BottomCenter).background(Color.Black.copy(alpha = .8f)).padding(10.dp),
+                    modifier = Modifier.align(Alignment.Center).background(Color.Black.copy(alpha = .8f)).padding(10.dp),
                     color = Color.White, fontSize = 12.sp)
             }
         }
+        Row(Modifier.align(Alignment.BottomEnd).padding(4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            IconButton(onClick = { directorOpen = true }, modifier = Modifier.size(40.dp)
+                .background(Color.Black.copy(alpha = .7f), CircleShape)) {
+                Icon(WaveIcons.More, "Réalisation vidéo", tint = Color.White, modifier = Modifier.size(19.dp))
+            }
+            if (onFullscreen != null) IconButton(onClick = onFullscreen, modifier = Modifier.size(40.dp)
+                .background(Color.Black.copy(alpha = .7f), CircleShape)) {
+                Icon(WaveIcons.Expand, "Plein écran", tint = Color.White, modifier = Modifier.size(17.dp))
+            }
+        }
     }
+    if (directorOpen) WaveDirectorSheet(state, onDismiss = { directorOpen = false }, onFullscreen = { onFullscreen?.invoke() })
 }
-
 @Composable
 private fun GuestStageTile(state: WaveGuestState, guest: WaveGuest, interactive: Boolean, modifier: Modifier) {
     Box(modifier.clip(RoundedCornerShape(7.dp)).background(Color(0xFF111216))
         .guestDrag(state, guest, interactive)
         .clickable(enabled = interactive) { state.previewId = guest.id }
         .alpha(if (state.dragId == guest.id) .35f else 1f)) {
-        if (guest.camera) Image(painterResource(guest.portrait), null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+        if (guest.camera) Image(painterResource(guest.portrait), null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
         else Icon(WaveIcons.CameraOff, "Caméra coupée", tint = Color.White.copy(alpha = .55f), modifier = Modifier.align(Alignment.Center).size(26.dp))
         Text("Aperçu démo", color = Color.White.copy(alpha = .65f), fontSize = 8.sp,
             modifier = Modifier.align(Alignment.TopStart).background(Color.Black.copy(alpha = .65f)).padding(4.dp))
@@ -228,7 +244,7 @@ private fun GuestPreviewSheet(state: WaveGuestState, guest: WaveGuest) {
                 IconButton(onClick = { state.previewId = null }) { Icon(WaveIcons.Close, "Fermer l’aperçu") }
             }
             Box(Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(16.dp)).background(Color.Black), contentAlignment = Alignment.Center) {
-                if (guest.camera) Image(painterResource(guest.portrait), null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                if (guest.camera) Image(painterResource(guest.portrait), null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
                 else Icon(WaveIcons.CameraOff, "Caméra coupée", tint = Color.White.copy(alpha = .5f))
                 Text("Aperçu de démonstration", modifier = Modifier.align(Alignment.BottomCenter).background(Color.Black.copy(alpha = .75f)).padding(6.dp), fontSize = 10.sp)
             }

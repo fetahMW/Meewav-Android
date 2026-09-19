@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -206,6 +207,22 @@ fun WaveMixerScreen(onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
     }
     val onImport: () -> Unit = { importLauncher.launch(arrayOf("audio/*")) }
     var showLeaveConfirm by remember { mutableStateOf(false) }
+    var stageFullscreen by remember { mutableStateOf(false) }
+
+    if (stageFullscreen) androidx.compose.ui.window.Dialog(
+        onDismissRequest = { stageFullscreen = false },
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+    ) {
+        Box(Modifier.fillMaxSize().background(Color.Black).systemBarsPadding()) {
+            WaveGuestStage(guestState, interactive = false) {
+                WaveVideo(cameraOff = true, modifier = Modifier.fillMaxSize())
+            }
+            androidx.compose.material3.IconButton(onClick = { stageFullscreen = false },
+                modifier = Modifier.align(Alignment.TopEnd).padding(8.dp).background(Color.Black.copy(alpha = .7f), CircleShape)) {
+                Icon(WaveIcons.Close, "Quitter le plein écran", tint = Color.White)
+            }
+        }
+    }
 
     Box(Modifier.fillMaxSize().mixerSurfaceBackground()) {
         BoxWithConstraints(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().imePadding()) {
@@ -217,9 +234,8 @@ fun WaveMixerScreen(onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
         Column(Modifier.fillMaxSize()) {
             WaveHeader(title = "Freestyle session — Luma invite", onBack = { showLeaveConfirm = true }, onClose = { showLeaveConfirm = true })
             Box(Modifier.fillMaxWidth().height(videoViewportHeight).clipToBounds()) {
-                WaveGuestStage(guestState, interactive = activeTab == WaveTab.INVITES) {
-                    WaveVideo(cameraOff = true, modifier = if (guestState.onStage.isEmpty())
-                        Modifier.requiredHeight(fullVideoHeight) else Modifier.fillMaxSize())
+                WaveGuestStage(guestState, interactive = activeTab == WaveTab.INVITES, onFullscreen = { stageFullscreen = true }) {
+                    WaveVideo(cameraOff = true, modifier = Modifier.fillMaxSize())
                 }
             }
             // Zone grise du mixeur : couvre la barre d'onglets ET le corps.
@@ -417,7 +433,7 @@ private fun WaveVideo(cameraOff: Boolean, modifier: Modifier = Modifier) {
     Box(
         modifier
             .fillMaxWidth()
-            .aspectRatio(16f / 9f)
+            
             .padding(0.dp)
             .drawBehind {
                 // Halo blanc 0.11 r10 + 0.045 r22 autour de la cellule.
@@ -435,6 +451,8 @@ private fun WaveVideo(cameraOff: Boolean, modifier: Modifier = Modifier) {
             }
     ) {
         // Retour vidéo — boucle muette (démo : dj-turntable / landscape-dj).
+        BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        val mediaWidth = minOf(maxWidth, maxHeight * (16f / 9f))
         AndroidView(
             factory = { ctx ->
                 android.widget.VideoView(ctx).apply {
@@ -446,8 +464,10 @@ private fun WaveVideo(cameraOff: Boolean, modifier: Modifier = Modifier) {
                     }
                 }
             },
-            modifier = Modifier.fillMaxSize()
+            onRelease = { it.stopPlayback() },
+            modifier = Modifier.width(mediaWidth).height(mediaWidth * 9f / 16f)
         )
+        }
         // Chip chrono — haut-gauche, verre sombre translucide + point rouge.
         Row(
             Modifier
@@ -489,19 +509,6 @@ private fun WaveVideo(cameraOff: Boolean, modifier: Modifier = Modifier) {
                 fontSize = 8.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp,
                 fontFamily = WaveMixerTheme.fontFamily
             )
-        }
-        // Bouton expand — coin inférieur droit.
-        Box(
-            Modifier
-                .align(Alignment.BottomEnd)
-                .padding(8.dp)
-                .size(34.dp)
-                .clip(CircleShape)
-                .background(black44())
-                .border(0.5.dp, white(0.10f), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(WaveIcons.Expand, null, tint = Color.White, modifier = Modifier.size(12.dp))
         }
     }
 }

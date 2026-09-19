@@ -13,10 +13,15 @@ internal data class WaveGuest(
     val id: String, val name: String, val role: String, val portrait: Int,
     val location: WaveGuestLocation, val mic: Boolean = true, val camera: Boolean = true,
     val appeared: Boolean = false,
+    // Declared format of the local demo source; replace with RTC publication dimensions when connected.
+    val sourceAspectRatio: Float = 9f / 16f,
 )
 
 /** Native demo room state. No RTC or Supabase success is inferred from a local move. */
 internal class WaveGuestState {
+    var composition by mutableStateOf(WaveComposition.ENSEMBLE)
+    var primaryId by mutableStateOf("host")
+    val resolvedPrimaryId get() = primaryId.takeIf { id -> id == "host" || onStage.any { it.id == id } } ?: "host"
     private val initialGuests = listOf(
         WaveGuest("naya", "NAYA K.", "Rappeuse", R.drawable.wave_chat_artist_0, WaveGuestLocation.BACKSTAGE),
         WaveGuest("keo", "KÉO", "Chanteur", R.drawable.wave_chat_artist_1, WaveGuestLocation.BACKSTAGE),

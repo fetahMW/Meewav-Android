@@ -317,3 +317,11 @@ Compilation de livraison uniquement ; rendu à valider par l'utilisateur.
 - Demandes à gauche, Coulisses au centre, Scène à droite. Coulisses reste l'ouverture par défaut.
 - Libellés et compteurs discrets sans châssis ni capsules, fin repère violet fondu ; cibles tactiles 44 dp conservées.
 
+
+### Régie vidéo native — adaptation des compositions web
+- Menu compact sur la vidéo : Ensemble, Mise en avant, Solo, choix de la personne principale. Repli sur le host si la personne quitte la scène.
+- Formats des sources séparés du viewport : duo mixte 70/30, colonnes Short, grille à trois/quatre et focus adapté au viewport. Média contenu sans déformation.
+- Plein écran natif séparé : ne redimensionne pas le mixeur. Fermeture par croix ou retour Android. Libération de la vidéo à la sortie.
+- Sources toujours locales (boucle host et portraits démo). Ni RTC, ni synchronisation Supabase, ni auto-director audio ne sont annoncés comme raccordés. BytePlus reste différé.
+- Référence : Meewav-Web PlaceStage.tsx, placeStageLayoutEngine.ts, placeStageLayout.css. Compilation de livraison uniquement, aucune QA automatique.
+
