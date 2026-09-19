@@ -40,7 +40,7 @@ private val foreground = Color(0xFFEAE8F0)
 private val primary = WaveMixerTheme.primaryCta
 private val danger = Color(0xFFC88B90)
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) {
     var section by rememberSaveable { mutableIntStateOf(0) }
@@ -51,6 +51,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
     var importMenu by remember { mutableStateOf(false) }
     var importDestination by remember { mutableStateOf(WaveImportDestination.PROPOSALS) }
     var filterMenu by remember { mutableStateOf(false) }
+    var categories by remember { mutableStateOf(setOf<String>()) }
     var duration by remember { mutableIntStateOf(30) }
     var durationMenu by remember { mutableStateOf(false) }
     var selectedVote by remember { mutableStateOf<String?>(null) }
@@ -105,7 +106,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
             2 -> {
                 val composition = state.clips.filter { it.inComposition }
                 if (composition.isEmpty()) EmptyWorkspace("Ta composition commence ici", "Prends une boucle dans Propositions ou importe ton audio.", Modifier.weight(1f))
-                else LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(7.dp), contentPadding = PaddingValues(bottom = 8.dp)) {
+                else LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp), contentPadding = PaddingValues(bottom = 8.dp)) {
                     items(composition, key = { it.id }) { clip ->
                             WaveLoopCard(clip, state, composition = true)
 
@@ -114,28 +115,36 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
             }
             0 -> {
                 Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Box {
-                        TextButton(onClick = { filterMenu = true }, contentPadding = PaddingValues(horizontal = 4.dp)) {
-                            Text("${filter.label}  ${state.clips.count { !it.isBase && it.status == filter }}", fontSize = 11.sp, color = foreground)
-                            Icon(Icons.Default.ExpandMore, null, modifier = Modifier.size(17.dp), tint = muted)
-                        }
-                        DropdownMenu(expanded = filterMenu, onDismissRequest = { filterMenu = false }, containerColor = Color(0xFF17181E)) {
-                            listOf(WaveProposalStatus.PENDING, WaveProposalStatus.ACCEPTED, WaveProposalStatus.ARCHIVED).forEach {
-                                DropdownMenuItem(text = { Text(it.label, color = foreground) }, onClick = { filter = it; filterMenu = false })
-                            }
-                        }
-                    }
-                    Spacer(Modifier.weight(1f))
                     WaveIntakeChip(state.intakeOpen, state::toggleIntake)
+                    Spacer(Modifier.weight(1f))
+                    ToolIcon(Icons.Default.Tune, "Filtrer les boucles") { filterMenu = !filterMenu }
                     ToolIcon(Icons.Default.Add, "Importer une proposition", enabled = !state.importing) { importMenu = true }
                 }
+                AnimatedVisibility(filterMenu) {
+                    Column(Modifier.fillMaxWidth().hifiBlackSurface(12.dp).padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            listOf(WaveProposalStatus.PENDING, WaveProposalStatus.ACCEPTED, WaveProposalStatus.ARCHIVED).forEach { status ->
+                                TextButton(onClick = { filter = status }) { Text(status.label, color = if (filter == status) soft else muted, fontSize = 11.sp) }
+                            }
+                        }
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            state.categories.forEach { category ->
+                                Row(Modifier.clickable { categories = if (category in categories) categories - category else categories + category }.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    WaveRoleChip(category)
+                                    if (category in categories) Icon(Icons.Default.Check, "Sélectionné", tint = soft, modifier = Modifier.size(16.dp))
+                                }
+                            }
+                        }
+                        if (categories.isNotEmpty()) TextButton(onClick = { categories = emptySet() }) { Text("Toutes les catégories", color = soft, fontSize = 11.sp) }
+                    }
+                }
                 if (state.importing) LinearProgressIndicator(Modifier.fillMaxWidth(), color = soft, trackColor = Color(0xFF23242B))
-                val proposals = state.proposals(filter)
+                val proposals = state.proposals(filter).filter { categories.isEmpty() || it.category in categories }
                 if (proposals.isEmpty()) EmptyWorkspace("Aucune proposition ici", "Les boucles classées apparaîtront dans cette liste.", Modifier.weight(1f))
-                else LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp), contentPadding = PaddingValues(bottom = 10.dp)) {
+                else LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp), contentPadding = PaddingValues(bottom = 10.dp)) {
                     items(proposals, key = { it.id }) { clip ->
                         if (clip.packId != null && proposals.firstOrNull { it.packId == clip.packId }?.id == clip.id) {
-                            Row(Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Row(Modifier.fillMaxWidth().padding(top = 2.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Column(Modifier.weight(1f)) {
                                     Text(clip.packTitle ?: "Composition", color = foreground, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                     Text("${state.clips.count { it.packId == clip.packId }} éléments", color = muted, fontSize = 9.sp)
@@ -168,8 +177,8 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                             Column(Modifier.weight(1f)) {
                                 Text(clip.title, color = foreground, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 Text(clip.artist, color = muted, fontSize = 10.sp)
-                                WaveRoleChip(clip.category)
                             }
+                            WaveRoleChip(clip.category)
                             WaveRoundPlay((state.snapshot.cue == clip.id && !state.snapshot.cuePaused) || (state.snapshot.candidate == clip.id && state.snapshot.running), clip.id in state.preparing,
                                 if (state.snapshot.cue == clip.id) state.snapshot.cueProgress else if (state.snapshot.candidate == clip.id) state.snapshot.candidateProgress else 0f,
                                 "Écouter ${clip.title}", queued = state.snapshot.pendingCandidate == clip.id) { state.preview(clip.id) }
@@ -289,7 +298,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                                     Text(target.title, color = foreground, maxLines = 1, overflow = TextOverflow.Ellipsis, fontSize = 12.sp)
                                     Text(target.artist, color = muted, fontSize = 10.sp)
                                 }
-                                WaveRoleChip(target.category)
+                                Box(Modifier.width(76.dp), contentAlignment = Alignment.CenterStart) { WaveRoleChip(target.category) }
                             }
                         }
                     }

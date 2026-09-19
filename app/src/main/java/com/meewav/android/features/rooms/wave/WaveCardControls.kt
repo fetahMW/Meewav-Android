@@ -55,14 +55,12 @@ internal fun WaveVoteControls(clip: WaveCompositionClip, state: WaveCompositionS
                     } else {
                         CardCommand(if (current == CardRail.VOLUME) Icons.Default.ChevronLeft else Icons.Default.VolumeUp,
                             "${kotlin.math.round(state.auditionGain(clip.id) * 100).toInt()}", enabled = !locked, modifier = Modifier.width(62.dp)) { rail = if (rail == CardRail.VOLUME) CardRail.NONE else CardRail.VOLUME }
-                        if (current == CardRail.VOLUME) Slider(state.auditionGain(clip.id), { adjusting = true; state.auditionVolume(clip.id, it) },
-                            modifier = Modifier.weight(1f), enabled = !locked, onValueChangeFinished = { adjusting = false }, interactionSource = interaction, steps = 99,
-                            colors = SliderDefaults.colors(thumbColor = accent, activeTrackColor = accent))
+                        if (current == CardRail.VOLUME) WaveOutputFader(state.auditionGain(clip.id), { state.auditionVolume(clip.id, it) }, Modifier.weight(1f).height(40.dp).hifiBlackSurface(9.dp))
                         else {
                             Spacer(Modifier.weight(1f))
                             VoteSquare(Icons.Default.ChatBubbleOutline, "Message", enabled = !locked, onClick = onMessage)
-                            VoteSquare(Icons.Default.HowToVote, "Vote", enabled = !locked, onClick = onLaunch)
-                            VoteSquare(Icons.Default.CompareArrows, "Duel de remplacement", enabled = !locked && !clip.isBase, onClick = onDuel)
+                            CardCommand(Icons.Default.HowToVote, "Vote", enabled = !locked, onClick = onLaunch)
+                            VoteSquare(WaveDuelIcon, "Duel de remplacement", enabled = !locked && !clip.isBase, onClick = onDuel)
                         }
                     }
                 }
@@ -105,12 +103,9 @@ internal fun WaveMixControls(clip: WaveCompositionClip, state: WaveCompositionSt
                             }
                             WaveControl(Icons.Default.Add, "Placer la boucle sur la base", enabled = state.canAddPin(clip.id)) { state.addPin(clip.id) }
                         }
-                        CardRail.VOLUME -> Slider(clip.gain, { adjusting = true; state.gain(clip.id, it) },
-                            onValueChangeFinished = { adjusting = false }, interactionSource = interaction, steps = 99, colors = SliderDefaults.colors(thumbColor = accent, activeTrackColor = accent))
+                        CardRail.VOLUME -> WaveOutputFader(clip.gain, { state.gain(clip.id, it) }, Modifier.fillMaxWidth().height(40.dp).hifiBlackSurface(9.dp))
                         else -> {
-                            Slider(clip.gain, { adjusting = true; state.gain(clip.id, it) },
-                                onValueChangeFinished = { adjusting = false }, interactionSource = interaction, steps = 99,
-                                colors = SliderDefaults.colors(thumbColor = accent, activeTrackColor = accent))
+                            WaveOutputFader(clip.gain, { state.gain(clip.id, it) }, Modifier.fillMaxWidth().height(40.dp).hifiBlackSurface(9.dp))
                         }
                     }
                 }

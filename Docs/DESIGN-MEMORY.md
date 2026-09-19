@@ -391,3 +391,9 @@ Le lecteur Wave possède son propre bouton haut-parleur animé et son propre vol
 ### Wave propositions
 - Bulle Message directe vers la conversation de l'auteur ; espacement 4 dp et padding vertical 6 dp.
 - Plus de bottom sheet au toucher des cartes ; Composition conserve son dépliage intégré.
+
+### Wave — densité, filtres et commandes
+- Supprimer la hauteur minimale de 92 dp du conteneur swipe : les propositions suivent leur contenu, avec un intervalle de 3 dp.
+- Ouvert/Fermé à gauche ; filtre à droite avec les chips de catégories existants, multi-sélection et statut dans le filtre.
+- Composition compacte : chip au-dessus des commandes Mute/Solo, volume avec le curseur du mixeur.
+- Duel en épées croisées ; catégories alignées à gauche dans une colonne fixe dans le choix du duel. Vote explicitement nommé. Halo actif Base/Boucle/Mix renforcé.

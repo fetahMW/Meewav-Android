@@ -42,7 +42,7 @@ internal fun WaveProposalSwipe(id: String, reviewId: String?, onReview: (String?
     LaunchedEffect(reviewing) { if (!reviewing && !departing) offset.animateTo(0f, spring(dampingRatio = .9f)) }
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val width = constraints.maxWidth.toFloat()
-        Box(Modifier.fillMaxWidth().heightIn(min = 92.dp).pointerInput(id, reviewing, departing) {
+        Box(Modifier.fillMaxWidth().pointerInput(id, reviewing, departing) {
             if (departing) return@pointerInput
             val velocity = VelocityTracker()
             detectHorizontalDragGestures(onDragStart = {

@@ -175,7 +175,7 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
     Column(Modifier.fillMaxWidth().hifiBlackSurface(13.dp).graphicsLayer { alpha = opacity }
         .border(.75.dp, if (selected) accent.copy(alpha = .45f) else Color.Transparent, RoundedCornerShape(13.dp))
         .then(if (composition) Modifier.clickable { state.selectMix(clip.id) } else Modifier)
-        .padding(horizontal = 10.dp, vertical = if (composition) 8.dp else 6.dp)) {
+        .padding(horizontal = 10.dp, vertical = 5.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
             WaveArtistPortrait(clip.artist)
             Column(Modifier.weight(1f)) {
@@ -206,13 +206,14 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
                 download.launch("${clip.title.replace('/', '-') }.$extension")
             }
             else {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    WaveRoleChip(clip.category)
+                    WaveMixHeaderControls(clip, state)
+                }
                 WaveControl(Icons.Default.Close, "Retirer ${clip.title} de la composition") { confirmRemoval = true }
             }
         }
-        if (composition) Box(Modifier.fillMaxWidth().height(42.dp)) {
-            Box(Modifier.align(Alignment.CenterStart)) { WaveRoleChip(clip.category) }
-            Box(Modifier.align(Alignment.Center)) { WaveMixHeaderControls(clip, state) }
-        }
+
         AnimatedVisibility(selected) { WaveMixControls(clip, state) }
         if (clip.id in state.errors) Text(state.errors[clip.id] ?: "Audio indisponible", color = Color(0xFFC88B90), fontSize = 9.sp)
     }

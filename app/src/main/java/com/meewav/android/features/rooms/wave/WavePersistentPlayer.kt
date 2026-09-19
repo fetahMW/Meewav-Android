@@ -84,10 +84,11 @@ internal fun WaveMasterPlayer(state: WaveCompositionState, onImport: (WaveImport
                         .waveTactileClick { state.listen(mode) }, contentAlignment = Alignment.Center) {
                         val glow by animateFloatAsState(if (selected) 1f else 0f, tween(180), label = "Halo du mode d’écoute")
                         Box(Modifier.fillMaxWidth().padding(horizontal = 2.dp).height(28.dp)
-                            .shadow((7 * glow).dp, RoundedCornerShape(6.dp), clip = false,
-                                ambientColor = violet.copy(alpha = .20f), spotColor = violet.copy(alpha = .30f))
+                            .shadow((12 * glow).dp, RoundedCornerShape(6.dp), clip = false,
+                                ambientColor = violet.copy(alpha = .45f), spotColor = violet.copy(alpha = .6f))
                             .clip(RoundedCornerShape(6.dp))
-                            .hardwareSurface(6.dp, raised = true, reflection = 0.085f), contentAlignment = Alignment.Center) {
+                            .hardwareSurface(6.dp, raised = true, reflection = 0.085f)
+                            .border(.8.dp, violet.copy(alpha = .48f * glow), RoundedCornerShape(6.dp)), contentAlignment = Alignment.Center) {
                             Text(mode.label, color = if (selected) violet else secondary, fontWeight = FontWeight.SemiBold, fontSize = 10.sp)
                         }
                     }
