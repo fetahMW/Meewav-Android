@@ -24,8 +24,10 @@ const within = (base, path) => { const rel = relative(base, path); return !rel.s
 await mkdir(output, { recursive: true });
 
 const result = await build({
-  absWorkingDir: root, entryPoints: [join(source, 'main.tsx')],
-  outdir: join(output, 'assets'), publicPath: `/${surface}/assets`, entryNames: 'main', chunkNames: '[name]-[hash]',
+  absWorkingDir: root, entryPoints: surface === 'rooms'
+    ? { main: join(source, 'main.tsx'), director: join(source, 'director-entry.tsx') }
+    : [join(source, 'main.tsx')],
+  outdir: join(output, 'assets'), publicPath: `/${surface}/assets`, entryNames: '[name]', chunkNames: '[name]-[hash]',
   nodePaths: [join(web, 'node_modules'), join(web, 'vendor/globe-vinyle/node_modules')], bundle: true, splitting: true, format: 'esm',
   target: ['chrome110'], jsx: 'automatic', minify: true, metafile: true, legalComments: 'linked',
   define: { 'import.meta.env': JSON.stringify({ DEV: false, BASE_URL: '/', VITE_MESSAGING_DEMO_FALLBACK: false }), 'process.env.NODE_ENV': '"production"' },
@@ -127,6 +129,7 @@ await copyAsset(join(root, 'app/src/main/assets/globe-vinyle/ui/images/earth_spe
 // CSP is completed by the native interceptor with the configured Supabase
 // origin. No service URL, key or session is written into the shipped document.
 await writeFile(join(output, 'index.html'), `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="dark"><title>Meewav — ${title}</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/${surface}/assets/main.css"><link rel="stylesheet" href="/${surface}/profile-chrome.css"><link rel="stylesheet" href="/${surface}/mobile.css"></head><body><div id="root">${featureLoadingHtml(`Ouverture de ${title}…`)}</div><script type="module" src="/${surface}/assets/main.js"></script></body></html>`);
+if (surface === 'rooms') await writeFile(join(output, 'director.html'), `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="dark"><title>Régie MeeWav</title><link rel="stylesheet" href="/rooms/assets/director.css"></head><body><div id="root"></div><script type="module" src="/rooms/assets/director.js"></script></body></html>`);
 async function list(folder) {
   for (const entry of await readdir(folder, { withFileTypes: true })) {
     const path = join(folder, entry.name);

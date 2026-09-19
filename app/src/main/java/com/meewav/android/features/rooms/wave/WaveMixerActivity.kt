@@ -22,8 +22,9 @@ class WaveMixerActivity : ComponentActivity() {
             statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.rgb(7, 8, 9)),
         )
+        val director = RoomVideoDirector(this)
         setContent {
-            WaveMixerScreen(onBack = { finish() }, onClose = { finish() })
+            WaveMixerScreen(director = director, onBack = { finish() }, onClose = { finish() })
         }
     }
 }

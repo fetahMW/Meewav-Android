@@ -211,6 +211,13 @@ open class MessagingActivity : ComponentActivity() {
         }
         web.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                // The current Wave Host is native. Do not reopen its older Web shell.
+                if (assetSurface == "rooms" && preview && request.isForMainFrame && request.method == "GET"
+                    && view.url == PAGE && request.url.scheme == "https"
+                    && request.url.host == "appassets.androidplatform.net" && request.url.path == "/native/wave-host") {
+                    startActivity(Intent(this@MessagingActivity, com.meewav.android.features.rooms.wave.WaveMixerActivity::class.java))
+                    return true
+                }
                 if (assetSurface == "messaging" && view.url == PAGE && request.isForMainFrame
                     && request.url.scheme == "https" && request.url.host == "appassets.androidplatform.net"
                     && request.url.path == "/native/call-audio") {
