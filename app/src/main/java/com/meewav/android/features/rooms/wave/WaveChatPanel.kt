@@ -317,9 +317,9 @@ fun WaveChatPanel(modifier: Modifier = Modifier) {
                 // Rail social iOS — vraie colonne chrome (outils + indicateurs).
                 WaveChatSocialRail(
                     Modifier
-                        .width(46.dp)
+                        .width(42.dp)
                         .fillMaxSize()
-                        .padding(start = 6.dp),
+                        .padding(start = 6.dp, top = 6.dp, bottom = 6.dp),
                     onOpenEmoji = { emojiWallOpen = !emojiWallOpen },
                     onReturnToLive = {
                         unreadCount = 0
@@ -556,10 +556,10 @@ private fun WaveChatSocialRail(
                     listOf(white(0.11f), white(0.045f), white(0.02f))
                 )
             )
-            .border(1.dp, white(0.13f), RoundedCornerShape(14.dp))
+            .border(0.7.dp, white(0.10f), RoundedCornerShape(14.dp))
             .padding(vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.SpaceEvenly
     ) {
         Box {
             RailToolButton(
@@ -584,17 +584,12 @@ private fun WaveChatSocialRail(
                 )
             }
         }
-        ChatRailDivider()
         RailToolButton(icon = WaveIcons.Dashboard, tint = white(0.8f), label = "Dashboard")
         RailToolButton(icon = WaveIcons.Bell, tint = white(0.8f), label = "Notifications", badge = "3")
-        ChatRailDivider()
         // Métriques — indicateurs web.
         ChatRailItem(imageRes = R.drawable.money_bag, value = "148")
-        ChatRailDivider()
         ChatRailItem(icon = WaveIcons.Star, tint = Color(0xFFF3BF49), value = "86")
-        ChatRailDivider()
         ChatRailItem(icon = WaveIcons.Heart, tint = Color(0xFFFF64AA), value = "1,2k")
-        ChatRailDivider()
         ChatRailItem(icon = WaveIcons.Eye, tint = Color(0xFF9A63FF), value = "312")
     }
 }
@@ -642,19 +637,13 @@ private fun ChatRailItem(
         } else if (icon != null && tint != null) {
             Icon(icon, null, tint = tint, modifier = Modifier.size(17.dp))
         }
-        Spacer(Modifier.height(1.dp))
+        Spacer(Modifier.height(3.dp))
         Text(
             value, color = white(0.85f),
             fontSize = 9.sp, fontWeight = FontWeight.Bold,
             fontFamily = WaveMixerTheme.fontFamily
         )
     }
-}
-
-/* Petit trait de séparation épuré entre les compteurs du rail. */
-@Composable
-private fun ChatRailDivider() {
-    Box(Modifier.width(14.dp).height(0.5.dp).background(white(0.16f)))
 }
 
 /* Sheet d'outils message — long-press : épingler / supprimer / modérer. */
@@ -735,17 +724,15 @@ private fun WaveChatComposer(
         Modifier
             .fillMaxWidth()
             .padding(horizontal = 3.dp)
-            .height(58.dp)
-            .chatComposerGlass(focused = focused)
-            .padding(horizontal = 8.dp, vertical = 5.dp),
+            .height(52.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(7.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Row(
             Modifier
                 .weight(1f)
-                .height(46.dp)
-                .chatComposerGlass(inner = true)
+                .height(50.dp)
+                .chatComposerGlass(focused = focused)
                 .padding(start = 16.dp, end = 2.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -790,7 +777,7 @@ private fun WaveChatComposer(
         }
         Box(
             Modifier
-                .size(44.dp)
+                .size(48.dp)
                 .chatComposerGlass(key = true, focused = focused || emojiOpen)
                 .clip(RoundedCornerShape(16.dp))
                 .clickable(enabled = canSend, onClick = onSend),

@@ -249,3 +249,8 @@ Compilation de livraison uniquement ; rendu à valider par l'utilisateur.
 ### Essai Autotune lumineux — 19 septembre 2026
 - Autotune/Réverb désactivés : titres, icônes, valeurs et curseur atténués en gris, châssis noir conservé.
 - Halo violet discret uniquement autour de l'Autotune activé, transition 200 ms. Essai utilisateur avant éventuelle extension à Réverb ; ne pas généraliser sans son retour.
+
+### Ajustement chat Wave — capsule unique, 19 septembre 2026
+- Remplace le double conteneur du composer web par une seule capsule gris translucide et une touche d'envoi distincte.
+- Envoi violet basé sur capsuleAccent (#7E44E3), suppression du dégradé bleu électrique.
+- Rail d'indicateurs affiné, indicateurs répartis régulièrement en hauteur sans séparateurs superflus.
