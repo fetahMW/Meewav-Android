@@ -163,7 +163,6 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, 
             else -> {
                 val candidates = state.clips.filter { it.status == WaveProposalStatus.VOTE }
                 val selected = candidates.find { it.id == (state.vote?.clipId ?: selectedVote) }
-                Text("Simulation locale · aucun vote public envoyé", color = muted, fontSize = 10.sp, modifier = Modifier.padding(vertical = 8.dp))
                 state.lastVerdict?.let { Text(it, color = soft, fontSize = 11.sp, modifier = Modifier.padding(bottom = 8.dp)) }
                 if (candidates.isEmpty()) EmptyWorkspace("Aucune boucle au vote", "Ouvre une proposition et choisis « Mettre au vote ».", Modifier.weight(1f))
                 else LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
