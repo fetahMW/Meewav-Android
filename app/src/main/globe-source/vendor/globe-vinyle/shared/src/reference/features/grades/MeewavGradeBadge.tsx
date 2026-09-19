@@ -367,7 +367,8 @@ function BadgeSvg({ level }: { level: GradeLevel }) {
 
       <text
         x="64"
-        y="85"
+        y="70"
+        dominantBaseline="central"
         fill={legendary ? "#FFFFFF" : "#FFFFFF"}
         fontFamily="Inter, ui-sans-serif, system-ui, sans-serif"
         fontSize="43"

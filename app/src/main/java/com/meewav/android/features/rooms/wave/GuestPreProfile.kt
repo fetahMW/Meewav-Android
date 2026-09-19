@@ -78,8 +78,8 @@ internal fun GuestPreProfileHost(state: WaveGuestState) {
                 Box(Modifier.matchParentSize().clickable(interactionSource = null, indication = null) {
                     state.profilePreviewId = null
                 })
-                val cardWidth = minOf(maxWidth, maxHeight * (413f / 588f), 413.dp)
-                val cardHeight = cardWidth * (588f / 413f)
+                val cardWidth = minOf(maxWidth, maxHeight * (413f / 540f), 413.dp)
+                val cardHeight = cardWidth * (540f / 413f)
                 Box(Modifier.size(cardWidth, cardHeight).clip(RoundedCornerShape(18.dp))
                     .background(Color(0xFF030405)), contentAlignment = Alignment.Center) {
                     ProfileBrowser(content, Modifier.fillMaxSize())

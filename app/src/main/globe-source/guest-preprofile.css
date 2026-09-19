@@ -1,6 +1,19 @@
 html, body, #root { position: fixed; inset: 0; margin: 0; width: 100vw; height: 100dvh; overflow: hidden; background: #030405; color: #eee; font-family: Arial, sans-serif; }
-#root .ring-artist-preprofile { position: absolute; inset: 0 auto auto 0; width: 413px; height: 588px; --mw-bubble-w: 413px; --mw-bubble-h: 588px; transform-origin: top left; transform: scale(var(--guest-profile-scale, 1)); background: #030405; border-radius: 22px; }
+#root .ring-artist-preprofile { position: absolute; inset: 0 auto auto 0; width: 413px; height: 540px; --mw-bubble-w: 413px; --mw-bubble-h: 540px; transform-origin: top left; transform: scale(var(--guest-profile-scale, 1)); background: #030405; border-radius: 22px; }
 .ring-artist-preprofile .mw-hover-preprofile-bubble__arrow { display: none; }
+
+#root .ring-artist-preprofile .mw-hover-preprofile-bubble__surface:has(.mw-preprofile) { padding: 34px 20px 20px; }
+#root .ring-artist-preprofile .mw-preprofile { gap: 12px; padding: 0; }
+#root .ring-artist-preprofile .mw-preprofile__lower-stage { flex: 1 1 auto; min-height: 150px; }
+#root .ring-artist-preprofile .mw-preprofile__media-stage { gap: 12px; }
+#root .ring-artist-preprofile .mw-preprofile__bio { min-height: 40px; padding: 6px 10px; }
+#root .ring-artist-preprofile .mw-preprofile__footer { margin-top: 0; gap: 10px; }
+#root .mw-hover-preprofile-bubble__shell.is-black-glass .mw-preprofile .mw-preprofile__portrait-shell {
+  border: 1px solid transparent;
+  background: linear-gradient(#08090c, #020304) padding-box,
+    linear-gradient(125deg, #626a77, #282d37 24%, #171b23 68%, #3b424e) border-box;
+  box-shadow: inset 0 1px #e8efff14, 0 3px 8px #0006;
+}
 
 /* Same Violet urbain material as the approved mobile Globe pre-profile CTA.
    This standalone portrait document does not load its landscape media query. */

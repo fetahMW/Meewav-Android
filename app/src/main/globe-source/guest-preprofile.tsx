@@ -7,7 +7,7 @@ const root = createRoot(document.getElementById('root')!);
 // Android owns the modal's centering and aspect ratio. Web content starts at (0,0)
 // and fits those exact bounds; it never positions itself against the document body.
 const fitCard = () => document.documentElement.style.setProperty('--guest-profile-scale',
-  String(Math.min(document.documentElement.clientWidth / 413, document.documentElement.clientHeight / 588, 1)));
+  String(Math.min(document.documentElement.clientWidth / 413, document.documentElement.clientHeight / 540, 1)));
 fitCard();
 window.addEventListener('resize', fitCard);
 new ResizeObserver(fitCard).observe(document.documentElement);
