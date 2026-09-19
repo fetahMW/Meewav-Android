@@ -406,3 +406,6 @@ Le lecteur Wave possède son propre bouton haut-parleur animé et son propre vol
 - Vote en texte sans icône, accessible sur les miniatures et à côté du chip des propositions.
 - Toucher une carte de Vote alterne dépliée/repliée, sans sélection automatique de la première carte.
 - Portraits Propositions/Vote/Composition raccordés au bottom sheet pré-profil partagé des invités.
+
+### Correction bouton Vote
+- Aucun bouton Vote dans Propositions. Dans Vote, un seul bouton texte carré noir hifi de 40 dp à côté du chip, visible replié/déplié. Aucun doublon dans les commandes dépliées.

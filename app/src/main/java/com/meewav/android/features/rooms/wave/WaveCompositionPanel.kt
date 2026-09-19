@@ -187,14 +187,18 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, 
                                 Text(clip.artist, color = muted, fontSize = 10.sp)
                             }
                             WaveRoleChip(clip.category)
-                            TextButton(onClick = { state.startVote(clip.id, duration, null) }, enabled = state.vote == null && clip.id !in state.preparing, contentPadding = PaddingValues(horizontal = 6.dp), modifier = Modifier.height(36.dp)) { Text("Vote", color = soft, fontSize = 11.sp) }
+                            val canVote = state.vote == null && clip.id !in state.preparing
+                            Box(Modifier.size(40.dp).hifiBlackSurface(8.dp)
+                                .clickable(enabled = canVote) { state.startVote(clip.id, duration, null) }, contentAlignment = Alignment.Center) {
+                                Text("Vote", color = soft.copy(alpha = if (canVote) 1f else .35f), fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                            }
                             WaveRoundPlay((state.snapshot.cue == clip.id && !state.snapshot.cuePaused) || (state.snapshot.candidate == clip.id && state.snapshot.running), clip.id in state.preparing,
                                 if (state.snapshot.cue == clip.id) state.snapshot.cueProgress else if (state.snapshot.candidate == clip.id) state.snapshot.candidateProgress else 0f,
                                 "Écouter ${clip.title}", queued = state.snapshot.pendingCandidate == clip.id) { state.preview(clip.id) }
                             }
                             AnimatedVisibility(selected?.id == clip.id) {
                                 WaveVoteControls(clip, state, duration, onDuration = { duration = it },
-                                    onLaunch = { state.startVote(clip.id, duration, null) }, onMessage = { messageArtist = clip.artist },
+                                    onMessage = { messageArtist = clip.artist },
                                     onDuel = { duelId = clip.id; duelTarget = null })
                             }
                         }

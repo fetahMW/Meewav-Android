@@ -30,7 +30,7 @@ private enum class CardRail { NONE, DURATION, VOLUME, PINS }
 
 @Composable
 internal fun WaveVoteControls(clip: WaveCompositionClip, state: WaveCompositionState, duration: Int,
-    onDuration: (Int) -> Unit, onLaunch: () -> Unit, onMessage: () -> Unit, onDuel: () -> Unit) {
+    onDuration: (Int) -> Unit, onMessage: () -> Unit, onDuel: () -> Unit) {
     var rail by remember(clip.id) { mutableStateOf(CardRail.NONE) }
     var adjusting by remember { mutableStateOf(false) }
     val interaction = remember { MutableInteractionSource() }
@@ -59,7 +59,6 @@ internal fun WaveVoteControls(clip: WaveCompositionClip, state: WaveCompositionS
                         else {
                             Spacer(Modifier.weight(1f))
                             VoteSquare(Icons.Default.ChatBubbleOutline, "Message", enabled = !locked, onClick = onMessage)
-                            CardCommand(null, "Vote", enabled = !locked, onClick = onLaunch)
                             VoteSquare(WaveDuelIcon, "Duel de remplacement", enabled = !locked && !clip.isBase, onClick = onDuel)
                         }
                     }

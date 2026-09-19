@@ -195,7 +195,6 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
                 }
                 if (!composition) Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     WaveRoleChip(clip.category)
-                    TextButton(onClick = { state.queueVote(clip.id) }, contentPadding = PaddingValues(horizontal = 4.dp), modifier = Modifier.height(30.dp)) { Text("Vote", color = accent, fontSize = 11.sp) }
                     if (composition) Text(if (clip.solo) "SOLO" else if (clip.mute) "MUTE" else if (queued) "À la mesure" else if (clip.repeats == -1) "∞" else "${clip.repeats}×",
                         color = secondary, fontSize = 9.sp)
                     else Text(if (clip.id in state.preparing) "Préparation…" else clip.musical, color = secondary, fontSize = 8.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
