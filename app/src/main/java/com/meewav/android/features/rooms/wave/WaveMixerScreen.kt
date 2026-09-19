@@ -97,6 +97,7 @@ fun WaveMixerScreen(onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
     // Keep the highlighted snapshot even if the live feed trims old messages or tabs change.
     var pinnedChatMessage by remember { mutableStateOf<WaveChatMessage?>(null) }
     var waveNotificationsRead by remember { mutableStateOf(false) }
+    val guestState = remember { WaveGuestState() }
     // Canaux.
     var micGain by remember { mutableStateOf(0.72f) }
     var audioGain by remember { mutableStateOf(0.62f) }
@@ -216,7 +217,10 @@ fun WaveMixerScreen(onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
         Column(Modifier.fillMaxSize()) {
             WaveHeader(title = "Freestyle session — Luma invite", onBack = { showLeaveConfirm = true }, onClose = { showLeaveConfirm = true })
             Box(Modifier.fillMaxWidth().height(videoViewportHeight).clipToBounds()) {
-                WaveVideo(cameraOff = true, modifier = Modifier.requiredHeight(fullVideoHeight))
+                WaveGuestStage(guestState, interactive = activeTab == WaveTab.INVITES) {
+                    WaveVideo(cameraOff = true, modifier = if (guestState.onStage.isEmpty())
+                        Modifier.requiredHeight(fullVideoHeight) else Modifier.fillMaxSize())
+                }
             }
             // Zone grise du mixeur : couvre la barre d'onglets ET le corps.
             Column(
@@ -280,12 +284,14 @@ fun WaveMixerScreen(onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
                         notificationsRead = waveNotificationsRead,
                         onReadNotifications = { waveNotificationsRead = true },
                     )
+                    WaveTab.INVITES -> WaveGuestsPanel(guestState, Modifier.fillMaxSize())
                     else -> WaveTabPlaceholder(activeTab)
                 }
                 }
             }
         }
         }
+        WaveGuestDragOverlay(guestState)
         if (showLeaveConfirm) {
             AlertDialog(
                 onDismissRequest = { showLeaveConfirm = false },

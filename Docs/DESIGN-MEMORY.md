@@ -295,3 +295,9 @@ Compilation de livraison uniquement ; rendu à valider par l'utilisateur.
 - Appui long : bottom sheet noir Hi-Fi, portrait et aperçu riche du message, sections d'actions espacées, suppression distincte, croix/fermeture par geste. Mise en avant du host et suppression locale conservées.
 - Actions de modération préexistantes toujours sans câblage serveur ; cette passe modifie leur présentation, pas leur mécanique.
 - Compilation de livraison uniquement.
+
+### Invités Wave natifs — 19 septembre 2026
+- Audit source iOS documenté dans Docs/ANDROID-WAVE-GUESTS-IOS-AUDIT.md.
+- Nouveau parcours natif : candidatures/invitations, coulisses, scène ; aperçu au tap, sélection longue, glisser vers la vidéo pour monter et retour vers le panneau pour redescendre.
+- Capacité trois invités, géométrie duo/trio/quatre, état conservé entre onglets, matériau Hi-Fi existant. Ne pas remplacer l'écran par l'ancienne régie WebView.
+- Démo locale avec portraits, contrôles micro/caméra locaux. Aucun raccordement RTC/Supabase à cette room native fictive ; BytePlus différé par l'utilisateur.
