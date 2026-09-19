@@ -1,8 +1,6 @@
 package com.meewav.android.features.rooms.wave
 
 import androidx.compose.foundation.Image
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -341,17 +339,10 @@ fun FxCard(
     on: Boolean,
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
-    activationGlow: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    val glow by animateFloatAsState(
-        targetValue = if (activationGlow && on) 1f else 0f,
-        animationSpec = tween(200), label = "fxActivationGlow",
-    )
-    Box(modifier.fxActivationGlow(glow)) {
-        HiFiBlackCard(Modifier.fillMaxSize().border(
-            0.7.dp, WaveMixerTheme.capsuleAccent.copy(alpha = glow * 0.38f), RoundedCornerShape(12.dp)
-        ), cornerRadius = 12.dp) {
+    Box(modifier) {
+        HiFiBlackCard(Modifier.fillMaxSize(), cornerRadius = 12.dp) {
             Column(
                 Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)

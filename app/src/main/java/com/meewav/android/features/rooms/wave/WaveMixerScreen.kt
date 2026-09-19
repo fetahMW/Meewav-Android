@@ -723,7 +723,6 @@ private fun FxColumn(
             FxCard(
                 title = "Autotune", icon = WaveIcons.Waveform,
                 on = autotuneOn, onToggle = onAutotune,
-                activationGlow = true,
                 modifier = Modifier.fillMaxWidth().weight(1f)
             ) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

@@ -268,3 +268,7 @@ Compilation de livraison uniquement ; rendu à valider par l'utilisateur.
 - Référence consultée : Meewav-iOS/Meewav/Features/Rooms/Components/Classe/ClasseSocialChrome.swift, CageHostToolsButton, ClasseHostToolsPalette et ClasseHostPollToolEditor. Palette iOS trouvée : Sondage.
 - Adaptation native de l'éditeur (Oui/Non, multiple 2–6 réponses, notes sur 5/10, durées 30/60/120s), annonce dans le chat, arrêt/expiration/nouveau sondage. Démo locale explicite ; aucun vote inventé ni connexion serveur ajoutée.
 - Compilation de livraison uniquement, pas de QA automatique.
+
+### Fin de l'essai glow Autotune — 19 septembre 2026
+- Retour utilisateur : mieux sans halo. Halo, contour violet et animation associés retirés ; ne pas les étendre à Réverb.
+- Conservation du châssis noir Hi-Fi et des textes/commandes grisés lorsque les effets sont désactivés.
