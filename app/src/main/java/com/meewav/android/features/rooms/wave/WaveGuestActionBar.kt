@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun WaveGuestActionBar(state: WaveGuestState, guests: List<WaveGuest>, page: Int, selectionActive: Boolean, onClear: () -> Unit) {
+internal fun WaveGuestActionBar(state: WaveGuestState, guests: List<WaveGuest>, page: Int, onClear: () -> Unit) {
     val messageRecipients = state.guests.filter { it.id in state.messageRecipientIds }
     var draft by remember { mutableStateOf("") }
     LaunchedEffect(state.messageRecipientIds) { draft = "" }
@@ -31,9 +31,6 @@ internal fun WaveGuestActionBar(state: WaveGuestState, guests: List<WaveGuest>, 
         Row(Modifier.fillMaxWidth().height(32.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(if (enabled) "${guests.size} sélectionné(s)" else "Sélectionne un invité", modifier = Modifier.weight(1f).padding(start = 8.dp),
                 color = Color.White.copy(alpha = .5f), fontSize = 10.sp)
-            if (selectionActive) TextButton(onClick = onClear, contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)) {
-                Text("Annuler", fontSize = 10.sp, color = Color.White.copy(alpha = .6f))
-            }
         }
         Row(Modifier.fillMaxWidth().padding(bottom = 4.dp)) {
             GuestAction("Message", WaveIcons.Envelope, enabled, Modifier.weight(1f)) { state.messageRecipientIds = ids; draft = "" }

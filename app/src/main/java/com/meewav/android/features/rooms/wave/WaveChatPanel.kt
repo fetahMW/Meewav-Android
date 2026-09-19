@@ -209,6 +209,7 @@ fun WaveChatPanel(
     onPinMessage: (WaveChatMessage?) -> Unit = {},
     notificationsRead: Boolean = false,
     onReadNotifications: () -> Unit = {},
+    onEmojiPanelChange: (Boolean) -> Unit = {},
 ) {
     val now = remember { System.currentTimeMillis() }
     val mountedAt = remember { System.currentTimeMillis() }
@@ -258,7 +259,7 @@ fun WaveChatPanel(
     }
     var liveIndex by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) {
-        val delays = longArrayOf(1400, 2200, 3100, 1900, 2600, 1800, 3400, 2400, 2900, 2100)
+        val delays = longArrayOf(650, 900, 450, 1200, 550, 750, 400, 1000, 600, 800)
         var i = 0
         while (true) {
             delay(delays[i % delays.size]); i++
@@ -278,6 +279,8 @@ fun WaveChatPanel(
     }
     var actionMessage by remember { mutableStateOf<WaveChatMessage?>(null) }
     var emojiWallOpen by remember { mutableStateOf(false) }
+    LaunchedEffect(emojiWallOpen) { onEmojiPanelChange(emojiWallOpen) }
+    androidx.compose.runtime.DisposableEffect(Unit) { onDispose { onEmojiPanelChange(false) } }
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
@@ -304,6 +307,10 @@ fun WaveChatPanel(
         lastSeenMessageId = messages.lastOrNull()?.id
     }
     BoxWithConstraints(modifier.fillMaxSize().padding(bottom = 6.dp)) {
+        // This area already follows the Samsung IME insets from WaveMixerScreen.
+        // Reserve the composer first; the grid uses the remaining height without a modal.
+        val emojiHeight = (maxHeight - 100.dp - if (pinnedMessage != null) 86.dp else 0.dp)
+            .coerceIn(80.dp, 260.dp)
         Column(Modifier.fillMaxSize()) {
             pinnedMessage?.let { pinned ->
                 Row(
@@ -387,8 +394,8 @@ fun WaveChatPanel(
             // Mur d'emoji maison — panneau au-dessus du composer.
             if (emojiWallOpen) {
                 MwEmojiWall(
-                    height = 360.dp,
-                    onSelect = { name -> emojiInput.insert(name); emojiWallOpen = false },
+                    height = emojiHeight,
+                    onSelect = { name -> emojiInput.insert(name) },
                     onClose = { emojiWallOpen = false },
                 )
             }
@@ -399,7 +406,7 @@ fun WaveChatPanel(
                 emojiInput = emojiInput,
                 emojiOpen = emojiWallOpen,
                 onDraftChange = { draft = it },
-                onToggleEmoji = { emojiInput.hideKeyboard(); emojiWallOpen = !emojiWallOpen },
+                onToggleEmoji = { emojiWallOpen = !emojiWallOpen },
                 onSend = {
                     val text = draft.trim()
                     if (text.isNotEmpty()) {
@@ -568,11 +575,7 @@ private fun WaveChatRow(
 
 /* Mur d'emoji maison — grille des 50 emoticons customs (mw-emoticon-wall web). */
 @Composable
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 private fun MwEmojiWall(height: Dp, onSelect: (String) -> Unit, onClose: () -> Unit) {
-    androidx.compose.material3.ModalBottomSheet(onDismissRequest = onClose,
-        sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = Color(0xFF111216), dragHandle = null) {
     Column(
         Modifier
             .fillMaxWidth()
@@ -606,7 +609,7 @@ private fun MwEmojiWall(height: Dp, onSelect: (String) -> Unit, onClose: () -> U
             gridItems(mwEmojiMap.entries.toList()) { (name, res) ->
                 Box(
                     Modifier
-                        .size(40.dp)
+                        .size(48.dp)
                         .clip(RoundedCornerShape(8.dp))
                         .clickable { onSelect(name) }
                         .padding(4.dp),
@@ -617,8 +620,6 @@ private fun MwEmojiWall(height: Dp, onSelect: (String) -> Unit, onClose: () -> U
             }
         }
     }
-}
-
 }
 
 /* Compact Hi-Fi rail: same black chassis as the Chat / Mixeur navbar. */

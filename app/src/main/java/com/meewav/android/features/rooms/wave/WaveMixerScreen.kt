@@ -99,6 +99,7 @@ fun WaveMixerScreen(onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
     var pinnedChatMessage by remember { mutableStateOf<WaveChatMessage?>(null) }
     var waveNotificationsRead by remember { mutableStateOf(false) }
     val guestState = remember { WaveGuestState() }
+    var emojiPanelOpen by remember { mutableStateOf(false) }
     // Canaux.
     var micGain by remember { mutableStateOf(0.72f) }
     var audioGain by remember { mutableStateOf(0.62f) }
@@ -230,7 +231,7 @@ fun WaveMixerScreen(onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
         // Crop the existing preview only when Chat needs room; keep the video mounted.
         val fullVideoHeight = maxWidth * 9f / 16f
         val videoViewportHeight = if (activeTab == WaveTab.CHAT)
-            (maxHeight - 305.dp).coerceIn(0.dp, fullVideoHeight) else fullVideoHeight
+            (maxHeight - if (emojiPanelOpen) 405.dp else 305.dp).coerceIn(0.dp, fullVideoHeight) else fullVideoHeight
         Column(Modifier.fillMaxSize()) {
             WaveHeader(title = "Freestyle session — Luma invite", onBack = { showLeaveConfirm = true }, onClose = { showLeaveConfirm = true })
             Box(Modifier.fillMaxWidth().height(videoViewportHeight).clipToBounds()) {
@@ -299,6 +300,7 @@ fun WaveMixerScreen(onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
                         onPinMessage = { pinnedChatMessage = it },
                         notificationsRead = waveNotificationsRead,
                         onReadNotifications = { waveNotificationsRead = true },
+                        onEmojiPanelChange = { emojiPanelOpen = it },
                     )
                     WaveTab.INVITES -> WaveGuestsPanel(guestState, Modifier.fillMaxSize())
                     else -> WaveTabPlaceholder(activeTab)

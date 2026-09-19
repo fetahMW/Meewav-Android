@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material.icons.filled.NetworkCheck
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckBox
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -170,7 +171,18 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
         }
         Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            if (page == 1) {
+            if (multiSelect || state.selected.isNotEmpty()) {
+                Row(Modifier.weight(1f).height(40.dp).hifiBlackSurface(12.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .border(1.dp, WaveMixerTheme.capsuleAccentSoft.copy(alpha = .45f), RoundedCornerShape(12.dp))
+                    .clickable { state.selected = emptySet(); multiSelect = false }
+                    .padding(horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                    Icon(Icons.Filled.CheckBox, null, tint = WaveMixerTheme.capsuleAccentSoft, modifier = Modifier.size(18.dp))
+                    Text("Annuler la sélection", color = Color.White, fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold, maxLines = 1)
+                }
+            } else if (page == 1) {
                 Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
                 Box(Modifier.height(44.dp).clickable(onClick = state::toggleRequests), contentAlignment = Alignment.Center) {
                     Row(Modifier.hifiBlackSurface(14.dp).padding(horizontal = 12.dp, vertical = 7.dp),
@@ -233,7 +245,7 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                 }
             }
         }
-        WaveGuestActionBar(state, selectedGuests, page, selectionActive = multiSelect || state.selected.isNotEmpty(), onClear = { state.selected = emptySet(); multiSelect = false })
+        WaveGuestActionBar(state, selectedGuests, page, onClear = { state.selected = emptySet(); multiSelect = false })
     }
     val preview = state.guests.find { it.id == state.previewId }
     if (preview != null) GuestPreviewSheet(state, preview)
