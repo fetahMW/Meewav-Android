@@ -233,8 +233,6 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
             }
         }
         WaveGuestActionBar(state, selectedGuests, page, onClear = { state.selected = emptySet(); multiSelect = false })
-        Text(state.notice ?: "Invités de démonstration · toucher pour l’aperçu", color = Color.White.copy(alpha = .45f), fontSize = 10.sp,
-            modifier = Modifier.padding(top = 5.dp), maxLines = 2)
     }
     val preview = state.guests.find { it.id == state.previewId }
     if (preview != null) GuestPreviewSheet(state, preview)
