@@ -1,6 +1,14 @@
 package com.meewav.android.features.rooms.wave
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.lazy.LazyColumn
 import com.meewav.android.R
 import androidx.compose.foundation.clickable
@@ -40,6 +48,7 @@ private fun WaveGuest.roleKey(): String = when (role) {
     else -> ""
 }
 
+private val guestFilterViolet = Color(0xFF453677)
 private fun <T> Set<T>.toggle(value: T) = if (value in this) this - value else this + value
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -110,7 +119,7 @@ internal fun WaveGuestFilterSheet(state: WaveGuestState, participants: List<Wave
             Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TextButton(onClick = { draft = WaveGuestFilters(); firstCount = 0 }) { Text("Tout effacer", color = Color.White.copy(alpha = .7f)) }
                 Button(onClick = { state.filters = draft; state.selected = if (isRequests && firstCount > 0) participants.filter { it.location == WaveGuestLocation.REQUESTED && draft.matches(it) }.take(firstCount).map { it.id }.toSet() else emptySet(); onDismiss() }, modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF453677), contentColor = Color(0xFFE8E2F5))) {
+                    colors = ButtonDefaults.buttonColors(containerColor = guestFilterViolet, contentColor = Color(0xFFE8E2F5))) {
                     Text("Afficher $resultCount profils", fontSize = 12.sp)
                 }
             }
@@ -121,12 +130,17 @@ internal fun WaveGuestFilterSheet(state: WaveGuestState, participants: List<Wave
 @Composable
 private fun FilterChoice(label: String, selected: Boolean, modifier: Modifier = Modifier,
                          onClick: () -> Unit, leading: @Composable () -> Unit) {
-    Row(modifier.fillMaxWidth().heightIn(min = 52.dp).hifiBlackSurface(10.dp).clickable(onClick = onClick).padding(8.dp),
+    Row(modifier.fillMaxWidth().heightIn(min = 52.dp).hifiBlackSurface(10.dp)
+        .toggleable(value = selected, role = Role.Checkbox, onValueChange = { onClick() }).padding(8.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
         leading()
         Text(label, modifier = Modifier.weight(1f), fontSize = 11.sp,
             color = if (selected) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .75f))
-        Checkbox(checked = selected, onCheckedChange = null, modifier = Modifier.size(20.dp),
-            colors = CheckboxDefaults.colors(checkedColor = WaveMixerTheme.capsuleAccent))
+        Box(Modifier.size(22.dp).clip(RoundedCornerShape(7.dp))
+            .background(if (selected) guestFilterViolet else Color.Black.copy(alpha = .4f))
+            .border(.75.dp, if (selected) guestFilterViolet else Color.White.copy(alpha = .3f), RoundedCornerShape(7.dp)),
+            contentAlignment = Alignment.Center) {
+            if (selected) Icon(Icons.Filled.Check, null, tint = Color(0xFFE8E2F5), modifier = Modifier.size(15.dp))
+        }
     }
 }
