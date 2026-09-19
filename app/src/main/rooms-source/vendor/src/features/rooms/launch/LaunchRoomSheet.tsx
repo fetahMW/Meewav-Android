@@ -37,7 +37,7 @@ type LaunchRoomSheetProps = {
   initialType?: RoomsHomeRoomType;
   closeRef?: RefObject<HTMLButtonElement | null>;
   onClose: () => void;
-  onLaunched?: (roomLabel: string) => void;
+  onLaunched?: (roomLabel: string, roomType: RoomsHomeRoomType) => void;
 };
 
 type LaunchTab = { id: RoomsHomeRoomType; label: string; accent: string };
@@ -893,7 +893,7 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
           onComplete={() => {
             setLaunching(false);
             onClose();
-            onLaunched?.(roomLabel);
+            onLaunched?.(roomLabel, LAUNCH_TABS[selectedTab].id);
           }}
         />
       ) : null}

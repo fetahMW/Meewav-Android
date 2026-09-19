@@ -366,3 +366,417 @@
 #root .mobile-rooms .rooms-home-filter__districts { margin-top: .55rem; padding-top: .55rem; border-top: 1px dashed rgba(255,255,255,.14); }
 #root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__audience,
 #root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__duration { font-size: .6rem; padding: .22rem .4rem; }
+
+/* ════════════════════════════════════════════════════════════════════════════
+
+/* ════════════════════════════════════════════════════════════════════════════
+   LA WAVE — shell + studio (parité iOS WaveStudioTheme / WaveLiveHost·Viewer)
+   Fond #0E0E10 · cartes blanc .04–.055 · filets blanc .07–.12 · accent #7E44E3
+   ════════════════════════════════════════════════════════════════════════════ */
+
+#root .mobile-rooms .wv-room { position: fixed; inset: 0; z-index: 51020; display: flex; flex-direction: column; background: #0E0E10; color: #fff; overflow: hidden; }
+/* La room Wave est plein écran : le dock global de l'app disparaît tant qu'elle est ouverte. */
+body:has(.wv-room) .feature-dock-host { display: none !important; }
+#root .mobile-rooms .wv-spin { animation: wv-spin 0.9s linear infinite; }
+@keyframes wv-spin { to { transform: rotate(360deg); } }
+
+/* ── Header ── */
+#root .mobile-rooms .wv-header { display: flex; align-items: center; height: 39px; padding: 0 2px; flex: none; }
+#root .mobile-rooms .wv-header-btn { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; background: none; border: 0; color: #fff; }
+#root .mobile-rooms .wv-header-title { flex: 1; text-align: center; font-size: 16px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Vidéo 16:9 ── */
+#root .mobile-rooms .wv-video { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; flex: none; border-top: .7px solid rgba(255,255,255,.16); border-bottom: .7px solid rgba(255,255,255,.16); box-shadow: 0 4px 10px rgba(255,255,255,.045), 0 2px 22px rgba(255,255,255,.045); }
+#root .mobile-rooms .wv-video-el { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+#root .mobile-rooms .wv-video-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 8px; background: linear-gradient(180deg, rgba(0,0,0,.42), rgba(0,0,0,0) 32%, rgba(0,0,0,0) 66%, rgba(0,0,0,.42)); opacity: 0; transition: opacity .18s ease; }
+#root .mobile-rooms .wv-video-overlay.is-visible { opacity: 1; }
+#root .mobile-rooms .wv-video-top { display: flex; align-items: center; gap: 8px; }
+#root .mobile-rooms .wv-video-metrics { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 999px; background: rgba(12,12,16,.55); border: .5px solid rgba(255,255,255,.14); font-size: 10px; font-weight: 800; color: #fff; backdrop-filter: blur(10px); }
+#root .mobile-rooms .wv-video-elapsed { font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+#root .mobile-rooms .wv-video-sep { width: 3px; height: 3px; border-radius: 50%; background: rgba(255,255,255,.4); }
+#root .mobile-rooms .wv-video-live-dot { width: 7px; height: 7px; border-radius: 50%; background: #FF2E3B; box-shadow: 0 0 8px #FF2E3B; animation: wv-dot 1.6s ease infinite; flex: none; }
+@keyframes wv-dot { 50% { opacity: .45; } }
+#root .mobile-rooms .wv-video-top .wv-video-icon { margin-left: auto; }
+#root .mobile-rooms .wv-video-bottom { display: flex; justify-content: space-between; align-items: center; }
+#root .mobile-rooms .wv-video-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.06); border: .5px solid rgba(255,255,255,.1); color: #fff; }
+#root .mobile-rooms .wv-video-icon.is-off { color: #FF2E3B; }
+#root .mobile-rooms .wv-video-host-controls { display: flex; gap: 8px; margin-left: auto; }
+
+/* ── Creator row (viewer) ── */
+#root .mobile-rooms .wv-creator { display: flex; align-items: center; gap: 11px; height: 44px; padding: 0 16px; flex: none; }
+#root .mobile-rooms .wv-creator-id { display: flex; align-items: center; gap: 9px; background: none; border: 0; color: #fff; text-align: left; padding: 0; }
+#root .mobile-rooms .wv-creator-meta { display: flex; flex-direction: column; gap: 2px; }
+#root .mobile-rooms .wv-creator-name { font-size: 13px; font-weight: 800; }
+#root .mobile-rooms .wv-creator-followers { display: inline-flex; align-items: center; gap: 4px; font-size: 9px; font-weight: 600; color: rgba(255,255,255,.5); }
+#root .mobile-rooms .wv-follow { margin-left: auto; display: inline-flex; align-items: center; justify-content: center; gap: 3px; min-width: 76px; height: 32px; padding: 0 12px; border-radius: 999px; border: 0; background: #7E44E3; color: #fff; font-size: 11px; font-weight: 900; }
+#root .mobile-rooms .wv-follow.is-following { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.12); }
+
+/* ── Avatar ── */
+#root .mobile-rooms .wv-avatar { display: inline-flex; border-radius: 50%; overflow: hidden; background: linear-gradient(135deg, rgba(126,68,227,.5), rgba(0,229,255,.18)); border: 1px solid rgba(255,255,255,.14); flex: none; font-size: 18px; }
+#root .mobile-rooms .wv-avatar img { width: 100%; height: 100%; object-fit: cover; }
+#root .mobile-rooms .wv-avatar-initial { margin: auto; font-size: .62em; font-weight: 900; color: #fff; }
+
+/* ── Tab bar — WaveTabBar (capsule unique iOS) ── */
+#root .mobile-rooms .wv-tabs { display: flex; padding: 6px 12px 4px; flex: none; }
+#root .mobile-rooms .wv-tabs-capsule { flex: 1; display: flex; gap: 3px; padding: 3px; height: 46px; border-radius: 18px; background: rgba(255,255,255,.045); border: .7px solid rgba(255,255,255,.09); }
+#root .mobile-rooms .wv-tab { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 14px; border: .7px solid transparent; background: transparent; color: rgba(255,255,255,.52); font-size: 9px; font-weight: 800; transition: background .16s ease, color .16s ease, border-color .16s ease; }
+#root .mobile-rooms .wv-tab.is-active { background: rgba(126,68,227,.28); border-color: rgba(126,68,227,.55); color: #fff; }
+#root .mobile-rooms .wv-tab.is-disabled { opacity: .38; }
+#root .mobile-rooms .wv-tab-badge { position: absolute; top: 2px; right: calc(50% - 20px); min-width: 14px; height: 14px; padding: 0 4px; border-radius: 999px; background: #7E44E3; color: #fff; font-size: 8px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+#root .mobile-rooms .wv-tab-badge--coulisses { background: #E8B86D; color: #1a1408; }
+
+/* ── Panel ── */
+#root .mobile-rooms .wv-panel { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ── Bannière ── */
+#root .mobile-rooms .wv-banner { margin: 6px 16px; padding: 9px 12px; border-radius: 12px; background: rgba(232,184,109,.13); border: 1px solid rgba(232,184,109,.4); color: #E8B86D; font-size: 11px; font-weight: 600; }
+
+/* ── Chat ── */
+#root .mobile-rooms .wv-chat { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+#root .mobile-rooms .wv-chat-body { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+#root .mobile-rooms .wv-chat-list { flex: 1; min-height: 0; overflow-y: auto; padding: 10px 64px 8px 12px; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; -webkit-mask-image: linear-gradient(to bottom, transparent, #000 26px); mask-image: linear-gradient(to bottom, transparent, #000 26px); }
+#root .mobile-rooms .wv-chat-notif { display: flex; align-items: center; gap: 7px; align-self: flex-start; margin-bottom: 6px; padding: 7px 11px; border-radius: 999px; background: rgba(126,68,227,.18); border: 1px solid rgba(126,68,227,.45); color: #fff; font-size: 10px; font-weight: 700; }
+#root .mobile-rooms .wv-chat-empty { margin: auto; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 20px; }
+#root .mobile-rooms .wv-chat-empty-title { font-size: 13px; font-weight: 800; color: rgba(255,255,255,.6); }
+#root .mobile-rooms .wv-chat-empty-sub { font-size: 11px; color: rgba(255,255,255,.36); }
+#root .mobile-rooms .wv-msg { font-size: 12px; line-height: 1.4; color: rgba(255,255,255,.92); }
+#root .mobile-rooms .wv-msg-author { font-weight: 800; }
+#root .mobile-rooms .wv-msg-text { color: rgba(255,255,255,.92); }
+#root .mobile-rooms .wv-msg--system { align-self: flex-start; padding: 5px 10px; border-radius: 11px; background: rgba(126,68,227,.13); border: .7px solid rgba(126,68,227,.32); color: rgba(233,222,255,.92); font-size: 11px; font-weight: 600; }
+#root .mobile-rooms .wv-social { position: absolute; right: 8px; bottom: 8px; display: flex; flex-direction: column; align-items: center; padding: 6px 0; border-radius: 22px; background: rgba(16,16,20,.62); border: .7px solid rgba(255,255,255,.11); backdrop-filter: blur(14px); z-index: 2; }
+#root .mobile-rooms .wv-social-item { position: relative; width: 38px; min-height: 38px; border: 0; background: none; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }
+#root .mobile-rooms .wv-social-item--accent { color: #E8B86D; }
+#root .mobile-rooms .wv-social-metric { min-height: 44px; }
+#root .mobile-rooms .wv-social-count { font-size: 8px; font-weight: 800; color: rgba(255,255,255,.78); }
+#root .mobile-rooms .wv-social-divider { width: 20px; height: .7px; background: rgba(255,255,255,.14); margin: 2px 0; flex: none; }
+#root .mobile-rooms .wv-social-badge { position: absolute; top: 2px; right: 4px; min-width: 14px; height: 14px; padding: 0 3px; border-radius: 999px; background: #FF2E3B; color: #fff; font-size: 8px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+#root .mobile-rooms .wv-cmd { flex: none; display: flex; align-items: center; gap: 7px; padding: 7px 12px calc(9px + env(safe-area-inset-bottom)); }
+#root .mobile-rooms .wv-cmd-field { flex: 1; height: 38px; border-radius: 19px; background: rgba(255,255,255,.055); border: .7px solid rgba(255,255,255,.11); display: flex; align-items: center; gap: 8px; padding: 0 13px; }
+#root .mobile-rooms .wv-cmd-dot { width: 7px; height: 7px; border-radius: 50%; background: #7E44E3; box-shadow: 0 0 7px rgba(126,68,227,.8); flex: none; }
+#root .mobile-rooms .wv-cmd-field input { flex: 1; background: none; border: 0; outline: 0; color: #fff; font-size: 12px; }
+#root .mobile-rooms .wv-cmd-field input::placeholder { color: rgba(255,255,255,.34); }
+#root .mobile-rooms .wv-cmd-send { width: 38px; height: 38px; border-radius: 50%; border: 0; background: rgba(255,255,255,.08); color: rgba(255,255,255,.4); display: flex; align-items: center; justify-content: center; transition: background .15s ease, color .15s ease; }
+#root .mobile-rooms .wv-cmd-send.is-ready { background: #7E44E3; color: #fff; }
+
+/* ── Coulisses ── */
+#root .mobile-rooms .wvc { flex: 1; min-height: 0; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+#root .mobile-rooms .wvc-host-card { display: flex; align-items: center; gap: 10px; padding: 14px; border-radius: 16px; background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.07); }
+#root .mobile-rooms .wvc-closed { padding: 14px; display: flex; flex-direction: column; gap: 5px; }
+#root .mobile-rooms .wvc-closed-title { font-size: 14px; font-weight: 700; color: rgba(255,255,255,.82); }
+#root .mobile-rooms .wvc-closed-sub { font-size: 12px; color: rgba(255,255,255,.5); }
+#root .mobile-rooms .wvc-section { display: flex; flex-direction: column; gap: 8px; }
+#root .mobile-rooms .wvc-section-head { display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 900; letter-spacing: 1px; color: rgba(255,255,255,.56); }
+#root .mobile-rooms .wvc-count { padding: 2px 7px; border-radius: 999px; background: rgba(255,255,255,.07); font-size: 9px; }
+#root .mobile-rooms .wvc-invite { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px; border-radius: 999px; border: 0; background: rgba(126,68,227,.26); color: #fff; font-size: 10px; font-weight: 800; }
+#root .mobile-rooms .wvc-card { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 16px; background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.07); }
+#root .mobile-rooms .wvc-card-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+#root .mobile-rooms .wvc-card-name { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#root .mobile-rooms .wvc-card-role { font-size: 10px; color: rgba(255,255,255,.48); }
+#root .mobile-rooms .wvc-card-status { padding: 4px 8px; border-radius: 999px; border: 1px solid; font-size: 8px; font-weight: 900; letter-spacing: .5px; }
+#root .mobile-rooms .wvc-mini { height: 28px; padding: 0 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06); color: #fff; font-size: 10px; font-weight: 800; display: inline-flex; align-items: center; }
+#root .mobile-rooms .wvc-mini--go { background: rgba(47,230,166,.18); border-color: rgba(47,230,166,.4); color: #2FE6A6; }
+
+/* ── Host Wave — transport ── */
+#root .mobile-rooms .wvh { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+#root .mobile-rooms .wvh-transport { display: flex; align-items: center; gap: 10px; margin: 8px 16px 0; padding: 10px 12px; border-radius: 16px; background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.07); }
+#root .mobile-rooms .wvh-transport-btn { width: 42px; height: 42px; border-radius: 50%; border: 0; background: #7E44E3; color: #fff; display: flex; align-items: center; justify-content: center; flex: none; box-shadow: 0 4px 14px rgba(126,68,227,.4); }
+#root .mobile-rooms .wvh-transport-btn.is-running { background: #FF2E3B; box-shadow: 0 4px 14px rgba(255,46,59,.35); }
+#root .mobile-rooms .wvh-transport-clock { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+#root .mobile-rooms .wvh-transport-bar { font-size: 14px; font-weight: 800; }
+#root .mobile-rooms .wvh-transport-sub { font-size: 10px; color: rgba(255,255,255,.46); }
+#root .mobile-rooms .wvh-transport-chips { display: flex; gap: 6px; flex: none; }
+#root .mobile-rooms .wvh-chip { padding: 5px 9px; border-radius: 999px; background: rgba(126,68,227,.16); border: 1px solid rgba(126,68,227,.35); color: #C9B3F5; font-size: 9px; font-weight: 800; }
+
+/* ── Host Wave — lanes ── */
+#root .mobile-rooms .wvh-list { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 16px; display: flex; flex-direction: column; gap: 7px; }
+#root .mobile-rooms .wvh-lane { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 15px; background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.07); transition: border-color .15s ease, background .15s ease; }
+#root .mobile-rooms .wvh-lane.is-active { border-color: rgba(126,68,227,.55); background: rgba(126,68,227,.1); }
+#root .mobile-rooms .wvh-lane.is-muted { opacity: .55; }
+#root .mobile-rooms .wvh-lane.is-cue { border-color: rgba(0,229,255,.5); background: rgba(0,229,255,.07); }
+#root .mobile-rooms .wvh-lane-play { width: 34px; height: 34px; border-radius: 50%; flex: none; border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: #fff; display: flex; align-items: center; justify-content: center; }
+#root .mobile-rooms .wvh-lane-play.is-active { background: #7E44E3; border-color: #7E44E3; }
+#root .mobile-rooms .wvh-lane-play:disabled { opacity: .45; }
+#root .mobile-rooms .wvh-lane-play--cue { border-color: rgba(0,229,255,.4); color: #00E5FF; }
+#root .mobile-rooms .wvh-lane-play--cue.is-active { background: #00E5FF; border-color: #00E5FF; color: #062a30; }
+#root .mobile-rooms .wvh-lane-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+#root .mobile-rooms .wvh-lane-meta--btn { background: none; border: 0; padding: 0; text-align: left; color: #fff; }
+#root .mobile-rooms .wvh-lane-title { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#root .mobile-rooms .wvh-lane-sub { font-size: 10px; color: rgba(255,255,255,.46); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#root .mobile-rooms .wvh-lane-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+#root .mobile-rooms .wvh-tag { padding: 2px 6px; border-radius: 6px; background: rgba(255,255,255,.06); font-size: 8px; font-weight: 800; letter-spacing: .3px; color: rgba(255,255,255,.6); }
+#root .mobile-rooms .wvh-tag.is-live { background: rgba(47,230,166,.16); color: #2FE6A6; }
+#root .mobile-rooms .wvh-tag--accepted { background: rgba(47,230,166,.16); color: #2FE6A6; }
+#root .mobile-rooms .wvh-tag--inspiration { background: rgba(232,184,109,.16); color: #E8B86D; }
+#root .mobile-rooms .wvh-tag--rejected { background: rgba(255,46,59,.14); color: #FF2E3B; }
+#root .mobile-rooms .wvh-lane-actions { display: flex; align-items: center; gap: 5px; flex: none; }
+#root .mobile-rooms .wvh-lane-repeat { display: inline-flex; align-items: center; gap: 3px; height: 26px; padding: 0 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.05); color: rgba(255,255,255,.75); font-size: 9px; font-weight: 800; }
+#root .mobile-rooms .wvh-ms { width: 26px; height: 26px; border-radius: 8px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.05); color: rgba(255,255,255,.6); font-size: 10px; font-weight: 900; }
+#root .mobile-rooms .wvh-ms.is-on { background: rgba(255,46,59,.2); border-color: rgba(255,46,59,.55); color: #FF2E3B; }
+#root .mobile-rooms .wvh-ms--solo.is-on { background: rgba(255,215,0,.18); border-color: rgba(255,215,0,.55); color: #FFD700; }
+#root .mobile-rooms .wvh-lane-remove { width: 28px; height: 28px; border-radius: 8px; border: 0; background: none; color: rgba(255,255,255,.35); display: flex; align-items: center; justify-content: center; }
+#root .mobile-rooms .wvh-lane-chevron { color: rgba(255,255,255,.3); flex: none; }
+#root .mobile-rooms .wvh-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 34px 22px; color: rgba(255,255,255,.4); font-size: 11px; text-align: center; }
+
+/* ── Host Wave — scopes + workspace footer ── */
+#root .mobile-rooms .wvh-scopes { display: flex; gap: 6px; padding: 8px 16px 0; }
+#root .mobile-rooms .wvh-scope { flex: 1; height: 32px; border-radius: 999px; border: 1px solid rgba(255,255,255,.09); background: rgba(255,255,255,.04); color: rgba(255,255,255,.56); font-size: 10px; font-weight: 800; }
+#root .mobile-rooms .wvh-scope.is-active { background: rgba(0,229,255,.14); border-color: rgba(0,229,255,.45); color: #00E5FF; }
+#root .mobile-rooms .wvh-workspace { flex: none; display: flex; gap: 6px; padding: 8px 16px calc(10px + env(safe-area-inset-bottom)); }
+#root .mobile-rooms .wvh-workspace-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; height: 40px; border-radius: 999px; border: 1px solid rgba(255,255,255,.09); background: rgba(255,255,255,.04); color: rgba(255,255,255,.56); font-size: 11px; font-weight: 800; }
+#root .mobile-rooms .wvh-workspace-btn.is-active { background: rgba(126,68,227,.26); border-color: rgba(126,68,227,.5); color: #fff; }
+
+/* ── Host Wave — cue + swipe ── */
+#root .mobile-rooms .wvh-cue-banner { display: flex; align-items: center; gap: 7px; margin: 6px 16px 0; padding: 8px 11px; border-radius: 11px; background: rgba(0,229,255,.1); border: 1px solid rgba(0,229,255,.35); color: #00E5FF; font-size: 10px; font-weight: 700; }
+#root .mobile-rooms .wvh-cue-banner button { margin-left: auto; background: none; border: 0; color: #00E5FF; display: flex; }
+#root .mobile-rooms .wvh-swipe-wrap { position: relative; }
+#root .mobile-rooms .wvh-swipe-actions { display: flex; gap: 6px; padding: 0 2px 6px; }
+#root .mobile-rooms .wvh-swipe { display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 11px; border-radius: 9px; border: 0; font-size: 10px; font-weight: 800; }
+#root .mobile-rooms .wvh-swipe--save { background: rgba(232,184,109,.15); color: #E8B86D; }
+#root .mobile-rooms .wvh-swipe--reject { background: rgba(255,46,59,.13); color: #FF2E3B; }
+
+/* ── Sheet (détail proposition / plugins) ── */
+#root .mobile-rooms .wvh-sheet-overlay { position: absolute; inset: 0; z-index: 30; background: rgba(4,4,8,.62); backdrop-filter: blur(6px); display: flex; flex-direction: column; justify-content: flex-end; }
+#root .mobile-rooms .wvh-sheet { background: linear-gradient(160deg, #14141a, #0d0d11 70%); border-radius: 22px 22px 0 0; border-top: 1px solid rgba(255,255,255,.1); padding: 16px 16px calc(18px + env(safe-area-inset-bottom)); max-height: 82%; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+#root .mobile-rooms .wvh-sheet-head { display: flex; align-items: center; gap: 11px; }
+#root .mobile-rooms .wvh-sheet-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+#root .mobile-rooms .wvh-sheet-title { font-size: 15px; font-weight: 800; }
+#root .mobile-rooms .wvh-sheet-sub { font-size: 10px; color: rgba(255,255,255,.48); }
+#root .mobile-rooms .wvh-sheet-close { width: 32px; height: 32px; border-radius: 50%; border: 0; background: rgba(255,255,255,.07); color: #fff; display: flex; align-items: center; justify-content: center; }
+#root .mobile-rooms .wvh-sheet-list { display: flex; flex-direction: column; gap: 7px; }
+#root .mobile-rooms .wvh-take { height: 30px; padding: 0 12px; border-radius: 9px; border: 0; background: rgba(47,230,166,.16); color: #2FE6A6; font-size: 10px; font-weight: 900; flex: none; }
+#root .mobile-rooms .wvh-adopt { display: flex; align-items: center; justify-content: center; gap: 7px; height: 42px; border-radius: 13px; border: 1px solid rgba(126,68,227,.55); background: rgba(126,68,227,.2); color: #fff; font-size: 12px; font-weight: 800; }
+#root .mobile-rooms .wvh-decisions { display: flex; gap: 7px; }
+#root .mobile-rooms .wvh-decision { flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; height: 40px; border-radius: 12px; border: 1px solid rgba(255,255,255,.11); background: rgba(255,255,255,.05); color: rgba(255,255,255,.8); font-size: 11px; font-weight: 800; }
+#root .mobile-rooms .wvh-decision--accept { background: rgba(47,230,166,.16); border-color: rgba(47,230,166,.5); color: #2FE6A6; }
+#root .mobile-rooms .wvh-decision--reject { background: rgba(255,46,59,.1); border-color: rgba(255,46,59,.4); color: #FF2E3B; }
+
+/* ── Viewer studio ── */
+#root .mobile-rooms .wvs { flex: 1; min-height: 0; overflow-y: auto; padding: 10px 16px calc(12px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 10px; }
+#root .mobile-rooms .wvs-privacy { display: flex; align-items: center; gap: 11px; padding: 11px 12px; border-radius: 16px; background: rgba(126,68,227,.1); border: 1px solid rgba(126,68,227,.35); }
+#root .mobile-rooms .wvs-privacy-icon { width: 36px; height: 36px; border-radius: 12px; background: rgba(126,68,227,.22); color: #C9B3F5; display: flex; align-items: center; justify-content: center; flex: none; }
+#root .mobile-rooms .wvs-privacy-meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+#root .mobile-rooms .wvs-privacy-title { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 900; letter-spacing: .8px; }
+#root .mobile-rooms .wvs-privacy-chip { padding: 3px 7px; border-radius: 999px; background: rgba(47,230,166,.16); border: 1px solid rgba(47,230,166,.4); color: #2FE6A6; font-size: 7px; font-weight: 900; letter-spacing: .6px; }
+#root .mobile-rooms .wvs-privacy-sub { font-size: 10px; color: rgba(255,255,255,.5); line-height: 1.4; }
+#root .mobile-rooms .wvs-card { padding: 12px; border-radius: 16px; background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.07); display: flex; flex-direction: column; gap: 10px; }
+#root .mobile-rooms .wvs-card-head { display: flex; align-items: center; justify-content: space-between; }
+#root .mobile-rooms .wvs-card-kicker { font-size: 9px; font-weight: 900; letter-spacing: 1px; color: #7E44E3; }
+#root .mobile-rooms .wvs-card-hint { font-size: 9px; font-weight: 700; color: rgba(255,255,255,.36); }
+#root .mobile-rooms .wvs-ref { display: flex; align-items: center; gap: 10px; }
+#root .mobile-rooms .wvs-ref-play { width: 38px; height: 38px; border-radius: 50%; border: 0; background: #7E44E3; color: #fff; display: flex; align-items: center; justify-content: center; flex: none; }
+#root .mobile-rooms .wvs-ref-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+#root .mobile-rooms .wvs-ref-title { font-size: 13px; font-weight: 800; }
+#root .mobile-rooms .wvs-ref-sub { font-size: 10px; color: rgba(255,255,255,.46); }
+#root .mobile-rooms .wvs-ref-chips { display: flex; gap: 5px; }
+#root .mobile-rooms .wvs-row { display: flex; align-items: center; gap: 10px; }
+#root .mobile-rooms .wvs-label { width: 46px; flex: none; font-size: 10px; font-weight: 700; color: rgba(255,255,255,.5); }
+#root .mobile-rooms .wvs-seg { flex: 1; display: flex; gap: 4px; }
+#root .mobile-rooms .wvs-seg-btn { flex: 1; height: 30px; border-radius: 9px; border: 1px solid rgba(255,255,255,.09); background: rgba(255,255,255,.04); color: rgba(255,255,255,.56); font-size: 9px; font-weight: 800; }
+#root .mobile-rooms .wvs-seg-btn.is-active { background: rgba(126,68,227,.22); border-color: rgba(126,68,227,.5); color: #fff; }
+#root .mobile-rooms .wvs-seg-btn:disabled { opacity: .4; }
+#root .mobile-rooms .wvs-monitor { display: inline-flex; align-items: center; gap: 5px; height: 30px; padding: 0 11px; border-radius: 9px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.05); color: rgba(255,255,255,.6); font-size: 10px; font-weight: 800; }
+#root .mobile-rooms .wvs-monitor.is-on { background: rgba(0,229,255,.13); border-color: rgba(0,229,255,.45); color: #00E5FF; }
+#root .mobile-rooms .wvs-actions { display: flex; gap: 7px; }
+#root .mobile-rooms .wvs-record { flex: 1.4; display: flex; align-items: center; justify-content: center; gap: 7px; height: 44px; border-radius: 13px; border: 0; background: #FF2E3B; color: #fff; font-size: 12px; font-weight: 900; box-shadow: 0 4px 16px rgba(255,46,59,.35); }
+#root .mobile-rooms .wvs-import { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; height: 44px; border-radius: 13px; border: 1px solid rgba(255,255,255,.13); background: rgba(255,255,255,.05); color: #fff; font-size: 11px; font-weight: 800; }
+#root .mobile-rooms .wvs-recording { display: flex; flex-direction: column; gap: 8px; }
+#root .mobile-rooms .wvs-recording-bar { height: 6px; border-radius: 999px; background: rgba(255,255,255,.07); overflow: hidden; }
+#root .mobile-rooms .wvs-recording-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #FF2E3B, #FF6B74); transition: width .12s linear; }
+#root .mobile-rooms .wvs-recording-meta { display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,.65); }
+#root .mobile-rooms .wvs-rec-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.25); }
+#root .mobile-rooms .wvs-rec-dot.is-live { background: #FF2E3B; animation: wv-dot 1s ease infinite; }
+#root .mobile-rooms .wvs-cancel { margin-left: auto; background: none; border: 0; color: rgba(255,255,255,.55); font-size: 10px; font-weight: 800; }
+#root .mobile-rooms .wvs-review { display: flex; flex-direction: column; gap: 10px; }
+#root .mobile-rooms .wvs-name { height: 40px; border-radius: 11px; border: 1px solid rgba(255,255,255,.11); background: rgba(255,255,255,.05); color: #fff; font-size: 13px; font-weight: 600; padding: 0 12px; outline: 0; }
+#root .mobile-rooms .wvs-name:focus { border-color: rgba(126,68,227,.6); }
+#root .mobile-rooms .wvs-review-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+#root .mobile-rooms .wvs-review-play { flex: 1.2; display: flex; align-items: center; justify-content: center; gap: 6px; height: 42px; border-radius: 12px; border: 1px solid rgba(0,229,255,.4); background: rgba(0,229,255,.1); color: #00E5FF; font-size: 11px; font-weight: 800; }
+#root .mobile-rooms .wvs-discard { flex: 1; height: 42px; border-radius: 12px; border: 1px solid rgba(255,255,255,.11); background: rgba(255,255,255,.05); color: rgba(255,255,255,.75); font-size: 11px; font-weight: 800; }
+#root .mobile-rooms .wvs-submit { flex: 1.5; display: flex; align-items: center; justify-content: center; gap: 6px; height: 42px; border-radius: 12px; border: 0; background: #7E44E3; color: #fff; font-size: 11px; font-weight: 900; }
+#root .mobile-rooms .wvs-review-note { font-size: 9px; color: rgba(255,255,255,.4); line-height: 1.4; }
+#root .mobile-rooms .wvs-error { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 10px; background: rgba(255,46,59,.1); border: 1px solid rgba(255,46,59,.4); color: #FF6B74; font-size: 10px; font-weight: 600; }
+#root .mobile-rooms .wvs-proposals-empty { display: flex; align-items: center; gap: 9px; color: rgba(255,255,255,.4); font-size: 10px; }
+#root .mobile-rooms .wvs-proposal { display: flex; align-items: center; gap: 9px; padding: 8px 0; border-top: 1px solid rgba(255,255,255,.05); }
+#root .mobile-rooms .wvs-proposal-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+#root .mobile-rooms .wvs-proposal-title { font-size: 12px; font-weight: 700; }
+#root .mobile-rooms .wvs-proposal-sub { font-size: 9px; color: rgba(255,255,255,.45); }
+#root .mobile-rooms .wvs-status { padding: 4px 8px; border-radius: 999px; font-size: 8px; font-weight: 900; }
+#root .mobile-rooms .wvs-status--pending_review { background: rgba(232,184,109,.14); color: #E8B86D; }
+#root .mobile-rooms .wvs-status--accepted { background: rgba(47,230,166,.14); color: #2FE6A6; }
+#root .mobile-rooms .wvs-status--rejected { background: rgba(255,46,59,.12); color: #FF2E3B; }
+#root .mobile-rooms .wvs-status--inspiration { background: rgba(0,229,255,.12); color: #00E5FF; }
+
+/* ── Mix — header ── */
+#root .mobile-rooms .wvm { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+#root .mobile-rooms .wvm-head { position: relative; display: flex; align-items: center; height: 34px; padding: 0 16px; flex: none; }
+#root .mobile-rooms .wvm-head-left { display: flex; align-items: center; gap: 7px; flex: 1; }
+#root .mobile-rooms .wvm-head-title { font-size: 12px; font-weight: 900; letter-spacing: 1.2px; color: rgba(255,255,255,.56); }
+#root .mobile-rooms .wvm-head-ctx { display: inline-flex; align-items: center; gap: 4px; height: 19px; padding: 0 7px; border-radius: 999px; background: rgba(126,68,227,.11); border: 1px solid rgba(126,68,227,.25); font-size: 7px; font-weight: 900; letter-spacing: .65px; color: #7E44E3; }
+#root .mobile-rooms .wvm-head-dot { width: 5px; height: 5px; border-radius: 50%; background: #7E44E3; }
+#root .mobile-rooms .wvm-head-dots { position: absolute; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; }
+#root .mobile-rooms .wvm-dot { width: 5px; height: 5px; border-radius: 50%; border: 0; background: rgba(255,255,255,.2); padding: 0; }
+#root .mobile-rooms .wvm-dot.is-active { background: #fff; }
+#root .mobile-rooms .wvm-head-right { display: flex; align-items: center; gap: 7px; flex: 1; justify-content: flex-end; }
+#root .mobile-rooms .wvm-util { height: 28px; min-width: 30px; padding: 0 9px; border-radius: 999px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06); color: rgba(255,255,255,.66); font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; gap: 3px; }
+#root .mobile-rooms .wvm-util.is-on { background: rgba(126,68,227,.2); border-color: rgba(126,68,227,.5); color: #fff; }
+#root .mobile-rooms .wvm-util--preset { color: #fff; border-color: rgba(255,255,255,.14); background: rgba(255,255,255,.07); letter-spacing: .5px; font-weight: 600; font-size: 10px; }
+
+/* ── Mix — cartes effets simples (iOS simpleEffectCard) ── */
+#root .mobile-rooms .wvm-simple { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-top: 1px; }
+#root .mobile-rooms .wvm-simple-card { border-radius: 16px; border: 1px solid rgba(255,255,255,.09); background: linear-gradient(160deg, rgba(255,255,255,.05), rgba(255,255,255,.02)); overflow: hidden; flex: none; }
+#root .mobile-rooms .wvm-simple-card.is-on { border-color: rgba(126,68,227,.4); }
+#root .mobile-rooms .wvm-simple-card-head { display: flex; align-items: center; gap: 8px; padding: 10px 11px 8px; }
+#root .mobile-rooms .wvm-simple-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.18); flex: none; }
+#root .mobile-rooms .wvm-simple-card.is-on .wvm-simple-dot { background: #2FE6A6; box-shadow: 0 0 6px rgba(47,230,166,.7); }
+#root .mobile-rooms .wvm-simple-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex: none; color: rgba(255,255,255,.62); background: rgba(255,255,255,.06); }
+#root .mobile-rooms .wvm-simple-card.is-on .wvm-simple-icon { color: #C9B3F5; background: rgba(126,68,227,.18); }
+#root .mobile-rooms .wvm-simple-title { flex: 1; font-size: 13px; font-weight: 600; color: rgba(255,255,255,.92); }
+#root .mobile-rooms .wvm-simple-power { width: 26px; height: 26px; border-radius: 50%; border: 0; background: rgba(255,255,255,.09); color: rgba(255,255,255,.4); display: flex; align-items: center; justify-content: center; flex: none; }
+#root .mobile-rooms .wvm-simple-power.is-on { background: #7E44E3; color: #fff; box-shadow: 0 0 10px rgba(126,68,227,.5); }
+#root .mobile-rooms .wvm-simple-card-body { padding: 0 11px 12px; display: flex; flex-direction: column; gap: 8px; }
+#root .mobile-rooms .wvm-tune-fields { display: flex; gap: 8px; }
+#root .mobile-rooms .wvm-tune-field { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+#root .mobile-rooms .wvm-tune-field-label { font-size: 11px; font-weight: 500; color: rgba(255,255,255,.52); padding-left: 2px; }
+#root .mobile-rooms .wvm-tune-field-box { display: flex; align-items: center; gap: 6px; height: 38px; padding: 0 11px; border-radius: 10px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.05); }
+#root .mobile-rooms .wvm-tune-field-value { flex: 1; text-align: left; font-size: 13px; font-weight: 600; color: #fff; }
+#root .mobile-rooms .wvm-tune-field-box svg { color: rgba(255,255,255,.5); flex: none; }
+/* reverb */
+#root .mobile-rooms .wvm-reverb { display: flex; flex-direction: column; gap: 5px; }
+#root .mobile-rooms .wvm-reverb-labels { display: flex; justify-content: space-between; font-size: 10px; font-weight: 500; color: rgba(255,255,255,.46); }
+#root .mobile-rooms .wvm-reverb-track { position: relative; height: 26px; touch-action: none; }
+#root .mobile-rooms .wvm-reverb-track::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); height: 6px; border-radius: 999px; background: rgba(255,255,255,.1); }
+#root .mobile-rooms .wvm-reverb-fill { position: absolute; left: 0; top: 50%; transform: translateY(-50%); height: 6px; background: linear-gradient(90deg, #7E44E3, #B48CF2); border-radius: 999px; }
+#root .mobile-rooms .wvm-reverb-knob { position: absolute; top: 50%; width: 18px; height: 18px; border-radius: 50%; background: #fff; transform: translate(-50%,-50%); box-shadow: 0 2px 6px rgba(0,0,0,.5); }
+/* selector panel */
+#root .mobile-rooms .wvm-selector { border-radius: 16px; border: 1px solid rgba(126,68,227,.3); background: linear-gradient(160deg, #17131f, #0e0c13); overflow: hidden; flex: none; }
+#root .mobile-rooms .wvm-selector-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; }
+#root .mobile-rooms .wvm-selector-title { flex: 1; font-size: 12px; font-weight: 600; color: #fff; }
+#root .mobile-rooms .wvm-selector-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 0 11px 11px; }
+#root .mobile-rooms .wvm-selector-list { display: flex; flex-direction: column; gap: 2px; padding: 0 6px 8px; }
+#root .mobile-rooms .wvm-selector-btn { height: 34px; border-radius: 9px; border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.04); color: rgba(255,255,255,.68); font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+#root .mobile-rooms .wvm-selector-btn.is-active { background: rgba(126,68,227,.3); border-color: rgba(126,68,227,.6); color: #fff; }
+#root .mobile-rooms .wvm-selector-list .wvm-selector-btn { justify-content: flex-start; padding: 0 12px; font-weight: 500; }
+#root .mobile-rooms .wvm-selector-btn--wide { width: 100%; }
+#root .mobile-rooms .wvm-selector-icon { color: #C9B3F5; flex: none; }
+#root .mobile-rooms .wvm-selector-close { width: 24px; height: 24px; border-radius: 50%; border: 0; background: rgba(255,255,255,.08); color: rgba(255,255,255,.6); display: flex; align-items: center; justify-content: center; flex: none; }
+
+/* reverb — l'input range pilote le remplissage + knob visuels */
+#root .mobile-rooms .wvm-reverb-track input[type="range"] { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 2; -webkit-appearance: none; appearance: none; }
+#root .mobile-rooms .wvm-reverb.is-off { opacity: .45; }
+
+/* console Pro */
+#root .mobile-rooms .wvm-pro { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
+
+/* indicateurs de page Traitement/Live */
+#root .mobile-rooms .wvm-pagedots { position: absolute; top: 6px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; z-index: 4; }
+
+/* placeholder caméra coupée (host) */
+#root .mobile-rooms .wv-video-camoff { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: #0a0a0c; color: rgba(255,255,255,.5); z-index: 3; }
+#root .mobile-rooms .wv-video-camoff-label { font-size: 9px; font-weight: 900; letter-spacing: 2px; color: rgba(255,255,255,.42); }
+
+/* ── Mix — page traitement ── */
+#root .mobile-rooms .wvm-page { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 0 16px; }
+#root .mobile-rooms .wvm-treatment { flex: 1; min-height: 0; display: flex; gap: 0; padding-top: 10px; }
+#root .mobile-rooms .wvm-strips { width: 44%; flex: none; display: flex; justify-content: space-evenly; align-items: stretch; }
+#root .mobile-rooms .wvm-divider { width: 1px; background: rgba(255,255,255,.07); margin: 6px 0 6px 14px; flex: none; }
+#root .mobile-rooms .wvm-strip { width: 46px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+#root .mobile-rooms .wvm-strip-head { display: flex; align-items: center; justify-content: center; gap: 4px; height: 30px; font-size: 11px; font-weight: 600; color: rgba(255,255,255,.86); }
+#root .mobile-rooms .wvm-strip-body { flex: 1; min-height: 0; display: flex; gap: 6px; align-items: stretch; justify-content: center; }
+#root .mobile-rooms .wvm-meter { width: 4px; border-radius: 999px; background: rgba(255,255,255,.06); overflow: hidden; display: flex; align-items: flex-end; }
+#root .mobile-rooms .wvm-meter-fill { width: 100%; background: linear-gradient(to top, rgba(126,68,227,.45), #7E44E3 62%, #E8B86D 84%, #FF2E3B); transition: height .09s linear; }
+#root .mobile-rooms .wvm-fader { position: relative; width: 28px; touch-action: none; }
+#root .mobile-rooms .wvm-fader-track { position: absolute; left: 50%; top: 0; bottom: 0; width: 5px; transform: translateX(-50%); border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; }
+#root .mobile-rooms .wvm-fader-fill { position: absolute; bottom: 0; width: 100%; background: linear-gradient(to top, #7E44E3, #B48CF2); }
+#root .mobile-rooms .wvm-fader-thumb { position: absolute; left: 50%; transform: translate(-50%, 50%); width: 26px; height: 44px; border-radius: 13px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.55), inset 0 -1px 2px rgba(0,0,0,.12); }
+#root .mobile-rooms .wvm-strip-mute { width: 44px; height: 24px; border-radius: 6px; border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.08); color: rgba(255,255,255,.74); display: flex; align-items: center; justify-content: center; }
+#root .mobile-rooms .wvm-strip-mute.is-on { color: #FF2E3B; border-color: rgba(255,46,59,.4); }
+#root .mobile-rooms .wvm-strip.is-muted .wvm-fader-fill { background: rgba(255,255,255,.14); }
+
+/* ── Mix — colonne FX ── */
+#root .mobile-rooms .wvm-fx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; padding-left: 14px; }
+#root .mobile-rooms .wvm-fx-util { display: flex; align-items: center; gap: 7px; justify-content: flex-end; height: 30px; flex: none; }
+#root .mobile-rooms .wvm-mode { display: flex; gap: 2px; padding: 2px; border-radius: 999px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); height: 28px; align-items: center; }
+#root .mobile-rooms .wvm-mode-btn { height: 100%; padding: 0 12px; border-radius: 999px; border: 0; background: none; color: rgba(255,255,255,.46); font-size: 12px; font-weight: 500; display: flex; align-items: center; }
+#root .mobile-rooms .wvm-mode-btn.is-active { background: rgba(126,68,227,.55); color: #fff; font-weight: 600; }
+#root .mobile-rooms .wvm-fx-head { display: flex; align-items: center; justify-content: space-between; }
+#root .mobile-rooms .wvm-fx-title { font-size: 8px; font-weight: 900; letter-spacing: 1px; color: #7E44E3; }
+#root .mobile-rooms .wvm-fx-summary { font-size: 7px; font-weight: 900; color: rgba(255,255,255,.42); letter-spacing: .5px; }
+#root .mobile-rooms .wvm-fx-list { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 7px; padding-top: 1px; }
+#root .mobile-rooms .wvm-fx-card { display: flex; gap: 6px; }
+#root .mobile-rooms .wvm-fx-toggle { flex: 1; display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 10px; border-radius: 13px; border: 1px solid rgba(255,255,255,.1); background: linear-gradient(135deg, rgba(255,255,255,.04), rgba(255,255,255,.018)); color: rgba(255,255,255,.42); }
+#root .mobile-rooms .wvm-fx-card.is-on .wvm-fx-toggle { border-color: rgba(0,229,255,.54); background: linear-gradient(135deg, rgba(0,229,255,.16), rgba(255,255,255,.04)); color: #00E5FF; }
+#root .mobile-rooms .wvm-fx-icon { display: flex; width: 18px; }
+#root .mobile-rooms .wvm-fx-name { flex: 1; text-align: left; font-size: 8px; font-weight: 900; letter-spacing: .55px; }
+#root .mobile-rooms .wvm-fx-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.2); }
+#root .mobile-rooms .wvm-fx-card.is-on .wvm-fx-dot { background: #00E5FF; }
+#root .mobile-rooms .wvm-fx-settings { width: 36px; height: 36px; border-radius: 13px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.055); color: rgba(255,255,255,.46); display: flex; align-items: center; justify-content: center; flex: none; }
+#root .mobile-rooms .wvm-fx-card.is-on .wvm-fx-settings { color: #00E5FF; border-color: rgba(0,229,255,.35); }
+#root .mobile-rooms .wvm-fx-add { height: 34px; border-radius: 12px; border: 1px dashed rgba(126,68,227,.4); background: rgba(126,68,227,.06); color: #C9B3F5; font-size: 9px; font-weight: 800; }
+
+/* ── Mix — deck ── */
+#root .mobile-rooms .wvm-deck { flex: none; display: flex; flex-direction: column; gap: 7px; margin: 6px 0 calc(8px + env(safe-area-inset-bottom)); padding: 10px 12px 12px; border-radius: 18px; border: 1px solid rgba(255,255,255,.09); background: linear-gradient(160deg, rgba(255,255,255,.045), rgba(255,255,255,.02)); }
+/* transport */
+#root .mobile-rooms .wvm-deck-transport { display: flex; align-items: center; gap: 7px; justify-content: center; }
+#root .mobile-rooms .wvm-tr-prive { height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06); color: rgba(255,255,255,.62); font-size: 12px; font-weight: 500; }
+#root .mobile-rooms .wvm-tr-prive.is-on { background: rgba(126,68,227,.22); border-color: rgba(126,68,227,.5); color: #fff; }
+#root .mobile-rooms .wvm-tr-btn { width: 32px; height: 30px; border-radius: 999px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.05); color: rgba(255,255,255,.68); display: flex; align-items: center; justify-content: center; flex: none; }
+#root .mobile-rooms .wvm-tr-btn.is-on { color: #C9B3F5; border-color: rgba(126,68,227,.5); background: rgba(126,68,227,.16); }
+#root .mobile-rooms .wvm-tr-btn--play { width: 40px; height: 40px; background: #7E44E3; border-color: #7E44E3; color: #fff; box-shadow: 0 3px 12px rgba(126,68,227,.5); }
+#root .mobile-rooms .wvm-tr-btn:disabled { opacity: .45; }
+/* piste principale */
+#root .mobile-rooms .wvm-deck-label { font-size: 11px; font-weight: 600; color: rgba(255,255,255,.5); padding: 0 2px; }
+#root .mobile-rooms .wvm-deck-lane { position: relative; height: 46px; display: flex; align-items: center; gap: 2px; padding: 0 8px; border-radius: 11px; background: rgba(255,255,255,.045); border: 1px solid rgba(255,255,255,.08); touch-action: none; }
+#root .mobile-rooms .wvm-deck-bar { flex: 1; min-width: 2px; border-radius: 2px; background: rgba(255,255,255,.16); }
+#root .mobile-rooms .wvm-deck-bar.is-filled { background: #7E44E3; }
+#root .mobile-rooms .wvm-deck-playhead { position: absolute; top: 4px; bottom: 4px; width: 1.5px; background: #fff; box-shadow: 0 0 6px rgba(255,255,255,.7); }
+#root .mobile-rooms .wvm-deck-import { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; color: rgba(255,255,255,.5); font-size: 12px; font-weight: 500; }
+#root .mobile-rooms .wvm-deck-foot { display: flex; align-items: center; justify-content: flex-end; gap: 9px; }
+#root .mobile-rooms .wvm-deck-time { font-size: 10px; font-weight: 600; color: rgba(255,255,255,.42); font-variant-numeric: tabular-nums; }
+
+/* ── Mix — soundboard ── */
+#root .mobile-rooms .wvm-live { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding-top: 10px; }
+#root .mobile-rooms .wvm-live-head { display: flex; align-items: center; justify-content: space-between; }
+#root .mobile-rooms .wvm-live-title { font-size: 10px; font-weight: 900; letter-spacing: 1.2px; color: #7E44E3; }
+#root .mobile-rooms .wvm-live-sub { font-size: 8px; font-weight: 900; letter-spacing: .8px; color: rgba(255,255,255,.42); }
+#root .mobile-rooms .wvm-board { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 12px; border-radius: 19px; background: rgba(5,6,10,.42); border: 1px solid rgba(126,68,227,.2); }
+#root .mobile-rooms .wvm-pads { flex: 1; display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; }
+#root .mobile-rooms .wvm-pad { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border-radius: 15px; border: 1px solid rgba(126,68,227,.3); background: rgba(126,68,227,.08); color: #C9B3F5; font-size: 9px; font-weight: 900; letter-spacing: .5px; transition: transform .08s ease; }
+#root .mobile-rooms .wvm-pad.is-hit { transform: scale(.95); background: rgba(126,68,227,.24); }
+#root .mobile-rooms .wvm-board-volume { display: flex; align-items: center; gap: 9px; color: rgba(255,255,255,.55); font-size: 10px; font-weight: 800; }
+#root .mobile-rooms .wvm-board-volume input { flex: 1; accent-color: #7E44E3; }
+
+/* ── Mix — sheets ── */
+#root .mobile-rooms .wvm-sheet { background: linear-gradient(160deg, #14141a, #0d0d11 70%); border-radius: 22px 22px 0 0; border-top: 1px solid rgba(255,255,255,.1); padding: 16px 16px calc(18px + env(safe-area-inset-bottom)); max-height: 86%; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
+#root .mobile-rooms .wvm-sheet-head { display: flex; align-items: center; gap: 11px; }
+#root .mobile-rooms .wvm-sheet-icon { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex: none; }
+#root .mobile-rooms .wvm-sheet-icon--accent { color: #7E44E3; background: rgba(126,68,227,.16); }
+#root .mobile-rooms .wvm-sheet-meta { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+#root .mobile-rooms .wvm-sheet-title { font-size: 15px; font-weight: 900; }
+#root .mobile-rooms .wvm-sheet-sub { font-size: 8px; font-weight: 900; letter-spacing: .8px; color: rgba(255,255,255,.42); }
+#root .mobile-rooms .wvm-sheet-enable { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px; border-radius: 14px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); text-align: left; }
+#root .mobile-rooms .wvm-sheet-enable-title { display: block; font-size: 12px; font-weight: 900; letter-spacing: .6px; color: #fff; }
+#root .mobile-rooms .wvm-sheet-enable-sub { display: block; margin-top: 3px; font-size: 10px; font-weight: 600; color: rgba(255,255,255,.48); }
+#root .mobile-rooms .wvm-switch { width: 40px; height: 24px; border-radius: 999px; background: rgba(255,255,255,.14); position: relative; flex: none; transition: background .15s ease; }
+#root .mobile-rooms .wvm-switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .15s ease; }
+#root .mobile-rooms .wvm-switch.is-on { background: #7E44E3; }
+#root .mobile-rooms .wvm-switch.is-on::after { transform: translateX(16px); }
+
+/* ── Mix — autotune editor ── */
+#root .mobile-rooms .wvm-tune { display: flex; flex-direction: column; gap: 13px; }
+#root .mobile-rooms .wvm-tune-row { display: flex; align-items: center; gap: 10px; }
+#root .mobile-rooms .wvm-tune-label { width: 52px; flex: none; font-size: 10px; font-weight: 700; color: rgba(255,255,255,.5); }
+#root .mobile-rooms .wvm-tune-value { font-size: 11px; font-weight: 700; color: rgba(255,255,255,.75); }
+#root .mobile-rooms .wvm-keys { flex: 1; display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+#root .mobile-rooms .wvm-key { height: 30px; border-radius: 8px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.05); color: rgba(255,255,255,.6); font-size: 9px; font-weight: 800; }
+#root .mobile-rooms .wvm-key.is-active { background: rgba(0,229,255,.16); border-color: rgba(0,229,255,.55); color: #00E5FF; }
+#root .mobile-rooms .wvm-tune-slider { display: flex; flex-direction: column; gap: 6px; }
+#root .mobile-rooms .wvm-tune-slider-head { display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; color: rgba(255,255,255,.55); }
+#root .mobile-rooms .wvm-tune-slider input { width: 100%; accent-color: #00E5FF; }
+#root .mobile-rooms .wvm-generic-params { display: flex; flex-direction: column; gap: 13px; }
+#root .mobile-rooms .wvm-presets { display: flex; flex-direction: column; gap: 7px; }
+#root .mobile-rooms .wvm-preset { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 14px; border: 1px solid rgba(255,255,255,.09); background: rgba(255,255,255,.04); color: #fff; text-align: left; }
+#root .mobile-rooms .wvm-preset.is-active { border-color: rgba(126,68,227,.55); background: rgba(126,68,227,.12); }
+#root .mobile-rooms .wvm-preset-name { font-size: 13px; font-weight: 800; }
+#root .mobile-rooms .wvm-preset-fx { flex: 1; font-size: 9px; color: rgba(255,255,255,.45); }
+#root .mobile-rooms .wv-panel-keep { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+#root .mobile-rooms .wv-panel-keep[hidden] { display: none; }

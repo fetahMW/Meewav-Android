@@ -224,3 +224,146 @@ dégage `env(safe-area-inset-top)`. Le CTA location hors-live passe de
 l’APK n’a pas pu être recompilé ici (`JAVA_HOME` absent), à refaire en
 local pour tester sur appareil.
 
+
+## Wave native — matière noire Hi-Fi, 19 septembre 2026
+
+L'ajout de régie vidéo du commit d8d239c a été annulé (eae6971). La référence
+reste le retour vidéo, le mixeur et le chat natifs de 9233783. Ne pas réintroduire
+le retour vidéo à hauteur variable qui poussait le mixeur.
+
+La navbar du mixeur, les cartes Autotune/Réverb, leur sélecteur et le lecteur
+partagent maintenant `hifiBlackSurface` / `HiFiBlackCard` : noir neutre, bombé
+peu profond, reflet supérieur large et faible, un seul liseré discret. Aucun
+métal brossé en image, aucune gorge ou succession de strokes blancs sur ces
+conteneurs. Les cartes FX gardent leur matière noire même éteintes ; le texte,
+les icônes et les contrôles portent l'état. Les dimensions, le retour vidéo,
+les gestes et le moteur audio restent ceux de la référence native.
+Compilation de livraison uniquement ; rendu à valider par l'utilisateur.
+
+### Chat Wave Android — champ web, 19 septembre 2026
+- Suppression de l'encart de démonstration épinglé « Envoie ta boucle ».
+- Champ natif adapté de Meewav-Web/src/features/rooms/place/place-chat-composer-glass.css : capsule noire, champ creusé, reflets statiques, touche d'envoi éclairée pendant la saisie, emojis conservés.
+- Rail d'indicateurs conservé ; cadeau remplacé par une roue crantée ouvrant les émoticônes ou le retour au direct.
+- Compilation de livraison uniquement ; appréciation visuelle laissée à l'utilisateur.
+
+### Essai Autotune lumineux — 19 septembre 2026
+- Autotune/Réverb désactivés : titres, icônes, valeurs et curseur atténués en gris, châssis noir conservé.
+- Halo violet discret uniquement autour de l'Autotune activé, transition 200 ms. Essai utilisateur avant éventuelle extension à Réverb ; ne pas généraliser sans son retour.
+
+### Ajustement chat Wave — capsule unique, 19 septembre 2026
+- Remplace le double conteneur du composer web par une seule capsule gris translucide et une touche d'envoi distincte.
+- Envoi violet basé sur capsuleAccent (#7E44E3), suppression du dégradé bleu électrique.
+- Rail d'indicateurs affiné, indicateurs répartis régulièrement en hauteur sans séparateurs superflus.
+
+### Saisie chat et clavier Samsung — 19 septembre 2026
+- Capsule de saisie étendue sur toute la largeur ; enveloppe violette intégrée, sans bouton carré externe.
+- La Wave consomme les insets du clavier avec imePadding, après ceux de navigation, sans seconde animation.
+- En Chat, le retour vidéo reste monté à sa taille d'origine mais sa fenêtre se réduit si nécessaire pour laisser place aux messages et au champ. Retour au cadrage normal à la fermeture du clavier.
+- Rail défilable quand la hauteur disponible diminue ; quitter Chat replie le clavier.
+- Compilation de livraison ; comportement visuel à apprécier sur Samsung par l'utilisateur.
+
+### Rail Hi-Fi et outils du chat — 19 septembre 2026
+- Rail natif : matériau hifiBlackSurface partagé avec la navbar, largeur utile 44 dp, hauteur maximale 332 dp, sept emplacements réguliers ; défilement si clavier ouvert.
+- Remplacement de la roue crantée par la clé d'outils. Suppression du doublon d'accès aux emojis et du retour au direct dans ce menu.
+- Référence consultée : Meewav-iOS/Meewav/Features/Rooms/Components/Classe/ClasseSocialChrome.swift, CageHostToolsButton, ClasseHostToolsPalette et ClasseHostPollToolEditor. Palette iOS trouvée : Sondage.
+- Adaptation native de l'éditeur (Oui/Non, multiple 2–6 réponses, notes sur 5/10, durées 30/60/120s), annonce dans le chat, arrêt/expiration/nouveau sondage. Démo locale explicite ; aucun vote inventé ni connexion serveur ajoutée.
+- Compilation de livraison uniquement, pas de QA automatique.
+
+### Fin de l'essai glow Autotune — 19 septembre 2026
+- Retour utilisateur : mieux sans halo. Halo, contour violet et animation associés retirés ; ne pas les étendre à Réverb.
+- Conservation du châssis noir Hi-Fi et des textes/commandes grisés lorsque les effets sont désactivés.
+
+### Émojis dans la saisie Wave — 19 septembre 2026
+- Croix explicite dans le mur d'émoticônes ; hauteur adaptée à l'espace restant quand le clavier Samsung est ouvert.
+- Saisie native EditText avec ImageSpan : les assets Meewav remplacent visuellement les références [[mw:...]], un caractère éditable par image, insertion à la sélection et envoi sérialisé compatible avec les messages existants.
+- Conservation de la composition IME quand le brouillon ne change pas, limite de 1000 caractères sérialisés. Aucun remplacement du brouillon pendant une simple recomposition Compose.
+- Compilation de livraison, sans QA automatique.
+
+### Outils Wave : mise en avant et formats binaires — 19 septembre 2026
+- Ajout de Mise en avant : choix parmi les messages du host, snapshot fixé hors du flux défilant, sans expiration, conservé au niveau de l'écran lors des changements d'onglets. Retrait/remplacement explicite ; suppression du message épinglé le retire aussi du bandeau.
+- Émojis rendus dans le bandeau et dans la liste de sélection. Message long résumé sur deux lignes ; intégralité disponible dans Mise en avant.
+- Sondages : exactement Oui/Non, Pour/Contre, Pouce vers le haut/Pouce vers le bas (icônes bleues). Suppression du choix multiple et des notes 5/10. Démo locale inchangée, pas de vote serveur.
+
+### Chat Wave : portraits et icônes — 19 septembre 2026
+- Avion en papier pour envoyer ; trois points horizontaux pour ouvrir les outils du chat.
+- Dix portraits locaux repris de la banque Tremplin/Scène (sceneArtistPortraits.ts), artistes ajoutés au flux de démonstration.
+- Avatars existants conservés. Les participants sans image ont un portrait stable ; suppression du fallback avec une lettre.
+
+### Panneaux du chat Wave — 19 septembre 2026
+- Icône Dashboard retirée sous les trois points ; rail recalibré à six emplacements (286 dp max).
+- Cloche reliée à un bottom sheet natif avec notifications de démonstration, portraits, fermeture et défilement. Badge calculé depuis les données ; lecture conservée dans l'écran au changement d'onglet.
+- Appui long : bottom sheet noir Hi-Fi, portrait et aperçu riche du message, sections d'actions espacées, suppression distincte, croix/fermeture par geste. Mise en avant du host et suppression locale conservées.
+- Actions de modération préexistantes toujours sans câblage serveur ; cette passe modifie leur présentation, pas leur mécanique.
+- Compilation de livraison uniquement.
+
+### Invités Wave natifs — 19 septembre 2026
+- Audit source iOS documenté dans Docs/ANDROID-WAVE-GUESTS-IOS-AUDIT.md.
+- Nouveau parcours natif : candidatures/invitations, coulisses, scène ; aperçu au tap, sélection longue, glisser vers la vidéo pour monter et retour vers le panneau pour redescendre.
+- Capacité trois invités, géométrie duo/trio/quatre, état conservé entre onglets, matériau Hi-Fi existant. Ne pas remplacer l'écran par l'ancienne régie WebView.
+- Démo locale avec portraits, contrôles micro/caméra locaux. Aucun raccordement RTC/Supabase à cette room native fictive ; BytePlus différé par l'utilisateur.
+
+### Rail du chat Wave — partage et centrage
+- Rail noir Hi-Fi centré verticalement entre la navbar principale et la barre de messages ; hauteur compacte bornée à l'espace disponible.
+- Fins séparateurs gris entre actions, indicateurs et partage. Partage Android natif du descriptif de la session de démonstration, sans inventer de lien de room.
+
+
+### Chat live compact
+- Texte rapproché du nom, intermessages réduit, heures supprimées.
+- Suivi automatique actif à l'ouverture ; le défilement manuel le suspend et révèle Revenir au direct. Les nouveaux messages restent reçus.
+- Exemple de don de KÉO (10 euros) dans la cloche ; notifications toujours de démonstration locale.
+
+
+### Navigation secondaire des invités
+- Demandes à gauche, Coulisses au centre, Scène à droite. Coulisses reste l'ouverture par défaut.
+- Libellés et compteurs discrets sans châssis ni capsules, fin repère violet fondu ; cibles tactiles 44 dp conservées.
+
+
+### Régie vidéo native — adaptation des compositions web
+- Menu compact sur la vidéo : Ensemble, Mise en avant, Solo, choix de la personne principale. Repli sur le host si la personne quitte la scène.
+- Formats des sources séparés du viewport : duo mixte 70/30, colonnes Short, grille à trois/quatre et focus adapté au viewport. Média contenu sans déformation.
+- Plein écran natif séparé : ne redimensionne pas le mixeur. Fermeture par croix ou retour Android. Libération de la vidéo à la sortie.
+- Sources toujours locales (boucle host et portraits démo). Ni RTC, ni synchronisation Supabase, ni auto-director audio ne sont annoncés comme raccordés. BytePlus reste différé.
+- Référence : Meewav-Web PlaceStage.tsx, placeStageLayoutEngine.ts, placeStageLayout.css. Compilation de livraison uniquement, aucune QA automatique.
+
+
+### Plein écran mobile à deux
+- En portrait, deux personnes occupent chacune une moitié pleine largeur : haut/bas, indépendamment du format des sources. Ensemble et Mise en avant suivent cette règle ; Solo conserve une personne.
+
+
+### Filtre invités repris des Rooms web
+- Bouton filtre après Inviter, badge du nombre de critères. Panneau natif noir Hi-Fi à trois sections repliables : 28 styles illustrés du catalogue web, niveaux 1 à 6, préparation micro/caméra, latence <=80 ms et Green House.
+- Brouillon avant application, compteur de résultats, Tout effacer. OU au sein d'une catégorie, ET entre catégories, comme sur le web. Filtres sur Demandes/Coulisses/Scène ; ils ne retirent personne de la vidéo.
+- Niveaux et latences du roster sont explicitement des données de démonstration.
+
+
+### Coulisses peuplées et filtres mobiles
+- 24 profils en coulisses et plus de 32 demandes en démo. États illustrés connexion perdue, signal faible, latence, micro/caméra coupés ; une connexion perdue bloque la montée sur scène.
+- Filtre en LazyColumn, décodage de miniatures hors du fil UI avec cache, images originales conservées. CTA violet assourdi #453677.
+- Six vrais badges exportés directement du composant SVG React canonique via scripts/export-wave-grade-badges.cjs.
+- Sélection des 8/16/32 premières demandes correspondant aux filtres, uniquement dans Demandes, appliquée au bouton inférieur sans accepter automatiquement.
+
+
+### Demandes : sélection et barre d'actions
+- Multi-select à côté d'Ouvrir/Fermer les demandes. Tap sur une demande ou appui long active la sélection ; cases visibles et sélection des lots 8/16/32 compatible.
+- Bandeau noir Hi-Fi inférieur : compteur, Annuler, Passer en coulisses, Refuser. Actions désactivées sans sélection. Refuser retire uniquement les demandes sélectionnées ; passage direct en coulisses, sans mise sur scène.
+- Actions locales de démonstration, pas de notification distante envoyée.
+
+
+### Mixeur et deux rails invités
+- Entête des deux faders mutualisée : nom avec ellipse, plus de libellé Audio, note centrée sur son fader et petit séparateur vertical.
+- Invités sur deux rangées en LazyHorizontalGrid. Reconnaissance du drag vertical uniquement pour laisser le geste horizontal au rail.
+- Barre d'actions noire Hi-Fi fixe : Message, Aperçu, Scène/Demandes/Coulisses selon la section, Retirer/Refuser. Commandes désactivées sans sélection ; capacité et connexion vérifiées avant montée.
+- Composer privé avec clavier et historique local par invité pour la démo. Aucune livraison serveur annoncée.
+
+
+### Invités : tap, appui long et Greenhouse
+- Tap simple : sélection unique et fiche d'actions. Appui long : multi-sélection sans fiche ; les taps suivants modifient la sélection.
+- Demandes REQUESTED -> Greenhouse INVITED -> Coulisses BACKSTAGE -> Scène STAGE. Pas de caméra ni de commandes média dans la fiche d'une demande.
+- Fiche avec vrai badge, message privé démo et pré-profil natif compact (portrait, rôle, grade). Greenhouse est désormais un onglet distinct.
+
+
+### Correction explicite : Greenhouse invisible
+- Greenhouse est une étape interne, jamais un onglet ni un libellé utilisateur. Interface : Demandes / Coulisses / Scène. Cette règle remplace l'entrée précédente.
+- Préparation interne conservée ; bouton visible Passer en coulisses. Aucun aperçu caméra pour les profils de la liste Demandes, y compris ceux en préparation.
+- Le module actuel reste une démo locale ; ne pas prétendre avoir raccordé la préparation serveur.
+

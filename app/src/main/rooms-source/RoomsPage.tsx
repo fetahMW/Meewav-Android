@@ -6,6 +6,7 @@ import MeewavPillarBrand from '../market-source/vendor/src/components/navigation
 import MeewavPillarTabs, { type MeewavPillarTabItem } from '../market-source/vendor/src/components/navigation/MeewavPillarTabs';
 import RoomsHome from './vendor/src/features/rooms/home/RoomsHome';
 import LaunchRoomSheet from './vendor/src/features/rooms/launch/LaunchRoomSheet';
+
 import type { RoomsHomeRoom, RoomsHomeRoomType } from './vendor/src/features/rooms/home/roomsHome.types';
 
 const ROOMS = [
@@ -35,9 +36,11 @@ export default function RoomsPage() {
     setRoomNotice(message);
     window.setTimeout(() => setRoomNotice(''), 4000);
   };
-  const openRoom = (room: RoomsHomeRoom) => {
-    notice(`« ${room.title} » — le live arrive bientôt sur Android.`);
+  const openSession = (roomType: RoomsHomeRoomType, title: string, id?: string) => {
+    const params = new URLSearchParams({ type: roomType, title, ...(id ? { id } : {}) });
+    window.location.assign(`/native/room-session?${params}`);
   };
+  const openRoom = (room: RoomsHomeRoom) => openSession(room.roomType, room.title, room.id);
   return <div className="rooms-page">
     <div className="rooms-page__background" aria-hidden="true"
       style={{ backgroundImage: `url('/images/meewav-acoustic-violet-background.png')` }} />
@@ -70,7 +73,10 @@ export default function RoomsPage() {
         <LaunchRoomSheet
           initialType={tab === 'home' ? undefined : (tab as RoomsHomeRoomType)}
           onClose={() => setSequencerOpen(false)}
-          onLaunched={(label) => notice(`${label} — ta Room est prête, le live arrive bientôt sur Android.`)}
+          onLaunched={(label, roomType) => {
+            setSequencerOpen(false);
+            openSession(roomType, label);
+          }}
         />
       </div>
     ), document.body) : null}

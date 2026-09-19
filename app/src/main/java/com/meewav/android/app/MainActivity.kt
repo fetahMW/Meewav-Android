@@ -31,6 +31,7 @@ class MainActivity : ComponentActivity() {
         const val EXTRA_OPEN_SCENE = "com.meewav.android.OPEN_SCENE"
         const val EXTRA_OPEN_TREMPLIN = "com.meewav.android.OPEN_TREMPLIN"
         const val EXTRA_OPEN_PROFILE = "com.meewav.android.OPEN_PROFILE"
+        const val EXTRA_OPEN_WAVE_MIXER = "com.meewav.android.OPEN_WAVE_MIXER"
         const val EXTRA_LIVE_AUTH = "com.meewav.android.LIVE_AUTH"
         // Temporary Market workshop entry. Set false to restore authentication.
         private const val OPEN_FEATURE_WORKSHOP = true
@@ -88,6 +89,7 @@ class MainActivity : ComponentActivity() {
             || intent.getBooleanExtra(EXTRA_LIVE_AUTH, false)
             || intent.getBooleanExtra(EXTRA_OPEN_GLOBE, false)) return false
         val workshop = when {
+            intent.getBooleanExtra(EXTRA_OPEN_WAVE_MIXER, false) -> com.meewav.android.features.rooms.wave.WaveMixerActivity::class.java
             intent.getBooleanExtra(EXTRA_OPEN_SCENE, false) -> com.meewav.android.features.scene.SceneActivity::class.java
             intent.getBooleanExtra(EXTRA_OPEN_TREMPLIN, false) -> com.meewav.android.features.tremplin.TremplinActivity::class.java
             intent.getBooleanExtra(EXTRA_OPEN_MESSAGES, false) -> MessagingActivity::class.java

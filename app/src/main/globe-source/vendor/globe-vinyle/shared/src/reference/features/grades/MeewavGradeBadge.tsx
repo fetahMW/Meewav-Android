@@ -1,4 +1,4 @@
-import { type CSSProperties, useId } from "react";
+import { type CSSProperties, useId, useLayoutEffect, useRef } from "react";
 
 import {
   getGradeBadgeMeta,
@@ -158,6 +158,25 @@ function Laurel({
 
 function BadgeSvg({ level }: { level: GradeLevel }) {
   const rawId = useId();
+  const numberRef = useRef<SVGTextElement>(null);
+  useLayoutEffect(() => {
+    let active = true;
+    const centerNumber = () => {
+      const node = numberRef.current;
+      if (!active || !node) return;
+      const style = getComputedStyle(node);
+      const canvas = document.createElement('canvas').getContext('2d');
+      if (!canvas) return;
+      canvas.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+      const metrics = canvas.measureText(node.textContent || '');
+      // Center the painted glyph, not the font's line box (especially visible on 4).
+      node.setAttribute('x', String(64 - (metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft) / 2));
+      node.setAttribute('y', String(70 + (metrics.actualBoundingBoxAscent - metrics.actualBoundingBoxDescent) / 2));
+    };
+    centerNumber();
+    document.fonts.ready.then(centerNumber);
+    return () => { active = false; };
+  }, [level]);
   const uid = `mw-grade-${sanitizeSvgId(rawId)}-${level}`;
   const meta = getGradeBadgeMeta(level);
   const legendary = level === 6;
@@ -366,14 +385,15 @@ function BadgeSvg({ level }: { level: GradeLevel }) {
       />
 
       <text
+        ref={numberRef}
         x="64"
-        y="85"
+        y="70"
         fill={legendary ? "#FFFFFF" : "#FFFFFF"}
         fontFamily="Inter, ui-sans-serif, system-ui, sans-serif"
         fontSize="43"
         fontWeight="950"
         letterSpacing="0"
-        textAnchor="middle"
+        textAnchor="start"
       >
         {meta.badgeNumber}
       </text>

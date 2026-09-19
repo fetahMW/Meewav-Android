@@ -377,7 +377,7 @@ private class AuthGlobeController(private val fullScene: Boolean) {
 }
 
 /** Only manifest-listed files in the bundled full scene can be fetched, including workers. */
-private fun fullGlobeAsset(context: Context, request: WebResourceRequest, manifest: JSONObject): WebResourceResponse {
+internal fun fullGlobeAsset(context: Context, request: WebResourceRequest, manifest: JSONObject): WebResourceResponse {
     val uri = request.url
     if (request.method != "GET" || uri.scheme != "https" || uri.host != "appassets.androidplatform.net" ||
         uri.port != -1 || uri.userInfo != null || uri.encodedQuery != null || uri.encodedFragment != null) return denied()
