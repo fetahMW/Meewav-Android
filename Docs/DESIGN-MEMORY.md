@@ -329,3 +329,9 @@ Compilation de livraison uniquement ; rendu à valider par l'utilisateur.
 ### Plein écran mobile à deux
 - En portrait, deux personnes occupent chacune une moitié pleine largeur : haut/bas, indépendamment du format des sources. Ensemble et Mise en avant suivent cette règle ; Solo conserve une personne.
 
+
+### Filtre invités repris des Rooms web
+- Bouton filtre après Inviter, badge du nombre de critères. Panneau natif noir Hi-Fi à trois sections repliables : 28 styles illustrés du catalogue web, niveaux 1 à 6, préparation micro/caméra, latence <=80 ms et Green House.
+- Brouillon avant application, compteur de résultats, Tout effacer. OU au sein d'une catégorie, ET entre catégories, comme sur le web. Filtres sur Demandes/Coulisses/Scène ; ils ne retirent personne de la vidéo.
+- Niveaux et latences du roster sont explicitement des données de démonstration.
+

@@ -132,11 +132,13 @@ private fun GuestStageTile(state: WaveGuestState, guest: WaveGuest, interactive:
 internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifier) {
     var page by remember { mutableIntStateOf(0) }
     var inviteOpen by remember { mutableStateOf(false) }
-    val shown = state.guests.filter { when (page) {
+    var filtersOpen by remember { mutableStateOf(false) }
+    val participants = state.guests.filter { when (page) {
         0 -> it.location == WaveGuestLocation.BACKSTAGE
         1 -> it.location == WaveGuestLocation.INVITED || it.location == WaveGuestLocation.REQUESTED
         else -> it.location == WaveGuestLocation.STAGE
     } }
+    val shown = participants.filter(state.filters::matches)
     val selectedGuests = shown.filter { it.id in state.selected }
     DisposableEffect(Unit) { onDispose { state.cancelDrag(); state.backstageBounds = androidx.compose.ui.geometry.Rect.Zero } }
     Column(modifier.padding(top = 2.dp, bottom = 8.dp)) {
@@ -165,6 +167,11 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
             Text(if (page == 0) "Glisse un invité vers la vidéo" else if (page == 2) "3 invités maximum sur scène" else "Demandes de participation",
                 modifier = Modifier.weight(1f), color = Color.White.copy(alpha = .48f), fontSize = 11.sp)
             TextButton(onClick = { inviteOpen = true }) { Text("+ Inviter", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 12.sp) }
+            BadgedBox(badge = { if (state.filters.count > 0) Badge(containerColor = WaveMixerTheme.capsuleAccent) { Text("${state.filters.count}") } }) {
+                IconButton(onClick = { filtersOpen = true }) {
+                    Icon(WaveIcons.Tune, "Filtrer les invités", tint = WaveMixerTheme.capsuleAccentSoft, modifier = Modifier.size(20.dp))
+                }
+            }
         }
         Box(Modifier.weight(1f).fillMaxWidth()
             .onGloballyPositioned { state.backstageBounds = it.boundsInRoot() }
@@ -172,7 +179,8 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                 Modifier.border(1.dp, WaveMixerTheme.capsuleAccentSoft, RoundedCornerShape(14.dp)) else Modifier)) {
             if (shown.isEmpty()) Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
                 Icon(WaveIcons.Group, null, tint = Color.White.copy(alpha = .3f), modifier = Modifier.size(30.dp))
-                Text(if (page == 2) "Personne sur scène" else "Aucun invité ici", color = Color.White.copy(alpha = .6f), fontSize = 13.sp)
+                Text(if (participants.isNotEmpty()) "Aucun profil pour ces filtres" else if (page == 2) "Personne sur scène" else "Aucun invité ici", color = Color.White.copy(alpha = .6f), fontSize = 13.sp)
+                if (state.filters.count > 0) TextButton(onClick = { state.filters = WaveGuestFilters() }) { Text("Tout effacer", color = WaveMixerTheme.capsuleAccentSoft) }
             }
             LazyVerticalGrid(columns = GridCells.Fixed(3), modifier = Modifier.fillMaxSize(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -210,6 +218,7 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
     }
     val preview = state.guests.find { it.id == state.previewId }
     if (preview != null) GuestPreviewSheet(state, preview)
+    if (filtersOpen) WaveGuestFilterSheet(state, participants, onDismiss = { filtersOpen = false })
     if (inviteOpen) {
         ModalBottomSheet(onDismissRequest = { inviteOpen = false }, containerColor = Color(0xFF101114), contentColor = Color.White) {
             Column(Modifier.fillMaxWidth().heightIn(max = 500.dp).verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

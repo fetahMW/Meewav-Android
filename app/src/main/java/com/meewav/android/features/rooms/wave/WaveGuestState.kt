@@ -15,6 +15,8 @@ internal data class WaveGuest(
     val appeared: Boolean = false,
     // Declared format of the local demo source; replace with RTC publication dimensions when connected.
     val sourceAspectRatio: Float = 9f / 16f,
+    val gradeLevel: Int = 1,
+    val latencyMs: Int? = null,
 )
 
 /** Native demo room state. No RTC or Supabase success is inferred from a local move. */
@@ -32,8 +34,11 @@ internal class WaveGuestState {
         WaveGuest("malik", "MALIK NOX", "Auteur", R.drawable.wave_chat_artist_6, WaveGuestLocation.REQUESTED),
         WaveGuest("alya", "ALYA FLOW", "Productrice", R.drawable.wave_chat_artist_7, WaveGuestLocation.REQUESTED),
     )
-    var guests by mutableStateOf(initialGuests)
+    var guests by mutableStateOf(initialGuests.mapIndexed { index, guest ->
+        guest.copy(gradeLevel = index % 6 + 1, latencyMs = listOf(35, 65, 110, 48)[index % 4])
+    })
         private set
+    var filters by mutableStateOf(WaveGuestFilters())
     val availableInvites get() = (initialGuests + listOf(
         WaveGuest("noam", "NOAM A.", "Producteur", R.drawable.wave_chat_artist_8, WaveGuestLocation.INVITED),
         WaveGuest("lina", "LINA V.", "Rappeuse", R.drawable.wave_chat_artist_9, WaveGuestLocation.INVITED),
