@@ -8,12 +8,12 @@ html, body, #root { position: fixed; inset: 0; margin: 0; width: 100vw; height: 
 #root .ring-artist-preprofile__close { display: none; }
 .ring-artist-preprofile .mw-hover-preprofile-bubble__arrow { display: none; }
 
-#root .ring-artist-preprofile .mw-hover-preprofile-bubble__surface:has(.mw-preprofile) { padding: 4px 16px 12px; }
-#root .ring-artist-preprofile .mw-preprofile { gap: 8px; padding: 0; }
+#root .ring-artist-preprofile .mw-hover-preprofile-bubble__surface:has(.mw-preprofile) { padding: 8px 16px 12px; }
+#root .ring-artist-preprofile .mw-preprofile { gap: clamp(8px, calc((var(--guest-profile-height, 440px) - 380px) * .2), 16px); padding: 0; }
 #root .ring-artist-preprofile .mw-preprofile__button { min-height: 42px; }
 #root .ring-artist-preprofile .mw-preprofile__tabs { min-height: 38px; }
 #root .ring-artist-preprofile .mw-preprofile__lower-stage { flex: 1 1 auto; min-height: 0; }
-#root .ring-artist-preprofile .mw-preprofile__media-stage { gap: 8px; }
+#root .ring-artist-preprofile .mw-preprofile__media-stage { gap: 12px; }
 #root .ring-artist-preprofile .mw-preprofile__preview[data-active-tab="overview"] { flex: 1 1 0; min-height: 0; max-height: none; }
 #root .ring-artist-preprofile .mw-preprofile__bio { flex: 0 0 auto; min-height: 28px; padding: 4px 6px; }
 #root .ring-artist-preprofile .mw-preprofile__footer { flex: 0 0 54px; min-height: 54px; margin-top: 0; gap: 10px; }
