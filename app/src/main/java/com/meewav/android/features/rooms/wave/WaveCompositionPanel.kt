@@ -272,12 +272,18 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, 
     if (filterMenu) {
         ModalBottomSheet(onDismissRequest = { filterMenu = false },
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            dragHandle = null,
             containerColor = Color(0xFF101115), contentColor = foreground) {
-            Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp).padding(bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Filtres des boucles", fontSize = 18.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                    ToolIcon(Icons.Default.Close, "Fermer les filtres") { filterMenu = false }
+            BoxWithConstraints(Modifier.fillMaxWidth().height(48.dp).padding(horizontal = 16.dp)) {
+                Text("Filtre des boucles", fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.align(Alignment.CenterStart).widthIn(max = maxWidth / 2 - 24.dp))
+                Box(Modifier.align(Alignment.Center).size(30.dp, 3.dp).background(muted.copy(alpha = .6f), RoundedCornerShape(50)))
+                IconButton(onClick = { filterMenu = false }, modifier = Modifier.align(Alignment.CenterEnd).size(48.dp)) {
+                    Icon(Icons.Default.Close, "Fermer les filtres", tint = soft, modifier = Modifier.size(20.dp))
                 }
+            }
+            Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp).padding(bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(Modifier.fillMaxWidth().hifiBlackSurface(10.dp)) {
                     listOf("Afficher", "Autoriser l’envoi").forEachIndexed { index, title ->
                         TextButton(onClick = { receptionFilter = index == 1 }, modifier = Modifier.weight(1f)) {
