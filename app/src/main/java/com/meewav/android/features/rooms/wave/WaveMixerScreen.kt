@@ -364,19 +364,11 @@ private fun WaveHeader(title: String, onBack: () -> Unit, onClose: () -> Unit) {
             fontFamily = WaveMixerTheme.fontFamily, maxLines = 1,
             modifier = Modifier.align(Alignment.Center)
         )
-        // Share + croix — prévient avant de quitter le live.
+        // Croix — prévient avant de quitter le live.
         Row(
             Modifier.align(Alignment.CenterEnd),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                Modifier
-                    .size(36.dp)
-                    .clickable { },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(WaveIcons.Share, null, tint = Color.White, modifier = Modifier.size(15.dp))
-            }
             Box(
                 Modifier
                     .size(36.dp)
