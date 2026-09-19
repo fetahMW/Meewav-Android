@@ -182,7 +182,7 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
             Box(Modifier.clickable(onClick = onProfile)) { WaveArtistPortrait(clip.artist) }
             Column(Modifier.weight(1f)) {
-                if (!composition) Box(Modifier.offset { androidx.compose.ui.unit.IntOffset(30, 0) }) { WaveRoleChip(clip.category) }
+                if (!composition) Box(Modifier.offset { androidx.compose.ui.unit.IntOffset(280, 0) }) { WaveRoleChip(clip.category) }
                 else Text(clip.title, color = ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(clip.artist, color = secondary, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, false))
