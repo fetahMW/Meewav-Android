@@ -425,3 +425,5 @@ Le lecteur Wave possède son propre bouton haut-parleur animé et son propre vol
 - Chips compacts : capsules 58 x 18 dp, couleurs néon saturées (orange, vert, violet, cyan, rose, jaune). L’atténuation mute/solo touche l’identité de la piste, pas les chips ni les commandes.
 
 - Propositions : auto-repli du lecteur après 40 pixels réellement consommés vers le bas ; mouvement inverse réinitialise le seuil. Réouverture après repli automatique uniquement en remontant au début. Chevron prioritaire avec grâce de 1200 ms, fermeture manuelle non annulée automatiquement. Animation commune au chevron.
+
+- Lecteur de boucles Wave compacté de 16 dp ouvert : marges externes 2 dp, ligne titre/BPM/chrono 21 dp, timeline 54 dp avec padding 3 dp (dessin utile inchangé à 48 dp). Boutons et typographie conservés ; rail volume 48 dp.

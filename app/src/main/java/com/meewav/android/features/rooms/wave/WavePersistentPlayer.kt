@@ -65,7 +65,7 @@ internal fun WaveMasterPlayer(
         (snapshot.frame.toFloat() / state.durationFrames).coerceIn(0f, 1f)
     val peaks = if (snapshot.cue != null) state.prepared[snapshot.cue]?.peaks.orEmpty() else state.masterPeaks
     LaunchedEffect(state.page, state.referenceId, state.listeningMode) { rail = PlayerRail.READOUT; bases = false; volumeOpen = false }
-    Column(Modifier.fillMaxWidth().hifiBlackSurface(17.dp).padding(horizontal = 10.dp, vertical = 4.dp)) {
+    Column(Modifier.fillMaxWidth().hifiBlackSurface(17.dp).padding(horizontal = 10.dp, vertical = 2.dp)) {
         Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(48.dp).waveTactileClick {
                 onExpandedChange(!expanded); bases = false; rail = PlayerRail.READOUT; volumeOpen = false
@@ -106,7 +106,7 @@ internal fun WaveMasterPlayer(
         }
         AnimatedVisibility(volumeOpen, enter = expandVertically(spring(dampingRatio = .9f)) + fadeIn(),
             exit = shrinkVertically(spring(dampingRatio = .9f)) + fadeOut()) {
-            Row(Modifier.fillMaxWidth().height(60.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically,
+            Row(Modifier.fillMaxWidth().height(48.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Icon(Icons.Default.VolumeUp, null, tint = secondary, modifier = Modifier.size(18.dp))
                 WaveOutputFader(state.outputGain, state::outputVolume, Modifier.weight(1f).height(44.dp))
@@ -119,9 +119,9 @@ internal fun WaveMasterPlayer(
             exit = shrinkVertically(animationSpec = spring(dampingRatio = .88f, stiffness = 230f), shrinkTowards = Alignment.Top) + fadeOut(tween(100))) {
             if (bases) WaveBaseLibrary(state, onImport = { bases = false; onImport(WaveImportDestination.BASE) }, onClose = { bases = false }) else Column {
                 // Library replaces the waveform's footprint, exactly as the iOS player does.
-                Box(Modifier.fillMaxWidth().height(if (state.compositionPage) 107.dp else 87.dp).clipToBounds()) {
+                Box(Modifier.fillMaxWidth().height(if (state.compositionPage) 95.dp else 75.dp).clipToBounds()) {
                     Column {
-                        Row(Modifier.fillMaxWidth().height(27.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Row(Modifier.fillMaxWidth().height(21.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text(if (snapshot.cue != null) state.candidate?.title ?: "Écoute privée" else state.reference?.title ?: "Aucune base importée",
                                 color = secondary, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.weight(1f).combinedClickable(onClick = { bases = true }, onLongClick = onSettings))
@@ -129,7 +129,7 @@ internal fun WaveMasterPlayer(
                                 modifier = Modifier.width(88.dp).clickable(onClick = onSettings), maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Text(waveClock(snapshot.frame), color = pearl, fontSize = 10.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.width(38.dp))
                         }
-                        if (rail == PlayerRail.LOOP && !state.canLoop) Box(Modifier.fillMaxWidth().height(60.dp), contentAlignment = Alignment.Center) {
+                        if (rail == PlayerRail.LOOP && !state.canLoop) Box(Modifier.fillMaxWidth().height(54.dp), contentAlignment = Alignment.Center) {
                             Text(if (!state.referenceReady) "Importe une base pour régler sa boucle." else "Choisis Base ou Mix pour régler la boucle.",
                                 color = secondary, fontSize = 11.sp)
                         } else WaveReferenceTimeline(peaks, progress, editingPin != null || state.loopEnabled,
@@ -139,7 +139,7 @@ internal fun WaveMasterPlayer(
                             sourceId = state.referenceId, minimum = (4800f / state.durationFrames).coerceAtMost(1f),
                             onScrubBegin = state::beginScrub, onScrubEnd = state::endScrub,
                             totalBars = (state.durationFrames / state.framesPerBar).toFloat(),
-                            modifier = Modifier.fillMaxWidth().height(60.dp).padding(vertical = 6.dp))
+                            modifier = Modifier.fillMaxWidth().height(54.dp).padding(vertical = 3.dp))
                         if (state.compositionPage) {
                             val markers = state.selectedMixId?.let { state.pinsFor(it) }.orEmpty()
                             Canvas(Modifier.fillMaxWidth().height(20.dp).pointerInput(markers, state.selectedPinId) {
