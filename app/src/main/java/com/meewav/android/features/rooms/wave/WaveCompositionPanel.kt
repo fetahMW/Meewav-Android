@@ -212,7 +212,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, 
                 val selected = candidates.find { it.id == (state.vote?.clipId ?: selectedVote) }
                 state.lastVerdict?.let { Text(it, color = soft, fontSize = 11.sp, modifier = Modifier.padding(bottom = 8.dp)) }
                 if (candidates.isEmpty()) EmptyWorkspace("Aucune boucle au vote", "Ouvre une proposition et choisis « Mettre au vote ».", Modifier.weight(1f))
-                else LazyColumn(Modifier.weight(1f).nestedScroll(proposalScroll), state = voteList, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                else LazyColumn(Modifier.weight(1f).nestedScroll(proposalScroll), state = voteList, verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(top = 6.dp)) {
                     items(candidates, key = { it.id }) { clip ->
                         Column(Modifier.fillMaxWidth().hifiBlackSurface(13.dp)
                             .border(if (selected?.id == clip.id) 1.dp else 0.dp, if (selected?.id == clip.id) soft.copy(alpha = .5f) else Color.Transparent, RoundedCornerShape(12.dp))
