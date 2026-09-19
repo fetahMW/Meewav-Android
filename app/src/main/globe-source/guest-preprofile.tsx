@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client';
-import { useLayoutEffect } from 'react';
+import { useLayoutEffect, type CSSProperties } from 'react';
 import { ArtistProfileCard } from './vendor/globe-vinyle/shared/src/RingArtistPreProfile';
 import './guest-preprofile.css';
 
@@ -30,7 +30,8 @@ function GuestCard({ guest }: { guest: Guest }) {
     portraitUrl: guest.portrait, gradeLevel: guest.grade,
     anchor: { x: 0, y: 0, clearance: 0, viewportWidth: innerWidth, viewportHeight: innerHeight },
   };
-  return <div className="ring-artist-preprofile" role="region" aria-label={`Pré-profil de ${selection.name}`}>
+  return <div className="ring-artist-preprofile" role="region" aria-label={`Pré-profil de ${selection.name}`}
+    style={{ '--guest-grade-image': `url("/guest-grade/${Math.max(1, Math.min(6, Math.round(guest.grade)))}")` } as CSSProperties}>
     <ArtistProfileCard selection={selection} onClose={() => { location.href = '/native/close'; }} />
   </div>;
 }

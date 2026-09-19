@@ -33,6 +33,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.meewav.android.features.auth.fullGlobeAsset
+import com.meewav.android.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -163,6 +164,13 @@ private class GuestProfileContent(context: Context, manifest: JSONObject,
             }
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse {
                 val uri = request.url
+                // Share the exact artwork used by GuestGrade in the native actions sheet.
+                if (uri.scheme == "https" && uri.host == "appassets.androidplatform.net" && uri.path?.startsWith("/guest-grade/") == true) {
+                    val badges = listOf(R.drawable.wave_grade_1, R.drawable.wave_grade_2, R.drawable.wave_grade_3,
+                        R.drawable.wave_grade_4, R.drawable.wave_grade_5, R.drawable.wave_grade_6)
+                    val level = uri.lastPathSegment?.toIntOrNull()
+                    if (level != null && level in 1..6) return WebResourceResponse("image/png", null, context.resources.openRawResource(badges[level - 1]))
+                }
                 // Immutable portrait URLs prevent an old request from displaying the next guest.
                 if (uri.scheme == "https" && uri.host == "appassets.androidplatform.net" && uri.path?.startsWith("/guest-portrait/") == true) {
                     val res = uri.lastPathSegment?.toIntOrNull()

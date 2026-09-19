@@ -1,5 +1,8 @@
 html, body, #root { position: fixed; inset: 0; margin: 0; width: 100vw; height: 100dvh; overflow: hidden; background: transparent; color: #eee; font-family: Arial, sans-serif; }
 #root { overflow: hidden; }
+/* Same grade artwork and numeral alignment as the native guest actions sheet. */
+#root .mw-grade-badge__icon { background: var(--guest-grade-image) center / contain no-repeat; }
+#root .mw-grade-badge__svg { visibility: hidden; }
 #root .ring-artist-preprofile { position: relative; inset: auto; margin: 0 auto; width: 413px; height: var(--guest-profile-height, 440px); --mw-bubble-w: 413px; --mw-bubble-h: var(--guest-profile-height, 440px); transform-origin: top left; transform: scale(var(--guest-profile-scale, 1)); background: transparent; border-radius: 0; }
 #root .mw-hover-preprofile-bubble__shell { border-radius: 0; background: transparent; box-shadow: none; }
 #root .mw-hover-preprofile-bubble__shell::before,
