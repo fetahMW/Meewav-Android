@@ -367,3 +367,6 @@ Compilation de livraison uniquement ; rendu à valider par l'utilisateur.
 - Préparation interne conservée ; bouton visible Passer en coulisses. Aucun aperçu caméra pour les profils de la liste Demandes, y compris ceux en préparation.
 - Le module actuel reste une démo locale ; ne pas prétendre avoir raccordé la préparation serveur.
 
+
+## Wave — source du lecteur, 19 septembre 2026
+Le lecteur permanent Wave demandé se trouve sur Meewav-iOS origin/wave/host-hardware-c97a (20ef578), et non sur main aea7251. Garder : barre principale > sous-menu Propositions / Vote / Composition > lecteur fixe repliable. Référence des cartes : les conteneurs noirs déjà validés dans Propositions ; portrait, Play, seul le chip de catégorie porte sa couleur. Importer les rails animés et la mécanique du workflow de cette branche, ne pas inventer un transport différent. Voir Docs/PORTAGE-WAVE-IOS-ANDROID.md pour les capacités et limites.

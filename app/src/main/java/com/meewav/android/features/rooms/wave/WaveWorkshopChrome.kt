@@ -54,116 +54,6 @@ internal fun Modifier.waveTactileClick(onClick: () -> Unit): Modifier {
     return graphicsLayer { scaleX = scale; scaleY = scale; alpha = opacity }.clickable(source, indication = null, onClick = onClick)
 }
 
-/** Fixed above the workspace lists. Only the deck folds; transport never scrolls away. */
-@Composable
-internal fun WaveMasterPlayer(state: WaveCompositionState, onImport: () -> Unit, onSettings: () -> Unit) {
-    var expanded by rememberSaveable { mutableStateOf(true) }
-    val snapshot = state.snapshot
-    val duration = state.durationFrames
-    val progress = (snapshot.frame % duration).toFloat() / duration
-    val peaks = remember(state.prepared, state.clips) { state.masterPeaks }
-    Column(Modifier.fillMaxWidth().hifiBlackSurface(17.dp).animateContentSize(spring(stiffness = Spring.StiffnessMediumLow))
-        .padding(horizontal = 10.dp, vertical = 5.dp)) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            WaveRoundPlay(snapshot.running, state.transportPending, progress, "Lecture ou pause de la composition", onClick = state::transport)
-            Column(Modifier.weight(1f).padding(start = 8.dp)) {
-                Text("Composition live", color = ink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                Text("${state.bpm} BPM · ${state.key}", color = secondary, fontSize = 10.sp)
-            }
-            Text(formatWaveTime(snapshot.frame), color = ink, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
-                modifier = Modifier.width(48.dp))
-            WaveControl(Icons.Default.Stop, "Tout arrêter et revenir au début", onClick = state::stopTransport)
-            WaveControl(if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                if (expanded) "Replier le lecteur" else "Déplier le lecteur", active = expanded) { expanded = !expanded }
-        }
-        AnimatedVisibility(expanded) {
-            Column {
-                Row(Modifier.fillMaxWidth().padding(start = 5.dp, end = 5.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                    val beat = snapshot.frame * state.bpm / (48_000L * 60)
-                    Text("MES. ${beat / 4 + 1}  ·  ${beat % 4 + 1}/4", color = secondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                    Text(if (state.loopEnabled) "Boucle A — B" else "${state.clips.count { it.inComposition }} pistes", color = secondary, fontSize = 9.sp)
-                }
-                WaveDeckTimeline(peaks, progress, state.loopEnabled, state.loopRange,
-                    onSeek = state::seek, onRange = state::updateLoopRange,
-                    modifier = Modifier.fillMaxWidth().height(47.dp).padding(vertical = 3.dp))
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                    WaveControl(Icons.Default.SkipPrevious, "Reculer d’une mesure") { state.stepBar(-1) }
-                    WaveControl(Icons.Default.Repeat, "Activer ou désactiver la boucle A B", state.loopEnabled, onClick = state::toggleLoop)
-                    WaveControl(Icons.Default.SkipNext, "Avancer d’une mesure") { state.stepBar(1) }
-                    WaveControl(Icons.Default.Add, "Importer un son ou un pack", onClick = onImport)
-                    WaveControl(Icons.Default.Tune, "Grille musicale", onClick = onSettings)
-                    WaveMeters(snapshot.leftPeak, snapshot.rightPeak)
-                }
-            }
-        }
-        if (snapshot.cue != null) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.Headphones, null, tint = accent, modifier = Modifier.size(15.dp))
-            Text(state.clips.find { it.id == snapshot.cue }?.title ?: "Écoute privée", color = secondary, fontSize = 10.sp,
-                modifier = Modifier.weight(1f).padding(horizontal = 6.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
-            WaveControl(Icons.Default.Close, "Arrêter l’écoute privée", onClick = state::stopPreview)
-        }
-    }
-}
-
-private fun formatWaveTime(frame: Long): String {
-    val seconds = frame / 48_000
-    return "%02d:%02d".format(seconds / 60, seconds % 60)
-}
-
-@Composable
-private fun WaveDeckTimeline(peaks: List<Float>, progress: Float, looping: Boolean,
-    range: ClosedFloatingPointRange<Float>, onSeek: (Float) -> Unit,
-    onRange: (ClosedFloatingPointRange<Float>) -> Unit, modifier: Modifier) {
-    val currentRange by rememberUpdatedState(range)
-    val currentSeek by rememberUpdatedState(onSeek)
-    val currentSelect by rememberUpdatedState(onRange)
-    Canvas(modifier.pointerInput(looping) {
-        var anchor = 0f
-        detectDragGestures(onDragStart = { point ->
-            val p = (point.x / size.width).coerceIn(0f, 1f)
-            anchor = if (!looping) p else if (abs(p - currentRange.start) < .08f) currentRange.endInclusive
-                else if (abs(p - currentRange.endInclusive) < .08f) currentRange.start else p
-            if (!looping) currentSeek(p)
-        }, onDrag = { change, _ ->
-            change.consume()
-            val p = (change.position.x / size.width).coerceIn(0f, 1f)
-            if (looping) currentSelect(min(anchor, p)..max(anchor, p)) else currentSeek(p)
-        })
-    }.pointerInput(looping) {
-        detectTapGestures { if (!looping) currentSeek((it.x / size.width).coerceIn(0f, 1f)) }
-    }) {
-        val width = size.width
-        repeat(9) { drawLine(Color.White.copy(alpha = .07f), Offset(width * it / 8, 0f), Offset(width * it / 8, size.height), 1f) }
-        if (looping) drawRect(accent.copy(alpha = .10f), Offset(range.start * width, 0f), androidx.compose.ui.geometry.Size((range.endInclusive - range.start) * width, size.height))
-        peaks.forEachIndexed { i, peak ->
-            val x = width * i / peaks.size
-            val h = max(1f, peak * size.height * .39f)
-            drawLine(if (i.toFloat() / peaks.size < progress) accent.copy(alpha = .8f) else Color(0xFF777680),
-                Offset(x, size.height / 2 - h), Offset(x, size.height / 2 + h), 2f, StrokeCap.Round)
-        }
-        if (looping) listOf(range.start, range.endInclusive).forEach {
-            drawLine(accent.copy(alpha = .8f), Offset(it * width, 0f), Offset(it * width, size.height), 2f)
-            drawCircle(accent, 3.dp.toPx(), Offset((it * width).coerceIn(3.dp.toPx(), width - 3.dp.toPx()), 4.dp.toPx()))
-        }
-        drawLine(ink, Offset(progress * width, 0f), Offset(progress * width, size.height), 1.5f)
-    }
-}
-
-@Composable
-private fun WaveMeters(left: Float, right: Float) {
-    val l by animateFloatAsState(left, tween(90), label = "Niveau gauche")
-    val r by animateFloatAsState(right, tween(90), label = "Niveau droit")
-    Canvas(Modifier.size(20.dp, 24.dp)) {
-        listOf(l, r).forEachIndexed { channel, value ->
-            repeat(8) { led ->
-                drawRoundRect(if (value * 8 >= led + 1) accent.copy(alpha = .85f) else Color(0xFF303038),
-                    Offset(channel * size.width / 2, size.height - (led + 1) * size.height / 8),
-                    androidx.compose.ui.geometry.Size(size.width / 2 - 3, size.height / 8 - 2), androidx.compose.ui.geometry.CornerRadius(1f))
-            }
-        }
-    }
-}
-
 @Composable
 internal fun WaveControl(icon: ImageVector, label: String, active: Boolean = false, enabled: Boolean = true, onClick: () -> Unit) {
     val interaction = remember { MutableInteractionSource() }
@@ -270,15 +160,17 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
     onDetail: () -> Unit, onAction: () -> Unit) {
     val voice = state.snapshot.voices.find { it.id == clip.id }
     val cue = state.snapshot.cue == clip.id
-    val queued = composition && voice?.phase == "Prochaine mesure"
-    val playing = if (composition) voice?.phase == "En lecture" else cue
+    val queued = if (composition) voice?.phase == "Prochaine mesure" else state.snapshot.pendingCandidate == clip.id
+    val playing = if (composition) voice?.phase == "En lecture" else (cue && !state.snapshot.cuePaused) || (state.snapshot.candidate == clip.id && state.snapshot.running)
     val progress = if (composition) {
         if (queued) 1f - (voice!!.remainingFrames / (48_000f * 60 * 4 / state.bpm)).coerceIn(0f, 1f) else voice?.progress ?: 0f
-    } else if (cue) state.snapshot.cueProgress else 0f
+    } else if (cue) state.snapshot.cueProgress else if (state.snapshot.candidate == clip.id) state.snapshot.candidateProgress else 0f
     val dimmed = composition && (clip.mute || (state.clips.any { it.inComposition && it.solo } && !clip.solo))
+    val selected = composition && state.selectedMixId == clip.id
     val opacity by animateFloatAsState(if (dimmed) .50f else 1f, tween(170), label = "Audibilité")
     Column(Modifier.fillMaxWidth().hifiBlackSurface(13.dp).graphicsLayer { alpha = opacity }
-        .combinedClickable(onClick = onDetail, onLongClick = { if (composition) state.repeat(clip.id) else onDetail() })
+        .border(.75.dp, if (selected) accent.copy(alpha = .45f) else Color.Transparent, RoundedCornerShape(13.dp))
+        .combinedClickable(onClick = { if (composition) state.selectMix(clip.id) else onDetail() }, onLongClick = onDetail)
         .padding(horizontal = 10.dp, vertical = 8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
             WaveArtistPortrait(clip.artist)
@@ -299,6 +191,7 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
                 "Prendre ou restaurer ${clip.title}", active = clip.inComposition, enabled = !clip.inComposition, onClick = onAction)
             else WaveControl(Icons.Default.MoreHoriz, "Options de ${clip.title}", onClick = onDetail)
         }
+        AnimatedVisibility(selected) { WaveMixControls(clip, state) }
         if (clip.id in state.errors) Text(state.errors[clip.id] ?: "Audio indisponible", color = Color(0xFFC88B90), fontSize = 9.sp)
     }
 }

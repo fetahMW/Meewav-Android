@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -46,8 +47,10 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
     var rejectId by remember { mutableStateOf<String?>(null) }
     var filter by remember { mutableStateOf(WaveProposalStatus.PENDING) }
     var detail by remember { mutableStateOf<String?>(null) }
+    var messageArtist by remember { mutableStateOf<String?>(null) }
     var settings by remember { mutableStateOf(false) }
     var importMenu by remember { mutableStateOf(false) }
+    var importDestination by remember { mutableStateOf(WaveImportDestination.PROPOSALS) }
     var filterMenu by remember { mutableStateOf(false) }
     var duration by remember { mutableIntStateOf(30) }
     var durationMenu by remember { mutableStateOf(false) }
@@ -65,11 +68,14 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
         uris.forEach { uri ->
             runCatching { context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
         }
-        state.importSelection(uris)
-        if (uris.isNotEmpty()) { filter = WaveProposalStatus.PENDING; section = 0 }
+        state.importSelection(uris, importDestination)
+        if (uris.isNotEmpty() && importDestination != WaveImportDestination.BASE) {
+            filter = WaveProposalStatus.PENDING
+            section = if (importDestination == WaveImportDestination.VOTE) 1 else 0
+        }
     }
+    LaunchedEffect(section) { state.setPage(section == 2) }
     Column(Modifier.fillMaxSize()) {
-        WaveMasterPlayer(state, onImport = { importMenu = true }, onSettings = { settings = true })
         Row(Modifier.fillMaxWidth().height(42.dp), verticalAlignment = Alignment.CenterVertically) {
             listOf("Propositions", "Vote", "Composition").forEachIndexed { index, label ->
                 Column(Modifier.weight(1f).fillMaxHeight().clickable {
@@ -81,6 +87,10 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                 }
             }
         }
+        WaveMasterPlayer(state, onImport = { destination ->
+            importDestination = destination
+            importer.launch(arrayOf("audio/*"))
+        }, onSettings = { settings = true })
         state.notice?.let { message ->
             Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(message, color = soft, fontSize = 11.sp, modifier = Modifier.weight(1f))
@@ -108,7 +118,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                 Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box {
                         TextButton(onClick = { filterMenu = true }, contentPadding = PaddingValues(horizontal = 4.dp)) {
-                            Text("${filter.label}  ${state.clips.count { it.status == filter }}", fontSize = 11.sp, color = foreground)
+                            Text("${filter.label}  ${state.clips.count { !it.isBase && it.status == filter }}", fontSize = 11.sp, color = foreground)
                             Icon(Icons.Default.ExpandMore, null, modifier = Modifier.size(17.dp), tint = muted)
                         }
                         DropdownMenu(expanded = filterMenu, onDismissRequest = { filterMenu = false }, containerColor = Color(0xFF17181E)) {
@@ -124,7 +134,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                     ToolIcon(Icons.Default.Add, "Importer une proposition", enabled = !state.importing) { importMenu = true }
                 }
                 if (state.importing) LinearProgressIndicator(Modifier.fillMaxWidth(), color = soft, trackColor = Color(0xFF23242B))
-                val proposals = state.clips.filter { it.status == filter }
+                val proposals = state.clips.filter { !it.isBase && it.status == filter }
                 if (proposals.isEmpty()) EmptyWorkspace("Aucune proposition ici", "Les boucles classées apparaîtront dans cette liste.", Modifier.weight(1f))
                 else LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(bottom = 10.dp)) {
                     items(proposals, key = { it.id }) { clip ->
@@ -159,17 +169,24 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                 if (candidates.isEmpty()) EmptyWorkspace("Aucune boucle au vote", "Ouvre une proposition et choisis « Mettre au vote ».", Modifier.weight(1f))
                 else LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(candidates, key = { it.id }) { clip ->
-                        Row(Modifier.fillMaxWidth().hifiBlackSurface(13.dp)
+                        Column(Modifier.fillMaxWidth().hifiBlackSurface(13.dp)
                             .border(if (selected?.id == clip.id) 1.dp else 0.dp, if (selected?.id == clip.id) soft.copy(alpha = .5f) else Color.Transparent, RoundedCornerShape(12.dp))
-                            .clickable(enabled = state.vote == null) { selectedVote = clip.id; replacement = null }.padding(10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+                            .clickable(enabled = state.vote == null) { selectedVote = clip.id; replacement = null }.padding(10.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
                             WaveArtistPortrait(clip.artist)
                             Column(Modifier.weight(1f)) {
                                 Text(clip.title, color = foreground, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 Text(clip.artist, color = muted, fontSize = 10.sp)
                                 WaveRoleChip(clip.category)
                             }
-                            WaveRoundPlay(state.snapshot.cue == clip.id, clip.id in state.preparing,
-                                if (state.snapshot.cue == clip.id) state.snapshot.cueProgress else 0f, "Écouter ${clip.title}") { state.preview(clip.id) }
+                            WaveRoundPlay((state.snapshot.cue == clip.id && !state.snapshot.cuePaused) || (state.snapshot.candidate == clip.id && state.snapshot.running), clip.id in state.preparing,
+                                if (state.snapshot.cue == clip.id) state.snapshot.cueProgress else if (state.snapshot.candidate == clip.id) state.snapshot.candidateProgress else 0f,
+                                "Écouter ${clip.title}", queued = state.snapshot.pendingCandidate == clip.id) { state.preview(clip.id) }
+                            }
+                            AnimatedVisibility(selected?.id == clip.id) {
+                                WaveVoteControls(clip, state, duration, onDuration = { duration = it },
+                                    onLaunch = { state.startVote(clip.id, duration, replacement) }, onMessage = { messageArtist = clip.artist })
+                            }
                         }
                     }
                 }
@@ -180,14 +197,9 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                             Text("${seconds}s", color = soft, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                             TextButton(onClick = { state.demoBallot(true) }) { Text("Pour  ${poll.yes}", color = Color(0xFF86B69B)) }
                             TextButton(onClick = { state.demoBallot(false) }) { Text("Contre  ${poll.no}", color = danger) }
+                            ToolIcon(Icons.Default.Check, "Clôturer la simulation", onClick = state::finishVote)
                         }
                     } ?: Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Box {
-                            TextButton(onClick = { durationMenu = true }) { Text("${duration}s ▾", color = muted) }
-                            DropdownMenu(durationMenu, { durationMenu = false }, containerColor = Color(0xFF17181E)) {
-                                listOf(30, 45, 60).forEach { DropdownMenuItem(text = { Text("$it secondes", color = foreground) }, onClick = { duration = it; durationMenu = false }) }
-                            }
-                        }
                         Box(Modifier.weight(1f)) {
                             TextButton(onClick = { replacementMenu = true }) { Text(if (replacement == null) "Ajout au Beat ▾" else "Remplacement ▾", fontSize = 11.sp, color = muted) }
                             DropdownMenu(replacementMenu, { replacementMenu = false }, containerColor = Color(0xFF17181E)) {
@@ -199,16 +211,31 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                         }
                         ToolIcon(Icons.Default.Close, "Retirer du vote") { state.pending(clip.id) }
                     }
-                    Button(onClick = { if (state.vote != null) state.finishVote() else state.startVote(clip.id, duration, replacement) },
-                        modifier = Modifier.fillMaxWidth().height(42.dp), colors = ButtonDefaults.buttonColors(containerColor = primary, contentColor = Color.White)) {
-                        Text(if (state.vote != null) "Clôturer et appliquer" else "Lancer la simulation", fontSize = 12.sp)
-                    }
                 }
             }
         }
         Row(Modifier.fillMaxWidth().height(24.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(if (state.snapshot.cue != null) "Écoute privée · composition atténuée" else "Atelier privé · non diffusé", color = muted, fontSize = 9.sp, modifier = Modifier.weight(1f))
+            Text(if (state.snapshot.cue != null) "Écoute privée · composition atténuée" else if (state.publicRoute) "Sortie publique · diffusion non raccordée" else "Atelier privé · non diffusé", color = muted, fontSize = 9.sp, modifier = Modifier.weight(1f))
             if (state.snapshot.cue != null) Text("Arrêter", color = soft, fontSize = 10.sp, modifier = Modifier.clickable { state.stopPreview() }.padding(4.dp))
+        }
+    }
+    messageArtist?.let { artist ->
+        var draft by remember(artist) { mutableStateOf("") }
+        WorkspaceSheet(sheetHeight, { messageArtist = null }) {
+            Column(Modifier.fillMaxSize().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(artist, color = foreground, fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
+                Text("Message privé · Démonstration locale", color = muted, fontSize = 10.sp)
+                LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(state.privateMessages[artist].orEmpty()) { message ->
+                        Text(message, color = foreground, fontSize = 13.sp, modifier = Modifier.fillMaxWidth().hifiBlackSurface(12.dp).padding(12.dp))
+                    }
+                }
+                Row(Modifier.imePadding().padding(bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(draft, { draft = it.take(2000) }, placeholder = { Text("Message…") }, modifier = Modifier.weight(1f), maxLines = 3,
+                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = foreground, unfocusedTextColor = foreground, focusedBorderColor = soft))
+                    ToolIcon(Icons.Default.Send, "Envoyer", enabled = draft.isNotBlank()) { state.message(artist, draft); draft = "" }
+                }
+            }
         }
     }
     val selected = state.clips.find { it.id == detail }
@@ -286,6 +313,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
             listOf("Un ou plusieurs sons" to Icons.Default.MusicNote, "Un pack ZIP" to Icons.Default.LibraryMusic, "Un dossier de pistes" to Icons.Default.Folder).forEachIndexed { index, (label, icon) ->
                 Row(Modifier.fillMaxWidth().clickable {
                     importMenu = false
+                    importDestination = WaveImportDestination.PROPOSALS
                     when (index) {
                         0 -> importer.launch(arrayOf("audio/*"))
                         1 -> importer.launch(arrayOf("application/zip", "application/x-zip-compressed"))
