@@ -105,7 +105,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, 
             2 -> {
                 val composition = state.clips.filter { it.inComposition }
                 if (composition.isEmpty()) EmptyWorkspace("Ta composition commence ici", "Prends une boucle dans Propositions ou importe ton audio.", Modifier.weight(1f))
-                else LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp), contentPadding = PaddingValues(bottom = 8.dp)) {
+                else LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(top = 6.dp, bottom = 8.dp)) {
                     items(composition, key = { it.id }) { clip ->
                             WaveLoopCard(clip, state, composition = true, onProfile = { onProfile(clip.artist) })
 

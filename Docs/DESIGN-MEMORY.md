@@ -409,3 +409,6 @@ Le lecteur Wave possède son propre bouton haut-parleur animé et son propre vol
 
 ### Correction bouton Vote
 - Aucun bouton Vote dans Propositions. Dans Vote, un seul bouton texte carré noir hifi de 40 dp à côté du chip, visible replié/déplié. Aucun doublon dans les commandes dépliées.
+
+### Composition — espacement et alignements
+- Intervalle de 8 dp entre boucles. Mute/Solo centrés dans leurs boutons. Chip de catégorie à droite, au-dessus de la croix, séparé des commandes Mute/Solo.

@@ -209,11 +209,11 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
                 download.launch("${clip.title.replace('/', '-') }.$extension")
             }
             else {
+                WaveMixHeaderControls(clip, state)
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     WaveRoleChip(clip.category)
-                    WaveMixHeaderControls(clip, state)
+                    WaveControl(Icons.Default.Close, "Retirer ${clip.title} de la composition") { confirmRemoval = true }
                 }
-                WaveControl(Icons.Default.Close, "Retirer ${clip.title} de la composition") { confirmRemoval = true }
             }
         }
 

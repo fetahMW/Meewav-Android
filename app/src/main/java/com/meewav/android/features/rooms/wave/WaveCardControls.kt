@@ -126,7 +126,7 @@ private fun CardCommand(icon: ImageVector?, label: String, selected: Boolean = f
         .border(.6.dp, if (selected) accent.copy(alpha = .4f) else Color.Transparent, RoundedCornerShape(8.dp))
         .semantics { this.selected = selected }
         .clickable(enabled = enabled, onClick = onClick).padding(horizontal = 7.dp),
-        horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically) {
+        horizontalArrangement = Arrangement.spacedBy(3.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
         val tint = (if (selected) accent else text).copy(alpha = if (enabled) 1f else .4f)
         if (icon != null) Icon(icon, label.ifBlank { "Retour" }, tint = tint, modifier = Modifier.size(15.dp))
         if (label.isNotEmpty()) Text(label, color = tint, fontSize = 10.sp, maxLines = 1)
