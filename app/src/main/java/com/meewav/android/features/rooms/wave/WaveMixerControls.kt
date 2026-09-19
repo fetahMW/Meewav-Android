@@ -237,6 +237,7 @@ fun WaveChannelStrip(
     muted: Boolean,
     isMic: Boolean,
     portraitRes: Int? = null,
+    showHeader: Boolean = true,
     onGainChange: (Float) -> Unit,
     onToggleMute: () -> Unit,
     modifier: Modifier = Modifier,
@@ -246,7 +247,7 @@ fun WaveChannelStrip(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Row(
+        if (showHeader) Row(
             modifier = Modifier.height(32.dp).fillMaxWidth(),
             horizontalArrangement = if (portraitRes != null) Arrangement.Start else Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically

@@ -348,3 +348,10 @@ Compilation de livraison uniquement ; rendu à valider par l'utilisateur.
 - Bandeau noir Hi-Fi inférieur : compteur, Annuler, Passer en coulisses, Refuser. Actions désactivées sans sélection. Refuser retire uniquement les demandes sélectionnées ; passage direct en coulisses, sans mise sur scène.
 - Actions locales de démonstration, pas de notification distante envoyée.
 
+
+### Mixeur et deux rails invités
+- Entête des deux faders mutualisée : nom avec ellipse, plus de libellé Audio, note centrée sur son fader et petit séparateur vertical.
+- Invités sur deux rangées en LazyHorizontalGrid. Reconnaissance du drag vertical uniquement pour laisser le geste horizontal au rail.
+- Barre d'actions noire Hi-Fi fixe : Message, Aperçu, Scène/Demandes/Coulisses selon la section, Retirer/Refuser. Commandes désactivées sans sélection ; capacité et connexion vérifiées avant montée.
+- Composer privé avec clavier et historique local par invité pour la démo. Aucune livraison serveur annoncée.
+

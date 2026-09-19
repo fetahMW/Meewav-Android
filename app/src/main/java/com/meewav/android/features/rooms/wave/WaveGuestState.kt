@@ -105,7 +105,7 @@ internal class WaveGuestState {
             WaveGuestLocation.STAGE -> guest.location == WaveGuestLocation.BACKSTAGE
             WaveGuestLocation.BACKSTAGE -> guest.location == WaveGuestLocation.STAGE || guest.location == WaveGuestLocation.INVITED || guest.location == WaveGuestLocation.REQUESTED
             WaveGuestLocation.INVITED -> guest.location == WaveGuestLocation.REQUESTED || guest.location == WaveGuestLocation.BACKSTAGE
-            WaveGuestLocation.REQUESTED -> false
+            WaveGuestLocation.REQUESTED -> guest.location == WaveGuestLocation.BACKSTAGE || guest.location == WaveGuestLocation.INVITED
         } }
         if (allowed.isEmpty()) return
         if (target == WaveGuestLocation.STAGE && allowed.any { !it.connected }) {
@@ -122,10 +122,22 @@ internal class WaveGuestState {
         notice = when (target) {
             WaveGuestLocation.STAGE -> "${allowed.size} invité(s) sur scène"
             WaveGuestLocation.BACKSTAGE -> "${allowed.size} invité(s) en coulisses"
+            WaveGuestLocation.REQUESTED -> "${allowed.size} invité(s) renvoyé(s) dans les demandes"
             else -> "Invitation acceptée · préparation disponible"
         }
     }
     fun toggleMic(id: String) { guests = guests.map { if (it.id == id) it.copy(mic = !it.mic) else it } }
+    var privateDemoMessages by mutableStateOf<Map<String, List<String>>>(emptyMap())
+        private set
+    fun addPrivateDemoMessage(ids: Set<String>, text: String) {
+        val content = text.trim().take(1000)
+        if (content.isEmpty()) return
+        val recipients = guests.filter { it.id in ids }
+        privateDemoMessages = privateDemoMessages.toMutableMap().apply {
+            recipients.forEach { put(it.id, (get(it.id).orEmpty() + content).takeLast(30)) }
+        }
+        notice = "Message enregistré pour ${recipients.size} invité(s) · démo locale"
+    }
     fun refuseRequests(ids: Set<String>) {
         val refused = guests.filter { it.id in ids && it.location in setOf(WaveGuestLocation.REQUESTED, WaveGuestLocation.INVITED) }
         if (refused.isEmpty()) return

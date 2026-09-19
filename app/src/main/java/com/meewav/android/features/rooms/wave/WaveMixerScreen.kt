@@ -620,19 +620,34 @@ private fun MixerBody(
         BoxWithConstraints(Modifier.fillMaxWidth().weight(1f).padding(top = 10.dp)) {
             val cw = maxWidth
             val slot = (cw - 6.dp) / 4f
+            Box(Modifier.offset(x = 3.dp).width(slot * 2f).height(32.dp)) {
+                Row(Modifier.width(slot * 1.5f - 22.dp).fillMaxHeight(), verticalAlignment = Alignment.CenterVertically) {
+                    Image(painterResource(R.drawable.wave_artist_luma), null,
+                        modifier = Modifier.size(28.dp).clip(CircleShape))
+                    Spacer(Modifier.width(5.dp))
+                    Text("Luma", modifier = Modifier.weight(1f), color = WaveMixerTheme.pearl,
+                        fontSize = 13.sp, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                }
+                Box(Modifier.offset(x = slot * 1.5f - 20.dp, y = 8.dp).width(1.dp).height(16.dp).background(white(.12f)))
+                Box(Modifier.offset(x = slot * 1.5f - 16.dp).size(32.dp), contentAlignment = Alignment.Center) {
+                    Icon(WaveIcons.MusicNote, "Piste musicale", tint = WaveMixerTheme.pearl, modifier = Modifier.size(16.dp))
+                }
+            }
             // Strip Micro sous le slot Chat, Audio sous le slot Mixeur.
             WaveChannelStrip(
                 label = "Luma", icon = WaveIcons.Mic,
                 portraitRes = R.drawable.wave_artist_luma,
+                showHeader = false,
                 gain = micGain, muted = micMuted, isMic = true,
                 onGainChange = onMicGain, onToggleMute = onMicMute,
-                modifier = Modifier.offset(x = 3.dp).width(slot).fillMaxHeight()
+                modifier = Modifier.offset(x = 3.dp).width(slot).fillMaxHeight().padding(top = 40.dp)
             )
             WaveChannelStrip(
                 label = "Audio", icon = WaveIcons.MusicNote,
+                showHeader = false,
                 gain = audioGain, muted = audioMuted, isMic = false,
                 onGainChange = onAudioGain, onToggleMute = onAudioMute,
-                modifier = Modifier.offset(x = 3.dp + slot).width(slot).fillMaxHeight()
+                modifier = Modifier.offset(x = 3.dp + slot).width(slot).fillMaxHeight().padding(top = 40.dp)
             )
             // Séparateur vertical centré, blanc 0.07, marges v6.
             Box(
