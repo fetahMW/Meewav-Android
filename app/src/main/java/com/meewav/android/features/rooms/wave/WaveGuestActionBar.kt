@@ -39,11 +39,12 @@ internal fun WaveGuestActionBar(state: WaveGuestState, guests: List<WaveGuest>, 
                 GuestAction("Scène", Icons.Filled.ArrowUpward, enabled && guests.all { it.connected } && state.onStage.size + guests.size <= 3, Modifier.weight(1f)) {
                     state.move(ids, WaveGuestLocation.STAGE); onClear()
                 }
-                GuestAction("Demandes", Icons.Filled.ArrowDownward, enabled, Modifier.weight(1f)) {
-                    state.move(ids, WaveGuestLocation.REQUESTED); onClear()
-                }
             } else GuestAction("Coulisses", if (page == 1) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward, enabled, Modifier.weight(1f)) {
                 state.move(ids, WaveGuestLocation.BACKSTAGE); onClear()
+            }
+            if (page != 3) GuestAction("Jury", Icons.Filled.ArrowUpward,
+                enabled && state.jury.size + guests.size <= 6, Modifier.weight(1f)) {
+                state.move(ids, WaveGuestLocation.JURY); onClear()
             }
             GuestAction(if (page == 1) "Refuser" else "Retirer", Icons.Outlined.DeleteOutline, enabled, Modifier.weight(1f)) {
                 if (page == 1) state.refuseRequests(ids) else state.remove(ids)

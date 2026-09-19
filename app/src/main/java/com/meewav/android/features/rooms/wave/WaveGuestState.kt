@@ -6,7 +6,7 @@ import androidx.compose.ui.geometry.Rect
 import com.meewav.android.R
 
 internal enum class WaveGuestLocation(val label: String) {
-    REQUESTED("Demande"), INVITED("En préparation"), BACKSTAGE("Prêt en coulisses"), STAGE("Sur scène")
+    REQUESTED("Demande"), INVITED("En préparation"), BACKSTAGE("Prêt en coulisses"), STAGE("Sur scène"), JURY("Jury")
 }
 
 internal data class WaveGuest(
@@ -80,6 +80,7 @@ internal class WaveGuestState {
         private set
     var stageBounds = Rect.Zero
     var backstageBounds = Rect.Zero
+    val jury get() = guests.filter { it.location == WaveGuestLocation.JURY }
     val onStage get() = guests.filter { it.location == WaveGuestLocation.STAGE }
     val dragged get() = guests.find { it.id == dragId }
     val overStage get() = dragId != null && stageBounds.contains(dragPoint)
@@ -106,7 +107,8 @@ internal class WaveGuestState {
         val matching = guests.filter { it.id in ids }
         val allowed = matching.filter { guest -> when (target) {
             WaveGuestLocation.STAGE -> guest.location == WaveGuestLocation.BACKSTAGE
-            WaveGuestLocation.BACKSTAGE -> guest.location == WaveGuestLocation.STAGE || guest.location == WaveGuestLocation.INVITED || guest.location == WaveGuestLocation.REQUESTED
+            WaveGuestLocation.JURY -> guest.location != WaveGuestLocation.JURY
+            WaveGuestLocation.BACKSTAGE -> guest.location == WaveGuestLocation.JURY || guest.location == WaveGuestLocation.STAGE || guest.location == WaveGuestLocation.INVITED || guest.location == WaveGuestLocation.REQUESTED
             WaveGuestLocation.INVITED -> guest.location == WaveGuestLocation.REQUESTED || guest.location == WaveGuestLocation.BACKSTAGE
             WaveGuestLocation.REQUESTED -> guest.location == WaveGuestLocation.BACKSTAGE || guest.location == WaveGuestLocation.INVITED
         } }
@@ -119,10 +121,15 @@ internal class WaveGuestState {
             notice = "Scène complète · 3 invités maximum"
             return
         }
+        if (target == WaveGuestLocation.JURY && jury.size + allowed.size > 6) {
+            notice = "Jury complet · 6 personnes maximum"
+            return
+        }
         val moving = allowed.map { it.id }.toSet()
         guests = guests.map { if (it.id in moving) it.copy(location = target, appeared = it.appeared || target == WaveGuestLocation.STAGE) else it }
         selected = emptySet()
         notice = when (target) {
+            WaveGuestLocation.JURY -> "${allowed.size} membre(s) ajouté(s) au jury · ${jury.size}/6"
             WaveGuestLocation.STAGE -> "${allowed.size} invité(s) sur scène"
             WaveGuestLocation.BACKSTAGE -> "${allowed.size} invité(s) en coulisses"
             WaveGuestLocation.REQUESTED -> "${allowed.size} invité(s) renvoyé(s) dans les demandes"
