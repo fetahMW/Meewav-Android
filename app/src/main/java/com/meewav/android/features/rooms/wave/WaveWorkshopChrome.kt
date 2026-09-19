@@ -183,24 +183,7 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
         .padding(horizontal = 10.dp, vertical = 5.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
             Box(Modifier.clickable(onClick = onProfile)) { WaveArtistPortrait(clip.artist) }
-            Column(Modifier.weight(1f)) {
-                if (composition) Text(clip.title, color = ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(clip.artist, color = secondary, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, false))
-                    val grade = when (clip.artist) {
-                        "AZUR" -> R.drawable.wave_grade_4
-                        "SOLEN", "LUMA" -> R.drawable.wave_grade_3
-                        "KÉO", "NOAM A." -> R.drawable.wave_grade_2
-                        else -> R.drawable.wave_grade_1
-                    }
-                    Image(painterResource(grade), "Grade de ${clip.artist}", modifier = Modifier.size(24.dp))
-                }
-                if (!composition) Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    if (composition) Text(if (clip.solo) "SOLO" else if (clip.mute) "MUTE" else if (queued) "À la mesure" else if (clip.repeats == -1) "∞" else "${clip.repeats}×",
-                        color = secondary, fontSize = 9.sp)
-                    else Text(if (clip.id in state.preparing) "Préparation…" else clip.musical, color = secondary, fontSize = 8.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
-            }
+            WaveLoopIdentity(clip, clip.id in state.preparing, Modifier.weight(1f))
             if (!composition) WaveRoleChip(clip.category)
             if (!composition) WaveRoundPlay(playing, clip.id in state.preparing, progress, if (composition) "Lancer ou arrêter ${clip.title}" else "Écouter ${clip.title}", queued, stopIcon = false) {
                 state.preview(clip.id)
@@ -228,4 +211,21 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
         text = { Text("Tu es sur le point de supprimer « ${clip.title} » de la composition. Cette boucle a été validée par le public. Elle cessera de jouer et ses épingles seront retirées.", color = secondary) },
         confirmButton = { TextButton(onClick = { state.remove(clip.id); confirmRemoval = false }) { Text("Retirer la boucle", color = Color(0xFFC88B90)) } },
         dismissButton = { TextButton(onClick = { confirmRemoval = false }) { Text("Conserver", color = accent) } })
+}
+
+@Composable
+internal fun WaveLoopIdentity(clip: WaveCompositionClip, preparing: Boolean, modifier: Modifier = Modifier) {
+    Column(modifier) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(clip.artist, color = secondary, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, false))
+            val grade = when (clip.artist) {
+                "AZUR" -> R.drawable.wave_grade_4
+                "SOLEN", "LUMA" -> R.drawable.wave_grade_3
+                "KÉO", "NOAM A." -> R.drawable.wave_grade_2
+                else -> R.drawable.wave_grade_1
+            }
+            Image(painterResource(grade), "Grade de ${clip.artist}", modifier = Modifier.size(24.dp))
+        }
+        Text(if (preparing) "Préparation…" else clip.musical, color = secondary, fontSize = 8.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp))
+    }
 }

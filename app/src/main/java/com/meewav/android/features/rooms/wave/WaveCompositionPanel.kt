@@ -219,10 +219,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, 
                             .clickable(enabled = state.vote == null) { selectedVote = if (selectedVote == clip.id) null else clip.id }.padding(10.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
                             Box(Modifier.clickable { onProfile(clip.artist) }) { WaveArtistPortrait(clip.artist) }
-                            Column(Modifier.weight(1f)) {
-                                Text(clip.title, color = foreground, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                Text(clip.artist, color = muted, fontSize = 10.sp)
-                            }
+                            WaveLoopIdentity(clip, clip.id in state.preparing, Modifier.weight(1f))
                             WaveRoleChip(clip.category, uniform = true)
                             val canVote = state.vote == null && clip.id !in state.preparing
                             Box(Modifier.size(40.dp).hifiBlackSurface(8.dp)
