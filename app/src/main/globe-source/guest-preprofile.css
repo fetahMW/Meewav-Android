@@ -1,3 +1,3 @@
-html, body, #root { margin: 0; width: 100%; height: 100%; background: transparent; color: #eee; font-family: Arial, sans-serif; }
-.ring-artist-preprofile { position: absolute; left: 50%; top: 50%; width: 413px; height: 588px; --mw-bubble-w: 413px; --mw-bubble-h: 588px; transform-origin: center; transform: translate(-50%, -50%) scale(var(--guest-profile-scale, 1)); background: #030405; border-radius: 22px; }
+html, body, #root { position: fixed; inset: 0; margin: 0; width: 100vw; height: 100dvh; overflow: hidden; background: #030405; color: #eee; font-family: Arial, sans-serif; }
+#root .ring-artist-preprofile { position: absolute; inset: 0 auto auto 0; width: 413px; height: 588px; --mw-bubble-w: 413px; --mw-bubble-h: 588px; transform-origin: top left; transform: scale(var(--guest-profile-scale, 1)); background: #030405; border-radius: 22px; }
 .ring-artist-preprofile .mw-hover-preprofile-bubble__arrow { display: none; }

@@ -237,7 +237,6 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
     }
     val preview = state.guests.find { it.id == state.previewId }
     if (preview != null) GuestPreviewSheet(state, preview)
-    state.guests.find { it.id == state.profilePreviewId }?.let { GuestPreProfile(state, it) }
     if (filtersOpen) WaveGuestFilterSheet(state, participants, isRequests = page == 1, onDismiss = { filtersOpen = false })
     if (inviteOpen) {
         ModalBottomSheet(onDismissRequest = { inviteOpen = false }, containerColor = Color(0xFF101114), contentColor = Color.White) {
@@ -345,4 +344,3 @@ private fun GuestGrade(level: Int) {
         R.drawable.wave_grade_4, R.drawable.wave_grade_5, R.drawable.wave_grade_6)
     Image(painterResource(badges[(level - 1).coerceIn(0, 5)]), "Grade $level", modifier = Modifier.size(42.dp))
 }
-

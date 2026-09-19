@@ -308,6 +308,7 @@ fun WaveMixerScreen(onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
         }
         }
         WaveGuestDragOverlay(guestState)
+        GuestPreProfileHost(guestState)
         if (showLeaveConfirm) {
             AlertDialog(
                 onDismissRequest = { showLeaveConfirm = false },
