@@ -419,3 +419,5 @@ Le lecteur Wave possède son propre bouton haut-parleur animé et son propre vol
 - Bandeau Ouvert/gestes/filtre/import dans la liste défilante, y compris liste vide.
 - Bottom sheet : Afficher filtre uniquement la liste ; Autoriser l’envoi modifie les catégories acceptées persistantes sans masquer les anciennes boucles. Restriction encore locale, envois publics non raccordés.
 - Propositions : catégorie au lieu du titre, identité/grade/BPM/gamme conservés. Vote : chips de largeur commune 68 dp.
+
+- Chips des boucles : taille commune 68 x 22 dp dans Propositions, Vote et Composition ; couleurs lumineuses, bordure renforcée, texte centré. Chips désactivés du filtre restent gris.

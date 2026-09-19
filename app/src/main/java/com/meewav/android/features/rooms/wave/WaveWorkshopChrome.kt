@@ -106,22 +106,24 @@ internal fun WaveArtistPortrait(artist: String) {
 }
 
 @Composable
-internal fun WaveRoleChip(category: String, expanded: Boolean = false, active: Boolean = true, uniform: Boolean = false) {
+internal fun WaveRoleChip(category: String, expanded: Boolean = false, active: Boolean = true, uniform: Boolean = true) {
     val color = when (category) {
-        "Drums" -> Color(0xFFFFAB32)
+        "Drums" -> Color(0xFFFFC454)
         "Basse" -> Color(0xFF43EF9E)
-        "Mélodie" -> Color(0xFF9890FF)
-        "Accords" -> Color(0xFF43CFFF)
-        "Nappe" -> Color(0xFFD078FF)
-        "Acapella" -> Color(0xFFFF70B8)
+        "Mélodie" -> Color(0xFFB8ADFF)
+        "Accords" -> Color(0xFF62E2FF)
+        "Nappe" -> Color(0xFFE3A1FF)
+        "Acapella" -> Color(0xFFFF9DCE)
         else -> Color(0xFFFFDC50)
     }
-    Text(category, color = if (active) color else Color(0xFF777781), fontSize = if (expanded) 12.sp else 9.sp, fontWeight = FontWeight.Medium,
-        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-        modifier = Modifier.then(if (expanded) Modifier.fillMaxWidth() else if (uniform) Modifier.width(68.dp) else Modifier)
-            .clip(RoundedCornerShape(if (expanded) 8.dp else 5.dp)).background(if (active) color.copy(alpha = .23f) else Color(0xFF17181D))
-            .border(.5.dp, if (active) color.copy(alpha = .62f) else Color(0xFF33343B), RoundedCornerShape(if (expanded) 8.dp else 5.dp))
-            .padding(horizontal = 6.dp, vertical = if (expanded) 9.dp else 2.dp), maxLines = 1)
+    Box(Modifier.then(if (expanded) Modifier.fillMaxWidth().height(36.dp) else Modifier.width(68.dp).height(22.dp))
+        .clip(RoundedCornerShape(if (expanded) 8.dp else 5.dp))
+        .background(if (active) color.copy(alpha = .30f) else Color(0xFF17181D))
+        .border(.75.dp, if (active) color.copy(alpha = .85f) else Color(0xFF33343B), RoundedCornerShape(if (expanded) 8.dp else 5.dp)),
+        contentAlignment = Alignment.Center) {
+        Text(category, color = if (active) color else Color(0xFF777781), fontSize = if (expanded) 12.sp else 9.sp,
+            fontWeight = FontWeight.SemiBold, maxLines = 1)
+    }
 }
 
 /** Horizontal slop is handled by Compose; vertical list scrolling retains its gesture. */
