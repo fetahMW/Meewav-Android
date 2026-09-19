@@ -1,5 +1,7 @@
 package com.meewav.android.features.rooms.wave
 
+import android.content.Intent
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -615,9 +617,10 @@ private fun WaveChatSocialRail(
     notificationCount: Int,
     onOpenNotifications: () -> Unit,
 ) {
-    BoxWithConstraints(modifier) {
+    val context = LocalContext.current
+    BoxWithConstraints(modifier, contentAlignment = Alignment.Center) {
         Column(
-            Modifier.fillMaxWidth().height(maxHeight.coerceAtMost(286.dp))
+            Modifier.fillMaxWidth().height(maxHeight.coerceAtMost(346.dp))
                 .hifiBlackSurface(17.dp).clip(RoundedCornerShape(17.dp))
                 .verticalScroll(rememberScrollState()).padding(vertical = 6.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -626,11 +629,27 @@ private fun WaveChatSocialRail(
             RailToolButton(icon = WaveIcons.More, tint = chatAccent, label = "Outils du chat", onClick = onOpenTools)
             RailToolButton(icon = WaveIcons.Bell, tint = white(0.8f), label = "Notifications",
                 badge = notificationCount.takeIf { it > 0 }?.toString(), onClick = onOpenNotifications)
+            RailSeparator()
             Box(Modifier.height(44.dp), contentAlignment = Alignment.Center) { ChatRailItem(imageRes = R.drawable.money_bag, value = "148") }
             Box(Modifier.height(44.dp), contentAlignment = Alignment.Center) { ChatRailItem(icon = WaveIcons.Star, tint = Color(0xFFF3BF49), value = "86") }
             Box(Modifier.height(44.dp), contentAlignment = Alignment.Center) { ChatRailItem(icon = WaveIcons.Heart, tint = Color(0xFFFF64AA), value = "1,2k") }
             Box(Modifier.height(44.dp), contentAlignment = Alignment.Center) { ChatRailItem(icon = WaveIcons.Eye, tint = Color(0xFF9A63FF), value = "312") }
+            RailSeparator()
+            RailToolButton(icon = WaveIcons.Share, tint = white(0.8f), label = "Partager le live", onClick = {
+                val intent = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, "Meewav · La Wave — Freestyle session · Luma invite")
+                }
+                context.startActivity(Intent.createChooser(intent, "Partager le live"))
+            })
         }
+    }
+}
+
+@Composable
+private fun RailSeparator() {
+    Box(Modifier.height(5.dp), contentAlignment = Alignment.Center) {
+        Box(Modifier.width(22.dp).height(0.5.dp).background(white(0.12f)))
     }
 }
 /* Bouton d'outil du rail — icône + badge optionnel (notifications). */

@@ -301,3 +301,8 @@ Compilation de livraison uniquement ; rendu à valider par l'utilisateur.
 - Nouveau parcours natif : candidatures/invitations, coulisses, scène ; aperçu au tap, sélection longue, glisser vers la vidéo pour monter et retour vers le panneau pour redescendre.
 - Capacité trois invités, géométrie duo/trio/quatre, état conservé entre onglets, matériau Hi-Fi existant. Ne pas remplacer l'écran par l'ancienne régie WebView.
 - Démo locale avec portraits, contrôles micro/caméra locaux. Aucun raccordement RTC/Supabase à cette room native fictive ; BytePlus différé par l'utilisateur.
+
+### Rail du chat Wave — partage et centrage
+- Rail noir Hi-Fi centré verticalement entre la navbar principale et la barre de messages ; hauteur compacte bornée à l'espace disponible.
+- Fins séparateurs gris entre actions, indicateurs et partage. Partage Android natif du descriptif de la session de démonstration, sans inventer de lien de room.
+
