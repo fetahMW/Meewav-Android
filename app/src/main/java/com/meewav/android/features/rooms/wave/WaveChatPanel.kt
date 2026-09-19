@@ -36,6 +36,11 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.material3.Icon
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -264,39 +269,6 @@ fun WaveChatPanel(modifier: Modifier = Modifier) {
 
     Box(modifier.fillMaxSize().padding(bottom = 6.dp)) {
         Column(Modifier.fillMaxSize()) {
-            // Barre épinglée — « Épinglé par le host ».
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp)
-                    .clip(RoundedCornerShape(11.dp))
-                    .background(
-                        Brush.horizontalGradient(
-                            listOf(Color(0xFF7645C1).copy(alpha = 0.11f), white(0.016f))
-                        )
-                    )
-                    .border(1.dp, Color(0xFFB78CF1).copy(alpha = 0.16f), RoundedCornerShape(11.dp))
-                    .padding(horizontal = 9.dp, vertical = 7.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(WaveIcons.Chat, null, tint = Color(0xFFC1B2DD), modifier = Modifier.size(14.dp))
-                Spacer(Modifier.width(9.dp))
-                Column {
-                    Text(
-                        "Épinglé par le host",
-                        color = Color(0xFFC1B2DD), fontSize = 9.sp,
-                        fontWeight = FontWeight.Medium, fontFamily = WaveMixerTheme.fontFamily
-                    )
-                    val (pinnedText, pinnedInline) = chatAnnotatedText("Envoie ta boucle — le sas est ouvert [[mw:micro-flamme]]")
-                    Text(
-                        pinnedText, inlineContent = pinnedInline,
-                        color = white(0.90f), fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold, fontFamily = WaveMixerTheme.fontFamily,
-                        maxLines = 1
-                    )
-                }
-            }
-
             Row(Modifier.weight(1f).fillMaxWidth()) {
                 Box(Modifier.weight(1f).fillMaxSize()) {
                     LazyColumn(
@@ -347,7 +319,12 @@ fun WaveChatPanel(modifier: Modifier = Modifier) {
                     Modifier
                         .width(46.dp)
                         .fillMaxSize()
-                        .padding(start = 6.dp)
+                        .padding(start = 6.dp),
+                    onOpenEmoji = { emojiWallOpen = !emojiWallOpen },
+                    onReturnToLive = {
+                        unreadCount = 0
+                        if (messages.isNotEmpty()) scope.launch { listState.animateScrollToItem(messages.lastIndex) }
+                    }
                 )
             }
 
@@ -565,7 +542,12 @@ private fun MwEmojiWall(onSelect: (String) -> Unit) {
 /* Rail social iOS (WaveChatSocialActionRail) — vraie colonne chrome :
    outils host (dons, dashboard, notifications) + métriques + partage. */
 @Composable
-private fun WaveChatSocialRail(modifier: Modifier = Modifier) {
+private fun WaveChatSocialRail(
+    modifier: Modifier = Modifier,
+    onOpenEmoji: () -> Unit,
+    onReturnToLive: () -> Unit,
+) {
+    var menuOpen by remember { mutableStateOf(false) }
     Column(
         modifier
             .clip(RoundedCornerShape(14.dp))
@@ -579,8 +561,29 @@ private fun WaveChatSocialRail(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Outils host — dons / dashboard / notifications.
-        RailToolButton(icon = WaveIcons.Gift, tint = chatAccent.copy(alpha = 0.95f), label = "Dons")
+        Box {
+            RailToolButton(
+                icon = WaveIcons.Settings, tint = chatAccent, label = "Menu du chat",
+                onClick = { menuOpen = true }
+            )
+            DropdownMenu(
+                expanded = menuOpen,
+                onDismissRequest = { menuOpen = false },
+                containerColor = Color(0xFF10121A),
+                shape = RoundedCornerShape(16.dp),
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Émoticônes Meewav", color = Color(0xFFE4E3EE)) },
+                    leadingIcon = { Icon(WaveIcons.Emoji, null, tint = chatAccent) },
+                    onClick = { menuOpen = false; onOpenEmoji() },
+                )
+                DropdownMenuItem(
+                    text = { Text("Revenir au direct", color = Color(0xFFE4E3EE)) },
+                    leadingIcon = { Icon(WaveIcons.ChevronDown, null, tint = chatAccent) },
+                    onClick = { menuOpen = false; onReturnToLive() },
+                )
+            }
+        }
         ChatRailDivider()
         RailToolButton(icon = WaveIcons.Dashboard, tint = white(0.8f), label = "Dashboard")
         RailToolButton(icon = WaveIcons.Bell, tint = white(0.8f), label = "Notifications", badge = "3")
@@ -599,13 +602,14 @@ private fun WaveChatSocialRail(modifier: Modifier = Modifier) {
 /* Bouton d'outil du rail — icône + badge optionnel (notifications). */
 @Composable
 private fun RailToolButton(
-    icon: ImageVector, tint: Color, label: String, badge: String? = null
+    icon: ImageVector, tint: Color, label: String, badge: String? = null,
+    onClick: () -> Unit = {},
 ) {
     Box(
         Modifier
             .fillMaxWidth()
             .height(40.dp)
-            .clickable { }
+            .clickable(onClick = onClick)
             .padding(4.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -726,88 +730,76 @@ private fun WaveChatComposer(
     onSend: () -> Unit,
 ) {
     val canSend = draft.trim().isNotEmpty()
+    var focused by remember { mutableStateOf(false) }
     Row(
         Modifier
             .fillMaxWidth()
-            .height(50.dp)
-            .clip(RoundedCornerShape(16.dp))
-            // Liquid glass — gradient translucide + liseré spéculaire haut.
-            .background(
-                Brush.verticalGradient(
-                    listOf(white(0.10f), white(0.045f), white(0.03f))
-                )
-            )
-            .border(1.dp, white(0.14f), RoundedCornerShape(16.dp))
-            .drawBehind {
-                // Filet de lumière en haut — reflet du verre.
-                drawLine(
-                    white(0.16f),
-                    Offset(14.dp.toPx(), 0.5f),
-                    Offset(size.width - 14.dp.toPx(), 0.5f),
-                    strokeWidth = 1f
-                )
-            }
-            .padding(5.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = 3.dp)
+            .height(58.dp)
+            .chatComposerGlass(focused = focused)
+            .padding(horizontal = 8.dp, vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(7.dp),
     ) {
         Row(
             Modifier
                 .weight(1f)
-                .height(40.dp)
-                .clip(RoundedCornerShape(11.dp))
-                .background(white(0.045f))
-                .padding(horizontal = 10.dp),
+                .height(46.dp)
+                .chatComposerGlass(inner = true)
+                .padding(start = 16.dp, end = 2.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             BasicTextField(
                 value = draft,
-                onValueChange = onDraftChange,
-                modifier = Modifier.weight(1f),
+                onValueChange = { onDraftChange(it.take(1_000)) },
+                modifier = Modifier.weight(1f)
+                    .onFocusChanged { focused = it.isFocused }
+                    .semantics { contentDescription = "Écrire un message" },
                 singleLine = true,
                 textStyle = TextStyle(
-                    color = white(0.92f), fontSize = 13.sp,
+                    color = Color(0xFFE4E3EE), fontSize = 13.sp,
                     fontFamily = WaveMixerTheme.fontFamily
                 ),
-                cursorBrush = SolidColor(chatAccent),
+                cursorBrush = SolidColor(Color(0xFFB49AFF)),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                keyboardActions = KeyboardActions(onSend = { onSend() }),
+                keyboardActions = KeyboardActions(onSend = { if (canSend) onSend() }),
                 decorationBox = { inner ->
-                    if (draft.isEmpty()) {
-                        Text(
-                            "Écris un message…", color = white(0.42f),
-                            fontSize = 13.sp, fontFamily = WaveMixerTheme.fontFamily
-                        )
+                    Box {
+                        if (draft.isEmpty()) {
+                            Text(
+                                "Écris un message…", color = Color(0xFF9794A6),
+                                fontSize = 13.sp, fontFamily = WaveMixerTheme.fontFamily
+                            )
+                        }
+                        inner()
                     }
-                    inner()
                 }
             )
-            Spacer(Modifier.width(8.dp))
-            Icon(
-                WaveIcons.Emoji, "Emoticons",
-                tint = if (emojiOpen) chatAccent else white(0.50f),
-                modifier = Modifier
-                    .size(22.dp)
-                    .clip(CircleShape)
-                    .clickable(onClick = onToggleEmoji)
-                    .padding(2.dp)
-            )
+            Spacer(Modifier.width(7.dp))
+            Box(Modifier.width(1.dp).height(22.dp).background(
+                Brush.verticalGradient(listOf(Color.Transparent, Color(0x4077759C), Color.Transparent))
+            ))
+            Box(
+                Modifier.size(44.dp).clip(CircleShape).clickable(onClick = onToggleEmoji),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(WaveIcons.Emoji, "Émoticônes Meewav",
+                    tint = if (emojiOpen) chatAccent else Color(0xFFA7A8BB),
+                    modifier = Modifier.size(21.dp))
+            }
         }
-        Spacer(Modifier.width(5.dp))
         Box(
             Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(11.dp))
-                .then(
-                    if (canSend) Modifier.activeCapsule(11.dp)
-                    else Modifier.background(white(0.06f))
-                )
+                .size(44.dp)
+                .chatComposerGlass(key = true, focused = focused || emojiOpen)
+                .clip(RoundedCornerShape(16.dp))
                 .clickable(enabled = canSend, onClick = onSend),
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                WaveIcons.Send, null,
-                tint = if (canSend) Color.White else white(0.34f),
-                modifier = Modifier.size(14.dp)
+                WaveIcons.Send, "Envoyer",
+                tint = if (focused || emojiOpen) Color(0xFFE3DDFF) else Color(0xFFBDBDCE),
+                modifier = Modifier.size(21.dp)
             )
         }
     }
