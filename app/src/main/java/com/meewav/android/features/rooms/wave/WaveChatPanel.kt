@@ -329,7 +329,7 @@ fun WaveChatPanel(
                 Box(Modifier.weight(1f).fillMaxSize()) {
                     LazyColumn(
                         state = listState,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize().nestedScroll(manualScroll),
                         verticalArrangement = Arrangement.spacedBy(0.dp),
                         contentPadding = PaddingValues(top = 4.dp, bottom = 4.dp)
                     ) {
@@ -362,7 +362,7 @@ fun WaveChatPanel(
                             Icon(WaveIcons.ChevronDown, null, tint = chatAccent, modifier = Modifier.size(12.dp))
                             Spacer(Modifier.width(4.dp))
                             Text(
-                                if (unreadCount > 0) "$unreadCount nouveaux" else "Revenir au direct",
+                                if (unreadCount > 0) "Revenir au direct · $unreadCount" else "Revenir au direct",
                                 color = Color.White, fontSize = 10.sp,
                                 fontWeight = FontWeight.SemiBold, fontFamily = WaveMixerTheme.fontFamily
                             )
