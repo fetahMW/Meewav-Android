@@ -219,8 +219,15 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                         .guestDrag(state, guest, !multiSelect && state.selected.size <= 1 && guest.location in listOf(WaveGuestLocation.BACKSTAGE, WaveGuestLocation.STAGE))
                         .combinedClickable(
                             onClick = {
-                                if (multiSelect || state.selected.size > 1) state.selected = if (guest.id in state.selected) state.selected - guest.id else state.selected + guest.id
-                                else { state.selected = setOf(guest.id); state.previewId = guest.id }
+                                if (multiSelect || state.selected.size > 1) {
+                                    state.selected = if (guest.id in state.selected) state.selected - guest.id else state.selected + guest.id
+                                } else if (guest.id in state.selected) {
+                                    state.previewId = guest.id
+                                } else {
+                                    // First tap arms the action bar; only a repeat tap opens the sheet.
+                                    state.selected = setOf(guest.id)
+                                    state.previewId = null
+                                }
                             },
                             onLongClick = { multiSelect = true; state.previewId = null; state.selected = state.selected + guest.id },
                         ).padding(8.dp).alpha(if (state.dragId == guest.id) .3f else 1f),
