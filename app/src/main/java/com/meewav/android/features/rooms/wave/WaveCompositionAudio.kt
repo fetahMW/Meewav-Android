@@ -228,7 +228,6 @@ internal class WaveCompositionAudio : AutoCloseable {
         loopStart = start.coerceAtLeast(0); loopEnd = if (end > start) end else 0
     }
     fun monitor(mode: WaveListeningMode, collective: Boolean) = command {
-        if (collective && !composition && running) voices.values.forEach { it.active = true; it.position = timeline }
         monitorMode = mode; composition = collective
     }
     fun reference(id: String, pcm: WavePcm) = command {
@@ -243,8 +242,10 @@ internal class WaveCompositionAudio : AutoCloseable {
             pendingCandidate = next
         } else {
             candidate = next; pendingCandidate = null; running = true; paused = false
+            voices.values.forEach { it.active = true; it.position = timeline }
         }
     }
+    fun cancelPendingCandidate() = command { pendingCandidate = null }
     fun clearCandidate() = command { candidate = null; pendingCandidate = null }
     fun candidateGain(id: String, value: Float) = command {
         candidate?.takeIf { it.id == id }?.gain = value
@@ -279,7 +280,11 @@ internal class WaveCompositionAudio : AutoCloseable {
     fun mix(id: String, mute: Boolean, solo: Boolean, gain: Float, repeats: Int) = command {
         voices[id]?.let { it.mute = mute; it.solo = solo; it.gain = gain; it.repeats = repeats }
     }
-    fun preview(id: String, pcm: WavePcm) = command { cue = if (cue?.id == id) null else Voice(id, pcm, gain = .8f); cuePaused = false }
+    fun preview(id: String, pcm: WavePcm, gain: Float = .75f) = command {
+        if (cue?.id == id) cuePaused = !cuePaused
+        else { cue = Voice(id, pcm, gain = gain); cuePaused = false }
+    }
+    fun seekPreview(frame: Long) = command { cue?.let { it.position = frame.coerceIn(0, (it.pcm.frames - 1).toLong()); it.smoothGain = 0f }; output?.pause(); output?.flush() }
     fun pausePreview() = command { cuePaused = !cuePaused; output?.pause(); output?.flush() }
     fun stopPreview() = command { cue = null }
     fun stop() = command {
@@ -338,7 +343,7 @@ internal class WaveCompositionAudio : AutoCloseable {
                             if (voice.placements.isEmpty() && voice.repeats > 0 && voice.position >= voice.pcm.frames.toLong() * voice.repeats) { voice.active = false; continue }
                             val placement = voice.placements.firstOrNull { timeline >= it.first && timeline < it.second }
                             if (voice.placements.isNotEmpty() && placement == null) { voice.smoothGain = 0f; voice.position++; continue }
-                            val monitoring = composition || reference == null
+                            val monitoring = composition || monitorMode == WaveListeningMode.MIX
                             val edgeGain = placement?.let { min(1f, min((timeline - it.first) / 240f, (it.second - timeline) / 240f)) } ?: 1f
                             val gain = if (!monitoring || cue != null || voice.mute || (hasSolo && !voice.solo)) 0f else voice.gain * edgeGain
                             voice.smoothGain += (gain - voice.smoothGain) * .006f
@@ -348,7 +353,8 @@ internal class WaveCompositionAudio : AutoCloseable {
                             voice.position++
                         }
                         candidate?.let {
-                            val target = if (cue != null || composition || monitorMode == WaveListeningMode.BASE) 0f else it.gain
+                            val reused = (composition || monitorMode == WaveListeningMode.MIX) && voices[it.id]?.active == true
+                            val target = if (cue != null || composition || reused) 0f else it.gain
                             it.smoothGain += (target - it.smoothGain) * .006f
                             val frame = (it.position % it.pcm.frames).toInt() * 2
                             left += it.pcm.samples.get(frame) * it.smoothGain

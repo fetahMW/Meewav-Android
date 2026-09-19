@@ -3,7 +3,7 @@ package com.meewav.android.features.rooms.wave
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -43,7 +43,8 @@ private enum class PlayerRail { READOUT, IMPORT, LOOP }
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun WaveMasterPlayer(state: WaveCompositionState, onImport: (WaveImportDestination) -> Unit, onSettings: () -> Unit) {
-    var expanded by rememberSaveable { mutableStateOf(true) }
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    var volumeOpen by rememberSaveable { mutableStateOf(false) }
     var bases by remember { mutableStateOf(false) }
     var rail by remember { mutableStateOf(PlayerRail.READOUT) }
     val chevron by animateFloatAsState(if (expanded) 180f else 0f,
@@ -57,11 +58,11 @@ internal fun WaveMasterPlayer(state: WaveCompositionState, onImport: (WaveImport
     val progress = if (snapshot.cue != null) snapshot.cueProgress else
         (snapshot.frame.toFloat() / state.durationFrames).coerceIn(0f, 1f)
     val peaks = if (snapshot.cue != null) state.prepared[snapshot.cue]?.peaks.orEmpty() else state.masterPeaks
-    LaunchedEffect(state.compositionPage) { rail = PlayerRail.READOUT; bases = false }
+    LaunchedEffect(state.compositionPage, state.referenceId, state.listeningMode) { rail = PlayerRail.READOUT; bases = false; volumeOpen = false }
     Column(Modifier.fillMaxWidth().hifiBlackSurface(17.dp).padding(horizontal = 10.dp, vertical = 4.dp)) {
         Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(48.dp).waveTactileClick {
-                expanded = !expanded; bases = false; rail = PlayerRail.READOUT
+                expanded = !expanded; bases = false; rail = PlayerRail.READOUT; volumeOpen = false
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             }.semantics { contentDescription = if (expanded) "Replier le lecteur" else "Déplier le lecteur"; role = Role.Button }, contentAlignment = Alignment.Center) {
                 Icon(Icons.Default.ExpandMore, null, tint = violet,
@@ -79,9 +80,9 @@ internal fun WaveMasterPlayer(state: WaveCompositionState, onImport: (WaveImport
                     val selected = state.listeningMode == mode
                     Box(Modifier.weight(1f).height(44.dp).semantics { this.selected = selected; role = Role.Tab }
                         .waveTactileClick { state.listen(mode) }, contentAlignment = Alignment.Center) {
-                        Box(Modifier.fillMaxWidth().height(28.dp).clip(RoundedCornerShape(7.dp))
-                            .then(if (selected) Modifier.roomsStudioCapsule(cornerRadius = 7.dp) else Modifier), contentAlignment = Alignment.Center) {
-                            Text(mode.label, color = if (selected) pearl else secondary, fontWeight = FontWeight.SemiBold, fontSize = 10.sp)
+                        Box(Modifier.fillMaxWidth().padding(horizontal = 2.dp).height(28.dp).clip(RoundedCornerShape(6.dp))
+                            .hardwareSurface(6.dp, raised = true, reflection = 0.085f), contentAlignment = Alignment.Center) {
+                            Text(mode.label, color = if (selected) violet else secondary, fontWeight = FontWeight.SemiBold, fontSize = 10.sp)
                         }
                     }
                 }
@@ -90,6 +91,16 @@ internal fun WaveMasterPlayer(state: WaveCompositionState, onImport: (WaveImport
                 .semantics { contentDescription = "Sortie ${if (state.publicRoute) "publique" else "privée"}, toucher pour changer"; role = Role.Switch }, contentAlignment = Alignment.Center) {
                 Text(if (state.publicRoute) "Public" else "Privé", color = if (state.publicRoute) violet else secondary,
                     fontSize = 10.sp, modifier = Modifier.clip(RoundedCornerShape(7.dp)).background(Color(0xFF17171C)).padding(horizontal = 5.dp, vertical = 7.dp))
+            }
+        }
+        AnimatedVisibility(volumeOpen, enter = expandVertically(spring(dampingRatio = .9f)) + fadeIn(),
+            exit = shrinkVertically(spring(dampingRatio = .9f)) + fadeOut()) {
+            Row(Modifier.fillMaxWidth().height(60.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Icon(Icons.Default.VolumeUp, null, tint = secondary, modifier = Modifier.size(18.dp))
+                WaveOutputFader(state.outputGain, state::outputVolume, Modifier.weight(1f).height(44.dp))
+                Text("${kotlin.math.round(state.outputGain * 100).toInt()} %", color = pearl, fontSize = 11.sp,
+                    fontFamily = FontFamily.Monospace, modifier = Modifier.width(40.dp))
             }
         }
         AnimatedVisibility(expanded,
@@ -122,9 +133,11 @@ internal fun WaveMasterPlayer(state: WaveCompositionState, onImport: (WaveImport
                         if (rail == PlayerRail.LOOP && !state.canLoop) Box(Modifier.fillMaxWidth().height(60.dp), contentAlignment = Alignment.Center) {
                             Text(if (!state.referenceReady) "Importe une base pour régler sa boucle." else "Choisis Base ou Mix pour régler la boucle.",
                                 color = secondary, fontSize = 11.sp)
-                        } else WaveReferenceTimeline(peaks, progress, editingPin != null || (state.loopEnabled && state.canLoop),
+                        } else WaveReferenceTimeline(peaks, progress, editingPin != null || state.loopEnabled,
                             editingPin == null && state.loopBars == 0, displayedRange, state.cueFrame.toFloat() / state.durationFrames,
                             onSeek = state::seek, onRange = { if (editingPin != null) state.movePin(it.start) else state.updateLoopRange(it) },
+                            snap = { state.snapRegion(it, editingPin?.bars ?: state.loopBars) }, editable = state.canLoop,
+                            sourceId = state.referenceId, minimum = (4800f / state.durationFrames).coerceAtMost(1f),
                             modifier = Modifier.fillMaxWidth().height(60.dp).padding(vertical = 6.dp))
                     }
                 }
@@ -135,7 +148,7 @@ internal fun WaveMasterPlayer(state: WaveCompositionState, onImport: (WaveImport
                             Box(Modifier.weight(1f).fillMaxHeight().clipToBounds()) {
                                 androidx.compose.animation.AnimatedVisibility(rail == PlayerRail.READOUT, enter = fadeIn(tween(140)), exit = fadeOut(tween(80))) {
                                     Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
-                                        val beat = snapshot.frame * state.bpm / (48_000L * 60)
+                                        val beat = snapshot.frame.coerceAtMost((state.durationFrames - 1).coerceAtLeast(0)) * state.bpm / (48_000L * 60)
                                         Column(Modifier.weight(1f).combinedClickable(onClick = onSettings, onLongClick = state::setCue)) {
                                             Text(if (editingPin != null) "Épingle · M${editingPin.startBar + 1}" else "Mesure ${beat / 4 + 1} / ${max(1, (state.durationFrames / state.framesPerBar).toInt())}", color = pearl, fontSize = 10.sp, maxLines = 1)
                                             Text(if (editingPin != null) "${editingPin.bars} mesures" else "Temps ${beat % 4 + 1} / 4", color = secondary, fontSize = 9.sp)
@@ -181,6 +194,15 @@ internal fun WaveMasterPlayer(state: WaveCompositionState, onImport: (WaveImport
                             }
                         }
                     }
+                    Box(Modifier.size(44.dp).waveTactileClick { volumeOpen = !volumeOpen }
+                        .semantics { contentDescription = "Volume du lecteur Wave"; role = Role.Button; stateDescription = if (volumeOpen) "Déplié" else "Replié" },
+                        contentAlignment = Alignment.Center) {
+                        Box(Modifier.size(36.dp, 28.dp).hardwareSurface(6.dp, raised = true, reflection = .085f), contentAlignment = Alignment.Center) {
+                            val scale by animateFloatAsState(if (volumeOpen) 1.15f else 1f, spring(dampingRatio = .7f), label = "Haut-parleur Wave")
+                            Icon(if (state.outputGain == 0f) Icons.Default.VolumeOff else Icons.Default.VolumeUp, null,
+                                tint = if (volumeOpen) violet else pearl, modifier = Modifier.size(17.dp).graphicsLayer { scaleX = scale; scaleY = scale })
+                        }
+                    }
                     Box(Modifier.size(44.dp), contentAlignment = Alignment.Center) {
                         WaveControl(Icons.Default.Repeat, if (rail == PlayerRail.LOOP) "Replier les réglages de boucle" else "Déplier les réglages de boucle", rail == PlayerRail.LOOP || state.loopEnabled) {
                             bases = false
@@ -208,35 +230,40 @@ private fun waveClock(frame: Long): String = "%02d:%02d".format(frame / 48_000 /
 @Composable
 private fun WaveReferenceTimeline(peaks: List<Float>, progress: Float, looping: Boolean, free: Boolean,
     range: ClosedFloatingPointRange<Float>, cue: Float, onSeek: (Float) -> Unit,
-    onRange: (ClosedFloatingPointRange<Float>) -> Unit, modifier: Modifier) {
+    onRange: (ClosedFloatingPointRange<Float>) -> Unit,
+    snap: (ClosedFloatingPointRange<Float>) -> ClosedFloatingPointRange<Float>, editable: Boolean,
+    sourceId: String?, minimum: Float, modifier: Modifier) {
     var draft by remember { mutableStateOf<ClosedFloatingPointRange<Float>?>(null) }
     var scrub by remember { mutableStateOf<Float?>(null) }
     val currentRange by rememberUpdatedState(range)
     val currentSeek by rememberUpdatedState(onSeek)
     val currentSelect by rememberUpdatedState(onRange)
+    val currentSnap by rememberUpdatedState(snap)
     val drawnRange = draft ?: range
     val playhead = scrub ?: progress
-    Canvas(modifier.pointerInput(looping, free) {
+    Canvas(modifier.pointerInput(looping, free, editable, sourceId) {
         var startPointer = 0f
         var original = 0f..1f
         var edge = 0
-        detectDragGestures(onDragStart = { point ->
+        detectHorizontalDragGestures(onDragStart = { point ->
             startPointer = (point.x / size.width).coerceIn(0f, 1f); original = currentRange
             val threshold = 22.dp.toPx() / size.width
-            edge = if (!free) 0 else if (abs(startPointer - original.start) <= threshold) -1
-                else if (abs(startPointer - original.endInclusive) <= threshold) 1 else 0
-        }, onDrag = { change, _ ->
+            val da = abs(startPointer - original.start); val db = abs(startPointer - original.endInclusive)
+            edge = if (!free) 0 else if (da <= threshold && db <= threshold)
+                (if (point.y < size.height / 2) -1 else 1)
+                else if (da <= threshold && da <= db) -1 else if (db <= threshold) 1 else 0
+        }, onHorizontalDrag = { change, _ ->
             change.consume()
             val position = (change.position.x / size.width).coerceIn(0f, 1f)
-            if (!looping) scrub = position else {
+            if (!looping) scrub = position else if (editable) {
                 val length = original.endInclusive - original.start
                 draft = when (edge) {
-                    -1 -> position.coerceAtMost(original.endInclusive - .002f).coerceAtLeast(0f)..original.endInclusive
-                    1 -> original.start..position.coerceAtLeast(original.start + .002f).coerceAtMost(1f)
-                    else -> { val start = (original.start + position - startPointer).coerceIn(0f, 1f - length); start..start + length }
+                    -1 -> position.coerceAtMost(original.endInclusive - minimum).coerceAtLeast(0f)..original.endInclusive
+                    1 -> original.start..position.coerceAtLeast(original.start + minimum).coerceAtMost(1f)
+                    else -> { val start = (original.start + position - startPointer).coerceIn(0f, (1f - length).coerceAtLeast(0f)); currentSnap(start..start + length) }
                 }
             }
-        }, onDragEnd = { draft?.let(currentSelect); scrub?.let(currentSeek); draft = null; scrub = null },
+        }, onDragEnd = { draft?.takeIf { it != currentRange }?.let(currentSelect); scrub?.let(currentSeek); draft = null; scrub = null },
             onDragCancel = { draft = null; scrub = null })
     }.pointerInput(looping) { detectTapGestures { currentSeek((it.x / size.width).coerceIn(0f, 1f)) } }) {
         repeat(9) { drawLine(Color.White.copy(alpha = .06f), Offset(size.width * it / 8, 0f), Offset(size.width * it / 8, size.height), 1f) }

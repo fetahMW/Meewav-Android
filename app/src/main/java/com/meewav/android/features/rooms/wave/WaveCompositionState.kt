@@ -21,7 +21,7 @@ internal data class WaveCompositionClip(
     val id: String, val title: String, val artist: String, val source: String, val category: String,
     val kind: WaveClipKind = WaveClipKind.LOOP, val status: WaveProposalStatus = WaveProposalStatus.PENDING,
     val inComposition: Boolean = false, val repeats: Int = -1, val mute: Boolean = false,
-    val solo: Boolean = false, val gain: Float = .65f, val note: String = "", val musical: String = "124 BPM · A MIN",
+    val solo: Boolean = false, val gain: Float = .82f, val note: String = "", val musical: String = "124 BPM · A MIN",
     val packId: String? = null, val packTitle: String? = null,
     val isBase: Boolean = false,
 )
@@ -33,6 +33,8 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val preferences = context.getSharedPreferences("wave-workshop-${sessionKey.hashCode()}", Context.MODE_PRIVATE)
     val audio = WaveCompositionAudio()
+    var outputGain by mutableFloatStateOf(1f); private set
+    fun outputVolume(value: Float) { outputGain = value.coerceIn(0f, 1f); audio.masterGain(outputGain) }
     var clips by mutableStateOf<List<WaveCompositionClip>>(emptyList()); private set
     var bpm by mutableIntStateOf(124); private set
     var key by mutableStateOf("A MIN"); private set
@@ -63,6 +65,13 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
     var pins by mutableStateOf<List<WaveMixPin>>(emptyList()); private set
     var selectedPinId by mutableStateOf<String?>(null); private set
     var selectedMixId by mutableStateOf<String?>(null); private set
+    private val rememberedPins = mutableMapOf<String, String>()
+    var auditionGains by mutableStateOf<Map<String, Float>>(emptyMap()); private set
+    fun auditionGain(id: String) = auditionGains[id] ?: .75f
+    fun auditionVolume(id: String, value: Float) {
+        val level = kotlin.math.round(value.coerceIn(0f, 1f) * 100) / 100
+        auditionGains = auditionGains + (id to level); audio.candidateGain(id, level)
+    }
     var privateMessages by mutableStateOf<Map<String, List<String>>>(emptyMap()); private set
     fun message(artist: String, text: String) {
         if (text.isBlank()) return
@@ -99,6 +108,9 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
     val categories = listOf("Drums", "Basse", "Mélodie", "Accords", "Nappe", "Acapella", "FX")
     init {
         restore()
+        // Add newly ported demo sources without overwriting user imports or decisions.
+        clips = clips + waveDemoProposals().filter { demo -> clips.none { it.id == demo.id } }
+        save()
         audio.tempo(bpm)
         clips.filter { it.inComposition }.forEach { prepare(it.id) }
         referenceId?.let { id -> prepare(id) { activateReference(id) } }
@@ -111,7 +123,7 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
                     voteSecondsRemaining = ((remaining.coerceAtLeast(0) + 999) / 1000).toInt()
                     if (remaining <= 0) finishVote()
                 }
-                delay(50)
+                delay(33)
             }
         }
     }
@@ -164,25 +176,43 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
         clips = clips.map { if (it.id == id) change(it) else it }; save()
         clips.find { it.id == id }?.let { audio.mix(id, it.mute, it.solo, it.gain, it.repeats) }
     }
-    fun selectMix(id: String) { selectedMixId = if (selectedMixId == id) null else id; selectedPinId = null }
-    fun pinsFor(id: String) = pins.filter { it.clipId == id && it.baseId == referenceId }.sortedBy { it.startBar }
-    fun selectPin(id: String?) { selectedPinId = id?.takeIf { candidate -> pins.any { it.id == candidate && it.baseId == referenceId } } }
-    fun addPin(id: String) {
-        val base = referenceId ?: return
-        if (!referenceReady) return
-        val length = selectedPin?.bars ?: loopBars.takeIf { loopEnabled && it > 0 } ?: 4
-        val totalBars = (durationFrames / framesPerBar).toInt()
-        if (totalBars < length) { notice = "La base est trop courte pour ce placement."; return }
-        val existing = pinsFor(id)
-        val initial = selectedPin?.let { it.startBar + it.bars } ?: (snapshot.frame / framesPerBar).toInt().coerceAtMost(totalBars - length)
-        val start = (initial..(totalBars - length)).firstOrNull { position -> existing.none { position < it.startBar + it.bars && position + length > it.startBar } }
-        if (start == null) { notice = "Aucun emplacement libre de $length mesures."; return }
-        val pin = WaveMixPin(UUID.randomUUID().toString(), id, base, start, length)
-        pins = pins + pin; selectedPinId = pin.id; selectedMixId = id; syncPins(); save()
+    fun selectMix(id: String) {
+        selectedMixId = if (selectedMixId == id) null else id
+        selectedPinId = selectedMixId?.let { rememberedPins["$referenceId:$it"] }?.takeIf { saved -> pins.any { it.id == saved } }
     }
-    fun movePin(progress: Float) {
+    fun pinsFor(id: String) = pins.filter { it.clipId == id && it.baseId == referenceId }.sortedBy { it.startBar }
+    fun selectPin(id: String?) {
+        selectedPinId = id?.takeIf { candidate -> pins.any { it.id == candidate && it.baseId == referenceId } }
+        selectedPin?.let { rememberedPins["$referenceId:${it.clipId}"] = it.id }
+    }
+    private fun nextPin(id: String): WaveMixPin? {
+        val base = referenceId ?: return null
+        if (!referenceReady) return null
+        val existing = pinsFor(id)
+        val total = (durationFrames / framesPerBar).toInt()
+        if (total <= 0) return null
+        val length = (selectedPin?.takeIf { it.clipId == id }?.bars ?: loopBars.takeIf { loopEnabled && it > 0 } ?: 4)
+            .let { if (existing.isEmpty()) it.coerceAtMost(total) else it }
+        if (length > total) return null
+        val anchor = selectedPin?.takeIf { it.clipId == id }?.let { it.startBar + it.bars }
+            ?: (if (loopEnabled) loopRange.start * durationFrames / framesPerBar else snapshot.frame / framesPerBar).toInt()
+        val initial = (anchor / length * length).coerceIn(0, (total - length).coerceAtLeast(0))
+        if (selectedPin == null) existing.find { it.startBar == initial && it.bars == length }?.let { return it }
+        val slots = (0..(total - length) step length).toList()
+        val ordered = slots.filter { it >= initial } + slots.filter { it < initial }
+        val start = ordered.firstOrNull { at -> existing.none { at < it.startBar + it.bars && at + length > it.startBar } } ?: return null
+        return WaveMixPin(UUID.randomUUID().toString(), id, base, start, length)
+    }
+    fun canAddPin(id: String) = nextPin(id) != null
+    fun addPin(id: String) {
+        val pin = nextPin(id) ?: return
+        if (pins.none { it.id == pin.id }) pins = pins + pin
+        selectedMixId = id; selectPin(pin.id); syncPins(); save()
+    }    fun movePin(progress: Float) {
         val pin = selectedPin ?: return
-        val start = kotlin.math.round(progress * durationFrames / framesPerBar).toInt().coerceIn(0, ((durationFrames / framesPerBar).toInt() - pin.bars).coerceAtLeast(0))
+        val step = pin.bars
+        val last = ((durationFrames / framesPerBar).toInt() - step).coerceAtLeast(0) / step
+        val start = kotlin.math.floor(progress * durationFrames / framesPerBar / step + .5).toInt().coerceIn(0, last) * step
         replacePin(pin.copy(startBar = start))
     }
     fun resizePin(bars: Int) {
@@ -190,12 +220,18 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
         if (bars in listOf(4, 8, 16, 32) && (pin.startBar + bars) * framesPerBar <= durationFrames + 1) replacePin(pin.copy(bars = bars))
     }
     private fun replacePin(pin: WaveMixPin) {
-        if (pinsFor(pin.clipId).any { it.id != pin.id && pin.startBar < it.startBar + it.bars && pin.startBar + pin.bars > it.startBar }) {
-            notice = "Ce placement chevauche une autre épingle."; return
+        pinsFor(pin.clipId).find { it.id != pin.id && pin.startBar == it.startBar && pin.bars == it.bars }?.let {
+            selectPin(it.id); return
         }
         pins = pins.map { if (it.id == pin.id) pin else it }; syncPins(); save()
     }
-    fun removePin() { pins = pins.filterNot { it.id == selectedPinId }; selectedPinId = null; syncPins(); save() }
+    fun removePin() {
+        val removed = selectedPin ?: return
+        val siblings = pinsFor(removed.clipId); val index = siblings.indexOf(removed)
+        pins = pins.filterNot { it.id == removed.id }
+        selectPin(siblings.getOrNull(index + 1)?.id ?: siblings.getOrNull(index - 1)?.id)
+        syncPins(); save()
+    }
     private fun syncPins() {
         clips.filter { it.inComposition }.forEach { clip -> audio.placements(clip.id, pinsFor(clip.id).map {
             (it.startBar * framesPerBar).toLong() to ((it.startBar + it.bars) * framesPerBar).toLong()
@@ -249,13 +285,20 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
     fun stopTransport() { transportPending = false; preparedActions.clear(); auditionGeneration++; preparingPack = null; audio.stop() }
     fun toggleLoop() { loopEnabled = !loopEnabled; syncLoop() }
     fun updateLoopRange(range: ClosedFloatingPointRange<Float>) {
-        val minimum = (4800f / durationFrames).coerceAtMost(1f)
-        val length = if (loopBars > 0) (framesPerBar * loopBars / durationFrames).toFloat().coerceAtMost(1f) else (range.endInclusive - range.start).coerceAtLeast(minimum)
-        val raw = if (loopBars > 0) (kotlin.math.round(range.start * durationFrames / framesPerBar) * framesPerBar / durationFrames).toFloat() else range.start
-        val start = raw.coerceIn(0f, (1f - length).coerceAtLeast(0f))
-        loopRange = start..(start + length).coerceAtMost(1f); syncLoop()
+        val next = snapRegion(range)
+        if (next != loopRange) { loopRange = next; syncLoop() }
     }
     val framesPerBar get() = 48_000 * 60.0 * 4 / bpm
+    fun snapRegion(range: ClosedFloatingPointRange<Float>, bars: Int = loopBars): ClosedFloatingPointRange<Float> {
+        val minimum = (4800f / durationFrames).coerceAtMost(1f)
+        val length = if (bars > 0) (framesPerBar * bars / durationFrames).toFloat().coerceAtMost(1f)
+            else (range.endInclusive - range.start).coerceIn(minimum, 1f)
+        val start = if (bars > 0) {
+            val lastBlock = kotlin.math.floor((1.0 - length + 0.000001) / length).toInt().coerceAtLeast(0)
+            kotlin.math.floor(range.start / length + .5f).toInt().coerceIn(0, lastBlock) * length
+        } else range.start.coerceIn(0f, 1f - length)
+        return start..(start + length).coerceAtMost(1f)
+    }
     fun selectLoop(bars: Int) {
         if (!canLoop) return
         loopEnabled = bars != -1; loopBars = bars.coerceAtLeast(0)
@@ -265,15 +308,15 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
         }
         syncLoop()
     }
-    private fun syncLoop() = audio.loop((durationFrames * loopRange.start).toLong(), if (loopEnabled && canLoop) (durationFrames * loopRange.endInclusive).toLong() else 0)
+    private fun syncLoop() = audio.loop((durationFrames * loopRange.start).toLong(), if (loopEnabled && referenceReady) (durationFrames * loopRange.endInclusive).toLong() else 0)
     fun setPage(composition: Boolean) {
         compositionPage = composition; stopPreview(); selectedPinId = null
         if (!composition) listeningMode = WaveListeningMode.BASE
         audio.monitor(listeningMode, compositionPage); syncLoop()
     }
-    fun listen(mode: WaveListeningMode) { listeningMode = mode; audio.monitor(mode, compositionPage); syncLoop() }
+    fun listen(mode: WaveListeningMode) { listeningMode = mode; audio.monitor(mode, compositionPage) }
     fun setCue() { cueFrame = snapshot.frame; notice = "Point de reprise mémorisé." }
-    fun returnToCue() = audio.seek(cueFrame)
+    fun returnToCue() = audio.seek(if (loopEnabled) (loopRange.start * durationFrames).toLong() else cueFrame)
     fun toggleRoute() {
         if (snapshot.cue != null && !snapshot.cuePaused) audio.pausePreview()
         if (snapshot.running) audio.toggleClock()
@@ -281,15 +324,20 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
         notice = if (publicRoute) "Sortie publique sélectionnée · diffusion RTC non raccordée." else "Écoute privée sur ce téléphone."
     }
     fun activateReference(id: String) {
+        if (vote != null || (id == referenceId && referenceReady)) return
         val clip = clips.find { it.id == id && it.isBase } ?: return
-        referenceId = id; loopEnabled = false; cueFrame = 0; selectedPinId = null; pendingGrid = null; stopTransport(); save()
+        referenceId = id; publicRoute = false; loopEnabled = false; cueFrame = 0; selectedPinId = null; pendingGrid = null; stopTransport(); save()
         prepare(id) {
             if (referenceId == id) prepared[id]?.let { audio.reference(id, it); audio.monitor(listeningMode, compositionPage); syncPins() }
         }
         val detectedBpm = Regex("(\\d+) BPM").find(clip.musical)?.groupValues?.get(1)?.toIntOrNull()
         if (detectedBpm != null) pendingGrid = detectedBpm to clip.musical.substringAfter("·", key).trim()
     }
-    fun seek(progress: Float) = audio.seek((progress.coerceIn(0f, 1f) * durationFrames).toLong())
+    fun seek(progress: Float) {
+        snapshot.cue?.let { id -> prepared[id]?.let { audio.seekPreview((progress.coerceIn(0f, 1f) * it.frames).toLong()) }; return }
+        val position = if (loopEnabled && progress !in loopRange) loopRange.start else progress.coerceIn(0f, 1f)
+        audio.seek((position * durationFrames).toLong().coerceAtMost((durationFrames - 1).coerceAtLeast(0)))
+    }
     fun stepBar(direction: Int) {
         val bar = 48_000 * 60.0 * 4 / bpm
         audio.seek((snapshot.frame + direction * bar).toLong().coerceIn(0, durationFrames))
@@ -297,6 +345,7 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
     fun launch(id: String) { stopPreview(); if (focus()) prepare(id) { audio.launch(id) } }
     fun preview(id: String) {
         val generation = ++auditionGeneration
+        if (snapshot.pendingCandidate == id) { candidateId = snapshot.candidate; audio.cancelPendingCandidate(); return }
         if (candidateId == id && (snapshot.candidate == id || snapshot.pendingCandidate == id)) { candidateId = null; audio.clearCandidate(); return }
         candidateId = id
         if (focus()) prepare(id) { if (generation == auditionGeneration) prepared[id]?.let {
@@ -304,8 +353,8 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
                 val minimum = listOf(4, 8, 16, 32).firstOrNull { bars -> bars * framesPerBar >= it.frames && bars * framesPerBar <= durationFrames + 1 }
                 if (minimum != null) selectLoop(minimum) else selectLoop(-1)
             }
-            if (referenceReady) audio.candidate(id, it, clips.find { c -> c.id == id }?.gain ?: .75f)
-            else audio.preview(id, it)
+            if (referenceReady && clips.find { c -> c.id == id }?.isBase != true) audio.candidate(id, it, auditionGain(id))
+            else audio.preview(id, it, auditionGain(id))
         } }
     }
     fun stopPreview() { auditionGeneration++; preparingPack = null; candidateId = null; audio.stopPreview(); audio.clearCandidate() }
@@ -441,10 +490,10 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
                 }
             }.getOrNull() ?: "Audio importé" }
             val clip = WaveCompositionClip(UUID.randomUUID().toString(), importedTitle ?: name, "VOUS", uri.toString(), WaveWorkshopImports.category(importedTitle ?: name),
-                musical = "Analyse…", packId = packId, packTitle = packTitle, isBase = destination == WaveImportDestination.BASE,
+                musical = "Analyse…", packId = packId, packTitle = packTitle, isBase = destination != WaveImportDestination.PROPOSALS,
                 status = if (destination == WaveImportDestination.VOTE) WaveProposalStatus.VOTE else WaveProposalStatus.PENDING)
             clips = clips + clip; save()
-            if (clip.isBase) activateReference(clip.id) else prepare(clip.id)
+            if (destination == WaveImportDestination.BASE) activateReference(clip.id) else prepare(clip.id)
             withContext(Dispatchers.IO) {
                 WaveAudioAnalysis.analyze(context, uri, onMusicalResult = { value -> withContext(Dispatchers.Main) {
                     update(clip.id) { it.copy(musical = value) }
@@ -472,11 +521,14 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
         val current = vote ?: return
         vote = null; stopPreview()
         val name = clips.find { it.id == current.clipId }?.title ?: "Boucle"
-        if (current.yes > current.no) {
+        if (current.yes + current.no > 0 && current.yes.toDouble() / (current.yes + current.no) >= .60) {
             if (current.replacementId == null && clips.count { it.inComposition } >= 20) {
                 lastVerdict = "$name : vote favorable, composition pleine. Libère une piste pour l’ajouter."; return
             }
-            current.replacementId?.let(::remove); add(current.clipId)
+            current.replacementId?.let(::remove)
+            if (clips.find { it.id == current.clipId }?.isBase == true) {
+                update(current.clipId) { it.copy(status = WaveProposalStatus.ACCEPTED) }; activateReference(current.clipId)
+            } else add(current.clipId)
             lastVerdict = "$name : retenue · ${current.yes} pour / ${current.no} contre"
         } else { pending(current.clipId); lastVerdict = "$name : à réécouter · ${current.yes} pour / ${current.no} contre" }
     }

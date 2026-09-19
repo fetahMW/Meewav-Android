@@ -177,9 +177,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     }
     // Lecture réelle — MediaPlayer sur l'URI importée (son audible).
     var mediaPlayer by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
-    LaunchedEffect(audioGain, audioMuted, composition) {
-        composition?.audio?.masterGain(if (audioMuted) 0f else audioGain)
-    }
+    // The mixer track fader owns MediaPlayer only. Wave has its own output gain.
     LaunchedEffect(composition?.snapshot?.running, composition?.snapshot?.cue) {
         if (composition?.snapshot?.running == true || composition?.snapshot?.cue != null) {
             mediaPlayer?.pause()
