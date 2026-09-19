@@ -283,3 +283,8 @@ Compilation de livraison uniquement ; rendu à valider par l'utilisateur.
 - Ajout de Mise en avant : choix parmi les messages du host, snapshot fixé hors du flux défilant, sans expiration, conservé au niveau de l'écran lors des changements d'onglets. Retrait/remplacement explicite ; suppression du message épinglé le retire aussi du bandeau.
 - Émojis rendus dans le bandeau et dans la liste de sélection. Message long résumé sur deux lignes ; intégralité disponible dans Mise en avant.
 - Sondages : exactement Oui/Non, Pour/Contre, Pouce vers le haut/Pouce vers le bas (icônes bleues). Suppression du choix multiple et des notes 5/10. Démo locale inchangée, pas de vote serveur.
+
+### Chat Wave : portraits et icônes — 19 septembre 2026
+- Avion en papier pour envoyer ; trois points horizontaux pour ouvrir les outils du chat.
+- Dix portraits locaux repris de la banque Tremplin/Scène (sceneArtistPortraits.ts), artistes ajoutés au flux de démonstration.
+- Avatars existants conservés. Les participants sans image ont un portrait stable ; suppression du fallback avec une lettre.

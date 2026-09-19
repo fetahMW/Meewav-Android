@@ -236,6 +236,16 @@ fun WaveChatPanel(
             Triple("u_riko", "riko.wav", "Encore une [[mw:micro-flamme]]"),
             Triple("u_zoe", "zoe.beats", "C'est parti [[mw:fusee-musicale]]"),
             Triple("u_kel", "kel.wav", "La transition est propre [[mw:egaliseur]]"),
+            Triple("artist_0", "NAYA K.", "Ce groove est incroyable"),
+            Triple("artist_1", "KÉO", "La basse est parfaite ici"),
+            Triple("artist_2", "SOLEN", "Bravo pour cette transition"),
+            Triple("artist_3", "AZUR", "Le mix est propre"),
+            Triple("artist_4", "LORNS", "On veut la suite !"),
+            Triple("artist_5", "YUNA", "Ce refrain reste en tête"),
+            Triple("artist_6", "MALIK NOX", "Quelle énergie ce soir"),
+            Triple("artist_7", "ALYA FLOW", "Le son est chaud"),
+            Triple("artist_8", "NOAM A.", "Les harmonies sont magnifiques"),
+            Triple("artist_9", "LINA V.", "Un plaisir de vous écouter"),
         )
     }
     var liveIndex by remember { mutableIntStateOf(0) }
@@ -253,7 +263,7 @@ fun WaveChatPanel(
                     "u_riko" -> R.drawable.chat_av_riko
                     "u_luca" -> R.drawable.chat_av_luca
                     "u_mina" -> R.drawable.chat_av_mina
-                    else -> null
+                    else -> waveDemoPortrait(uid)
                 }
             )).takeLast(60)
         }
@@ -471,7 +481,7 @@ private fun WaveChatRow(
             Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Portrait 28dp — image réelle, sinon initiale sur #162333 (place-chat__portrait).
+            // Existing avatars retained; demo artists always have a stable portrait, never initials.
             Box(
                 Modifier
                     .size(28.dp)
@@ -479,19 +489,11 @@ private fun WaveChatRow(
                     .background(Color(0xFF162333)),
                 contentAlignment = Alignment.Center
             ) {
-                if (message.avatarRes != null) {
-                    Image(
-                        painterResource(message.avatarRes), null,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
-                    Text(
-                        message.userName.first().uppercase(),
-                        color = Color(0xFFB9D9FF),
-                        fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
-                        fontFamily = WaveMixerTheme.fontFamily
-                    )
-                }
+                Image(
+                    painterResource(message.avatarRes ?: waveDemoPortrait(message.userId)), null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                )
             }
             Spacer(Modifier.width(8.dp))
             Text(
@@ -608,7 +610,7 @@ private fun WaveChatSocialRail(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
-            RailToolButton(icon = WaveIcons.Tools, tint = chatAccent, label = "Outils du chat", onClick = onOpenTools)
+            RailToolButton(icon = WaveIcons.More, tint = chatAccent, label = "Outils du chat", onClick = onOpenTools)
             RailToolButton(icon = WaveIcons.Dashboard, tint = white(0.8f), label = "Dashboard")
             RailToolButton(icon = WaveIcons.Bell, tint = white(0.8f), label = "Notifications", badge = "3")
             Box(Modifier.height(44.dp), contentAlignment = Alignment.Center) { ChatRailItem(imageRes = R.drawable.money_bag, value = "148") }
@@ -790,10 +792,35 @@ private fun WaveChatComposer(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                WaveIcons.Envelope, "Envoyer",
+                WaveIcons.Send, "Envoyer",
                 tint = WaveMixerTheme.capsuleAccentSoft.copy(alpha = if (canSend) 1f else .48f),
                 modifier = Modifier.size(23.dp)
             )
         }
     }
+}
+
+private val waveArtistPortraits = listOf(
+    R.drawable.wave_chat_artist_0,
+    R.drawable.wave_chat_artist_1,
+    R.drawable.wave_chat_artist_2,
+    R.drawable.wave_chat_artist_3,
+    R.drawable.wave_chat_artist_4,
+    R.drawable.wave_chat_artist_5,
+    R.drawable.wave_chat_artist_6,
+    R.drawable.wave_chat_artist_7,
+    R.drawable.wave_chat_artist_8,
+    R.drawable.wave_chat_artist_9,
+)
+
+private fun waveDemoPortrait(userId: String): Int {
+    val artistIndex = userId.removePrefix("artist_").toIntOrNull()
+    val index = artistIndex ?: when (userId) {
+        "u_zoe" -> 0
+        "u_kel" -> 1
+        "u_nova" -> 2
+        "u_dio" -> 3
+        else -> Math.floorMod(userId.hashCode(), waveArtistPortraits.size)
+    }
+    return waveArtistPortraits[Math.floorMod(index, waveArtistPortraits.size)]
 }
