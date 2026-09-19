@@ -52,7 +52,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
@@ -135,10 +137,16 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     val composition = remember(context, room, roomTitle) {
         if (room == RoomModule.WAVE) WaveCompositionState(context.applicationContext, roomTitle ?: "wave-demo") else null
     }
+    val mixerDeck = remember(context) { WaveMixerDeckState(context.applicationContext) }
+    LaunchedEffect(audioGain, audioMuted) { mixerDeck.volume(if (audioMuted) 0f else audioGain) }
+    LaunchedEffect(composition?.snapshot?.running, composition?.snapshot?.cue) {
+        if (composition?.playing == true) mixerDeck.pause()
+    }
+    DisposableEffect(mixerDeck) { onDispose { mixerDeck.close() } }
     val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
     DisposableEffect(composition, lifecycle) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
-            if (event == androidx.lifecycle.Lifecycle.Event.ON_STOP) composition?.suspendAudio()
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_STOP) { composition?.suspendAudio(); mixerDeck.pause() }
         }
         lifecycle.addObserver(observer)
         onDispose { lifecycle.removeObserver(observer); composition?.close() }
@@ -292,6 +300,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                 ) {
                 when (activeTab) {
                     WaveTab.MIXEUR -> MixerBody(
+                        deck = mixerDeck, onDeckPlay = { composition?.suspendAudio(); mixerDeck.toggle() },
                         micGain = micGain, audioGain = audioGain,
                         micMuted = micMuted, audioMuted = audioMuted,
                         onMicGain = { micGain = it }, onAudioGain = { audioGain = it },
@@ -620,6 +629,7 @@ private fun WaveTabBar(
 
 @Composable
 private fun MixerBody(
+    deck: WaveMixerDeckState, onDeckPlay: () -> Unit,
     micGain: Float, audioGain: Float, micMuted: Boolean, audioMuted: Boolean,
     onMicGain: (Float) -> Unit, onAudioGain: (Float) -> Unit,
     onMicMute: () -> Unit, onAudioMute: () -> Unit,
@@ -643,10 +653,13 @@ private fun MixerBody(
     onRemoveLane: (Int) -> Unit,
     onImportPack: () -> Unit,
 ) {
-    Box(Modifier.fillMaxSize()) {
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val deckHeight by animateDpAsState(if (multitrack) maxHeight else 168.dp.coerceAtMost(maxHeight),
+            androidx.compose.animation.core.spring(dampingRatio = .9f, stiffness = 320f), label = "Déploiement du deck")
+        val channelHeight = (maxHeight - deckHeight - 8.dp).coerceAtLeast(0.dp)
         Column(Modifier.fillMaxSize()) {
         // Région haute : strips + diviseur + FX.
-        BoxWithConstraints(Modifier.fillMaxWidth().weight(1f).padding(top = 10.dp)) {
+        BoxWithConstraints(Modifier.fillMaxWidth().height(channelHeight).then(Modifier.clipToBounds()).padding(top = 10.dp)) {
             val cw = maxWidth
             val slot = (cw - 6.dp) / 4f
             Box(Modifier.offset(x = 3.dp).width(slot * 2f).height(32.dp)) {
@@ -703,45 +716,8 @@ private fun MixerBody(
                     .fillMaxHeight()
             )
         }
-        // Deck ancré en bas (mode compact).
-        MixerDeck(
-            privacyPublic = privacyPublic, onPrivacy = onPrivacy,
-            isPlaying = isPlaying, onPlay = onPlay,
-            loopOn = loopOn, onLoop = onLoop,
-            multitrack = multitrack, onMultitrack = onMultitrack,
-            hasTrack = hasTrack, trackName = trackName,
-            trackDurationMs = trackDurationMs, trackSamples = trackSamples, playProgress = playProgress, trackAnalyzing = trackAnalyzing, musicLabel = musicLabel,
-            onImport = onImport,
-            extraLaneCount = extraLaneCount,
-            onAddLane = onAddLane, onRemoveLane = onRemoveLane, onImportPack = onImportPack,
-            expanded = false,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp, bottom = 4.dp)
-        )
-        }
-        // Feuille multipiste déployée — glisse du bas jusqu'à la navbar du haut.
-        AnimatedVisibility(
-            visible = multitrack,
-            modifier = Modifier.fillMaxSize(),
-            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
-        ) {
-            MixerDeck(
-                privacyPublic = privacyPublic, onPrivacy = onPrivacy,
-                isPlaying = isPlaying, onPlay = onPlay,
-                loopOn = loopOn, onLoop = onLoop,
-                multitrack = multitrack, onMultitrack = onMultitrack,
-                hasTrack = hasTrack, trackName = trackName,
-                trackDurationMs = trackDurationMs, trackSamples = trackSamples, playProgress = playProgress, trackAnalyzing = trackAnalyzing, musicLabel = musicLabel,
-                onImport = onImport,
-                extraLaneCount = extraLaneCount,
-                onAddLane = onAddLane, onRemoveLane = onRemoveLane, onImportPack = onImportPack,
-                expanded = true,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = 4.dp)
-            )
+        WaveMixerDeckPanel(deck, multitrack, onMultitrack, onDeckPlay,
+            Modifier.fillMaxWidth().height(deckHeight).padding(top = 4.dp, bottom = 4.dp))
         }
     }
 }

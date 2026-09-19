@@ -17,6 +17,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 
 private val accent = WaveMixerTheme.capsuleAccentSoft
 private val text = Color(0xFFEAE8F0)
@@ -28,7 +31,10 @@ internal fun WaveVoteControls(clip: WaveCompositionClip, state: WaveCompositionS
     onDuration: (Int) -> Unit, onLaunch: () -> Unit, onMessage: () -> Unit) {
     var rail by remember(clip.id) { mutableStateOf(CardRail.NONE) }
     var adjusting by remember { mutableStateOf(false) }
-    LaunchedEffect(rail, state.auditionGain(clip.id), adjusting) { if (rail == CardRail.VOLUME && !adjusting) { delay(3000); rail = CardRail.NONE } }
+    val interaction = remember { MutableInteractionSource() }
+    val dragged by interaction.collectIsDraggedAsState()
+    val pressed by interaction.collectIsPressedAsState()
+    LaunchedEffect(rail, state.auditionGain(clip.id), adjusting, dragged, pressed) { if (rail == CardRail.VOLUME && !adjusting && !dragged && !pressed) { delay(3000); rail = CardRail.NONE } }
     val locked = state.vote != null || clip.id in state.preparing
     Row(Modifier.fillMaxWidth().height(44.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
         CardCommand(if (rail == CardRail.DURATION) Icons.Default.ChevronLeft else Icons.Default.Timer, "${duration}s", enabled = !locked) {
@@ -47,7 +53,7 @@ internal fun WaveVoteControls(clip: WaveCompositionClip, state: WaveCompositionS
                         CardCommand(if (current == CardRail.VOLUME) Icons.Default.ChevronLeft else Icons.Default.VolumeUp,
                             "${(state.auditionGain(clip.id) * 100).toInt()}", enabled = !locked) { rail = if (rail == CardRail.VOLUME) CardRail.NONE else CardRail.VOLUME }
                         if (current == CardRail.VOLUME) Slider(state.auditionGain(clip.id), { adjusting = true; state.auditionVolume(clip.id, it) },
-                            modifier = Modifier.weight(1f), enabled = !locked, onValueChangeFinished = { adjusting = false },
+                            modifier = Modifier.weight(1f), enabled = !locked, onValueChangeFinished = { adjusting = false }, interactionSource = interaction, steps = 99,
                             colors = SliderDefaults.colors(thumbColor = accent, activeTrackColor = accent))
                         else {
                             Spacer(Modifier.weight(1f))
@@ -65,7 +71,10 @@ internal fun WaveVoteControls(clip: WaveCompositionClip, state: WaveCompositionS
 internal fun WaveMixControls(clip: WaveCompositionClip, state: WaveCompositionState) {
     var rail by remember(clip.id) { mutableStateOf(CardRail.NONE) }
     var adjusting by remember { mutableStateOf(false) }
-    LaunchedEffect(rail, clip.gain, adjusting) { if (rail == CardRail.VOLUME && !adjusting) { delay(3000); rail = CardRail.NONE } }
+    val interaction = remember { MutableInteractionSource() }
+    val dragged by interaction.collectIsDraggedAsState()
+    val pressed by interaction.collectIsPressedAsState()
+    LaunchedEffect(rail, clip.gain, adjusting, dragged, pressed) { if (rail == CardRail.VOLUME && !adjusting && !dragged && !pressed) { delay(3000); rail = CardRail.NONE } }
     Row(Modifier.fillMaxWidth().height(44.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         if (rail != CardRail.VOLUME) CardCommand(if (rail == CardRail.PINS) Icons.Default.ChevronLeft else Icons.Default.PushPin,
             if (rail == CardRail.PINS) "" else state.pinsFor(clip.id).size.takeIf { it > 0 }?.toString() ?: "∞") {
@@ -87,7 +96,7 @@ internal fun WaveMixControls(clip: WaveCompositionClip, state: WaveCompositionSt
                             WaveControl(Icons.Default.Add, "Placer la boucle sur la base", enabled = state.canAddPin(clip.id)) { state.addPin(clip.id) }
                         }
                         CardRail.VOLUME -> Slider(clip.gain, { adjusting = true; state.gain(clip.id, it) },
-                            onValueChangeFinished = { adjusting = false }, colors = SliderDefaults.colors(thumbColor = accent, activeTrackColor = accent))
+                            onValueChangeFinished = { adjusting = false }, interactionSource = interaction, steps = 99, colors = SliderDefaults.colors(thumbColor = accent, activeTrackColor = accent))
                         else -> {
                             CardCommand(null, "M", clip.mute) { state.mute(clip.id) }
                             CardCommand(null, "S", clip.solo) { state.solo(clip.id) }

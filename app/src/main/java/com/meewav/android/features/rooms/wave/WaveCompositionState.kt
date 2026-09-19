@@ -28,6 +28,8 @@ internal data class WaveCompositionClip(
 internal data class WaveDemoVote(val clipId: String, val duration: Int, val endsAt: Long, val yes: Int = 0, val no: Int = 0, val replacementId: String? = null,
     val id: String = UUID.randomUUID().toString(), val version: String = clipId, val ballots: Map<String, Boolean> = emptyMap())
 internal data class WaveVoteResult(val roundId: String, val clipId: String, val accepted: Boolean, val yes: Int, val no: Int)
+internal data class WaveDawExport(val id: String, val uri: String, val title: String, val bpm: Double, val key: String, val sources: List<String>)
+internal data class WaveDawDraft(val uri: Uri, val export: WaveDawExport)
 internal data class WaveMixPin(val id: String, val clipId: String, val baseId: String, val startBar: Int, val bars: Int)
 
 /** Local workshop mirrors iOS live-set state. Demo votes are explicitly local, never public ballots. */
@@ -37,6 +39,72 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
     val audio = WaveCompositionAudio()
     var outputGain by mutableFloatStateOf(1f); private set
     fun outputVolume(value: Float) { outputGain = value.coerceIn(0f, 1f); audio.masterGain(outputGain) }
+    var exportProgress by mutableStateOf<Float?>(null); private set
+    private var exportJob: Job? = null
+    var dawExports by mutableStateOf<List<WaveDawExport>>(emptyList()); private set
+    var dawDraft by mutableStateOf<WaveDawDraft?>(null); private set
+    var dawImporting by mutableStateOf(false); private set
+    var dawError by mutableStateOf<String?>(null); private set
+    private val bakedSources = mutableMapOf<String, Set<String>>()
+    private val baseArrangements = mutableMapOf<String, Set<String>>()
+    fun reviewDaw(uri: Uri, archive: WaveDawExport) { dawDraft = WaveDawDraft(uri, archive); dawError = null }
+    fun cancelDaw() { if (!dawImporting) { dawDraft = null; dawError = null } }
+    fun acceptDaw(credits: Map<String, String>, propose: Boolean) {
+        val draft = dawDraft ?: return
+        if (dawImporting) return
+        dawImporting = true; dawError = null
+        scope.launch {
+            try {
+                val pcm = withContext(Dispatchers.IO) { decodeLock.withLock { WaveCompositionDecoder.decode(context, draft.uri.toString()) } }
+                val id = UUID.randomUUID().toString()
+                val clip = WaveCompositionClip(id, "${draft.export.title} · retour DAW", "VOUS", draft.uri.toString(), "Mélodie",
+                    isBase = true, status = if (propose) WaveProposalStatus.VOTE else WaveProposalStatus.ACCEPTED,
+                    gain = 1f, musical = "${draft.export.bpm} BPM · ${draft.export.key}", note = credits.entries.joinToString("\n") { (source, status) -> "$source:$status" })
+                bakedSources[id] = credits.filterValues { it != "Retirée" }.keys
+                clips = clips + clip; prepared = prepared + (id to pcm)
+                if (!propose) activateReference(id)
+                dawDraft = null; save()
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (error: Exception) { dawError = error.message ?: "Retour DAW impossible." }
+            finally { dawImporting = false }
+        }
+    }
+    fun cancelExport() { exportJob?.cancel() }
+    fun export(uri: Uri, archive: Boolean = false, focusedBase: String? = null) {
+        if (exportJob?.isActive == true) return
+        val selected = if (focusedBase != null) clips.filter { it.id == focusedBase }
+            else listOfNotNull(reference) + clips.filter { it.inComposition && !it.isBase }
+        if (selected.isEmpty()) return
+        val placementSnapshot = selected.associate { clip -> clip.id to pinsFor(clip.id).map { (it.startBar * framesPerBar).toLong() to ((it.startBar + it.bars) * framesPerBar).toLong() } }
+        val frameCount = durationFrames.toInt(); val tempo = bpm; val musicalKey = key
+        exportProgress = 0f
+        exportJob = scope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    val sources = selected.map { clip -> WaveExportStem(clip, decodeLock.withLock { WaveCompositionDecoder.decode(context, clip.source) }, placementSnapshot[clip.id].orEmpty()) }
+                    context.contentResolver.openOutputStream(uri, "wt")!!.use { output ->
+                        val frames = if (focusedBase != null) sources.first().pcm.frames else frameCount
+                        val progress: suspend (Float) -> Unit = { value -> withContext(Dispatchers.Main) { exportProgress = value } }
+                        if (archive) WaveArrangementExport.archive(output, frames, sources, tempo, musicalKey, progress)
+                        else WaveArrangementExport.render(output, frames, sources, progress)
+                    }
+                }
+                notice = if (archive) "Archive DAW et crédits enregistrés." else "Audio enregistré."
+                if (archive) {
+                    dawExports = dawExports + WaveDawExport(UUID.randomUUID().toString(), uri.toString(), reference?.title ?: "Arrangement", tempo, musicalKey, selected.map { it.id })
+                    save()
+                }
+                if (focusedBase != null) {
+                    val send = android.content.Intent(android.content.Intent.ACTION_SEND).setType("audio/wav")
+                        .putExtra(android.content.Intent.EXTRA_STREAM, uri).addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    context.startActivity(android.content.Intent.createChooser(send, "Partager la base").addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+                }
+            } catch (cancelled: CancellationException) {
+                withContext(NonCancellable + Dispatchers.IO) { runCatching { android.provider.DocumentsContract.deleteDocument(context.contentResolver, uri) } }; throw cancelled
+            } catch (e: Exception) { notice = e.message ?: "Export impossible." }
+            finally { exportProgress = null }
+        }
+    }
     var clips by mutableStateOf<List<WaveCompositionClip>>(emptyList()); private set
     var bpm by mutableDoubleStateOf(124.0); private set
     var key by mutableStateOf("A MIN"); private set
@@ -76,7 +144,7 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
     var loopBars by mutableIntStateOf(0); private set
     var cueFrame by mutableLongStateOf(0); private set
     var publicRoute by mutableStateOf(false); private set
-    private var pendingGrid: Pair<Int, String>? = null
+    private var pendingGrid: Pair<Double, String>? = null
     var pins by mutableStateOf<List<WaveMixPin>>(emptyList()); private set
     var selectedPinId by mutableStateOf<String?>(null); private set
     var selectedMixId by mutableStateOf<String?>(null); private set
@@ -85,7 +153,7 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
     fun auditionGain(id: String) = auditionGains[id] ?: .75f
     fun auditionVolume(id: String, value: Float) {
         val level = kotlin.math.round(value.coerceIn(0f, 1f) * 100) / 100
-        auditionGains = auditionGains + (id to level); audio.candidateGain(id, level)
+        auditionGains = auditionGains + (id to level); audio.candidateGain(id, level * (clips.find { it.id == id }?.gain ?: .82f))
     }
     var privateMessages by mutableStateOf<Map<String, List<String>>>(emptyMap()); private set
     fun message(artist: String, text: String) {
@@ -167,6 +235,15 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
         try {
             val json = JSONObject(saved); bpm = json.optDouble("bpm", 124.0).coerceIn(40.0, 260.0); key = json.optString("key", "A MIN"); open = json.optBoolean("open", true)
             referenceId = json.optString("referenceId").takeIf(String::isNotBlank)
+            json.optJSONObject("baked")?.let { values -> values.keys().forEach { id -> val list = values.getJSONArray(id); bakedSources[id] = (0 until list.length()).map { list.getString(it) }.toSet() } }
+            json.optJSONObject("arrangements")?.let { values -> values.keys().forEach { id -> val list = values.getJSONArray(id); baseArrangements[id] = (0 until list.length()).map { list.getString(it) }.toSet() } }
+            json.optJSONArray("dawExports")?.let { list -> dawExports = (0 until list.length()).map { i -> list.getJSONObject(i).let { item ->
+                val sources = item.getJSONArray("sources")
+                WaveDawExport(item.getString("id"), item.getString("uri"), item.getString("title"), item.getDouble("bpm"), item.getString("key"), (0 until sources.length()).map { sources.getString(it) })
+            } } }
+            json.optJSONArray("votes")?.let { list -> voteHistory = (0 until list.length()).map { i -> list.getJSONObject(i).let {
+                WaveVoteResult(it.getString("round"), it.getString("clip"), it.getBoolean("accepted"), it.getInt("yes"), it.getInt("no"))
+            } } }
             val array = json.getJSONArray("clips")
             clips = List(array.length()) { i -> array.getJSONObject(i).let {
                 WaveCompositionClip(it.getString("id"), it.getString("title"), it.getString("artist"), it.getString("source"), it.getString("category"),
@@ -188,7 +265,12 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
             .put("packId", c.packId ?: "").put("packTitle", c.packTitle ?: "").put("isBase", c.isBase)) }
         val savedPins = JSONArray()
         pins.forEach { savedPins.put(JSONObject().put("id", it.id).put("clip", it.clipId).put("base", it.baseId).put("start", it.startBar).put("bars", it.bars)) }
-        preferences.edit().putString("state", JSONObject().put("pins", savedPins).put("referenceId", referenceId ?: "").put("bpm", bpm).put("key", key).put("open", open).put("clips", array).toString()).apply()
+        val baked = JSONObject(); bakedSources.forEach { (id, sources) -> baked.put(id, JSONArray(sources.toList())) }
+        val arrangements = JSONObject(); baseArrangements.forEach { (id, sources) -> arrangements.put(id, JSONArray(sources.toList())) }
+        val exports = JSONArray(); dawExports.forEach { exports.put(JSONObject().put("id", it.id).put("uri", it.uri).put("title", it.title).put("bpm", it.bpm).put("key", it.key).put("sources", JSONArray(it.sources))) }
+        val history = JSONArray(); voteHistory.forEach { history.put(JSONObject().put("round", it.roundId).put("clip", it.clipId).put("accepted", it.accepted).put("yes", it.yes).put("no", it.no)) }
+        preferences.edit().putString("state", JSONObject().put("baked", baked).put("arrangements", arrangements).put("dawExports", exports).put("votes", history)
+            .put("pins", savedPins).put("referenceId", referenceId ?: "").put("bpm", bpm).put("key", key).put("open", open).put("clips", array).toString()).apply()
     }
     private fun update(id: String, change: (WaveCompositionClip) -> WaveCompositionClip) {
         clips = clips.map { if (it.id == id) change(it) else it }; save()
@@ -319,14 +401,18 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
     }
     fun selectLoop(bars: Int) {
         if (!canLoop) return
+        val wasEnabled = loopEnabled
+        val previous = loopRange
         loopEnabled = bars != -1; loopBars = bars.coerceAtLeast(0)
-        if (loopEnabled) {
-            val length = if (loopBars > 0) (framesPerBar * loopBars / durationFrames).toFloat().coerceAtMost(1f) else (loopRange.endInclusive - loopRange.start)
-            updateLoopRange(loopRange.start..loopRange.start + length)
+        if (!loopEnabled) loopRange = 0f..1f
+        else if (bars == 0) loopRange = if (wasEnabled) previous else 0f..1f
+        else {
+            val length = (framesPerBar * bars / durationFrames).toFloat().coerceAtMost(1f)
+            val start = if (wasEnabled) previous.start else snapshot.frame.toFloat() / durationFrames
+            loopRange = snapRegion(start..start + length, bars)
         }
         syncLoop()
-    }
-    private fun syncLoop() = audio.loop((durationFrames * loopRange.start).toLong(), if (loopEnabled && referenceReady) (durationFrames * loopRange.endInclusive).toLong() else 0)
+    }    private fun syncLoop() = audio.loop((durationFrames * loopRange.start).toLong(), if (loopEnabled && referenceReady) (durationFrames * loopRange.endInclusive).toLong() else 0)
     fun setPage(composition: Boolean) {
         compositionPage = composition; stopPreview(); selectedPinId = null
         if (!composition) listeningMode = WaveListeningMode.BASE
@@ -344,11 +430,19 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
     fun activateReference(id: String) {
         if (vote != null || (id == referenceId && referenceReady)) return
         val clip = clips.find { it.id == id && it.isBase } ?: return
+        referenceId?.let { baseArrangements[it] = clips.filter { clip -> clip.inComposition }.map { clip -> clip.id }.toSet() }
+        val arrangement = baseArrangements[id] ?: clips.filter { it.inComposition }.map { it.id }.toSet()
+        clips = clips.map { c ->
+            val active = c.id in arrangement && c.id !in bakedSources[id].orEmpty() && !c.isBase
+            if (!active && c.inComposition) audio.remove(c.id)
+            c.copy(inComposition = active)
+        }
         referenceId = id; publicRoute = false; loopEnabled = false; cueFrame = 0; selectedPinId = null; pendingGrid = null; stopTransport(); save()
         prepare(id) {
             if (referenceId == id) prepared[id]?.let { audio.reference(id, it); audio.monitor(listeningMode, compositionPage); syncPins() }
         }
-        val detectedBpm = Regex("(\\d+) BPM").find(clip.musical)?.groupValues?.get(1)?.toIntOrNull()
+        clips.filter { it.inComposition }.forEach { prepare(it.id) }
+        val detectedBpm = Regex("(\\d+(?:[.,]\\d+)?) BPM").find(clip.musical)?.groupValues?.get(1)?.replace(',', '.')?.toDoubleOrNull()
         if (detectedBpm != null) pendingGrid = detectedBpm to clip.musical.substringAfter("·", key).trim()
     }
     fun seek(progress: Float) {
@@ -389,7 +483,7 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
                 val minimum = listOf(4, 8, 16, 32).firstOrNull { bars -> bars * framesPerBar >= it.frames && bars * framesPerBar <= durationFrames + 1 }
                 if (minimum != null) selectLoop(minimum) else selectLoop(-1)
             }
-            if (referenceReady && clips.find { c -> c.id == id }?.isBase != true) audio.candidate(id, it, auditionGain(id))
+            if (referenceReady && clips.find { c -> c.id == id }?.isBase != true) audio.candidate(id, it, auditionGain(id) * (clips.find { clip -> clip.id == id }?.gain ?: .82f))
             else audio.preview(id, it, auditionGain(id))
         } }
     }
@@ -416,6 +510,7 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
         }
     }
     fun add(id: String) {
+        if (id in bakedSources[referenceId].orEmpty()) { notice = "Cette contribution est déjà intégrée dans la base active."; return }
         if (adoptingPack != null) { notice = "Le pack est en cours de préparation."; return }
         if (clips.count { it.inComposition } >= 20) { notice = "La composition contient déjà 20 pistes."; return }
         val clip = clips.find { it.id == id } ?: return
@@ -432,7 +527,7 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
         clips = clips.map { if (it.id == id) it.copy(solo = enable, mute = if (enable) false else it.mute) else if (enable) it.copy(solo = false) else it }
         save(); clips.forEach { audio.mix(it.id, it.mute, it.solo, it.gain, it.repeats) }
     }
-    fun gain(id: String, value: Float) { update(id) { it.copy(gain = value.coerceIn(0f, 1f)) }; audio.candidateGain(id, value) }
+    fun gain(id: String, value: Float) { update(id) { it.copy(gain = kotlin.math.round(value.coerceIn(0f, 1f) * 100) / 100) } }
     fun repeat(id: String) {
         val clip = clips.find { it.id == id } ?: return
         if (clip.kind == WaveClipKind.HIT) return
@@ -534,7 +629,7 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
             withContext(Dispatchers.IO) {
                 WaveAudioAnalysis.analyze(context, uri, onMusicalResult = { value -> withContext(Dispatchers.Main) {
                     update(clip.id) { it.copy(musical = value) }
-                    if (referenceId == clip.id) Regex("(\\d+) BPM").find(value)?.groupValues?.get(1)?.toIntOrNull()?.let {
+                    if (referenceId == clip.id) Regex("(\\d+(?:[.,]\\d+)?) BPM").find(value)?.groupValues?.get(1)?.replace(',', '.')?.toDoubleOrNull()?.let {
                         pendingGrid = it to value.substringAfter("·", key).trim()
                     }
                 } })

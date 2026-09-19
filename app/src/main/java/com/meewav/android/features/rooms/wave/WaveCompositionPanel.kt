@@ -218,8 +218,11 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
     }
     messageArtist?.let { artist ->
         var draft by remember(artist) { mutableStateOf("") }
-        WorkspaceSheet(sheetHeight, { messageArtist = null }) {
+        androidx.compose.ui.window.Dialog(onDismissRequest = { messageArtist = null },
+            properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+            Surface(Modifier.fillMaxSize().systemBarsPadding(), color = Color(0xFF08090D)) {
             Column(Modifier.fillMaxSize().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                TextButton(onClick = { messageArtist = null }) { Text("‹ Retour à la Wave", color = soft) }
                 Text(artist, color = foreground, fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
                 Text("Message privé · Démonstration locale", color = muted, fontSize = 10.sp)
                 LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -232,6 +235,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
                         colors = OutlinedTextFieldDefaults.colors(focusedTextColor = foreground, unfocusedTextColor = foreground, focusedBorderColor = soft))
                     ToolIcon(Icons.Default.Send, "Envoyer", enabled = draft.isNotBlank()) { state.message(artist, draft); draft = "" }
                 }
+            }
             }
         }
     }
@@ -324,6 +328,22 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp) 
         }
     }
     if (settings) WorkspaceSheet(sheetHeight, { settings = false }) { WaveRulesPanel(state) { settings = false } }
+    if (state.followVote) WorkspaceSheet(sheetHeight.coerceAtMost(320.dp), { state.followVote = false }) {
+        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("Suivi du vote", color = foreground, fontSize = 18.sp)
+            val round = state.vote
+            if (round != null) {
+                Text(state.clips.find { it.id == round.clipId }?.title ?: "Proposition", color = foreground)
+                Text("${state.voteSecondsRemaining} s · ${round.yes} pour · ${round.no} contre", color = soft)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = { state.demoBallot(true) }) { Text("Pour") }
+                    OutlinedButton(onClick = { state.demoBallot(false) }) { Text("Contre") }
+                }
+                Text("60 % d’approbation · un bulletin par participant", color = muted, fontSize = 12.sp)
+            } else Text(state.lastVerdict ?: "Vote terminé", color = soft)
+            TextButton(onClick = { state.followVote = false }) { Text("Fermer le suivi", color = soft) }
+        }
+    }
 }
 
 @Composable

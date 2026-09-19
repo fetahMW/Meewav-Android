@@ -68,15 +68,15 @@ internal fun WaveControl(icon: ImageVector, label: String, active: Boolean = fal
 
 @Composable
 internal fun WaveRoundPlay(playing: Boolean, loading: Boolean, progress: Float, label: String,
-    queued: Boolean = false, stopIcon: Boolean = false, onClick: () -> Unit) {
+    queued: Boolean = false, stopIcon: Boolean = false, enabled: Boolean = true, onClick: () -> Unit) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(if (pressed) .94f else 1f, spring(dampingRatio = .8f), label = "Lecture")
     val fill by androidx.compose.animation.animateColorAsState(if (playing || queued) Color(0xFF24222D) else Color(0xFF101114), tween(180), label = "Lecteur")
-    Box(Modifier.size(44.dp).graphicsLayer { scaleX = scale; scaleY = scale }
+    Box(Modifier.size(44.dp).graphicsLayer { scaleX = scale; scaleY = scale; alpha = if (enabled) 1f else .35f }
         .clip(CircleShape).background(Brush.verticalGradient(listOf(Color(0xFF33333C), fill, Color.Black)))
         .border(.75.dp, Color(0xFF4C4B55), CircleShape)
-        .clickable(interactionSource = interaction, indication = null, onClick = onClick), contentAlignment = Alignment.Center) {
+        .clickable(interactionSource = interaction, indication = null, enabled = enabled, onClick = onClick), contentAlignment = Alignment.Center) {
         if (loading) CircularProgressIndicator(Modifier.size(19.dp), color = accent, strokeWidth = 1.5.dp)
         else Icon(if (queued) Icons.Default.Schedule else if (playing && stopIcon) Icons.Default.Stop else if (playing) Icons.Default.Pause else Icons.Default.PlayArrow,
             label, tint = ink, modifier = Modifier.size(22.dp))

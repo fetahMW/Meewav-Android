@@ -21,6 +21,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -106,22 +107,10 @@ internal fun WaveMasterPlayer(state: WaveCompositionState, onImport: (WaveImport
         AnimatedVisibility(expanded,
             enter = expandVertically(animationSpec = spring(dampingRatio = .88f, stiffness = 230f), expandFrom = Alignment.Top) + fadeIn(tween(150)),
             exit = shrinkVertically(animationSpec = spring(dampingRatio = .88f, stiffness = 230f), shrinkTowards = Alignment.Top) + fadeOut(tween(100))) {
-            Column {
+            if (bases) WaveBaseLibrary(state, onImport = { bases = false; onImport(WaveImportDestination.BASE) }, onClose = { bases = false }) else Column {
                 // Library replaces the waveform's footprint, exactly as the iOS player does.
-                Box(Modifier.fillMaxWidth().height(87.dp).clipToBounds()) {
-                    if (bases) Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-                        state.clips.filter { it.isBase }.forEach { base ->
-                            Row(Modifier.fillMaxWidth().height(42.dp).waveTactileClick { state.activateReference(base.id); bases = false },
-                                verticalAlignment = Alignment.CenterVertically) {
-                                Icon(if (base.id == state.referenceId) Icons.Default.Check else Icons.Default.MusicNote, null, tint = violet, modifier = Modifier.size(17.dp))
-                                Text(base.title, color = pearl, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 8.dp).weight(1f))
-                            }
-                        }
-                        Row(Modifier.fillMaxWidth().height(42.dp).waveTactileClick { bases = false; onImport(WaveImportDestination.BASE) }, verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Add, null, tint = violet, modifier = Modifier.size(18.dp))
-                            Text("Importer une base", color = secondary, fontSize = 12.sp, modifier = Modifier.padding(start = 8.dp))
-                        }
-                    } else Column {
+                Box(Modifier.fillMaxWidth().height(if (state.compositionPage) 107.dp else 87.dp).clipToBounds()) {
+                    Column {
                         Row(Modifier.fillMaxWidth().height(27.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text(if (snapshot.cue != null) state.candidate?.title ?: "Écoute privée" else state.reference?.title ?: "Aucune base importée",
                                 color = secondary, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
@@ -139,11 +128,29 @@ internal fun WaveMasterPlayer(state: WaveCompositionState, onImport: (WaveImport
                             snap = { state.snapRegion(it, editingPin?.bars ?: state.loopBars) }, editable = state.canLoop,
                             sourceId = state.referenceId, minimum = (4800f / state.durationFrames).coerceAtMost(1f),
                             onScrubBegin = state::beginScrub, onScrubEnd = state::endScrub,
+                            totalBars = (state.durationFrames / state.framesPerBar).toFloat(),
                             modifier = Modifier.fillMaxWidth().height(60.dp).padding(vertical = 6.dp))
+                        if (state.compositionPage) {
+                            val markers = state.selectedMixId?.let { state.pinsFor(it) }.orEmpty()
+                            Canvas(Modifier.fillMaxWidth().height(20.dp).pointerInput(markers, state.selectedPinId) {
+                                detectTapGestures { point ->
+                                    val bar = point.x / size.width * state.durationFrames / state.framesPerBar
+                                    val hits = markers.filter { bar >= it.startBar && bar < it.startBar + it.bars }.sortedWith(compareBy<WaveMixPin> { it.startBar }.thenBy { it.id })
+                                    if (hits.isNotEmpty()) state.selectPin(hits[(hits.indexOfFirst { it.id == state.selectedPinId } + 1) % hits.size].id)
+                                }
+                            }) {
+                                markers.forEach { pin ->
+                                    val x = (pin.startBar * state.framesPerBar / state.durationFrames).toFloat() * size.width
+                                    val width = (pin.bars * state.framesPerBar / state.durationFrames).toFloat() * size.width
+                                    drawRoundRect(violet.copy(alpha = if (pin.id == state.selectedPinId) .7f else .22f), Offset(x, 5.dp.toPx()), Size(width, 10.dp.toPx()), androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()))
+                                }
+                            }
+                        }
                     }
                 }
                 Row(Modifier.fillMaxWidth().height(48.dp), horizontalArrangement = Arrangement.spacedBy(5.dp), verticalAlignment = Alignment.CenterVertically) {
-                    WaveRoundPlay(state.playing, state.transportPending, progress, if (state.playing) "Pause" else "Lecture", onClick = state::transport)
+                    WaveRoundPlay(state.playing, state.transportPending, progress, if (state.playing) "Pause" else "Lecture",
+                        enabled = state.referenceReady || snapshot.cue != null || state.transportPending, onClick = state::transport)
                     Box(Modifier.weight(1f).height(44.dp).clipToBounds()) {
                         Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
                             Box(Modifier.weight(1f).fillMaxHeight().clipToBounds()) {
@@ -233,7 +240,8 @@ private fun WaveReferenceTimeline(peaks: List<Float>, progress: Float, looping: 
     range: ClosedFloatingPointRange<Float>, cue: Float, onSeek: (Float) -> Unit,
     onRange: (ClosedFloatingPointRange<Float>) -> Unit,
     snap: (ClosedFloatingPointRange<Float>) -> ClosedFloatingPointRange<Float>, editable: Boolean,
-    sourceId: String?, minimum: Float, onScrubBegin: () -> Unit, onScrubEnd: (Boolean) -> Unit, modifier: Modifier) {
+    sourceId: String?, minimum: Float, onScrubBegin: () -> Unit, onScrubEnd: (Boolean) -> Unit,
+    totalBars: Float, modifier: Modifier) {
     var draft by remember { mutableStateOf<ClosedFloatingPointRange<Float>?>(null) }
     var scrub by remember { mutableStateOf<Float?>(null) }
     val currentRange by rememberUpdatedState(range)
@@ -270,7 +278,11 @@ private fun WaveReferenceTimeline(peaks: List<Float>, progress: Float, looping: 
         }, onDragEnd = { draft?.takeIf { it != currentRange }?.let(currentSelect); if (scrub != null) end(false); draft = null; scrub = null },
             onDragCancel = { if (scrub != null) end(true); draft = null; scrub = null })
     }.pointerInput(looping) { detectTapGestures { currentSeek((it.x / size.width).coerceIn(0f, 1f)) } }) {
-        repeat(9) { drawLine(Color.White.copy(alpha = .06f), Offset(size.width * it / 8, 0f), Offset(size.width * it / 8, size.height), 1f) }
+        val stride = kotlin.math.ceil(totalBars / 64).toInt().coerceAtLeast(1)
+        for (bar in 0..totalBars.toInt() step stride) {
+            val x = size.width * bar / totalBars.coerceAtLeast(1f)
+            drawLine(Color.White.copy(alpha = .06f), Offset(x, 0f), Offset(x, size.height), 1f)
+        }
         if (looping) drawRect(violet.copy(alpha = .12f), Offset(drawnRange.start * size.width, 0f), Size((drawnRange.endInclusive - drawnRange.start) * size.width, size.height))
         peaks.forEachIndexed { i, peak ->
             val x = size.width * i / peaks.size
@@ -280,6 +292,13 @@ private fun WaveReferenceTimeline(peaks: List<Float>, progress: Float, looping: 
         if (looping) listOf(drawnRange.start, drawnRange.endInclusive).forEach {
             drawLine(violet, Offset(it * size.width, 0f), Offset(it * size.width, size.height), 2f)
             drawCircle(violet, 3.dp.toPx(), Offset((it * size.width).coerceIn(3.dp.toPx(), size.width - 3.dp.toPx()), size.height / 2))
+        }
+        if (looping) {
+            val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { color = android.graphics.Color.LTGRAY; textSize = 9.dp.toPx() }
+            drawContext.canvas.nativeCanvas.drawText("A", (drawnRange.start * size.width + 4.dp.toPx()).coerceAtMost(size.width - 12.dp.toPx()), 10.dp.toPx(), paint)
+            drawContext.canvas.nativeCanvas.drawText("B", (drawnRange.endInclusive * size.width - 10.dp.toPx()).coerceAtLeast(0f), size.height - 2.dp.toPx(), paint)
+            val center = (drawnRange.start + drawnRange.endInclusive) * .5f * size.width
+            for (line in -1..1) drawLine(pearl.copy(alpha = .65f), Offset(center + line * 3.dp.toPx(), size.height / 2 - 5.dp.toPx()), Offset(center + line * 3.dp.toPx(), size.height / 2 + 5.dp.toPx()), 1.dp.toPx())
         }
         if (cue > 0f) drawCircle(violet.copy(alpha = .75f), 3.dp.toPx(), Offset(cue.coerceIn(0f, 1f) * size.width, 3.dp.toPx()))
         drawLine(pearl, Offset(playhead * size.width, 0f), Offset(playhead * size.width, size.height), 1.5f)
