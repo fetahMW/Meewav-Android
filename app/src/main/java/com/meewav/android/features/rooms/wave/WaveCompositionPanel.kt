@@ -51,6 +51,8 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, 
     var importMenu by remember { mutableStateOf(false) }
     var importDestination by remember { mutableStateOf(WaveImportDestination.PROPOSALS) }
     var filterMenu by remember { mutableStateOf(false) }
+    var visibleCategories by remember { mutableStateOf(state.categories.toSet()) }
+    var receptionFilter by remember { mutableStateOf(false) }
     var duration by remember { mutableIntStateOf(30) }
     var durationMenu by remember { mutableStateOf(false) }
     var selectedVote by remember { mutableStateOf<String?>(null) }
@@ -113,6 +115,9 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, 
                 }
             }
             0 -> {
+                val proposals = state.proposals(WaveProposalStatus.PENDING).filter { it.category in visibleCategories }
+                LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(7.dp), contentPadding = PaddingValues(bottom = 10.dp)) {
+                    item(key = "proposal-toolbar") {
                 Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
                     WaveIntakeChip(state.intakeOpen, state::toggleIntake)
                     Column(Modifier.weight(1f).padding(horizontal = 6.dp), horizontalAlignment = Alignment.CenterHorizontally,
@@ -132,35 +137,10 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, 
                     ToolIcon(Icons.Default.Tune, "Filtrer les boucles") { filterMenu = !filterMenu }
                     ToolIcon(Icons.Default.Add, "Importer une proposition", enabled = !state.importing) { importMenu = true }
                 }
-                AnimatedVisibility(filterMenu) {
-                    Column(Modifier.fillMaxWidth().hifiBlackSurface(12.dp).padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        (state.categories + listOf("Tout", "Aucun")).chunked(3).forEach { row ->
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                row.forEach { category ->
-                                    val active = when (category) {
-                                        "Tout" -> state.acceptedCategories.containsAll(state.categories)
-                                        "Aucun" -> state.acceptedCategories.isEmpty()
-                                        else -> category in state.acceptedCategories
-                                    }
-                                    Box(Modifier.weight(1f).height(44.dp).clickable {
-                                        val next = when (category) {
-                                            "Tout" -> state.categories.toSet()
-                                            "Aucun" -> emptySet()
-                                            else -> if (active) state.acceptedCategories - category else state.acceptedCategories + category
-                                        }
-                                        state.submissionRules(next, state.requestedBars, state.editorialDirection)
-                                    }, contentAlignment = Alignment.Center) {
-                                        WaveRoleChip(category, expanded = true, active = active)
-                                    }
-                                }
-                            }
-                        }
+
                     }
-                }
-                if (state.importing) LinearProgressIndicator(Modifier.fillMaxWidth(), color = soft, trackColor = Color(0xFF23242B))
-                val proposals = state.proposals(WaveProposalStatus.PENDING).filter { it.category in state.acceptedCategories }
-                if (proposals.isEmpty()) EmptyWorkspace("Aucune proposition ici", "Les boucles classées apparaîtront dans cette liste.", Modifier.weight(1f))
-                else LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(7.dp), contentPadding = PaddingValues(bottom = 10.dp)) {
+                    if (state.importing) item { LinearProgressIndicator(Modifier.fillMaxWidth(), color = soft, trackColor = Color(0xFF23242B)) }
+                    if (proposals.isEmpty()) item { EmptyWorkspace("Aucune proposition ici", "Aucune boucle ne correspond aux catégories affichées.", Modifier.fillMaxWidth()) }
                     items(proposals, key = { it.id }) { clip ->
                         if (clip.packId != null && proposals.firstOrNull { it.packId == clip.packId }?.id == clip.id) {
                             Row(Modifier.fillMaxWidth().padding(top = 2.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -197,7 +177,7 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, 
                                 Text(clip.title, color = foreground, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 Text(clip.artist, color = muted, fontSize = 10.sp)
                             }
-                            WaveRoleChip(clip.category)
+                            WaveRoleChip(clip.category, uniform = true)
                             val canVote = state.vote == null && clip.id !in state.preparing
                             Box(Modifier.size(40.dp).hifiBlackSurface(8.dp)
                                 .clickable(enabled = canVote) { state.startVote(clip.id, duration, null) }, contentAlignment = Alignment.Center) {
@@ -241,6 +221,52 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, 
         Row(Modifier.fillMaxWidth().height(24.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(if (state.snapshot.cue != null) "Écoute privée · composition atténuée" else if (state.publicRoute) "Sortie publique · diffusion non raccordée" else "Atelier privé · non diffusé", color = muted, fontSize = 9.sp, modifier = Modifier.weight(1f))
             if (state.snapshot.cue != null) Text("Arrêter", color = soft, fontSize = 10.sp, modifier = Modifier.clickable { state.stopPreview() }.padding(4.dp))
+        }
+    }
+    if (filterMenu) {
+        ModalBottomSheet(onDismissRequest = { filterMenu = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = Color(0xFF101115), contentColor = foreground) {
+            Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp).padding(bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text("Filtres des boucles", fontSize = 18.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                    ToolIcon(Icons.Default.Close, "Fermer les filtres") { filterMenu = false }
+                }
+                Row(Modifier.fillMaxWidth().hifiBlackSurface(10.dp)) {
+                    listOf("Afficher", "Autoriser l’envoi").forEachIndexed { index, title ->
+                        TextButton(onClick = { receptionFilter = index == 1 }, modifier = Modifier.weight(1f)) {
+                            Text(title, color = if (receptionFilter == (index == 1)) soft else muted, fontSize = 12.sp)
+                        }
+                    }
+                }
+                Text(if (receptionFilter) "Allumé : catégorie acceptée. Éteint : nouveaux envois fermés. Les boucles déjà reçues restent disponibles."
+                    else "Allume les catégories à afficher dans la liste. Ce choix ne change pas les autorisations d’envoi.", color = muted, fontSize = 12.sp)
+                val chosenCategories = if (receptionFilter) state.acceptedCategories else visibleCategories
+                    Column(Modifier.fillMaxWidth().hifiBlackSurface(12.dp).padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        (state.categories + listOf("Tout", "Aucun")).chunked(3).forEach { row ->
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                row.forEach { category ->
+                                    val active = when (category) {
+                                        "Tout" -> chosenCategories.containsAll(state.categories)
+                                        "Aucun" -> chosenCategories.isEmpty()
+                                        else -> category in chosenCategories
+                                    }
+                                    Box(Modifier.weight(1f).height(44.dp).clickable {
+                                        val next = when (category) {
+                                            "Tout" -> state.categories.toSet()
+                                            "Aucun" -> emptySet()
+                                            else -> if (active) chosenCategories - category else chosenCategories + category
+                                        }
+                                        if (receptionFilter) state.submissionRules(next, state.requestedBars, state.editorialDirection) else visibleCategories = next
+                                    }, contentAlignment = Alignment.Center) {
+                                        WaveRoleChip(category, expanded = true, active = active)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+            }
         }
     }
     messageArtist?.let { artist ->

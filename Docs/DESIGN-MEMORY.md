@@ -414,3 +414,8 @@ Le lecteur Wave possède son propre bouton haut-parleur animé et son propre vol
 - Intervalle de 8 dp entre boucles. Mute/Solo centrés dans leurs boutons. Chip de catégorie à droite, au-dessus de la croix, séparé des commandes Mute/Solo.
 
 - Guide gestuel Propositions : icône Swipe et titre Glisser la boucle, puis flèche gauche Supprimer / flèche droite Vote, sur deux lignes compactes sans conteneur supplémentaire.
+
+### Propositions — défilement et double filtre
+- Bandeau Ouvert/gestes/filtre/import dans la liste défilante, y compris liste vide.
+- Bottom sheet : Afficher filtre uniquement la liste ; Autoriser l’envoi modifie les catégories acceptées persistantes sans masquer les anciennes boucles. Restriction encore locale, envois publics non raccordés.
+- Propositions : catégorie au lieu du titre, identité/grade/BPM/gamme conservés. Vote : chips de largeur commune 68 dp.

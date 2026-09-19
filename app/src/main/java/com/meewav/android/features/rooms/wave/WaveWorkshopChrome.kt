@@ -106,7 +106,7 @@ internal fun WaveArtistPortrait(artist: String) {
 }
 
 @Composable
-internal fun WaveRoleChip(category: String, expanded: Boolean = false, active: Boolean = true) {
+internal fun WaveRoleChip(category: String, expanded: Boolean = false, active: Boolean = true, uniform: Boolean = false) {
     val color = when (category) {
         "Drums" -> Color(0xFFFFAB32)
         "Basse" -> Color(0xFF43EF9E)
@@ -118,7 +118,7 @@ internal fun WaveRoleChip(category: String, expanded: Boolean = false, active: B
     }
     Text(category, color = if (active) color else Color(0xFF777781), fontSize = if (expanded) 12.sp else 9.sp, fontWeight = FontWeight.Medium,
         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-        modifier = Modifier.then(if (expanded) Modifier.fillMaxWidth() else Modifier)
+        modifier = Modifier.then(if (expanded) Modifier.fillMaxWidth() else if (uniform) Modifier.width(68.dp) else Modifier)
             .clip(RoundedCornerShape(if (expanded) 8.dp else 5.dp)).background(if (active) color.copy(alpha = .23f) else Color(0xFF17181D))
             .border(.5.dp, if (active) color.copy(alpha = .62f) else Color(0xFF33343B), RoundedCornerShape(if (expanded) 8.dp else 5.dp))
             .padding(horizontal = 6.dp, vertical = if (expanded) 9.dp else 2.dp), maxLines = 1)
@@ -182,7 +182,8 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
             Box(Modifier.clickable(onClick = onProfile)) { WaveArtistPortrait(clip.artist) }
             Column(Modifier.weight(1f)) {
-                Text(clip.title, color = ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                if (!composition) WaveRoleChip(clip.category)
+                else Text(clip.title, color = ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(clip.artist, color = secondary, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, false))
                     val grade = when (clip.artist) {
@@ -194,7 +195,6 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
                     Image(painterResource(grade), "Grade de ${clip.artist}", modifier = Modifier.size(24.dp))
                 }
                 if (!composition) Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    WaveRoleChip(clip.category)
                     if (composition) Text(if (clip.solo) "SOLO" else if (clip.mute) "MUTE" else if (queued) "À la mesure" else if (clip.repeats == -1) "∞" else "${clip.repeats}×",
                         color = secondary, fontSize = 9.sp)
                     else Text(if (clip.id in state.preparing) "Préparation…" else clip.musical, color = secondary, fontSize = 8.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
