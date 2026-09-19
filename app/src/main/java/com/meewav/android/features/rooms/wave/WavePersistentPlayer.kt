@@ -77,11 +77,10 @@ internal fun WaveMasterPlayer(state: WaveCompositionState, onImport: (WaveImport
             } else Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                 WaveListeningMode.entries.forEach { mode ->
                     val selected = state.listeningMode == mode
-                    val shade by animateColorAsState(if (selected) Color(0xFF28252F) else Color.Transparent, tween(150), label = "Écoute")
                     Box(Modifier.weight(1f).height(44.dp).semantics { this.selected = selected; role = Role.Tab }
                         .waveTactileClick { state.listen(mode) }, contentAlignment = Alignment.Center) {
-                        Box(Modifier.fillMaxWidth().height(28.dp).clip(RoundedCornerShape(7.dp)).background(shade)
-                            .border(.5.dp, if (selected) Color(0xFF48414F) else Color.Transparent, RoundedCornerShape(7.dp)), contentAlignment = Alignment.Center) {
+                        Box(Modifier.fillMaxWidth().height(28.dp).clip(RoundedCornerShape(7.dp))
+                            .then(if (selected) Modifier.roomsStudioCapsule(cornerRadius = 7.dp) else Modifier), contentAlignment = Alignment.Center) {
                             Text(mode.label, color = if (selected) pearl else secondary, fontWeight = FontWeight.SemiBold, fontSize = 10.sp)
                         }
                     }
