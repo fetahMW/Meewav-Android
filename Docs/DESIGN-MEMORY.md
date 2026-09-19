@@ -261,3 +261,10 @@ Compilation de livraison uniquement ; rendu à valider par l'utilisateur.
 - En Chat, le retour vidéo reste monté à sa taille d'origine mais sa fenêtre se réduit si nécessaire pour laisser place aux messages et au champ. Retour au cadrage normal à la fermeture du clavier.
 - Rail défilable quand la hauteur disponible diminue ; quitter Chat replie le clavier.
 - Compilation de livraison ; comportement visuel à apprécier sur Samsung par l'utilisateur.
+
+### Rail Hi-Fi et outils du chat — 19 septembre 2026
+- Rail natif : matériau hifiBlackSurface partagé avec la navbar, largeur utile 44 dp, hauteur maximale 332 dp, sept emplacements réguliers ; défilement si clavier ouvert.
+- Remplacement de la roue crantée par la clé d'outils. Suppression du doublon d'accès aux emojis et du retour au direct dans ce menu.
+- Référence consultée : Meewav-iOS/Meewav/Features/Rooms/Components/Classe/ClasseSocialChrome.swift, CageHostToolsButton, ClasseHostToolsPalette et ClasseHostPollToolEditor. Palette iOS trouvée : Sondage.
+- Adaptation native de l'éditeur (Oui/Non, multiple 2–6 réponses, notes sur 5/10, durées 30/60/120s), annonce dans le chat, arrêt/expiration/nouveau sondage. Démo locale explicite ; aucun vote inventé ni connexion serveur ajoutée.
+- Compilation de livraison uniquement, pas de QA automatique.

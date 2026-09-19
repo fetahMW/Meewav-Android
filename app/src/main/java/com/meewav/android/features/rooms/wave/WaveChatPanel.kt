@@ -213,6 +213,8 @@ fun WaveChatPanel(modifier: Modifier = Modifier) {
             )
         )
     }
+    var toolsOpen by remember { mutableStateOf(false) }
+    var livePoll by remember { mutableStateOf<WaveChatPoll?>(null) }
     var draft by remember { mutableStateOf("") }
     var unreadCount by remember { mutableIntStateOf(0) }
     // Flux live animé — nouveaux messages qui défilent à la vraie vitesse d'un chat.
@@ -321,14 +323,10 @@ fun WaveChatPanel(modifier: Modifier = Modifier) {
                 // Rail social iOS — vraie colonne chrome (outils + indicateurs).
                 WaveChatSocialRail(
                     Modifier
-                        .width(42.dp)
+                        .width(50.dp)
                         .fillMaxSize()
                         .padding(start = 6.dp, top = 6.dp, bottom = 6.dp),
-                    onOpenEmoji = { emojiWallOpen = !emojiWallOpen },
-                    onReturnToLive = {
-                        unreadCount = 0
-                        if (messages.isNotEmpty()) scope.launch { listState.animateScrollToItem(messages.lastIndex) }
-                    }
+                    onOpenTools = { toolsOpen = true }
                 )
             }
 
@@ -360,6 +358,23 @@ fun WaveChatPanel(modifier: Modifier = Modifier) {
                         draft = ""
                     }
                 }
+            )
+        }
+
+        if (toolsOpen) {
+            WaveChatToolsSheet(
+                poll = livePoll,
+                onDismiss = { toolsOpen = false },
+                onLaunch = { question, choices, duration ->
+                    livePoll = WaveChatPoll(question, choices, System.currentTimeMillis() + duration * 1000L)
+                    messages = messages + WaveChatMessage(
+                        id = nextId++, userId = "sys", userName = "",
+                        content = "Sondage · $question · ${choices.joinToString(" / ")}",
+                        createdAtMs = System.currentTimeMillis(), isSystem = true,
+                    )
+                },
+                onStop = { livePoll = livePoll?.copy(endsAt = System.currentTimeMillis()) },
+                onNewPoll = { livePoll = null },
             )
         }
 
@@ -543,65 +558,30 @@ private fun MwEmojiWall(onSelect: (String) -> Unit) {
     }
 }
 
-/* Rail social iOS (WaveChatSocialActionRail) — vraie colonne chrome :
-   outils host (dons, dashboard, notifications) + métriques + partage. */
+/* Compact Hi-Fi rail: same black chassis as the Chat / Mixeur navbar. */
 @Composable
 private fun WaveChatSocialRail(
     modifier: Modifier = Modifier,
-    onOpenEmoji: () -> Unit,
-    onReturnToLive: () -> Unit,
+    onOpenTools: () -> Unit,
 ) {
-    var menuOpen by remember { mutableStateOf(false) }
-    BoxWithConstraints(
-        modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(
-                Brush.verticalGradient(
-                    listOf(white(0.11f), white(0.045f), white(0.02f))
-                )
-            )
-            .border(0.7.dp, white(0.10f), RoundedCornerShape(14.dp))
-    ) {
-    Column(
-        Modifier.fillMaxWidth().verticalScroll(rememberScrollState())
-            .heightIn(min = maxHeight).padding(vertical = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceEvenly
-    ) {
-        Box {
-            RailToolButton(
-                icon = WaveIcons.Settings, tint = chatAccent, label = "Menu du chat",
-                onClick = { menuOpen = true }
-            )
-            DropdownMenu(
-                expanded = menuOpen,
-                onDismissRequest = { menuOpen = false },
-                containerColor = Color(0xFF10121A),
-                shape = RoundedCornerShape(16.dp),
-            ) {
-                DropdownMenuItem(
-                    text = { Text("Émoticônes Meewav", color = Color(0xFFE4E3EE)) },
-                    leadingIcon = { Icon(WaveIcons.Emoji, null, tint = chatAccent) },
-                    onClick = { menuOpen = false; onOpenEmoji() },
-                )
-                DropdownMenuItem(
-                    text = { Text("Revenir au direct", color = Color(0xFFE4E3EE)) },
-                    leadingIcon = { Icon(WaveIcons.ChevronDown, null, tint = chatAccent) },
-                    onClick = { menuOpen = false; onReturnToLive() },
-                )
-            }
+    BoxWithConstraints(modifier) {
+        Column(
+            Modifier.fillMaxWidth().height(maxHeight.coerceAtMost(332.dp))
+                .hifiBlackSurface(17.dp).clip(RoundedCornerShape(17.dp))
+                .verticalScroll(rememberScrollState()).padding(vertical = 6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            RailToolButton(icon = WaveIcons.Tools, tint = chatAccent, label = "Outils du chat", onClick = onOpenTools)
+            RailToolButton(icon = WaveIcons.Dashboard, tint = white(0.8f), label = "Dashboard")
+            RailToolButton(icon = WaveIcons.Bell, tint = white(0.8f), label = "Notifications", badge = "3")
+            Box(Modifier.height(44.dp), contentAlignment = Alignment.Center) { ChatRailItem(imageRes = R.drawable.money_bag, value = "148") }
+            Box(Modifier.height(44.dp), contentAlignment = Alignment.Center) { ChatRailItem(icon = WaveIcons.Star, tint = Color(0xFFF3BF49), value = "86") }
+            Box(Modifier.height(44.dp), contentAlignment = Alignment.Center) { ChatRailItem(icon = WaveIcons.Heart, tint = Color(0xFFFF64AA), value = "1,2k") }
+            Box(Modifier.height(44.dp), contentAlignment = Alignment.Center) { ChatRailItem(icon = WaveIcons.Eye, tint = Color(0xFF9A63FF), value = "312") }
         }
-        RailToolButton(icon = WaveIcons.Dashboard, tint = white(0.8f), label = "Dashboard")
-        RailToolButton(icon = WaveIcons.Bell, tint = white(0.8f), label = "Notifications", badge = "3")
-        // Métriques — indicateurs web.
-        ChatRailItem(imageRes = R.drawable.money_bag, value = "148")
-        ChatRailItem(icon = WaveIcons.Star, tint = Color(0xFFF3BF49), value = "86")
-        ChatRailItem(icon = WaveIcons.Heart, tint = Color(0xFFFF64AA), value = "1,2k")
-        ChatRailItem(icon = WaveIcons.Eye, tint = Color(0xFF9A63FF), value = "312")
-    }
     }
 }
-
 /* Bouton d'outil du rail — icône + badge optionnel (notifications). */
 @Composable
 private fun RailToolButton(
@@ -611,7 +591,7 @@ private fun RailToolButton(
     Box(
         Modifier
             .fillMaxWidth()
-            .height(40.dp)
+            .height(44.dp)
             .clickable(onClick = onClick)
             .padding(4.dp),
         contentAlignment = Alignment.Center

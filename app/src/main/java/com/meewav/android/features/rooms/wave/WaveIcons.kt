@@ -41,12 +41,14 @@ import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.MailOutline
+import androidx.compose.material.icons.outlined.Build
 import androidx.compose.ui.graphics.vector.ImageVector
 
 /** Mapping SF Symbols iOS → Material Icons (material-icons-extended). */
 object WaveIcons {
     val Settings: ImageVector = Icons.Outlined.Settings
     val Envelope: ImageVector = Icons.Outlined.MailOutline
+    val Tools: ImageVector = Icons.Outlined.Build
     val ChevronLeft: ImageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft
     val Close: ImageVector = Icons.Filled.Close
     val Chat: ImageVector = Icons.Outlined.ChatBubbleOutline
