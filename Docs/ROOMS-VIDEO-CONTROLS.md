@@ -24,3 +24,6 @@ Compilation : assembleDebug. Aucun test ni inspection visuelle automatique exéc
 
 ## Barre simplifiée
 À la demande de l’utilisateur, retrait des boutons micro, haut-parleur et changement de caméra de la barre vidéo commune. Restent régie, caméra, partage d’écran et plein écran. Le masquage automatique reste inchangé. Les commandes audio du mixeur sont conservées.
+
+## Matériau du site
+Le châssis et les touches sont désormais dessinés dans RoomVideoMaterial à partir des couches de live-action-bar.css et live-glass-material.css : châssis noir opaque, arête à reflets localisés, logements noirs, bord biseauté à gradient angulaire, lentille fumée et reflets elliptiques. Dimensions et cibles tactiles conservées.

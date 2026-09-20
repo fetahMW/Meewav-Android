@@ -97,10 +97,10 @@ internal fun RoomVideoControlBar(controls: RoomVideoControls, fullscreen: Boolea
     AnimatedVisibility(visible = controls.visible, modifier = modifier,
         enter = fadeIn(tween(160)) + slideInVertically(tween(160)) { it / 5 },
         exit = fadeOut(tween(220)) + slideOutVertically(tween(220)) { it / 5 }) {
-        Row(Modifier.onFocusChanged { controls.focused = it.hasFocus }.clip(CircleShape)
-            .background(Brush.verticalGradient(listOf(Color(0xF0191B20), Color(0xF0030406), Color(0xF00B0D12))))
-            .border(.7.dp, Brush.verticalGradient(listOf(Color(0x667A718E), Color(0x224D475E), Color(0x665D507B))), CircleShape)
-            .padding(horizontal = 3.dp, vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.onFocusChanged { controls.focused = it.hasFocus }
+            .shadow(8.dp, androidx.compose.foundation.shape.RoundedCornerShape(24.dp), clip = false)
+            .liveVideoShell().padding(horizontal = 5.dp, vertical = 2.dp),
+            verticalAlignment = Alignment.CenterVertically) {
             RoomVideoButton(WaveIcons.More, "Régie vidéo", controls, action = onDirector)
             RoomVideoButton(if (controls.cameraEnabled) Icons.Default.Videocam else WaveIcons.CameraOff,
                 if (controls.cameraEnabled) "Couper ma caméra" else "Activer ma caméra", controls,
@@ -140,9 +140,7 @@ private fun RoomVideoButton(icon: ImageVector, label: String, controls: RoomVide
         .clickable(interactionSource = interactions, indication = null, enabled = enabled, role = Role.Button) {
             controls.reveal(); action()
         }, contentAlignment = Alignment.Center) {
-        Box(Modifier.size(34.dp).scale(scale).clip(CircleShape)
-            .background(Brush.verticalGradient(listOf(Color(0xFF303039), Color(0xFF08090D), Color(0xFF15121D))))
-            .border(.65.dp, if (selected) WaveMixerTheme.capsuleAccentSoft else Color(0xFF494450), CircleShape),
+        Box(Modifier.size(34.dp).scale(scale).liveVideoKey(selected),
             contentAlignment = Alignment.Center) {
             Icon(icon, null, modifier = Modifier.size(16.dp), tint = when {
                 !enabled -> Color.Gray; off -> Color(0xFFE39AA6); selected -> WaveMixerTheme.capsuleAccentSoft; else -> Color(0xFFE5E2EC)
