@@ -141,6 +141,7 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
     var page by state::guestPage
     var originFilter by remember { mutableIntStateOf(0) }
     var originMenu by remember { mutableStateOf(false) }
+    var requestLimit by remember { mutableIntStateOf(0) }
     var inviteOpen by remember { mutableStateOf(false) }
     var filtersOpen by remember { mutableStateOf(false) }
     var multiSelect by remember { mutableStateOf(false) }
@@ -151,7 +152,23 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
         2 -> it.location == WaveGuestLocation.STAGE
         else -> it.location == WaveGuestLocation.JURY
     } }
-    val shown = participants.filter(state.filters::matches).filter { page != 1 || originFilter == 0 || (originFilter == 1 && it.origin == GuestOrigin.CANDIDATURE) || (originFilter == 2 && it.origin == GuestOrigin.INVITATION) }
+    val originParticipants = participants.filter { page != 1 || originFilter == 0 || (originFilter == 1 && it.origin == GuestOrigin.CANDIDATURE) || (originFilter == 2 && it.origin == GuestOrigin.INVITATION) }
+    val shown = originParticipants.filter(state.filters::matches)
+    fun selectRequests(origin: Int, limit: Int) {
+        val candidates = participants.filter(state.filters::matches).filter {
+            origin == 0 || (origin == 1 && it.origin == GuestOrigin.CANDIDATURE) || (origin == 2 && it.origin == GuestOrigin.INVITATION)
+        }.let { if (limit == 0) it else it.take(limit) }.map { it.id }.toSet()
+        originFilter = origin; requestLimit = limit; originMenu = false
+        if (cage?.selectionMode == true) {
+            if (candidates.size > cage.capacity) {
+                cage.notice = "La sélection dépasse les " + cage.capacity + " places du programme. Choisis moins de profils ou augmente la capacité."
+            } else {
+                cage.removeParticipants(cage.roster.toSet()); cage.addParticipants(candidates)
+            }
+        } else {
+            state.selected = candidates; multiSelect = candidates.isNotEmpty()
+        }
+    }
     val selectedGuests = shown.filter { it.id in state.selected }
     DisposableEffect(Unit) { onDispose { state.cancelDrag(); state.backstageBounds = androidx.compose.ui.geometry.Rect.Zero } }
     Column(modifier.padding(top = 2.dp, bottom = 8.dp)) {
@@ -198,9 +215,26 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                 }
             } else Text(if (page == 0) "Glisse un invité vers la vidéo" else if (page == 3) "${state.jury.size}/6 membres du jury" else "3 invités maximum sur scène",
                 modifier = Modifier.weight(1f), color = Color.White.copy(alpha = .48f), fontSize = 11.sp)
-            if (page == 1 && state.selected.isEmpty()) Box {
-                TextButton(onClick = { originMenu = true }, contentPadding = PaddingValues(horizontal = 3.dp)) { Text(listOf("Tous", "Candidatures", "Invitations")[originFilter] + " ▾", color = Color.White.copy(alpha = .7f), fontSize = 11.sp) }
-                DropdownMenu(originMenu, { originMenu = false }) { listOf("Tous", "Candidatures", "Invitations envoyées").forEachIndexed { index, label -> DropdownMenuItem(text = { Text(label) }, onClick = { originFilter = index; originMenu = false }) } }
+            if (page == 1 && (cage != null || state.selected.isEmpty())) Box {
+                TextButton(onClick = { originMenu = true }, modifier = Modifier.height(36.dp).hifiBlackSurface(10.dp), contentPadding = PaddingValues(horizontal = 8.dp)) {
+                    Text(listOf("Tous", "Candidatures", "Invitations")[originFilter] + if (requestLimit > 0 && cage != null) " · $requestLimit ▾" else " ▾", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 11.sp)
+                }
+                DropdownMenu(expanded = originMenu, onDismissRequest = { originMenu = false },
+                    containerColor = Color(0xFF141419), shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.border(.75.dp, WaveMixerTheme.capsuleAccentSoft.copy(alpha = .25f), RoundedCornerShape(14.dp))) {
+                    listOf("Tous", "Candidatures", "Invitations envoyées").forEachIndexed { index, label ->
+                        DropdownMenuItem(text = { Text(label, color = if (originFilter == index) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .85f), fontSize = 13.sp) },
+                            trailingIcon = { if (originFilter == index) Icon(Icons.Filled.Check, null, tint = WaveMixerTheme.capsuleAccentSoft, modifier = Modifier.size(16.dp)) },
+                            onClick = { if (cage != null) selectRequests(index, requestLimit) else { originFilter = index; originMenu = false } })
+                    }
+                    if (cage != null) {
+                        HorizontalDivider(color = Color.White.copy(alpha = .08f))
+                        listOf(0, 8, 16, 32).forEach { count ->
+                            DropdownMenuItem(text = { Text(if (count == 0) "Sélectionner tous" else "Les $count premiers", color = if (requestLimit == count) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .85f), fontSize = 13.sp) },
+                                onClick = { selectRequests(originFilter, count) })
+                        }
+                    }
+                }
             }
             TextButton(onClick = { inviteOpen = true }, modifier = Modifier.height(44.dp), contentPadding = PaddingValues(horizontal = 6.dp)) { Text("+ Inviter", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 12.sp) }
             BadgedBox(badge = { if (state.filters.count > 0) Badge(containerColor = WaveMixerTheme.capsuleAccent) { Text("${state.filters.count}") } }) {
@@ -230,7 +264,7 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                                 if (cage?.selectionMode == true) { cage.select(guest.id) }
                                 else if (multiSelect || state.selected.size > 1) {
                                     state.selected = if (guest.id in state.selected) state.selected - guest.id else state.selected + guest.id
-                                } else if (guest.id in state.selected) {
+                                } else if (guest.id in state.selected && cage == null) {
                                     state.previewId = guest.id
                                 } else {
                                     // First tap arms the action bar; only a repeat tap opens the sheet.
@@ -283,7 +317,7 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
         }
         if (cage?.selectionMode != true) WaveGuestActionBar(state, selectedGuests, page, onClear = { state.selected = emptySet(); multiSelect = false })
     }
-    if (filtersOpen) WaveGuestFilterSheet(state, participants, isRequests = page == 1, onDismiss = { filtersOpen = false })
+    if (filtersOpen) WaveGuestFilterSheet(state, originParticipants, isRequests = page == 1 && cage == null, onDismiss = { filtersOpen = false })
     if (inviteOpen) {
         ModalBottomSheet(onDismissRequest = { inviteOpen = false }, containerColor = Color(0xFF101114), contentColor = Color.White) {
             Column(Modifier.fillMaxWidth().heightIn(max = 500.dp).verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

@@ -103,3 +103,9 @@ Coulisses représente une admission déjà effectuée par la Green House backend
 Le sélecteur Participants redondant des réglages est retiré. Le choix reste dans Invités via Programme. La sélection Retenu dépend exclusivement de CageToolsState.selectionMode ; les autres rooms reçoivent cage=null et conservent leurs clics, aperçu et multi-sélection habituels. Le socle reste partagé, les comportements spécifiques sont optionnels par room.
 
 21 tests Cage passent, dont admission sans recontrôle des interrupteurs micro/caméra et parcours complet des duels. APK debug compilé.
+
+## Sélection groupée et simulation
+
+Dans les demandes Cage, le dropdown sombre conserve Tous par défaut. Choisir une origine sélectionne les profils correspondants aux filtres ; le plafond Tous/8/16/32 s'applique à cette origine. La capacité du programme est respectée sans tronquer silencieusement sa sélection. Les autres rooms conservent le comportement de filtre d'origine. Le raccourci de quantité est retiré du bottom sheet de filtres Cage pour éviter le doublon.
+
+Le clic répété et le routage vers un artiste indisponible n'ouvrent plus automatiquement le bottom sheet d'actions dans la Cage. Le bouton Aperçu reste explicite. L'entrée dans la sélection du programme ferme tout ancien aperçu. Les réglages affichent l'override debug de 2 secondes au lieu des durées enregistrées, sans modifier les programmes sauvegardés. Compilation debug réussie ; pas de nouvelle inspection visuelle automatique.

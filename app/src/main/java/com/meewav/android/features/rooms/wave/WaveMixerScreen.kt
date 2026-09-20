@@ -109,13 +109,13 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
             .onFailure { state.notice = "Le programme n’a pas pu être chargé. Choisis-le à nouveau dans Mes programmes." }
         else if (!roomTitle.isNullOrBlank()) state.title = roomTitle
     } else null }
-    LaunchedEffect(cage?.selectionMode) { if (cage?.selectionMode == true) activeTab = WaveTab.INVITES }
+    LaunchedEffect(cage?.selectionMode) { if (cage?.selectionMode == true) { guestState.previewId = null; guestState.profilePreviewId = null; activeTab = WaveTab.INVITES } }
     LaunchedEffect(cage?.artistAttentionId) {
         cage?.artistAttentionId?.let { id ->
             val guest = guestState.guests.find { it.id == id }
             activeTab = WaveTab.INVITES
             guestState.guestPage = when (guest?.location) { WaveGuestLocation.STAGE -> 2; WaveGuestLocation.BACKSTAGE -> 0; WaveGuestLocation.JURY -> 3; else -> 1 }
-            guestState.selected = setOf(id); guestState.previewId = guest?.id
+            guestState.selected = setOf(id); guestState.previewId = null
             cage.artistAttentionId = null
         }
     }
