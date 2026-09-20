@@ -29,4 +29,6 @@ et commerciaux sans attribution obligatoire.
 
 - Fichier fourni par le propriétaire du projet le 2 septembre 2026 comme contenu libre de droits.
 - Fichier local : `countdown-10-seconds.wav`
-- SHA-256 : `B0DA36FDEA16E6AC3E959FF7C07DC13001FAE327CBA62A843CE7C16287F111ED`
+- SHA-256 source : `B0DA36FDEA16E6AC3E959FF7C07DC13001FAE327CBA62A843CE7C16287F111ED`
+- Copie Android réparée : en-tête RIFF/data finalisé le 20 septembre 2026 (la source annonçait 0xFFFFFFFF octets). PCM 16 bits, stéréo, 48 kHz conservés.
+- SHA-256 Android : `03633DCFFCAC92C26DBD869A4CCF0B71FA78D200201856B3DB38748EF1E1A288`
