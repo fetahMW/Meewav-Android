@@ -152,7 +152,8 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
         2 -> it.location == WaveGuestLocation.STAGE
         else -> it.location == WaveGuestLocation.JURY
     } }
-    val originParticipants = participants.filter { page != 1 || originFilter == 0 || (originFilter == 1 && it.origin == GuestOrigin.CANDIDATURE) || (originFilter == 2 && it.origin == GuestOrigin.INVITATION) }
+    val originFilterEnabled = page == 1 || (cage != null && page == 0)
+    val originParticipants = participants.filter { !originFilterEnabled || originFilter == 0 || (originFilter == 1 && it.origin == GuestOrigin.CANDIDATURE) || (originFilter == 2 && it.origin == GuestOrigin.INVITATION) }
     val shown = originParticipants.filter(state.filters::matches)
     fun selectRequests(origin: Int, limit: Int) {
         val candidates = participants.filter(state.filters::matches).filter {
@@ -215,7 +216,7 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                 }
             } else Text(if (page == 0) "Glisse un invité vers la vidéo" else if (page == 3) "${state.jury.size}/6 membres du jury" else "3 invités maximum sur scène",
                 modifier = Modifier.weight(1f), color = Color.White.copy(alpha = .48f), fontSize = 11.sp)
-            if (page == 1 && (cage != null || state.selected.isEmpty())) Box {
+            if (originFilterEnabled && (cage != null || state.selected.isEmpty())) Box {
                 Box(Modifier.height(48.dp).widthIn(min = 96.dp).clickable { originMenu = true }, contentAlignment = Alignment.Center) {
                     Box(Modifier.height(28.dp).widthIn(min = 96.dp).hifiBlackSurface(8.dp).padding(horizontal = 12.dp), contentAlignment = Alignment.Center) {
                     Text(listOf("Tous", "Candidatures", "Invitations")[originFilter] + if (requestLimit > 0 && cage != null) " · $requestLimit ▾" else " ▾", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 11.sp, maxLines = 1)
