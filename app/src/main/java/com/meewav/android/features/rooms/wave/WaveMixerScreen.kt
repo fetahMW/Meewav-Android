@@ -65,6 +65,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.MeetingRoom
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -101,13 +102,15 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     val keyboardController = LocalSoftwareKeyboardController.current
     val context = LocalContext.current
     val mixerDeck = remember(context) { WaveMixerDeckState(context.applicationContext) }
-    var activeTab by remember(room) { mutableStateOf(if (room in listOf(RoomModule.CAGE, RoomModule.CLASSE, RoomModule.SCENE)) WaveTab.WAVE else WaveTab.MIXEUR) }
+    var activeTab by remember(room) { mutableStateOf(if (room in listOf(RoomModule.CAGE, RoomModule.CLASSE, RoomModule.SCENE, RoomModule.LOGE)) WaveTab.WAVE else WaveTab.MIXEUR) }
     // Keep the highlighted snapshot even if the live feed trims old messages or tabs change.
     var pinnedChatMessage by remember { mutableStateOf<WaveChatMessage?>(null) }
     var waveNotificationsRead by remember { mutableStateOf(false) }
     val guestState = remember(room) { WaveGuestState(cageDemo = room == RoomModule.CAGE, classeDemo = room == RoomModule.CLASSE) }
     val classe = remember(room, guestState, programScope) { if (room == RoomModule.CLASSE) ClasseToolsState(context.applicationContext, guestState, programScope).also { if (!roomTitle.isNullOrBlank()) it.title = roomTitle } else null }
     val scene = remember(room, guestState, programScope) { if (room == RoomModule.SCENE) SceneToolsState(context.applicationContext, guestState, programScope + ":" + roomTitle.orEmpty()) else null }
+    val loge = remember(room, guestState, programScope) { if (room == RoomModule.LOGE) LogeToolsState(context.applicationContext, guestState, programScope + ":" + roomTitle.orEmpty()) else null }
+    LaunchedEffect(loge) { if (loge != null) while (true) { loge.tick(); delay(250) } }
     LaunchedEffect(classe, guestState.guests) { classe?.syncStudents() }
     // Temporary workshop override requested for rapid Cage simulations; saved rules stay intact.
     val cage = remember(room, guestState, mixerDeck) { if (room == RoomModule.CAGE) CageToolsState(guestState,
@@ -132,7 +135,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     }
     LaunchedEffect(cage, guestState.onStage.map { it.id }) { cage?.syncManualStage() }
     DisposableEffect(cage) { onDispose { cage?.close() } }
-    val roomAccent = when (room) { RoomModule.CAGE -> Color(0xFFFF5B73); RoomModule.CLASSE -> classeBlue; RoomModule.SCENE -> WaveMixerTheme.capsuleAccent; else -> Color(0xFF27C2D1) }
+    val roomAccent = when (room) { RoomModule.CAGE -> Color(0xFFFF5B73); RoomModule.CLASSE -> classeBlue; RoomModule.SCENE -> WaveMixerTheme.capsuleAccent; RoomModule.LOGE -> Color(0xFFE9B949); else -> Color(0xFF27C2D1) }
     var emojiPanelOpen by remember { mutableStateOf(false) }
     // Canaux.
     var micGain by remember { mutableStateOf(0.72f) }
@@ -189,6 +192,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                 }
             }
             if (scene != null) SceneVideoSignals(scene, Modifier.align(Alignment.TopCenter).padding(top = 38.dp)) { scene.tab = 3; activeTab = WaveTab.WAVE; stageFullscreen = false }
+            if (loge != null) LogeVideoSignals(loge, Modifier.align(Alignment.BottomCenter).padding(bottom = 55.dp))
         }
     }
 
@@ -201,7 +205,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
             (maxHeight - if (emojiPanelOpen) 405.dp else 305.dp).coerceIn(0.dp, fullVideoHeight) else fullVideoHeight
         val workshopHeight = (maxHeight - 44.dp - videoViewportHeight - 6.dp).coerceAtLeast(0.dp)
         Column(Modifier.fillMaxSize()) {
-            WaveHeader(title = cage?.title ?: classe?.title ?: roomTitle?.takeIf { it.isNotBlank() } ?: if (room == RoomModule.WAVE) "Freestyle session — Luma invite" else if (room == RoomModule.SCENE) "Scène ouverte — Lumière noire" else room.label,
+            WaveHeader(title = cage?.title ?: classe?.title ?: roomTitle?.takeIf { it.isNotBlank() } ?: if (room == RoomModule.WAVE) "Freestyle session — Luma invite" else if (room == RoomModule.SCENE) "Scène ouverte — Lumière noire" else if (room == RoomModule.LOGE) "Éclipse — dans la Loge de Naya" else room.label,
                 onBack = { showLeaveConfirm = true }, onClose = { showLeaveConfirm = true })
             Box(Modifier.fillMaxWidth().height(videoViewportHeight).clipToBounds().roomVideoTouches(videoControls)) {
                 if (cage != null) CageVideoStage(cage, interactive = activeTab == WaveTab.INVITES,
@@ -217,6 +221,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                     }
                 }
                 if (scene != null) SceneVideoSignals(scene, Modifier.align(Alignment.TopCenter).padding(top = 35.dp)) { scene.tab = 3; activeTab = WaveTab.WAVE }
+                if (loge != null) LogeVideoSignals(loge, Modifier.align(Alignment.BottomCenter).padding(bottom = 46.dp))
             }
             // Zone grise du mixeur : couvre la barre d'onglets ET le corps.
             Column(
@@ -266,17 +271,21 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                         onSelectScale = { tuneScale = it; selector = null },
                         multitrack = multitrack, onMultitrack = { multitrack = !multitrack },
                     )
-                    WaveTab.CHAT -> WaveChatPanel(
-                        Modifier.fillMaxSize(), pinnedMessage = pinnedChatMessage,
+                    WaveTab.CHAT -> Column(Modifier.fillMaxSize()) {
+                        if (loge?.activePoll != null) LogePollCard(loge, compact = true)
+                        WaveChatPanel(
+                        Modifier.weight(1f), pinnedMessage = pinnedChatMessage,
                         onPinMessage = { pinnedChatMessage = it },
                         notificationsRead = waveNotificationsRead,
                         onReadNotifications = { waveNotificationsRead = true },
                         onEmojiPanelChange = { emojiPanelOpen = it },
+                        onOpenRoomPoll = if (loge != null) ({ loge.tab = 1; activeTab = WaveTab.WAVE }) else null,
                     )
+                    }
                     WaveTab.INVITES -> WaveGuestsPanel(guestState, Modifier.fillMaxSize(), cage, onProgram = { cage?.selectionMode = false; activeTab = WaveTab.WAVE })
                     else -> if (room == RoomModule.WAVE && composition != null) {
                         WaveCompositionPanel(composition, workshopHeight, onProfile = guestState::openArtistProfile)
-                    } else if (cage != null) CageToolsPanel(cage, programScope) else if (classe != null) ClasseToolsPanel(classe) else if (scene != null) SceneToolsPanel(scene) { activeTab = WaveTab.INVITES } else WaveTabPlaceholder(activeTab, room.toolsLabel)
+                    } else if (cage != null) CageToolsPanel(cage, programScope) else if (classe != null) ClasseToolsPanel(classe) else if (scene != null) SceneToolsPanel(scene) { activeTab = WaveTab.INVITES } else if (loge != null) LogeToolsPanel(loge, { activeTab = WaveTab.INVITES }, { activeTab = WaveTab.CHAT }) else WaveTabPlaceholder(activeTab, room.toolsLabel)
                 }
                 }
             }
@@ -543,7 +552,7 @@ private fun WaveTabBar(
                             horizontalArrangement = Arrangement.Center
                         ) {
                             Icon(
-                                if (tab == WaveTab.WAVE && toolsLabel == "Classe") Icons.Filled.School else if (tab == WaveTab.WAVE && toolsLabel == "Scène") WaveIcons.MusicNote else tab.icon, null,
+                                if (tab == WaveTab.WAVE && toolsLabel == "Classe") Icons.Filled.School else if (tab == WaveTab.WAVE && toolsLabel == "Scène") WaveIcons.MusicNote else if (tab == WaveTab.WAVE && toolsLabel == "Loge") Icons.Filled.MeetingRoom else tab.icon, null,
                                 tint = if (isActive) WaveMixerTheme.violetSoft else WaveMixerTheme.secondary,
                                 modifier = Modifier.size(14.dp)
                             )

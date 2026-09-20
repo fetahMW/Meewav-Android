@@ -149,7 +149,7 @@ import java.util.Locale
 }
 internal fun sceneEuros(cents:Long)=java.text.NumberFormat.getCurrencyInstance(Locale.FRANCE).apply { maximumFractionDigits=if(cents%100L==0L)0 else 2 }.format(cents/100.0)
 
-@Composable private fun SceneCampaignCover(uri:String) {
+@Composable internal fun SceneCampaignCover(uri:String) {
     val context=LocalContext.current
     val bitmap by produceState<Bitmap?>(null,uri) {
         value=withContext(Dispatchers.IO) { runCatching {

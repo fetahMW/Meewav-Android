@@ -35,6 +35,7 @@ internal fun WaveChatToolsSheet(
     hostMessages: List<WaveChatMessage>,
     pinnedMessage: WaveChatMessage?,
     onPin: (WaveChatMessage?) -> Unit,
+    onOpenRoomPoll: (() -> Unit)? = null,
 ) {
     var editing by remember { mutableStateOf(false) }
     var highlighting by remember { mutableStateOf(false) }
@@ -95,7 +96,7 @@ internal fun WaveChatToolsSheet(
                     }
                 } else if (!editing) {
                     Column(Modifier.fillMaxWidth().hifiBlackSurface(16.dp)
-                        .clickable { editing = true }.padding(18.dp)) {
+                        .clickable { if (onOpenRoomPoll != null) onOpenRoomPoll() else editing = true }.padding(18.dp)) {
                         Text("Sondage", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                         Text(if (poll == null) "Demander l’avis du public" else "Voir le sondage et ses résultats",
                             color = Color.White.copy(alpha = .55f), fontSize = 12.sp)

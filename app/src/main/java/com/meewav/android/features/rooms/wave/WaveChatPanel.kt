@@ -210,6 +210,7 @@ fun WaveChatPanel(
     notificationsRead: Boolean = false,
     onReadNotifications: () -> Unit = {},
     onEmojiPanelChange: (Boolean) -> Unit = {},
+    onOpenRoomPoll: (() -> Unit)? = null,
 ) {
     val now = remember { System.currentTimeMillis() }
     val mountedAt = remember { System.currentTimeMillis() }
@@ -442,6 +443,7 @@ fun WaveChatPanel(
                 hostMessages = messages.filter { it.isHost && !it.isSystem },
                 pinnedMessage = pinnedMessage,
                 onPin = onPinMessage,
+                onOpenRoomPoll = onOpenRoomPoll?.let { open -> { toolsOpen = false; open() } },
             )
         }
 

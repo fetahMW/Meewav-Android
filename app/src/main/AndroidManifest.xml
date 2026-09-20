@@ -20,6 +20,9 @@
         android:label="Meewav"
         android:supportsRtl="true"
         android:theme="@style/Theme.Meewav">
+        <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.loge-media" android:exported="false" android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/loge_media_paths" />
+        </provider>
         <service android:name=".features.rooms.wave.RoomScreenCaptureService" android:exported="false" android:foregroundServiceType="mediaProjection" />
         <activity android:name=".features.messaging.MessagingActivity"
             android:exported="false" android:screenOrientation="portrait"
