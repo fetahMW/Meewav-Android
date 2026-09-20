@@ -152,12 +152,11 @@ internal fun ClasseToolsPanel(state: ClasseToolsState, onInvite: () -> Unit) {
                             if (hand || speaking || student.id in state.invitedToSpeak) Icon(if (speaking) WaveIcons.Mic else if (hand) Icons.Filled.BackHand else Icons.Filled.Schedule,
                                 if (speaking) "A la parole" else if (hand) "Main levée" else "Invité à parler", tint = if (speaking) Color(0xFF7ABFA2) else WaveMixerTheme.capsuleAccentSoft,
                                 modifier = Modifier.align(Alignment.BottomEnd).size(23.dp).background(Color(0xFF121017), CircleShape).padding(4.dp))
-                            val count = state.rankedQuestions.count { it.studentId == student.id }
-                            if (count > 0) Row(Modifier.align(Alignment.TopEnd).background(Color(0xFF122541), RoundedCornerShape(9.dp))
-                                .border(.5.dp, classeBlue.copy(alpha = .6f), RoundedCornerShape(9.dp)).padding(horizontal = 4.dp, vertical = 3.dp),
-                                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                                Icon(WaveIcons.Chat, "Question posée", tint = Color(0xFF79B4FF), modifier = Modifier.size(12.dp))
-                                Text("$count", color = Color(0xFF9BC8FF), fontSize = 8.sp)
+                            if (state.rankedQuestions.any { it.studentId == student.id }) {
+                                Icon(WaveIcons.Chat, "Question en attente", tint = Color(0xFF79B4FF),
+                                    modifier = Modifier.align(Alignment.TopEnd).size(23.dp)
+                                        .background(Color(0xFF122541), CircleShape)
+                                        .border(.5.dp, classeBlue.copy(alpha = .6f), CircleShape).padding(4.dp))
                             }
                         }
                         Spacer(Modifier.height(6.dp))
@@ -286,7 +285,7 @@ private fun ClasseUnderstanding.color() = when (this) { ClasseUnderstanding.UNDE
         OutlinedTextField(text, { text = it.take(1000) }, label = { Text("Message de l’élève") }, modifier = Modifier.fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White, focusedBorderColor = WaveMixerTheme.capsuleAccentSoft))
         Row {
             TextButton(onClick = { studentId?.let { state.requestFloor(it, text) }; onDismiss() }, enabled = state.handsOpen && studentId != null && text.isNotBlank()) { Text("Lever la main") }
-            TextButton(onClick = { studentId?.let { state.submitQuestion(it, text) }; onDismiss() }, enabled = state.questionsOpen && studentId != null && text.isNotBlank()) { Text("Poser la question") }
+            TextButton(onClick = { studentId?.let { state.submitQuestion(it, text) }; onDismiss() }, enabled = state.questionsOpen && studentId != null && text.isNotBlank() && state.rankedQuestions.none { it.studentId == studentId }) { Text("Poser la question") }
         }
         if (state.understandingActive) ClasseUnderstanding.entries.forEach { response -> TextButton(onClick = { studentId?.let { state.respond(it, response) }; onDismiss() }) { Text(response.label, color = response.color()) } }
     }

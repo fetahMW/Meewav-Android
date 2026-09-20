@@ -71,7 +71,14 @@ internal class ClasseToolsState(context: Context, val guests: WaveGuestState, sc
     fun dismissHand(id: String) { if (speakerId == id) releaseFloor(); hands = hands.filterNot { it.studentId == id } }
     fun lowerAllHands() { hands = hands.filter { it.studentId == speakerId } }
     fun removeStudent(id: String) { dismissHand(id); excluded = excluded + id; selectedStudent = null; guests.move(setOf(id), WaveGuestLocation.REQUESTED) }
-    fun submitQuestion(id: String, text: String) { if (questionsOpen && text.isNotBlank()) questions = questions + ClasseQuestion(studentId = id, text = text.trim().take(1000)) }
+    fun submitQuestion(id: String, text: String) {
+        if (!questionsOpen || text.isBlank()) return
+        if (questions.any { it.studentId == id && it.resolution == null }) {
+            notice = "Cet élève a déjà une question en attente."
+            return
+        }
+        questions = questions + ClasseQuestion(studentId = id, text = text.trim().take(1000))
+    }
     fun likeQuestion(id: String) { questions = questions.map { if (it.id == id) it.copy(likes = (it.likes + if (it.liked) -1 else 1).coerceAtLeast(0), liked = !it.liked) else it } }
     fun resolveQuestion(id: String, answered: Boolean) { questions = questions.map { if (it.id == id) it.copy(resolution = if (answered) "Répondue" else "Écartée") else it } }
     fun toggleUnderstanding() { understandingActive = !understandingActive; understanding = emptyMap() }
