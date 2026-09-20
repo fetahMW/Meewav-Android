@@ -35,13 +35,13 @@ internal fun CageToolsPanel(state: CageToolsState) {
     var simulation by remember { mutableStateOf(false) }
     var voter by remember { mutableStateOf("public-1") }
     var voterJury by remember { mutableStateOf(false) }
-    Column(Modifier.fillMaxSize()) {
-        Row(Modifier.fillMaxWidth().height(44.dp)) {
+    Column(Modifier.fillMaxSize().padding(top = 2.dp)) {
+        Row(Modifier.fillMaxWidth().height(44.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             listOf(if (state.format == CageFormat.LEAGUE) "Classement" else "Programme", "Régie", "Match", "Vote").forEachIndexed { index, label ->
-                Column(Modifier.weight(1f).fillMaxHeight().clickable { state.page = index }, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                    Text(label, color = if (state.page == index) cageInk else cageMuted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                    Spacer(Modifier.height(6.dp))
-                    Box(Modifier.width(34.dp).height(2.dp).background(Brush.horizontalGradient(listOf(Color.Transparent, if (state.page == index) WaveMixerTheme.capsuleAccentSoft else Color.Transparent, Color.Transparent))))
+                Box(Modifier.weight(1f).height(44.dp).clip(RoundedCornerShape(8.dp)).clickable { state.page = index }, contentAlignment = Alignment.Center) {
+                    Text(label, color = Color.White.copy(alpha = if (state.page == index) .95f else .5f), fontSize = 11.sp, fontWeight = if (state.page == index) FontWeight.SemiBold else FontWeight.Normal)
+                    if (state.page == index) Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 5.dp).width(32.dp).height(2.dp)
+                        .background(Brush.horizontalGradient(listOf(Color.Transparent, WaveMixerTheme.capsuleAccentSoft, Color.Transparent)), RoundedCornerShape(50)))
                 }
             }
         }
