@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -26,7 +27,7 @@ import com.meewav.android.R
 internal fun CageToolsState.openProfile(id: String) { guests.previewId = null; guests.profilePreviewId = id }
 
 @Composable
-internal fun CageArtistCompact(state: CageToolsState, id: String?, modifier: Modifier = Modifier, winner: Boolean = false, beforeProfile: () -> Unit = {}, duelSide: Int = 0) {
+internal fun CageArtistCompact(state: CageToolsState, id: String?, modifier: Modifier = Modifier, winner: Boolean = false, beforeProfile: () -> Unit = {}, duelSide: Int = 0, showMessage: Boolean = true) {
     val person = state.person(id)
     if (duelSide != 0) {
         val champion = person != null && state.finished && state.format in listOf(CageFormat.TOURNAMENT, CageFormat.CHALLENGER) && state.matches.lastOrNull()?.winner == person.id
@@ -42,22 +43,16 @@ internal fun CageArtistCompact(state: CageToolsState, id: String?, modifier: Mod
         }
         val message: @Composable () -> Unit = {
             IconButton(onClick = { person?.let { state.guests.messageRecipientIds = setOf(it.id) } }, enabled = person != null,
-                modifier = Modifier.size(48.dp).hifiBlackSurface(10.dp)) {
-                Icon(WaveIcons.Envelope, "Message à " + (person?.name ?: "artiste"), Modifier.size(22.dp), tint = WaveMixerTheme.capsuleAccentSoft.copy(alpha = if (person != null) 1f else .25f))
+                modifier = Modifier.size(40.dp)) {
+                Icon(WaveIcons.Chat, "Message à " + (person?.name ?: "artiste"), Modifier.size(22.dp), tint = WaveMixerTheme.capsuleAccentSoft.copy(alpha = if (person != null) 1f else .25f))
             }
         }
-        Column(modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                if (duelSide < 0) { message(); portrait() } else { portrait(); message() }
+        Box(modifier) {
+            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            portrait()
+            CageDuelName(person, winner)
             }
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-                Text(person?.name ?: "À déterminer", modifier = Modifier.weight(1f, fill = false), color = if (winner) WaveMixerTheme.capsuleAccentSoft else Color.White, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                if (person != null) {
-                    val badges = listOf(R.drawable.wave_grade_1, R.drawable.wave_grade_2, R.drawable.wave_grade_3, R.drawable.wave_grade_4, R.drawable.wave_grade_5, R.drawable.wave_grade_6)
-                    Spacer(Modifier.width(3.dp))
-                    Image(painterResource(badges[(person.gradeLevel - 1).coerceIn(0, 5)]), "Grade " + person.gradeLevel, Modifier.size(22.dp))
-                }
-            }
+            if (showMessage) Box(Modifier.align(if (duelSide < 0) Alignment.TopStart else Alignment.TopEnd).height(48.dp), contentAlignment = Alignment.Center) { message() }
         }
         return
     }
@@ -97,16 +92,16 @@ internal fun CageArtistCompact(state: CageToolsState, id: String?, modifier: Mod
 }
 
 @Composable
-internal fun CageDuelCard(state: CageToolsState, match: CageMatch, showStatus: Boolean = true) {
+internal fun CageDuelCard(state: CageToolsState, match: CageMatch, showStatus: Boolean = true, showMessages: Boolean = true) {
     Column(Modifier.fillMaxWidth().hifiBlackSurface(12.dp).padding(10.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
         if (showStatus) Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Match " + (match.id + 1), color = Color(0xFFAAA6B4), fontSize = 10.sp, modifier = Modifier.weight(1f))
             Text(if (match.completed) if (match.b == null) "Qualifié d’office" else "Terminé" else if (state.activeId == match.id) "En cours" else "À venir", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 10.sp)
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            CageArtistCompact(state, match.a, Modifier.weight(1f), match.winner == match.a, duelSide = -1)
+            CageArtistCompact(state, match.a, Modifier.weight(1f), match.winner == match.a, duelSide = -1, showMessage = showMessages)
             Text(if (match.b == null) "—" else "VS", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-            CageArtistCompact(state, match.b, Modifier.weight(1f), match.b != null && match.winner == match.b, duelSide = 1)
+            CageArtistCompact(state, match.b, Modifier.weight(1f), match.b != null && match.winner == match.b, duelSide = 1, showMessage = showMessages)
         }
 
     }
@@ -156,6 +151,28 @@ internal fun CageParticipantCard(state: CageToolsState, id: String, onReplace: (
         }
         if (com.meewav.android.BuildConfig.DEBUG && (!person.canParticipate || !person.connected)) CageAction("Simuler son arrivée") {
             state.guests.demoInvitationResponse(id, true); state.guests.demoReconnect(id); state.guests.move(setOf(id), WaveGuestLocation.BACKSTAGE); state.notice = null
+        }
+    }
+}
+
+@Composable
+private fun CageDuelName(person: WaveGuest?, winner: Boolean) {
+    Layout(modifier = Modifier.fillMaxWidth(), content = {
+        Text(person?.name ?: "À déterminer", color = if (winner) WaveMixerTheme.capsuleAccentSoft else Color.White,
+            fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        if (person != null) {
+            val badges = listOf(R.drawable.wave_grade_1, R.drawable.wave_grade_2, R.drawable.wave_grade_3, R.drawable.wave_grade_4, R.drawable.wave_grade_5, R.drawable.wave_grade_6)
+            Image(painterResource(badges[(person.gradeLevel - 1).coerceIn(0, 5)]), "Grade " + person.gradeLevel, Modifier.size(22.dp))
+        } else Spacer(Modifier.size(0.dp))
+    }) { items, constraints ->
+        val badge = items[1].measure(constraints.copy(minWidth = 0, minHeight = 0))
+        val gap = if (person != null) 3.dp.roundToPx() else 0
+        val name = items[0].measure(constraints.copy(minWidth = 0, minHeight = 0, maxWidth = (constraints.maxWidth - 2 * (badge.width + gap)).coerceAtLeast(0)))
+        val height = maxOf(name.height, badge.height)
+        layout(constraints.maxWidth, height) {
+            val left = (constraints.maxWidth - name.width) / 2
+            name.placeRelative(left, (height - name.height) / 2)
+            badge.placeRelative(left + name.width + gap, (height - badge.height) / 2)
         }
     }
 }

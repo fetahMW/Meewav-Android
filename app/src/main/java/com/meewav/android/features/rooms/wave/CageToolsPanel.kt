@@ -115,7 +115,7 @@ internal fun CageToolsPanel(state: CageToolsState, programScope: String) {
                     val match = state.active ?: state.matches.firstOrNull { !it.completed }
                     if (match == null) item { CageCard { Text("Prépare le programme dans Compétition. Le prochain duel apparaîtra ici.", color = cageMuted, fontSize = 12.sp) } }
                     else {
-                        item { CageDuelCard(state, match) }
+                        item { CageDuelCard(state, match, showMessages = false) }
                         if (state.phase == "Appel") items(state.readinessIssues(), key = { "issue-" + it.first }) { issue ->
                             CageParticipantCard(state, issue.first) { replacementId = it }
                         }
