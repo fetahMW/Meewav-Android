@@ -97,11 +97,14 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                     onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
-    var activeTab by remember { mutableStateOf(WaveTab.MIXEUR) }
+    var activeTab by remember(room) { mutableStateOf(if (room == RoomModule.CAGE) WaveTab.WAVE else WaveTab.MIXEUR) }
     // Keep the highlighted snapshot even if the live feed trims old messages or tabs change.
     var pinnedChatMessage by remember { mutableStateOf<WaveChatMessage?>(null) }
     var waveNotificationsRead by remember { mutableStateOf(false) }
     val guestState = remember { WaveGuestState() }
+    val cage = remember(room, guestState) { if (room == RoomModule.CAGE) CageToolsState(guestState) else null }
+    DisposableEffect(cage) { onDispose { cage?.close() } }
+    val roomAccent = if (room == RoomModule.CAGE) Color(0xFFFF5B73) else Color(0xFF27C2D1)
     var emojiPanelOpen by remember { mutableStateOf(false) }
     // Canaux.
     var micGain by remember { mutableStateOf(0.72f) }
@@ -131,7 +134,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
     DisposableEffect(composition, lifecycle) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
-            if (event == androidx.lifecycle.Lifecycle.Event.ON_STOP) { composition?.suspendAudio(); mixerDeck.suspendAudio() }
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_STOP) { composition?.suspendAudio(); mixerDeck.suspendAudio(); cage?.pause() }
         }
         lifecycle.addObserver(observer)
         onDispose { lifecycle.removeObserver(observer); composition?.close() }
@@ -145,7 +148,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     ) {
         Box(Modifier.fillMaxSize().background(Color.Black).systemBarsPadding()) {
             WaveGuestStage(guestState, interactive = false) {
-                WaveVideo(cameraOff = true, modifier = Modifier.fillMaxSize(), roomLabel = room.label)
+                WaveVideo(cameraOff = true, modifier = Modifier.fillMaxSize(), roomLabel = room.label, roomAccent = roomAccent)
             }
             androidx.compose.material3.IconButton(onClick = { stageFullscreen = false },
                 modifier = Modifier.align(Alignment.TopEnd).padding(8.dp).background(Color.Black.copy(alpha = .7f), CircleShape)) {
@@ -163,11 +166,11 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
             (maxHeight - if (emojiPanelOpen) 405.dp else 305.dp).coerceIn(0.dp, fullVideoHeight) else fullVideoHeight
         val workshopHeight = (maxHeight - 44.dp - videoViewportHeight - 6.dp).coerceAtLeast(0.dp)
         Column(Modifier.fillMaxSize()) {
-            WaveHeader(title = roomTitle?.takeIf { it.isNotBlank() } ?: if (room == RoomModule.WAVE) "Freestyle session — Luma invite" else room.label,
+            WaveHeader(title = roomTitle?.takeIf { it.isNotBlank() } ?: if (room == RoomModule.WAVE) "Freestyle session — Luma invite" else if (room == RoomModule.CAGE) "Battle Rap — Paris vs Marseille" else room.label,
                 onBack = { showLeaveConfirm = true }, onClose = { showLeaveConfirm = true })
             Box(Modifier.fillMaxWidth().height(videoViewportHeight).clipToBounds()) {
                 WaveGuestStage(guestState, interactive = activeTab == WaveTab.INVITES, onFullscreen = { stageFullscreen = true }, audible = !stageFullscreen) {
-                    WaveVideo(cameraOff = true, modifier = Modifier.fillMaxSize(), roomLabel = room.label)
+                    WaveVideo(cameraOff = true, modifier = Modifier.fillMaxSize(), roomLabel = room.label, roomAccent = roomAccent)
                 }
             }
             // Zone grise du mixeur : couvre la barre d'onglets ET le corps.
@@ -227,7 +230,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                     WaveTab.INVITES -> WaveGuestsPanel(guestState, Modifier.fillMaxSize())
                     else -> if (room == RoomModule.WAVE && composition != null) {
                         WaveCompositionPanel(composition, workshopHeight, onProfile = guestState::openArtistProfile)
-                    } else WaveTabPlaceholder(activeTab, room.toolsLabel)
+                    } else if (cage != null) CageToolsPanel(cage) else WaveTabPlaceholder(activeTab, room.toolsLabel)
                 }
                 }
             }
@@ -349,7 +352,7 @@ private fun HeaderCounter(value: String, tint: Color? = null, icon: ImageVector?
 /* ------------------------------------------------------------------------- */
 
 @Composable
-private fun WaveVideo(cameraOff: Boolean, modifier: Modifier = Modifier, roomLabel: String = "La Wave") {
+private fun WaveVideo(cameraOff: Boolean, modifier: Modifier = Modifier, roomLabel: String = "La Wave", roomAccent: Color = Color(0xFF27C2D1)) {
     // Chronomètre fictif qui défile depuis l'ouverture de l'écran.
     var elapsed by remember { mutableStateOf(12L * 60L + 47L) }
     LaunchedEffect(Unit) {
@@ -426,13 +429,13 @@ private fun WaveVideo(cameraOff: Boolean, modifier: Modifier = Modifier, roomLab
                 .padding(top = 8.dp, end = 10.dp)
                 .clip(RoundedCornerShape(50))
                 .background(Color(0xFF060712).copy(alpha = 0.52f))
-                .background(Color(0xFF27C2D1).copy(alpha = 0.10f))
-                .border(1.dp, Color(0xFF27C2D1).copy(alpha = 0.42f), RoundedCornerShape(50))
+                .background(roomAccent.copy(alpha = 0.10f))
+                .border(1.dp, roomAccent.copy(alpha = 0.42f), RoundedCornerShape(50))
                 .padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                roomLabel.uppercase(java.util.Locale.FRANCE), color = Color(0xFF27C2D1),
+                roomLabel.uppercase(java.util.Locale.FRANCE), color = roomAccent,
                 fontSize = 8.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp,
                 fontFamily = WaveMixerTheme.fontFamily
             )
