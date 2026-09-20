@@ -21,3 +21,6 @@ Le conteneur vidéo observe les pressions sans consommer les événements : sél
 - Les rooms natives actuelles n’ont pas de session RTC de publication. L’interface indique donc aperçu local avant de demander la capture et sur le retour écran. Aucun flux n’est annoncé comme transmis au public. Le futur transport devra consommer les sources caméra/écran et raccorder le micro.
 
 Compilation : assembleDebug. Aucun test ni inspection visuelle automatique exécuté, conformément aux consignes.
+
+## Barre simplifiée
+À la demande de l’utilisateur, retrait des boutons micro, haut-parleur et changement de caméra de la barre vidéo commune. Restent régie, caméra, partage d’écran et plein écran. Le masquage automatique reste inchangé. Les commandes audio du mixeur sont conservées.

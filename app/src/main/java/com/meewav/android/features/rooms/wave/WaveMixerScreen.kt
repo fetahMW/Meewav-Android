@@ -168,7 +168,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     var stageFullscreen by remember { mutableStateOf(false) }
     val videoControls = rememberRoomVideoControls()
     @Composable fun StageControls(fullscreen: Boolean, director: () -> Unit) {
-        RoomVideoControlBar(videoControls, micMuted, onMicrophone = { micMuted = !micMuted },
+        RoomVideoControlBar(videoControls,
             fullscreen = fullscreen, onFullscreen = { stageFullscreen = !stageFullscreen; videoControls.reveal() }, onDirector = director)
     }
 

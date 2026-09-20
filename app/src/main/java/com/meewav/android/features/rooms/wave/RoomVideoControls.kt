@@ -1,9 +1,7 @@
 package com.meewav.android.features.rooms.wave
 
-import android.Manifest
 import android.app.Activity
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.media.projection.MediaProjectionManager
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -74,8 +72,7 @@ internal fun rememberRoomVideoControls(): RoomVideoControls {
 }
 
 @Composable
-internal fun RoomVideoControlBar(controls: RoomVideoControls, micMuted: Boolean,
-    onMicrophone: () -> Unit, fullscreen: Boolean, onFullscreen: () -> Unit, onDirector: () -> Unit,
+internal fun RoomVideoControlBar(controls: RoomVideoControls, fullscreen: Boolean, onFullscreen: () -> Unit, onDirector: () -> Unit,
     modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val sharing by RoomScreenCaptureService.active.collectAsState()
@@ -83,11 +80,6 @@ internal fun RoomVideoControlBar(controls: RoomVideoControls, micMuted: Boolean,
     LaunchedEffect(sharing, error) {
         if (sharing || error != null) controls.sharingRequested = false
         error?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show(); RoomScreenCaptureService.clearFailure() }
-    }
-    val cameraPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) { controls.liveCamera = true; controls.cameraEnabled = true }
-        else Toast.makeText(context, "Autorise la caméra dans les réglages pour afficher ton retour.", Toast.LENGTH_LONG).show()
-        controls.reveal()
     }
     val capturePermission = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val data = result.data
@@ -110,20 +102,9 @@ internal fun RoomVideoControlBar(controls: RoomVideoControls, micMuted: Boolean,
             .border(.7.dp, Brush.verticalGradient(listOf(Color(0x667A718E), Color(0x224D475E), Color(0x665D507B))), CircleShape)
             .padding(horizontal = 3.dp, vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
             RoomVideoButton(WaveIcons.More, "Régie vidéo", controls, action = onDirector)
-            RoomVideoButton(Icons.Default.Cameraswitch, "Changer de caméra", controls) {
-                if (controls.liveCamera) controls.frontCamera = !controls.frontCamera
-                if (context.checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                    controls.liveCamera = true; controls.cameraEnabled = true
-                } else cameraPermission.launch(Manifest.permission.CAMERA)
-            }
             RoomVideoButton(if (controls.cameraEnabled) Icons.Default.Videocam else WaveIcons.CameraOff,
                 if (controls.cameraEnabled) "Couper ma caméra" else "Activer ma caméra", controls,
                 off = !controls.cameraEnabled) { controls.cameraEnabled = !controls.cameraEnabled }
-            RoomVideoButton(if (micMuted) WaveIcons.MicOff else WaveIcons.Mic,
-                if (micMuted) "Activer mon micro" else "Couper mon micro", controls, off = micMuted, action = onMicrophone)
-            RoomVideoButton(if (controls.returnAudio) WaveIcons.VolumeUp else WaveIcons.VolumeOff,
-                if (controls.returnAudio) "Couper le son du retour vidéo" else "Écouter le retour vidéo", controls,
-                off = !controls.returnAudio) { controls.returnAudio = !controls.returnAudio }
             RoomVideoButton(if (sharing) Icons.Default.StopScreenShare else Icons.Default.ScreenShare,
                 if (sharing) "Arrêter la capture d’écran" else "Partager mon écran", controls,
                 selected = sharing, enabled = !controls.sharingRequested) {
