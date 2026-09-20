@@ -32,7 +32,6 @@ internal fun CageToolsPanel(state: CageToolsState) {
     var rosterOpen by remember { mutableStateOf(false) }
     var reset by remember { mutableStateOf(false) }
     var incident by remember { mutableStateOf(false) }
-    var verdict by remember { mutableStateOf<String?>(null) }
     var simulation by remember { mutableStateOf(false) }
     var voter by remember { mutableStateOf("public-1") }
     var voterJury by remember { mutableStateOf(false) }
@@ -55,7 +54,7 @@ internal fun CageToolsPanel(state: CageToolsState) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text(state.format.title, color = cageInk, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                        Text(if (state.finished) "Programme terminé" else if (state.locked) "${state.roster.size} artistes · programme verrouillé" else "Préparation · ${state.roster.size} artistes", color = cageMuted, fontSize = 11.sp)
+                        Text(if (state.finished) "Programme terminé" else if (state.locked) "${state.roster.size} artistes · programme confirmé" else "Préparation · ${state.roster.size} artistes", color = cageMuted, fontSize = 11.sp)
                     }
                     IconButton(onClick = { settings = true }) { Icon(Icons.Default.Tune, "Réglages de la compétition", tint = WaveMixerTheme.capsuleAccentSoft) }
                 }
@@ -68,15 +67,13 @@ internal fun CageToolsPanel(state: CageToolsState) {
                             CageAction("Mélanger", Modifier.weight(1f), !state.locked) { state.shuffle() }
                         }
                     }
-                    if (!state.locked) item { CageAction(if (state.matches.isEmpty()) "Générer le programme" else "Verrouiller le programme", primary = true) { if (state.matches.isEmpty()) state.generate() else state.lock() } }
-                    if (state.matches.isEmpty()) item { CageCard { Text("Choisis les artistes et le format, puis génère le programme.", color = cageMuted, fontSize = 12.sp) } }
+                    if (state.matches.isEmpty()) item { CageCard { Text("Choisis les artistes et le format, puis utilise le bouton en bas pour préparer le programme.", color = cageMuted, fontSize = 12.sp) } }
                     items(state.matches, key = { it.id }) { match ->
                         CageCard {
                             Text(if (state.isSolo) "Passage ${match.id + 1}" else "Tour ${match.round} · Match ${match.id + 1}", color = cageMuted, fontSize = 10.sp)
                             CagePerson(state.person(match.a), match.winner == match.a)
                             match.b?.let { CagePerson(state.person(it), match.winner == it) }
                             if (match.completed) Text(match.score?.let { "Note : $it / 100" } ?: "Qualifié : ${state.person(match.winner)?.name}", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 11.sp)
-                            else if (state.locked) CageAction("Préparer en régie", enabled = state.active == null || state.active?.completed == true || state.phase == "Appel") { state.page = 1; state.call(match.id) }
                         }
                     }
                     if (state.format == CageFormat.LEAGUE && state.matches.any { it.completed }) item {
@@ -93,7 +90,7 @@ internal fun CageToolsPanel(state: CageToolsState) {
                     } }
                 }
                 1 -> {
-                    if (!state.locked) item { CageAction("Préparer le programme", primary = true) { state.page = 0 } }
+                    if (!state.locked) item { Text("Prépare les artistes et le programme avant leur entrée en scène.", color = cageMuted, fontSize = 12.sp) }
                     else {
                         items(state.matches.filterNot { it.completed }, key = { it.id }) { match ->
                             CageCard {
@@ -104,15 +101,13 @@ internal fun CageToolsPanel(state: CageToolsState) {
                                     Text(if (person?.connected != true) "Connexion perdue" else if (!person.camera || !person.mic) "Caméra ou micro à préparer" else person.healthLabel,
                                         color = if (person?.connected == true) cageMuted else Color(0xFFC88B90), fontSize = 10.sp)
                                 }
-                                if (state.activeId == match.id) CageAction("Monter sur scène", enabled = state.ready() && state.phase == "Appel", primary = true) { state.stage() }
-                                else CageAction("Appeler les artistes", enabled = state.active == null || state.active?.completed == true || state.phase == "Appel") { state.call(match.id) }
                             }
                         }
                     }
                 }
                 2 -> {
                     val match = state.active
-                    if (match == null) item { CageAction("Choisir un match en régie") { state.page = 1 } }
+                    if (match == null) item { Text("Le prochain passage apparaîtra ici après la préparation.", color = cageMuted, fontSize = 12.sp) }
                     else {
                         item { CageCard {
                             CagePerson(state.person(match.a), state.speaker.contains("A"))
@@ -121,22 +116,17 @@ internal fun CageToolsPanel(state: CageToolsState) {
                             Text("%02d:%02d".format(seconds / 60, seconds % 60), modifier = Modifier.align(Alignment.CenterHorizontally), fontSize = 38.sp, fontFamily = FontFamily.Monospace, color = WaveMixerTheme.capsuleAccentSoft)
                             Text("${state.phase} · ${state.speaker} · ${state.step + 1}/${state.steps.size}", color = cageMuted, fontSize = 11.sp, modifier = Modifier.align(Alignment.CenterHorizontally))
                         } }
-                        item { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            CageAction(if (state.clockRunning) "Pause" else "Démarrer", Modifier.weight(1f), enabled = state.phase in listOf("Performance", "Pause", "Temps écoulé", "Sur scène"), primary = true) { if (state.clockRunning) state.pause() else state.start() }
-                            CageAction(if (state.step + 1 == state.steps.size) "Fin des passages" else "Passage suivant", Modifier.weight(1f), state.phase in listOf("Performance", "Pause", "Temps écoulé", "Sur scène")) { state.nextStep() }
-                        } }
+                        if (state.clockRunning) item { CageAction("Mettre en pause") { state.pause() } }
                         item {
                             if (state.incident != null) CageCard {
                                 Text(state.incident.orEmpty(), color = Color(0xFFC88B90))
-                                CageAction("Incident résolu") { state.resumeIncident() }
                             } else CageAction("Signaler un incident", enabled = !match.completed && !state.voteOpen) { incident = true }
                         }
-                        if (state.phase == "Prêt au vote") item { CageAction("Passer au vote", primary = true) { state.page = 3 } }
                     }
                 }
                 3 -> {
                     val match = state.active
-                    if (match == null) item { CageAction("Préparer un match") { state.page = 1 } }
+                    if (match == null) item { Text("Le vote sera disponible après les passages des artistes.", color = cageMuted, fontSize = 12.sp) }
                     else {
                         item { Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             listOf("Public", "Jury", "Hybride").forEach { mode -> CageAction(mode, Modifier.weight(1f), !state.voteOpen && !state.voteClosed, primary = state.voteMode == mode) { state.voteConfig(mode, state.voteSeconds) } }
@@ -151,22 +141,15 @@ internal fun CageToolsPanel(state: CageToolsState) {
                             Text(if (state.revealed) "A : ${state.score("A").toInt()} %" + if (match.b != null) " · B : ${state.score("B").toInt()} %" else "" else "Résultats masqués", color = cageMuted, fontSize = 12.sp)
                             Text("${state.publicBallots.size} bulletins public · ${state.juryBallots.size} jury", color = cageMuted, fontSize = 11.sp)
                         } }
-                        item { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            CageAction(if (state.voteOpen) "Fermer le vote" else "Ouvrir le vote", Modifier.weight(1f), state.phase == "Prêt au vote" && !state.voteClosed, true) { if (state.voteOpen) state.closeVote() else state.openVote() }
-                            CageAction(if (state.revealed) "Masquer" else "Révéler", Modifier.weight(1f), state.voteClosed) { state.reveal() }
-                        } }
                         item { CageAction("Bulletins de démonstration", enabled = state.voteOpen) { simulation = true } }
                         if (state.revealed && state.voteClosed && !match.completed) {
                             if (state.isSolo) item { CageCard {
                                 Text("Note du passage : ${state.note.toInt()} / 100", color = cageInk)
                                 WaveOutputFader(state.note / 100, { state.note = it * 100 }, Modifier.fillMaxWidth().height(44.dp))
-                                CageAction("Valider le passage", primary = true) { verdict = match.a }
                             } } else item {
                                 val a = state.score("A"); val b = state.score("B")
                                 if (a == b) Text("Égalité · lance une manche décisive avec le bouton principal.", color = cageMuted, fontSize = 11.sp)
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    if (a > b) CageAction("Valider A", Modifier.weight(1f), primary = true) { verdict = match.a }
-                                    if (b > a) CageAction("Valider B", Modifier.weight(1f), primary = true) { verdict = match.b }
                                 }
                             }
                         }
@@ -176,6 +159,7 @@ internal fun CageToolsPanel(state: CageToolsState) {
         }
         Column(Modifier.fillMaxWidth().hifiBlackSurface(12.dp).padding(8.dp)) {
             Text(state.active?.let { listOfNotNull(state.person(it.a)?.name, state.person(it.b)?.name).joinToString(" · ") } ?: "${state.roster.size} artistes", color = cageMuted, fontSize = 10.sp, maxLines = 1, modifier = Modifier.padding(bottom = 4.dp))
+            Text(state.commandHint, color = cageMuted, fontSize = 11.sp, modifier = Modifier.padding(bottom = 6.dp))
             CageAction(state.commandLabel, enabled = state.commandEnabled, primary = true) { state.advance() }
         }
     }
@@ -208,8 +192,6 @@ internal fun CageToolsPanel(state: CageToolsState) {
     }, confirmButton = { TextButton(onClick = { incident = false }) { Text("Annuler") } })
     if (reset) AlertDialog(onDismissRequest = { reset = false }, containerColor = Color(0xFF141419), title = { Text("Recommencer ?") }, text = { Text("Le programme, les votes et les résultats de cette session seront effacés.") },
         confirmButton = { TextButton(onClick = { state.reset(); reset = false; settings = false }) { Text("Recommencer") } }, dismissButton = { TextButton(onClick = { reset = false }) { Text("Conserver") } })
-    verdict?.let { id -> AlertDialog(onDismissRequest = { verdict = null }, containerColor = Color(0xFF141419), title = { Text("Valider ${state.person(id)?.name} ?") }, text = { Text("Le résultat sera inscrit au programme et la suite sera préparée.") },
-        confirmButton = { TextButton(onClick = { state.verdict(id); verdict = null }) { Text("Valider", color = WaveMixerTheme.capsuleAccentSoft) } }, dismissButton = { TextButton(onClick = { verdict = null }) { Text("Annuler") } }) }
     if (simulation) ModalBottomSheet(onDismissRequest = { simulation = false }, containerColor = Color(0xFF111216)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text("Bulletins locaux de démonstration", color = cageInk)

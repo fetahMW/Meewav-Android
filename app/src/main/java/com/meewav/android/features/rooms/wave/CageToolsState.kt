@@ -63,7 +63,7 @@ internal class CageToolsState(val guests: WaveGuestState,
     } } }
     private fun log(text: String) { history = (history + text).takeLast(60) }
     val commandLabel: String get() = when {
-        !locked -> if (matches.isEmpty()) "Créer le programme" else "Valider le programme"
+        !locked -> if (matches.isEmpty()) "Préparer le programme" else if (format == CageFormat.CHALLENGER) "Confirmer les duels" else "Confirmer le programme"
         finished -> "Voir les résultats"
         active == null || active?.completed == true -> "Préparer la rencontre suivante"
         incident != null -> "Reprendre après l’incident"
@@ -79,6 +79,18 @@ internal class CageToolsState(val guests: WaveGuestState,
         else -> "Démarrer le passage"
     }
     val commandEnabled get() = phase != "Appel" || ready()
+    val commandHint: String get() = when {
+        !locked && matches.isEmpty() -> "Choisis les artistes ; tu pourras revoir l’ordre avant de confirmer."
+        !locked -> "Vérifie l’ordre : la confirmation fixe les participants, sans lancer le direct."
+        finished -> "Tous les passages sont terminés."
+        active == null || active?.completed == true -> if (format == CageFormat.CHALLENGER && active != null) "Le gagnant reste sur scène ; le prochain challenger arrive." else "La prochaine rencontre sera choisie automatiquement."
+        phase == "Appel" -> "Les artistes doivent avoir leur connexion, leur caméra et leur micro prêts."
+        incident != null -> "Résous le problème avant de reprendre."
+        voteOpen -> "Le vote se ferme aussi à la fin du chronomètre."
+        voteClosed -> "La suite dépend des bulletins reçus : résultat, égalité ou nouveau vote."
+        clockRunning -> "Termine le passage ici ; Pause reste disponible dans Match."
+        else -> "Ce bouton te conduit automatiquement à la prochaine étape."
+    }
     fun advance() {
         notice = null
         when {
