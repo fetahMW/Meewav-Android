@@ -131,6 +131,10 @@ private fun PlaceToolsState.name(id:String?)=if(id=="host")"Vous"else guests.gue
                     SceneIcon(Icons.Default.Stop,"Arrêter le clash"){state.endClash()}
                 }
             }}
+            if(c.status=="inviting"&&"host" in listOf(c.left,c.right))item{Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){
+                SceneButton(if("host" in c.accepted)"Votre accord est reçu"else"J’accepte",Modifier.weight(1f),enabled="host" !in c.accepted){state.answerClash("host",true)}
+                SceneButton("Me retirer"){state.answerClash("host",false)}
+            }}
             if(c.status=="inviting"&&com.meewav.android.BuildConfig.DEBUG)item{SceneCard{
                 Text("Réponses des participants · démo",color=sceneMuted,fontSize=10.sp)
                 listOf(c.left,c.right).forEach{id->Row(verticalAlignment=Alignment.CenterVertically){Text(state.name(id),Modifier.weight(1f),color=Color.White,fontSize=11.sp,maxLines=1);SceneIcon(Icons.Default.Check,"Simuler l’accord de "+state.name(id),enabled=id !in c.accepted){state.answerClash(id,true)};SceneIcon(WaveIcons.Close,"Simuler le refus de "+state.name(id),tint=logeRed){state.answerClash(id,false)}}}
@@ -141,8 +145,8 @@ private fun PlaceToolsState.name(id:String?)=if(id=="host")"Vous"else guests.gue
                 Text("Un sujet, deux points de vue",color=Color.White,fontSize=16.sp,fontWeight=FontWeight.SemiBold)
                 Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){Box(Modifier.weight(1f),contentAlignment=Alignment.Center){PlacePortrait(state,left,48.dp)};Text("VS",color=sceneMuted,fontSize=12.sp);Box(Modifier.weight(1f),contentAlignment=Alignment.Center){PlacePortrait(state,right,48.dp)}}
                 Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){
-                    PlaceChoice(state.name(left),state.people.map{it.id to it.name},Modifier.weight(1f)){left=it}
-                    PlaceChoice(state.name(right),state.people.filter{it.id!=left}.map{it.id to it.name},Modifier.weight(1f)){right=it}
+                    PlaceChoice(state.name(left),listOf("host" to "Vous")+state.people.map{it.id to it.name},Modifier.weight(1f)){left=it}
+                    PlaceChoice(state.name(right),(listOf("host" to "Vous")+state.people.map{it.id to it.name}).filter{it.first!=left},Modifier.weight(1f)){right=it}
                 }
                 PlaceField(title,{title=it},"Le talent ou le travail ?")
                 Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){
@@ -168,7 +172,7 @@ private fun PlaceToolsState.name(id:String?)=if(id=="host")"Vous"else guests.gue
         item{Row(verticalAlignment=Alignment.CenterVertically){Text("Défis · ${active.size}",Modifier.weight(1f),color=Color.White,fontSize=15.sp,fontWeight=FontWeight.SemiBold);SceneIcon(Icons.Default.History,"Défis terminés"){history=!history};SceneIcon(if(editing)WaveIcons.Close else Icons.Default.Add,"Créer un défi"){editing=!editing}}}
         if(editing)item{SceneCard{
             PlaceField(title,{title=it},"Raconte une histoire en une minute…")
-            PlaceChoice(target?.let{state.name(it)}?:"Tout le monde",listOf(null to "Tout le monde")+state.people.map{it.id to it.name}){target=it}
+            PlaceChoice(target?.let{state.name(it)}?:"Tout le monde",listOf(null to "Tout le monde","host" to "Vous")+state.people.map{it.id to it.name}){target=it}
             PlaceDuration(seconds){seconds=it}
             SceneButton("Proposer le défi",Modifier.fillMaxWidth(),primary=true,enabled=title.isNotBlank()&&active.size<6,icon=Icons.Default.Bolt){if(state.createChallenge(title,target,seconds)){title="";editing=false;history=false}}
         }}
@@ -180,6 +184,8 @@ private fun PlaceToolsState.name(id:String?)=if(id=="host")"Vous"else guests.gue
             Text("Proposé par "+state.name(c.author),color=sceneMuted,fontSize=10.sp)
             if(c.status=="running")PlaceTimer(c.clock,state.now)else if(c.status=="open")Text(sceneClock(c.clock.seconds.toLong())+" · ${c.accepted.size} inscrit(s)",color=sceneMuted,fontSize=11.sp)
             if(c.status in setOf("open","running")){
+                if(c.status=="open"&&(c.target==null||c.target=="host"))SceneButton(if("host" in c.accepted)"Vous participez"else"Je relève le défi",Modifier.fillMaxWidth(),enabled="host" !in c.accepted){state.challenge(c.id,"accept")}
+                if(c.status=="running"&&"host" in c.accepted)SceneButton(if("host" in c.completed)"En attente de validation"else"J’ai terminé",Modifier.fillMaxWidth(),enabled="host" !in c.completed){state.challenge(c.id,"complete")}
                 Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)){
                     SceneButton(if(c.status=="open")"Lancer"else"Valider (${c.completed.size})",Modifier.weight(1f),primary=true,enabled=if(c.status=="open")c.accepted.isNotEmpty()else c.completed.isNotEmpty(),icon=if(c.status=="open")WaveIcons.Play else Icons.Default.Check){state.challenge(c.id,if(c.status=="open")"start"else"validate")}
                     SceneIcon(WaveIcons.Close,"Annuler le défi",tint=logeRed){state.challenge(c.id,"cancel")}

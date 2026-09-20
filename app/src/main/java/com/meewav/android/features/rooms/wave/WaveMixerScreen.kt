@@ -66,6 +66,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.MeetingRoom
+import androidx.compose.material.icons.filled.People
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -552,7 +553,7 @@ private fun WaveTabBar(
                             horizontalArrangement = Arrangement.Center
                         ) {
                             Icon(
-                                if (tab == WaveTab.WAVE && toolsLabel == "Classe") Icons.Filled.School else if (tab == WaveTab.WAVE && toolsLabel == "Scène") WaveIcons.MusicNote else if (tab == WaveTab.WAVE && toolsLabel == "Loge") Icons.Filled.MeetingRoom else tab.icon, null,
+                                if (tab == WaveTab.WAVE && toolsLabel == "Classe") Icons.Filled.School else if (tab == WaveTab.WAVE && toolsLabel == "Scène") WaveIcons.MusicNote else if (tab == WaveTab.WAVE && toolsLabel == "Loge") Icons.Filled.MeetingRoom else if(tab == WaveTab.WAVE && toolsLabel == "Place") Icons.Filled.People else tab.icon, null,
                                 tint = if (isActive) WaveMixerTheme.violetSoft else WaveMixerTheme.secondary,
                                 modifier = Modifier.size(14.dp)
                             )
