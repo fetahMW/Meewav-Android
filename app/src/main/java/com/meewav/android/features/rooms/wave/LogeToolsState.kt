@@ -57,7 +57,8 @@ internal class LogeToolsState(val guests:WaveGuestState,private val load:()->Str
     var showDrawId by mutableStateOf<String?>(null)
     private var drawHideAt:Long?=null
     fun showWinner(id:String) { showDrawId=id;drawHideAt=System.currentTimeMillis()+12_000L }
-    val people get()=guests.guests
+    var externalGiftRecipients by mutableStateOf<Map<String,WaveGuest>>(emptyMap())
+    val people get()=(guests.guests+externalGiftRecipients.values).distinctBy{it.id}
     val selected get()=people.find { it.id==selectedId }
     val activeMoment get()=data.moments.firstOrNull { it.personId==selectedId && it.format=="live" && it.status in setOf("scheduled","accepted","live") }
     val selectedQuestion get()=data.questions.firstOrNull { it.status=="selected" }

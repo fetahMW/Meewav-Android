@@ -43,7 +43,8 @@ private const val ProfilePage = "https://appassets.androidplatform.net/globe-vin
 /** One persistent artist sheet, with actions and the shared Globe content as two pages. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun GuestPreProfileHost(state: WaveGuestState, availableHeight: Dp) {
+internal fun GuestPreProfileHost(state: WaveGuestState, availableHeight: Dp, onOffer:(WaveGuest)->Unit) {
+    val offer by rememberUpdatedState(onOffer)
     val context = LocalContext.current
     val manifest by produceState<JSONObject?>(null, context) {
         value = withContext(Dispatchers.IO) {
@@ -54,6 +55,7 @@ internal fun GuestPreProfileHost(state: WaveGuestState, availableHeight: Dp) {
     val content = remember(context, assets) {
         GuestProfileContent(context, assets,
             onClose = { state.profilePreviewId = null; state.previewId = null },
+            onOffer = { person -> state.profilePreviewId=null;state.previewId=null;offer(person) },
             onContact = { id -> state.profilePreviewId = null; state.previewId = null; state.messageRecipientIds = setOf(id) })
     }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -128,7 +130,7 @@ private fun ProfileBrowser(content: GuestProfileContent, modifier: Modifier) {
 
 @SuppressLint("SetJavaScriptEnabled")
 private class GuestProfileContent(context: Context, manifest: JSONObject,
-    private val onClose: () -> Unit, private val onContact: (String) -> Unit) {
+    private val onClose: () -> Unit, private val onContact: (String) -> Unit, private val onOffer:(WaveGuest)->Unit) {
     private var ready = false
     private var disposed = false
     private var current: WaveGuest? = null
@@ -159,6 +161,7 @@ private class GuestProfileContent(context: Context, manifest: JSONObject,
                     }
                     "/native/close" -> onClose()
                     "/native/contact" -> current?.let { onContact(it.id) }
+                    "/native/gift" -> current?.let(onOffer)
                 }
                 return true
             }

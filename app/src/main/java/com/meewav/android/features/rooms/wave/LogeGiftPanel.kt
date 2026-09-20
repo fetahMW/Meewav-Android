@@ -36,11 +36,11 @@ internal val logeGiftCatalog=listOf(
     Image(painterResource(assets[code]),logeGiftCatalog[code].name,Modifier.size(size))
 }
 
-@Composable internal fun LogeGiftPanel(state:LogeToolsState) {
+@Composable internal fun LogeGiftPanel(state:LogeToolsState,directRecipientId:String?=null) {
     var drawMode by remember{mutableStateOf(false)}
     var step by remember{mutableIntStateOf(0)}
     var code by remember{mutableIntStateOf(-1)}
-    var recipient by remember{mutableStateOf(state.selectedId)}
+    var recipient by remember{mutableStateOf(directRecipientId?:state.selectedId)}
     var customTitle by remember{mutableStateOf("")}
     var customImage by remember{mutableStateOf("")}
     var poolMode by remember{mutableStateOf("queue")}
@@ -66,7 +66,7 @@ internal val logeGiftCatalog=listOf(
     val completed=state.data.gifts.find{it.id==completedId}
     Column(Modifier.fillMaxSize()) {
         state.notice?.let{Text(it,color=logeRed,fontSize=11.sp)}
-        Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)){
+        if(directRecipientId==null) Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)){
             Row(Modifier.weight(1f).hifiBlackSurface(10.dp),verticalAlignment=Alignment.CenterVertically) {
                 listOf("Offrir","Tirage").forEachIndexed { index,label ->
                     val active=!history && drawMode==(index==1)
@@ -89,8 +89,8 @@ internal val logeGiftCatalog=listOf(
             }
         } else {
             Row(Modifier.padding(vertical=6.dp),horizontalArrangement=Arrangement.spacedBy(7.dp)) {
-                listOf("Cadeau",if(drawMode)"Participants"else"Destinataire",if(drawMode)"Diffusion"else"Envoi").forEachIndexed { i,label->
-                    Text("${i+1} · $label",color=if(i==step)logeGold else sceneMuted.copy(alpha=.6f),fontSize=10.sp,modifier=Modifier.weight(1f))
+                (if(directRecipientId!=null) listOf("Cadeau","Envoi") else listOf("Cadeau",if(drawMode)"Participants"else"Destinataire",if(drawMode)"Diffusion"else"Envoi")).forEachIndexed { i,label->
+                    Text("${i+1} · $label",color=if(i==(if(directRecipientId!=null&&step==2)1 else step))logeGold else sceneMuted.copy(alpha=.6f),fontSize=10.sp,modifier=Modifier.weight(1f))
                 }
             }
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(9.dp)) {
@@ -150,9 +150,9 @@ internal val logeGiftCatalog=listOf(
             }
             val canNext=when(step){0->code>=0&&state.data.stock.getOrElse(code){0}>0&&(code!=2||customTitle.isNotBlank());1->if(drawMode)candidates.size>=2 else state.people.any{it.id==recipient};else->delivery!="scheduled"||(date?:0)>state.now}
             Row(Modifier.padding(vertical=8.dp),horizontalArrangement=Arrangement.spacedBy(6.dp)){
-                if(step>0)SceneButton("Retour",icon=WaveIcons.ChevronLeft){step--}
+                if(step>0)SceneButton("Retour",icon=WaveIcons.ChevronLeft){step=if(directRecipientId!=null)0 else step-1}
                 SceneButton(if(step<2)"Continuer"else if(drawMode)"Préparer le tirage"else"Confirmer · démo",Modifier.weight(1f),primary=true,enabled=canNext){
-                    if(step<2)step++ else {
+                    if(step<2)step=if(directRecipientId!=null)2 else step+1 else {
                         val g=LogeGift(operationId,code,recipientId=if(drawMode)""else recipient,recipientName=if(drawMode)""else state.people.find{it.id==recipient}?.name.orEmpty(),title=if(code==2)customTitle else logeGiftCatalog[code].name,image=customImage,
                             status=if(delivery=="scheduled")"scheduled"else if(drawMode)"ready"else if(delivery=="round")"round"else"sent",scheduledAt=date,round=if(delivery=="round")round else"",pool=if(drawMode)candidates else emptyList(),animationSeconds=seconds)
                         if(state.gift(g))completedId=operationId

@@ -117,6 +117,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     var pinnedChatMessage by remember { mutableStateOf<WaveChatMessage?>(null) }
     var waveNotificationsRead by remember { mutableStateOf(false) }
     val guestState = remember(initialRoom) { WaveGuestState(cageDemo = initialRoom == RoomModule.CAGE, classeDemo = initialRoom == RoomModule.CLASSE) }
+    var giftRecipient by remember { mutableStateOf<WaveGuest?>(null) }
     val roomGifts=remember(guestState,programScope){LogeToolsState(context.applicationContext,guestState,"gifts:"+programScope,false)}
     LaunchedEffect(roomGifts){while(true){roomGifts.tick();delay(250)}}
     val classeCache=remember{mutableMapOf<RoomModule,ClasseToolsState>()}
@@ -338,7 +339,15 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
             }
         }
         WaveGuestMessageSheet(guestState)
-        GuestPreProfileHost(guestState, (maxHeight - 44.dp - videoViewportHeight - 6.dp).coerceAtLeast(0.dp))
+        GuestPreProfileHost(guestState, (maxHeight - 44.dp - videoViewportHeight - 6.dp).coerceAtLeast(0.dp)) { person ->
+            if(guestState.guests.none{it.id==person.id})roomGifts.externalGiftRecipients=roomGifts.externalGiftRecipients+(person.id to person)
+            giftRecipient=person
+        }
+        giftRecipient?.let { person ->
+            ClasseSheet("Offrir à ${person.name}",{giftRecipient=null}) {
+                Box(Modifier.fillMaxWidth().height(480.dp)){LogeGiftPanel(roomGifts,person.id)}
+            }
+        }
         }
         WaveGuestDragOverlay(guestState)
         if (showLeaveConfirm) {
