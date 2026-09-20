@@ -19,7 +19,7 @@ internal val placeDurations=listOf(30,60,90,120,180,300)
 @Serializable internal data class PlaceChallenge(val id:String=UUID.randomUUID().toString(),val title:String,val target:String?=null,val author:String="host",val accepted:List<String> = emptyList(),val completed:List<String> = emptyList(),val status:String="open",val clock:PlaceClock=PlaceClock())
 @Serializable internal data class PlaceArchive(val floor:PlaceFloor=PlaceFloor(),val clash:PlaceClash?=null,val challenges:List<PlaceChallenge> = emptyList())
 
-/** Mirrors web placeConversationTools.domain. Social clocks never change microphone or stage authority. */
+/** Web conversation rules, with the user-requested Classe stage/microphone handoff for the floor only. */
 internal class PlaceToolsState(val guests:WaveGuestState,load:()->String?,private val persist:(String)->Unit,private val time:()->Long={System.currentTimeMillis()}) {
     constructor(context:Context,guests:WaveGuestState,scope:String):this(guests,
         {context.getSharedPreferences("place-tools-v1-"+scope.hashCode(),Context.MODE_PRIVATE).getString("state",null)},
@@ -31,8 +31,16 @@ internal class PlaceToolsState(val guests:WaveGuestState,load:()->String?,privat
     var now by mutableLongStateOf(time());private set
     val people get()=guests.guests.filter{it.connected&&it.canParticipate&&it.location in setOf(WaveGuestLocation.BACKSTAGE,WaveGuestLocation.STAGE)}
     val backstage get()=people.filter{it.location==WaveGuestLocation.BACKSTAGE}
-    init { load()?.let { runCatching{data=json.decodeFromString<PlaceArchive>(it)}.onFailure{notice="Le dernier atelier n’a pas pu être restauré."} } }
-    fun tick(){now=time()}
+    init {
+        load()?.let { runCatching{data=json.decodeFromString<PlaceArchive>(it)}.onFailure{notice="Le dernier atelier n’a pas pu être restauré."} }
+        // Restoring an atelier must never reopen a microphone without a fresh host action.
+        if(data.floor.current!=null)data=data.copy(floor=data.floor.copy(current=null,status="ended",clock=PlaceClock(data.floor.clock.seconds,data.floor.clock.seconds)))
+    }
+    fun tick(){
+        now=time()
+        val current=data.floor.current
+        if(current!=null&&guests.onStage.none{it.id==current&&it.connected})endFloor()
+    }
     private fun save(value:PlaceArchive){data=value;persist(json.encodeToString(value));notice=null;tick()}
     private fun requireState(condition:Boolean,message:String){require(condition){message}}
     private fun act(block:()->Unit):Boolean=try {block();true}catch(e:IllegalArgumentException){notice=e.message;false}
@@ -51,14 +59,28 @@ internal class PlaceToolsState(val guests:WaveGuestState,load:()->String?,privat
         val f=data.floor
         if(id !in f.queue && id!=f.current){requireState(f.queue.size<50,"La file de parole est complète.");save(data.copy(floor=f.copy(queue=f.queue+id)))}
     }
-    fun leaveFloor(id:String){val f=data.floor;save(data.copy(floor=f.copy(queue=f.queue-id,current=if(f.current==id)null else f.current,status=if(f.current==id)"ended"else f.status,clock=if(f.current==id)f.clock.copy(deadline=null)else f.clock)))}
+    private fun releaseSpeaker(id:String?) {
+        if(id==null)return
+        if(guests.guests.any{it.id==id&&it.mic})guests.toggleMic(id)
+        if(guests.onStage.any{it.id==id})guests.move(setOf(id),WaveGuestLocation.BACKSTAGE)
+        if(guests.mixerGuestId==id)guests.mixerGuestId=null
+    }
+    fun leaveFloor(id:String){val f=data.floor;if(f.current==id)releaseSpeaker(id);save(data.copy(floor=f.copy(queue=f.queue-id,current=if(f.current==id)null else f.current,status=if(f.current==id)"ended"else f.status,clock=if(f.current==id)f.clock.copy(deadline=null)else f.clock)))}
     fun nextFloor()=act {
         val f=data.floor;val next=f.queue.firstOrNull{eligible(it)}
         requireState(next!=null,"Ajoute une personne disponible à la file de parole.")
+        val alreadyOnStage=guests.onStage.any{it.id==next}
+        val occupied=guests.onStage.count{it.id!=f.current}
+        requireState(alreadyOnStage||occupied<3,"Redescends un invité pour libérer une place sur scène.")
+        releaseSpeaker(f.current)
+        if(!alreadyOnStage)guests.move(setOf(next!!),WaveGuestLocation.STAGE)
+        requireState(guests.onStage.any{it.id==next},"Impossible de faire monter cette personne sur scène.")
+        if(guests.guests.any{it.id==next&&!it.mic})guests.toggleMic(next!!)
+        guests.mixerGuestId=next
         save(data.copy(floor=f.copy(current=next,queue=f.queue.filter{it!=next&&eligible(it)},completed=(f.completed+listOfNotNull(f.current)).takeLast(50),status="running",clock=f.clock.start(time()))))
     }
     fun pauseFloor(){val f=data.floor;if(f.status=="running")save(data.copy(floor=f.copy(status="paused",clock=f.clock.pause(time()))))else if(f.status=="paused"&&f.clock.remaining>0)save(data.copy(floor=f.copy(status="running",clock=f.clock.resume(time()))))}
-    fun endFloor(){val f=data.floor;save(data.copy(floor=f.copy(current=null,status="ended",completed=(f.completed+listOfNotNull(f.current)).takeLast(50),clock=PlaceClock(f.clock.seconds,f.clock.seconds))))}
+    fun endFloor(){val f=data.floor;releaseSpeaker(f.current);save(data.copy(floor=f.copy(current=null,status="ended",completed=(f.completed+listOfNotNull(f.current)).takeLast(50),clock=PlaceClock(f.clock.seconds,f.clock.seconds))))}
     fun inviteClash(text:String,left:String,right:String,seconds:Int,rounds:Int)=act {
         title(text);duration(seconds);requireState(rounds in listOf(1,3,5),"Choisis 1, 3 ou 5 manches.")
         requireState(left!=right&&eligible(left)&&eligible(right),"Choisis deux personnes disponibles et différentes.")

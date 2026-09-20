@@ -20,4 +20,8 @@ Implémentation native **host / atelier local de démonstration**, conservée pa
 
 ## Vérifications
 
+### Adaptation Parole demandée après la livraison
+
+Sur demande explicite, Parole reprend maintenant la mécanique de la Classe : montée sur scène, micro activé et sélection du fader invité. Le passage suivant ou la fin coupe le micro précédent et le renvoie en coulisses. Scène pleine : aucune consommation de file. Un retrait manuel interrompt le tour sans remettre l’invité en coulisses contre le choix du host. La restauration ne réactive pas un micro. Cette adaptation remplace la règle « sans autorité média » ci-dessus pour **Parole seulement** ; Clash et Défis restent inchangés. Onze tests ciblés passent, dont trois couvrent ces transferts. Cela commande le même état média natif que la Classe ; aucun test RTC distant n’est revendiqué.
+
 Huit tests ciblés réussis : admissibilité/dédoublonnage de file, pause/expiration sans avancée automatique, participants retirés, deux accords, alternance complète, refus/indisponibilité, cycle des défis, plafond et restauration. Compilation debug réussie. Première capture Samsung de Parole et lecture de la hiérarchie Clash réalisées ; inspection complète de chaque écran et parcours live réseau non revendiqués.

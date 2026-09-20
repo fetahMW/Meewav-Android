@@ -97,7 +97,7 @@ private fun PlaceToolsState.name(id:String?)=if(id=="host")"Vous"else guests.gue
             SceneIcon(WaveIcons.Chat,"Message à "+state.name(id)){state.message(id)};SceneIcon(WaveIcons.Close,"Retirer de la file",tint=logeRed){state.leaveFloor(id)}
         }}
         if(floor.queue.isEmpty()&&!adding)item{SceneButton("Ajouter depuis les coulisses",Modifier.fillMaxWidth(),icon=Icons.Default.Add){adding=true}}
-        item{Text("Le tour organise la parole. Chacun garde le contrôle de son micro.",color=sceneMuted,fontSize=10.sp)}
+        item{Text("Donner la parole fait monter l’invité et active son micro. Le suivant prend le relais.",color=sceneMuted,fontSize=10.sp)}
     }
 }
 
