@@ -228,7 +228,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                     WaveTab.MIXEUR -> MixerBody(
                         guest = guestState.mixerGuest, deck = mixerDeck, onDeckPlay = { composition?.suspendAudio(); mixerDeck.toggle() },
                         micGain = guestState.mixerGuest?.let { guestState.guestGain(it.id) } ?: micGain, audioGain = audioGain,
-                        micMuted = guestState.mixerGuest?.let { if (cage != null) !cage.microphoneOpen(it.id) else !it.mic } ?: micMuted, audioMuted = audioMuted,
+                        micMuted = guestState.mixerGuest?.let { !it.mic } ?: micMuted, audioMuted = audioMuted,
                         onMicGain = { value -> guestState.mixerGuest?.let { guestState.setGuestGain(it.id, value) } ?: run { micGain = value } }, onAudioGain = { audioGain = it },
                         onMicMute = { guestState.mixerGuest?.let { guestState.toggleMic(it.id) } ?: run { micMuted = !micMuted } }, onAudioMute = { audioMuted = !audioMuted },
                         isPro = isPro, onProChange = { isPro = it },
