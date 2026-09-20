@@ -73,10 +73,7 @@ internal fun CageToolsPanel(state: CageToolsState, programScope: String) {
             }
             when (state.page) {
                 0 -> {
-                    if (!state.locked) item { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        CageAction("Choisir les artistes", Modifier.weight(1f)) { manageParticipants() }
-                        CageAction("Mélanger", Modifier.weight(1f), state.roster.size > 1) { state.shuffle() }
-                    } }
+                    if (!state.locked && state.roster.size > 1) item { CageAction("Mélanger l’ordre") { state.shuffle() } }
                     if (!state.locked) item { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         CageAction("Charger", Modifier.weight(1f)) {
                             val entries = store.list(); library = (0 until entries.length()).map { entries.getJSONObject(it) }; libraryOpen = true
@@ -93,11 +90,8 @@ internal fun CageToolsPanel(state: CageToolsState, programScope: String) {
                         }
                     } }
                     item { CageFundraiserSummary(state.fundraiser) { fundraiserOpen = true } }
-                    if (state.matches.isEmpty()) item { CageCard {
-                        Text(if (state.roster.isEmpty()) "Choisis les participants pour préparer la compétition." else state.roster.size.toString() + " artistes retenus. Le bouton principal prépare leurs rencontres.", color = cageMuted, fontSize = 12.sp)
-                    } }
-                    else if (state.format == CageFormat.TOURNAMENT) item { CageBracket(state) }
-                    else {
+                    if (state.matches.isNotEmpty() && state.format == CageFormat.TOURNAMENT) item { CageBracket(state) }
+                    else if (state.matches.isNotEmpty()) {
                         if (state.format == CageFormat.LEAGUE) item { CageCard {
                             Text("Classement · 3 points par victoire", color = cageInk, fontSize = 12.sp)
                             state.roster.sortedByDescending { id -> state.matches.count { it.winner == id && it.b != null } }.forEachIndexed { index, id ->
