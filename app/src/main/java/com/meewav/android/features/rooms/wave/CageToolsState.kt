@@ -19,6 +19,16 @@ internal class CageToolsState(val guests: WaveGuestState,
     private val onPassageEnd: () -> Unit = {}) : AutoCloseable {
     private val scope = CoroutineScope(SupervisorJob() + dispatcher)
     var page by mutableIntStateOf(0)
+    var resultsOpen by mutableStateOf(false)
+    var resultsOnStage by mutableStateOf(false)
+    val finalRanking: List<String> get() {
+        if (!finished) return emptyList()
+        return if (format in listOf(CageFormat.CHALLENGER, CageFormat.TOURNAMENT)) {
+            (listOfNotNull(matches.lastOrNull()?.winner) + matches.asReversed().flatMap { match ->
+                listOfNotNull(match.a, match.b).filterNot { it == match.winner }
+            }).distinct()
+        } else roster.sortedByDescending { id -> matches.count { it.winner == id && it.b != null } }
+    }
     var videoMode by mutableStateOf("Face à face")
     var format by mutableStateOf(CageFormat.TOURNAMENT); private set
     var roster by mutableStateOf(emptyList<String>()); private set
@@ -155,7 +165,7 @@ internal class CageToolsState(val guests: WaveGuestState,
         when {
             !locked && roster.isEmpty() && rosterMode in listOf("manual", "prepared") -> { selectionMode = true; guests.guestPage = 0 }
             !locked -> if (matches.isEmpty()) generate() else lock()
-            finished -> page = 0
+            finished -> resultsOpen = true
             active == null || active?.completed == true -> matches.firstOrNull { !it.completed }?.let { call(it.id); page = 1; if (ready()) stage() else notice = commandHint }
             incident != null -> resumeIncident()
             phase == "Appel" -> if (ready()) stage() else {
@@ -203,7 +213,7 @@ internal class CageToolsState(val guests: WaveGuestState,
         log("Programme généré · ${format.title} · ${roster.size} artistes")
     }
     fun lock() { if (matches.isEmpty()) generate(); if (matches.isNotEmpty()) { locked = true; page = 1; log("Programme verrouillé") } }
-    fun reset() { guests.move(listOfNotNull(active?.a, active?.b).filter { person(it)?.location == WaveGuestLocation.STAGE }.toSet(), WaveGuestLocation.BACKSTAGE); guests.clearCageVictories(); artistAttentionId = null; clockRunning = false; voteOpen = false; locked = false; matches = emptyList(); activeId = null; phase = "Prêt"; incident = null; page = 0; clearVote(); log("Nouvelle préparation") }
+    fun reset() { resultsOpen = false; resultsOnStage = false; guests.move(listOfNotNull(active?.a, active?.b).filter { person(it)?.location == WaveGuestLocation.STAGE }.toSet(), WaveGuestLocation.BACKSTAGE); guests.clearCageVictories(); artistAttentionId = null; clockRunning = false; voteOpen = false; locked = false; matches = emptyList(); activeId = null; phase = "Prêt"; incident = null; page = 0; clearVote(); log("Nouvelle préparation") }
     private fun clearVote() { publicBallots = emptyMap(); juryBallots = emptyMap(); simulatedPublicChoices = emptyList(); voteClosed = false; revealed = false; voteOpen = false }
     fun call(id: Int) {
         val match = matches.find { it.id == id && !it.completed } ?: return
@@ -239,7 +249,9 @@ internal class CageToolsState(val guests: WaveGuestState,
         if (active == null || active?.completed == true || voteOpen || incident != null || phase !in listOf("Sur scène", "Pause", "Temps écoulé")) return
         if (!ready() || listOfNotNull(active?.a, active?.b).any { person(it)?.location != WaveGuestLocation.STAGE }) { notice = "Un artiste a quitté la scène ou perdu sa connexion."; return }
         if (remainingMs <= 0) return
+        val beginning = phase != "Pause"
         deadline = now() + remainingMs; clockRunning = true; phase = "Performance"; log("Passage $speaker")
+        if (beginning) onPassageStart()
     }
     fun pause() { if (clockRunning) { remainingMs = (deadline - now()).coerceAtLeast(0); clockRunning = false; phase = "Pause" } }
     fun nextStep() {
@@ -249,9 +261,7 @@ internal class CageToolsState(val guests: WaveGuestState,
         else { phase = "Prêt au vote"; page = 3; log("Passages terminés") }
     }
     fun report(reason: String) { if (active == null || active?.completed == true || voteOpen || voteClosed || phase == "Appel") return; incidentResumePhase = if (clockRunning) "Pause" else phase; pause(); incident = reason; phase = "Incident"; log("Incident · $reason") }
-        val beginning = phase != "Pause"
     fun resumeIncident() { if (incident != null) { incident = null; phase = incidentResumePhase; log("Incident résolu") } }
-        if (beginning) onPassageStart()
     fun voteConfig(mode: String, seconds: Int) { if (!voteOpen && !voteClosed) { voteMode = mode; voteSeconds = seconds } }
     fun openVote() {
         if (phase != "Prêt au vote" || active == null || voteOpen || voteClosed) return

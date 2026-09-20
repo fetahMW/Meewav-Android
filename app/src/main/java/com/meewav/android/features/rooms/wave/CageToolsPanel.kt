@@ -240,6 +240,7 @@ internal fun CageToolsPanel(state: CageToolsState, programScope: String) {
             state.history.takeLast(8).reversed().forEach { Text(it, color = cageMuted, fontSize = 11.sp) }
         }
     }
+    if (state.resultsOpen && state.finished) CageResultsSheet(state)
     if (libraryOpen) ModalBottomSheet(onDismissRequest = { libraryOpen = false }, containerColor = Color(0xFF111216)) {
         Row(Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("Mes programmes", color = cageInk, modifier = Modifier.weight(1f))

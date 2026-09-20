@@ -19,6 +19,21 @@ import androidx.compose.ui.unit.sp
 @Composable
 internal fun CageVideoStage(state: CageToolsState, interactive: Boolean, audible: Boolean = true,
     onFullscreen: (() -> Unit)? = null, fullscreen: Boolean = false, fallback: @Composable () -> Unit) {
+    if (state.resultsOnStage && state.finished) {
+        Column(Modifier.fillMaxSize().background(Color.Black)) {
+            CageResultsCard(state, Modifier.weight(1f), compact = !fullscreen)
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                if (interactive) TextButton(onClick = { state.resultsOnStage = false }) {
+                    Text("Masquer le podium", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 11.sp)
+                }
+                Spacer(Modifier.weight(1f))
+                if (onFullscreen != null) IconButton(onClick = onFullscreen) {
+                    Icon(WaveIcons.Expand, "Plein écran", tint = Color.White)
+                }
+            }
+        }
+        return
+    }
     var director by remember { mutableStateOf(false) }
     val mode = state.videoMode
     val pair = state.active?.let { listOfNotNull(it.a, it.b) }.orEmpty()
