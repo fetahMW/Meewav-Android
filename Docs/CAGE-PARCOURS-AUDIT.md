@@ -109,3 +109,9 @@ Le sélecteur Participants redondant des réglages est retiré. Le choix reste d
 Dans les demandes Cage, le dropdown sombre conserve Tous par défaut. Choisir une origine sélectionne les profils correspondants aux filtres ; le plafond Tous/8/16/32 s'applique à cette origine. La capacité du programme est respectée sans tronquer silencieusement sa sélection. Les autres rooms conservent le comportement de filtre d'origine. Le raccourci de quantité est retiré du bottom sheet de filtres Cage pour éviter le doublon.
 
 Le clic répété et le routage vers un artiste indisponible n'ouvrent plus automatiquement le bottom sheet d'actions dans la Cage. Le bouton Aperçu reste explicite. L'entrée dans la sélection du programme ferme tout ancien aperçu. Les réglages affichent l'override debug de 2 secondes au lieu des durées enregistrées, sans modifier les programmes sauvegardés. Compilation debug réussie ; pas de nouvelle inspection visuelle automatique.
+
+## Open Mic Battle à huit — disponibilité
+
+La sélection du programme commence dans Coulisses. Un duo indisponible reste dans Régie avec noms et raisons : aucun renvoi automatique vers Invités ni ouverture de son aperçu. En debug, une arrivée peut être simulée explicitement dans la carte du match (acceptation locale et reconnexion), sans prétendre à une validation backend. Le CTA peut ensuite monter les deux artistes.
+
+23 tests Cage passent, dont les sept duels d'un Open Mic Battle à huit artistes en coulisses, le maintien du gagnant, les deux artistes sur scène et les passages à deux secondes ; le cas invitation en attente puis arrivée est également couvert. Pas de nouvelle vérification visuelle automatique.

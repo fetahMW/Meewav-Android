@@ -111,7 +111,7 @@ internal class CageToolsState(val guests: WaveGuestState,
         finished -> "Voir les résultats"
         active == null || active?.completed == true -> "Monter le prochain duo sur scène"
         incident != null -> "Reprendre après l’incident"
-        phase == "Appel" -> if (ready()) "Monter sur scène" else "Voir l’artiste indisponible"
+        phase == "Appel" -> if (ready()) "Monter sur scène" else "Actualiser la disponibilité"
         voteOpen -> "Clore le vote"
         voteClosed && !revealed -> "Révéler le résultat"
         voteClosed && publicBallots.isEmpty() && juryBallots.isEmpty() -> "Relancer le vote sans bulletin"
@@ -138,13 +138,13 @@ internal class CageToolsState(val guests: WaveGuestState,
     fun advance() {
         notice = null
         when {
-            !locked && roster.isEmpty() && rosterMode in listOf("manual", "prepared") -> { selectionMode = true; guests.guestPage = 1 }
+            !locked && roster.isEmpty() && rosterMode in listOf("manual", "prepared") -> { selectionMode = true; guests.guestPage = 0 }
             !locked -> if (matches.isEmpty()) generate() else lock()
             finished -> page = 0
-            active == null || active?.completed == true -> matches.firstOrNull { !it.completed }?.let { call(it.id); page = 1; if (ready()) stage() }
+            active == null || active?.completed == true -> matches.firstOrNull { !it.completed }?.let { call(it.id); page = 1; if (ready()) stage() else notice = commandHint }
             incident != null -> resumeIncident()
             phase == "Appel" -> if (ready()) stage() else {
-                artistAttentionId = readinessIssues().firstOrNull()?.first
+                page = 1
                 notice = commandHint
             }
             voteOpen -> closeVote()

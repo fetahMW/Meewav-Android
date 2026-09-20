@@ -35,7 +35,7 @@ internal fun CageToolsPanel(state: CageToolsState, programScope: String) {
     var libraryOpen by remember { mutableStateOf(false) }
     var library by remember { mutableStateOf(emptyList<org.json.JSONObject>()) }
     var saving by remember { mutableStateOf(false) }
-    fun manageParticipants() { state.guests.selected = emptySet(); state.guests.guestPage = 1; state.selectionMode = true }
+    fun manageParticipants() { state.guests.selected = emptySet(); state.guests.guestPage = 0; state.selectionMode = true }
     var settings by remember { mutableStateOf(false) }
     var reset by remember { mutableStateOf(false) }
     var incident by remember { mutableStateOf(false) }
@@ -129,6 +129,14 @@ internal fun CageToolsPanel(state: CageToolsState, programScope: String) {
                                     CagePerson(person)
                                     Text(if (person?.connected != true) "Connexion perdue" else if (!person.canParticipate) "Invitation en attente" else if (person.location == WaveGuestLocation.BACKSTAGE) "Prêt à monter" else person.location.label,
                                         color = if (person?.connected == true) cageMuted else Color(0xFFC88B90), fontSize = 10.sp)
+                                    if (com.meewav.android.BuildConfig.DEBUG && person != null && (!person.canParticipate || !person.connected)) {
+                                        CageAction("Simuler son arrivée") {
+                                            state.guests.demoInvitationResponse(id, true)
+                                            state.guests.demoReconnect(id)
+                                            state.guests.move(setOf(id), WaveGuestLocation.BACKSTAGE)
+                                            state.notice = null
+                                        }
+                                    }
                                 }
                             }
                         }

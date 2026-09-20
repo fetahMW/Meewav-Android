@@ -5,6 +5,33 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class CageToolsStateTest {
+    @Test fun eightBackstageArtistsCompleteOpenMicBattleWithoutLeavingTheProgramme() {
+        CageToolsState(WaveGuestState(cageDemo = true), { 0L }, Dispatchers.Unconfined, false, simulationPassageSeconds = 2).use { s ->
+            s.chooseFormat(CageFormat.CHALLENGER); s.changeCapacity(8)
+            s.addParticipants(s.guests.guests.filter { it.location == WaveGuestLocation.BACKSTAGE }.take(8).map { it.id }.toSet())
+            s.advance(); s.advance()
+            repeat(7) {
+                perform(s)
+                assertEquals(2, s.guests.onStage.size)
+                assertEquals(2_000L, s.remainingMs)
+                assertNull(s.artistAttentionId)
+                resolve(s)
+            }
+            assertTrue(s.finished)
+        }
+    }
+    @Test fun pendingInvitationStaysInRegieAndCanArriveWithoutOpeningGuestSheet() {
+        CageToolsState(WaveGuestState(cageDemo = true), { 0L }, Dispatchers.Unconfined, false).use { s ->
+            s.chooseFormat(CageFormat.CHALLENGER); s.addParticipants(setOf("lorns", "naya"))
+            s.advance(); s.advance(); s.advance()
+            assertEquals("Appel", s.phase); assertTrue(s.commandHint.contains("LORNS"))
+            s.advance(); assertEquals(1, s.page); assertNull(s.artistAttentionId); assertNull(s.guests.previewId)
+            s.guests.demoInvitationResponse("lorns", true); s.guests.demoReconnect("lorns")
+            s.guests.move(setOf("lorns"), WaveGuestLocation.BACKSTAGE)
+            s.advance(); assertEquals("Sur scène", s.phase); assertEquals(2, s.guests.onStage.size)
+        }
+    }
+
     @Test fun backstageAdmissionDoesNotRecheckManualMicrophoneOrCameraSwitches() {
         session(CageFormat.CHALLENGER, 2).use { s ->
             val id = s.roster.first()
