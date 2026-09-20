@@ -183,6 +183,10 @@ internal fun CageToolsPanel(state: CageToolsState, programScope: String) {
                         item { Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             listOf(30, 45, 60, 90).forEach { seconds -> CageAction("${seconds}s", Modifier.weight(1f), !state.voteOpen && !state.voteClosed, primary = state.voteSeconds == seconds) { state.voteConfig(state.voteMode, seconds) } }
                         } }
+                        if (state.simulatesPublicVote) item {
+                            Text(if (state.voteMode == "Public") "Simulation automatique du public · ${state.simulationVoteSeconds} secondes. La durée choisie reste enregistrée."
+                                else "Public simulé automatiquement en ${state.simulationVoteSeconds} secondes · durée du jury inchangée.", color = cageMuted, fontSize = 11.sp)
+                        }
                         item { CageCard {
                             CagePerson(state.person(match.a))
                             match.b?.let { CagePerson(state.person(it)) }
@@ -192,7 +196,13 @@ internal fun CageToolsPanel(state: CageToolsState, programScope: String) {
                                 Text("${state.publicBallots.size} bulletins public · ${state.juryBallots.size} jury", color = cageMuted, fontSize = 11.sp)
                             }
                         } }
-                        item { CageAction("Bulletins de démonstration", enabled = state.voteOpen) { simulation = true } }
+                        if (!state.simulatesPublicVote || state.voteMode != "Public") item {
+                            CageAction(if (state.simulatesPublicVote || state.voteMode == "Jury") "Bulletins du jury" else "Bulletins de démonstration", enabled = state.voteOpen) {
+                                voterJury = state.simulatesPublicVote || state.voteMode == "Jury"
+                                voter = if (voterJury) state.guests.jury.firstOrNull()?.id.orEmpty() else "public-1"
+                                simulation = true
+                            }
+                        }
                         if (state.revealed && state.voteClosed && !match.completed) {
                             item {
                                 val a = state.score("A"); val b = state.score("B")
@@ -253,14 +263,17 @@ internal fun CageToolsPanel(state: CageToolsState, programScope: String) {
         confirmButton = { TextButton(onClick = { state.reset(); reset = false; settings = false }) { Text("Recommencer") } }, dismissButton = { TextButton(onClick = { reset = false }) { Text("Conserver") } })
     if (simulation) ModalBottomSheet(onDismissRequest = { simulation = false }, containerColor = Color(0xFF111216)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("Bulletins locaux de démonstration", color = cageInk)
+            Text(if (state.simulatesPublicVote || state.voteMode == "Jury") "Bulletins locaux du jury" else "Bulletins locaux de démonstration", color = cageInk)
             Text("Choisis un compte de test. Un nouveau choix remplace son bulletin.", color = cageMuted, fontSize = 12.sp)
-            Row(Modifier.horizontalScroll(rememberScrollState())) { (1..5).forEach { n -> TextButton(onClick = { voter = "public-$n"; voterJury = false }) { Text("Public $n", color = if (voter == "public-$n") WaveMixerTheme.capsuleAccentSoft else cageMuted) } } }
-            Row(Modifier.horizontalScroll(rememberScrollState())) { state.guests.jury.forEach { juror -> TextButton(onClick = { voter = juror.id; voterJury = true }) { Text(juror.name, color = if (voter == juror.id) WaveMixerTheme.capsuleAccentSoft else cageMuted) } } }
+            if (!state.simulatesPublicVote && state.voteMode != "Jury") {
+                Row(Modifier.horizontalScroll(rememberScrollState())) { (1..5).forEach { n -> TextButton(onClick = { voter = "public-$n"; voterJury = false }) { Text("Public $n", color = if (voter == "public-$n") WaveMixerTheme.capsuleAccentSoft else cageMuted) } } }
+            }
+            if (state.voteMode != "Public") {
+                Row(Modifier.horizontalScroll(rememberScrollState())) { state.guests.jury.forEach { juror -> TextButton(onClick = { voter = juror.id; voterJury = true }) { Text(juror.name, color = if (voter == juror.id) WaveMixerTheme.capsuleAccentSoft else cageMuted) } } }
+            }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    CageAction("Vote A", Modifier.weight(1f), state.voteOpen) { state.ballot(voter, "A", voterJury) }
-                    CageAction("Vote B", Modifier.weight(1f), state.voteOpen) { state.ballot(voter, "B", voterJury) }
-
+                CageAction("Vote A", Modifier.weight(1f), state.voteOpen && voter.isNotBlank()) { state.ballot(voter, "A", voterJury) }
+                CageAction("Vote B", Modifier.weight(1f), state.voteOpen && voter.isNotBlank()) { state.ballot(voter, "B", voterJury) }
             }
         }
     }

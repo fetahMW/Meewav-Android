@@ -14,6 +14,7 @@ internal class CageToolsState(val guests: WaveGuestState,
     dispatcher: CoroutineDispatcher = Dispatchers.Main.immediate,
     ticking: Boolean = true,
     val simulationPassageSeconds: Int? = null,
+    val simulationVoteSeconds: Int? = null,
     private val onPassageEnd: () -> Unit = {}) : AutoCloseable {
     private val scope = CoroutineScope(SupervisorJob() + dispatcher)
     var page by mutableIntStateOf(0)
@@ -77,6 +78,10 @@ internal class CageToolsState(val guests: WaveGuestState,
     private var incidentResumePhase = "Pause"
     private var deadline = 0L
     private var voteDeadline = 0L
+    private var voteStartedAt = 0L
+    private var simulatedPublicChoices = emptyList<String>()
+    val simulatesPublicVote get() = simulationVoteSeconds != null && voteMode != "Jury"
+    private val automaticPublicVote get() = simulatesPublicVote && voteMode == "Public"
     val active get() = matches.find { it.id == activeId }
     val currentRound get() = matches.maxOfOrNull { it.round } ?: 1
     val finished get() = locked && matches.isNotEmpty() && matches.all { it.completed }
@@ -105,7 +110,11 @@ internal class CageToolsState(val guests: WaveGuestState,
                 onPassageEnd()
             }
         }
-        if (voteOpen) { voteTick++; if (now() >= voteDeadline) closeVote() }
+        if (voteOpen) {
+            voteTick++
+            updateSimulatedPublicVote()
+            if (now() >= voteDeadline) closeVote()
+        }
         delay(100)
     } } }
     private fun log(text: String) { history = (history + text).takeLast(60) }
@@ -116,7 +125,7 @@ internal class CageToolsState(val guests: WaveGuestState,
         active == null || active?.completed == true -> "Monter le prochain duo sur scène"
         incident != null -> "Reprendre après l’incident"
         phase == "Appel" -> if (ready()) "Monter sur scène" else "Actualiser la disponibilité"
-        voteOpen -> "Clore le vote"
+        voteOpen -> if (automaticPublicVote) "Le public vote…" else "Clore le vote"
         voteClosed && !revealed -> "Révéler le résultat"
         voteClosed && publicBallots.isEmpty() && juryBallots.isEmpty() -> "Relancer le vote sans bulletin"
         voteClosed && score("A") == score("B") -> "Jouer la manche décisive"
@@ -126,7 +135,7 @@ internal class CageToolsState(val guests: WaveGuestState,
         phase == "Pause" -> "Reprendre le passage"
         else -> "Démarrer le passage"
     }
-    val commandEnabled get() = true
+    val commandEnabled get() = !(voteOpen && automaticPublicVote)
     val commandHint: String get() = when {
         !locked && matches.isEmpty() -> "Choisis les artistes ; tu pourras revoir l’ordre avant de confirmer."
         !locked -> "Vérifie l’ordre : la confirmation fixe les participants, sans lancer le direct."
@@ -134,12 +143,13 @@ internal class CageToolsState(val guests: WaveGuestState,
         active == null || active?.completed == true -> if (format == CageFormat.CHALLENGER && active != null) "Le gagnant reste sur scène ; le prochain challenger arrive." else "La prochaine rencontre sera choisie automatiquement."
         phase == "Appel" -> readinessIssues().takeIf { it.isNotEmpty() }?.joinToString(" · ") { "${person(it.first)?.name ?: "Artiste"} : ${it.second}" } ?: "Les artistes sont prêts à monter ensemble."
         incident != null -> "Résous le problème avant de reprendre."
-        voteOpen -> "Le vote se ferme aussi à la fin du chronomètre."
+        voteOpen -> if (automaticPublicVote) "Le public est simulé pendant $simulationVoteSeconds secondes ; le résultat apparaîtra automatiquement." else "Le vote se ferme aussi à la fin du chronomètre."
         voteClosed -> "La suite dépend des bulletins reçus : résultat, égalité ou nouveau vote."
         clockRunning -> "Termine le passage ici ; Pause reste disponible dans Match."
         else -> "Ce bouton te conduit automatiquement à la prochaine étape."
     }
     fun advance() {
+        if (!commandEnabled) return
         notice = null
         when {
             !locked && roster.isEmpty() && rosterMode in listOf("manual", "prepared") -> { selectionMode = true; guests.guestPage = 0 }
@@ -193,7 +203,7 @@ internal class CageToolsState(val guests: WaveGuestState,
     }
     fun lock() { if (matches.isEmpty()) generate(); if (matches.isNotEmpty()) { locked = true; page = 1; log("Programme verrouillé") } }
     fun reset() { guests.move(listOfNotNull(active?.a, active?.b).filter { person(it)?.location == WaveGuestLocation.STAGE }.toSet(), WaveGuestLocation.BACKSTAGE); guests.clearCageVictories(); artistAttentionId = null; clockRunning = false; voteOpen = false; locked = false; matches = emptyList(); activeId = null; phase = "Prêt"; incident = null; page = 0; clearVote(); log("Nouvelle préparation") }
-    private fun clearVote() { publicBallots = emptyMap(); juryBallots = emptyMap(); voteClosed = false; revealed = false; voteOpen = false }
+    private fun clearVote() { publicBallots = emptyMap(); juryBallots = emptyMap(); simulatedPublicChoices = emptyList(); voteClosed = false; revealed = false; voteOpen = false }
     fun call(id: Int) {
         val match = matches.find { it.id == id && !it.completed } ?: return
         if (!locked || clockRunning || voteOpen || active?.let { !it.completed && phase != "Prêt" && phase != "Appel" } == true) return
@@ -243,10 +253,23 @@ internal class CageToolsState(val guests: WaveGuestState,
     fun openVote() {
         if (phase != "Prêt au vote" || active == null || voteOpen || voteClosed) return
         if (voteMode != "Public" && guests.jury.isEmpty()) { notice = "Ajoute un jury depuis Invités pour ce mode de vote."; return }
-        voteOpen = true; voteDeadline = now() + voteSeconds * 1000L; log("Vote local ouvert · $voteMode")
+        val duration = simulationVoteSeconds?.takeIf { automaticPublicVote }?.coerceAtLeast(1) ?: voteSeconds
+        simulatedPublicChoices = if (simulatesPublicVote) List(21) {
+            if (active?.b != null && kotlin.random.Random.nextBoolean()) "B" else "A"
+        } else emptyList()
+        voteStartedAt = now(); voteDeadline = voteStartedAt + duration * 1000L
+        voteOpen = true; log("Vote local ouvert · $voteMode" + if (simulatesPublicVote) " · public simulé" else "")
+    }
+    private fun updateSimulatedPublicVote() {
+        if (!voteOpen || simulatedPublicChoices.isEmpty()) return
+        val durationMs = (simulationVoteSeconds ?: return).coerceAtLeast(1) * 1000L
+        val elapsed = (now() - voteStartedAt).coerceIn(0L, durationMs)
+        val count = (elapsed * simulatedPublicChoices.size / durationMs).toInt()
+        if (count == publicBallots.size) return
+        publicBallots = simulatedPublicChoices.take(count).mapIndexed { index, side -> "simulation-public-$index" to side }.toMap()
     }
     fun ballot(id: String, side: String, jury: Boolean) {
-        if (!voteOpen || now() >= voteDeadline || side !in listOf("A", "B") || (side == "B" && active?.b == null)) return
+        if (!voteOpen || now() >= voteDeadline || (!jury && simulatesPublicVote) || side !in listOf("A", "B") || (side == "B" && active?.b == null)) return
         if (jury && guests.jury.none { it.id == id }) return
         if (jury && voteMode != "Public") juryBallots = juryBallots + (id to side)
         if (!jury && voteMode != "Jury") publicBallots = publicBallots + (id to side)
@@ -255,7 +278,12 @@ internal class CageToolsState(val guests: WaveGuestState,
         fun ratio(v: Map<String, String>) = if (v.isEmpty()) 0f else 100f * v.values.count { it == side } / v.size
         return when (voteMode) { "Jury" -> ratio(juryBallots); "Hybride" -> (ratio(publicBallots) + ratio(juryBallots)) / 2; else -> ratio(publicBallots) }
     }
-    fun closeVote() { if (voteOpen) { voteOpen = false; voteClosed = true; page = 3; log("Vote fermé") } }
+    fun closeVote() {
+        if (!voteOpen || (automaticPublicVote && now() < voteDeadline)) return
+        updateSimulatedPublicVote()
+        voteOpen = false; voteClosed = true; page = 3; log("Vote fermé")
+        if (simulatesPublicVote) revealed = true
+    }
     fun reveal() { if (voteClosed) { revealed = !revealed; page = 3 } }
     fun verdict(id: String) {
         val match = active ?: return
