@@ -106,7 +106,7 @@ internal fun ClasseToolsPanel(state: ClasseToolsState) {
                                 if (speaking) "A la parole" else if (hand) "Main levée" else "Invité à parler", tint = if (speaking) Color(0xFF7ABFA2) else WaveMixerTheme.capsuleAccentSoft,
                                 modifier = Modifier.align(Alignment.BottomEnd).size(23.dp).background(Color(0xFF121017), CircleShape).padding(4.dp))
                             if (state.rankedQuestions.any { it.studentId == student.id }) {
-                                Icon(WaveIcons.Chat, "Question en attente", tint = Color(0xFF79B4FF),
+                                Icon(Icons.Filled.ChatBubble, "Question en attente", tint = Color(0xFF79B4FF),
                                     modifier = Modifier.align(Alignment.TopEnd).size(19.dp))
                             }
                         }
