@@ -31,14 +31,14 @@ internal fun WaveGuestActionBar(state: WaveGuestState, guests: List<WaveGuest>, 
             GuestAction("Message", WaveIcons.Envelope, enabled, Modifier.weight(1f)) { state.messageRecipientIds = ids; draft = "" }
             GuestAction("Aperçu", WaveIcons.Eye, guests.size == 1, Modifier.weight(1f)) { state.previewId = guests.single().id }
             if (page == 0) {
-                GuestAction("Scène", Icons.Filled.ArrowUpward, enabled && guests.all { it.connected } && state.onStage.size + guests.size <= 3, Modifier.weight(1f)) {
+                GuestAction("Scène", Icons.Filled.ArrowUpward, enabled && guests.all { it.connected && it.canParticipate } && state.onStage.size + guests.size <= 3, Modifier.weight(1f)) {
                     state.move(ids, WaveGuestLocation.STAGE); onClear()
                 }
-            } else GuestAction("Coulisses", if (page == 1) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward, enabled, Modifier.weight(1f)) {
+            } else GuestAction("Coulisses", if (page == 1) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward, enabled && guests.all { it.canParticipate }, Modifier.weight(1f)) {
                 state.move(ids, WaveGuestLocation.BACKSTAGE); onClear()
             }
             if (page != 3) GuestAction("Jury", Icons.Filled.ArrowUpward,
-                enabled && state.jury.size + guests.size <= 6, Modifier.weight(1f)) {
+                enabled && guests.all { it.canParticipate } && state.jury.size + guests.size <= 6, Modifier.weight(1f)) {
                 state.move(ids, WaveGuestLocation.JURY); onClear()
             }
             GuestAction(if (page == 1) "Refuser" else "Retirer", WaveIcons.Close, enabled, Modifier.weight(1f), tint = Color(0xFFE99A9E)) {

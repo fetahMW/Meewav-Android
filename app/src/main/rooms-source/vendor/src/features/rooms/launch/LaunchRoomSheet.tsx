@@ -1,3 +1,4 @@
+import { readCagePrograms, saveCageProgram, type CageProgram, type SavedCageProgram } from "../../../../../../shared-ui/cagePrograms";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from "react";
 import {
   AudioLines,
@@ -37,7 +38,8 @@ type LaunchRoomSheetProps = {
   initialType?: RoomsHomeRoomType;
   closeRef?: RefObject<HTMLButtonElement | null>;
   onClose: () => void;
-  onLaunched?: (roomLabel: string, roomType: RoomsHomeRoomType) => void;
+  onLaunched?: (roomLabel: string, roomType: RoomsHomeRoomType, program?: CageProgram) => void;
+  initialProgram?: CageProgram;
 };
 
 type LaunchTab = { id: RoomsHomeRoomType; label: string; accent: string };
@@ -195,7 +197,7 @@ function LaunchSelect({ label, value, options, onChange }: {
   );
 }
 
-export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaunched }: LaunchRoomSheetProps) {
+export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaunched, initialProgram }: LaunchRoomSheetProps) {
   const initialIndex = useMemo(() => {
     const index = LAUNCH_TABS.findIndex((tab) => tab.id === initialType);
     return index >= 0 ? index : 0;
@@ -227,6 +229,41 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
   const [cagePassageDuration, setCagePassageDuration] = useState(90);
   const [cageVoting, setCageVoting] = useState<"public" | "jury" | "mixed">("public");
   const [cageTieBreak, setCageTieBreak] = useState<"sudden-death" | "replay">("sudden-death");
+  const [savedPrograms, setSavedPrograms] = useState<SavedCageProgram[]>([]);
+  const [programPicker, setProgramPicker] = useState(false);
+  const [programBusy, setProgramBusy] = useState(false);
+  const [programNotice, setProgramNotice] = useState('');
+  const [programId, setProgramId] = useState<string>();
+  const [programRoster, setProgramRoster] = useState<string[]>([]);
+  const [programMembers, setProgramMembers] = useState<{id: string; name: string}[]>([]);
+  const [cageVoteDuration, setCageVoteDuration] = useState(60);
+  const configuration = (): CageProgram => ({ version: 1, title: title.trim(), format: cageFormat,
+    participantCount: cageParticipants, rosterMode: cageRoster, rosterProfileIds: programRoster,
+    rosterMembers: programMembers, rules: { rounds: cageRounds, passageDurationSeconds: cagePassageDuration,
+      performanceMode: cagePerfMode, votingMode: cageVoting, votingDurationSeconds: cageVoteDuration,
+      openMicFeedback: cageFeedback, tieBreak: cageTieBreak } });
+  const applyProgram = (config: CageProgram, id?: string) => {
+    setTitle(config.title); setCageFormat(config.format); setCageParticipants(config.participantCount);
+    setCageRoster(config.rosterMode as keyof typeof CAGE_ROSTER_LABELS); setProgramRoster(config.rosterProfileIds);
+    setProgramMembers(config.rosterMembers ?? []); setCageRounds(config.rules.rounds);
+    setCagePassageDuration(config.rules.passageDurationSeconds); setCagePerfMode(config.rules.performanceMode as typeof cagePerfMode);
+    setCageVoting(config.rules.votingMode as typeof cageVoting); setCageVoteDuration(config.rules.votingDurationSeconds);
+    setCageFeedback((config.rules.openMicFeedback ?? 'scored') as typeof cageFeedback);
+    setCageTieBreak((config.rules.tieBreak ?? 'sudden-death') as typeof cageTieBreak);
+    setProgramId(id); setProgramPicker(false); setProgramNotice('Programme chargé. Les présences seront vérifiées dans Invités.');
+  };
+  useEffect(() => { if (initialProgram) { applyProgram(initialProgram); setSelectedTab(1); } }, []);
+  const loadPrograms = async () => {
+    setProgramPicker(true); setProgramBusy(true); setProgramNotice('');
+    try { setSavedPrograms(await readCagePrograms()); } catch (error) { setProgramNotice(String(error)); }
+    finally { setProgramBusy(false); }
+  };
+  const saveProgram = async () => {
+    if (!title.trim()) { setProgramNotice('Donne un nom au programme.'); return; }
+    setProgramBusy(true);
+    try { const saved = await saveCageProgram({ id: programId, configuration: configuration() }); setProgramId(saved.id); setProgramNotice('Programme enregistré dans Mes Cages sur ce téléphone.'); }
+    catch (error) { setProgramNotice(String(error)); } finally { setProgramBusy(false); }
+  };
   const [loopExpanded, setLoopExpanded] = useState(false);
   const [moduleStates, setModuleStates] = useState<Record<string, boolean>>({});
 
@@ -328,6 +365,7 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
   };
 
   const goToStep = (next: number) => {
+    if (next > 0 && LAUNCH_TABS[selectedTab].id === "cage" && (!title.trim() || programRoster.length > cageParticipants)) { setProgramNotice(!title.trim() ? "Donne un nom au programme." : "La capacité est inférieure au nombre de participants préparés."); setStep(0); return; }
     if (next === 2) markCheckupDone();
     if (next !== 1) stopMic();
     setStep(next);
@@ -447,6 +485,12 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
       case "cage":
         return (
           <>
+            <div className="launch-actions">
+              <button type="button" className="launch-btn launch-btn--ghost" onClick={() => void loadPrograms()}>Mes programmes</button>
+              <button type="button" disabled={programBusy} className="launch-btn launch-btn--ghost" onClick={() => void saveProgram()}>Enregistrer</button>
+            </div>
+            <p className="launch-hint">Prépare un nouveau programme ici ou charge celui de ton profil. Les artistes se gèrent ensuite dans Invités.</p>
+            {programNotice ? <p className="launch-hint" role="status">{programNotice}</p> : null}
             <FieldLabel icon={Trophy}>{CAGE_TITLE_LABELS[cageFormat]}</FieldLabel>
             <input className="launch-input" value={title} onChange={(event) => setTitle(event.target.value)} placeholder={`${CAGE_TITLE_LABELS[cageFormat]}...`} />
             <DottedSeparator />
@@ -486,14 +530,14 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
                 onChange={(value) => setCageParticipants(Number(value))}
               />
               <LaunchSelect
-                label="Sélection du roster"
+                label="Choix des participants"
                 value={cageRoster}
                 options={Object.entries(CAGE_ROSTER_LABELS).map(([value, label]) => ({ value, label }))}
                 onChange={(value) => setCageRoster(value as keyof typeof CAGE_ROSTER_LABELS)}
               />
             </div>
             {cageFormat === "tournament" && cageBracketSlots > cageParticipants ? (
-              <p className="launch-hint">{cageParticipants} participants · tableau de {cageBracketSlots} places · {cageBracketSlots - cageParticipants} BYE à autoriser dans le règlement.</p>
+              <p className="launch-hint">{cageParticipants} participants · tableau de {cageBracketSlots} places · {cageBracketSlots - cageParticipants} exemptions automatiques au premier tour.</p>
             ) : null}
             <DottedSeparator />
             {cageOpenMic ? (
@@ -534,8 +578,8 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
                     value={cageVoting}
                     options={[
                       { value: "public", label: "Vote du public" },
-                      { value: "jury", label: "Jury · à configurer", disabled: true },
-                      { value: "mixed", label: "Public et jury · à configurer", disabled: true },
+                      { value: "jury", label: "Jury" },
+                      { value: "mixed", label: "Public et jury", disabled: true },
                     ]}
                     onChange={(value) => setCageVoting(value as typeof cageVoting)}
                   />
@@ -886,6 +930,12 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
         </div>
       ) : null}
 
+      {programPicker ? <div className="launch-jury" role="dialog" aria-modal="true" aria-label="Mes programmes">
+        <header className="launch-jury__header"><strong>Mes programmes</strong><button onClick={() => setProgramPicker(false)} aria-label="Fermer"><X size={18}/></button></header>
+        <div className="launch-jury__list">
+          {programBusy ? <p>Chargement…</p> : savedPrograms.length === 0 ? <p>Aucun programme enregistré sur ce téléphone.</p> : savedPrograms.map(entry => <button key={entry.id} className="launch-jury__contact" onClick={() => applyProgram(entry.configuration, entry.id)}><span><strong>{entry.configuration.title}</strong><small>{CAGE_FORMAT_LABELS[entry.configuration.format]} · {entry.configuration.participantCount} places</small></span><ChevronRight size={18}/></button>)}
+          {programNotice ? <p role="status">{programNotice}</p> : null}
+        </div></div> : null}
       {launching ? (
         <LaunchVinylTransition
           roomLabel={roomLabel}
@@ -893,7 +943,7 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
           onComplete={() => {
             setLaunching(false);
             onClose();
-            onLaunched?.(roomLabel, LAUNCH_TABS[selectedTab].id);
+            onLaunched?.(title.trim() || roomLabel, LAUNCH_TABS[selectedTab].id, LAUNCH_TABS[selectedTab].id === "cage" ? configuration() : undefined);
           }}
         />
       ) : null}

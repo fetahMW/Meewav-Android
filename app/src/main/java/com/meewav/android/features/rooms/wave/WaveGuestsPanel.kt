@@ -137,8 +137,10 @@ private fun GuestStageTile(state: WaveGuestState, guest: WaveGuest, interactive:
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
-internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifier) {
-    var page by remember { mutableIntStateOf(0) }
+internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifier, cage: CageToolsState? = null, onProgram: () -> Unit = {}) {
+    var page by state::guestPage
+    var originFilter by remember { mutableIntStateOf(0) }
+    var originMenu by remember { mutableStateOf(false) }
     var inviteOpen by remember { mutableStateOf(false) }
     var filtersOpen by remember { mutableStateOf(false) }
     var multiSelect by remember { mutableStateOf(false) }
@@ -149,7 +151,7 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
         2 -> it.location == WaveGuestLocation.STAGE
         else -> it.location == WaveGuestLocation.JURY
     } }
-    val shown = participants.filter(state.filters::matches)
+    val shown = participants.filter(state.filters::matches).filter { page != 1 || originFilter == 0 || (originFilter == 1 && it.origin == GuestOrigin.CANDIDATURE) || (originFilter == 2 && it.origin == GuestOrigin.INVITATION) }
     val selectedGuests = shown.filter { it.id in state.selected }
     DisposableEffect(Unit) { onDispose { state.cancelDrag(); state.backstageBounds = androidx.compose.ui.geometry.Rect.Zero } }
     Column(modifier.padding(top = 2.dp, bottom = 8.dp)) {
@@ -196,6 +198,10 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                 }
             } else Text(if (page == 0) "Glisse un invité vers la vidéo" else if (page == 3) "${state.jury.size}/6 membres du jury" else "3 invités maximum sur scène",
                 modifier = Modifier.weight(1f), color = Color.White.copy(alpha = .48f), fontSize = 11.sp)
+            if (page == 1 && state.selected.isEmpty()) Box {
+                TextButton(onClick = { originMenu = true }, contentPadding = PaddingValues(horizontal = 3.dp)) { Text(listOf("Tous", "Candidatures", "Invitations")[originFilter] + " ▾", color = Color.White.copy(alpha = .7f), fontSize = 11.sp) }
+                DropdownMenu(originMenu, { originMenu = false }) { listOf("Tous", "Candidatures", "Invitations envoyées").forEachIndexed { index, label -> DropdownMenuItem(text = { Text(label) }, onClick = { originFilter = index; originMenu = false }) } }
+            }
             TextButton(onClick = { inviteOpen = true }, modifier = Modifier.height(44.dp), contentPadding = PaddingValues(horizontal = 6.dp)) { Text("+ Inviter", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 12.sp) }
             BadgedBox(badge = { if (state.filters.count > 0) Badge(containerColor = WaveMixerTheme.capsuleAccent) { Text("${state.filters.count}") } }) {
                 IconButton(onClick = { filtersOpen = true }, modifier = Modifier.size(44.dp)) {
@@ -221,7 +227,8 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                         .guestDrag(state, guest, !multiSelect && state.selected.size <= 1 && guest.location in listOf(WaveGuestLocation.BACKSTAGE, WaveGuestLocation.STAGE))
                         .combinedClickable(
                             onClick = {
-                                if (multiSelect || state.selected.size > 1) {
+                                if (cage?.selectionMode == true) { cage.select(guest.id) }
+                                else if (multiSelect || state.selected.size > 1) {
                                     state.selected = if (guest.id in state.selected) state.selected - guest.id else state.selected + guest.id
                                 } else if (guest.id in state.selected) {
                                     state.previewId = guest.id
@@ -236,6 +243,8 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                         horizontalAlignment = Alignment.CenterHorizontally) {
                         Box(Modifier.weight(1f)) {
                             Image(painterResource(guest.portrait), guest.name, modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Crop)
+                            if (cage != null && guest.id in cage.roster) Text("RETENU", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 8.sp,
+                                modifier = Modifier.align(Alignment.TopStart).background(Color(0xEE141019), RoundedCornerShape(5.dp)).padding(4.dp))
                             if (guest.location == WaveGuestLocation.JURY) Text("JURY",
                                 modifier = Modifier.align(Alignment.BottomStart).padding(3.dp).background(Color(0xFF211A35), RoundedCornerShape(5.dp)).padding(horizontal = 6.dp, vertical = 3.dp),
                                 color = WaveMixerTheme.capsuleAccentSoft, fontSize = 8.sp, fontWeight = FontWeight.Bold)
@@ -251,13 +260,24 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                             }
                         }
                         Text(guest.name, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        if (page == 1) Text(guest.originLabel, color = if (guest.origin == GuestOrigin.INVITATION) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .6f), fontSize = 8.sp, maxLines = 1)
                         if (guest.location == WaveGuestLocation.BACKSTAGE) GuestHealth(guest)
                         else Text(guest.location.label, color = Color.White.copy(alpha = .45f), fontSize = 8.sp, maxLines = 1)
                     }
                 }
             }
         }
-        WaveGuestActionBar(state, selectedGuests, page, onClear = { state.selected = emptySet(); multiSelect = false })
+        if (cage != null) {
+            cage.notice?.let { Text(it, color = WaveMixerTheme.capsuleAccentSoft, fontSize = 10.sp) }
+            if (cage.selectionMode) TextButton(onClick = onProgram, modifier = Modifier.fillMaxWidth().hifiBlackSurface(10.dp)) {
+                Text("Terminer · ${cage.roster.size}/${cage.capacity} participants", color = WaveMixerTheme.capsuleAccentSoft)
+            } else if (selectedGuests.isNotEmpty() && !cage.locked) TextButton(onClick = {
+                if (selectedGuests.all { it.id in cage.roster }) cage.removeParticipants(selectedGuests.map { it.id }.toSet()) else cage.addParticipants(selectedGuests.map { it.id }.toSet())
+            }, modifier = Modifier.fillMaxWidth().hifiBlackSurface(10.dp)) {
+                Text(if (selectedGuests.all { it.id in cage.roster }) "Retirer du programme" else "Ajouter au programme", color = WaveMixerTheme.capsuleAccentSoft)
+            }
+        }
+        if (cage?.selectionMode != true) WaveGuestActionBar(state, selectedGuests, page, onClear = { state.selected = emptySet(); multiSelect = false })
     }
     if (filtersOpen) WaveGuestFilterSheet(state, participants, isRequests = page == 1, onDismiss = { filtersOpen = false })
     if (inviteOpen) {
@@ -287,6 +307,11 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
 internal fun GuestPreviewContent(state: WaveGuestState, guest: WaveGuest) {
     var removeRequested by remember(guest.id) { mutableStateOf(false) }
         Column(Modifier.fillMaxSize().padding(start = 16.dp, end = 16.dp, bottom = 10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (guest.invitation == GuestInvitation.PENDING) {
+                Text("Invitation en attente", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 12.sp)
+                Row { TextButton(onClick = { state.demoInvitationResponse(guest.id, true) }) { Text("Simuler l’acceptation", fontSize = 11.sp) }
+                    TextButton(onClick = { state.demoInvitationResponse(guest.id, false) }) { Text("Simuler le refus", fontSize = 11.sp) } }
+            }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Image(painterResource(guest.portrait), null, modifier = Modifier.size(52.dp).clip(CircleShape), contentScale = ContentScale.Crop)
                 Column(Modifier.weight(1f)) {
@@ -322,7 +347,7 @@ internal fun GuestPreviewContent(state: WaveGuestState, guest: WaveGuest) {
                 WaveGuestLocation.BACKSTAGE -> WaveGuestLocation.STAGE
             }
             Button(onClick = { state.move(setOf(guest.id), target); if (state.guests.find { it.id == guest.id }?.location == target) state.previewId = null },
-                enabled = target != WaveGuestLocation.STAGE || (state.onStage.size < 3 && guest.connected),
+                enabled = guest.canParticipate && (target != WaveGuestLocation.STAGE || (state.onStage.size < 3 && guest.connected)),
                 modifier = Modifier.fillMaxWidth().height(44.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = WaveMixerTheme.primaryCta, contentColor = Color.White)) {
                 Text(when (guest.location) {

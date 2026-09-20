@@ -8,8 +8,9 @@ class CageToolsStateTest {
     private fun session(format: CageFormat, size: Int): CageToolsState {
         val guests = WaveGuestState()
         val state = CageToolsState(guests, { 1000L }, Dispatchers.Unconfined, false)
+        state.changeCapacity(size)
         state.roster.toList().forEach(state::select)
-        guests.guests.filter { it.connected && it.mic && it.camera }.take(size).forEach { state.select(it.id) }
+        guests.guests.filter { it.canParticipate && it.connected && it.mic && it.camera }.take(size).forEach { state.select(it.id) }
         assertEquals(size, state.roster.size)
         state.chooseFormat(format)
         state.advance(); state.advance()
@@ -24,7 +25,9 @@ class CageToolsStateTest {
         s.advance()
     }
     private fun resolve(s: CageToolsState) {
-        if (!s.isSolo) { assertTrue(s.voteOpen); s.ballot("viewer", "A", false); s.advance(); s.advance() }
+        assertTrue(s.voteOpen)
+        if (s.isSolo) s.feedbackBallot("viewer", 4) else s.ballot("viewer", "A", false)
+        s.advance(); s.advance()
         s.advance(); assertTrue(s.active!!.completed)
     }
     @Test fun tournamentsReachOneChampionIncludingByesAnd32Artists() {
@@ -87,8 +90,48 @@ class CageToolsStateTest {
     @Test fun lateVotesCannotEnterAfterDeadline() {
         var time = 0L
         CageToolsState(WaveGuestState(), { time }, Dispatchers.Unconfined, false).use { s ->
+            s.addParticipants(setOf("naya", "keo"))
             s.advance(); s.advance(); perform(s)
             time = 30_001; s.ballot("late", "A", false); assertTrue(s.publicBallots.isEmpty())
+        }
+    }
+    @Test fun newProgramStartsEmptyAndSelectionNeverMovesArtists() {
+        val guests = WaveGuestState()
+        CageToolsState(guests, { 0L }, Dispatchers.Unconfined, false).use { s ->
+            assertTrue(s.roster.isEmpty()); s.advance(); assertTrue(s.selectionMode)
+            val before = guests.guests.associate { it.id to it.location }
+            s.addParticipants(setOf("malik", "alya"))
+            assertEquals(before, guests.guests.associate { it.id to it.location })
+            assertEquals(2, s.roster.size)
+        }
+    }
+    @Test fun loadingInvitationsReservesPlacesButNeverAcceptsThem() {
+        val guests = WaveGuestState()
+        CageToolsState(guests, { 0L }, Dispatchers.Unconfined, false).use { s ->
+            val p = CageProgram(title = "Battle préparé", format = CageFormat.CHALLENGER, capacity = 8,
+                roster = listOf("external", "naya"), people = listOf("external" to "Artiste invité"),
+                rounds = 3, passage = 180, performance = "Alterné", voteMode = "Jury", voteSeconds = 45)
+            s.applyProgram(p); assertEquals("Battle préparé", s.title); assertEquals(3, s.rounds)
+            assertEquals(180, s.passageSeconds); assertEquals("Jury", s.voteMode)
+            s.advance(); s.advance(); s.advance()
+            assertFalse(s.ready()); assertEquals(GuestInvitation.PENDING, s.person("external")!!.invitation)
+            assertEquals(WaveGuestLocation.INVITED, s.person("external")!!.location)
+            guests.demoInvitationResponse("external", true); guests.move(setOf("external"), WaveGuestLocation.BACKSTAGE)
+            assertTrue(s.ready()); assertEquals(1, guests.guests.count { it.id == "external" })
+            assertEquals(listOf("external", "naya"), p.roster)
+        }
+    }
+    @Test fun capacityAndJuryMembershipAreRespected() {
+        val guests = WaveGuestState()
+        CageToolsState(guests, { 0L }, Dispatchers.Unconfined, false).use { s ->
+            s.changeCapacity(2); s.addParticipants(setOf("naya", "keo", "azur")); assertTrue(s.roster.isEmpty())
+            guests.move(setOf("azur"), WaveGuestLocation.JURY); s.addParticipants(setOf("naya", "azur")); assertEquals(listOf("naya"), s.roster)
+        }
+    }
+    @Test fun openMicWithoutFeedbackAdvancesWithoutCreatingAVote() {
+        CageToolsState(WaveGuestState(), { 0L }, Dispatchers.Unconfined, false).use { s ->
+            s.applyProgram(CageProgram(format = CageFormat.OPEN_MIC, roster = listOf("naya"), feedback = "none"))
+            s.advance(); s.advance(); perform(s); assertTrue(s.finished); assertFalse(s.voteOpen)
         }
     }
 }

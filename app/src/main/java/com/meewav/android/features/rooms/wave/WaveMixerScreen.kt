@@ -93,7 +93,7 @@ enum class WaveTab(val label: String, val icon: ImageVector) {
 /* ------------------------------------------------------------------------- */
 
 @Composable
-fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = null,
+fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = null, cageProgram: String? = null, programScope: String = "demo",
                     onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -102,7 +102,12 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     var pinnedChatMessage by remember { mutableStateOf<WaveChatMessage?>(null) }
     var waveNotificationsRead by remember { mutableStateOf(false) }
     val guestState = remember { WaveGuestState() }
-    val cage = remember(room, guestState) { if (room == RoomModule.CAGE) CageToolsState(guestState) else null }
+    val cage = remember(room, guestState) { if (room == RoomModule.CAGE) CageToolsState(guestState).also { state ->
+        if (cageProgram != null) runCatching { state.applyProgram(CageProgram.decode(org.json.JSONObject(cageProgram))) }
+            .onFailure { state.notice = "Le programme n’a pas pu être chargé. Choisis-le à nouveau dans Mes programmes." }
+        else if (!roomTitle.isNullOrBlank()) state.title = roomTitle
+    } else null }
+    LaunchedEffect(cage?.selectionMode) { if (cage?.selectionMode == true) activeTab = WaveTab.INVITES }
     DisposableEffect(cage) { onDispose { cage?.close() } }
     val roomAccent = if (room == RoomModule.CAGE) Color(0xFFFF5B73) else Color(0xFF27C2D1)
     var emojiPanelOpen by remember { mutableStateOf(false) }
@@ -166,7 +171,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
             (maxHeight - if (emojiPanelOpen) 405.dp else 305.dp).coerceIn(0.dp, fullVideoHeight) else fullVideoHeight
         val workshopHeight = (maxHeight - 44.dp - videoViewportHeight - 6.dp).coerceAtLeast(0.dp)
         Column(Modifier.fillMaxSize()) {
-            WaveHeader(title = roomTitle?.takeIf { it.isNotBlank() } ?: if (room == RoomModule.WAVE) "Freestyle session — Luma invite" else if (room == RoomModule.CAGE) "Battle Rap — Paris vs Marseille" else room.label,
+            WaveHeader(title = cage?.title ?: roomTitle?.takeIf { it.isNotBlank() } ?: if (room == RoomModule.WAVE) "Freestyle session — Luma invite" else room.label,
                 onBack = { showLeaveConfirm = true }, onClose = { showLeaveConfirm = true })
             Box(Modifier.fillMaxWidth().height(videoViewportHeight).clipToBounds()) {
                 if (cage != null) CageVideoStage(cage, interactive = activeTab == WaveTab.INVITES, audible = !stageFullscreen, onFullscreen = { stageFullscreen = true }) { WaveVideo(true, Modifier.fillMaxSize(), room.label, roomAccent) } else WaveGuestStage(guestState, interactive = activeTab == WaveTab.INVITES, onFullscreen = { stageFullscreen = true }, audible = !stageFullscreen) {
@@ -227,10 +232,10 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                         onReadNotifications = { waveNotificationsRead = true },
                         onEmojiPanelChange = { emojiPanelOpen = it },
                     )
-                    WaveTab.INVITES -> WaveGuestsPanel(guestState, Modifier.fillMaxSize())
+                    WaveTab.INVITES -> WaveGuestsPanel(guestState, Modifier.fillMaxSize(), cage, onProgram = { cage?.selectionMode = false; activeTab = WaveTab.WAVE })
                     else -> if (room == RoomModule.WAVE && composition != null) {
                         WaveCompositionPanel(composition, workshopHeight, onProfile = guestState::openArtistProfile)
-                    } else if (cage != null) CageToolsPanel(cage) else WaveTabPlaceholder(activeTab, room.toolsLabel)
+                    } else if (cage != null) CageToolsPanel(cage, programScope) else WaveTabPlaceholder(activeTab, room.toolsLabel)
                 }
                 }
             }

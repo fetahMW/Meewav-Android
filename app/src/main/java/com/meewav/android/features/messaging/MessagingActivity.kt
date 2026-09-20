@@ -153,7 +153,7 @@ open class MessagingActivity : ComponentActivity() {
                 // BytePlus reads DOM storage during module initialization. The
                 // Auth client still has persistSession=false; refresh tokens
                 // remain exclusively in the native encrypted session manager.
-                domStorageEnabled = assetSurface in setOf("messaging", "tremplin", "market", "scene", "rooms")
+                domStorageEnabled = assetSurface in setOf("messaging", "profile", "tremplin", "market", "scene", "rooms")
                 databaseEnabled = false
                 allowFileAccess = false; allowContentAccess = true
                 allowFileAccessFromFileURLs = false; allowUniversalAccessFromFileURLs = false
@@ -245,6 +245,8 @@ open class MessagingActivity : ComponentActivity() {
                     if (room != null) startActivity(Intent(this@MessagingActivity, com.meewav.android.features.rooms.wave.WaveMixerActivity::class.java)
                         .putExtra("roomType", room.route)
                         .putExtra("roomTitle", request.url.getQueryParameter("title")?.take(160))
+                        .putExtra("cageProgram", request.url.getQueryParameter("program")?.take(80_000))
+                        .putExtra("programScope", profileId ?: "demo")
                         .putExtra("roomId", request.url.getQueryParameter("id")?.take(160)))
                     return true
                 }
@@ -318,6 +320,23 @@ open class MessagingActivity : ComponentActivity() {
                     val rtcHost = uri.host.orEmpty()
                     val rtc = assetSurface == "messaging" && !preview && (rtcHost == "rtcplus.com" || rtcHost.endsWith(".rtcplus.com")) && (uri.port == -1 || uri.port == 443)
                     return if (rtc || (!preview && service.scheme == "https" && uri.host == service.host && uri.port == service.port)) null else denied()
+                }
+                if (assetSurface in setOf("rooms", "profile") && uri.path == "/native/cage-programs" && !request.isForMainFrame) {
+                    val libraryScope = profileId ?: if (preview) "demo" else return denied()
+                    return try {
+                        val store = com.meewav.android.features.rooms.wave.CageProgramStore(this@MessagingActivity, libraryScope)
+                        val body = when (request.method) {
+                            "GET" -> store.list().toString()
+                            "DELETE" -> { store.remove(uri.getQueryParameter("id") ?: return denied()); "{}" }
+                            "POST" -> {
+                                val payload = request.requestHeaders.entries.firstOrNull { it.key.equals("X-Meewav-Program", true) }?.value ?: return denied()
+                                require(payload.length <= 120_000)
+                                store.save(JSONObject(String(Base64.decode(payload, Base64.NO_WRAP), Charsets.UTF_8))).toString()
+                            }
+                            else -> return denied()
+                        }
+                        WebResourceResponse("application/json", "utf-8", 200, "OK", mapOf("Cache-Control" to "no-store"), ByteArrayInputStream(body.toByteArray()))
+                    } catch (_: Exception) { denied() }
                 }
                 if (request.method != "GET") return denied()
                 if (assetSurface == "messaging" && uri.path.orEmpty().startsWith("/native/voice-file/")) {

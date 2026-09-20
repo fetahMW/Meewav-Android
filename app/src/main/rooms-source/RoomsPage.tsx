@@ -1,3 +1,4 @@
+import type { CageProgram } from '../shared-ui/cagePrograms';
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { createPortal } from 'react-dom';
@@ -23,7 +24,7 @@ type RoomTab = 'home' | (typeof ROOMS)[number]['id'];
 export default function RoomsPage() {
   const location = useLocation();
   const [tab, setTab] = useState<RoomTab>('home');
-  const [sequencerOpen, setSequencerOpen] = useState(false);
+  const [sequencerOpen, setSequencerOpen] = useState(new URLSearchParams(location.search).get('launch') === 'cage');
   const [roomNotice, setRoomNotice] = useState('');
   const collectionSlug = location.pathname.startsWith('/rooms/collections/')
     ? decodeURIComponent(location.pathname.split('/')[3] ?? '')
@@ -36,8 +37,8 @@ export default function RoomsPage() {
     setRoomNotice(message);
     window.setTimeout(() => setRoomNotice(''), 4000);
   };
-  const openSession = (roomType: RoomsHomeRoomType, title: string, id?: string) => {
-    const params = new URLSearchParams({ type: roomType, title, ...(id ? { id } : {}) });
+  const openSession = (roomType: RoomsHomeRoomType, title: string, id?: string, program?: CageProgram) => {
+    const params = new URLSearchParams({ type: roomType, title, ...(id ? { id } : {}), ...(program ? { program: JSON.stringify(program) } : {}) });
     window.location.assign(`/native/room-session?${params}`);
   };
   const openRoom = (room: RoomsHomeRoom) => openSession(room.roomType, room.title, room.id);
@@ -71,11 +72,12 @@ export default function RoomsPage() {
       <div className="rooms-home-launch-dialog" role="presentation"
         onMouseDown={(event) => { if (event.target === event.currentTarget) setSequencerOpen(false); }}>
         <LaunchRoomSheet
-          initialType={tab === 'home' ? undefined : (tab as RoomsHomeRoomType)}
+          initialProgram={(() => { try { return JSON.parse(new URLSearchParams(location.search).get("program") ?? "null") ?? undefined; } catch { return undefined; } })()}
+          initialType={new URLSearchParams(location.search).get("launch") === "cage" ? "cage" : tab === 'home' ? undefined : (tab as RoomsHomeRoomType)}
           onClose={() => setSequencerOpen(false)}
-          onLaunched={(label, roomType) => {
+          onLaunched={(label, roomType, program) => {
             setSequencerOpen(false);
-            openSession(roomType, label);
+            openSession(roomType, label, undefined, program);
           }}
         />
       </div>

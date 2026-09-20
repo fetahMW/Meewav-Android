@@ -1,3 +1,4 @@
+import { readCagePrograms, saveCageProgram, removeCageProgram, type CageProgram } from "../../../../../../shared-ui/cagePrograms";
 import ProfileMenuSelect from "../components/ProfileMenuSelect";
 import {
   ArrowLeft,
@@ -57,6 +58,7 @@ type ProfileCageWorkspaceProps = {
 type CageStatus = "Brouillon" | "Invitations en attente" | "Programmée" | "Prête" | "En cours" | "Terminée" | "Annulée";
 
 type CageDraft = {
+  nativeConfiguration?: CageProgram;
   model: string;
   title: string;
   description: string;
@@ -217,7 +219,7 @@ function loadCageEntries(storageKey: string | null): CageEntry[] {
         ? [...new Set(source.inviteeIds
           .filter((id): id is string => typeof id === "string")
           .map(migrateLegacyInviteeId)
-          .filter((id) => meewavContactIds.has(id)))]
+          .filter((id) => id.length > 0 && id.length <= 120))]
         : [];
       const storedImportSource = typeof source.importSource === "string" ? source.importSource : defaultDraft.importSource;
       const importSource = storedImportSource === "Contacts"
@@ -286,11 +288,39 @@ function StepIntro({ step }: { step: number }) {
   return <div className="profile-cage-step-intro"><span><Icon size={20} /></span><div><small>Étape {step + 1} sur {cageSteps.length}</small><h4>{meta.title}</h4><p>{meta.subtitle}</p></div><strong>{String(step + 1).padStart(2, "0")} / 07</strong></div>;
 }
 
+function programFor(entry: CageDraft & { id?: string }): CageProgram {
+  const generated = configurationFromProfileCage(entry);
+  return { ...generated, rules: { ...generated.rules, ...entry.nativeConfiguration?.rules,
+    rounds: generated.rules.rounds, passageDurationSeconds: generated.rules.passageDurationSeconds, votingMode: generated.rules.votingMode },
+    rosterMembers: entry.inviteeIds.map(id => ({ id, name: cageContacts.find(p => p.id === id)?.name ?? entry.nativeConfiguration?.rosterMembers?.find(p => p.id === id)?.name ?? id })) };
+}
 export default function ProfileCageWorkspace({ storageScope, onBack, onDone }: ProfileCageWorkspaceProps) {
   const navigate = useNavigate();
   const storageKey = storageScope ? `${CAGE_STORAGE_KEY}:${storageScope}` : null;
   const [screen, setScreen] = useState<"overview" | "editor" | "detail" | "launch">("overview");
   const [entries, setEntries] = useState<CageEntry[]>(() => loadCageEntries(storageKey));
+  useEffect(() => {
+    let disposed = false;
+    void (async () => {
+      try {
+        const saved = await readCagePrograms();
+        for (const entry of entries) if (!saved.some(p => p.id === entry.id)) {
+          try { saved.push(await saveCageProgram({ id: entry.id, configuration: programFor(entry), profile: entry })); } catch { /* Incomplete drafts stay in the profile editor. */ }
+        }
+        if (disposed) return;
+        setEntries(saved.map(p => ({ ...defaultDraft, ...p.profile, nativeConfiguration: p.configuration, id: p.id, title: p.configuration.title,
+          type: p.configuration.format === 'open-mic' ? 'Open mic' : p.configuration.format === 'open-mic-battle' ? 'Open mic battle' : 'Tournoi',
+          format: p.configuration.format === 'championship' ? 'Classement par points' : p.configuration.format === 'open-mic-battle' ? 'Le gagnant reste' : p.configuration.format === 'open-mic' ? 'Passages libres' : 'Élimination directe',
+          participants: p.configuration.participantCount, inviteeIds: p.configuration.rosterProfileIds,
+          passage: `${p.configuration.rules.passageDurationSeconds} sec`, roundsOverride: String(p.configuration.rules.rounds),
+          vote: p.configuration.rules.votingMode === 'jury' ? 'Jury' : p.configuration.rules.votingMode === 'mixed' ? 'Public + host' : 'Public',
+          status: (p.profile?.status ?? 'Brouillon') as CageStatus, schedule: String(p.profile?.schedule ?? 'Non programmée'),
+          info: `${p.configuration.participantCount} places`, lastStep: Number(p.profile?.lastStep ?? 0),
+        } as CageEntry)).concat(entries.filter(e => !saved.some(p => p.id === e.id))));
+      } catch { if (!disposed) onDone('La bibliothèque des programmes est momentanément indisponible.'); }
+    })();
+    return () => { disposed = true; };
+  }, []);
   const [filter, setFilter] = useState("Toutes");
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
@@ -460,6 +490,7 @@ export default function ProfileCageWorkspace({ storageScope, onBack, onDone }: P
   const editEntry = (entry: CageEntry, initialStep = entry.lastStep) => {
     setEditingId(entry.id);
     setDraft({
+      nativeConfiguration: entry.nativeConfiguration,
       model: entry.model,
       title: entry.title,
       description: entry.description,
@@ -521,7 +552,7 @@ export default function ProfileCageWorkspace({ storageScope, onBack, onDone }: P
     };
     setEntries((current) => editingId ? current.map((entry) => entry.id === editingId ? next : entry) : [next, ...current]);
     setEditingId(next.id);
-    onDone(`${next.title} sauvegardée dans Mes Cages`);
+    void saveCageProgram({ id: next.id, configuration: programFor(next), profile: next }).then(() => onDone(`${next.title} sauvegardée dans Mes Cages`)).catch(() => onDone("Brouillon gardé dans le profil ; enregistrement dans la bibliothèque à réessayer."));
     if (options.openLaunch) {
       setLiveEntryId(next.id);
       setLiveStep(0);
@@ -537,13 +568,17 @@ export default function ProfileCageWorkspace({ storageScope, onBack, onDone }: P
   };
 
   const updateStatus = (entryId: string, status: CageStatus, message: string, schedule?: string) => {
+    const entry = entries.find(e => e.id === entryId);
+    if (entry) void saveCageProgram({ id: entryId, configuration: programFor(entry), profile: { ...entry, status, schedule: schedule ?? entry.schedule } }).catch(() => onDone("La bibliothèque n’a pas pu être mise à jour."));
     setEntries((current) => current.map((entry) => entry.id === entryId ? { ...entry, status, schedule: schedule ?? entry.schedule } : entry));
     setActiveMenu(null);
     onDone(message);
   };
 
   const duplicateEntry = (entry: CageEntry) => {
-    setEntries((current) => [{ ...entry, id: `${entry.id}-copy-${Date.now()}`, title: `${entry.title} copie`, status: "Brouillon", schedule: "Brouillon Studio", lastStep: 0, scheduled: false }, ...current]);
+    const copy: CageEntry = { ...entry, id: `${entry.id}-copy-${Date.now()}`, title: `${entry.title} copie`, status: "Brouillon", schedule: "Brouillon Studio", lastStep: 0, scheduled: false };
+    setEntries((current) => [copy, ...current]);
+    void saveCageProgram({ id: copy.id, configuration: programFor(copy), profile: copy }).catch(() => onDone("La copie reste dans le profil ; son enregistrement est à réessayer."));
     setActiveMenu(null);
     setFilter("Toutes");
     onDone("Copie créée en brouillon");
@@ -711,9 +746,10 @@ export default function ProfileCageWorkspace({ storageScope, onBack, onDone }: P
   const launchRoom = () => {
     if (!validateFinalLaunch()) return;
     try {
-      const configuration = configurationFromProfileCage(liveEntry ?? draft);
+      const configuration = programFor(liveEntry ?? draft);
       stageCageLaunchDraft(storageScope ?? "demo", configuration);
-      navigate("/rooms/home?launch=cage");
+      const route = "/rooms?" + new URLSearchParams({ launch: "cage", program: JSON.stringify(configuration) });
+      window.location.assign("/native/rooms?route=" + encodeURIComponent(route));
     } catch {
       onDone("La configuration n’a pas pu être transmise au lancement. Réessaie sans quitter cette page.");
     }
@@ -770,6 +806,6 @@ export default function ProfileCageWorkspace({ storageScope, onBack, onDone }: P
     {countdown !== null && <div className="profile-cage-countdown" role="dialog" aria-modal="true" aria-label="Compte à rebours avant le live"><span>LA CAGE</span><strong>{countdown}</strong><p>Ouverture du live</p><button type="button" onClick={cancelCountdown}>Annuler</button></div>}
 
     {confirmAction?.kind === "cancel" && <CageConfirm title="Annuler cette Cage ?" detail="La Cage restera visible dans ton historique." confirmLabel="Annuler la Cage" icon={X} onCancel={() => setConfirmAction(null)} onConfirm={() => { updateStatus(confirmAction.id, "Annulée", "Cage annulée"); setConfirmAction(null); }} />}
-    {confirmAction?.kind === "delete" && <CageConfirm title="Supprimer cette Cage ?" detail="La Cage sera retirée de Mes Cages." confirmLabel="Supprimer" icon={Trash2} onCancel={() => setConfirmAction(null)} onConfirm={() => { setEntries((current) => current.filter((entry) => entry.id !== confirmAction.id)); setConfirmAction(null); onDone("Cage supprimée"); }} />}
+    {confirmAction?.kind === "delete" && <CageConfirm title="Supprimer cette Cage ?" detail="La Cage sera retirée de Mes Cages." confirmLabel="Supprimer" icon={Trash2} onCancel={() => setConfirmAction(null)} onConfirm={() => { const id = confirmAction.id; void removeCageProgram(id).then(() => { setEntries((current) => current.filter(entry => entry.id !== id)); setConfirmAction(null); onDone("Cage supprimée"); }).catch(() => onDone("Suppression impossible. Réessaie.")); }} />}
   </section>;
 }

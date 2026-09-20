@@ -8,6 +8,8 @@ import com.meewav.android.R
 internal enum class WaveGuestLocation(val label: String) {
     REQUESTED("Demande"), INVITED("En préparation"), BACKSTAGE("Prêt en coulisses"), STAGE("Sur scène"), JURY("Jury")
 }
+internal enum class GuestOrigin { CANDIDATURE, INVITATION }
+internal enum class GuestInvitation { NONE, PENDING, ACCEPTED, DECLINED }
 
 internal data class WaveGuest(
     val id: String, val name: String, val role: String, val portrait: Int,
@@ -19,7 +21,16 @@ internal data class WaveGuest(
     val gradeLevel: Int = 1,
     val latencyMs: Int? = null,
     val connected: Boolean = true,
+    val origin: GuestOrigin = GuestOrigin.CANDIDATURE,
+    val invitation: GuestInvitation = GuestInvitation.NONE,
 )
+
+internal val WaveGuest.canParticipate get() = invitation !in setOf(GuestInvitation.PENDING, GuestInvitation.DECLINED)
+internal val WaveGuest.originLabel get() = if (origin == GuestOrigin.CANDIDATURE) "Candidature" else when(invitation) {
+    GuestInvitation.PENDING -> "Invité · En attente"
+    GuestInvitation.DECLINED -> "Invité · Déclinée"
+    else -> "Invité · Acceptée"
+}
 
 internal val WaveGuest.healthLabel: String get() = when {
     !connected -> "Connexion perdue"
@@ -34,6 +45,7 @@ internal val WaveGuest.healthLabel: String get() = when {
 
 /** Native demo room state. No RTC or Supabase success is inferred from a local move. */
 internal class WaveGuestState {
+    var guestPage by mutableIntStateOf(0)
     var composition by mutableStateOf(WaveComposition.ENSEMBLE)
     var requestsOpen by mutableStateOf(true)
         private set
@@ -66,7 +78,9 @@ internal class WaveGuestState {
             connected = index % 9 != 2, mic = index % 7 != 3, camera = index % 8 != 4)
     }
     var guests by mutableStateOf(initialGuests.mapIndexed { index, guest ->
-        guest.copy(gradeLevel = index % 6 + 1, latencyMs = listOf(35, 65, 110, 48)[index % 4])
+        guest.copy(gradeLevel = index % 6 + 1, latencyMs = listOf(35, 65, 110, 48)[index % 4],
+            origin = if (index in 4..5) GuestOrigin.INVITATION else GuestOrigin.CANDIDATURE,
+            invitation = if (index == 4) GuestInvitation.PENDING else if (index == 5) GuestInvitation.ACCEPTED else GuestInvitation.NONE)
     } + List(20) { demoGuest(it, WaveGuestLocation.BACKSTAGE) } + List(38) { demoGuest(it, WaveGuestLocation.REQUESTED) })
         private set
     var filters by mutableStateOf(WaveGuestFilters())
@@ -123,7 +137,7 @@ internal class WaveGuestState {
     }
 
     fun move(ids: Set<String>, target: WaveGuestLocation) {
-        val matching = guests.filter { it.id in ids }
+        val matching = guests.filter { it.id in ids && it.canParticipate }
         val allowed = matching.filter { guest -> when (target) {
             WaveGuestLocation.STAGE -> guest.location == WaveGuestLocation.BACKSTAGE
             WaveGuestLocation.JURY -> guest.location != WaveGuestLocation.JURY
@@ -183,7 +197,15 @@ internal class WaveGuestState {
         notice = "Invité retiré de la démo"
     }
     fun invite(guest: WaveGuest) {
-        if (guests.none { it.id == guest.id }) guests = guests + guest.copy(location = WaveGuestLocation.INVITED)
+        if (guests.none { it.id == guest.id }) guests = guests + guest.copy(location = WaveGuestLocation.INVITED,
+            origin = GuestOrigin.INVITATION, invitation = GuestInvitation.PENDING, connected = false)
         notice = "Invitation ajoutée à la démo"
+    }
+    fun reserveProgramInvite(id: String, name: String) {
+        if (guests.none { it.id == id }) invite(WaveGuest(id, name, "Artiste", R.drawable.wave_chat_artist_0, WaveGuestLocation.INVITED))
+    }
+    fun demoInvitationResponse(id: String, accepted: Boolean) {
+        guests = guests.map { if (it.id == id && it.invitation == GuestInvitation.PENDING)
+            it.copy(invitation = if (accepted) GuestInvitation.ACCEPTED else GuestInvitation.DECLINED, connected = accepted) else it }
     }
 }
