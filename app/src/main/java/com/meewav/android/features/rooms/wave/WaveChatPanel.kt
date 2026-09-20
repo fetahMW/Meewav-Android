@@ -202,8 +202,26 @@ internal fun chatAnnotatedText(content: String): Pair<AnnotatedString, Map<Strin
 private fun messageClock(ms: Long): String =
     java.text.SimpleDateFormat("HH:mm", java.util.Locale.FRANCE).format(java.util.Date(ms))
 
+internal class WaveChatSession {
+    private val now=System.currentTimeMillis()
+    val nextId=mutableLongStateOf(9L)
+    val messages =         mutableStateOf(
+            listOf(
+                WaveChatMessage(1, "sys", "", "La Wave est en direct — bienvenue dans le chat", now - 9 * 60_000, isSystem = true),
+                WaveChatMessage(2, "u_luca", "luca.maris", "Cette base est lourde [[mw:coeur-en-flamme]]", now - 8 * 60_000, avatarRes = R.drawable.chat_av_luca),
+                WaveChatMessage(3, "u_mina", "mina.lune", "J'ai envoyé une boucle au sas [[mw:micro-flamme]]", now - 6 * 60_000, avatarRes = R.drawable.chat_av_mina),
+                WaveChatMessage(4, "u_mina", "mina.lune", "Vous en pensez quoi ?", now - 5 * 60_000, avatarRes = R.drawable.chat_av_mina),
+                WaveChatMessage(5, "host", "Luma", "Je l'écoute tout de suite [[mw:casque-studio]]", now - 4 * 60_000, avatarRes = R.drawable.wave_artist_luma, isHost = true),
+                WaveChatMessage(6, "u_riko", "riko.wav", "Le drop à 1:12 est fou [[mw:vinyle-notes]]", now - 2 * 60_000, avatarRes = R.drawable.chat_av_riko),
+            )
+        )
+    val draft=mutableStateOf("")
+    val poll=mutableStateOf<WaveChatPoll?>(null)
+}
+
 @Composable
-fun WaveChatPanel(
+internal fun WaveChatPanel(
+    chatSession:WaveChatSession=remember{WaveChatSession()},
     modifier: Modifier = Modifier,
     pinnedMessage: WaveChatMessage? = null,
     onPinMessage: (WaveChatMessage?) -> Unit = {},
@@ -214,24 +232,13 @@ fun WaveChatPanel(
 ) {
     val now = remember { System.currentTimeMillis() }
     val mountedAt = remember { System.currentTimeMillis() }
-    var nextId by remember { mutableLongStateOf(9L) }
-    var messages by remember {
-        mutableStateOf(
-            listOf(
-                WaveChatMessage(1, "sys", "", "La Wave est en direct — bienvenue dans le chat", now - 9 * 60_000, isSystem = true),
-                WaveChatMessage(2, "u_luca", "luca.maris", "Cette base est lourde [[mw:coeur-en-flamme]]", now - 8 * 60_000, avatarRes = R.drawable.chat_av_luca),
-                WaveChatMessage(3, "u_mina", "mina.lune", "J'ai envoyé une boucle au sas [[mw:micro-flamme]]", now - 6 * 60_000, avatarRes = R.drawable.chat_av_mina),
-                WaveChatMessage(4, "u_mina", "mina.lune", "Vous en pensez quoi ?", now - 5 * 60_000, avatarRes = R.drawable.chat_av_mina),
-                WaveChatMessage(5, "host", "Luma", "Je l'écoute tout de suite [[mw:casque-studio]]", now - 4 * 60_000, avatarRes = R.drawable.wave_artist_luma, isHost = true),
-                WaveChatMessage(6, "u_riko", "riko.wav", "Le drop à 1:12 est fou [[mw:vinyle-notes]]", now - 2 * 60_000, avatarRes = R.drawable.chat_av_riko),
-            )
-        )
-    }
+    var nextId by chatSession.nextId
+    var messages by chatSession.messages
     var toolsOpen by remember { mutableStateOf(false) }
     var notificationsOpen by remember { mutableStateOf(false) }
-    var livePoll by remember { mutableStateOf<WaveChatPoll?>(null) }
+    var livePoll by chatSession.poll
     val emojiInput = remember { WaveEmojiInputController() }
-    var draft by remember { mutableStateOf("") }
+    var draft by chatSession.draft
     var unreadCount by remember { mutableIntStateOf(0) }
     // Flux live animé — nouveaux messages qui défilent à la vraie vitesse d'un chat.
     val liveFeed = remember {

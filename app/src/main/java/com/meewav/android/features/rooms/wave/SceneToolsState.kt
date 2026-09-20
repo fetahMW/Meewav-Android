@@ -33,7 +33,7 @@ internal val sceneReactions = listOf("Énergie", "Présence", "Originalité", "M
     val evaluations: Map<String, SceneEvaluation> = emptyMap(), val fundraiser: SceneFundraiser = SceneFundraiser())
 
 /** Host tools ported exclusively from web roomTools.service.ts. This entry is a local demo session. */
-internal class SceneToolsState(context: Context, val guests: WaveGuestState, scope: String) {
+internal class SceneToolsState(context: Context, val guests: WaveGuestState, scope: String, seedDemoPeople:Boolean=true) {
     private val prefs = context.getSharedPreferences("scene-tools-" + scope.hashCode(), Context.MODE_PRIVATE)
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
     var data by mutableStateOf(sceneInitialState()); private set
@@ -51,12 +51,12 @@ internal class SceneToolsState(context: Context, val guests: WaveGuestState, sco
         val portraits = listOf(R.drawable.scene_artist_0,R.drawable.scene_artist_1,R.drawable.scene_artist_2,R.drawable.scene_artist_3,R.drawable.scene_artist_4)
         val roles = listOf("Chanteuse", "Guitariste", "Chanteur Soul", "Collectif de danse", "DJ Drum & Bass")
         val ids = listOf("scene-a", "scene-b", "scene-c", "scene-d", "scene-e")
-        guests.addSceneDemoPeople(ids.mapIndexed { i, id -> WaveGuest(id, names[i], roles[i], portraits[i], WaveGuestLocation.BACKSTAGE, gradeLevel = listOf(4,2,3,3,2,4)[i]) })
+        if(seedDemoPeople) guests.addSceneDemoPeople(ids.mapIndexed { i, id -> WaveGuest(id, names[i], roles[i], portraits[i], WaveGuestLocation.BACKSTAGE, gradeLevel = listOf(4,2,3,3,2,4)[i]) })
         prefs.getString("state", null)?.let { saved -> runCatching { data = json.decodeFromString<SceneArchive>(saved) }
             .onFailure { notice = "Le programme enregistré n’a pas pu être chargé." } }
         // Older demo archives represented the duo as one fictitious guest. Use the two real feeds.
         data = data.copy(program = data.program.map { if (it.artistId == "scene-duo") it.copy(artistId = "scene-a", memberIds = listOf("scene-a", "scene-c")) else it })
-        live?.let { saved ->
+        if(seedDemoPeople) live?.let { saved ->
             if (!guests.transitionScenePassage(performerIds(saved), emptySet())) {
                 commit(data.copy(program = data.program.map { if (it.id == saved.id) it.copy(status = "ready", startedAt = null) else it }))
                 notice = "Le passage attend ses artistes en coulisses avant de reprendre."
@@ -66,6 +66,10 @@ internal class SceneToolsState(context: Context, val guests: WaveGuestState, sco
     private fun commit(next: SceneArchive) {
         data = next
         prefs.edit().putString("state", json.encodeToString(next)).apply()
+    }
+    fun prepareSwitch(config:RoomSwitchConfig) {
+        val text=SceneText(title=config.title,artistId="host",body=config.prompter)
+        commit(SceneArchive(program=config.program.lines().filter{it.isNotBlank()}.map{SceneEntry(artistId="host",artistName="Luma",title=it.trim(),minutes=config.minutes,evaluation=config.evaluation,textId=text.id)},texts=listOf(text),prompt=ScenePrompt(activeId=text.id)))
     }
     fun performerIds(entry: SceneEntry): Set<String> = (entry.memberIds.ifEmpty { listOf(entry.artistId) }).filter { it.isNotBlank() && it != "host" }.toSet()
     fun prepared(entry: SceneEntry): Boolean = performerIds(entry).all { id -> people.any { it.id == id } }

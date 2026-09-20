@@ -20,7 +20,8 @@ internal class ClasseToolsState(context: Context, val guests: WaveGuestState, sc
     var resources by mutableStateOf(emptyList<ClasseResource>()); private set
     var selectedStudent by mutableStateOf<String?>(null)
     var excluded by mutableStateOf(emptySet<String>())
-    val students get() = guests.guests.filter { it.id !in excluded && it.canParticipate && it.location in setOf(WaveGuestLocation.BACKSTAGE, WaveGuestLocation.STAGE) }.take(capacity)
+    var switchRoster by mutableStateOf<Set<String>?>(null)
+    val students get() = guests.guests.filter { (switchRoster==null || it.id in switchRoster!!) && it.id !in excluded && it.canParticipate && it.location in setOf(WaveGuestLocation.BACKSTAGE, WaveGuestLocation.STAGE) }.take(capacity)
     var handsOpen by mutableStateOf(true)
     var questionsOpen by mutableStateOf(true)
     var hands by mutableStateOf(listOf(ClasseHand("naya", "Comment régler le gain sans saturer ?"), ClasseHand("solen", "Je voudrais essayer la compression."), ClasseHand("demo-BACKSTAGE-5", "Je peux faire écouter mon essai ?"), ClasseHand("demo-BACKSTAGE-10", "Une question sur le placement du micro."), ClasseHand("demo-BACKSTAGE-15", "Je voudrais refaire l’exercice."), ClasseHand("demo-BACKSTAGE-18", "Comment doser la réverbération ?"))); private set

@@ -1,5 +1,6 @@
 package com.meewav.android.features.rooms.wave
 
+import androidx.compose.material.icons.filled.SwapHoriz
 import android.view.HapticFeedbackConstants
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -99,6 +100,14 @@ enum class WaveTab(val label: String, val icon: ImageVector) {
 @Composable
 fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = null, cageProgram: String? = null, programScope: String = "demo",
                     onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
+    WaveMixerSession(room,roomTitle,cageProgram,programScope,onBack,onClose)
+}
+@Composable private fun WaveMixerSession(initialRoom:RoomModule,initialTitle:String?,cageProgram:String?,programScope:String,onBack:()->Unit,onClose:()->Unit) {
+    var room by remember(initialRoom){mutableStateOf(initialRoom)}
+    var roomTitle by remember(initialTitle){mutableStateOf(initialTitle)}
+    var switchOpen by remember{mutableStateOf(false)}
+    val switchState=remember(initialRoom){RoomSwitchState(initialRoom)}
+    val chatSession=remember{WaveChatSession()}
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val context = LocalContext.current
@@ -107,27 +116,34 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     // Keep the highlighted snapshot even if the live feed trims old messages or tabs change.
     var pinnedChatMessage by remember { mutableStateOf<WaveChatMessage?>(null) }
     var waveNotificationsRead by remember { mutableStateOf(false) }
-    val guestState = remember(room) { WaveGuestState(cageDemo = room == RoomModule.CAGE, classeDemo = room == RoomModule.CLASSE) }
+    val guestState = remember(initialRoom) { WaveGuestState(cageDemo = initialRoom == RoomModule.CAGE, classeDemo = initialRoom == RoomModule.CLASSE) }
     val roomGifts=remember(guestState,programScope){LogeToolsState(context.applicationContext,guestState,"gifts:"+programScope,false)}
     LaunchedEffect(roomGifts){while(true){roomGifts.tick();delay(250)}}
-    val classe = remember(room, guestState, programScope) { if (room == RoomModule.CLASSE) ClasseToolsState(context.applicationContext, guestState, programScope).also { if (!roomTitle.isNullOrBlank()) it.title = roomTitle } else null }
-    val scene = remember(room, guestState, programScope) { if (room == RoomModule.SCENE) SceneToolsState(context.applicationContext, guestState, programScope + ":" + roomTitle.orEmpty()) else null }
-    val loge = remember(room, guestState, programScope) { if (room == RoomModule.LOGE) LogeToolsState(context.applicationContext, guestState, programScope + ":" + roomTitle.orEmpty()) else null }
-    val place = remember(room, guestState, programScope) { if (room == RoomModule.PLACE) PlaceToolsState(context.applicationContext, guestState, programScope + ":" + roomTitle.orEmpty()) else null }
+    val classeCache=remember{mutableMapOf<RoomModule,ClasseToolsState>()}
+    val sceneCache=remember{mutableMapOf<RoomModule,SceneToolsState>()}
+    val logeCache=remember{mutableMapOf<RoomModule,LogeToolsState>()}
+    val placeCache=remember{mutableMapOf<RoomModule,PlaceToolsState>()}
+    val cageCache=remember{mutableMapOf<RoomModule,CageToolsState>()}
+    val waveCache=remember{mutableMapOf<RoomModule,WaveCompositionState>()}
+    val appliedRooms=remember{mutableSetOf(initialRoom)}
+    val classe = remember(room, guestState, programScope) { if (room == RoomModule.CLASSE) classeCache.getOrPut(room){ClasseToolsState(context.applicationContext, guestState, programScope).also { if (!roomTitle.isNullOrBlank()) it.title = roomTitle.orEmpty() }} else null }
+    val scene = remember(room, guestState, programScope) { if (room == RoomModule.SCENE) sceneCache.getOrPut(room){SceneToolsState(context.applicationContext, guestState, programScope + ":" + roomTitle.orEmpty(),room==initialRoom)} else null }
+    val loge = remember(room, guestState, programScope) { if (room == RoomModule.LOGE) logeCache.getOrPut(room){LogeToolsState(context.applicationContext, guestState, programScope + ":" + roomTitle.orEmpty(),room==initialRoom)} else null }
+    val place = remember(room, guestState, programScope) { if (room == RoomModule.PLACE) placeCache.getOrPut(room){PlaceToolsState(context.applicationContext, guestState, programScope + ":" + roomTitle.orEmpty())} else null }
     LaunchedEffect(place) { if(place!=null)while(true){place.tick();delay(250)} }
     LaunchedEffect(loge) { if (loge != null) while (true) { loge.tick(); delay(250) } }
     LaunchedEffect(classe, guestState.guests) { classe?.syncStudents() }
     // Temporary workshop override requested for rapid Cage simulations; saved rules stay intact.
-    val cage = remember(room, guestState, mixerDeck) { if (room == RoomModule.CAGE) CageToolsState(guestState,
+    val cage = remember(room, guestState, mixerDeck) { if (room == RoomModule.CAGE) cageCache.getOrPut(room){CageToolsState(guestState,
         simulationPassageSeconds = if (com.meewav.android.BuildConfig.DEBUG) 5 else null,
         simulationVoteSeconds = if (com.meewav.android.BuildConfig.DEBUG) 2 else null,
         requestPassageStart = mixerDeck.tools::requestPassageStart,
         cancelPassageStart = mixerDeck.tools::cancelStart,
         onPassageEnd = mixerDeck.tools::playEndHorn).also { state ->
-        if (cageProgram != null) runCatching { state.applyProgram(CageProgram.decode(org.json.JSONObject(cageProgram))) }
+        if (room==initialRoom && cageProgram != null) runCatching { state.applyProgram(CageProgram.decode(org.json.JSONObject(cageProgram))) }
             .onFailure { state.notice = "Le programme n’a pas pu être chargé. Choisis-le à nouveau dans Mes programmes." }
-        else if (!roomTitle.isNullOrBlank()) state.title = roomTitle
-    } else null }
+        else if (!roomTitle.isNullOrBlank()) state.title = roomTitle.orEmpty()
+    }} else null }
     LaunchedEffect(cage?.selectionMode) { if (cage?.selectionMode == true) { guestState.previewId = null; guestState.profilePreviewId = null; activeTab = WaveTab.INVITES } }
     LaunchedEffect(cage?.artistAttentionId) {
         cage?.artistAttentionId?.let { id ->
@@ -139,7 +155,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
         }
     }
     LaunchedEffect(cage, guestState.onStage.map { it.id }) { cage?.syncManualStage() }
-    DisposableEffect(cage) { onDispose { cage?.close() } }
+    DisposableEffect(Unit) { onDispose { cageCache.values.forEach{it.close()};waveCache.values.forEach{it.close()} } }
     val roomAccent = when (room) { RoomModule.CAGE -> Color(0xFFFF5B73); RoomModule.CLASSE -> classeBlue; RoomModule.SCENE -> WaveMixerTheme.capsuleAccent; RoomModule.LOGE -> Color(0xFFE9B949); RoomModule.PLACE -> Color(0xFFD5D3DC); else -> Color(0xFF27C2D1) }
     var emojiPanelOpen by remember { mutableStateOf(false) }
     // Canaux.
@@ -158,7 +174,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     var selector by remember { mutableStateOf<String?>(null) } // "key" | "scale"
     var multitrack by remember { mutableStateOf(false) }
     val composition = remember(context, room, roomTitle) {
-        if (room == RoomModule.WAVE) WaveCompositionState(context.applicationContext, roomTitle ?: "wave-demo") else null
+        if (room == RoomModule.WAVE) waveCache.getOrPut(room){WaveCompositionState(context.applicationContext, roomTitle ?: "wave-demo")} else null
     }
     LaunchedEffect(audioGain, audioMuted) { mixerDeck.volume(if (audioMuted) 0f else audioGain) }
     LaunchedEffect(composition?.snapshot?.running, composition?.snapshot?.cue) {
@@ -171,7 +187,31 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
             if (event == androidx.lifecycle.Lifecycle.Event.ON_STOP) { composition?.suspendAudio(); mixerDeck.suspendAudio(); cage?.pause() }
         }
         lifecycle.addObserver(observer)
-        onDispose { lifecycle.removeObserver(observer); composition?.close() }
+        onDispose { lifecycle.removeObserver(observer) }
+    }
+    LaunchedEffect(room,switchState.version) {
+        val config=switchState.configs[room] ?: return@LaunchedEffect
+        if(room==RoomModule.CLASSE) classe?.apply { title=config.title; switchRoster=config.students; handsOpen=config.open;questionsOpen=config.questions;syncStudents() }
+        if(appliedRooms.add(room)) {
+            scene?.prepareSwitch(config)
+            cage?.applyProgram(CageProgram(title=config.title,format=config.format,capacity=config.capacity,passage=config.passage,voteSeconds=config.voting))
+            place?.apply { configureFloor(config.topic,60);if(data.floor.open!=config.open)toggleFloor() }
+            loge?.apply { if(data.questionsOpen!=config.questions)toggleQuestions() }
+            composition?.apply { rules(config.bpm,config.key);submissionRules(acceptedCategories,config.maxBars,"");if(open!=config.open)toggleIntake();importSelection(listOf(android.net.Uri.parse(config.audio)),WaveImportDestination.BASE) }
+        }
+    }
+    val switchBlock=when {
+        cage?.active?.let{!it.completed}==true -> "Termine le match en cours avant de changer de room."
+        loge?.data?.moments?.any{it.status=="live"}==true -> "Termine la rencontre VIP avant de changer de room."
+        scene?.live!=null -> "Termine la prestation avant de changer de room."
+        classe?.speakerId!=null -> "Reprends la parole avant de changer de room."
+        composition?.vote!=null || composition?.playing==true -> "Termine le vote et arrête le lecteur Wave avant de changer de room."
+        place?.data?.let{it.floor.current!=null||it.floor.queue.isNotEmpty()||it.clash?.status in setOf("inviting","running","paused")||it.challenges.any{c->c.status in setOf("open","running")}}==true -> "Termine les prises de parole et activités de la Place avant de changer de room."
+        else -> null
+    }
+    if(switchOpen) RoomSwitchSheet(switchState,guestState,switchBlock,{switchOpen=false}) { destination,config ->
+        roomTitle=if(destination==initialRoom)initialTitle else config.title
+        room=destination
     }
     var showLeaveConfirm by remember { mutableStateOf(false) }
     var stageFullscreen by remember { mutableStateOf(false) }
@@ -211,8 +251,8 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
             (maxHeight - if (emojiPanelOpen) 405.dp else 305.dp).coerceIn(0.dp, fullVideoHeight) else fullVideoHeight
         val workshopHeight = (maxHeight - 44.dp - videoViewportHeight - 6.dp).coerceAtLeast(0.dp)
         Column(Modifier.fillMaxSize()) {
-            WaveHeader(title = cage?.title ?: classe?.title ?: roomTitle?.takeIf { it.isNotBlank() } ?: if (room == RoomModule.WAVE) "Freestyle session — Luma invite" else if (room == RoomModule.SCENE) "Scène ouverte — Lumière noire" else if (room == RoomModule.LOGE) "Éclipse — dans la Loge de Naya" else room.label,
-                onBack = { showLeaveConfirm = true }, onClose = { showLeaveConfirm = true })
+            WaveHeader(title = cage?.title ?: classe?.title ?: roomTitle?.takeIf { it.isNotBlank() && it!=room.label } ?: if (room == RoomModule.WAVE) "Freestyle session — Luma invite" else if (room == RoomModule.SCENE) "Scène ouverte — Lumière noire" else if (room == RoomModule.LOGE) "Éclipse — dans la Loge de Naya" else if(room==RoomModule.PLACE)"Autour du micro — avec Luma"else room.label,
+                onBack = { showLeaveConfirm = true }, onClose = { showLeaveConfirm = true },onSwitch={switchState.notice=null;switchOpen=true})
             Box(Modifier.fillMaxWidth().height(videoViewportHeight).clipToBounds().roomVideoTouches(videoControls)) {
                 if (cage != null) CageVideoStage(cage, interactive = activeTab == WaveTab.INVITES,
                     audible = !stageFullscreen && videoControls.returnAudio, onFullscreen = { stageFullscreen = true },
@@ -280,6 +320,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                     )
                     WaveTab.CHAT -> Column(Modifier.fillMaxSize()) {
                         WaveChatPanel(
+                            chatSession=chatSession,
                         Modifier.weight(1f), pinnedMessage = pinnedChatMessage,
                         onPinMessage = { pinnedChatMessage = it },
                         notificationsRead = waveNotificationsRead,
@@ -353,7 +394,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
 /* ------------------------------------------------------------------------- */
 
 @Composable
-private fun WaveHeader(title: String, onBack: () -> Unit, onClose: () -> Unit) {
+private fun WaveHeader(title: String, onBack: () -> Unit, onClose: () -> Unit,onSwitch:()->Unit) {
     Box(Modifier.fillMaxWidth().height(44.dp).padding(horizontal = 6.dp)) {
         // Chevron retour à gauche.
         Box(
@@ -369,13 +410,14 @@ private fun WaveHeader(title: String, onBack: () -> Unit, onClose: () -> Unit) {
             title, color = WaveMixerTheme.pearl,
             fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
             fontFamily = WaveMixerTheme.fontFamily, maxLines = 1,
-            modifier = Modifier.align(Alignment.Center)
+            modifier = Modifier.align(Alignment.Center).padding(start=40.dp,end=78.dp),overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis
         )
         // Croix — prévient avant de quitter le live.
         Row(
             Modifier.align(Alignment.CenterEnd),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Box(Modifier.size(40.dp).clickable(onClick=onSwitch),contentAlignment=Alignment.Center){Icon(androidx.compose.material.icons.Icons.Default.SwapHoriz,"Switch Room",tint=WaveMixerTheme.capsuleAccent,modifier=Modifier.size(21.dp))}
             Box(
                 Modifier
                     .size(36.dp)
