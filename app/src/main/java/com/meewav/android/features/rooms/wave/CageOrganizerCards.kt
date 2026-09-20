@@ -29,33 +29,34 @@ internal fun CageToolsState.openProfile(id: String) { guests.previewId = null; g
 internal fun CageArtistCompact(state: CageToolsState, id: String?, modifier: Modifier = Modifier, winner: Boolean = false, beforeProfile: () -> Unit = {}, duelSide: Int = 0) {
     val person = state.person(id)
     if (duelSide != 0) {
+        val champion = person != null && state.finished && state.format in listOf(CageFormat.TOURNAMENT, CageFormat.CHALLENGER) && state.matches.lastOrNull()?.winner == person.id
+        val portrait: @Composable () -> Unit = {
+            Box(Modifier.size(48.dp)) {
+                Box(Modifier.fillMaxSize().clip(CircleShape).background(Color(0xFF222129))
+                    .clickable(enabled = person != null) { person?.let { beforeProfile(); state.openProfile(it.id) } }, contentAlignment = Alignment.Center) {
+                    if (person != null) Image(painterResource(person.portrait), "Pré-profil de " + person.name, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                    else Text("?", color = Color.Gray)
+                }
+                if (winner || champion) Icon(Icons.Default.EmojiEvents, if (champion) "Champion" else "Vainqueur", Modifier.align(Alignment.BottomEnd).size(15.dp).background(Color(0xFF17140F), CircleShape), tint = Color(0xFFE4C47F))
+            }
+        }
+        val message: @Composable () -> Unit = {
+            IconButton(onClick = { person?.let { state.guests.messageRecipientIds = setOf(it.id) } }, enabled = person != null,
+                modifier = Modifier.size(48.dp).hifiBlackSurface(10.dp)) {
+                Icon(WaveIcons.Envelope, "Message à " + (person?.name ?: "artiste"), Modifier.size(22.dp), tint = WaveMixerTheme.capsuleAccentSoft.copy(alpha = if (person != null) 1f else .25f))
+            }
+        }
         Column(modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Row(Modifier.height(32.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                if (duelSide < 0) { message(); portrait() } else { portrait(); message() }
+            }
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+                Text(person?.name ?: "À déterminer", modifier = Modifier.weight(1f, fill = false), color = if (winner) WaveMixerTheme.capsuleAccentSoft else Color.White, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (person != null) {
                     val badges = listOf(R.drawable.wave_grade_1, R.drawable.wave_grade_2, R.drawable.wave_grade_3, R.drawable.wave_grade_4, R.drawable.wave_grade_5, R.drawable.wave_grade_6)
-                    Image(painterResource(badges[(person.gradeLevel - 1).coerceIn(0, 5)]), "Grade " + person.gradeLevel, Modifier.size(32.dp))
-                    val champion = state.finished && state.format in listOf(CageFormat.TOURNAMENT, CageFormat.CHALLENGER) && state.matches.lastOrNull()?.winner == person.id
-                    val role = person.role.lowercase()
-                    val symbol = when {
-                        winner || champion -> Icons.Default.EmojiEvents
-                        "rapp" in role || "chant" in role -> Icons.Default.Mic
-                        "produc" in role || "beat" in role || "dj" in role -> Icons.Default.GraphicEq
-                        "auteur" in role || "autrice" in role -> Icons.Default.Edit
-                        else -> Icons.Default.MusicNote
-                    }
-                    Icon(symbol, if (champion) "Champion" else if (winner) "Vainqueur" else person.role, Modifier.size(18.dp), tint = if (winner || champion) Color(0xFFE4C47F) else WaveMixerTheme.capsuleAccentSoft)
+                    Spacer(Modifier.width(3.dp))
+                    Image(painterResource(badges[(person.gradeLevel - 1).coerceIn(0, 5)]), "Grade " + person.gradeLevel, Modifier.size(22.dp))
                 }
-            }
-            Box(Modifier.size(68.dp).clip(CircleShape).background(Color(0xFF222129))
-                .border(.75.dp, WaveMixerTheme.capsuleAccentSoft.copy(alpha = if (winner) .7f else .25f), CircleShape)
-                .clickable(enabled = person != null) { person?.let { beforeProfile(); state.openProfile(it.id) } }, contentAlignment = Alignment.Center) {
-                if (person != null) Image(painterResource(person.portrait), "Pré-profil de " + person.name, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-                else Text("?", color = Color.Gray)
-            }
-            Text(person?.name ?: "À déterminer", color = if (winner) WaveMixerTheme.capsuleAccentSoft else Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
-            IconButton(onClick = { person?.let { state.guests.messageRecipientIds = setOf(it.id) } }, enabled = person != null,
-                modifier = Modifier.size(48.dp).hifiBlackSurface(12.dp)) {
-                Icon(WaveIcons.Envelope, "Message à " + (person?.name ?: "artiste"), Modifier.size(23.dp), tint = WaveMixerTheme.capsuleAccentSoft.copy(alpha = if (person != null) 1f else .25f))
             }
         }
         return
