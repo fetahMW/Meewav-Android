@@ -108,6 +108,8 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     var pinnedChatMessage by remember { mutableStateOf<WaveChatMessage?>(null) }
     var waveNotificationsRead by remember { mutableStateOf(false) }
     val guestState = remember(room) { WaveGuestState(cageDemo = room == RoomModule.CAGE, classeDemo = room == RoomModule.CLASSE) }
+    val roomGifts=remember(guestState,programScope){LogeToolsState(context.applicationContext,guestState,"gifts:"+programScope,false)}
+    LaunchedEffect(roomGifts){while(true){roomGifts.tick();delay(250)}}
     val classe = remember(room, guestState, programScope) { if (room == RoomModule.CLASSE) ClasseToolsState(context.applicationContext, guestState, programScope).also { if (!roomTitle.isNullOrBlank()) it.title = roomTitle } else null }
     val scene = remember(room, guestState, programScope) { if (room == RoomModule.SCENE) SceneToolsState(context.applicationContext, guestState, programScope + ":" + roomTitle.orEmpty()) else null }
     val loge = remember(room, guestState, programScope) { if (room == RoomModule.LOGE) LogeToolsState(context.applicationContext, guestState, programScope + ":" + roomTitle.orEmpty()) else null }
@@ -196,6 +198,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
             }
             if (scene != null) SceneVideoSignals(scene, Modifier.align(Alignment.TopCenter).padding(top = 38.dp)) { scene.tab = 3; activeTab = WaveTab.WAVE; stageFullscreen = false }
             if (loge != null) LogeVideoSignals(loge, Modifier.align(Alignment.BottomCenter).padding(bottom = 55.dp))
+            LogeVideoSignals(roomGifts, Modifier.align(Alignment.BottomCenter).padding(bottom = 55.dp))
         }
     }
 
@@ -225,6 +228,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                 }
                 if (scene != null) SceneVideoSignals(scene, Modifier.align(Alignment.TopCenter).padding(top = 35.dp)) { scene.tab = 3; activeTab = WaveTab.WAVE }
                 if (loge != null) LogeVideoSignals(loge, Modifier.align(Alignment.BottomCenter).padding(bottom = 46.dp))
+                LogeVideoSignals(roomGifts, Modifier.align(Alignment.BottomCenter).padding(bottom = 46.dp))
             }
             // Zone grise du mixeur : couvre la barre d'onglets ET le corps.
             Column(
@@ -258,7 +262,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                 ) {
                 when (activeTab) {
                     WaveTab.MIXEUR -> MixerBody(
-                        guest = guestState.mixerGuest, deck = mixerDeck, onDeckPlay = { composition?.suspendAudio(); mixerDeck.toggle() },
+                        guest = guestState.mixerGuest, deck = mixerDeck, onDeckPlay = { composition?.suspendAudio(); mixerDeck.toggle() },giftContent={LogeGiftPanel(roomGifts)},
                         micGain = guestState.mixerGuest?.let { guestState.guestGain(it.id) } ?: micGain, audioGain = audioGain,
                         micMuted = guestState.mixerGuest?.let { !it.mic } ?: micMuted, audioMuted = audioMuted,
                         onMicGain = { value -> guestState.mixerGuest?.let { guestState.setGuestGain(it.id, value) } ?: run { micGain = value } }, onAudioGain = { audioGain = it },
@@ -581,6 +585,7 @@ private fun WaveTabBar(
 private fun MixerBody(
     guest: WaveGuest?,
     deck: WaveMixerDeckState, onDeckPlay: () -> Unit,
+    giftContent:@Composable ()->Unit,
     micGain: Float, audioGain: Float, micMuted: Boolean, audioMuted: Boolean,
     onMicGain: (Float) -> Unit, onAudioGain: (Float) -> Unit,
     onMicMute: () -> Unit, onAudioMute: () -> Unit,
@@ -658,7 +663,7 @@ private fun MixerBody(
             )
         }
         WaveMixerDeckPanel(deck, multitrack, onMultitrack, onDeckPlay,
-            Modifier.fillMaxWidth().height(deckHeight).padding(top = 4.dp, bottom = 4.dp))
+            Modifier.fillMaxWidth().height(deckHeight).padding(top = 4.dp, bottom = 4.dp),giftContent)
         }
     }
 }

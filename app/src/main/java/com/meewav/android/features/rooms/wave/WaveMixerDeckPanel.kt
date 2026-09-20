@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.sp
 import kotlin.math.max
 
 @Composable
-internal fun WaveMixerDeckPanel(state: WaveMixerDeckState, expanded: Boolean, onExpand: () -> Unit, onPlay: () -> Unit, modifier: Modifier) {
+internal fun WaveMixerDeckPanel(state: WaveMixerDeckState, expanded: Boolean, onExpand: () -> Unit, onPlay: () -> Unit, modifier: Modifier, giftContent:@Composable ()->Unit) {
     val context = LocalContext.current
     var target by remember { mutableStateOf("main") }
     var revealed by remember { mutableStateOf<String?>(null) }
@@ -50,7 +50,20 @@ internal fun WaveMixerDeckPanel(state: WaveMixerDeckState, expanded: Boolean, on
             WaveControl(Icons.Default.Repeat, "Répéter", state.repeat, onClick = state::toggleLoop)
             WaveControl(if (expanded) Icons.Default.ExpandMore else Icons.Default.Layers, "Déplier ou replier les pistes", expanded, onClick = onExpand)
         }
-        if (expanded && page == 1) WaveMixerPads(state.tools, Modifier.weight(1f).fillMaxWidth())
+        if(expanded)Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){
+            if(page!=0)SceneIcon(WaveIcons.ChevronLeft,"Retour aux pistes"){page=0}
+            Text(if(page==0)"Pistes"else if(page==1)"Pads"else if(page==2)"Chronomètre"else"Cadeaux",Modifier.weight(1f),color=WaveMixerTheme.pearl,fontSize=12.sp)
+            if(page==0)Box{
+                SceneIcon(Icons.Default.Add,"Ajouter une piste ou un dossier"){packMenu=true}
+                DropdownMenu(packMenu,{packMenu=false},containerColor=Color(0xFF101114),tonalElevation=0.dp){
+                    DropdownMenuItem(text={Text("Ajouter une piste",color=Color.White)},onClick={packMenu=false;target="new";importer.launch(arrayOf("audio/*"))})
+                    DropdownMenuItem(text={Text("Dossier",color=Color.White)},onClick={packMenu=false;folder.launch(null)})
+                    DropdownMenuItem(text={Text("Archive ZIP",color=Color.White)},onClick={packMenu=false;zip.launch(arrayOf("application/zip"))})
+                }
+            }
+        }
+        if (expanded && page == 3) Box(Modifier.weight(1f).fillMaxWidth()){giftContent()}
+        else if (expanded && page == 1) WaveMixerPads(state.tools, Modifier.weight(1f).fillMaxWidth())
         else if (expanded && page == 2) WaveMixerChrono(state, Modifier.weight(1f).fillMaxWidth())
         else if (expanded) LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(state.lanes, key = { it.id }) { lane ->
@@ -62,14 +75,7 @@ internal fun WaveMixerDeckPanel(state: WaveMixerDeckState, expanded: Boolean, on
             }
         } else state.lanes.firstOrNull()?.let { lane -> WaveDeckLaneView(lane, state, { target = lane.id; importer.launch(arrayOf("audio/*")) }) }
         if (expanded) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Box(Modifier.weight(1f)) {
-                MixerPageButton("Piste", Icons.Default.Add, page == 0) { if (page == 0) packMenu = true else page = 0 }
-                DropdownMenu(packMenu, { packMenu = false }) {
-                    DropdownMenuItem(text = { Text("Ajouter une piste") }, onClick = { packMenu = false; target = "new"; importer.launch(arrayOf("audio/*")) })
-                    DropdownMenuItem(text = { Text("Dossier") }, onClick = { packMenu = false; folder.launch(null) })
-                    DropdownMenuItem(text = { Text("Archive ZIP") }, onClick = { packMenu = false; zip.launch(arrayOf("application/zip")) })
-                }
-            }
+            Box(Modifier.weight(1f)) { MixerPageButton("Cadeau", Icons.Default.CardGiftcard, page == 3) { page = 3 } }
             Box(Modifier.weight(1f)) { MixerPageButton("Pads", Icons.Default.Apps, page == 1) { page = 1 } }
             Box(Modifier.weight(1f)) { MixerPageButton("Chronomètre", Icons.Default.Timer, page == 2) { page = 2 } }
         }

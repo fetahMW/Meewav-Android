@@ -18,6 +18,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
+import androidx.compose.ui.res.painterResource
+import com.meewav.android.R
 import java.util.UUID
 
 internal data class LogeGiftType(val name:String,val detail:String,val color:Color,val icon:ImageVector)
@@ -29,6 +31,10 @@ internal val logeGiftCatalog=listOf(
     LogeGiftType("Bonus supporter","Remercie une présence fidèle.",Color(0xFFFF4F91),Icons.Default.Favorite),
     LogeGiftType("La Certif","Une recommandation signée · grade 4 minimum.",Color(0xFF35DCF4),Icons.Default.Verified)
 )
+@Composable private fun RoomGiftBadge(code:Int,size:Dp=56.dp) {
+    val assets=listOf(R.drawable.room_gift_web_0,R.drawable.room_gift_web_1,R.drawable.room_gift_web_2,R.drawable.room_gift_web_3,R.drawable.room_gift_web_4,R.drawable.room_gift_web_5)
+    Image(painterResource(assets[code]),logeGiftCatalog[code].name,Modifier.size(size))
+}
 
 @Composable internal fun LogeGiftPanel(state:LogeToolsState) {
     var drawMode by remember{mutableStateOf(false)}
@@ -59,6 +65,7 @@ internal val logeGiftCatalog=listOf(
     fun reset(){step=0;code=-1;customTitle="";customImage="";completedId=null;delivery="now";date=null;round="Ronde actuelle";ids=emptySet();names="";search="";operationId=UUID.randomUUID().toString();state.notice=null}
     val completed=state.data.gifts.find{it.id==completedId}
     Column(Modifier.fillMaxSize()) {
+        state.notice?.let{Text(it,color=logeRed,fontSize=11.sp)}
         Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)){
             SceneButton("Offrir",Modifier.weight(1f),primary=!drawMode&&!history,icon=Icons.Default.CardGiftcard){drawMode=false;history=false;reset()}
             SceneButton("Tirage",Modifier.weight(1f),primary=drawMode&&!history,icon=Icons.Default.Casino){drawMode=true;history=false;reset()}
@@ -86,7 +93,7 @@ internal val logeGiftCatalog=listOf(
                         logeGiftCatalog.chunked(2).forEachIndexed { row,items->Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){items.forEachIndexed { col,gift->
                             val index=row*2+col;val available=state.data.stock[index]>0
                             Column(Modifier.weight(1f).heightIn(min=76.dp).hifiBlackSurface(14.dp).then(if(code==index)Modifier.border(.8.dp,gift.color,RoundedCornerShape(14.dp))else Modifier).clickable(enabled=available){code=index}.padding(10.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
-                                Row(verticalAlignment=Alignment.CenterVertically){Icon(gift.icon,null,tint=gift.color.copy(alpha=if(available)1f else .3f),modifier=Modifier.size(24.dp));Spacer(Modifier.weight(1f));Text("${state.data.stock[index]} dispo.",color=sceneMuted,fontSize=9.sp)}
+                                Row(verticalAlignment=Alignment.CenterVertically){RoomGiftBadge(index);Spacer(Modifier.weight(1f));Text("${state.data.stock[index]} dispo.",color=sceneMuted,fontSize=9.sp)}
                                 Text(gift.name,color=if(available)Color.White else sceneMuted,fontSize=12.sp,maxLines=1,overflow=TextOverflow.Ellipsis,fontWeight=FontWeight.SemiBold)
                             }
                         }}}
@@ -143,7 +150,7 @@ internal val logeGiftCatalog=listOf(
     val type=logeGiftCatalog.getOrNull(g.code)?:return
     SceneCard {
         Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(10.dp)){
-            Icon(type.icon,null,tint=type.color,modifier=Modifier.size(28.dp));Column(Modifier.weight(1f)){Text(g.title.ifBlank{type.name},color=Color.White,fontSize=14.sp,fontWeight=FontWeight.SemiBold);Text(when(g.status){"ready"->"Prêt à diffuser";"scheduled"->"Programmé · "+(g.scheduledAt?.let(::sceneDate)?:"");"spinning"->"Tirage en cours";"revealed"->"Gagnant révélé";"round"->g.round;"cancelled"->"Annulé";else->"Attribué · démo"},color=logeGold,fontSize=11.sp)}
+            RoomGiftBadge(g.code);Column(Modifier.weight(1f)){Text(g.title.ifBlank{type.name},color=Color.White,fontSize=14.sp,fontWeight=FontWeight.SemiBold);Text(when(g.status){"ready"->"Prêt à diffuser";"scheduled"->"Programmé · "+(g.scheduledAt?.let(::sceneDate)?:"");"spinning"->"Tirage en cours";"revealed"->"Gagnant révélé";"round"->g.round;"cancelled"->"Annulé";else->"Attribué · démo"},color=logeGold,fontSize=11.sp)}
         }
         Text(if(g.pool.isEmpty())"Pour "+g.recipientName else if(g.status=="revealed")"Gagnant · "+g.winner?.name.orEmpty()else"${g.pool.size} participants",color=sceneMuted,fontSize=12.sp)
         if(g.status in setOf("ready","round","scheduled"))Row(horizontalArrangement=Arrangement.spacedBy(6.dp)){

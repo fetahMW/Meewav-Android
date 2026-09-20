@@ -42,10 +42,10 @@ internal object LogeRules {
 
 /** Native host workshop, matching the active web VIP/Poll/Questions/Gift routes.
  * Room identifiers are demo identifiers: no local action is presented as a server delivery. */
-internal class LogeToolsState(val guests:WaveGuestState,private val load:()->String?,private val persist:(String)->Unit) {
-    constructor(context:Context,guests:WaveGuestState,scope:String):this(guests,
+internal class LogeToolsState(val guests:WaveGuestState,private val load:()->String?,private val persist:(String)->Unit,private val seedDemoPeople:Boolean=true) {
+    constructor(context:Context,guests:WaveGuestState,scope:String,seedDemoPeople:Boolean=true):this(guests,
         {context.getSharedPreferences("loge-tools-v1-"+scope.hashCode(),Context.MODE_PRIVATE).getString("state",null)},
-        {context.getSharedPreferences("loge-tools-v1-"+scope.hashCode(),Context.MODE_PRIVATE).edit().putString("state",it).apply()})
+        {context.getSharedPreferences("loge-tools-v1-"+scope.hashCode(),Context.MODE_PRIVATE).edit().putString("state",it).apply()},seedDemoPeople)
     private val json=Json { ignoreUnknownKeys=true;encodeDefaults=true }
     var data by mutableStateOf(LogeArchive());private set
     var tab by mutableIntStateOf(0)
@@ -66,7 +66,8 @@ internal class LogeToolsState(val guests:WaveGuestState,private val load:()->Str
     init {
         val names=listOf("Lou V.","Yanis Flow","Sofia Elan","Maya Nox","Léo Mar","Nina Vale")
         val images=listOf(R.drawable.loge_artist_0,R.drawable.loge_artist_1,R.drawable.loge_artist_2,R.drawable.loge_artist_3,R.drawable.loge_artist_4,R.drawable.loge_artist_5)
-        guests.addSceneDemoPeople(names.mapIndexed { i,name -> WaveGuest("loge-"+('a'+i),name,if(i in listOf(0,1,2,5))"Membre VIP" else "Membre de la Loge",images[i],if(i<3)WaveGuestLocation.BACKSTAGE else WaveGuestLocation.REQUESTED,gradeLevel=i%5+1) })
+        if(seedDemoPeople)guests.addSceneDemoPeople(names.mapIndexed { i,name -> WaveGuest("loge-"+('a'+i),name,if(i in listOf(0,1,2,5))"Membre VIP" else "Membre de la Loge",images[i],if(i<3)WaveGuestLocation.BACKSTAGE else WaveGuestLocation.REQUESTED,gradeLevel=i%5+1) })
+        else selectedId=guests.guests.firstOrNull()?.id.orEmpty()
         load()?.let { saved -> runCatching { data=json.decodeFromString<LogeArchive>(saved) }.onFailure { notice="Le dernier atelier n’a pas pu être restauré." } }
         // Re-entering a room must never silently put a person back on air.
         if(data.moments.any { it.status=="live" }) save(data.copy(moments=data.moments.map { if(it.status=="live")it.copy(status="accepted",startedAt=null)else it }))
