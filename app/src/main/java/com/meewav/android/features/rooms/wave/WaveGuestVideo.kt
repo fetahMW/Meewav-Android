@@ -21,14 +21,17 @@ internal fun waveGuestDemoVideo(id: String): String {
 }
 
 @Composable
-internal fun WaveGuestVideo(guest: WaveGuest, modifier: Modifier) {
+internal fun WaveGuestVideo(guest: WaveGuest, modifier: Modifier, volume: Float = 0f) {
     AndroidView(modifier = modifier, factory = { GuestVideoView(it, guest.demoVideo) },
+        update = { it.setGain(volume) },
         onRelease = { it.releasePlayer() })
 }
 
 private class GuestVideoView(context: Context, private val asset: String) : TextureView(context), TextureView.SurfaceTextureListener {
     private var player: MediaPlayer? = null
     private var prepared = false
+    private var gain = 0f
+    fun setGain(value: Float) { gain = value.coerceIn(0f, 1f); if (prepared) player?.setVolume(gain, gain) }
     private var videoWidth = 0
     private var videoHeight = 0
     init { surfaceTextureListener = this; isOpaque = false }
@@ -46,6 +49,7 @@ private class GuestVideoView(context: Context, private val asset: String) : Text
             media.setOnVideoSizeChangedListener { _, w, h -> videoWidth = w; videoHeight = h; fitVideo() }
             media.setOnPreparedListener {
                 prepared = true
+                it.setVolume(gain, gain)
                 if (windowVisibility == View.VISIBLE) it.start()
             }
             media.setOnErrorListener { _, _, _ -> releasePlayer(); true }

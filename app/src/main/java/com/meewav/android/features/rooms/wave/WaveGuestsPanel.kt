@@ -74,7 +74,7 @@ internal fun WaveGuestDragOverlay(state: WaveGuestState) {
 /** Shared stage geometry; controls change composition without resizing the mixer. */
 @Composable
 internal fun WaveGuestStage(state: WaveGuestState, interactive: Boolean,
-                            onFullscreen: (() -> Unit)? = null, host: @Composable () -> Unit) {
+                            onFullscreen: (() -> Unit)? = null, audible: Boolean = true, host: @Composable () -> Unit) {
     var directorOpen by remember { mutableStateOf(false) }
     val stage = state.onStage
     BoxWithConstraints(Modifier.fillMaxSize().background(Color(0xFF050608))
@@ -87,10 +87,13 @@ internal fun WaveGuestStage(state: WaveGuestState, interactive: Boolean,
                 .width(maxWidth * frame.width).height(maxHeight * frame.height).padding(1.dp)
         }
         // Stable host composition slot: changing the recipe never restarts its player.
-        Box(tileModifier("host").clipToBounds()) { host() }
+        Box(tileModifier("host").clipToBounds().clickable { state.mixerGuestId = null }) {
+            host()
+            if (state.mixerGuest == null && stage.isNotEmpty()) Box(Modifier.fillMaxSize().border(1.dp, WaveMixerTheme.capsuleAccentSoft.copy(alpha = .7f)))
+        }
         stage.forEach { guest ->
             key(guest.id) {
-                if (guest.id in frames) GuestStageTile(state, guest, interactive, tileModifier(guest.id))
+                if (guest.id in frames) GuestStageTile(state, guest, interactive, tileModifier(guest.id), audible)
             }
         }
         if (state.overStage && state.dragged?.location == WaveGuestLocation.BACKSTAGE) {
@@ -113,13 +116,14 @@ internal fun WaveGuestStage(state: WaveGuestState, interactive: Boolean,
     if (directorOpen) WaveDirectorSheet(state, onDismiss = { directorOpen = false }, onFullscreen = { onFullscreen?.invoke() })
 }
 @Composable
-private fun GuestStageTile(state: WaveGuestState, guest: WaveGuest, interactive: Boolean, modifier: Modifier) {
+private fun GuestStageTile(state: WaveGuestState, guest: WaveGuest, interactive: Boolean, modifier: Modifier, audible: Boolean) {
     Box(modifier.clip(RoundedCornerShape(7.dp)).background(Color(0xFF111216))
         .guestDrag(state, guest, interactive)
-        .clickable(enabled = interactive) { state.previewId = guest.id }
+        .clickable { state.mixerGuestId = guest.id }
         .alpha(if (state.dragId == guest.id) .35f else 1f)) {
-        if (guest.camera && guest.connected) WaveGuestVideo(guest, Modifier.fillMaxSize())
+        if (guest.camera && guest.connected) WaveGuestVideo(guest, Modifier.fillMaxSize(), volume = if (guest.mic && audible) state.guestGain(guest.id) else 0f)
         else Icon(WaveIcons.CameraOff, "Caméra coupée", tint = Color.White.copy(alpha = .55f), modifier = Modifier.align(Alignment.Center).size(26.dp))
+        if (state.mixerGuest?.id == guest.id) Box(Modifier.fillMaxSize().border(1.dp, WaveMixerTheme.capsuleAccentSoft.copy(alpha = .8f), RoundedCornerShape(7.dp)))
         Text("Aperçu démo", color = Color.White.copy(alpha = .65f), fontSize = 8.sp,
             modifier = Modifier.align(Alignment.TopStart).background(Color.Black.copy(alpha = .65f)).padding(4.dp))
         Row(Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(Color.Black.copy(alpha = .72f)).padding(7.dp),

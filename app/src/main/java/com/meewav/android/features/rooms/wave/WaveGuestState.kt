@@ -42,6 +42,11 @@ internal class WaveGuestState {
         notice = if (requestsOpen) "Demandes ouvertes · démo locale" else "Demandes fermées · les demandes reçues restent disponibles"
     }
     var primaryId by mutableStateOf("host")
+    var mixerGuestId by mutableStateOf<String?>(null)
+    private var mixerGains by mutableStateOf(mapOf<String, Float>())
+    val mixerGuest get() = onStage.find { it.id == mixerGuestId }
+    fun guestGain(id: String) = mixerGains[id] ?: .62f
+    fun setGuestGain(id: String, gain: Float) { mixerGains = mixerGains + (id to gain.coerceIn(0f, 1f)) }
     val resolvedPrimaryId get() = primaryId.takeIf { id -> id == "host" || onStage.any { it.id == id } } ?: "host"
     private val initialGuests = listOf(
         WaveGuest("naya", "NAYA K.", "Rappeuse", R.drawable.wave_chat_artist_0, WaveGuestLocation.BACKSTAGE),

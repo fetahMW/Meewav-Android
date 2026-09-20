@@ -166,7 +166,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
             WaveHeader(title = roomTitle?.takeIf { it.isNotBlank() } ?: if (room == RoomModule.WAVE) "Freestyle session — Luma invite" else room.label,
                 onBack = { showLeaveConfirm = true }, onClose = { showLeaveConfirm = true })
             Box(Modifier.fillMaxWidth().height(videoViewportHeight).clipToBounds()) {
-                WaveGuestStage(guestState, interactive = activeTab == WaveTab.INVITES, onFullscreen = { stageFullscreen = true }) {
+                WaveGuestStage(guestState, interactive = activeTab == WaveTab.INVITES, onFullscreen = { stageFullscreen = true }, audible = !stageFullscreen) {
                     WaveVideo(cameraOff = true, modifier = Modifier.fillMaxSize(), roomLabel = room.label)
                 }
             }
@@ -201,11 +201,11 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                 ) {
                 when (activeTab) {
                     WaveTab.MIXEUR -> MixerBody(
-                        deck = mixerDeck, onDeckPlay = { composition?.suspendAudio(); mixerDeck.toggle() },
-                        micGain = micGain, audioGain = audioGain,
-                        micMuted = micMuted, audioMuted = audioMuted,
-                        onMicGain = { micGain = it }, onAudioGain = { audioGain = it },
-                        onMicMute = { micMuted = !micMuted }, onAudioMute = { audioMuted = !audioMuted },
+                        guest = guestState.mixerGuest, deck = mixerDeck, onDeckPlay = { composition?.suspendAudio(); mixerDeck.toggle() },
+                        micGain = guestState.mixerGuest?.let { guestState.guestGain(it.id) } ?: micGain, audioGain = audioGain,
+                        micMuted = guestState.mixerGuest?.let { !it.mic } ?: micMuted, audioMuted = audioMuted,
+                        onMicGain = { value -> guestState.mixerGuest?.let { guestState.setGuestGain(it.id, value) } ?: run { micGain = value } }, onAudioGain = { audioGain = it },
+                        onMicMute = { guestState.mixerGuest?.let { guestState.toggleMic(it.id) } ?: run { micMuted = !micMuted } }, onAudioMute = { audioMuted = !audioMuted },
                         isPro = isPro, onProChange = { isPro = it },
                         monitoring = monitoring, onMonitoring = { monitoring = !monitoring },
                         autotuneOn = autotuneOn, onAutotune = { autotuneOn = !autotuneOn },
@@ -519,6 +519,7 @@ private fun WaveTabBar(
 
 @Composable
 private fun MixerBody(
+    guest: WaveGuest?,
     deck: WaveMixerDeckState, onDeckPlay: () -> Unit,
     micGain: Float, audioGain: Float, micMuted: Boolean, audioMuted: Boolean,
     onMicGain: (Float) -> Unit, onAudioGain: (Float) -> Unit,
@@ -544,10 +545,10 @@ private fun MixerBody(
             val slot = (cw - 6.dp) / 4f
             Box(Modifier.offset(x = 3.dp).width(slot * 2f).height(32.dp)) {
                 Row(Modifier.width(slot * 1.5f - 22.dp).fillMaxHeight(), verticalAlignment = Alignment.CenterVertically) {
-                    Image(painterResource(R.drawable.wave_artist_luma), null,
+                    Image(painterResource(guest?.portrait ?: R.drawable.wave_artist_luma), null,
                         modifier = Modifier.size(28.dp).clip(CircleShape))
                     Spacer(Modifier.width(5.dp))
-                    Text("Luma", modifier = Modifier.weight(1f), color = WaveMixerTheme.pearl,
+                    Text(guest?.name ?: "Luma", modifier = Modifier.weight(1f), color = WaveMixerTheme.pearl,
                         fontSize = 13.sp, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                 }
                 Box(Modifier.offset(x = slot * 1.5f - 20.dp, y = 8.dp).width(1.dp).height(16.dp).background(white(.12f)))
@@ -557,8 +558,8 @@ private fun MixerBody(
             }
             // Strip Micro sous le slot Chat, Audio sous le slot Mixeur.
             WaveChannelStrip(
-                label = "Luma", icon = WaveIcons.Mic,
-                portraitRes = R.drawable.wave_artist_luma,
+                label = guest?.name ?: "Luma", icon = WaveIcons.Mic,
+                portraitRes = guest?.portrait ?: R.drawable.wave_artist_luma,
                 showHeader = false,
                 gain = micGain, muted = micMuted, isMic = true,
                 onGainChange = onMicGain, onToggleMute = onMicMute,

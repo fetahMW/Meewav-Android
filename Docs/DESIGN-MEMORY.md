@@ -437,3 +437,5 @@ Le lecteur Wave possède son propre bouton haut-parleur animé et son propre vol
 - Toggles indépendants : compte à rebours avant le beat, DJ Horn à la fin. Départ une seconde avant la fin réelle du média, sans délai fixe ; annulation du départ si pause/erreur/quitter.
 - Chrono configurable 00:01 à 99:59, durée persistante, activable, pause/reprise/reset ; horloge monotone, suit le transport et arrête le beat à zéro. Horn également en fin naturelle de piste. Aucun raccordement RTC ajouté.
 - Compilation uniquement ; vérification visuelle et audio laissée à l’utilisateur.
+
+- Mixeur : toucher une vidéo de scène sélectionne le canal vocal (contour violet discret). Fader/portrait/nom/mute suivent la sélection ; gains conservés par invité. Toucher le host revient au host ; sortie de scène revient au host. Volume appliqué aux vidéos locales, raccordement RTC restant. Une seule scène audible en plein écran.
