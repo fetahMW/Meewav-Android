@@ -16,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
@@ -105,8 +106,10 @@ internal fun ClasseToolsPanel(state: ClasseToolsState) {
                     Column(Modifier.fillMaxSize().clickable { state.selectedStudent = if (selected) null else student.id }.padding(vertical = 3.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                         Box(Modifier.size(portraitSize).scale(size)) {
                             if (speaking) ClasseSpeakingHalo(Modifier.fillMaxSize())
-                            Image(painterResource(student.portrait), "Sélectionner ${student.name}", Modifier.fillMaxSize().padding(if (speaking) 3.dp else 0.dp).clip(CircleShape)
+                            Image(painterResource(student.portrait), "Sélectionner ${student.name}", Modifier.fillMaxSize().padding(if (speaking) 3.dp else 0.dp).clip(CircleShape).alpha(if (student.connected) 1f else .42f)
                                 .border(if (selected || speaking || response != null) 2.dp else .5.dp, if (speaking) Color(0xFF7ABFA2) else response?.color() ?: if (selected) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .15f), CircleShape), contentScale = ContentScale.Crop)
+                            if (!student.connected) Icon(Icons.Filled.WifiOff, "Connexion perdue",
+                                tint = Color(0xFFE39199), modifier = Modifier.align(Alignment.Center).size(22.dp))
                             if (hand || speaking || student.id in state.invitedToSpeak) Icon(if (speaking) WaveIcons.Mic else if (hand) Icons.Filled.BackHand else Icons.Filled.Schedule,
                                 if (speaking) "A la parole" else if (hand) "Main levée" else "Invité à parler", tint = if (speaking) Color(0xFF7ABFA2) else WaveMixerTheme.capsuleAccentSoft,
                                 modifier = Modifier.align(Alignment.BottomEnd).size(23.dp).background(Color(0xFF121017), CircleShape).padding(4.dp))
@@ -120,7 +123,7 @@ internal fun ClasseToolsPanel(state: ClasseToolsState) {
                             ClasseVoiceBars()
                             Text("Parole · " + ((tick - state.speakingSince) / 1000).coerceAtLeast(0) + " s", color = Color(0xFF8DD1B2), fontSize = 8.sp, maxLines = 1)
                         } else {
-                            val status = response?.label ?: if (!student.connected) "Déconnecté" else null
+                            val status = response?.label
                             status?.let { Text(it, color = response?.color() ?: classeMuted, fontSize = 9.sp, maxLines = 1) }
                         }
                     }
