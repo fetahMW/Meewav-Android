@@ -115,3 +115,9 @@ Le clic répété et le routage vers un artiste indisponible n'ouvrent plus auto
 La sélection du programme commence dans Coulisses. Un duo indisponible reste dans Régie avec noms et raisons : aucun renvoi automatique vers Invités ni ouverture de son aperçu. En debug, une arrivée peut être simulée explicitement dans la carte du match (acceptation locale et reconnexion), sans prétendre à une validation backend. Le CTA peut ensuite monter les deux artistes.
 
 23 tests Cage passent, dont les sept duels d'un Open Mic Battle à huit artistes en coulisses, le maintien du gagnant, les deux artistes sur scène et les passages à deux secondes ; le cas invitation en attente puis arrivée est également couvert. Pas de nouvelle vérification visuelle automatique.
+
+## Présence du host — 20 septembre 2026
+
+Vidéo fournie : video_2026-09-20_12-55-33.mp4, copiée dans cage-demo/host.mp4 (13,19 secondes, H.264/AAC, 1280×720). Lecture locale en boucle. Le host remplace le faux fallback utilisant le premier participant. Il reste seul à l'accueil, partage le cadre avec un seul invité, reste en miniature lors des duels et revient en grand après validation du résultat, pour tous les formats. Le gagnant Battle reste inscrit sur scène pour le prochain challenger. Le podium conserve une miniature host.
+
+En plein écran portrait, les deux artistes conservent leurs moitiés haut/bas et le host reste en incrustation. Son volume et son mute sont indépendants des micros alternés des compétiteurs et utilisent les contrôles host du mixeur. Au verdict, le fader revient au host ; toucher un invité permet toujours de sélectionner son volume. Ce sont des vidéos et commandes locales de démonstration, pas un nouveau flux RTC diffusé aux viewers réseau. Compilation APK effectuée, sans QA visuelle automatique.

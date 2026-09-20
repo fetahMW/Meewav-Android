@@ -167,7 +167,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
     ) {
         Box(Modifier.fillMaxSize().background(Color.Black).systemBarsPadding()) {
-            if (cage != null) CageVideoStage(cage, interactive = false, fullscreen = true) { guestState.guests.firstOrNull()?.let { WaveGuestVideo(it, Modifier.fillMaxSize()) } } else WaveGuestStage(guestState, interactive = false) {
+            if (cage != null) CageVideoStage(cage, interactive = false, fullscreen = true, hostVolume = if (micMuted) 0f else micGain) else WaveGuestStage(guestState, interactive = false) {
                 WaveVideo(cameraOff = true, modifier = Modifier.fillMaxSize(), roomLabel = room.label, roomAccent = roomAccent)
             }
             androidx.compose.material3.IconButton(onClick = { stageFullscreen = false },
@@ -189,7 +189,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
             WaveHeader(title = cage?.title ?: roomTitle?.takeIf { it.isNotBlank() } ?: if (room == RoomModule.WAVE) "Freestyle session — Luma invite" else room.label,
                 onBack = { showLeaveConfirm = true }, onClose = { showLeaveConfirm = true })
             Box(Modifier.fillMaxWidth().height(videoViewportHeight).clipToBounds()) {
-                if (cage != null) CageVideoStage(cage, interactive = activeTab == WaveTab.INVITES, audible = !stageFullscreen, onFullscreen = { stageFullscreen = true }) { guestState.guests.firstOrNull()?.let { WaveGuestVideo(it, Modifier.fillMaxSize()) } } else WaveGuestStage(guestState, interactive = activeTab == WaveTab.INVITES, onFullscreen = { stageFullscreen = true }, audible = !stageFullscreen) {
+                if (cage != null) CageVideoStage(cage, interactive = activeTab == WaveTab.INVITES, audible = !stageFullscreen, onFullscreen = { stageFullscreen = true }, hostVolume = if (micMuted) 0f else micGain) else WaveGuestStage(guestState, interactive = activeTab == WaveTab.INVITES, onFullscreen = { stageFullscreen = true }, audible = !stageFullscreen) {
                     WaveVideo(cameraOff = true, modifier = Modifier.fillMaxSize(), roomLabel = room.label, roomAccent = roomAccent)
                 }
             }
