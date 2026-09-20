@@ -102,7 +102,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     val keyboardController = LocalSoftwareKeyboardController.current
     val context = LocalContext.current
     val mixerDeck = remember(context) { WaveMixerDeckState(context.applicationContext) }
-    var activeTab by remember(room) { mutableStateOf(if (room in listOf(RoomModule.CAGE, RoomModule.CLASSE, RoomModule.SCENE, RoomModule.LOGE)) WaveTab.WAVE else WaveTab.MIXEUR) }
+    var activeTab by remember(room) { mutableStateOf(if (room != RoomModule.WAVE) WaveTab.WAVE else WaveTab.MIXEUR) }
     // Keep the highlighted snapshot even if the live feed trims old messages or tabs change.
     var pinnedChatMessage by remember { mutableStateOf<WaveChatMessage?>(null) }
     var waveNotificationsRead by remember { mutableStateOf(false) }
@@ -110,6 +110,8 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     val classe = remember(room, guestState, programScope) { if (room == RoomModule.CLASSE) ClasseToolsState(context.applicationContext, guestState, programScope).also { if (!roomTitle.isNullOrBlank()) it.title = roomTitle } else null }
     val scene = remember(room, guestState, programScope) { if (room == RoomModule.SCENE) SceneToolsState(context.applicationContext, guestState, programScope + ":" + roomTitle.orEmpty()) else null }
     val loge = remember(room, guestState, programScope) { if (room == RoomModule.LOGE) LogeToolsState(context.applicationContext, guestState, programScope + ":" + roomTitle.orEmpty()) else null }
+    val place = remember(room, guestState, programScope) { if (room == RoomModule.PLACE) PlaceToolsState(context.applicationContext, guestState, programScope + ":" + roomTitle.orEmpty()) else null }
+    LaunchedEffect(place) { if(place!=null)while(true){place.tick();delay(250)} }
     LaunchedEffect(loge) { if (loge != null) while (true) { loge.tick(); delay(250) } }
     LaunchedEffect(classe, guestState.guests) { classe?.syncStudents() }
     // Temporary workshop override requested for rapid Cage simulations; saved rules stay intact.
@@ -135,7 +137,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     }
     LaunchedEffect(cage, guestState.onStage.map { it.id }) { cage?.syncManualStage() }
     DisposableEffect(cage) { onDispose { cage?.close() } }
-    val roomAccent = when (room) { RoomModule.CAGE -> Color(0xFFFF5B73); RoomModule.CLASSE -> classeBlue; RoomModule.SCENE -> WaveMixerTheme.capsuleAccent; RoomModule.LOGE -> Color(0xFFE9B949); else -> Color(0xFF27C2D1) }
+    val roomAccent = when (room) { RoomModule.CAGE -> Color(0xFFFF5B73); RoomModule.CLASSE -> classeBlue; RoomModule.SCENE -> WaveMixerTheme.capsuleAccent; RoomModule.LOGE -> Color(0xFFE9B949); RoomModule.PLACE -> Color(0xFFD5D3DC); else -> Color(0xFF27C2D1) }
     var emojiPanelOpen by remember { mutableStateOf(false) }
     // Canaux.
     var micGain by remember { mutableStateOf(0.72f) }
@@ -283,7 +285,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                     WaveTab.INVITES -> WaveGuestsPanel(guestState, Modifier.fillMaxSize(), cage, onProgram = { cage?.selectionMode = false; activeTab = WaveTab.WAVE })
                     else -> if (room == RoomModule.WAVE && composition != null) {
                         WaveCompositionPanel(composition, workshopHeight, onProfile = guestState::openArtistProfile)
-                    } else if (cage != null) CageToolsPanel(cage, programScope) else if (classe != null) ClasseToolsPanel(classe) else if (scene != null) SceneToolsPanel(scene) { activeTab = WaveTab.INVITES } else if (loge != null) LogeToolsPanel(loge, { activeTab = WaveTab.INVITES }, { activeTab = WaveTab.CHAT }) else WaveTabPlaceholder(activeTab, room.toolsLabel)
+                    } else if (cage != null) CageToolsPanel(cage, programScope) else if (classe != null) ClasseToolsPanel(classe) else if (scene != null) SceneToolsPanel(scene) { activeTab = WaveTab.INVITES } else if (loge != null) LogeToolsPanel(loge, { activeTab = WaveTab.INVITES }, { activeTab = WaveTab.CHAT }) else if(place!=null)PlaceToolsPanel(place){activeTab=WaveTab.INVITES} else WaveTabPlaceholder(activeTab, room.toolsLabel)
                 }
                 }
             }
