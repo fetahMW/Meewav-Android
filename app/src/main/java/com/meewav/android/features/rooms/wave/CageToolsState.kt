@@ -109,9 +109,9 @@ internal class CageToolsState(val guests: WaveGuestState,
         !locked && roster.isEmpty() && rosterMode in listOf("manual", "prepared") -> "Choisir les participants"
         !locked -> if (matches.isEmpty()) "Préparer le programme" else if (format == CageFormat.CHALLENGER) "Confirmer les duels" else "Confirmer le programme"
         finished -> "Voir les résultats"
-        active == null || active?.completed == true -> "Préparer la rencontre suivante"
+        active == null || active?.completed == true -> "Monter le prochain duo sur scène"
         incident != null -> "Reprendre après l’incident"
-        phase == "Appel" -> if (ready()) "Monter sur scène" else "Préparer les artistes"
+        phase == "Appel" -> if (ready()) "Monter sur scène" else "Voir l’artiste indisponible"
         voteOpen -> "Clore le vote"
         voteClosed && !revealed -> "Révéler le résultat"
         voteClosed && publicBallots.isEmpty() && juryBallots.isEmpty() -> "Relancer le vote sans bulletin"
@@ -141,7 +141,7 @@ internal class CageToolsState(val guests: WaveGuestState,
             !locked && roster.isEmpty() && rosterMode in listOf("manual", "prepared") -> { selectionMode = true; guests.guestPage = 1 }
             !locked -> if (matches.isEmpty()) generate() else lock()
             finished -> page = 0
-            active == null || active?.completed == true -> matches.firstOrNull { !it.completed }?.let { call(it.id); page = 1 }
+            active == null || active?.completed == true -> matches.firstOrNull { !it.completed }?.let { call(it.id); page = 1; if (ready()) stage() }
             incident != null -> resumeIncident()
             phase == "Appel" -> if (ready()) stage() else {
                 artistAttentionId = readinessIssues().firstOrNull()?.first
@@ -167,7 +167,7 @@ internal class CageToolsState(val guests: WaveGuestState,
     fun generate() {
         if (locked) return
         if (roster.isEmpty() && rosterMode in listOf("random", "first-eligible")) {
-            val candidates = guests.guests.filter { it.canParticipate && it.connected && it.mic && it.camera && it.location != WaveGuestLocation.JURY }
+            val candidates = guests.guests.filter { it.canParticipate && it.connected && it.location != WaveGuestLocation.JURY }
             roster = (if (rosterMode == "random") candidates.shuffled() else candidates).take(capacity).map { it.id }
         }
         if (roster.any { person(it) == null || person(it)?.invitation == GuestInvitation.DECLINED || person(it)?.location == WaveGuestLocation.JURY }) { notice = "Retire les artistes indisponibles ou membres du jury de la sélection."; return }
@@ -199,16 +199,14 @@ internal class CageToolsState(val guests: WaveGuestState,
         guests.move(pair.filterNot { format == CageFormat.CHALLENGER && person(it)?.location == WaveGuestLocation.STAGE }.toSet(), WaveGuestLocation.BACKSTAGE)
         log("Appel · ${person(match.a)?.name} ${match.b?.let { "vs ${person(it)?.name}" }.orEmpty()}")
     }
-    fun ready(): Boolean = active?.let { m -> listOfNotNull(m.a, m.b).all { id -> person(id)?.let { it.canParticipate && it.connected && it.mic && it.camera && it.location in listOf(WaveGuestLocation.BACKSTAGE, WaveGuestLocation.STAGE) } == true } } == true
+    fun ready(): Boolean = active?.let { m -> listOfNotNull(m.a, m.b).all { id -> person(id)?.let { it.canParticipate && it.connected && it.location in listOf(WaveGuestLocation.BACKSTAGE, WaveGuestLocation.STAGE) } == true } } == true
     fun readinessIssues(): List<Pair<String, String>> = listOfNotNull(active?.a, active?.b).mapNotNull { id ->
         val guest = person(id)
         val reason = when {
             guest == null -> "artiste absent"
             !guest.canParticipate -> "invitation non acceptée"
             !guest.connected -> "connexion perdue"
-            !guest.mic -> "micro coupé"
-            !guest.camera -> "caméra coupée"
-            guest.location !in listOf(WaveGuestLocation.BACKSTAGE, WaveGuestLocation.STAGE) -> "à préparer en coulisses"
+            guest.location !in listOf(WaveGuestLocation.BACKSTAGE, WaveGuestLocation.STAGE) -> "pas encore en coulisses"
             else -> null
         }
         reason?.let { id to it }
@@ -216,7 +214,7 @@ internal class CageToolsState(val guests: WaveGuestState,
     fun stage() {
         val match = active ?: return
         if (phase != "Appel" || match.completed) return
-        if (!ready()) { notice = "Caméra, micro et connexion doivent être prêts pour les deux artistes."; return }
+        if (!ready()) { notice = commandHint; return }
         val ids = listOfNotNull(match.a, match.b).toSet()
         guests.move(guests.onStage.map { it.id }.filterNot { it in ids }.toSet(), WaveGuestLocation.BACKSTAGE)
         guests.move(ids, WaveGuestLocation.STAGE)
@@ -224,7 +222,7 @@ internal class CageToolsState(val guests: WaveGuestState,
     }
     fun start() {
         if (active == null || active?.completed == true || voteOpen || incident != null || phase !in listOf("Sur scène", "Pause", "Temps écoulé")) return
-        if (!ready() || listOfNotNull(active?.a, active?.b).any { person(it)?.location != WaveGuestLocation.STAGE }) { notice = "Un artiste n’est plus prêt : vérifie sa connexion, son micro et sa caméra."; return }
+        if (!ready() || listOfNotNull(active?.a, active?.b).any { person(it)?.location != WaveGuestLocation.STAGE }) { notice = "Un artiste a quitté la scène ou perdu sa connexion."; return }
         if (remainingMs <= 0) return
         deadline = now() + remainingMs; clockRunning = true; phase = "Performance"; log("Passage $speaker")
     }

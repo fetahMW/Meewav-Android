@@ -46,7 +46,10 @@ internal val WaveGuest.healthLabel: String get() = when {
 
 /** Native demo room state. No RTC or Supabase success is inferred from a local move. */
 internal class WaveGuestState(private val cageDemo: Boolean = false) {
-    private fun roomVideo(guest: WaveGuest) = if (cageDemo) guest.copy(demoVideo = cageGuestDemoVideo(guest.id), sourceAspectRatio = 9f / 16f) else guest
+    private fun roomVideo(guest: WaveGuest) = if (cageDemo) guest.copy(demoVideo = cageGuestDemoVideo(guest.id), sourceAspectRatio = 9f / 16f,
+        connected = if (guest.location == WaveGuestLocation.BACKSTAGE) true else guest.connected,
+        mic = if (guest.location == WaveGuestLocation.BACKSTAGE) true else guest.mic,
+        camera = if (guest.location == WaveGuestLocation.BACKSTAGE) true else guest.camera) else guest
     var guestPage by mutableIntStateOf(0)
     var composition by mutableStateOf(WaveComposition.ENSEMBLE)
     var requestsOpen by mutableStateOf(true)

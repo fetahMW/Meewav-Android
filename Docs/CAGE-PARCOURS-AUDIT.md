@@ -95,3 +95,11 @@ les annonces animées du ring web. Les sanctions, remplacements et reports du
 moteur web ne sont pas encore reproduits : l’incident permet pause/reprise.
 Ces limites ne sont pas couvertes par les tests locaux et ne constituent pas
 une validation d’un live multi-utilisateur.
+
+## Simplification Cage — coulisses et sélection
+
+Coulisses représente une admission déjà effectuée par la Green House backend. Le moteur local ne redemande plus de validation micro/caméra : un clic appelle et monte le duo programmé, sans démarrer son chronomètre. Une déconnexion ou une invitation non acceptée reste bloquante ; les commandes de mute restent respectées. Les fixtures initiales Cage en coulisses sont prêtes. Cela ne constitue pas un nouveau branchement backend.
+
+Le sélecteur Participants redondant des réglages est retiré. Le choix reste dans Invités via Programme. La sélection Retenu dépend exclusivement de CageToolsState.selectionMode ; les autres rooms reçoivent cage=null et conservent leurs clics, aperçu et multi-sélection habituels. Le socle reste partagé, les comportements spécifiques sont optionnels par room.
+
+21 tests Cage passent, dont admission sans recontrôle des interrupteurs micro/caméra et parcours complet des duels. APK debug compilé.

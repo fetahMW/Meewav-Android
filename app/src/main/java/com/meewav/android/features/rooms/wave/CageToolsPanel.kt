@@ -127,7 +127,7 @@ internal fun CageToolsPanel(state: CageToolsState, programScope: String) {
                                 listOfNotNull(match.a, match.b).forEach { id ->
                                     val person = state.person(id)
                                     CagePerson(person)
-                                    Text(if (person?.connected != true) "Connexion perdue" else if (!person.camera || !person.mic) "Caméra ou micro à préparer" else person.healthLabel,
+                                    Text(if (person?.connected != true) "Connexion perdue" else if (!person.canParticipate) "Invitation en attente" else if (person.location == WaveGuestLocation.BACKSTAGE) "Prêt à monter" else person.location.label,
                                         color = if (person?.connected == true) cageMuted else Color(0xFFC88B90), fontSize = 10.sp)
                                 }
                             }
@@ -197,7 +197,6 @@ internal fun CageToolsPanel(state: CageToolsState, programScope: String) {
             Row(Modifier.horizontalScroll(rememberScrollState())) { listOf(2, 4, 8, 12, 16, 24, 32, 64).forEach { n -> TextButton(onClick = { state.changeCapacity(n) }, enabled = !state.locked && n >= state.roster.size) { Text("$n", color = if (state.capacity == n) WaveMixerTheme.capsuleAccentSoft else cageMuted) } } }
             Text("Atelier local · votes et résultats non synchronisés au serveur.", color = cageMuted, fontSize = 11.sp)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) { CageFormat.entries.forEach { format -> TextButton(onClick = { state.chooseFormat(format) }, enabled = !state.locked) { Text(format.title, color = if (state.format == format) WaveMixerTheme.capsuleAccentSoft else cageMuted) } } }
-            CageSettingSelect("Participants", state.rosterMode, linkedMapOf("manual" to "Choisir dans Invités", "prepared" to "Participants du programme", "first-eligible" to "Premiers présents éligibles", "random" to "Tirage parmi les présents"), !state.locked) { state.preparationRules(selection = it) }
             CageSettingSelect("En cas d’égalité", state.tieBreak, linkedMapOf("sudden-death" to "Manche décisive", "replay" to "Rejouer la rencontre"), !state.locked) { state.preparationRules(tie = it) }
             Text("Durée d’un passage", color = cageMuted, fontSize = 12.sp)
             Row(Modifier.horizontalScroll(rememberScrollState())) { (listOf(30, 60, 90, 120, 180, 240, 300) + state.passageSeconds).distinct().sorted().forEach { duration -> TextButton(onClick = { state.configure(duration, state.rounds, state.performance) }, enabled = !state.locked) { Text("${duration}s", color = if (duration == state.passageSeconds) WaveMixerTheme.capsuleAccentSoft else cageMuted) } } }
