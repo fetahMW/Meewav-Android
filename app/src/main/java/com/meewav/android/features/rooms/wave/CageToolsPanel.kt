@@ -61,7 +61,13 @@ internal fun CageToolsPanel(state: CageToolsState, programScope: String) {
             Text(notice, color = WaveMixerTheme.capsuleAccentSoft, fontSize = 11.sp, modifier = Modifier.weight(1f))
             IconButton(onClick = { state.notice = null }) { Icon(Icons.Default.Close, "Fermer", tint = cageMuted) }
         } }
-        LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(top = 6.dp, bottom = 12.dp)) {
+        if (state.page == 2) Column(Modifier.weight(1f)) {
+            Row(Modifier.fillMaxWidth().height(44.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(state.roster.size.toString() + " participants", color = cageInk, fontSize = 14.sp, modifier = Modifier.weight(1f))
+                IconButton(onClick = { settings = true }) { Icon(Icons.Default.Tune, "Réglages", tint = WaveMixerTheme.capsuleAccentSoft, modifier = Modifier.size(20.dp)) }
+            }
+            CageParticipantsRails(state, Modifier.weight(1f).fillMaxWidth()) { replacementId = it }
+        } else LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(top = 6.dp, bottom = 12.dp)) {
             item {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
@@ -149,11 +155,6 @@ internal fun CageToolsPanel(state: CageToolsState, programScope: String) {
                         state.incident?.let { reason -> item { Text(reason, color = Color(0xFFC88B90), fontSize = 12.sp) } }
                     }
                     item { CageFundraiserSummary(state.fundraiser) { fundraiserOpen = true } }
-                }
-                2 -> {
-                    if (!state.locked) item { CageAction("Choisir dans Invités") { manageParticipants() } }
-                    if (state.roster.isEmpty()) item { Text("Les artistes retenus pour ce programme apparaîtront ici.", color = cageMuted, fontSize = 12.sp) }
-                    items(state.roster, key = { "person-" + it }) { id -> CageParticipantCard(state, id) { replacementId = it } }
                 }
             }
         }
