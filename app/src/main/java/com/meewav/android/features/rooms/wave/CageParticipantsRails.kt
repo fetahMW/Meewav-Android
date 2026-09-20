@@ -25,13 +25,15 @@ internal fun CageParticipantsRails(state: CageToolsState, modifier: Modifier, on
         }
         return
     }
-    LazyHorizontalGrid(rows = GridCells.Fixed(2), modifier = modifier,
+    BoxWithConstraints(modifier) {
+    val cardWidth = ((maxWidth - 16.dp) / 2.5f).coerceAtLeast(1.dp)
+    LazyHorizontalGrid(rows = GridCells.Fixed(2), modifier = Modifier.fillMaxSize(),
         horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(bottom = 8.dp)) {
         items(state.roster, key = { it }) { id ->
             state.person(id)?.let { guest ->
                 var menu by remember { mutableStateOf(false) }
-                Column(Modifier.width(112.dp).fillMaxHeight().hifiBlackSurface(12.dp).clip(RoundedCornerShape(12.dp))
+                Column(Modifier.width(cardWidth).fillMaxHeight().hifiBlackSurface(12.dp).clip(RoundedCornerShape(12.dp))
                     .clickable { state.openProfile(id) }.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(Modifier.weight(1f).fillMaxWidth()) {
                         Image(painterResource(guest.portrait), "Pré-profil de " + guest.name,
@@ -60,5 +62,6 @@ internal fun CageParticipantsRails(state: CageToolsState, modifier: Modifier, on
                 }
             }
         }
+    }
     }
 }
