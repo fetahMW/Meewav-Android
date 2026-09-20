@@ -39,13 +39,9 @@ internal fun CageVideoStage(state: CageToolsState, interactive: Boolean, audible
     val podium = state.resultsOnStage && state.finished
     val mode = state.videoMode
     val pair = state.active?.let { listOfNotNull(it.a, it.b) }.orEmpty()
-    // Battle intermission keeps the winner beside the host until the next duo actually mounts.
-    val feeds = when {
-        podium -> emptyList()
-        state.active?.completed == true && state.format == CageFormat.CHALLENGER ->
-            state.guests.onStage.filter { it.id == state.active?.winner }
-        state.active?.completed == true -> emptyList()
-        else -> state.guests.onStage.let { stage -> if (pair.isNotEmpty()) stage.filter { it.id in pair }.sortedBy { pair.indexOf(it.id) } else stage.take(2) }
+    // Stage membership is authoritative, including guests mounted manually by drag and drop.
+    val feeds = if (podium) emptyList() else state.guests.onStage.sortedBy {
+        pair.indexOf(it.id).let { index -> if (index < 0) Int.MAX_VALUE else index }
     }
     val focused = feeds.find { it.id == state.guests.mixerGuestId } ?: feeds.firstOrNull()
     val shown = if (mode == "Solo" && !fullscreen && feeds.size > 1) listOfNotNull(focused) else feeds
@@ -123,12 +119,21 @@ internal fun CageVideoStage(state: CageToolsState, interactive: Boolean, audible
                     color = WaveMixerTheme.capsuleAccentSoft, fontSize = if (fullscreen) 11.sp else 9.sp,
                     modifier = Modifier.align(Alignment.BottomEnd).padding(8.dp).background(Color.Black.copy(alpha = .8f), CircleShape).padding(horizontal = 10.dp, vertical = 5.dp))
             }
-            if (shown.size == 2) Text("VS", color = Color.White, fontSize = 11.sp, modifier = Modifier.align(Alignment.Center).background(Color.Black, CircleShape).padding(5.dp))
+            if (shown.size == 2 && state.active?.completed == false && shown.all { it.id in pair }) Text("VS", color = Color.White, fontSize = 11.sp, modifier = Modifier.align(Alignment.Center).background(Color.Black, CircleShape).padding(5.dp))
             if (fullscreen && feeds.size >= 2) {
                 state.voteTick
                 val seconds = if (state.voteOpen) state.voteRemaining else (state.remainingMs + 999) / 1000
                 Text((if (state.voteOpen) "Vote" else state.phase) + " · " + seconds + "s", color = Color.White, fontSize = 11.sp,
                     modifier = Modifier.align(Alignment.TopStart).padding(8.dp).background(Color.Black.copy(alpha = .65f), CircleShape).padding(horizontal = 10.dp, vertical = 5.dp))
+            }
+            if (interactive && state.guests.overStage && state.guests.dragged?.location == WaveGuestLocation.BACKSTAGE) {
+                Box(Modifier.fillMaxSize().zIndex(3f).background(WaveMixerTheme.capsuleAccent.copy(alpha = .15f))
+                    .border(2.dp, WaveMixerTheme.capsuleAccentSoft), contentAlignment = Alignment.Center) {
+                    Text(if (state.guests.dragged?.connected == false) "Connexion perdue · attendre la reconnexion"
+                        else if (state.guests.canDrop) "Relâcher pour monter" else "Scène complète · 3 invités maximum",
+                        color = Color.White, fontSize = 12.sp,
+                        modifier = Modifier.background(Color.Black.copy(alpha = .8f), RoundedCornerShape(8.dp)).padding(10.dp))
+                }
             }
             if (state.incident != null || state.phase == "Pause") Text(if (state.incident != null) "Interruption · " + state.incident else "Match en pause", color = Color.White,
                 modifier = Modifier.align(Alignment.Center).background(Color.Black.copy(alpha = .85f)).padding(10.dp))

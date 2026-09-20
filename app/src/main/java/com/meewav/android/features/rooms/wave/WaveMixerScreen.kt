@@ -125,6 +125,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
             cage.artistAttentionId = null
         }
     }
+    LaunchedEffect(cage, guestState.onStage.map { it.id }) { cage?.syncManualStage() }
     DisposableEffect(cage) { onDispose { cage?.close() } }
     val roomAccent = if (room == RoomModule.CAGE) Color(0xFFFF5B73) else Color(0xFF27C2D1)
     var emojiPanelOpen by remember { mutableStateOf(false) }

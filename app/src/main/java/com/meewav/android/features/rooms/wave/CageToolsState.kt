@@ -256,6 +256,16 @@ internal class CageToolsState(val guests: WaveGuestState,
         }
         reason?.let { id to it }
     }
+    fun syncManualStage() {
+        if (guests.onStage.isNotEmpty()) resultsOnStage = false
+        val match = active ?: return
+        if (match.completed) return
+        val duoOnStage = listOfNotNull(match.a, match.b).all { id -> guests.onStage.any { it.id == id } }
+        if (phase == "Appel" && duoOnStage && ready()) {
+            phase = "Sur scène"
+            log("Artistes sur scène")
+        } else if (phase == "Sur scène" && !duoOnStage) phase = "Appel"
+    }
     fun stage() {
         val match = active ?: return
         if (phase != "Appel" || match.completed) return
@@ -341,6 +351,7 @@ internal class CageToolsState(val guests: WaveGuestState,
         if (match.b != null) guests.awardCageVictory(id)
         // Keep the result visible until the next call. In Battle only the winner stays.
         if (format == CageFormat.CHALLENGER) guests.move(listOfNotNull(match.a, match.b).filterNot { it == id }.toSet(), WaveGuestLocation.BACKSTAGE)
+        else guests.move(listOfNotNull(match.a, match.b).toSet(), WaveGuestLocation.BACKSTAGE)
         guests.mixerGuestId = null
         phase = "Résultat validé"; log("${person(id)?.name} · vainqueur")
         if (format == CageFormat.TOURNAMENT) {
