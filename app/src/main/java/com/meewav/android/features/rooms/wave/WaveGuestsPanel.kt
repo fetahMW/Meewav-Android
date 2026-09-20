@@ -74,7 +74,8 @@ internal fun WaveGuestDragOverlay(state: WaveGuestState) {
 /** Shared stage geometry; controls change composition without resizing the mixer. */
 @Composable
 internal fun WaveGuestStage(state: WaveGuestState, interactive: Boolean,
-                            onFullscreen: (() -> Unit)? = null, audible: Boolean = true, host: @Composable () -> Unit) {
+                            onFullscreen: (() -> Unit)? = null, audible: Boolean = true,
+                            controlBar: @Composable (() -> Unit) -> Unit, host: @Composable () -> Unit) {
     var directorOpen by remember { mutableStateOf(false) }
     val stage = state.onStage
     BoxWithConstraints(Modifier.fillMaxSize().background(Color(0xFF050608))
@@ -104,14 +105,9 @@ internal fun WaveGuestStage(state: WaveGuestState, interactive: Boolean,
                     color = Color.White, fontSize = 12.sp)
             }
         }
-            IconButton(onClick = { directorOpen = true }, modifier = Modifier.align(Alignment.BottomStart).padding(4.dp).size(40.dp)
-                .background(Color.Black.copy(alpha = .7f), CircleShape)) {
-                Icon(WaveIcons.More, "Réalisation vidéo", tint = Color.White, modifier = Modifier.size(19.dp))
-            }
-            if (onFullscreen != null) IconButton(onClick = onFullscreen, modifier = Modifier.align(Alignment.BottomEnd).padding(4.dp).size(40.dp)
-                .background(Color.Black.copy(alpha = .7f), CircleShape)) {
-                Icon(WaveIcons.Expand, "Plein écran", tint = Color.White, modifier = Modifier.size(17.dp))
-            }
+        Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 4.dp)) {
+            controlBar { directorOpen = true }
+        }
     }
     if (directorOpen) WaveDirectorSheet(state, onDismiss = { directorOpen = false }, onFullscreen = { onFullscreen?.invoke() })
 }

@@ -30,7 +30,8 @@ import com.meewav.android.R
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun CageVideoStage(state: CageToolsState, interactive: Boolean, audible: Boolean = true,
-    onFullscreen: (() -> Unit)? = null, fullscreen: Boolean = false, hostVolume: Float = .72f) {
+    onFullscreen: (() -> Unit)? = null, fullscreen: Boolean = false, hostVolume: Float = .72f,
+    controlBar: @Composable (() -> Unit) -> Unit, hostContent: @Composable (@Composable () -> Unit) -> Unit) {
     var director by remember { mutableStateOf(false) }
     // Per-screen presentation preference, never a room command broadcast to other viewers.
     var hostX by rememberSaveable(fullscreen) { mutableFloatStateOf(1f) }
@@ -114,7 +115,7 @@ internal fun CageVideoStage(state: CageToolsState, interactive: Boolean, audible
             Box(hostModifier.clip(RoundedCornerShape(if (hostInset) 10.dp else 0.dp)).background(Color.Black)
                 .then(if (hostInset) Modifier.border(.75.dp, WaveMixerTheme.capsuleAccentSoft.copy(alpha = .6f), RoundedCornerShape(10.dp)) else Modifier)
                 .clickable { state.guests.mixerGuestId = null }) {
-                WaveGuestVideo(host, Modifier.fillMaxSize(), if (audible) hostVolume else 0f)
+                hostContent { WaveGuestVideo(host, Modifier.fillMaxSize(), if (audible) hostVolume else 0f) }
                 Text("HOST", color = WaveMixerTheme.capsuleAccentSoft, fontSize = if (hostInset) 8.sp else 10.sp,
                     modifier = Modifier.align(Alignment.BottomStart).background(Color.Black.copy(alpha = .65f)).padding(horizontal = 6.dp, vertical = 2.dp))
             }
@@ -139,20 +140,18 @@ internal fun CageVideoStage(state: CageToolsState, interactive: Boolean, audible
                         modifier = Modifier.background(Color.Black.copy(alpha = .8f), RoundedCornerShape(8.dp)).padding(10.dp))
                 }
             }
+            Box(Modifier.align(Alignment.BottomCenter).zIndex(4f).padding(bottom = 4.dp)) {
+                controlBar { director = true }
+            }
             if (state.incident != null || state.phase == "Pause") Text(if (state.incident != null) "Interruption · " + state.incident else "Match en pause", color = Color.White,
                 modifier = Modifier.align(Alignment.Center).background(Color.Black.copy(alpha = .85f)).padding(10.dp))
         }
-        if (!fullscreen) Row(Modifier.fillMaxWidth().height(32.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { director = true }, modifier = Modifier.size(32.dp)) { Icon(WaveIcons.More, "Régie vidéo Cage", tint = Color.White) }
-            if (podium && interactive) TextButton(onClick = { state.resultsOnStage = false }, contentPadding = PaddingValues(horizontal = 4.dp)) { Text("Masquer le podium", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 10.sp) }
-            Text(if (state.active?.completed == true) "Verdict · " + state.person(state.active?.winner)?.name else if (state.voteOpen) "Vote ouvert · résultats masqués" else state.format.title + " · " + mode,
-                color = Color.White.copy(alpha = .7f), fontSize = 9.sp, maxLines = 1, modifier = Modifier.weight(1f))
-            if (onFullscreen != null) IconButton(onClick = onFullscreen, modifier = Modifier.size(32.dp)) { Icon(WaveIcons.Expand, "Plein écran", tint = Color.White, modifier = Modifier.size(17.dp)) }
-        }
+
     }
     if (director) ModalBottomSheet(onDismissRequest = { director = false }, containerColor = Color(0xFF111216)) {
         Column(Modifier.padding(16.dp)) {
             Text("Régie vidéo · La Cage", color = Color.White)
+            if (podium) TextButton(onClick = { state.resultsOnStage = false; director = false }) { Text("Masquer le podium") }
             listOf("Face à face", "Focus", "Solo").forEach { choice -> TextButton(onClick = { state.videoMode = choice; director = false }) { Text(choice, color = if (mode == choice) WaveMixerTheme.capsuleAccentSoft else Color.White) } }
             Text("Le host revient entre les matchs et reste en miniature pendant les duels.", color = Color.Gray, fontSize = 12.sp)
             Row {

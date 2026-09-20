@@ -166,18 +166,26 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     }
     var showLeaveConfirm by remember { mutableStateOf(false) }
     var stageFullscreen by remember { mutableStateOf(false) }
+    val videoControls = rememberRoomVideoControls()
+    @Composable fun StageControls(fullscreen: Boolean, director: () -> Unit) {
+        RoomVideoControlBar(videoControls, micMuted, onMicrophone = { micMuted = !micMuted },
+            fullscreen = fullscreen, onFullscreen = { stageFullscreen = !stageFullscreen; videoControls.reveal() }, onDirector = director)
+    }
 
     if (stageFullscreen) androidx.compose.ui.window.Dialog(
         onDismissRequest = { stageFullscreen = false },
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
     ) {
-        Box(Modifier.fillMaxSize().background(Color.Black).systemBarsPadding()) {
-            if (cage != null) CageVideoStage(cage, interactive = false, fullscreen = true, hostVolume = if (micMuted) 0f else micGain) else WaveGuestStage(guestState, interactive = false) {
-                WaveVideo(cameraOff = true, modifier = Modifier.fillMaxSize(), roomLabel = room.label, roomAccent = roomAccent)
-            }
-            androidx.compose.material3.IconButton(onClick = { stageFullscreen = false },
-                modifier = Modifier.align(Alignment.TopEnd).padding(8.dp).background(Color.Black.copy(alpha = .7f), CircleShape)) {
-                Icon(WaveIcons.Close, "Quitter le plein écran", tint = Color.White)
+        Box(Modifier.fillMaxSize().background(Color.Black).systemBarsPadding().roomVideoTouches(videoControls)) {
+            if (cage != null) CageVideoStage(cage, interactive = false, fullscreen = true,
+                audible = videoControls.returnAudio, hostVolume = if (micMuted) 0f else micGain,
+                controlBar = { StageControls(true, it) },
+                hostContent = { demo -> RoomHostVideo(videoControls, demo = demo) })
+            else WaveGuestStage(guestState, interactive = false, audible = videoControls.returnAudio,
+                onFullscreen = { stageFullscreen = false }, controlBar = { StageControls(true, it) }) {
+                RoomHostVideo(videoControls) {
+                    WaveVideo(cameraOff = false, modifier = Modifier.fillMaxSize(), roomLabel = room.label, roomAccent = roomAccent)
+                }
             }
         }
     }
@@ -193,9 +201,18 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
         Column(Modifier.fillMaxSize()) {
             WaveHeader(title = cage?.title ?: classe?.title ?: roomTitle?.takeIf { it.isNotBlank() } ?: if (room == RoomModule.WAVE) "Freestyle session — Luma invite" else room.label,
                 onBack = { showLeaveConfirm = true }, onClose = { showLeaveConfirm = true })
-            Box(Modifier.fillMaxWidth().height(videoViewportHeight).clipToBounds()) {
-                if (cage != null) CageVideoStage(cage, interactive = activeTab == WaveTab.INVITES, audible = !stageFullscreen, onFullscreen = { stageFullscreen = true }, hostVolume = if (micMuted) 0f else micGain) else WaveGuestStage(guestState, interactive = activeTab == WaveTab.INVITES, onFullscreen = { stageFullscreen = true }, audible = !stageFullscreen) {
-                    WaveVideo(cameraOff = true, modifier = Modifier.fillMaxSize(), roomLabel = room.label, roomAccent = roomAccent)
+            Box(Modifier.fillMaxWidth().height(videoViewportHeight).clipToBounds().roomVideoTouches(videoControls)) {
+                if (cage != null) CageVideoStage(cage, interactive = activeTab == WaveTab.INVITES,
+                    audible = !stageFullscreen && videoControls.returnAudio, onFullscreen = { stageFullscreen = true },
+                    hostVolume = if (micMuted) 0f else micGain,
+                    controlBar = { if (!stageFullscreen) StageControls(false, it) },
+                    hostContent = { demo -> RoomHostVideo(videoControls, active = !stageFullscreen, demo = demo) })
+                else WaveGuestStage(guestState, interactive = activeTab == WaveTab.INVITES,
+                    onFullscreen = { stageFullscreen = true }, audible = !stageFullscreen && videoControls.returnAudio,
+                    controlBar = { if (!stageFullscreen) StageControls(false, it) }) {
+                    RoomHostVideo(videoControls, active = !stageFullscreen) {
+                        WaveVideo(cameraOff = false, modifier = Modifier.fillMaxSize(), roomLabel = room.label, roomAccent = roomAccent)
+                    }
                 }
             }
             // Zone grise du mixeur : couvre la barre d'onglets ET le corps.
