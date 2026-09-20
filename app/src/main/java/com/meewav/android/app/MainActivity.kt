@@ -96,7 +96,12 @@ class MainActivity : ComponentActivity() {
             intent.getBooleanExtra(EXTRA_OPEN_PROFILE, false) -> ProfileActivity::class.java
             else -> com.meewav.android.features.market.MarketActivity::class.java
         }
-        startActivity(Intent(this, workshop).putExtra("preview", true))
+        startActivity(Intent(this, workshop).putExtra("preview", true).apply {
+            if (workshop == com.meewav.android.features.rooms.wave.WaveMixerActivity::class.java) {
+                putExtra("roomType", intent.getStringExtra("roomType"))
+                putExtra("roomTitle", intent.getStringExtra("roomTitle"))
+            }
+        })
         finish()
         return true
     }
