@@ -221,6 +221,7 @@ internal class WaveChatSession {
 
 @Composable
 internal fun WaveChatPanel(
+    giftContent:(@Composable ()->Unit)?=null,
     chatSession:WaveChatSession=remember{WaveChatSession()},
     modifier: Modifier = Modifier,
     pinnedMessage: WaveChatMessage? = null,
@@ -435,6 +436,7 @@ internal fun WaveChatPanel(
         }
         if (toolsOpen) {
             WaveChatToolsSheet(
+                giftContent=giftContent,
                 poll = livePoll,
                 onDismiss = { toolsOpen = false },
                 onLaunch = { question, choices, duration ->

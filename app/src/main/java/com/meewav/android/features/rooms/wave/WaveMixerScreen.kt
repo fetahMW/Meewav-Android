@@ -302,7 +302,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                 ) {
                 when (activeTab) {
                     WaveTab.MIXEUR -> MixerBody(
-                        guest = guestState.mixerGuest, deck = mixerDeck, onDeckPlay = { composition?.suspendAudio(); mixerDeck.toggle() },giftContent={LogeGiftPanel(roomGifts)},
+                        guest = guestState.mixerGuest, deck = mixerDeck, onDeckPlay = { composition?.suspendAudio(); mixerDeck.toggle() },
                         micGain = guestState.mixerGuest?.let { guestState.guestGain(it.id) } ?: micGain, audioGain = audioGain,
                         micMuted = guestState.mixerGuest?.let { !it.mic } ?: micMuted, audioMuted = audioMuted,
                         onMicGain = { value -> guestState.mixerGuest?.let { guestState.setGuestGain(it.id, value) } ?: run { micGain = value } }, onAudioGain = { audioGain = it },
@@ -321,7 +321,8 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                     WaveTab.CHAT -> Column(Modifier.fillMaxSize()) {
                         WaveChatPanel(
                             chatSession=chatSession,
-                        Modifier.weight(1f), pinnedMessage = pinnedChatMessage,
+                            giftContent={LogeGiftPanel(roomGifts)},
+                        modifier=Modifier.weight(1f), pinnedMessage = pinnedChatMessage,
                         onPinMessage = { pinnedChatMessage = it },
                         notificationsRead = waveNotificationsRead,
                         onReadNotifications = { waveNotificationsRead = true },
@@ -627,7 +628,6 @@ private fun WaveTabBar(
 private fun MixerBody(
     guest: WaveGuest?,
     deck: WaveMixerDeckState, onDeckPlay: () -> Unit,
-    giftContent:@Composable ()->Unit,
     micGain: Float, audioGain: Float, micMuted: Boolean, audioMuted: Boolean,
     onMicGain: (Float) -> Unit, onAudioGain: (Float) -> Unit,
     onMicMute: () -> Unit, onAudioMute: () -> Unit,
@@ -705,7 +705,7 @@ private fun MixerBody(
             )
         }
         WaveMixerDeckPanel(deck, multitrack, onMultitrack, onDeckPlay,
-            Modifier.fillMaxWidth().height(deckHeight).padding(top = 4.dp, bottom = 4.dp),giftContent)
+            Modifier.fillMaxWidth().height(deckHeight).padding(top = 4.dp, bottom = 4.dp))
         }
     }
 }

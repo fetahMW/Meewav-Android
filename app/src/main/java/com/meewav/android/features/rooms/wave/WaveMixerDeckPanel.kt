@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.sp
 import kotlin.math.max
 
 @Composable
-internal fun WaveMixerDeckPanel(state: WaveMixerDeckState, expanded: Boolean, onExpand: () -> Unit, onPlay: () -> Unit, modifier: Modifier, giftContent:@Composable ()->Unit) {
+internal fun WaveMixerDeckPanel(state: WaveMixerDeckState, expanded: Boolean, onExpand: () -> Unit, onPlay: () -> Unit, modifier: Modifier) {
     val context = LocalContext.current
     var target by remember { mutableStateOf("main") }
     var revealed by remember { mutableStateOf<String?>(null) }
@@ -38,7 +38,7 @@ internal fun WaveMixerDeckPanel(state: WaveMixerDeckState, expanded: Boolean, on
     val folder = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri -> if (uri != null) {
         runCatching { context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }; state.importPack(uri, true)
     } }
-    LaunchedEffect(expanded) { revealed = null }
+    LaunchedEffect(expanded) { revealed = null; if(page !in 0..2)page=0 }
     Column(modifier.hifiBlackSurface(14.dp).padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (!expanded || page == 0 || page == 2) Row(Modifier.fillMaxWidth().height(44.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
             Text(if (state.public) "Public" else "Privé", color = Color(0xFFCBC7D5), fontSize = 11.sp,
@@ -52,7 +52,7 @@ internal fun WaveMixerDeckPanel(state: WaveMixerDeckState, expanded: Boolean, on
         }
         if(expanded)Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){
             if(page!=0)SceneIcon(WaveIcons.ChevronLeft,"Retour aux pistes"){page=0}
-            Text(if(page==0)"Pistes"else if(page==1)"Pads"else if(page==2)"Chronomètre"else"Cadeaux",Modifier.weight(1f),color=WaveMixerTheme.pearl,fontSize=12.sp)
+            Text(if(page==0)"Pistes"else if(page==1)"Pads"else if(page==2)"Chronomètre"else"Chronomètre",Modifier.weight(1f),color=WaveMixerTheme.pearl,fontSize=12.sp)
             if(page==0)Box{
                 SceneIcon(Icons.Default.Add,"Ajouter une piste ou un dossier"){packMenu=true}
                 DropdownMenu(packMenu,{packMenu=false},containerColor=Color(0xFF101114),tonalElevation=0.dp){
@@ -62,8 +62,7 @@ internal fun WaveMixerDeckPanel(state: WaveMixerDeckState, expanded: Boolean, on
                 }
             }
         }
-        if (expanded && page == 3) Box(Modifier.weight(1f).fillMaxWidth()){giftContent()}
-        else if (expanded && page == 1) WaveMixerPads(state.tools, Modifier.weight(1f).fillMaxWidth())
+        if (expanded && page == 1) WaveMixerPads(state.tools, Modifier.weight(1f).fillMaxWidth())
         else if (expanded && page == 2) WaveMixerChrono(state, Modifier.weight(1f).fillMaxWidth())
         else if (expanded) LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(state.lanes, key = { it.id }) { lane ->
@@ -75,7 +74,6 @@ internal fun WaveMixerDeckPanel(state: WaveMixerDeckState, expanded: Boolean, on
             }
         } else state.lanes.firstOrNull()?.let { lane -> WaveDeckLaneView(lane, state, { target = lane.id; importer.launch(arrayOf("audio/*")) }) }
         if (expanded) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Box(Modifier.weight(1f)) { MixerPageButton("Cadeau", Icons.Default.CardGiftcard, page == 3) { page = 3 } }
             Box(Modifier.weight(1f)) { MixerPageButton("Pads", Icons.Default.Apps, page == 1) { page = 1 } }
             Box(Modifier.weight(1f)) { MixerPageButton("Chronomètre", Icons.Default.Timer, page == 2) { page = 2 } }
         }

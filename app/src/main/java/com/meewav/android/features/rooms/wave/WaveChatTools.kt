@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.filled.ThumbDown
 import androidx.compose.ui.unit.dp
@@ -27,6 +28,7 @@ internal data class WaveChatPoll(val question: String, val choices: List<String>
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun WaveChatToolsSheet(
+    giftContent:(@Composable ()->Unit)?=null,
     poll: WaveChatPoll?,
     onDismiss: () -> Unit,
     onLaunch: (String, List<String>, Int) -> Unit,
@@ -37,6 +39,7 @@ internal fun WaveChatToolsSheet(
     onPin: (WaveChatMessage?) -> Unit,
     onOpenRoomPoll: (() -> Unit)? = null,
 ) {
+    var gifts by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf(false) }
     var highlighting by remember { mutableStateOf(false) }
     var question by remember { mutableStateOf("") }
@@ -65,14 +68,15 @@ internal fun WaveChatToolsSheet(
         Column(Modifier.fillMaxWidth().fillMaxHeight(.85f).padding(horizontal = 18.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(WaveIcons.Tools, null, tint = WaveMixerTheme.capsuleAccentSoft, modifier = Modifier.size(20.dp))
-                if (editing || highlighting) IconButton(onClick = { editing = false; highlighting = false }) {
+                if (editing || highlighting || gifts) IconButton(onClick = { editing = false; highlighting = false; gifts=false }) {
                     Icon(WaveIcons.ChevronLeft, "Retour aux outils")
                 }
-                Text(if (highlighting) "Mise en avant" else if (editing) "Sondage" else "Outils du live", fontSize = 18.sp,
+                Text(if(gifts) "Cadeaux" else if (highlighting) "Mise en avant" else if (editing) "Sondage" else "Outils du live", fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f).padding(start = 10.dp))
                 IconButton(onClick = onDismiss) { Icon(WaveIcons.Close, "Fermer les outils") }
             }
-            Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(bottom = 20.dp),
+            if(gifts && giftContent!=null) Box(Modifier.weight(1f).fillMaxWidth().padding(bottom=12.dp)){giftContent()}
+            else Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(bottom = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 if (highlighting) {
                     Text("Choisis un message du host. Il restera en haut du chat jusqu’à son retrait.",
@@ -95,6 +99,14 @@ internal fun WaveChatToolsSheet(
                         }
                     }
                 } else if (!editing) {
+                    if(giftContent!=null) Row(Modifier.fillMaxWidth().hifiBlackSurface(16.dp).clickable{gifts=true}.padding(18.dp),verticalAlignment=Alignment.CenterVertically) {
+                        Icon(Icons.Default.CardGiftcard,null,tint=WaveMixerTheme.capsuleAccentSoft,modifier=Modifier.size(24.dp))
+                        Spacer(Modifier.width(12.dp))
+                        Column {
+                            Text("Cadeaux",fontSize=16.sp,fontWeight=FontWeight.SemiBold)
+                            Text("Offrir, organiser un tirage et retrouver l’historique",color=Color.White.copy(alpha=.55f),fontSize=12.sp)
+                        }
+                    }
                     Column(Modifier.fillMaxWidth().hifiBlackSurface(16.dp)
                         .clickable { if (onOpenRoomPoll != null) onOpenRoomPoll() else editing = true }.padding(18.dp)) {
                         Text("Sondage", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
