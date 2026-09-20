@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.shape.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -49,6 +50,7 @@ internal val logeRed=Color(0xFFD6949A)
     var search by remember { mutableStateOf("") }
     var source by remember { mutableStateOf("all") }
     var history by remember { mutableStateOf(false) }
+    var sourceMenu by remember { mutableStateOf(false) }
     var playback by remember { mutableStateOf<LogeMoment?>(null) }
     val person=state.selected
     if(person!=null && state.action!=null) {
@@ -66,11 +68,27 @@ internal val logeRed=Color(0xFFD6949A)
     }
     Column(Modifier.fillMaxSize()) {
         Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)) {
-            OutlinedTextField(search,{search=it.take(80)},Modifier.weight(1f),singleLine=true,placeholder={Text("Rechercher un membre",fontSize=12.sp)},leadingIcon={Icon(Icons.Default.Search,null,Modifier.size(19.dp))},shape=RoundedCornerShape(14.dp),colors=logeFieldColors())
+            BasicTextField(search,{search=it.take(80)},Modifier.weight(1f).height(44.dp).hifiBlackSurface(12.dp),singleLine=true,
+                textStyle=androidx.compose.ui.text.TextStyle(color=Color.White,fontSize=12.sp),cursorBrush=SolidColor(sceneAccent),
+                decorationBox={field -> Row(Modifier.fillMaxSize().padding(horizontal=12.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(9.dp)) {
+                    Icon(Icons.Default.Search,null,Modifier.size(17.dp),tint=sceneMuted)
+                    Box(Modifier.weight(1f)){if(search.isEmpty())Text("Rechercher un membre",color=sceneMuted,fontSize=12.sp);field()}
+                    if(search.isNotEmpty())IconButton(onClick={search=""},modifier=Modifier.size(40.dp)){Icon(WaveIcons.Close,"Effacer la recherche",Modifier.size(16.dp),tint=sceneMuted)}
+                } })
             SceneIcon(Icons.Default.History,"Historique VIP") { history=!history }
         }
         Spacer(Modifier.height(8.dp))
-        SceneChoice(if(history)"Historique VIP" else when(source){"queue"->"Demandes";"vip"->"Membres VIP";else->"Tous les membres"},listOf("all" to "Tous les membres","queue" to "Demandes","vip" to "Membres VIP")){source=it;history=false}
+        Box {
+            Row(Modifier.fillMaxWidth().height(44.dp).hifiBlackSurface(12.dp).clickable(role=Role.Button){sourceMenu=true}.padding(horizontal=12.dp),verticalAlignment=Alignment.CenterVertically) {
+                Text(if(history)"Historique VIP"else when(source){"queue"->"Demandes";"vip"->"Membres VIP";else->"Tous les membres"},Modifier.weight(1f),color=Color(0xFFD1CED8),fontSize=12.sp)
+                Icon(Icons.Default.ExpandMore,null,Modifier.size(18.dp),tint=WaveMixerTheme.capsuleAccentSoft)
+            }
+            DropdownMenu(sourceMenu,{sourceMenu=false},containerColor=Color(0xFF101114),tonalElevation=0.dp,shape=RoundedCornerShape(12.dp)) {
+                listOf("all" to "Tous les membres","queue" to "Demandes","vip" to "Membres VIP","history" to "Historique VIP").forEach { (key,label) ->
+                    DropdownMenuItem(text={Text(label,color=Color(0xFFD1CED8),fontSize=12.sp)},onClick={history=key=="history";if(!history)source=key;sourceMenu=false})
+                }
+            }
+        }
         val filtered=state.people.filter { (search.isBlank() || (it.name+" "+it.role).contains(search,true)) && when(source){"queue"->it.location==WaveGuestLocation.REQUESTED;"vip"->it.role.contains("VIP",true);else->true} }
         LazyColumn(Modifier.weight(1f),contentPadding=PaddingValues(vertical=8.dp),verticalArrangement=Arrangement.spacedBy(7.dp)) {
             if(history) {
