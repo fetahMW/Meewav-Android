@@ -198,12 +198,15 @@ internal fun CageToolsPanel(state: CageToolsState, programScope: String) {
             Text("Réglages de la Cage", color = cageInk, fontSize = 18.sp)
             OutlinedTextField(state.title, { if (!state.locked) state.title = it.take(100) }, label = { Text("Nom du programme") }, enabled = !state.locked, singleLine = true)
             Text("${state.capacity} places · ${state.roster.size} participants retenus", color = cageMuted, fontSize = 12.sp)
-            Row(Modifier.horizontalScroll(rememberScrollState())) { listOf(2, 4, 8, 12, 16, 24, 32, 64).forEach { n -> TextButton(onClick = { state.changeCapacity(n) }, enabled = !state.locked && n >= state.roster.size) { Text("$n", color = if (state.capacity == n) WaveMixerTheme.capsuleAccentSoft else cageMuted) } } }
+            Row(Modifier.horizontalScroll(rememberScrollState())) { (listOfNotNull(if (state.isSolo) 1 else null) + listOf(2, 4, 8, 12, 16, 24, 32, 64)).forEach { n -> TextButton(onClick = { state.changeCapacity(n) }, enabled = !state.locked && n >= state.roster.size) { Text("$n", color = if (state.capacity == n) WaveMixerTheme.capsuleAccentSoft else cageMuted) } } }
             Text("Atelier local · votes et résultats non synchronisés au serveur.", color = cageMuted, fontSize = 11.sp)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) { CageFormat.entries.forEach { format -> TextButton(onClick = { state.chooseFormat(format) }, enabled = !state.locked) { Text(format.title, color = if (state.format == format) WaveMixerTheme.capsuleAccentSoft else cageMuted) } } }
+            CageSettingSelect("Participants", state.rosterMode, linkedMapOf("manual" to "Choisir dans Invités", "prepared" to "Participants du programme", "first-eligible" to "Premiers présents éligibles", "random" to "Tirage parmi les présents"), !state.locked) { state.preparationRules(selection = it) }
+            if (state.isSolo) CageSettingSelect("Après le passage", state.feedback, linkedMapOf("none" to "Sans vote", "appreciation" to "Appréciation", "scored" to "Note de 1 à 5"), !state.locked) { state.preparationRules(response = it) }
+            else CageSettingSelect("En cas d’égalité", state.tieBreak, linkedMapOf("sudden-death" to "Manche décisive", "replay" to "Rejouer la rencontre"), !state.locked) { state.preparationRules(tie = it) }
             Text("Durée d’un passage", color = cageMuted, fontSize = 12.sp)
-            Row { listOf(60, 90, 120, 180).forEach { duration -> TextButton(onClick = { state.configure(duration, state.rounds, state.performance) }, enabled = !state.locked) { Text("${duration}s", color = if (duration == state.passageSeconds) WaveMixerTheme.capsuleAccentSoft else cageMuted) } } }
-            Row { (1..3).forEach { count -> TextButton(onClick = { state.configure(state.passageSeconds, count, state.performance) }, enabled = !state.locked) { Text("$count round${if (count > 1) "s" else ""}", color = if (state.rounds == count) WaveMixerTheme.capsuleAccentSoft else cageMuted) } } }
+            Row(Modifier.horizontalScroll(rememberScrollState())) { (listOf(30, 60, 90, 120, 180, 240, 300) + state.passageSeconds).distinct().sorted().forEach { duration -> TextButton(onClick = { state.configure(duration, state.rounds, state.performance) }, enabled = !state.locked) { Text("${duration}s", color = if (duration == state.passageSeconds) WaveMixerTheme.capsuleAccentSoft else cageMuted) } } }
+            if (!state.isSolo) Row { listOf(1, 2, 3, 5).forEach { count -> TextButton(onClick = { state.configure(state.passageSeconds, count, state.performance) }, enabled = !state.locked) { Text("$count round${if (count > 1) "s" else ""}", color = if (state.rounds == count) WaveMixerTheme.capsuleAccentSoft else cageMuted) } } }
             Row { listOf("Successif", "Alterné", "Simultané").forEach { mode -> TextButton(onClick = { state.configure(state.passageSeconds, state.rounds, mode) }, enabled = !state.locked) { Text(mode, color = if (state.performance == mode) WaveMixerTheme.capsuleAccentSoft else cageMuted, fontSize = 11.sp) } } }
             CageAction("Recommencer la préparation") { reset = true }
             Text("Journal de session", color = cageInk)
@@ -250,6 +253,22 @@ internal fun CageToolsPanel(state: CageToolsState, programScope: String) {
     }
 }
 
+@Composable
+private fun CageSettingSelect(label: String, value: String, options: Map<String, String>, enabled: Boolean, onSelect: (String) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        Row(Modifier.fillMaxWidth().hifiBlackSurface(10.dp).clickable(enabled = enabled) { expanded = true }.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(label, color = cageMuted, fontSize = 10.sp)
+                Text(options[value].orEmpty(), color = cageInk.copy(alpha = if (enabled) 1f else .5f), fontSize = 12.sp)
+            }
+            Icon(Icons.Default.ExpandMore, null, tint = WaveMixerTheme.capsuleAccentSoft, modifier = Modifier.size(20.dp))
+        }
+        DropdownMenu(expanded, { expanded = false }, containerColor = Color(0xFF151519)) {
+            options.forEach { (key, text) -> DropdownMenuItem(text = { Text(text, color = if (key == value) WaveMixerTheme.capsuleAccentSoft else cageInk) }, onClick = { onSelect(key); expanded = false }) }
+        }
+    }
+}
 @Composable
 private fun CageCard(content: @Composable ColumnScope.() -> Unit) {
     Column(Modifier.fillMaxWidth().hifiBlackSurface(13.dp).padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp), content = content)

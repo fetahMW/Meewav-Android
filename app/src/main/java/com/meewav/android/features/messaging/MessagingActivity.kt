@@ -461,7 +461,7 @@ open class MessagingActivity : ComponentActivity() {
         callAudio.stop()
         if (::web.isInitialized) { web.evaluateJavascript("window.meewavMessaging?.setActive(false);", null); web.onPause() }
     }
-    override fun onResume() { super.onResume(); stopped = false; resumed = true; if (::web.isInitialized) { web.onResume(); web.evaluateJavascript("window.meewavMessaging?.setActive(true);", null) } }
+    override fun onResume() { super.onResume(); stopped = false; resumed = true; if (::web.isInitialized) { web.onResume(); web.evaluateJavascript("window.meewavMessaging?.setActive(true); window.dispatchEvent(new Event('meewav:resume'));", null) } }
     override fun onPause() {
         resumed = false
         // Android's permission sheet pauses this Activity. Cancelling the JS

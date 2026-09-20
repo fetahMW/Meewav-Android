@@ -89,7 +89,7 @@ const CAGE_TITLE_LABELS: Record<CageFormat, string> = {
   "open-mic-battle": "Titre de l'Open Mic Battle",
 };
 const CAGE_ROSTER_LABELS = {
-  prepared: "Roster préparé",
+  prepared: "Participants du programme",
   "first-eligible": "Premiers inscrits éligibles",
   manual: "Sélection manuelle",
   random: "Tirage parmi les présents",
@@ -238,7 +238,7 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
   const [programMembers, setProgramMembers] = useState<{id: string; name: string}[]>([]);
   const [cageVoteDuration, setCageVoteDuration] = useState(60);
   const configuration = (): CageProgram => ({ version: 1, title: title.trim(), format: cageFormat,
-    participantCount: cageParticipants, rosterMode: cageRoster, rosterProfileIds: programRoster,
+    participantCount: cageParticipants, rosterMode: cageRoster, rosterProfileIds: programRoster, templateId: programId,
     rosterMembers: programMembers, rules: { rounds: cageRounds, passageDurationSeconds: cagePassageDuration,
       performanceMode: cagePerfMode, votingMode: cageVoting, votingDurationSeconds: cageVoteDuration,
       openMicFeedback: cageFeedback, tieBreak: cageTieBreak } });
@@ -250,7 +250,7 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
     setCageVoting(config.rules.votingMode as typeof cageVoting); setCageVoteDuration(config.rules.votingDurationSeconds);
     setCageFeedback((config.rules.openMicFeedback ?? 'scored') as typeof cageFeedback);
     setCageTieBreak((config.rules.tieBreak ?? 'sudden-death') as typeof cageTieBreak);
-    setProgramId(id); setProgramPicker(false); setProgramNotice('Programme chargé. Les présences seront vérifiées dans Invités.');
+    setProgramId(id ?? config.templateId); setProgramPicker(false); setProgramNotice('Programme chargé. Les présences seront vérifiées dans Invités.');
   };
   useEffect(() => { if (initialProgram) { applyProgram(initialProgram); setSelectedTab(1); } }, []);
   const loadPrograms = async () => {
@@ -579,7 +579,7 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
                     options={[
                       { value: "public", label: "Vote du public" },
                       { value: "jury", label: "Jury" },
-                      { value: "mixed", label: "Public et jury", disabled: true },
+                      { value: "mixed", label: "Public et jury" },
                     ]}
                     onChange={(value) => setCageVoting(value as typeof cageVoting)}
                   />
@@ -599,15 +599,20 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
               <LaunchSelect
                 label="Durée d'un passage"
                 value={String(cagePassageDuration)}
-                options={CAGE_PASSAGE_DURATIONS.map((seconds) => ({ value: String(seconds), label: `${seconds} secondes` }))}
+                options={[...new Set([...CAGE_PASSAGE_DURATIONS, cagePassageDuration])].sort((a, b) => a - b).map((seconds) => ({ value: String(seconds), label: `${seconds} secondes` }))}
                 onChange={(value) => setCagePassageDuration(Number(value))}
               />
+              {(!cageOpenMic || cageFeedback !== "none") && <LaunchSelect
+                label="Durée du vote"
+                value={String(cageVoteDuration)}
+                options={[...new Set([15, 30, 45, 60, 90, 120, 180, 300, cageVoteDuration])].sort((a, b) => a - b).map(seconds => ({ value: String(seconds), label: `${seconds} secondes` }))}
+                onChange={value => setCageVoteDuration(Number(value))}
+              />}
             </div>
             <DottedSeparator />
             {regisseurRow}
             <DottedSeparator />
-            {juryRow}
-            <DottedSeparator />
+            {!cageOpenMic && cageVoting !== "public" && <p className="launch-hint">Choisis jusqu’à 6 jurés dans Invités → Jury avant d’ouvrir le vote.</p>}
             <FieldLabel icon={SlidersHorizontal}>Options</FieldLabel>
             <div className="launch-checkbox-row">
               <button type="button" role="checkbox" aria-checked={cageCagnotte} className={`launch-checkbox${cageCagnotte ? " is-on" : ""}`} style={cageCagnotte ? { borderColor: accent, color: accent } : undefined} onClick={() => setCageCagnotte((value) => !value)}>Cagnotte</button>

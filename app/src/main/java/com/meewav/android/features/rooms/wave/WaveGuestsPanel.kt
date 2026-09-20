@@ -224,7 +224,7 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                 items(shown, key = { it.id }) { guest ->
                     Column(Modifier.width(112.dp).fillMaxHeight().hifiBlackSurface(12.dp).clip(RoundedCornerShape(12.dp))
                         .border(if (guest.id in state.selected) 1.dp else 0.dp, if (guest.id in state.selected) WaveMixerTheme.capsuleAccentSoft else Color.Transparent, RoundedCornerShape(12.dp))
-                        .guestDrag(state, guest, !multiSelect && state.selected.size <= 1 && guest.location in listOf(WaveGuestLocation.BACKSTAGE, WaveGuestLocation.STAGE))
+                        .guestDrag(state, guest, cage?.selectionMode != true && !multiSelect && state.selected.size <= 1 && guest.location in listOf(WaveGuestLocation.BACKSTAGE, WaveGuestLocation.STAGE))
                         .combinedClickable(
                             onClick = {
                                 if (cage?.selectionMode == true) { cage.select(guest.id) }
@@ -238,7 +238,10 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                                     state.previewId = null
                                 }
                             },
-                            onLongClick = { multiSelect = true; state.previewId = null; state.selected = state.selected + guest.id },
+                            onLongClick = {
+                                if (cage?.selectionMode == true) cage.select(guest.id)
+                                else { multiSelect = true; state.previewId = null; state.selected = state.selected + guest.id }
+                            },
                         ).padding(8.dp).alpha(if (state.dragId == guest.id) .3f else 1f),
                         horizontalAlignment = Alignment.CenterHorizontally) {
                         Box(Modifier.weight(1f)) {

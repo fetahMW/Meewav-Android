@@ -112,7 +112,7 @@ export function configurationFromProfileCage(draft: {
       ...DEFAULT_CAGE_LAUNCH.rules,
       rounds,
       passageDurationSeconds: /min/i.test(draft.passage ?? "") ? passage * 60 : passage,
-      votingMode: /jury/i.test(draft.vote ?? "") ? "jury" : /host|mixte/i.test(draft.vote ?? "") ? "mixed" : "public",
+      votingMode: /public\s*\+|mixte|host/i.test(draft.vote ?? "") ? "mixed" : /jury/i.test(draft.vote ?? "") ? "jury" : "public",
       ...(/aucun|sans vote/i.test(draft.vote ?? "") ? { openMicFeedback: "none" as const } : {}),
     },
   };

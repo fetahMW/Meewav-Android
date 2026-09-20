@@ -61,11 +61,13 @@ internal data class CageProgram(
             require(json.optString("rosterMode", "manual") in listOf("manual", "prepared", "random", "first-eligible"))
             require(rules.optString("openMicFeedback", "scored") in listOf("none", "scored", "appreciation"))
             require(rules.optString("tieBreak", "sudden-death") in listOf("replay", "sudden-death"))
+            require(rules.optString("performanceMode", "successive") in listOf("successive", "alternating", "simultaneous"))
+            require(rules.optString("votingMode", "public") in listOf("public", "jury", "mixed"))
             val ids = json.optJSONArray("rosterProfileIds") ?: JSONArray()
             val roster = (0 until ids.length()).map { ids.getString(it) }.distinct(); require(roster.size <= capacity)
             val members = json.optJSONArray("rosterMembers") ?: JSONArray()
             val people = (0 until members.length()).map { members.getJSONObject(it).let { p -> p.getString("id") to p.getString("name").take(80) } }
-            require(people.size <= 64 && roster.all { it.length <= 120 })
+            require(people.size <= 64 && roster.all { it.isNotBlank() && it.length <= 120 } && people.all { it.first.isNotBlank() && it.first.length <= 120 && it.second.isNotBlank() })
             return CageProgram(title, format, capacity, json.optString("rosterMode", "manual"), roster, people, rounds, duration,
                 when(rules.optString("performanceMode")) { "alternating" -> "Alterné"; "simultaneous" -> "Simultané"; else -> "Successif" },
                 when(rules.optString("votingMode")) { "jury" -> "Jury"; "mixed" -> "Hybride"; else -> "Public" }, voting,

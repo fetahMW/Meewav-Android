@@ -194,6 +194,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                             keyboardController?.hide()
                         }
                         activeTab = it
+                        if (it != WaveTab.INVITES) cage?.selectionMode = false
                     },
                     modifier = Modifier
                         .fillMaxWidth()

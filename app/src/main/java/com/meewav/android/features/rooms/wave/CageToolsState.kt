@@ -37,6 +37,12 @@ internal class CageToolsState(val guests: WaveGuestState,
     fun program() = CageProgram(title.trim(), format, capacity, rosterMode, roster,
         roster.map { it to (person(it)?.name ?: it) }, rounds, passageSeconds, performance, voteMode, voteSeconds, feedback, tieBreak, templateId)
     fun changeCapacity(count: Int) { if (!locked && count in (if(isSolo) 1 else 2)..64 && count >= roster.size) capacity = count }
+    fun preparationRules(selection: String = rosterMode, response: String = feedback, tie: String = tieBreak) {
+        if (locked) return
+        if (selection in listOf("manual", "prepared", "random", "first-eligible")) rosterMode = selection
+        if (response in listOf("none", "scored", "appreciation")) feedback = response
+        if (tie in listOf("replay", "sudden-death")) tieBreak = tie
+    }
     fun addParticipants(ids: Set<String>) {
         if (locked) { notice = "Le programme est confirmé."; return }
         val available = ids.filter { person(it)?.location != WaveGuestLocation.JURY && person(it)?.invitation != GuestInvitation.DECLINED && person(it) != null }
@@ -141,7 +147,7 @@ internal class CageToolsState(val guests: WaveGuestState,
             else -> { start(); page = 2 }
         }
     }
-    fun chooseFormat(value: CageFormat) { if (!locked) { format = value; matches = emptyList() } }
+    fun chooseFormat(value: CageFormat) { if (!locked) { format = value; capacity = capacity.coerceAtLeast(if (isSolo) 1 else 2); matches = emptyList() } }
     fun configure(duration: Int, count: Int, mode: String) { if (!locked) { passageSeconds = duration; rounds = count; performance = mode; remainingMs = duration * 1000L } }
     fun select(id: String) { if (id in roster) removeParticipants(setOf(id)) else addParticipants(setOf(id)) }
     fun shuffle() { if (!locked) { roster = roster.shuffled(); matches = emptyList() } }
