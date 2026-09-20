@@ -1,6 +1,7 @@
 package com.meewav.android.features.rooms.wave
 
 import kotlinx.coroutines.launch
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,7 +19,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -147,8 +150,17 @@ internal fun CageToolsPanel(state: CageToolsState, programScope: String) {
                     if (match == null) item { Text("Le prochain passage apparaîtra ici après la préparation.", color = cageMuted, fontSize = 12.sp) }
                     else {
                         item { CageCard {
-                            CagePerson(state.person(match.a), state.speaker.contains("A"))
-                            match.b?.let { CagePerson(state.person(it), state.speaker.contains("B")) }
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                CageMatchArtist(state.person(match.a), state.speaker.contains("A"), Modifier.weight(1f))
+                                match.b?.let { opponent ->
+                                    Box(Modifier.height(80.dp).width(52.dp), contentAlignment = Alignment.Center) {
+                                        Box(Modifier.size(52.dp).background(Brush.radialGradient(listOf(WaveMixerTheme.capsuleAccentSoft.copy(alpha = .18f), Color.Transparent)), CircleShape), contentAlignment = Alignment.Center) {
+                                            Text("VS", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 24.sp, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, letterSpacing = 1.sp)
+                                        }
+                                    }
+                                    CageMatchArtist(state.person(opponent), state.speaker.contains("B"), Modifier.weight(1f))
+                                }
+                            }
                             val seconds = (state.remainingMs + 999) / 1000
                             Text("%02d:%02d".format(seconds / 60, seconds % 60), modifier = Modifier.align(Alignment.CenterHorizontally), fontSize = 38.sp, fontFamily = FontFamily.Monospace, color = WaveMixerTheme.capsuleAccentSoft)
                             Text("${state.phase} · ${state.speaker} · ${state.step + 1}/${state.steps.size}", color = cageMuted, fontSize = 11.sp, modifier = Modifier.align(Alignment.CenterHorizontally))
@@ -273,6 +285,25 @@ private fun CageSettingSelect(label: String, value: String, options: Map<String,
 @Composable
 private fun CageCard(content: @Composable ColumnScope.() -> Unit) {
     Column(Modifier.fillMaxWidth().hifiBlackSurface(13.dp).padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp), content = content)
+}
+@Composable
+private fun CageMatchArtist(guest: WaveGuest?, emphasized: Boolean, modifier: Modifier = Modifier) {
+    val ringColor by animateColorAsState(if (emphasized) WaveMixerTheme.capsuleAccentSoft else cageInk.copy(alpha = .18f), label = "cageMatchRing")
+    val nameColor by animateColorAsState(if (emphasized) WaveMixerTheme.capsuleAccentSoft else cageInk, label = "cageMatchName")
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Box(Modifier.size(80.dp)) {
+            Box(Modifier.fillMaxSize().clip(CircleShape)
+                .background(cageInk.copy(alpha = .05f))
+                .border(2.dp, ringColor, CircleShape)
+                .padding(4.dp), contentAlignment = Alignment.Center) {
+                if (guest != null) Image(painterResource(guest.portrait), null, Modifier.fillMaxSize().clip(CircleShape), contentScale = androidx.compose.ui.layout.ContentScale.Crop)
+                else Icon(Icons.Default.Person, null, Modifier.size(32.dp), tint = cageMuted)
+            }
+            guest?.let { CageVictoryBadge(it.cageVictories, Modifier.align(Alignment.BottomCenter)) }
+        }
+        Text(guest?.name ?: "À déterminer", color = nameColor, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+        Text(guest?.role.orEmpty(), color = cageMuted, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+    }
 }
 @Composable
 private fun CagePerson(guest: WaveGuest?, emphasized: Boolean = false) {
