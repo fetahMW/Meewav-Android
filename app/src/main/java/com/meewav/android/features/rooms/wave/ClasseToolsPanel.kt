@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -106,8 +107,10 @@ internal fun ClasseToolsPanel(state: ClasseToolsState) {
                                 if (speaking) "A la parole" else if (hand) "Main levée" else "Invité à parler", tint = if (speaking) Color(0xFF7ABFA2) else WaveMixerTheme.capsuleAccentSoft,
                                 modifier = Modifier.align(Alignment.BottomEnd).size(23.dp).background(Color(0xFF121017), CircleShape).padding(4.dp))
                             if (state.rankedQuestions.any { it.studentId == student.id }) {
-                                Icon(Icons.Filled.ChatBubble, "Question en attente", tint = Color(0xFF79B4FF),
-                                    modifier = Modifier.align(Alignment.TopEnd).size(19.dp))
+                                Box(Modifier.align(Alignment.TopEnd).size(19.dp)) {
+                                    Icon(Icons.Filled.ChatBubble, "Question en attente", tint = Color(0xFF438FFF), modifier = Modifier.fillMaxSize())
+                                    Icon(Icons.Outlined.ChatBubbleOutline, null, tint = Color(0xFF9AC9FF), modifier = Modifier.fillMaxSize())
+                                }
                             }
                         }
                         Spacer(Modifier.height(6.dp))
