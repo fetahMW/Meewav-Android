@@ -29,9 +29,14 @@ internal fun CageVideoStage(state: CageToolsState, interactive: Boolean, audible
     val podium = state.resultsOnStage && state.finished
     val mode = state.videoMode
     val pair = state.active?.let { listOfNotNull(it.a, it.b) }.orEmpty()
-    // The verdict returns the programme to the host, without removing the Battle winner from the roster.
-    val feeds = if (state.active?.completed == true || podium) emptyList() else
-        state.guests.onStage.let { stage -> if (pair.isNotEmpty()) stage.filter { it.id in pair }.sortedBy { pair.indexOf(it.id) } else stage.take(2) }
+    // Battle intermission keeps the winner beside the host until the next duo actually mounts.
+    val feeds = when {
+        podium -> emptyList()
+        state.active?.completed == true && state.format == CageFormat.CHALLENGER ->
+            state.guests.onStage.filter { it.id == state.active?.winner }
+        state.active?.completed == true -> emptyList()
+        else -> state.guests.onStage.let { stage -> if (pair.isNotEmpty()) stage.filter { it.id in pair }.sortedBy { pair.indexOf(it.id) } else stage.take(2) }
+    }
     val focused = feeds.find { it.id == state.guests.mixerGuestId } ?: feeds.firstOrNull()
     val shown = if (mode == "Solo" && !fullscreen && feeds.size > 1) listOfNotNull(focused) else feeds
     val hostInset = feeds.size >= 2 || podium
@@ -43,7 +48,7 @@ internal fun CageVideoStage(state: CageToolsState, interactive: Boolean, audible
             Spacer(Modifier.weight(1f))
             state.voteTick
             val seconds = if (state.voteOpen) state.voteRemaining else (state.remainingMs + 999) / 1000
-            Text(if (state.active == null) "Le host vous accueille" else if (state.active?.completed == true) "Le host reprend la parole" else
+            Text(if (state.active == null) "Le host vous accueille" else if (state.active?.completed == true) if (hostBesideGuest) "Le host et le gagnant" else "Le host reprend la parole" else
                 (if (state.voteOpen) "Vote" else if (state.awaitingCountdown) "Compte à rebours" else state.phase) + " · %02d:%02d".format(seconds / 60, seconds % 60), color = Color.White, fontSize = 10.sp)
         }
         BoxWithConstraints(Modifier.weight(1f).fillMaxWidth().clipToBounds()) {
