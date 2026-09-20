@@ -38,7 +38,7 @@ internal fun CageToolsPanel(state: CageToolsState) {
     var voterJury by remember { mutableStateOf(false) }
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().height(44.dp)) {
-            listOf("Bracket", "Régie", "Match", "Vote").forEachIndexed { index, label ->
+            listOf(if (state.format == CageFormat.LEAGUE) "Classement" else "Programme", "Régie", "Match", "Vote").forEachIndexed { index, label ->
                 Column(Modifier.weight(1f).fillMaxHeight().clickable { state.page = index }, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                     Text(label, color = if (state.page == index) cageInk else cageMuted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(6.dp))
@@ -76,7 +76,7 @@ internal fun CageToolsPanel(state: CageToolsState) {
                             CagePerson(state.person(match.a), match.winner == match.a)
                             match.b?.let { CagePerson(state.person(it), match.winner == it) }
                             if (match.completed) Text(match.score?.let { "Note : $it / 100" } ?: "Qualifié : ${state.person(match.winner)?.name}", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 11.sp)
-                            else if (state.locked) CageAction("Préparer en régie") { state.page = 1; state.call(match.id) }
+                            else if (state.locked) CageAction("Préparer en régie", enabled = state.active == null || state.active?.completed == true || state.phase == "Appel") { state.page = 1; state.call(match.id) }
                         }
                     }
                     if (state.format == CageFormat.LEAGUE && state.matches.any { it.completed }) item {
@@ -105,7 +105,7 @@ internal fun CageToolsPanel(state: CageToolsState) {
                                         color = if (person?.connected == true) cageMuted else Color(0xFFC88B90), fontSize = 10.sp)
                                 }
                                 if (state.activeId == match.id) CageAction("Monter sur scène", enabled = state.ready() && state.phase == "Appel", primary = true) { state.stage() }
-                                else CageAction("Appeler les artistes", enabled = !state.clockRunning && !state.voteOpen) { state.call(match.id) }
+                                else CageAction("Appeler les artistes", enabled = state.active == null || state.active?.completed == true || state.phase == "Appel") { state.call(match.id) }
                             }
                         }
                     }
@@ -163,16 +163,20 @@ internal fun CageToolsPanel(state: CageToolsState) {
                                 CageAction("Valider le passage", primary = true) { verdict = match.a }
                             } } else item {
                                 val a = state.score("A"); val b = state.score("B")
-                                if (a == b) Text("Égalité · départage explicite du host", color = cageMuted, fontSize = 11.sp)
+                                if (a == b) Text("Égalité · lance une manche décisive avec le bouton principal.", color = cageMuted, fontSize = 11.sp)
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    if (a >= b) CageAction("Valider A", Modifier.weight(1f), primary = true) { verdict = match.a }
-                                    if (b >= a) CageAction("Valider B", Modifier.weight(1f), primary = true) { verdict = match.b }
+                                    if (a > b) CageAction("Valider A", Modifier.weight(1f), primary = true) { verdict = match.a }
+                                    if (b > a) CageAction("Valider B", Modifier.weight(1f), primary = true) { verdict = match.b }
                                 }
                             }
                         }
                     }
                 }
             }
+        }
+        Column(Modifier.fillMaxWidth().hifiBlackSurface(12.dp).padding(8.dp)) {
+            Text(state.active?.let { listOfNotNull(state.person(it.a)?.name, state.person(it.b)?.name).joinToString(" · ") } ?: "${state.roster.size} artistes", color = cageMuted, fontSize = 10.sp, maxLines = 1, modifier = Modifier.padding(bottom = 4.dp))
+            CageAction(state.commandLabel, enabled = state.commandEnabled, primary = true) { state.advance() }
         }
     }
     if (settings) ModalBottomSheet(onDismissRequest = { settings = false }, containerColor = Color(0xFF111216)) {

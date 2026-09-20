@@ -147,7 +147,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
     ) {
         Box(Modifier.fillMaxSize().background(Color.Black).systemBarsPadding()) {
-            WaveGuestStage(guestState, interactive = false) {
+            if (cage != null) CageVideoStage(cage, interactive = false) { WaveVideo(true, Modifier.fillMaxSize(), room.label, roomAccent) } else WaveGuestStage(guestState, interactive = false) {
                 WaveVideo(cameraOff = true, modifier = Modifier.fillMaxSize(), roomLabel = room.label, roomAccent = roomAccent)
             }
             androidx.compose.material3.IconButton(onClick = { stageFullscreen = false },
@@ -169,7 +169,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
             WaveHeader(title = roomTitle?.takeIf { it.isNotBlank() } ?: if (room == RoomModule.WAVE) "Freestyle session — Luma invite" else if (room == RoomModule.CAGE) "Battle Rap — Paris vs Marseille" else room.label,
                 onBack = { showLeaveConfirm = true }, onClose = { showLeaveConfirm = true })
             Box(Modifier.fillMaxWidth().height(videoViewportHeight).clipToBounds()) {
-                WaveGuestStage(guestState, interactive = activeTab == WaveTab.INVITES, onFullscreen = { stageFullscreen = true }, audible = !stageFullscreen) {
+                if (cage != null) CageVideoStage(cage, interactive = activeTab == WaveTab.INVITES, audible = !stageFullscreen, onFullscreen = { stageFullscreen = true }) { WaveVideo(true, Modifier.fillMaxSize(), room.label, roomAccent) } else WaveGuestStage(guestState, interactive = activeTab == WaveTab.INVITES, onFullscreen = { stageFullscreen = true }, audible = !stageFullscreen) {
                     WaveVideo(cameraOff = true, modifier = Modifier.fillMaxSize(), roomLabel = room.label, roomAccent = roomAccent)
                 }
             }
