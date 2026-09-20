@@ -7,6 +7,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,7 +39,20 @@ internal fun CageArtistCompact(state: CageToolsState, id: String?, modifier: Mod
                     val badges = listOf(R.drawable.wave_grade_1, R.drawable.wave_grade_2, R.drawable.wave_grade_3, R.drawable.wave_grade_4, R.drawable.wave_grade_5, R.drawable.wave_grade_6)
                     Image(painterResource(badges[(it.gradeLevel - 1).coerceIn(0, 5)]), "Grade " + it.gradeLevel, Modifier.size(22.dp))
                 }
-                Text(if (winner) "Vainqueur" else person?.role.orEmpty(), color = Color(0xFFAAA6B4), fontSize = 9.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                person?.let { artist ->
+                    val champion = state.finished && state.format in listOf(CageFormat.TOURNAMENT, CageFormat.CHALLENGER) && state.matches.lastOrNull()?.winner == artist.id
+                    val role = artist.role.lowercase()
+                    val symbol = when {
+                        winner || champion -> Icons.Default.EmojiEvents
+                        "rapp" in role || "chant" in role -> Icons.Default.Mic
+                        "produc" in role || "beat" in role || "dj" in role -> Icons.Default.GraphicEq
+                        "auteur" in role || "autrice" in role -> Icons.Default.Edit
+                        else -> Icons.Default.MusicNote
+                    }
+                    Spacer(Modifier.width(4.dp))
+                    Icon(symbol, if (champion) "Champion" else if (winner) "Vainqueur du duel" else artist.role,
+                        modifier = Modifier.size(15.dp), tint = if (winner || champion) Color(0xFFE4C47F) else WaveMixerTheme.capsuleAccentSoft.copy(alpha = .8f))
+                }
             }
         }
     }
