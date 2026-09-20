@@ -15,6 +15,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -24,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.max
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun WaveMixerDeckPanel(state: WaveMixerDeckState, expanded: Boolean, onExpand: () -> Unit, onPlay: () -> Unit, modifier: Modifier) {
     val context = LocalContext.current
@@ -50,17 +55,9 @@ internal fun WaveMixerDeckPanel(state: WaveMixerDeckState, expanded: Boolean, on
             WaveControl(Icons.Default.Repeat, "Répéter", state.repeat, onClick = state::toggleLoop)
             WaveControl(if (expanded) Icons.Default.ExpandMore else Icons.Default.Layers, "Déplier ou replier les pistes", expanded, onClick = onExpand)
         }
-        if(expanded)Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){
-            if(page!=0)SceneIcon(WaveIcons.ChevronLeft,"Retour aux pistes"){page=0}
-            Text(if(page==0)"Pistes"else if(page==1)"Pads"else if(page==2)"Chronomètre"else"Chronomètre",Modifier.weight(1f),color=WaveMixerTheme.pearl,fontSize=12.sp)
-            if(page==0)Box{
-                SceneIcon(Icons.Default.Add,"Ajouter une piste ou un dossier"){packMenu=true}
-                DropdownMenu(packMenu,{packMenu=false},containerColor=Color(0xFF101114),tonalElevation=0.dp){
-                    DropdownMenuItem(text={Text("Ajouter une piste",color=Color.White)},onClick={packMenu=false;target="new";importer.launch(arrayOf("audio/*"))})
-                    DropdownMenuItem(text={Text("Dossier",color=Color.White)},onClick={packMenu=false;folder.launch(null)})
-                    DropdownMenuItem(text={Text("Archive ZIP",color=Color.White)},onClick={packMenu=false;zip.launch(arrayOf("application/zip"))})
-                }
-            }
+        if(expanded && page!=0)Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){
+            SceneIcon(WaveIcons.ChevronLeft,"Retour aux pistes"){page=0}
+            Text(if(page==1)"Pads"else"Chronomètre",Modifier.weight(1f),color=WaveMixerTheme.pearl,fontSize=12.sp)
         }
         if (expanded && page == 1) WaveMixerPads(state.tools, Modifier.weight(1f).fillMaxWidth())
         else if (expanded && page == 2) WaveMixerChrono(state, Modifier.weight(1f).fillMaxWidth())
@@ -71,6 +68,20 @@ internal fun WaveMixerDeckPanel(state: WaveMixerDeckState, expanded: Boolean, on
                     SwipeAction("Solo", Icons.Default.Headphones, lane.solo) { state.solo(lane.id); close() }
                     SwipeAction("Retirer", Icons.Default.Close) { state.remove(lane.id); close() }
                 }) { WaveDeckLaneView(lane, state, { target = lane.id; importer.launch(arrayOf("audio/*")) }) }
+            }
+            item(key="add-audio") {
+                Box(Modifier.fillMaxWidth()) {
+                    Box(Modifier.fillMaxWidth().height(64.dp).drawBehind {
+                        val inset=.6.dp.toPx()
+                        drawRoundRect(color=WaveMixerTheme.capsuleAccentSoft.copy(alpha=.42f),topLeft=Offset(inset,inset),size=androidx.compose.ui.geometry.Size(size.width-2*inset,size.height-2*inset),cornerRadius=CornerRadius(10.dp.toPx()),style=Stroke(width=1.dp.toPx(),pathEffect=PathEffect.dashPathEffect(floatArrayOf(5.dp.toPx(),5.dp.toPx()))))
+                    }.combinedClickable(onClickLabel="Importer un son",onLongClickLabel="Importer un dossier ou une archive",onClick={target="new";importer.launch(arrayOf("audio/*"))},onLongClick={packMenu=true}),contentAlignment=Alignment.Center) {
+                        Icon(Icons.Default.Add,"Importer un son",tint=WaveMixerTheme.capsuleAccentSoft,modifier=Modifier.size(22.dp))
+                    }
+                    DropdownMenu(packMenu,{packMenu=false},containerColor=Color(0xFF101114),tonalElevation=0.dp){
+                        DropdownMenuItem(text={Text("Dossier",color=Color.White)},onClick={packMenu=false;folder.launch(null)})
+                        DropdownMenuItem(text={Text("Archive ZIP",color=Color.White)},onClick={packMenu=false;zip.launch(arrayOf("application/zip"))})
+                    }
+                }
             }
         } else state.lanes.firstOrNull()?.let { lane -> WaveDeckLaneView(lane, state, { target = lane.id; importer.launch(arrayOf("audio/*")) }) }
         if (expanded) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
