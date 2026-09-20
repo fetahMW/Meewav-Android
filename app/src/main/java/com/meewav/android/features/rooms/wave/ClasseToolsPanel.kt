@@ -1,7 +1,7 @@
 package com.meewav.android.features.rooms.wave
 
 import androidx.compose.animation.*
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -43,6 +43,8 @@ internal fun ClasseToolsPanel(state: ClasseToolsState, onInvite: () -> Unit) {
     var demo by remember { mutableStateOf(false) }
     val gridState = rememberLazyGridState()
     var actionsVisible by remember { mutableStateOf(true) }
+    var bottomDocked by remember { mutableStateOf(false) }
+    val inStudentGrid by rememberUpdatedState(state.tab == 0 && !questions)
     val density = LocalDensity.current
     val hideThreshold = with(density) { 28.dp.toPx() }
     val revealThreshold = with(density) { 12.dp.toPx() }
@@ -52,10 +54,15 @@ internal fun ClasseToolsPanel(state: ClasseToolsState, onInvite: () -> Unit) {
             override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
                 if (source != NestedScrollSource.UserInput) return Offset.Zero
                 val delta = consumed.y
+                if (inStudentGrid && delta <= 0f && !gridState.canScrollForward) {
+                    bottomDocked = true; actionsVisible = true; travel = 0f
+                    return Offset.Zero
+                }
+                if (delta > 0f) bottomDocked = false
                 if (delta == 0f) return Offset.Zero
                 if (travel * delta < 0f) travel = 0f
                 travel += delta
-                if (travel <= -hideThreshold) { actionsVisible = false; travel = 0f }
+                if (travel <= -hideThreshold && !(inStudentGrid && bottomDocked)) { actionsVisible = false; travel = 0f }
                 if (travel >= revealThreshold) { actionsVisible = true; travel = 0f }
                 return Offset.Zero
             }
@@ -64,6 +71,22 @@ internal fun ClasseToolsPanel(state: ClasseToolsState, onInvite: () -> Unit) {
     LaunchedEffect(state.selectedStudent, state.tab, questions) { actionsVisible = true }
     LaunchedEffect(gridState.firstVisibleItemIndex, gridState.firstVisibleItemScrollOffset) {
         if (state.tab == 0 && !questions && gridState.firstVisibleItemIndex == 0 && gridState.firstVisibleItemScrollOffset == 0) actionsVisible = true
+    }
+    LaunchedEffect(gridState.canScrollForward, state.tab, questions) {
+        if (state.tab == 0 && !questions && gridState.layoutInfo.totalItemsCount > 0 && !gridState.canScrollForward) {
+            bottomDocked = true
+            actionsVisible = true
+        }
+    }
+    LaunchedEffect(bottomDocked, actionsVisible) {
+        if (bottomDocked && actionsVisible) {
+            // Keep the last row above the footer after it has recovered its height.
+            delay(200)
+            if (bottomDocked && inStudentGrid) {
+                val last = gridState.layoutInfo.totalItemsCount - 1
+                if (last >= 0) gridState.animateScrollToItem(last)
+            }
+        }
     }
     var tick by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(state.speakerId) { while (state.speakerId != null) { tick = System.currentTimeMillis(); delay(1000) } }
@@ -123,17 +146,29 @@ internal fun ClasseToolsPanel(state: ClasseToolsState, onInvite: () -> Unit) {
                     val size by animateFloatAsState(if (selected) 1.07f else 1f, label = "selected-student")
                     Column(Modifier.fillMaxWidth().clickable { state.selectedStudent = if (selected) null else student.id }.padding(vertical = 3.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         Box(Modifier.size(64.dp).scale(size)) {
-                            Image(painterResource(student.portrait), "Sélectionner ${student.name}", Modifier.fillMaxSize().clip(CircleShape)
-                                .border(if (selected || speaking || response != null) 2.dp else .5.dp, response?.color() ?: if (speaking) Color(0xFF7ABFA2) else if (selected) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .15f), CircleShape), contentScale = ContentScale.Crop)
+                            if (speaking) ClasseSpeakingHalo(Modifier.fillMaxSize())
+                            Image(painterResource(student.portrait), "Sélectionner ${student.name}", Modifier.fillMaxSize().padding(if (speaking) 3.dp else 0.dp).clip(CircleShape)
+                                .border(if (selected || speaking || response != null) 2.dp else .5.dp, if (speaking) Color(0xFF7ABFA2) else response?.color() ?: if (selected) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .15f), CircleShape), contentScale = ContentScale.Crop)
                             if (hand || speaking || student.id in state.invitedToSpeak) Icon(if (speaking) WaveIcons.Mic else if (hand) Icons.Filled.BackHand else Icons.Filled.Schedule,
                                 if (speaking) "A la parole" else if (hand) "Main levée" else "Invité à parler", tint = if (speaking) Color(0xFF7ABFA2) else WaveMixerTheme.capsuleAccentSoft,
                                 modifier = Modifier.align(Alignment.BottomEnd).size(23.dp).background(Color(0xFF121017), CircleShape).padding(4.dp))
                             val count = state.rankedQuestions.count { it.studentId == student.id }
-                            if (count > 0) Text("$count", color = Color.White, fontSize = 9.sp, modifier = Modifier.align(Alignment.TopEnd).background(Color(0xFF453677), CircleShape).padding(horizontal = 5.dp, vertical = 2.dp))
+                            if (count > 0) Row(Modifier.align(Alignment.TopEnd).background(Color(0xFF122541), RoundedCornerShape(9.dp))
+                                .border(.5.dp, classeBlue.copy(alpha = .6f), RoundedCornerShape(9.dp)).padding(horizontal = 4.dp, vertical = 3.dp),
+                                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Icon(WaveIcons.Chat, "Question posée", tint = Color(0xFF79B4FF), modifier = Modifier.size(12.dp))
+                                Text("$count", color = Color(0xFF9BC8FF), fontSize = 8.sp)
+                            }
                         }
                         Spacer(Modifier.height(6.dp))
                         Text(student.name, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text(response?.label ?: if (speaking) "${((tick - state.speakingSince) / 1000).coerceAtLeast(0)} s · Parole" else if (!student.connected) "Déconnecté" else if (hand) "Main levée" else "Élève", color = response?.color() ?: classeMuted, fontSize = 9.sp, maxLines = 1)
+                        if (speaking) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                            ClasseVoiceBars()
+                            Text("Parole · " + ((tick - state.speakingSince) / 1000).coerceAtLeast(0) + " s", color = Color(0xFF8DD1B2), fontSize = 8.sp, maxLines = 1)
+                        } else {
+                            val status = response?.label ?: if (!student.connected) "Déconnecté" else null
+                            status?.let { Text(it, color = response?.color() ?: classeMuted, fontSize = 9.sp, maxLines = 1) }
+                        }
                     }
                 }
                 if (state.students.size < 24) item { Column(Modifier.aspectRatio(.75f).clickable(onClick = onInvite), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
@@ -254,5 +289,20 @@ private fun ClasseUnderstanding.color() = when (this) { ClasseUnderstanding.UNDE
             TextButton(onClick = { studentId?.let { state.submitQuestion(it, text) }; onDismiss() }, enabled = state.questionsOpen && studentId != null && text.isNotBlank()) { Text("Poser la question") }
         }
         if (state.understandingActive) ClasseUnderstanding.entries.forEach { response -> TextButton(onClick = { studentId?.let { state.respond(it, response) }; onDismiss() }) { Text(response.label, color = response.color()) } }
+    }
+}
+
+@Composable private fun ClasseSpeakingHalo(modifier: Modifier) {
+    val transition = rememberInfiniteTransition(label = "speaking-halo")
+    val strength by transition.animateFloat(.3f, .75f, infiniteRepeatable(tween(1100), RepeatMode.Reverse), label = "speaking-light")
+    Box(modifier.background(Color(0xFF79C5A1).copy(alpha = strength * .12f), CircleShape)
+        .border(1.dp, Color(0xFF79C5A1).copy(alpha = strength), CircleShape))
+}
+
+@Composable private fun ClasseVoiceBars() {
+    val transition = rememberInfiniteTransition(label = "speaking-bars")
+    val height by transition.animateFloat(.3f, 1f, infiniteRepeatable(tween(550), RepeatMode.Reverse), label = "voice-motion")
+    Row(Modifier.height(10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(1.dp)) {
+        listOf(height, 1.3f - height, height * .7f).forEach { value -> Box(Modifier.width(2.dp).height((value * 10).dp).background(Color(0xFF8DD1B2), CircleShape)) }
     }
 }

@@ -22,8 +22,8 @@ internal class ClasseToolsState(context: Context, val guests: WaveGuestState, sc
     val students get() = guests.guests.filter { it.id !in excluded && it.canParticipate && it.location in setOf(WaveGuestLocation.BACKSTAGE, WaveGuestLocation.STAGE) }.take(24)
     var handsOpen by mutableStateOf(true)
     var questionsOpen by mutableStateOf(true)
-    var hands by mutableStateOf(listOf(ClasseHand("naya", "Comment régler le gain sans saturer ?"), ClasseHand("solen", "Je voudrais essayer la compression."))); private set
-    var questions by mutableStateOf(listOf(ClasseQuestion(studentId = "keo", text = "Faut-il placer le de-esser avant ou après le compresseur ?", likes = 8), ClasseQuestion(studentId = "azur", text = "Comment garder une voix naturelle avec l’autotune ?", likes = 5))); private set
+    var hands by mutableStateOf(listOf(ClasseHand("naya", "Comment régler le gain sans saturer ?"), ClasseHand("solen", "Je voudrais essayer la compression."), ClasseHand("demo-BACKSTAGE-5", "Je peux faire écouter mon essai ?"), ClasseHand("demo-BACKSTAGE-10", "Une question sur le placement du micro."), ClasseHand("demo-BACKSTAGE-15", "Je voudrais refaire l’exercice."), ClasseHand("demo-BACKSTAGE-18", "Comment doser la réverbération ?"))); private set
+    var questions by mutableStateOf(listOf(ClasseQuestion(studentId = "keo", text = "Faut-il placer le de-esser avant ou après le compresseur ?", likes = 8), ClasseQuestion(studentId = "azur", text = "Comment garder une voix naturelle avec l’autotune ?", likes = 5), ClasseQuestion(studentId = "demo-BACKSTAGE-1", text = "Quel niveau garder avant le mastering ?", likes = 4), ClasseQuestion(studentId = "demo-BACKSTAGE-8", text = "Comment éliminer les résonances sans affiner la voix ?", likes = 3), ClasseQuestion(studentId = "demo-BACKSTAGE-15", text = "Peut-on entendre le signal avant et après traitement ?", likes = 2))); private set
     val rankedQuestions get() = questions.filter { it.resolution == null }.sortedWith(compareByDescending<ClasseQuestion> { it.likes }.thenByDescending { it.created })
     var speakerId by mutableStateOf<String?>(null); private set
     var speakingSince by mutableLongStateOf(0L); private set
@@ -32,6 +32,7 @@ internal class ClasseToolsState(context: Context, val guests: WaveGuestState, sc
     var invitedToSpeak by mutableStateOf(emptySet<String>()); private set
     var notice by mutableStateOf<String?>(null)
     init {
+        if (com.meewav.android.BuildConfig.DEBUG) grantFloor("solen")
         runCatching {
             val array = JSONArray(prefs.getString("resources", "[]"))
             resources = (0 until array.length()).map { i -> val r = array.getJSONObject(i); ClasseResource(r.getString("id"), r.getString("title"), r.getString("uri"), r.getString("mime")) }
