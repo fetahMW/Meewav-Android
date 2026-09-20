@@ -51,7 +51,7 @@ internal class SceneToolsState(context: Context, val guests: WaveGuestState, sco
         val portraits = listOf(R.drawable.scene_artist_0,R.drawable.scene_artist_1,R.drawable.scene_artist_2,R.drawable.scene_artist_3,R.drawable.scene_artist_4,R.drawable.scene_artist_0)
         val roles = listOf("Chanteuse", "Guitariste", "Chanteur Soul", "Collectif de danse", "DJ Drum & Bass", "Duo soul")
         val ids = listOf("scene-a", "scene-b", "scene-c", "scene-d", "scene-e", "scene-duo")
-        guests.guests = ids.mapIndexed { i, id -> WaveGuest(id, names[i], roles[i], portraits[i], WaveGuestLocation.BACKSTAGE, gradeLevel = listOf(4,2,3,3,2,4)[i]) } + guests.guests
+        guests.addSceneDemoPeople(ids.mapIndexed { i, id -> WaveGuest(id, names[i], roles[i], portraits[i], WaveGuestLocation.BACKSTAGE, gradeLevel = listOf(4,2,3,3,2,4)[i]) })
         prefs.getString("state", null)?.let { saved -> runCatching { data = json.decodeFromString<SceneArchive>(saved) }
             .onFailure { notice = "Le programme enregistré n’a pas pu être chargé." } }
     }
@@ -126,7 +126,7 @@ internal class SceneToolsState(context: Context, val guests: WaveGuestState, sco
         val safe = value.copy(title = value.title.trim().take(100), beneficiary = value.beneficiary.trim().take(100), description = value.description.trim().take(500),
             highlighted = value.highlighted && value.visible && value.status == "live")
         if (safe.title.isBlank() || safe.beneficiary.isBlank() || safe.target !in 1..1000000) { notice = "Renseigne le titre, le bénéficiaire et un objectif valide."; return false }
-        if (safe.status == "live" && safe.endAt != null && safe.endAt <= System.currentTimeMillis()) { notice = "La date de fin doit être à venir."; return false }
+        if (safe.status == "live" && safe.endAt != null && safe.endAt <= System.currentTimeMillis() && (data.fundraiser.status != "live" || safe.endAt != data.fundraiser.endAt)) { notice = "La date de fin doit être à venir."; return false }
         commit(data.copy(fundraiser = safe)); return true
     }
     fun demoContribution(cents: Int, id: String = UUID.randomUUID().toString()) {

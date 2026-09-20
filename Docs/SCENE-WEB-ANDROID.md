@@ -13,3 +13,11 @@ Cagnotte : titre, bénéficiaire, cible jusqu’à 1 M€, description, illustra
 Adaptation : quatre sous-onglets à la hauteur commune, cartes noires compactes, CTA violet urbain Android, formulaires en bottom sheets. Les portraits du programme proviennent des fichiers locaux du web. Le programme initial reprend ses six prestations, la première prête à lancer au lieu de démarrer une scène automatiquement.
 
 Périmètre transport : écran hôte natif de démonstration, état enregistré localement par programme ; aucune session RTC/Supabase de room n’est fournie à cette Activity. Les publications, votes publics, permissions distantes, affectation du prompteur à un autre appareil et contributions réelles restent à raccorder à ce transport. Le portage ne prétend pas les effectuer.
+
+## Livraison native
+- Programme compact, historique, formulaires de passage, ordre via flèches, confirmations, portrait vers pré-profil commun, message privé et accès à Invités.
+- Prompteur plein écran privé avec protection contre la capture, décompte, lecture/pause/reprise, retour au début, lignes précédente/suivante, miroir ; import borné à 200 Ko sur thread IO. Les réglages sont enregistrés au relâchement des curseurs.
+- Évaluation avec moyenne et quatre histogrammes, conditions de publication, jeu de huit avis activable uniquement dans la démo debug.
+- Cagnotte avec date/illustration, indicateur cliquable sur le retour vidéo, visibilité et mise en avant. Contribution de 10 € simulée uniquement en debug.
+- Sauvegarde locale isolée par programme et titre de room ; modèles et portraits issus du web.
+- Compilation assembleDebug effectuée pour installation ; aucun test ni inspection visuelle automatique lancé.

@@ -197,6 +197,9 @@ internal class WaveGuestState(private val cageDemo: Boolean = false, private val
             else -> "Invitation acceptée · préparation disponible"
         }
     }
+    fun addSceneDemoPeople(people: List<WaveGuest>) {
+        guests = people.filter { incoming -> guests.none { it.id == incoming.id } } + guests
+    }
     fun toggleMic(id: String) { guests = guests.map { if (it.id == id) it.copy(mic = !it.mic) else it } }
     fun awardCageVictory(id: String) { guests = guests.map { if (it.id == id) it.copy(cageVictories = it.cageVictories + 1) else it } }
     fun clearCageVictories() { guests = guests.map { it.copy(cageVictories = 0) } }
