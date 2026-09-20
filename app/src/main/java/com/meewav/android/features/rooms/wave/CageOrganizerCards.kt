@@ -142,7 +142,7 @@ internal fun CageParticipantCard(state: CageToolsState, id: String, onReplace: (
     Column(Modifier.fillMaxWidth().hifiBlackSurface(12.dp).padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             CageArtistCompact(state, id, Modifier.weight(1f))
-            IconButton(onClick = { state.guests.messageRecipientIds = setOf(id) }) { Icon(WaveIcons.Envelope, "Message à " + person.name, tint = WaveMixerTheme.capsuleAccentSoft, modifier = Modifier.size(19.dp)) }
+            IconButton(onClick = { state.guests.messageRecipientIds = setOf(id) }, modifier = Modifier.size(40.dp)) { Icon(WaveIcons.Chat, "Message à " + person.name, tint = WaveMixerTheme.capsuleAccentSoft, modifier = Modifier.size(22.dp)) }
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(if (!person.canParticipate) "Invitation en attente" else if (!person.connected) "Connexion interrompue" else person.location.label, color = Color(0xFFAAA6B4), fontSize = 10.sp, modifier = Modifier.weight(1f))
