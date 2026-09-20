@@ -29,4 +29,12 @@ Les coulisses représentent la préparation terminée. L’acceptation d’une i
 
 ## Vérification demandée
 
+### Ajustement validé par l’utilisateur après la première passe
+
+L’interface active contient désormais **VIP, Questions, Invitations**. Cadeau est conservé à part pour son futur emplacement commun dans le mixeur, sans accès depuis la Loge. Sondage est retiré de la Loge : les outils du chat conservent leur mécanique existante, sans redirection. La barre VIP réutilise exactement `ClasseTool` et sa surface noire commune. Questions concerne les invités identifiés de la Loge, sans ingestion du chat ni compteur de soutiens public.
+
+Invitations propose Concert, Sur scène, Rencontre et Session studio, avec destinataire, détails date/lieu, historique, contact et suivi des réponses. Ce parcours est une adaptation demandée, pas une fonctionnalité prétendument copiée du web. L’acceptation ne modifie jamais la scène actuelle. Il reste local et indique explicitement l’absence d’envoi réel.
+
+Première passe Samsung : captures des quatre anciens onglets, question vers VIP, invitation/acceptation/mise à l’antenne, capture audio 16 secondes et réécoute, préparation/tirage/révélation du gagnant. La capture vidéo complète et les transports réseau ne sont pas validés. Tests unitaires ciblés et compilation réussis ; nouvelle passe après adaptation des trois onglets.
+
 Tests ciblés : consentement, préparation, montée/descente, question unique, arrêt des votes, idempotence, stock, date/grade/pool, tirage figé, reprise sans mise à l’antenne automatique. Compilation et parcours Samsung complètent cette vérification ; les transports serveur restent hors de la validation locale.

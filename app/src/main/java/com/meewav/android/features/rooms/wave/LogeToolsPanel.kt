@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.*
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -25,7 +26,7 @@ internal val logeRed=Color(0xFFD6949A)
 @Composable internal fun LogeToolsPanel(state:LogeToolsState,onGuests:()->Unit,onChat:()->Unit) {
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().height(44.dp)) {
-            listOf("VIP","Sondage","Questions","Cadeau").forEachIndexed { i,label ->
+            listOf("VIP","Questions","Invitations").forEachIndexed { i,label ->
                 Box(Modifier.weight(1f).fillMaxHeight().clickable { state.tab=i },contentAlignment=Alignment.Center) {
                     Text(label,color=if(state.tab==i)Color.White else sceneMuted,fontSize=12.sp,fontWeight=FontWeight.SemiBold)
                     if(state.tab==i)Box(Modifier.align(Alignment.BottomCenter).padding(bottom=5.dp).width(34.dp).height(2.dp).background(Brush.horizontalGradient(listOf(Color.Transparent,sceneAccent,Color.Transparent)),CircleShape))
@@ -35,9 +36,8 @@ internal val logeRed=Color(0xFFD6949A)
         state.notice?.let { Row(verticalAlignment=Alignment.CenterVertically) { Text(it,color=sceneAccent,fontSize=11.sp,modifier=Modifier.weight(1f));SceneIcon(WaveIcons.Close,"Fermer le message"){state.notice=null} } }
         Box(Modifier.weight(1f)) { when(state.tab) {
             0 -> LogeVipPanel(state,onGuests)
-            1 -> LogePollPanel(state,onChat)
-            2 -> LogeQuestionsPanel(state)
-            3 -> LogeGiftPanel(state)
+            1 -> LogeQuestionsPanel(state)
+            2 -> LogeInvitationsPanel(state)
         } }
     }
 }
@@ -102,11 +102,10 @@ internal val logeRed=Color(0xFFD6949A)
                 if(filtered.isEmpty())item{LogeEmpty("Aucun membre ne correspond à cette recherche.")}
             }
         }
-        if(!history)Column(Modifier.fillMaxWidth().hifiBlackSurface(16.dp).padding(8.dp),verticalArrangement=Arrangement.spacedBy(3.dp)) {
-            Text(person?.let { "Pour "+it.name }?:"Sélectionne un membre",color=logeGold,fontSize=11.sp,modifier=Modifier.padding(horizontal=6.dp))
+        if(!history)Column(Modifier.fillMaxWidth().padding(vertical=6.dp).hifiBlackSurface(14.dp).padding(6.dp)) {
             Row(horizontalArrangement=Arrangement.spacedBy(5.dp)) {
                 listOf(Triple("audio","Audio",Icons.Default.Mic),Triple("video","Vidéo",Icons.Default.Videocam),Triple("live","Moment VIP",Icons.Default.Lock)).forEach { (action,label,icon) ->
-                    SceneButton(label,Modifier.weight(1f),enabled=person!=null,icon=icon){state.action=action}
+                    ClasseTool(label,icon,Modifier.weight(1f),tint=if(person!=null)WaveMixerTheme.capsuleAccentSoft else sceneMuted){if(person!=null)state.action=action}
                 }
             }
         }
@@ -154,8 +153,9 @@ internal val logeRed=Color(0xFFD6949A)
 
 @Composable private fun LogeQuestionsPanel(state:LogeToolsState) {
     var filter by remember{mutableStateOf("pending")}
-    val shown=state.data.questions.filter { if(filter=="pending")it.status in setOf("pending","selected")else it.status==filter }.sortedWith(compareBy<LogeQuestion>{it.status!="selected"}.thenByDescending{it.supports})
+    val shown=state.data.questions.filter { q -> state.people.any { it.id==q.personId } && if(filter=="pending")q.status in setOf("pending","selected")else q.status==filter }.sortedBy{it.status!="selected"}
     LazyColumn(Modifier.fillMaxSize(),contentPadding=PaddingValues(top=5.dp,bottom=12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+        item { Text("Questions des invités de la Loge",color=sceneMuted,fontSize=11.sp,modifier=Modifier.padding(vertical=6.dp)) }
         item { Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             SceneChoice(when(filter){"answered"->"Répondues";"rejected"->"Archivées";else->"À traiter · "+state.data.questions.count{it.status=="pending"}},listOf("pending" to "À traiter","answered" to "Répondues","rejected" to "Archivées"),Modifier.weight(1f)){filter=it}
             LogeOpenChip(state.data.questionsOpen){state.toggleQuestions()}
@@ -165,7 +165,6 @@ internal val logeRed=Color(0xFFD6949A)
             Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(9.dp)) {
                 if(person!=null)LogePortrait(state,person,36.dp)
                 Column(Modifier.weight(1f)){Text(person?.name?:"Membre",color=Color.White,fontSize=13.sp,fontWeight=FontWeight.SemiBold);if(q.status=="selected")Text(if(state.displayedQuestion?.id==q.id)"À l’écran"else"Sélectionnée",color=logeGold,fontSize=10.sp)}
-                Icon(Icons.Default.Favorite,null,tint=sceneAccent,modifier=Modifier.size(13.dp));Text(q.supports.toString(),color=sceneMuted,fontSize=10.sp)
             }
             Text(q.text,color=Color.White,fontSize=13.sp,lineHeight=19.sp)
             Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(5.dp)) {

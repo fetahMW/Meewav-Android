@@ -56,7 +56,7 @@ internal val logeGiftCatalog=listOf(
         "room" -> state.people.filter{it.connected}.map{LogeCandidate(it.id,it.name)}
         else -> state.people.filter{it.location==WaveGuestLocation.REQUESTED && it.connected}.map{LogeCandidate(it.id,it.name)}
     }
-    fun reset(){step=0;code=-1;customTitle="";customImage="";completedId=null;operationId=UUID.randomUUID().toString();state.notice=null}
+    fun reset(){step=0;code=-1;customTitle="";customImage="";completedId=null;delivery="now";date=null;round="Ronde actuelle";ids=emptySet();names="";search="";operationId=UUID.randomUUID().toString();state.notice=null}
     val completed=state.data.gifts.find{it.id==completedId}
     Column(Modifier.fillMaxSize()) {
         Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)){
@@ -85,10 +85,9 @@ internal val logeGiftCatalog=listOf(
                     0 -> {
                         logeGiftCatalog.chunked(2).forEachIndexed { row,items->Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){items.forEachIndexed { col,gift->
                             val index=row*2+col;val available=state.data.stock[index]>0
-                            Column(Modifier.weight(1f).hifiBlackSurface(14.dp).then(if(code==index)Modifier.border(.8.dp,gift.color,RoundedCornerShape(14.dp))else Modifier).clickable(enabled=available){code=index}.padding(10.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
+                            Column(Modifier.weight(1f).heightIn(min=76.dp).hifiBlackSurface(14.dp).then(if(code==index)Modifier.border(.8.dp,gift.color,RoundedCornerShape(14.dp))else Modifier).clickable(enabled=available){code=index}.padding(10.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
                                 Row(verticalAlignment=Alignment.CenterVertically){Icon(gift.icon,null,tint=gift.color.copy(alpha=if(available)1f else .3f),modifier=Modifier.size(24.dp));Spacer(Modifier.weight(1f));Text("${state.data.stock[index]} dispo.",color=sceneMuted,fontSize=9.sp)}
                                 Text(gift.name,color=if(available)Color.White else sceneMuted,fontSize=12.sp,maxLines=1,overflow=TextOverflow.Ellipsis,fontWeight=FontWeight.SemiBold)
-                                Text(gift.detail,color=sceneMuted,fontSize=10.sp,maxLines=2,lineHeight=13.sp)
                             }
                         }}}
                         if(code==2){SceneField("Nom du cadeau surprise",customTitle,{customTitle=it.take(80)});SceneButton(if(customImage.isBlank())"Ajouter une image"else"Changer l’image",Modifier.fillMaxWidth(),icon=Icons.Default.Image){picker.launch(arrayOf("image/*"))};if(customImage.isNotBlank())SceneCampaignCover(customImage)}
@@ -114,6 +113,7 @@ internal val logeGiftCatalog=listOf(
                         val gift=logeGiftCatalog.getOrNull(code)
                         if(gift!=null)SceneCard{
                             Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)){Icon(gift.icon,null,tint=gift.color,modifier=Modifier.size(30.dp));Column{Text(if(code==2)customTitle else gift.name,color=Color.White,fontSize=15.sp);Text(if(drawMode)"${candidates.size} participants"else state.people.find{it.id==recipient}?.name.orEmpty(),color=logeGold,fontSize=12.sp)}}
+                            Text(gift.detail,color=sceneMuted,fontSize=11.sp)
                         }
                         SceneChoice(when(delivery){"scheduled"->"Programmer";"round"->"Ajouter à une ronde";else->if(drawMode)"Préparer maintenant"else"Envoyer maintenant"},(listOf("now" to if(drawMode)"Préparer maintenant"else"Envoyer maintenant","scheduled" to "Programmer")+if(drawMode)emptyList()else listOf("round" to "Ajouter à une ronde"))){delivery=it}
                         if(delivery=="scheduled")SceneDateField("Date et heure",date){date=it}
@@ -151,7 +151,7 @@ internal val logeGiftCatalog=listOf(
             if(g.status=="round")SceneButton("Attribuer maintenant",Modifier.weight(1f),primary=true){state.deliverRound(g.id)}
             SceneButton("Annuler"){state.cancelGift(g.id)}
         }
-        if(g.status=="spinning")LinearProgressIndicator(progress={((state.now-(g.startedAt?:state.now)).toFloat()/(g.animationSeconds*1000)).coerceIn(0f,1f)},modifier=Modifier.fillMaxWidth(),color=sceneAccent)
-        if(g.status=="revealed")SceneButton("Afficher le gagnant",Modifier.fillMaxWidth(),icon=Icons.Default.EmojiEvents){state.showDrawId=g.id}
+        if(g.status=="spinning")LinearProgressIndicator(progress={((state.now-(g.startedAt?:state.now)).toFloat()/(g.animationSeconds*1000)).coerceIn(0f,1f)},modifier=Modifier.fillMaxWidth().height(3.dp),color=sceneAccent,trackColor=Color(0xFF2C2637))
+        if(g.status=="revealed")SceneButton("Afficher le gagnant",Modifier.fillMaxWidth(),icon=Icons.Default.EmojiEvents){state.showWinner(g.id)}
     }
 }

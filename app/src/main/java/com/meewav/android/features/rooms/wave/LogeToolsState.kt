@@ -13,8 +13,9 @@ import java.util.UUID
 @Serializable internal data class LogeMoment(val id:String=UUID.randomUUID().toString(), val personId:String, val format:String="live", val status:String="scheduled", val minutes:Int=5, val startedAt:Long?=null, val file:String="", val seconds:Int=0)
 @Serializable internal data class LogePoll(val question:String, val choices:List<String>, val endsAt:Long, val votes:Map<String,Int> = emptyMap())
 @Serializable internal data class LogeCandidate(val id:String,val name:String)
+@Serializable internal data class LogeExperience(val id:String=UUID.randomUUID().toString(),val personId:String,val type:String,val detail:String,val status:String="pending")
 @Serializable internal data class LogeGift(val id:String, val code:Int, val recipientId:String="", val recipientName:String="", val title:String="", val image:String="", val status:String="sent", val scheduledAt:Long?=null, val round:String="", val pool:List<LogeCandidate> = emptyList(), val animationSeconds:Int=7, val startedAt:Long?=null, val winner:LogeCandidate?=null)
-@Serializable internal data class LogeArchive(val questionsOpen:Boolean=true, val questions:List<LogeQuestion> = logeQuestions(), val moments:List<LogeMoment> = emptyList(), val poll:LogePoll?=null, val gifts:List<LogeGift> = emptyList(), val stock:List<Int> = listOf(3,3,3,1,3,1))
+@Serializable internal data class LogeArchive(val questionsOpen:Boolean=true, val questions:List<LogeQuestion> = logeQuestions(), val moments:List<LogeMoment> = emptyList(), val poll:LogePoll?=null, val gifts:List<LogeGift> = emptyList(), val stock:List<Int> = listOf(3,3,3,1,3,1),val experiences:List<LogeExperience> = emptyList())
 
 internal object LogeRules {
     fun mayVote(poll:LogePoll, now:Long, choice:Int) = now<poll.endsAt && choice in poll.choices.indices
@@ -54,6 +55,8 @@ internal class LogeToolsState(val guests:WaveGuestState,private val load:()->Str
     var now by mutableLongStateOf(System.currentTimeMillis());private set
     var questionVisibleUntil by mutableLongStateOf(0);private set
     var showDrawId by mutableStateOf<String?>(null)
+    private var drawHideAt:Long?=null
+    fun showWinner(id:String) { showDrawId=id;drawHideAt=System.currentTimeMillis()+12_000L }
     val people get()=guests.guests
     val selected get()=people.find { it.id==selectedId }
     val activeMoment get()=data.moments.firstOrNull { it.personId==selectedId && it.format=="live" && it.status in setOf("scheduled","accepted","live") }
@@ -73,6 +76,16 @@ internal class LogeToolsState(val guests:WaveGuestState,private val load:()->Str
     fun choose(id:String) { if(people.none { it.id==id })return;selectedId=id;action=null;notice=null }
     fun profile(id:String) { guests.previewId=null;guests.profilePreviewId=id }
     fun message(id:String) { guests.messageRecipientIds=setOf(id) }
+    fun offerExperience(personId:String,type:String,detail:String):Boolean {
+        if(people.none { it.id==personId } || type !in listOf("Concert","Sur scène","Rencontre","Session studio") || detail.isBlank())return false
+        if(data.experiences.any { it.personId==personId && it.type==type && it.detail==detail.trim() && it.status in setOf("pending","accepted") }) { notice="Cette invitation existe déjà.";return false }
+        save(data.copy(experiences=listOf(LogeExperience(personId=personId,type=type,detail=detail.trim().take(240)))+data.experiences));notice=null;return true
+    }
+    fun experienceStatus(id:String,status:String) {
+        val invitation=data.experiences.find { it.id==id }?:return
+        val allowed=when(invitation.status){"pending"->setOf("accepted","declined","cancelled");"accepted"->setOf("completed","cancelled");else->emptySet()}
+        if(status in allowed)save(data.copy(experiences=data.experiences.map { if(it.id==id)it.copy(status=status)else it }))
+    }
     fun toggleQuestions() { save(data.copy(questionsOpen=!data.questionsOpen)) }
     fun question(id:String,status:String) {
         if(status !in setOf("pending","selected","answered","rejected") || data.questions.none { it.id==id })return
@@ -99,7 +112,7 @@ internal class LogeToolsState(val guests:WaveGuestState,private val load:()->Str
         }
         if(status=="completed")guests.move(setOf(moment.personId),WaveGuestLocation.BACKSTAGE)
         save(data.copy(moments=data.moments.map { if(it.id==id)it.copy(status=status,startedAt=if(status=="live")System.currentTimeMillis()else it.startedAt)else it }))
-        notice=null
+        notice=if(status=="completed")"Moment terminé · retour en coulisses."else null
     }
     fun dedicate(personId:String,format:String,path:String,seconds:Int):Boolean {
         if(people.none { it.id==personId } || format !in listOf("audio","video") || !java.io.File(path).isFile || seconds<1)return false
@@ -135,16 +148,21 @@ internal class LogeToolsState(val guests:WaveGuestState,private val load:()->Str
         val winner=g.pool[SecureRandom().nextInt(g.pool.size)]
         save(data.copy(gifts=data.gifts.map { if(it.id==id)it.copy(status="spinning",startedAt=System.currentTimeMillis(),winner=winner)else it }))
         showDrawId=id
+        drawHideAt=null
     }
     fun tick() {
         now=System.currentTimeMillis()
-        data.moments.filter { it.status=="live" && now-(it.startedAt?:now)>=it.minutes*60_000L }.forEach { moment(it.id,"completed") }
+        data.moments.filter { it.status=="live" && (now-(it.startedAt?:now)>=it.minutes*60_000L || guests.onStage.none { person -> person.id==it.personId }) }.forEach { moment(it.id,"completed") }
         val gifts=data.gifts.map { when {
             it.status=="scheduled" && now>=(it.scheduledAt?:Long.MAX_VALUE) -> it.copy(status=if(it.pool.isEmpty())"sent"else"ready")
             it.status=="spinning" && now-(it.startedAt?:now)>=it.animationSeconds*1000 -> it.copy(status="revealed")
             else -> it
         } }
-        if(gifts!=data.gifts)save(data.copy(gifts=gifts))
+        if(gifts!=data.gifts) {
+            if(gifts.any { it.id==showDrawId && it.status=="revealed" && data.gifts.any { old -> old.id==it.id && old.status=="spinning" } })drawHideAt=now+12_000L
+            save(data.copy(gifts=gifts))
+        }
+        if(drawHideAt?.let { now>=it }==true) { showDrawId=null;drawHideAt=null }
     }
 }
 private fun logeQuestions()=listOf(

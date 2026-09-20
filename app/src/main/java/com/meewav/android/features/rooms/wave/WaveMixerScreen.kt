@@ -272,14 +272,12 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                         multitrack = multitrack, onMultitrack = { multitrack = !multitrack },
                     )
                     WaveTab.CHAT -> Column(Modifier.fillMaxSize()) {
-                        if (loge?.activePoll != null) LogePollCard(loge, compact = true)
                         WaveChatPanel(
                         Modifier.weight(1f), pinnedMessage = pinnedChatMessage,
                         onPinMessage = { pinnedChatMessage = it },
                         notificationsRead = waveNotificationsRead,
                         onReadNotifications = { waveNotificationsRead = true },
                         onEmojiPanelChange = { emojiPanelOpen = it },
-                        onOpenRoomPoll = if (loge != null) ({ loge.tab = 1; activeTab = WaveTab.WAVE }) else null,
                     )
                     }
                     WaveTab.INVITES -> WaveGuestsPanel(guestState, Modifier.fillMaxSize(), cage, onProgram = { cage?.selectionMode = false; activeTab = WaveTab.WAVE })

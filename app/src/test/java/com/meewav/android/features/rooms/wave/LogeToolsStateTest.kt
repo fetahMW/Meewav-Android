@@ -67,4 +67,18 @@ class LogeToolsStateTest {
         assertEquals("accepted",restored.activeMoment?.status)
         assertFalse(restored.guests.onStage.any{it.id=="loge-a"})
     }
+    @Test fun experienceRequiresDetailsAndKeepsConsentSeparateFromStage() {
+        val s=state()
+        assertFalse(s.offerExperience("loge-a","Concert",""))
+        assertTrue(s.offerExperience("loge-a","Concert","Paris · septembre"))
+        assertFalse(s.offerExperience("loge-a","Concert","Paris · septembre"))
+        val id=s.data.experiences.first().id
+        s.experienceStatus(id,"completed")
+        assertEquals("pending",s.data.experiences.first().status)
+        s.experienceStatus(id,"accepted")
+        assertFalse(s.guests.onStage.any{it.id=="loge-a"})
+        s.experienceStatus(id,"completed")
+        s.experienceStatus(id,"cancelled")
+        assertEquals("completed",s.data.experiences.first().status)
+    }
 }
