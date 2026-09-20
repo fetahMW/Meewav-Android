@@ -180,31 +180,7 @@ internal fun CageToolsPanel(state: CageToolsState, programScope: String) {
             }
         }
     }
-    if (settings) ModalBottomSheet(onDismissRequest = { settings = false }, containerColor = Color(0xFF111216)) {
-        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("Réglages de la Cage", color = cageInk, fontSize = 18.sp)
-            OutlinedTextField(state.title, { if (!state.locked) state.title = it.take(100) }, label = { Text("Nom du programme") }, enabled = !state.locked, singleLine = true)
-            Text("${state.capacity} places · ${state.roster.size} participants retenus", color = cageMuted, fontSize = 12.sp)
-            Row(Modifier.horizontalScroll(rememberScrollState())) { listOf(2, 4, 8, 12, 16, 24, 32, 64).forEach { n -> TextButton(onClick = { state.changeCapacity(n) }, enabled = !state.locked && n >= state.roster.size) { Text("$n", color = if (state.capacity == n) WaveMixerTheme.capsuleAccentSoft else cageMuted) } } }
-            Text("Atelier local · votes et résultats non synchronisés au serveur.", color = cageMuted, fontSize = 11.sp)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) { CageFormat.entries.forEach { format -> TextButton(onClick = { state.chooseFormat(format) }, enabled = !state.locked) { Text(format.title, color = if (state.format == format) WaveMixerTheme.capsuleAccentSoft else cageMuted) } } }
-            CageSettingSelect("En cas d’égalité", state.tieBreak, linkedMapOf("sudden-death" to "Manche décisive", "replay" to "Rejouer la rencontre"), !state.locked) { state.preparationRules(tie = it) }
-            Text("Durée d’un passage", color = cageMuted, fontSize = 12.sp)
-            Row(Modifier.horizontalScroll(rememberScrollState())) { (listOf(30, 60, 90, 120, 180, 240, 300) + state.passageSeconds).distinct().sorted().forEach { duration -> TextButton(onClick = { state.configure(duration, state.rounds, state.performance) }, enabled = !state.locked) { Text("${duration}s", color = if (duration == state.passageSeconds) WaveMixerTheme.capsuleAccentSoft else cageMuted) } } }
-            state.simulationPassageSeconds?.let { seconds ->
-                Text("Simulation · $seconds secondes par passage. La durée choisie reste enregistrée dans le programme.", color = cageMuted, fontSize = 11.sp)
-            }
-            Row { listOf(1, 2, 3, 5).forEach { count -> TextButton(onClick = { state.configure(state.passageSeconds, count, state.performance) }, enabled = !state.locked) { Text("$count round${if (count > 1) "s" else ""}", color = if (state.rounds == count) WaveMixerTheme.capsuleAccentSoft else cageMuted) } } }
-            Row { listOf("Successif", "Alterné", "Simultané").forEach { mode -> TextButton(onClick = { state.configure(state.passageSeconds, state.rounds, mode) }, enabled = !state.locked) { Text(mode, color = if (state.performance == mode) WaveMixerTheme.capsuleAccentSoft else cageMuted, fontSize = 11.sp) } } }
-            Text("Vote", color = cageInk, fontSize = 13.sp)
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf("Public", "Jury", "Hybride").forEach { mode -> CageAction(mode, Modifier.weight(1f), !state.voteOpen && !state.voteClosed, primary = state.voteMode == mode) { state.voteConfig(mode, state.voteSeconds) } } }
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf(30, 45, 60, 90).forEach { duration -> CageAction(duration.toString() + " s", Modifier.weight(1f), !state.voteOpen && !state.voteClosed, primary = state.voteSeconds == duration) { state.voteConfig(state.voteMode, duration) } } }
-            if (state.simulatesPublicVote) Text("Public simulé · " + state.simulationVoteSeconds + " secondes", color = cageMuted, fontSize = 11.sp)
-            CageAction("Recommencer la préparation") { reset = true }
-            Text("Journal de session", color = cageInk)
-            state.history.takeLast(8).reversed().forEach { Text(it, color = cageMuted, fontSize = 11.sp) }
-        }
-    }
+    if (settings) CageSettingsSheet(state, onDismiss = { settings = false }, onReset = { settings = false; reset = true })
     if (state.resultsOpen && state.finished) CageResultsSheet(state)
     if (libraryOpen) ModalBottomSheet(onDismissRequest = { libraryOpen = false }, containerColor = Color(0xFF111216)) {
         Row(Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -246,7 +222,7 @@ internal fun CageToolsPanel(state: CageToolsState, programScope: String) {
 }
 
 @Composable
-private fun CageSettingSelect(label: String, value: String, options: Map<String, String>, enabled: Boolean, onSelect: (String) -> Unit) {
+internal fun CageSettingSelect(label: String, value: String, options: Map<String, String>, enabled: Boolean, onSelect: (String) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     Box {
         Row(Modifier.fillMaxWidth().hifiBlackSurface(10.dp).clickable(enabled = enabled) { expanded = true }.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -254,9 +230,9 @@ private fun CageSettingSelect(label: String, value: String, options: Map<String,
                 Text(label, color = cageMuted, fontSize = 10.sp)
                 Text(options[value].orEmpty(), color = cageInk.copy(alpha = if (enabled) 1f else .5f), fontSize = 12.sp)
             }
-            Icon(Icons.Default.ExpandMore, null, tint = WaveMixerTheme.capsuleAccentSoft, modifier = Modifier.size(20.dp))
+            Icon(if (enabled) Icons.Default.ExpandMore else Icons.Default.Lock, null, tint = if (enabled) WaveMixerTheme.capsuleAccentSoft else cageMuted.copy(alpha = .5f), modifier = Modifier.size(if (enabled) 20.dp else 15.dp))
         }
-        DropdownMenu(expanded, { expanded = false }, containerColor = Color(0xFF151519)) {
+        DropdownMenu(expanded && enabled, { expanded = false }, containerColor = Color(0xFF151519), shape = RoundedCornerShape(12.dp), modifier = Modifier.heightIn(max = 360.dp)) {
             options.forEach { (key, text) -> DropdownMenuItem(text = { Text(text, color = if (key == value) WaveMixerTheme.capsuleAccentSoft else cageInk) }, onClick = { onSelect(key); expanded = false }) }
         }
     }

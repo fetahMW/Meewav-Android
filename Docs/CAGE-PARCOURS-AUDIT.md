@@ -134,3 +134,6 @@ Cartes compactes : portraits côte à côte, VS, statut, grade et message indivi
 Cagnotte : objectif, bénéficiaire, montant cible, ouverture/clôture/réouverture, visibilité sur le retour vidéo et simulation explicite de contributions (debug). Inspirée des commandes du SceneFundraiserPanel web. Aucun paiement, solde ou versement réel implémenté ; transport et paiement restent à raccorder. État local à la session, non synchronisé aux viewers réseau. Billetterie inchangée dans le lancement.
 
 APK compilé ; aucun test ni inspection visuelle automatique lancé pour cette réorganisation.
+
+## Réglages Cage — saisie et présentation
+Le nom du programme est modifiable après confirmation : brouillon local du champ, validation non vide et application à la fermeture/Terminer. Les règles de compétition restent verrouillées. Sections noires Programme, Passages, Vote et Session ; sélecteurs sombres et compacts, cadenas pour les réglages indisponibles, journal replié. Texte et curseur du champ explicitement clairs, formulaire scrollable et adapté au clavier. Compilation effectuée sans tests ni QA automatique.
