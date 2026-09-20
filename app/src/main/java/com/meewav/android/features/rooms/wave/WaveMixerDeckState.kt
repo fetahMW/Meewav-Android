@@ -17,6 +17,7 @@ internal class WaveMixerDeckState(private val context: Context) : AutoCloseable 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val lock = Mutex()
     val audio = WaveCompositionAudio()
+    val tools = WaveMixerToolsState(context) { audio.stop(); audio.seek(0) }
     var lanes by mutableStateOf(listOf(WaveDeckLane(id = "main"))); private set
     var snapshot by mutableStateOf(WaveAudioSnapshot()); private set
     var repeat by mutableStateOf(false); private set
@@ -28,16 +29,27 @@ internal class WaveMixerDeckState(private val context: Context) : AutoCloseable 
         audio.monitor(WaveListeningMode.MIX, true)
         scope.launch { while (isActive) {
             snapshot = audio.snapshot
-            if (snapshot.running && !repeat && snapshot.frame >= duration && duration > 0) audio.stop()
+            if (snapshot.running && !repeat && snapshot.frame >= duration && duration > 0) { audio.stop(); tools.finish() }
             delay(33)
         } }
     }
     fun volume(value: Float) = audio.masterGain(value)
-    fun pause() { if (snapshot.running) audio.toggleClock() }
+    fun pause() { tools.pauseTimer(); if (audio.snapshot.running) audio.toggleClock() }
+    fun suspendAudio() { pause(); tools.stopAllPads() }
     fun route() { pause(); public = !public }
     fun toggleLoop() { repeat = !repeat; syncLoop() }
     private fun syncLoop() { audio.loop(0, if (repeat) duration.toLong() else 0) }
-    fun toggle() { if (lanes.any { it.pcm != null } && lanes.none { it.loading }) audio.toggleClock() }
+    fun toggle() {
+        if (tools.pendingStart || audio.snapshot.running) { pause(); return }
+        if (lanes.any { it.pcm != null } && lanes.none { it.loading }) {
+            if (audio.snapshot.frame >= duration) audio.seek(0)
+            tools.requestStart(audio.snapshot.frame == 0L) { if (!audio.snapshot.running) audio.toggleClock() }
+        }
+    }
+    fun toggleChrono() {
+        if (tools.timerRunning || tools.pendingStart) pause()
+        else tools.requestStart(tools.remainingMs == tools.durationSeconds * 1000L) { }
+    }
     fun seek(progress: Float) { audio.seek((duration * progress.coerceIn(0f, 1f)).toLong()) }
     fun add(): String { val lane = WaveDeckLane(); lanes = lanes + lane; return lane.id }
     fun remove(id: String) {
@@ -73,5 +85,5 @@ internal class WaveMixerDeckState(private val context: Context) : AutoCloseable 
             catch (failure: Exception) { error = failure.message }
         }
     }
-    override fun close() { scope.cancel(); audio.close() }
+    override fun close() { tools.close(); scope.cancel(); audio.close() }
 }

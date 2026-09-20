@@ -125,13 +125,13 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     val mixerDeck = remember(context) { WaveMixerDeckState(context.applicationContext) }
     LaunchedEffect(audioGain, audioMuted) { mixerDeck.volume(if (audioMuted) 0f else audioGain) }
     LaunchedEffect(composition?.snapshot?.running, composition?.snapshot?.cue) {
-        if (composition?.playing == true) mixerDeck.pause()
+        if (composition?.playing == true) mixerDeck.suspendAudio()
     }
     DisposableEffect(mixerDeck) { onDispose { mixerDeck.close() } }
     val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
     DisposableEffect(composition, lifecycle) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
-            if (event == androidx.lifecycle.Lifecycle.Event.ON_STOP) { composition?.suspendAudio(); mixerDeck.pause() }
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_STOP) { composition?.suspendAudio(); mixerDeck.suspendAudio() }
         }
         lifecycle.addObserver(observer)
         onDispose { lifecycle.removeObserver(observer); composition?.close() }

@@ -429,3 +429,11 @@ Le lecteur Wave possède son propre bouton haut-parleur animé et son propre vol
 - Lecteur de boucles Wave compacté de 16 dp ouvert : marges externes 2 dp, ligne titre/BPM/chrono 21 dp, timeline 54 dp avec padding 3 dp (dessin utile inchangé à 48 dp). Boutons et typographie conservés ; rail volume 48 dp.
 
 - Repli directionnel partagé entre Propositions, Vote et Composition ; positions de listes indépendantes et remise à zéro du seuil au changement d’onglet. Carte Vote dépliée : retour vers Propositions (flèche bas) et téléchargement local, désactivés pendant un vote actif.
+
+### Mixeur — Pads et Chronomètre (20 septembre 2026)
+- Le lecteur principal déplié contient trois commandes noires compactes : Piste, Pads, Chronomètre. Navigation dans le même panneau ; import audio/dossier/ZIP sous Piste.
+- Portage depuis Meewav-Web : PlaceTwists.tsx, placeTwistAudio.ts, PlaceTime.tsx, placeRoomTime.ts et placeMixerStart.ts.
+- Six assets locaux du site et leurs notices ; 15 emplacements, volume initial 20 %, pause/reprise/arrêt, import personnalisé persistant, appui long remplacer/rétablir.
+- Toggles indépendants : compte à rebours avant le beat, DJ Horn à la fin. Départ une seconde avant la fin réelle du média, sans délai fixe ; annulation du départ si pause/erreur/quitter.
+- Chrono configurable 00:01 à 99:59, durée persistante, activable, pause/reprise/reset ; horloge monotone, suit le transport et arrête le beat à zéro. Horn également en fin naturelle de piste. Aucun raccordement RTC ajouté.
+- Compilation uniquement ; vérification visuelle et audio laissée à l’utilisateur.

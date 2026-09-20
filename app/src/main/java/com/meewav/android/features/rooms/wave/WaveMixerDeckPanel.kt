@@ -30,8 +30,9 @@ internal fun WaveMixerDeckPanel(state: WaveMixerDeckState, expanded: Boolean, on
     var target by remember { mutableStateOf("main") }
     var revealed by remember { mutableStateOf<String?>(null) }
     var packMenu by remember { mutableStateOf(false) }
+    var page by androidx.compose.runtime.saveable.rememberSaveable { mutableIntStateOf(0) }
     val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) {
-        runCatching { context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }; state.import(target, uri)
+        runCatching { context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }; state.import(if (target == "new") state.add() else target, uri)
     } }
     val zip = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) state.importPack(uri, false) }
     val folder = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri -> if (uri != null) {
@@ -44,12 +45,14 @@ internal fun WaveMixerDeckPanel(state: WaveMixerDeckState, expanded: Boolean, on
                 modifier = Modifier.hardwareSurface(6.dp, true, .085f).clickable { state.route() }.padding(8.dp))
             WaveControl(Icons.Default.FileDownload, "Importer la piste principale") { target = state.lanes.first().id; importer.launch(arrayOf("audio/*")) }
             WaveControl(Icons.Default.SkipPrevious, "Précédent", enabled = false) {}
-            WaveRoundPlay(state.snapshot.running, state.lanes.any { it.loading }, 0f, "Lecture du mixeur", onClick = onPlay)
+            WaveRoundPlay(state.snapshot.running || state.tools.pendingStart, state.lanes.any { it.loading }, 0f, "Lecture du mixeur", onClick = onPlay)
             WaveControl(Icons.Default.SkipNext, "Suivant", enabled = false) {}
             WaveControl(Icons.Default.Repeat, "Répéter", state.repeat, onClick = state::toggleLoop)
             WaveControl(if (expanded) Icons.Default.ExpandMore else Icons.Default.Layers, "Déplier ou replier les pistes", expanded, onClick = onExpand)
         }
-        if (expanded) LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (expanded && page == 1) WaveMixerPads(state.tools, Modifier.weight(1f).fillMaxWidth())
+        else if (expanded && page == 2) WaveMixerChrono(state, Modifier.weight(1f).fillMaxWidth())
+        else if (expanded) LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(state.lanes, key = { it.id }) { lane ->
                 WaveSwipeActions(lane.id, revealed, { revealed = it }, actions = { close ->
                     SwipeAction("Mute", Icons.Default.VolumeOff, lane.muted) { state.mute(lane.id); close() }
@@ -58,17 +61,30 @@ internal fun WaveMixerDeckPanel(state: WaveMixerDeckState, expanded: Boolean, on
                 }) { WaveDeckLaneView(lane, state, { target = lane.id; importer.launch(arrayOf("audio/*")) }) }
             }
         } else state.lanes.firstOrNull()?.let { lane -> WaveDeckLaneView(lane, state, { target = lane.id; importer.launch(arrayOf("audio/*")) }) }
-        if (expanded) Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton({ target = state.add(); importer.launch(arrayOf("audio/*")) }, modifier = Modifier.weight(1f)) { Text("+ Piste", fontSize = 11.sp) }
+        if (expanded) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Box(Modifier.weight(1f)) {
-                OutlinedButton({ packMenu = true }, modifier = Modifier.fillMaxWidth()) { Text("Dossier / ZIP", fontSize = 11.sp) }
+                MixerPageButton("Piste", Icons.Default.Add, page == 0) { if (page == 0) packMenu = true else page = 0 }
                 DropdownMenu(packMenu, { packMenu = false }) {
+                    DropdownMenuItem(text = { Text("Ajouter une piste") }, onClick = { packMenu = false; target = "new"; importer.launch(arrayOf("audio/*")) })
                     DropdownMenuItem(text = { Text("Dossier") }, onClick = { packMenu = false; folder.launch(null) })
                     DropdownMenuItem(text = { Text("Archive ZIP") }, onClick = { packMenu = false; zip.launch(arrayOf("application/zip")) })
                 }
             }
+            Box(Modifier.weight(1f)) { MixerPageButton("Pads", Icons.Default.Apps, page == 1) { page = 1 } }
+            Box(Modifier.weight(1f)) { MixerPageButton("Chronomètre", Icons.Default.Timer, page == 2) { page = 2 } }
         }
         state.error?.let { Text(it, color = Color(0xFFC88B90), fontSize = 10.sp) }
+    }
+}
+
+@Composable
+private fun MixerPageButton(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, selected: Boolean, onClick: () -> Unit) {
+    Row(Modifier.fillMaxWidth().height(46.dp).hifiBlackSurface(10.dp).clickable(onClick = onClick),
+        horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+        val tint = if (selected) WaveMixerTheme.capsuleAccentSoft else Color(0xFFABA7B4)
+        Icon(icon, null, tint = tint, modifier = Modifier.size(17.dp))
+        Spacer(Modifier.width(5.dp))
+        Text(label, color = tint, fontSize = 11.sp, maxLines = 1)
     }
 }
 
