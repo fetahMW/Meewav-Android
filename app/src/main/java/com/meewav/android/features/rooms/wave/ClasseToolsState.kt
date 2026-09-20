@@ -52,19 +52,17 @@ internal class ClasseToolsState(context: Context, val guests: WaveGuestState, sc
     fun grantFloor(id: String) {
         val person = students.find { it.id == id && it.connected } ?: run { notice = "Cet élève n’est pas disponible."; return }
         if (hands.none { it.studentId == id }) { inviteFloor(id); return }
-        if (person.location != WaveGuestLocation.STAGE && guests.onStage.size >= 3) { notice = "Redescends un invité pour libérer une place sur scène."; return }
         releaseFloor()
-        guests.move(setOf(id), WaveGuestLocation.STAGE)
-        if (!person.mic) guests.toggleMic(id)
+        if (!guests.grantAudioFloor(id)) { notice = "Cet élève n’est pas disponible."; return }
         speakerId = id; speakingSince = System.currentTimeMillis(); invitedToSpeak = invitedToSpeak - id
         guests.mixerGuestId = id
     }
     fun releaseFloor() {
-        speakerId?.let { id -> hands = hands.filterNot { it.studentId == id }; guests.move(setOf(id), WaveGuestLocation.BACKSTAGE) }
+        speakerId?.let { id -> hands = hands.filterNot { it.studentId == id }; guests.releaseAudioFloor(id) }
         speakerId = null; speakingSince = 0
     }
     fun syncStudents() {
-        if (speakerId != null && guests.onStage.none { it.id == speakerId }) { hands = hands.filterNot { it.studentId == speakerId }; speakerId = null; speakingSince = 0 }
+        if (speakerId != null && students.none { it.id == speakerId && it.connected }) releaseFloor()
         if (students.none { it.id == selectedStudent }) selectedStudent = null
     }
     fun dismissHand(id: String) { if (speakerId == id) releaseFloor(); hands = hands.filterNot { it.studentId == id } }

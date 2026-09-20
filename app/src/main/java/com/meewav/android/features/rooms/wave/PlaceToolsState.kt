@@ -39,7 +39,7 @@ internal class PlaceToolsState(val guests:WaveGuestState,load:()->String?,privat
     fun tick(){
         now=time()
         val current=data.floor.current
-        if(current!=null&&guests.onStage.none{it.id==current&&it.connected})endFloor()
+        if(current!=null&&people.none{it.id==current})endFloor()
     }
     private fun save(value:PlaceArchive){data=value;persist(json.encodeToString(value));notice=null;tick()}
     private fun requireState(condition:Boolean,message:String){require(condition){message}}
@@ -61,22 +61,14 @@ internal class PlaceToolsState(val guests:WaveGuestState,load:()->String?,privat
     }
     private fun releaseSpeaker(id:String?) {
         if(id==null)return
-        if(guests.guests.any{it.id==id&&it.mic})guests.toggleMic(id)
-        if(guests.onStage.any{it.id==id})guests.move(setOf(id),WaveGuestLocation.BACKSTAGE)
-        if(guests.mixerGuestId==id)guests.mixerGuestId=null
+        guests.releaseAudioFloor(id)
     }
     fun leaveFloor(id:String){val f=data.floor;if(f.current==id)releaseSpeaker(id);save(data.copy(floor=f.copy(queue=f.queue-id,current=if(f.current==id)null else f.current,status=if(f.current==id)"ended"else f.status,clock=if(f.current==id)f.clock.copy(deadline=null)else f.clock)))}
     fun nextFloor()=act {
         val f=data.floor;val next=f.queue.firstOrNull{eligible(it)}
         requireState(next!=null,"Ajoute une personne disponible à la file de parole.")
-        val alreadyOnStage=guests.onStage.any{it.id==next}
-        val occupied=guests.onStage.count{it.id!=f.current}
-        requireState(alreadyOnStage||occupied<3,"Redescends un invité pour libérer une place sur scène.")
         releaseSpeaker(f.current)
-        if(!alreadyOnStage)guests.move(setOf(next!!),WaveGuestLocation.STAGE)
-        requireState(guests.onStage.any{it.id==next},"Impossible de faire monter cette personne sur scène.")
-        if(guests.guests.any{it.id==next&&!it.mic})guests.toggleMic(next!!)
-        guests.mixerGuestId=next
+        requireState(guests.grantAudioFloor(next!!),"Cette personne n’est plus disponible.")
         save(data.copy(floor=f.copy(current=next,queue=f.queue.filter{it!=next&&eligible(it)},completed=(f.completed+listOfNotNull(f.current)).takeLast(50),status="running",clock=f.clock.start(time()))))
     }
     fun pauseFloor(){val f=data.floor;if(f.status=="running")save(data.copy(floor=f.copy(status="paused",clock=f.clock.pause(time()))))else if(f.status=="paused"&&f.clock.remaining>0)save(data.copy(floor=f.copy(status="running",clock=f.clock.resume(time()))))}

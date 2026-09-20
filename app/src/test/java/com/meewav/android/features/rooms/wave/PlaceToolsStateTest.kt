@@ -52,16 +52,16 @@ class PlaceToolsStateTest {
         s.challenge(s.data.challenges.first().id,"cancel");assertTrue(s.createChallenge("Nouveau",null,30))
         val restored=PlaceToolsState(WaveGuestState(),{saved},{},{now});assertEquals(s.data,restored.data)
     }
-    @Test fun givingFloorTransfersStageMicrophoneAndMixerSelection(){
+    @Test fun givingFloorTransfersMicrophoneWithoutChangingVideo(){
         val s=state();s.guests.toggleMic("naya");s.joinFloor("naya");s.joinFloor("keo")
-        s.nextFloor();assertTrue(s.guests.onStage.any{it.id=="naya"&&it.mic});assertEquals("naya",s.guests.mixerGuestId)
-        s.nextFloor();assertTrue(s.guests.onStage.any{it.id=="keo"&&it.mic});assertEquals("keo",s.guests.mixerGuestId)
+        s.nextFloor();assertTrue(s.guests.guests.any{it.id=="naya"&&it.mic});assertEquals("naya",s.guests.mixerGuest?.id);assertTrue(s.guests.onStage.isEmpty())
+        s.nextFloor();assertTrue(s.guests.guests.any{it.id=="keo"&&it.mic});assertEquals("keo",s.guests.mixerGuest?.id);assertTrue(s.guests.onStage.isEmpty())
         assertTrue(s.guests.guests.any{it.id=="naya"&&it.location==WaveGuestLocation.BACKSTAGE&&!it.mic})
         s.endFloor();assertTrue(s.guests.onStage.isEmpty());assertNull(s.guests.mixerGuestId);assertFalse(s.guests.guests.first{it.id=="keo"}.mic)
     }
-    @Test fun fullStageDoesNotConsumeQueueOrActivateMicrophone(){
+    @Test fun fullStageDoesNotPreventAudioFloorOrChangeVideo(){
         val s=state();s.guests.move(setOf("keo","solen","azur"),WaveGuestLocation.STAGE);s.guests.toggleMic("naya");s.joinFloor("naya")
-        assertFalse(s.nextFloor());assertNull(s.data.floor.current);assertEquals(listOf("naya"),s.data.floor.queue);assertFalse(s.guests.guests.first{it.id=="naya"}.mic)
+        val stage=s.guests.onStage.map{it.id};assertTrue(s.nextFloor());assertEquals("naya",s.data.floor.current);assertTrue(s.data.floor.queue.isEmpty());assertTrue(s.guests.mixerGuest!!.mic);assertEquals(stage,s.guests.onStage.map{it.id})
     }
     @Test fun manualRemovalEndsFloorWithoutReturningGuestToBackstage(){
         val s=state();s.joinFloor("naya");s.nextFloor();s.guests.move(setOf("naya"),WaveGuestLocation.BACKSTAGE);s.guests.move(setOf("naya"),WaveGuestLocation.REQUESTED);s.tick()

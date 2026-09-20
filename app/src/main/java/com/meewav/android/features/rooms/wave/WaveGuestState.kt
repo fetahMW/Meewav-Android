@@ -61,7 +61,22 @@ internal class WaveGuestState(private val cageDemo: Boolean = false, private val
     var primaryId by mutableStateOf("host")
     var mixerGuestId by mutableStateOf<String?>(null)
     private var mixerGains by mutableStateOf(mapOf<String, Float>())
-    val mixerGuest get() = onStage.find { it.id == mixerGuestId }
+    var floorAudioId by mutableStateOf<String?>(null); private set
+    val mixerGuest get() = guests.find { it.id == mixerGuestId && (it.location == WaveGuestLocation.STAGE || (it.id == floorAudioId && it.location == WaveGuestLocation.BACKSTAGE && it.connected && it.canParticipate)) }
+    fun grantAudioFloor(id: String): Boolean {
+        val person = guests.find { it.id == id && it.connected && it.canParticipate && it.location in setOf(WaveGuestLocation.BACKSTAGE, WaveGuestLocation.STAGE) } ?: return false
+        if (floorAudioId != id) releaseAudioFloor(floorAudioId)
+        guests = guests.map { if (it.id == person.id) it.copy(mic = true) else it }
+        floorAudioId = id
+        mixerGuestId = id
+        return true
+    }
+    fun releaseAudioFloor(id: String?) {
+        if (id == null || id != floorAudioId) return
+        guests = guests.map { if (it.id == id) it.copy(mic = false) else it }
+        floorAudioId = null
+        if (mixerGuestId == id) mixerGuestId = null
+    }
     fun guestGain(id: String) = mixerGains[id] ?: .62f
     fun setGuestGain(id: String, gain: Float) { mixerGains = mixerGains + (id to gain.coerceIn(0f, 1f)) }
     val resolvedPrimaryId get() = primaryId.takeIf { id -> id == "host" || onStage.any { it.id == id } } ?: "host"
