@@ -135,8 +135,16 @@ internal class WaveGuestState(private val cageDemo: Boolean = false) {
     fun finishDrag() {
         val guest = dragged
         if (guest != null) {
-            if (guest.location == WaveGuestLocation.BACKSTAGE && overStage) move(setOf(guest.id), WaveGuestLocation.STAGE)
-            else if (guest.location == WaveGuestLocation.STAGE && overBackstage) move(setOf(guest.id), WaveGuestLocation.BACKSTAGE)
+            if (guest.location == WaveGuestLocation.BACKSTAGE && overStage) {
+                move(setOf(guest.id), WaveGuestLocation.STAGE)
+                if (onStage.any { it.id == guest.id }) mixerGuestId = guest.id
+            } else if (guest.location == WaveGuestLocation.STAGE && overBackstage) {
+                move(setOf(guest.id), WaveGuestLocation.BACKSTAGE)
+                if (onStage.none { it.id == guest.id }) {
+                    guestPage = 0
+                    if (mixerGuestId == guest.id) mixerGuestId = null
+                }
+            }
         }
         cancelDrag()
     }

@@ -260,7 +260,7 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                 items(shown, key = { it.id }) { guest ->
                     Column(Modifier.width(cardWidth).fillMaxHeight().hifiBlackSurface(12.dp).clip(RoundedCornerShape(12.dp))
                         .border(if (guest.id in state.selected) 1.dp else 0.dp, if (guest.id in state.selected) WaveMixerTheme.capsuleAccentSoft else Color.Transparent, RoundedCornerShape(12.dp))
-                        .guestDrag(state, guest, !multiSelect && state.selected.size <= 1 && guest.location in listOf(WaveGuestLocation.BACKSTAGE, WaveGuestLocation.STAGE))
+                        .guestDrag(state, guest, guest.location in listOf(WaveGuestLocation.BACKSTAGE, WaveGuestLocation.STAGE))
                         .combinedClickable(
                             onClick = {
                                 if (cage?.selectionMode == true) { cage.select(guest.id) }
@@ -304,6 +304,12 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                         if (guest.location == WaveGuestLocation.BACKSTAGE) GuestHealth(guest)
                         else Text(guest.location.label, color = Color.White.copy(alpha = .45f), fontSize = 8.sp, maxLines = 1)
                     }
+                }
+            }
+            if (state.overBackstage && state.dragged?.location == WaveGuestLocation.STAGE) {
+                Box(Modifier.fillMaxSize().background(WaveMixerTheme.capsuleAccent.copy(alpha = .12f)), contentAlignment = Alignment.Center) {
+                    Text("Relâcher pour redescendre en coulisses", color = Color.White, fontSize = 12.sp,
+                        modifier = Modifier.background(Color.Black.copy(alpha = .85f), RoundedCornerShape(8.dp)).padding(10.dp))
                 }
             }
         }

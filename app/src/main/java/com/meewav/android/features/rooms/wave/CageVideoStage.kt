@@ -15,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -48,7 +49,7 @@ internal fun CageVideoStage(state: CageToolsState, interactive: Boolean, audible
     val hostInset = feeds.size >= 2 || podium
     val hostBesideGuest = feeds.size == 1 && !podium
     Column(Modifier.fillMaxSize().background(Color.Black)
-        .onGloballyPositioned { if (interactive) state.guests.stageBounds = it.boundsInRoot() }) {
+        .onGloballyPositioned { if (!fullscreen) state.guests.stageBounds = it.boundsInRoot() }) {
         if (!fullscreen) Row(Modifier.fillMaxWidth().background(Color(0xFF0B0B0E)).padding(horizontal = 8.dp, vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("LA CAGE", color = Color(0xFFFF5B73), fontSize = 9.sp)
             Spacer(Modifier.weight(1f))
@@ -63,7 +64,10 @@ internal fun CageVideoStage(state: CageToolsState, interactive: Boolean, audible
                 val inMatch = state.active?.completed == false && guest.id in pair
                 val live = if (inMatch) state.microphoneOpen(guest.id) else guest.mic && guest.connected
                 val gain = if (!audible) 0f else if (inMatch) state.microphoneGain(guest.id) else if (live) state.guests.guestGain(guest.id) else 0f
-                Box(modifier.padding(1.dp).clickable { state.guests.mixerGuestId = guest.id }) {
+                Box(modifier.padding(1.dp)
+                    .guestDrag(state.guests, guest, interactive)
+                    .clickable { state.guests.mixerGuestId = guest.id }
+                    .alpha(if (state.guests.dragId == guest.id) .35f else 1f)) {
                     if (guest.connected && guest.camera) WaveGuestVideo(guest, Modifier.fillMaxSize(), gain, fillFrame = fullscreen)
                     else Text(guest.name + " · Signal indisponible", color = Color.White, modifier = Modifier.align(Alignment.Center))
                     if (live || state.guests.mixerGuestId == guest.id) Box(Modifier.fillMaxSize().border(1.dp, if (live) Color(0xFFFF5B73) else WaveMixerTheme.capsuleAccentSoft))

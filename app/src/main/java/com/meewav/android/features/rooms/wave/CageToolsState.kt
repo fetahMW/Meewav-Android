@@ -261,6 +261,10 @@ internal class CageToolsState(val guests: WaveGuestState,
         val match = active ?: return
         if (match.completed) return
         val duoOnStage = listOfNotNull(match.a, match.b).all { id -> guests.onStage.any { it.id == id } }
+        if (!duoOnStage && (clockRunning || awaitingCountdown)) {
+            pause()
+            notice = "Passage en pause · remonte le duo sur scène pour reprendre."
+        }
         if (phase == "Appel" && duoOnStage && ready()) {
             phase = "Sur scène"
             log("Artistes sur scène")
