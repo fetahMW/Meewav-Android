@@ -35,7 +35,7 @@ internal val classeBlue = Color(0xFF438FFF)
 private val classeMuted = Color(0xFFA7A3B2)
 
 @Composable
-internal fun ClasseToolsPanel(state: ClasseToolsState, onInvite: () -> Unit) {
+internal fun ClasseToolsPanel(state: ClasseToolsState) {
     var settings by remember { mutableStateOf(false) }
     var questions by remember { mutableStateOf(false) }
     var questionStudent by remember { mutableStateOf<String?>(null) }
@@ -107,7 +107,7 @@ internal fun ClasseToolsPanel(state: ClasseToolsState, onInvite: () -> Unit) {
         Row(Modifier.fillMaxWidth().height(44.dp), verticalAlignment = Alignment.CenterVertically) {
             listOf("Élèves", "Ressources").forEachIndexed { index, text ->
                 Column(Modifier.weight(1f).fillMaxHeight().clickable { state.tab = index; state.selectedStudent = null; questions = false }, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                    Text(text, color = if (state.tab == index && !questions) Color.White else classeMuted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    Text(if (index == 0) "Élèves · ${state.students.size}/24" else text, color = if (state.tab == index && !questions) Color.White else classeMuted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(5.dp))
                     Box(Modifier.width(30.dp).height(2.dp).background(if (state.tab == index && !questions) WaveMixerTheme.capsuleAccentSoft else Color.Transparent, CircleShape))
                 }
@@ -126,16 +126,9 @@ internal fun ClasseToolsPanel(state: ClasseToolsState, onInvite: () -> Unit) {
             ClasseResourcesPanel(state, Modifier.weight(1f))
         } else {
             LazyVerticalGrid(columns = GridCells.Fixed(4), state = gridState, modifier = Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(top = 8.dp, bottom = 12.dp)) {
-                item(key = "class-header", span = { GridItemSpan(maxLineSpan) }) {
-                    Column {
-            Row(Modifier.fillMaxWidth().height(40.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("${state.students.size}/24 élèves", color = classeMuted, fontSize = 11.sp, modifier = Modifier.weight(1f))
-                ClasseToggleChip("Mains", state.handsOpen) { state.handsOpen = !state.handsOpen }
-                IconButton(onClick = onInvite, modifier = Modifier.size(40.dp)) { Icon(WaveIcons.Add, "Inviter des élèves", tint = WaveMixerTheme.capsuleAccentSoft, modifier = Modifier.size(20.dp)) }
-            }
-            if (state.understandingActive) Row(Modifier.fillMaxWidth().padding(bottom = 6.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-                ClasseUnderstanding.entries.forEach { response -> Text("${state.understanding.values.count { it == response }} ${response.label}", fontSize = 10.sp, color = response.color()) }
-            }
+                if (state.understandingActive) item(key = "understanding", span = { GridItemSpan(maxLineSpan) }) {
+                    Row(Modifier.fillMaxWidth().padding(bottom = 6.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+                        ClasseUnderstanding.entries.forEach { response -> Text("${state.understanding.values.count { it == response }} ${response.label}", fontSize = 10.sp, color = response.color()) }
                     }
                 }
                 items(state.students, key = { it.id }) { student ->
@@ -170,10 +163,7 @@ internal fun ClasseToolsPanel(state: ClasseToolsState, onInvite: () -> Unit) {
                         }
                     }
                 }
-                if (state.students.size < 24) item { Column(Modifier.aspectRatio(.75f).clickable(onClick = onInvite), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                    Icon(WaveIcons.Add, "Inviter", tint = WaveMixerTheme.capsuleAccentSoft, modifier = Modifier.size(38.dp).hifiBlackSurface(18.dp).padding(8.dp))
-                    Text("Inviter", color = classeMuted, fontSize = 10.sp)
-                } }
+
             }
         }
         val selected = state.students.find { it.id == state.selectedStudent }
@@ -183,7 +173,6 @@ internal fun ClasseToolsPanel(state: ClasseToolsState, onInvite: () -> Unit) {
         Column(Modifier.fillMaxWidth().padding(vertical = 6.dp).hifiBlackSurface(14.dp).padding(6.dp)) {
             if (selected != null && !questions && state.tab == 0) {
                 val hand = state.hands.firstOrNull { it.studentId == selected.id }
-                hand?.let { Text(it.reason, color = classeMuted, fontSize = 11.sp, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)) }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     ClasseTool(if (state.speakerId == selected.id) "Couper" else if (hand != null) "Parole" else if (selected.id in state.invitedToSpeak) "Annuler" else "Inviter", if (state.speakerId == selected.id) WaveIcons.MicOff else WaveIcons.Mic, Modifier.weight(1f)) { if (state.speakerId == selected.id) state.releaseFloor() else state.grantFloor(selected.id) }
                     ClasseTool("Message", WaveIcons.Chat, Modifier.weight(1f)) { state.guests.messageRecipientIds = setOf(selected.id) }
@@ -202,7 +191,7 @@ internal fun ClasseToolsPanel(state: ClasseToolsState, onInvite: () -> Unit) {
             } else Row {
                 ClasseTool("Questions ${state.rankedQuestions.size}", Icons.Filled.QuestionAnswer, Modifier.weight(1f)) { questions = !questions; questionStudent = null }
                 ClasseTool(if (state.understandingActive) "Terminer" else "Compréhension", Icons.Filled.Psychology, Modifier.weight(1f), active = state.understandingActive) { state.toggleUnderstanding(); if (state.understandingActive) { state.tab = 0; questions = false } }
-                ClasseTool(if (state.hands.isEmpty()) "Mains" else "${state.hands.count { it.studentId != state.speakerId }} mains", Icons.Filled.BackHand, Modifier.weight(1f)) { state.tab = 0; questions = false; state.selectedStudent = state.hands.firstOrNull { it.studentId != state.speakerId }?.studentId }
+                ClasseTool(if (state.handsOpen) "Mains ouvertes" else "Mains fermées", Icons.Filled.BackHand, Modifier.weight(1f), tint = if (state.handsOpen) WaveMixerTheme.capsuleAccentSoft else classeMuted) { state.handsOpen = !state.handsOpen }
             }
         }
     }
@@ -224,9 +213,9 @@ internal fun ClasseToolsPanel(state: ClasseToolsState, onInvite: () -> Unit) {
         Text("$label ${if (enabled) "ouvertes" else "fermées"}", color = Color(0xFFCAC5D4), fontSize = 10.sp)
     }
 }
-@Composable internal fun ClasseTool(label: String, icon: ImageVector, modifier: Modifier = Modifier, active: Boolean = false, onClick: () -> Unit) {
-    Column(modifier.heightIn(min = 48.dp).clip(RoundedCornerShape(10.dp)).clickable(onClick = onClick).padding(vertical = 5.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-        Icon(icon, label, tint = if (active) Color(0xFF7ABFA2) else WaveMixerTheme.capsuleAccentSoft, modifier = Modifier.size(20.dp))
+@Composable internal fun ClasseTool(label: String, icon: ImageVector, modifier: Modifier = Modifier, active: Boolean = false, tint: Color = if (active) Color(0xFF7ABFA2) else WaveMixerTheme.capsuleAccentSoft, onClick: () -> Unit) {
+    Column(modifier.height(48.dp).clip(RoundedCornerShape(10.dp)).clickable(onClick = onClick).padding(vertical = 5.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Icon(icon, label, tint = tint, modifier = Modifier.size(20.dp))
         Spacer(Modifier.height(3.dp)); Text(label, fontSize = 9.sp, color = Color(0xFFCBC6D7), maxLines = 1)
     }
 }
