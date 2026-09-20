@@ -216,8 +216,10 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
             } else Text(if (page == 0) "Glisse un invité vers la vidéo" else if (page == 3) "${state.jury.size}/6 membres du jury" else "3 invités maximum sur scène",
                 modifier = Modifier.weight(1f), color = Color.White.copy(alpha = .48f), fontSize = 11.sp)
             if (page == 1 && (cage != null || state.selected.isEmpty())) Box {
-                TextButton(onClick = { originMenu = true }, modifier = Modifier.height(36.dp).hifiBlackSurface(10.dp), contentPadding = PaddingValues(horizontal = 8.dp)) {
-                    Text(listOf("Tous", "Candidatures", "Invitations")[originFilter] + if (requestLimit > 0 && cage != null) " · $requestLimit ▾" else " ▾", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 11.sp)
+                Box(Modifier.height(48.dp).widthIn(min = 96.dp).clickable { originMenu = true }, contentAlignment = Alignment.Center) {
+                    Box(Modifier.height(28.dp).widthIn(min = 96.dp).hifiBlackSurface(8.dp).padding(horizontal = 12.dp), contentAlignment = Alignment.Center) {
+                    Text(listOf("Tous", "Candidatures", "Invitations")[originFilter] + if (requestLimit > 0 && cage != null) " · $requestLimit ▾" else " ▾", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 11.sp, maxLines = 1)
+                    }
                 }
                 DropdownMenu(expanded = originMenu, onDismissRequest = { originMenu = false },
                     containerColor = Color(0xFF141419), shape = RoundedCornerShape(14.dp),
