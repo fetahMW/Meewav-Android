@@ -16,7 +16,9 @@ internal class CageToolsState(val guests: WaveGuestState,
     val simulationPassageSeconds: Int? = null,
     val simulationVoteSeconds: Int? = null,
     private val onPassageStart: () -> Unit = {},
-    private val onPassageEnd: () -> Unit = {}) : AutoCloseable {
+    private val onPassageEnd: () -> Unit = {},
+    private val requestPassageStart: (() -> Unit, () -> Unit) -> Unit = { start, _ -> start() },
+    private val cancelPassageStart: () -> Unit = {}) : AutoCloseable {
     private val scope = CoroutineScope(SupervisorJob() + dispatcher)
     var page by mutableIntStateOf(0)
     var resultsOpen by mutableStateOf(false)
@@ -76,6 +78,9 @@ internal class CageToolsState(val guests: WaveGuestState,
     var remainingMs by mutableLongStateOf((simulationPassageSeconds ?: 60) * 1000L); private set
     private val passageDurationMs get() = (simulationPassageSeconds ?: passageSeconds) * 1000L
     var clockRunning by mutableStateOf(false); private set
+    var awaitingCountdown by mutableStateOf(false); private set
+    private var startGeneration = 0
+    private fun cancelCountdown() { startGeneration++; awaitingCountdown = false; cancelPassageStart() }
     var voteMode by mutableStateOf("Public"); private set
     var voteSeconds by mutableIntStateOf(30); private set
     var voteOpen by mutableStateOf(false); private set
@@ -130,6 +135,7 @@ internal class CageToolsState(val guests: WaveGuestState,
     } } }
     private fun log(text: String) { history = (history + text).takeLast(60) }
     val commandLabel: String get() = when {
+        awaitingCountdown -> "Compte à rebours…"
         !locked && roster.isEmpty() && rosterMode in listOf("manual", "prepared") -> "Choisir les participants"
         !locked -> if (matches.isEmpty()) "Préparer le programme" else if (format == CageFormat.CHALLENGER) "Confirmer les duels" else "Confirmer le programme"
         finished -> "Voir les résultats"
@@ -146,8 +152,9 @@ internal class CageToolsState(val guests: WaveGuestState,
         phase == "Pause" -> "Reprendre le passage"
         else -> "Démarrer le passage"
     }
-    val commandEnabled get() = !(voteOpen && automaticPublicVote)
+    val commandEnabled get() = !awaitingCountdown && !(voteOpen && automaticPublicVote)
     val commandHint: String get() = when {
+        awaitingCountdown -> "Le passage démarre une seconde avant la fin du compte à rebours."
         !locked && matches.isEmpty() -> "Choisis les artistes ; tu pourras revoir l’ordre avant de confirmer."
         !locked -> "Vérifie l’ordre : la confirmation fixe les participants, sans lancer le direct."
         finished -> "Tous les passages sont terminés."
@@ -213,7 +220,7 @@ internal class CageToolsState(val guests: WaveGuestState,
         log("Programme généré · ${format.title} · ${roster.size} artistes")
     }
     fun lock() { if (matches.isEmpty()) generate(); if (matches.isNotEmpty()) { locked = true; page = 1; log("Programme verrouillé") } }
-    fun reset() { resultsOpen = false; resultsOnStage = false; guests.move(listOfNotNull(active?.a, active?.b).filter { person(it)?.location == WaveGuestLocation.STAGE }.toSet(), WaveGuestLocation.BACKSTAGE); guests.clearCageVictories(); artistAttentionId = null; clockRunning = false; voteOpen = false; locked = false; matches = emptyList(); activeId = null; phase = "Prêt"; incident = null; page = 0; clearVote(); log("Nouvelle préparation") }
+    fun reset() { cancelCountdown(); resultsOpen = false; resultsOnStage = false; guests.move(listOfNotNull(active?.a, active?.b).filter { person(it)?.location == WaveGuestLocation.STAGE }.toSet(), WaveGuestLocation.BACKSTAGE); guests.clearCageVictories(); artistAttentionId = null; clockRunning = false; voteOpen = false; locked = false; matches = emptyList(); activeId = null; phase = "Prêt"; incident = null; page = 0; clearVote(); log("Nouvelle préparation") }
     private fun clearVote() { publicBallots = emptyMap(); juryBallots = emptyMap(); simulatedPublicChoices = emptyList(); voteClosed = false; revealed = false; voteOpen = false }
     fun call(id: Int) {
         val match = matches.find { it.id == id && !it.completed } ?: return
@@ -246,14 +253,28 @@ internal class CageToolsState(val guests: WaveGuestState,
         if (ids.all { id -> guests.onStage.any { it.id == id } }) { phase = "Sur scène"; page = 2; log("Artistes sur scène") }
     }
     fun start() {
+        if (awaitingCountdown) return
         if (active == null || active?.completed == true || voteOpen || incident != null || phase !in listOf("Sur scène", "Pause", "Temps écoulé")) return
         if (!ready() || listOfNotNull(active?.a, active?.b).any { person(it)?.location != WaveGuestLocation.STAGE }) { notice = "Un artiste a quitté la scène ou perdu sa connexion."; return }
         if (remainingMs <= 0) return
         val beginning = phase != "Pause"
-        deadline = now() + remainingMs; clockRunning = true; phase = "Performance"; log("Passage $speaker")
-        if (beginning) onPassageStart()
+        fun begin() {
+            if (!ready() || incident != null || active?.completed != false || listOfNotNull(active?.a, active?.b).any { person(it)?.location != WaveGuestLocation.STAGE }) {
+                notice = "Le duo n’est plus disponible sur scène."; return
+            }
+            deadline = now() + remainingMs; clockRunning = true; phase = "Performance"; log("Passage $speaker")
+            if (beginning) onPassageStart()
+        }
+        if (!beginning) { begin(); return }
+        awaitingCountdown = true
+        val generation = ++startGeneration
+        requestPassageStart({
+            if (awaitingCountdown && generation == startGeneration) { awaitingCountdown = false; begin() }
+        }, {
+            if (generation == startGeneration) { awaitingCountdown = false; notice = "Compte à rebours interrompu. Tu peux relancer le passage." }
+        })
     }
-    fun pause() { if (clockRunning) { remainingMs = (deadline - now()).coerceAtLeast(0); clockRunning = false; phase = "Pause" } }
+    fun pause() { cancelCountdown(); if (clockRunning) { remainingMs = (deadline - now()).coerceAtLeast(0); clockRunning = false; phase = "Pause" } }
     fun nextStep() {
         if (active == null || active?.completed == true || phase !in listOf("Performance", "Pause", "Temps écoulé", "Sur scène")) return
         clockRunning = false
@@ -320,5 +341,5 @@ internal class CageToolsState(val guests: WaveGuestState,
         }
         page = 0
     }
-    override fun close() { scope.cancel() }
+    override fun close() { cancelCountdown(); scope.cancel() }
 }

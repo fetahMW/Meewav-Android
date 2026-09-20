@@ -108,7 +108,8 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     val cage = remember(room, guestState, mixerDeck) { if (room == RoomModule.CAGE) CageToolsState(guestState,
         simulationPassageSeconds = if (com.meewav.android.BuildConfig.DEBUG) 5 else null,
         simulationVoteSeconds = if (com.meewav.android.BuildConfig.DEBUG) 2 else null,
-        onPassageStart = mixerDeck.tools::playStartCountdown,
+        requestPassageStart = mixerDeck.tools::requestPassageStart,
+        cancelPassageStart = mixerDeck.tools::cancelStart,
         onPassageEnd = mixerDeck.tools::playEndHorn).also { state ->
         if (cageProgram != null) runCatching { state.applyProgram(CageProgram.decode(org.json.JSONObject(cageProgram))) }
             .onFailure { state.notice = "Le programme n’a pas pu être chargé. Choisis-le à nouveau dans Mes programmes." }

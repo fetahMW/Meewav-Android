@@ -41,6 +41,8 @@ internal class WaveMixerToolsState(private val context: Context, private val onT
     private var player: MediaPlayer? = null
     private var deadline = 0L
     private var startAction: (() -> Unit)? = null
+    private var cancelAction: (() -> Unit)? = null
+    private var startMixerTimer = true
 
     init {
         scope.launch {
@@ -80,17 +82,24 @@ internal class WaveMixerToolsState(private val context: Context, private val onT
     fun requestStart(fromBeginning: Boolean, action: () -> Unit) {
         if (pendingStart) return
         if (fromBeginning && countdownBefore && !timerRunning) {
-            pendingStart = true; startAction = action
+            pendingStart = true; startAction = action; startMixerTimer = true
             playSource(5, defaults[5], true)
         } else { action(); beginTimer() }
+    }
+    fun requestPassageStart(action: () -> Unit, cancelled: () -> Unit) {
+        cancelStart()
+        if (!countdownBefore) { action(); return }
+        pendingStart = true; startAction = action; cancelAction = cancelled; startMixerTimer = false
+        playSource(5, defaults[5], true)
     }
     private fun releaseStart() {
         if (!pendingStart) return
         val action = startAction; startAction = null; pendingStart = false
-        action?.invoke(); beginTimer()
+        cancelAction = null
+        action?.invoke(); if (startMixerTimer) beginTimer()
     }
     fun cancelStart() {
-        if (pendingStart) { pendingStart = false; startAction = null; stopPad() }
+        if (pendingStart) { val cancelled = cancelAction; cancelAction = null; pendingStart = false; startAction = null; stopPad(); cancelled?.invoke() }
     }
     fun finish(stopBeat: Boolean = false) {
         cancelStart(); timerRunning = false; remainingMs = durationSeconds * 1000L
@@ -114,10 +123,10 @@ internal class WaveMixerToolsState(private val context: Context, private val onT
             media.setOnPreparedListener { if (player === it) { padLoading = false; it.start() } }
             media.setOnCompletionListener { if (player === it) { if (automatic) releaseStart(); stopPad() } }
             media.setOnErrorListener { _, _, _ ->
-                if (player === media) { pendingStart = false; startAction = null; stopPad(); error = "Lecture du pad impossible. Relance le son." }; true
+                if (player === media) { cancelStart(); stopPad(); error = "Lecture du pad impossible. Relance le son." }; true
             }
             media.prepareAsync()
-        } catch (_: Exception) { pendingStart = false; startAction = null; stopPad(); error = "Ce son n’est pas accessible." }
+        } catch (_: Exception) { cancelStart(); stopPad(); error = "Ce son n’est pas accessible." }
     }
     fun togglePadPause() {
         val media = player ?: return
