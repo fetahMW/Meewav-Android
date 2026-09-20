@@ -12,13 +12,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -107,10 +110,7 @@ internal fun ClasseToolsPanel(state: ClasseToolsState) {
                                 if (speaking) "A la parole" else if (hand) "Main levée" else "Invité à parler", tint = if (speaking) Color(0xFF7ABFA2) else WaveMixerTheme.capsuleAccentSoft,
                                 modifier = Modifier.align(Alignment.BottomEnd).size(23.dp).background(Color(0xFF121017), CircleShape).padding(4.dp))
                             if (state.rankedQuestions.any { it.studentId == student.id }) {
-                                Box(Modifier.align(Alignment.TopEnd).size(19.dp)) {
-                                    Icon(Icons.Filled.ChatBubble, "Question en attente", tint = Color(0xFF438FFF), modifier = Modifier.fillMaxSize())
-                                    Icon(Icons.Outlined.ChatBubbleOutline, null, tint = Color(0xFF9AC9FF), modifier = Modifier.fillMaxSize())
-                                }
+                                ClasseQuestionBubble(Modifier.align(Alignment.TopEnd).size(20.dp))
                             }
                         }
                         Spacer(Modifier.height(6.dp))
@@ -262,5 +262,25 @@ private fun ClasseUnderstanding.color() = when (this) { ClasseUnderstanding.UNDE
     val height by transition.animateFloat(.3f, 1f, infiniteRepeatable(tween(550), RepeatMode.Reverse), label = "voice-motion")
     Row(Modifier.height(10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(1.dp)) {
         listOf(height, 1.3f - height, height * .7f).forEach { value -> Box(Modifier.width(2.dp).height((value * 10).dp).background(Color(0xFF8DD1B2), CircleShape)) }
+    }
+}
+
+@Composable private fun ClasseQuestionBubble(modifier: Modifier = Modifier) {
+    Canvas(modifier.semantics { contentDescription = "Question en attente" }) {
+        val w = size.width
+        val h = size.height
+        val bubble = Path().apply {
+            moveTo(w * .5f, h * .1f)
+            cubicTo(w * .74f, h * .1f, w * .91f, h * .25f, w * .91f, h * .45f)
+            cubicTo(w * .91f, h * .67f, w * .73f, h * .8f, w * .5f, h * .8f)
+            cubicTo(w * .44f, h * .8f, w * .38f, h * .79f, w * .34f, h * .77f)
+            quadraticTo(w * .23f, h * .88f, w * .12f, h * .9f)
+            quadraticTo(w * .19f, h * .79f, w * .2f, h * .69f)
+            cubicTo(w * .12f, h * .63f, w * .09f, h * .55f, w * .09f, h * .45f)
+            cubicTo(w * .09f, h * .25f, w * .26f, h * .1f, w * .5f, h * .1f)
+            close()
+        }
+        drawPath(bubble, Color(0xFF191B20))
+        drawPath(bubble, Color(0xFF79B4FF), style = Stroke(width = 1.2.dp.toPx()))
     }
 }
