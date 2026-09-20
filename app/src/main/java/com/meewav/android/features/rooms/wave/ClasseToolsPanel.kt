@@ -44,7 +44,7 @@ internal fun ClasseToolsPanel(state: ClasseToolsState) {
     var questionStudent by remember { mutableStateOf<String?>(null) }
     var removeId by remember { mutableStateOf<String?>(null) }
     var demo by remember { mutableStateOf(false) }
-    val pagerState = rememberPagerState { ((state.students.size + 11) / 12).coerceAtLeast(1) }
+    val pagerState = rememberPagerState { ((state.capacity + 11) / 12).coerceAtLeast(1) }
     var tick by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(state.speakerId) { while (state.speakerId != null) { tick = System.currentTimeMillis(); delay(1000) } }
     LaunchedEffect(state.understandingActive) {
@@ -111,7 +111,7 @@ internal fun ClasseToolsPanel(state: ClasseToolsState) {
                             if (!student.connected) Icon(Icons.Filled.WifiOff, "Connexion perdue",
                                 tint = Color(0xFFE39199), modifier = Modifier.align(Alignment.Center).size(22.dp))
                             if (hand) Icon(Icons.Filled.BackHand, "Main levée", tint = WaveMixerTheme.capsuleAccentSoft,
-                                modifier = Modifier.align(Alignment.TopStart).size(20.dp))
+                                modifier = Modifier.align(Alignment.TopStart).size(16.dp))
                             if (speaking || student.id in state.invitedToSpeak) Icon(if (speaking) WaveIcons.Mic else Icons.Filled.Schedule,
                                 if (speaking) "A la parole" else "Invité à parler", tint = if (speaking) Color(0xFF7ABFA2) else WaveMixerTheme.capsuleAccentSoft,
                                 modifier = Modifier.align(Alignment.BottomEnd).size(23.dp).background(Color(0xFF121017), CircleShape).padding(4.dp))
@@ -129,6 +129,15 @@ internal fun ClasseToolsPanel(state: ClasseToolsState) {
                             status?.let { Text(it, color = response?.color() ?: classeMuted, fontSize = 9.sp, maxLines = 1) }
                         }
                     }
+                                        } else {
+                                            val portraitSize = minOf(64.dp, maxWidth - 4.dp, (maxHeight - 38.dp).coerceAtLeast(24.dp))
+                                            Column(Modifier.fillMaxSize().padding(vertical = 3.dp),
+                                                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                                                Box(Modifier.size(portraitSize).background(Color(0xFF111216), CircleShape)
+                                                    .border(.75.dp, Color(0xFF49434F), CircleShape))
+                                                Spacer(Modifier.height(6.dp))
+                                                Text("Libre", color = classeMuted, fontSize = 10.sp)
+                                            }
                                         }
                                     }
                                 }
@@ -142,7 +151,6 @@ internal fun ClasseToolsPanel(state: ClasseToolsState) {
                             .background(if (index == pagerState.settledPage) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .2f), CircleShape))
                     }
                 }
-                if (state.students.isEmpty()) Text("Aucun élève pour le moment", color = classeMuted, fontSize = 12.sp, modifier = Modifier.align(Alignment.Center))
             }
         }
 
@@ -160,10 +168,9 @@ internal fun ClasseToolsPanel(state: ClasseToolsState) {
                         DropdownMenu(menu, { menu = false }, containerColor = Color(0xFF15141B)) {
                             DropdownMenuItem(text = { Text("Voir ses questions", color = Color.White) }, onClick = { questionStudent = selected.id; questions = true; menu = false })
                             if (hand != null) DropdownMenuItem(text = { Text("Baisser la main", color = Color.White) }, onClick = { state.dismissHand(selected.id); menu = false })
-                            DropdownMenuItem(text = { Text("Retirer de la classe", color = Color(0xFFE99A9E)) }, onClick = { removeId = selected.id; menu = false })
                         }
                     }
-                    ClasseTool("Annuler", WaveIcons.Close, Modifier.weight(1f)) { state.selectedStudent = null }
+                    ClasseTool("Bannir", WaveIcons.Close, Modifier.weight(1f), tint = Color(0xFFE39199)) { removeId = selected.id }
                 }
             } else Row {
                 ClasseTool("Questions ${state.rankedQuestions.size}", Icons.Filled.QuestionAnswer, Modifier.weight(1f)) { questions = !questions; questionStudent = null }
@@ -172,7 +179,13 @@ internal fun ClasseToolsPanel(state: ClasseToolsState) {
             }
         }
     }
-    if (removeId != null) AlertDialog(onDismissRequest = { removeId = null }, containerColor = Color(0xFF15141B), title = { Text("Retirer cet élève ?", color = Color.White) }, text = { Text("Il quittera la salle et retournera dans les demandes.", color = classeMuted) }, confirmButton = { TextButton(onClick = { state.removeStudent(removeId!!); removeId = null }) { Text("Retirer", color = Color(0xFFE99A9E)) } }, dismissButton = { TextButton(onClick = { removeId = null }) { Text("Annuler") } })
+    val banning = state.students.find { it.id == removeId }
+    if (banning != null) AlertDialog(
+        onDismissRequest = { removeId = null }, containerColor = Color(0xFF15141B),
+        title = { Text("Bannir cet élève ?", color = Color.White) },
+        text = { Text("Vous êtes sur le point de bannir "+ banning.name + " de la classe. Cet élève sera retiré et ne pourra plus être invité dans cette session.", color = classeMuted) },
+        confirmButton = { TextButton(onClick = { state.banStudent(banning.id); removeId = null }) { Text("Bannir", color = Color(0xFFE39199)) } },
+        dismissButton = { TextButton(onClick = { removeId = null }) { Text("Annuler", color = WaveMixerTheme.capsuleAccentSoft) } })
     if (settings) ClasseSheet("Réglages de la classe", { settings = false }) {
         ClasseSetting("Autoriser les mains levées", state.handsOpen) { state.handsOpen = it }
         ClasseSetting("Autoriser les questions", state.questionsOpen) { state.questionsOpen = it }

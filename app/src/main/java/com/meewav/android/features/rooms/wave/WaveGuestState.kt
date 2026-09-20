@@ -149,8 +149,18 @@ internal class WaveGuestState(private val cageDemo: Boolean = false, private val
         cancelDrag()
     }
 
+    private val classeBannedIds = mutableSetOf<String>()
+    fun banFromClasse(id: String) {
+        if (!classeDemo) return
+        classeBannedIds += id
+        remove(setOf(id))
+        if (mixerGuestId == id) mixerGuestId = null
+        if (profilePreviewId == id) profilePreviewId = null
+        if (dragId == id) cancelDrag()
+        notice = null
+    }
     fun move(ids: Set<String>, target: WaveGuestLocation) {
-        val matching = guests.filter { it.id in ids && it.canParticipate }
+        val matching = guests.filter { it.id in ids && it.canParticipate && it.id !in classeBannedIds }
         val allowed = matching.filter { guest -> when (target) {
             WaveGuestLocation.STAGE -> guest.location == WaveGuestLocation.BACKSTAGE
             WaveGuestLocation.JURY -> guest.location != WaveGuestLocation.JURY
@@ -170,6 +180,11 @@ internal class WaveGuestState(private val cageDemo: Boolean = false, private val
         if (target == WaveGuestLocation.JURY && jury.size + allowed.size > 6) {
             notice = "Jury complet · 6 personnes maximum"
             return
+        }
+        if (classeDemo && target == WaveGuestLocation.BACKSTAGE) {
+            val seated = guests.count { it.canParticipate && it.location in setOf(WaveGuestLocation.BACKSTAGE, WaveGuestLocation.STAGE) }
+            val arrivals = allowed.count { it.location !in setOf(WaveGuestLocation.BACKSTAGE, WaveGuestLocation.STAGE) }
+            if (seated + arrivals > 24) { notice = "Classe complète · 24 places maximum"; return }
         }
         val moving = allowed.map { it.id }.toSet()
         guests = guests.map { if (it.id in moving) it.copy(location = target, appeared = it.appeared || target == WaveGuestLocation.STAGE) else it }
@@ -213,6 +228,7 @@ internal class WaveGuestState(private val cageDemo: Boolean = false, private val
         notice = "Invité retiré de la démo"
     }
     fun invite(guest: WaveGuest) {
+        if (guest.id in classeBannedIds) { notice = "Cet artiste est banni de cette classe."; return }
         if (guests.none { it.id == guest.id }) guests = guests + roomVideo(guest.copy(location = WaveGuestLocation.INVITED,
             origin = GuestOrigin.INVITATION, invitation = GuestInvitation.PENDING, connected = false))
         notice = "Invitation ajoutée à la démo"

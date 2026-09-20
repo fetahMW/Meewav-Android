@@ -30,3 +30,10 @@ Le raccordement live nécessitera une entrée contenant la vraie room et le rôl
 ## Livraison
 
 Compilation autorisée pour installation sur Samsung. Aucun test ni contrôle visuel automatique exécuté, conformément à la consigne de travail.
+
+## Ajustements sièges et modération
+- Démo initiale : 22 élèves sur 24, deux places libres en cercles sombres, conservées dans la pagination de deux pages de 12. Les autres rooms conservent leurs effectifs.
+- Main levée sans fond : 16 dp en haut à gauche.
+- Bannir remplace Annuler dans la barre de sélection ; confirmation nominative avant retrait. Un second appui sur le portrait désélectionne toujours.
+- Le bannissement de cette session locale retire aussi la parole, les questions, la sélection du fader et empêche une nouvelle invitation du même identifiant. Les admissions depuis Invités respectent la capacité de 24.
+- Les sièges libres ne déclenchent aucun paiement côté host. Achat et bannissement serveur restent à raccorder à la future session viewer/backend.

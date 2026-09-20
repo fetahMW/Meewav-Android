@@ -34,7 +34,8 @@ internal fun classeDemoPortraits(guests: List<WaveGuest>): List<WaveGuest> {
     return guests.map { guest ->
         if (guest.location == WaveGuestLocation.BACKSTAGE && seat < artists.size) {
             val (name, role, portrait) = artists[seat++]
-            guest.copy(name = name, role = role, portrait = portrait)
+            guest.copy(name = name, role = role, portrait = portrait,
+                location = if (seat <= 22) WaveGuestLocation.BACKSTAGE else WaveGuestLocation.REQUESTED)
         } else guest
     }
 }

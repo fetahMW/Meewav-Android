@@ -14,12 +14,13 @@ internal enum class ClasseUnderstanding(val label: String) { UNDERSTOOD("Compris
 /** Port of ClasseSessionViewModel. This room entry is the local investor demonstration. */
 internal class ClasseToolsState(context: Context, val guests: WaveGuestState, scope: String) {
     private val prefs = context.getSharedPreferences("classe-resources-" + scope.hashCode(), Context.MODE_PRIVATE)
+    val capacity = 24
     var tab by mutableIntStateOf(0)
     var title by mutableStateOf("Voix & Mix — Session 1")
     var resources by mutableStateOf(emptyList<ClasseResource>()); private set
     var selectedStudent by mutableStateOf<String?>(null)
     var excluded by mutableStateOf(emptySet<String>())
-    val students get() = guests.guests.filter { it.id !in excluded && it.canParticipate && it.location in setOf(WaveGuestLocation.BACKSTAGE, WaveGuestLocation.STAGE) }.take(24)
+    val students get() = guests.guests.filter { it.id !in excluded && it.canParticipate && it.location in setOf(WaveGuestLocation.BACKSTAGE, WaveGuestLocation.STAGE) }.take(capacity)
     var handsOpen by mutableStateOf(true)
     var questionsOpen by mutableStateOf(true)
     var hands by mutableStateOf(listOf(ClasseHand("naya", "Comment régler le gain sans saturer ?"), ClasseHand("solen", "Je voudrais essayer la compression."), ClasseHand("demo-BACKSTAGE-5", "Je peux faire écouter mon essai ?"), ClasseHand("demo-BACKSTAGE-10", "Une question sur le placement du micro."), ClasseHand("demo-BACKSTAGE-15", "Je voudrais refaire l’exercice."), ClasseHand("demo-BACKSTAGE-18", "Comment doser la réverbération ?"))); private set
@@ -63,15 +64,23 @@ internal class ClasseToolsState(context: Context, val guests: WaveGuestState, sc
         speakerId = null; speakingSince = 0
     }
     fun syncStudents() {
-        excluded = excluded.filter { id -> guests.guests.none { it.id == id && it.location in setOf(WaveGuestLocation.BACKSTAGE, WaveGuestLocation.STAGE) } }.toSet()
         if (speakerId != null && guests.onStage.none { it.id == speakerId }) { hands = hands.filterNot { it.studentId == speakerId }; speakerId = null; speakingSince = 0 }
         if (students.none { it.id == selectedStudent }) selectedStudent = null
     }
     fun dismissHand(id: String) { if (speakerId == id) releaseFloor(); hands = hands.filterNot { it.studentId == id } }
     fun lowerAllHands() { hands = hands.filter { it.studentId == speakerId } }
-    fun removeStudent(id: String) { dismissHand(id); excluded = excluded + id; selectedStudent = null; guests.move(setOf(id), WaveGuestLocation.REQUESTED) }
+    fun banStudent(id: String) {
+        if (students.none { it.id == id }) return
+        dismissHand(id)
+        excluded = excluded + id
+        invitedToSpeak = invitedToSpeak - id
+        understanding = understanding - id
+        questions = questions.filterNot { it.studentId == id }
+        selectedStudent = null
+        guests.banFromClasse(id)
+    }
     fun submitQuestion(id: String, text: String) {
-        if (!questionsOpen || text.isBlank()) return
+        if (!questionsOpen || text.isBlank() || students.none { it.id == id }) return
         if (questions.any { it.studentId == id && it.resolution == null }) {
             notice = "Cet élève a déjà une question en attente."
             return
@@ -81,5 +90,5 @@ internal class ClasseToolsState(context: Context, val guests: WaveGuestState, sc
     fun likeQuestion(id: String) { questions = questions.map { if (it.id == id) it.copy(likes = (it.likes + if (it.liked) -1 else 1).coerceAtLeast(0), liked = !it.liked) else it } }
     fun resolveQuestion(id: String, answered: Boolean) { questions = questions.map { if (it.id == id) it.copy(resolution = if (answered) "Répondue" else "Écartée") else it } }
     fun toggleUnderstanding() { understandingActive = !understandingActive; understanding = emptyMap() }
-    fun respond(id: String, response: ClasseUnderstanding) { if (understandingActive) understanding = understanding + (id to response) }
+    fun respond(id: String, response: ClasseUnderstanding) { if (understandingActive && students.any { it.id == id }) understanding = understanding + (id to response) }
 }
