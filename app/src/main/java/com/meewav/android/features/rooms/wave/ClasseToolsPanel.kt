@@ -7,16 +7,13 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.grid.*
+import androidx.compose.foundation.pager.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.nestedscroll.*
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,53 +38,7 @@ internal fun ClasseToolsPanel(state: ClasseToolsState) {
     var questionStudent by remember { mutableStateOf<String?>(null) }
     var removeId by remember { mutableStateOf<String?>(null) }
     var demo by remember { mutableStateOf(false) }
-    val gridState = rememberLazyGridState()
-    var actionsVisible by remember { mutableStateOf(true) }
-    var bottomDocked by remember { mutableStateOf(false) }
-    val inStudentGrid by rememberUpdatedState(state.tab == 0 && !questions)
-    val density = LocalDensity.current
-    val hideThreshold = with(density) { 28.dp.toPx() }
-    val revealThreshold = with(density) { 12.dp.toPx() }
-    val scrollConnection = remember(hideThreshold, revealThreshold) {
-        object : NestedScrollConnection {
-            var travel = 0f
-            override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
-                if (source != NestedScrollSource.UserInput) return Offset.Zero
-                val delta = consumed.y
-                if (inStudentGrid && delta <= 0f && !gridState.canScrollForward) {
-                    bottomDocked = true; actionsVisible = true; travel = 0f
-                    return Offset.Zero
-                }
-                if (delta > 0f) bottomDocked = false
-                if (delta == 0f) return Offset.Zero
-                if (travel * delta < 0f) travel = 0f
-                travel += delta
-                if (travel <= -hideThreshold && !(inStudentGrid && bottomDocked)) { actionsVisible = false; travel = 0f }
-                if (travel >= revealThreshold) { actionsVisible = true; travel = 0f }
-                return Offset.Zero
-            }
-        }
-    }
-    LaunchedEffect(state.selectedStudent, state.tab, questions) { actionsVisible = true }
-    LaunchedEffect(gridState.firstVisibleItemIndex, gridState.firstVisibleItemScrollOffset) {
-        if (state.tab == 0 && !questions && gridState.firstVisibleItemIndex == 0 && gridState.firstVisibleItemScrollOffset == 0) actionsVisible = true
-    }
-    LaunchedEffect(gridState.canScrollForward, state.tab, questions) {
-        if (state.tab == 0 && !questions && gridState.layoutInfo.totalItemsCount > 0 && !gridState.canScrollForward) {
-            bottomDocked = true
-            actionsVisible = true
-        }
-    }
-    LaunchedEffect(bottomDocked, actionsVisible) {
-        if (bottomDocked && actionsVisible) {
-            // Keep the last row above the footer after it has recovered its height.
-            delay(200)
-            if (bottomDocked && inStudentGrid) {
-                val last = gridState.layoutInfo.totalItemsCount - 1
-                if (last >= 0) gridState.animateScrollToItem(last)
-            }
-        }
-    }
+    val pagerState = rememberPagerState { ((state.students.size + 11) / 12).coerceAtLeast(1) }
     var tick by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(state.speakerId) { while (state.speakerId != null) { tick = System.currentTimeMillis(); delay(1000) } }
     LaunchedEffect(state.understandingActive) {
@@ -103,7 +54,7 @@ internal fun ClasseToolsPanel(state: ClasseToolsState) {
             }
         }
     }
-    Column(Modifier.fillMaxSize().nestedScroll(scrollConnection)) {
+    Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().height(44.dp), verticalAlignment = Alignment.CenterVertically) {
             listOf("Élèves", "Ressources").forEachIndexed { index, text ->
                 Column(Modifier.weight(1f).fillMaxHeight().clickable { state.tab = index; state.selectedStudent = null; questions = false }, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
@@ -125,20 +76,29 @@ internal fun ClasseToolsPanel(state: ClasseToolsState) {
         } else if (state.tab == 1) {
             ClasseResourcesPanel(state, Modifier.weight(1f))
         } else {
-            LazyVerticalGrid(columns = GridCells.Fixed(4), state = gridState, modifier = Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(top = 8.dp, bottom = 12.dp)) {
-                if (state.understandingActive) item(key = "understanding", span = { GridItemSpan(maxLineSpan) }) {
-                    Row(Modifier.fillMaxWidth().padding(bottom = 6.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-                        ClasseUnderstanding.entries.forEach { response -> Text("${state.understanding.values.count { it == response }} ${response.label}", fontSize = 10.sp, color = response.color()) }
-                    }
-                }
-                items(state.students, key = { it.id }) { student ->
+            if (state.understandingActive) Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+                ClasseUnderstanding.entries.forEach { response -> Text("${state.understanding.values.count { it == response }} ${response.label}", fontSize = 10.sp, color = response.color()) }
+            }
+            Box(Modifier.weight(1f).fillMaxWidth()) {
+                VerticalPager(state = pagerState, modifier = Modifier.fillMaxSize(), pageSpacing = 12.dp,
+                    flingBehavior = PagerDefaults.flingBehavior(state = pagerState,
+                        pagerSnapDistance = PagerSnapDistance.atMost(1), snapPositionalThreshold = .12f,
+                        snapAnimationSpec = spring(dampingRatio = .9f, stiffness = Spring.StiffnessMediumLow))) { page ->
+                    Column(Modifier.fillMaxSize().padding(top = 4.dp, bottom = 4.dp, end = 8.dp)) {
+                        repeat(3) { row ->
+                            Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                repeat(4) { column ->
+                                    val student = state.students.getOrNull(page * 12 + row * 4 + column)
+                                    BoxWithConstraints(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.Center) {
+                                        if (student != null) key(student.id) {
+                                            val portraitSize = minOf(64.dp, maxWidth - 4.dp, (maxHeight - 38.dp).coerceAtLeast(24.dp))
                     val selected = state.selectedStudent == student.id
                     val speaking = state.speakerId == student.id
                     val hand = state.hands.any { it.studentId == student.id } && !speaking
                     val response = state.understanding[student.id]
                     val size by animateFloatAsState(if (selected) 1.07f else 1f, label = "selected-student")
-                    Column(Modifier.fillMaxWidth().clickable { state.selectedStudent = if (selected) null else student.id }.padding(vertical = 3.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Box(Modifier.size(64.dp).scale(size)) {
+                    Column(Modifier.fillMaxSize().clickable { state.selectedStudent = if (selected) null else student.id }.padding(vertical = 3.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                        Box(Modifier.size(portraitSize).scale(size)) {
                             if (speaking) ClasseSpeakingHalo(Modifier.fillMaxSize())
                             Image(painterResource(student.portrait), "Sélectionner ${student.name}", Modifier.fillMaxSize().padding(if (speaking) 3.dp else 0.dp).clip(CircleShape)
                                 .border(if (selected || speaking || response != null) 2.dp else .5.dp, if (speaking) Color(0xFF7ABFA2) else response?.color() ?: if (selected) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .15f), CircleShape), contentScale = ContentScale.Crop)
@@ -147,9 +107,7 @@ internal fun ClasseToolsPanel(state: ClasseToolsState) {
                                 modifier = Modifier.align(Alignment.BottomEnd).size(23.dp).background(Color(0xFF121017), CircleShape).padding(4.dp))
                             if (state.rankedQuestions.any { it.studentId == student.id }) {
                                 Icon(WaveIcons.Chat, "Question en attente", tint = Color(0xFF79B4FF),
-                                    modifier = Modifier.align(Alignment.TopEnd).size(23.dp)
-                                        .background(Color(0xFF122541), CircleShape)
-                                        .border(.5.dp, classeBlue.copy(alpha = .6f), CircleShape).padding(4.dp))
+                                    modifier = Modifier.align(Alignment.TopEnd).size(19.dp))
                             }
                         }
                         Spacer(Modifier.height(6.dp))
@@ -162,14 +120,24 @@ internal fun ClasseToolsPanel(state: ClasseToolsState) {
                             status?.let { Text(it, color = response?.color() ?: classeMuted, fontSize = 9.sp, maxLines = 1) }
                         }
                     }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
-
+                if (pagerState.pageCount > 1) Column(Modifier.align(Alignment.CenterEnd), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    repeat(pagerState.pageCount) { index ->
+                        Box(Modifier.width(3.dp).height(if (index == pagerState.settledPage) 13.dp else 5.dp)
+                            .background(if (index == pagerState.settledPage) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .2f), CircleShape))
+                    }
+                }
+                if (state.students.isEmpty()) Text("Aucun élève pour le moment", color = classeMuted, fontSize = 12.sp, modifier = Modifier.align(Alignment.Center))
             }
         }
+
         val selected = state.students.find { it.id == state.selectedStudent }
-        AnimatedVisibility(visible = actionsVisible,
-            enter = expandVertically(animationSpec = tween(180), expandFrom = Alignment.Bottom) + fadeIn(tween(150)),
-            exit = shrinkVertically(animationSpec = tween(180), shrinkTowards = Alignment.Bottom) + fadeOut(tween(120))) {
         Column(Modifier.fillMaxWidth().padding(vertical = 6.dp).hifiBlackSurface(14.dp).padding(6.dp)) {
             if (selected != null && !questions && state.tab == 0) {
                 val hand = state.hands.firstOrNull { it.studentId == selected.id }
@@ -194,7 +162,6 @@ internal fun ClasseToolsPanel(state: ClasseToolsState) {
                 ClasseTool(if (state.handsOpen) "Mains ouvertes" else "Mains fermées", Icons.Filled.BackHand, Modifier.weight(1f), tint = if (state.handsOpen) WaveMixerTheme.capsuleAccentSoft else classeMuted) { state.handsOpen = !state.handsOpen }
             }
         }
-    }
     }
     if (removeId != null) AlertDialog(onDismissRequest = { removeId = null }, containerColor = Color(0xFF15141B), title = { Text("Retirer cet élève ?", color = Color.White) }, text = { Text("Il quittera la salle et retournera dans les demandes.", color = classeMuted) }, confirmButton = { TextButton(onClick = { state.removeStudent(removeId!!); removeId = null }) { Text("Retirer", color = Color(0xFFE99A9E)) } }, dismissButton = { TextButton(onClick = { removeId = null }) { Text("Annuler") } })
     if (settings) ClasseSheet("Réglages de la classe", { settings = false }) {
