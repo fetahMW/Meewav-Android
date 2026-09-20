@@ -12,8 +12,8 @@ internal val sceneKinds = listOf("Morceau", "Freestyle", "Danse", "DJ set", "Bea
 internal val sceneReactions = listOf("Énergie", "Présence", "Originalité", "Maîtrise")
 @Serializable internal data class SceneEntry(val id: String = UUID.randomUUID().toString(), val artistId: String = "", val artistName: String = "",
     val title: String = "", val description: String = "", val kind: String = "Morceau", val minutes: Int = 5,
-    val scheduledAt: Long? = null, val delayMinutes: Int = 0, val textId: String = "", val evaluation: Boolean = true,
-    val status: String = "upcoming", val startedAt: Long? = null, val endedAt: Long? = null) {
+    val scheduledAt: Long? = null, val delayMinutes: Int = 0, val textId: String = "", val evaluation: Boolean = false,
+    val status: String = "upcoming", val startedAt: Long? = null, val endedAt: Long? = null, val memberIds: List<String> = emptyList()) {
     val upcoming get() = status == "upcoming" || status == "ready"
     val statusLabel get() = when(status) { "live" -> "En cours"; "done" -> "Terminé"; "skipped" -> "Passé"; "cancelled" -> "Annulé"; "ready" -> "Prêt"; else -> "Prévu" }
 }
@@ -41,27 +41,62 @@ internal class SceneToolsState(context: Context, val guests: WaveGuestState, sco
     var notice by mutableStateOf<String?>(null)
     var line by mutableIntStateOf(0); private set
     var playing by mutableStateOf(false)
-    val people get() = guests.guests.filter { it.canParticipate && it.location in setOf(WaveGuestLocation.BACKSTAGE, WaveGuestLocation.STAGE, WaveGuestLocation.JURY) }
+    val people get() = guests.guests.filter { it.canParticipate && it.location in setOf(WaveGuestLocation.BACKSTAGE, WaveGuestLocation.STAGE) }
     val live get() = data.program.firstOrNull { it.status == "live" }
     val upcoming get() = data.program.filter { it.upcoming }
-    val next get() = upcoming.firstOrNull { available(it) }
+    val next get() = upcoming.firstOrNull()
     val activeText get() = data.texts.find { it.id == data.prompt.activeId } ?: data.texts.firstOrNull()
     init {
-        val names = listOf("Naya Oris", "Lior Benali", "Malik Soren", "Collectif Neon", "June Kairo", "Naya Oris × Malik Soren")
-        val portraits = listOf(R.drawable.scene_artist_0,R.drawable.scene_artist_1,R.drawable.scene_artist_2,R.drawable.scene_artist_3,R.drawable.scene_artist_4,R.drawable.scene_artist_0)
-        val roles = listOf("Chanteuse", "Guitariste", "Chanteur Soul", "Collectif de danse", "DJ Drum & Bass", "Duo soul")
-        val ids = listOf("scene-a", "scene-b", "scene-c", "scene-d", "scene-e", "scene-duo")
+        val names = listOf("Naya Oris", "Lior Benali", "Malik Soren", "Collectif Neon", "June Kairo")
+        val portraits = listOf(R.drawable.scene_artist_0,R.drawable.scene_artist_1,R.drawable.scene_artist_2,R.drawable.scene_artist_3,R.drawable.scene_artist_4)
+        val roles = listOf("Chanteuse", "Guitariste", "Chanteur Soul", "Collectif de danse", "DJ Drum & Bass")
+        val ids = listOf("scene-a", "scene-b", "scene-c", "scene-d", "scene-e")
         guests.addSceneDemoPeople(ids.mapIndexed { i, id -> WaveGuest(id, names[i], roles[i], portraits[i], WaveGuestLocation.BACKSTAGE, gradeLevel = listOf(4,2,3,3,2,4)[i]) })
         prefs.getString("state", null)?.let { saved -> runCatching { data = json.decodeFromString<SceneArchive>(saved) }
             .onFailure { notice = "Le programme enregistré n’a pas pu être chargé." } }
+        // Older demo archives represented the duo as one fictitious guest. Use the two real feeds.
+        data = data.copy(program = data.program.map { if (it.artistId == "scene-duo") it.copy(artistId = "scene-a", memberIds = listOf("scene-a", "scene-c")) else it })
+        live?.let { saved ->
+            if (!guests.transitionScenePassage(performerIds(saved), emptySet())) {
+                commit(data.copy(program = data.program.map { if (it.id == saved.id) it.copy(status = "ready", startedAt = null) else it }))
+                notice = "Le passage attend ses artistes en coulisses avant de reprendre."
+            }
+        }
     }
     private fun commit(next: SceneArchive) {
         data = next
         prefs.edit().putString("state", json.encodeToString(next)).apply()
     }
-    fun available(entry: SceneEntry): Boolean = entry.artistId.isBlank() || people.any { it.id == entry.artistId && it.connected }
+    fun performerIds(entry: SceneEntry): Set<String> = (entry.memberIds.ifEmpty { listOf(entry.artistId) }).filter { it.isNotBlank() && it != "host" }.toSet()
+    fun prepared(entry: SceneEntry): Boolean = performerIds(entry).all { id -> people.any { it.id == id } }
+    fun available(entry: SceneEntry): Boolean = prepared(entry) && performerIds(entry).all { id -> people.any { it.id == id && it.connected } }
+    fun onStage(entry: SceneEntry): Boolean = performerIds(entry).all { id -> guests.onStage.any { it.id == id } }
+    fun readiness(entry: SceneEntry): String = when {
+        performerIds(entry).isEmpty() -> "Mon show"
+        !prepared(entry) -> "En attente des coulisses"
+        !available(entry) -> "Connexion à rétablir"
+        onStage(entry) -> "Sur scène"
+        else -> "Prêt en coulisses"
+    }
+    fun message(entry: SceneEntry) { guests.messageRecipientIds = performerIds(entry).filter { id -> guests.guests.any { it.id == id } }.toSet() }
+    fun locateArtists(entry: SceneEntry) {
+        val ids = performerIds(entry)
+        guests.guestPage = if (people.any { it.id in ids }) 0 else 1
+        guests.selected = emptySet()
+    }
+    fun mount(entry: SceneEntry, outgoing: Set<String>): Boolean {
+        if (!available(entry)) { notice = readiness(entry) + " · retrouve les artistes dans Invités."; return false }
+        if (!guests.transitionScenePassage(performerIds(entry), outgoing)) {
+            notice = "Il reste des invités sur scène. Libère une place dans Invités avant de lancer ce passage."
+            return false
+        }
+        notice = null
+        return true
+    }
+    fun remountLive() { live?.let { mount(it, emptySet()) } }
     fun saveEntry(entry: SceneEntry): Boolean {
         if (entry.title.isBlank() || entry.artistName.isBlank() || entry.minutes !in 1..180 || entry.delayMinutes !in 0..180 || entry.kind !in sceneKinds) return false
+        if (!prepared(entry) || performerIds(entry).size > 3) { notice = "Choisis jusqu’à trois artistes préparés dans les coulisses, ou Mon show."; return false }
         val sanitized = entry.copy(title = entry.title.trim().take(100), artistName = entry.artistName.trim().take(80), description = entry.description.trim().take(1200))
         commit(data.copy(program = if (data.program.any { it.id == entry.id }) data.program.map { if (it.id == entry.id) sanitized else it } else data.program + sanitized))
         return true
@@ -69,8 +104,12 @@ internal class SceneToolsState(context: Context, val guests: WaveGuestState, sco
     fun status(id: String, status: String) {
         val entry = data.program.find { it.id == id } ?: return
         if (status !in setOf("live", "done", "upcoming", "skipped", "cancelled", "ready")) return
-        if (status == "live" && !available(entry)) { notice = "Cet artiste n’est pas disponible. Retrouve-le dans Invités."; return }
-        if (status == "live" && entry.status == "live") return
+        if (status == "live") {
+            if (entry.status == "live") { remountLive(); return }
+            if (!mount(entry, live?.let(::performerIds).orEmpty())) return
+        } else if (entry.status == "live") {
+            guests.transitionScenePassage(emptySet(), performerIds(entry))
+        }
         val now = System.currentTimeMillis()
         val finished = if (status == "live") data.program.filter { it.status == "live" } else if (status == "done") listOf(entry) else emptyList()
         val evaluations = data.evaluations.toMutableMap()
@@ -82,6 +121,7 @@ internal class SceneToolsState(context: Context, val guests: WaveGuestState, sco
             else -> item
         } }
         commit(data.copy(program = program, evaluations = evaluations))
+        if (status == "live" && entry.textId.isNotBlank()) selectText(entry.textId)
     }
     fun move(id: String, direction: Int) {
         val visible = upcoming; val from = visible.indexOfFirst { it.id == id }; val other = visible.getOrNull(from + direction) ?: return
@@ -141,11 +181,11 @@ private fun sceneInitialState(): SceneArchive {
     val text2 = SceneText("text-2", "Interlude guitare", "scene-b", "Entrée guitare seule\nBoucle quatre mesures\nRegarder la régie\nFinal sur accord suspendu", listOf(SceneMarker(label="Final",line=3)))
     val text3 = SceneText("text-3", "Soul Transit", "scene-c", "Intro parlée\nPremier couplet\nMontée du refrain\nRefrain final\nRemerciements", listOf(SceneMarker(label="Intro parlée",line=0),SceneMarker(label="Refrain final",line=3)))
     return SceneArchive(program = listOf(
-        SceneEntry("perf-1","scene-a","Naya Oris","Lumière noire","Une création soul aux textures électroniques.",minutes=4,textId="text-1",status="ready"),
+        SceneEntry("perf-1","scene-a","Naya Oris","Lumière noire","Une création soul aux textures électroniques.",minutes=4,textId="text-1",status="ready",evaluation=true),
         SceneEntry("perf-2","scene-b","Lior Benali","Nuit acoustique","Arpèges acoustiques et variations improvisées.",kind="Instrumental",minutes=6,textId="text-2"),
         SceneEntry("perf-3","scene-c","Malik Soren","Soul Transit","Groove chaleureux et envolées vocales.",minutes=5,textId="text-3"),
         SceneEntry("perf-4","scene-d","Collectif Neon","Corps électrique","Danse urbaine, synchronisation et solos.",kind="Danse",minutes=7,evaluation=false),
         SceneEntry("perf-5","scene-e","June Kairo","Minuit 140","Un DJ set Drum & Bass.",kind="DJ set",minutes=12),
-        SceneEntry("perf-6","scene-duo","Naya Oris × Malik Soren","Deux voix","Harmonies croisées et final commun.",kind="Collaboration",minutes=6,textId="text-3",status="done")
+        SceneEntry("perf-6","scene-duo","Naya Oris × Malik Soren","Deux voix","Harmonies croisées et final commun.",kind="Collaboration",minutes=6,textId="text-3",status="done",evaluation=true)
     ), texts = listOf(text1,text2,text3), evaluations = mapOf("perf-6" to SceneEvaluation(responses = (0..7).associate { "demo-fan-" + it to SceneResponse(if (it==0) 3 else if(it<3) 4 else 5, sceneReactions.filterIndexed { r, _ -> (it+r)%3!=0 }.toSet()) })))
 }

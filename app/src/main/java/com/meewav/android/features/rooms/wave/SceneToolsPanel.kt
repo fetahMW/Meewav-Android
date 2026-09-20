@@ -78,12 +78,14 @@ internal val sceneAccent = WaveMixerTheme.capsuleAccentSoft
             }
             if(next!=null) {
                 if(live!=null) Text("À suivre · "+next.artistName+" · "+next.title,color=sceneMuted,fontSize=11.sp,maxLines=1,overflow=TextOverflow.Ellipsis)
-                SceneButton(if(live==null) "Lancer le passage" else "Enchaîner",Modifier.fillMaxWidth(),primary=true,icon=WaveIcons.Play) { state.status(next.id,"live") }
+                SceneButton(if(!state.available(next)) "Voir les invités à préparer" else if(live!=null) "Enchaîner" else "Lancer et monter sur scène",Modifier.fillMaxWidth(),primary=true,icon=WaveIcons.Play) {
+                    if(state.available(next)) state.status(next.id,"live") else { state.locateArtists(next);onGuests() }
+                }
             }
         } }
         item { Row(verticalAlignment=Alignment.CenterVertically) {
             SceneChoice(if(history) "Historique" else "À venir",listOf(false to "À venir",true to "Historique"),Modifier.weight(1f)) { history=it }
-            Spacer(Modifier.width(6.dp)); SceneIcon(WaveIcons.Add,"Ajouter un passage") { editing=SceneEntry(artistId=state.people.firstOrNull()?.id.orEmpty(),artistName=state.people.firstOrNull()?.name.orEmpty()) }
+            Spacer(Modifier.width(6.dp)); SceneIcon(WaveIcons.Add,"Ajouter un passage") { editing=SceneEntry(artistId="host",artistName="Mon show") }
         } }
         items(entries,key={it.id}) { entry ->
             SceneCard {
@@ -97,6 +99,7 @@ internal val sceneAccent = WaveMixerTheme.capsuleAccentSoft
                         }
                         Text(entry.kind+" · "+entry.minutes+" min"+(if(!state.available(entry))" · Indisponible" else if(history)" · "+entry.statusLabel else ""),color=if(state.available(entry))sceneMuted else Color(0xFFE39199),fontSize=10.sp)
                     }
+                    if(state.performerIds(entry).isNotEmpty()) SceneIcon(WaveIcons.Chat,"Contacter les artistes") { state.message(entry) }
                     Icon(if(expanded==entry.id) Icons.Default.ExpandLess else Icons.Default.ExpandMore,null,tint=sceneAccent,modifier=Modifier.size(18.dp))
                 }
                 AnimatedVisibility(expanded==entry.id) {
@@ -115,7 +118,6 @@ internal val sceneAccent = WaveMixerTheme.capsuleAccentSoft
                         Row(horizontalArrangement=Arrangement.spacedBy(7.dp)) {
                             if(!history) SceneButton("Lancer",Modifier.weight(1f),primary=true,enabled=state.available(entry),icon=WaveIcons.Play) { state.status(entry.id,"live") }
                             if(entry.textId.isNotBlank()) SceneIcon(Icons.Default.Article,"Texte associé") { state.openPrompter(entry.textId) }
-                            if(entry.artistId.isNotBlank()) SceneIcon(WaveIcons.Chat,"Écrire à l’artiste") { state.guests.messageRecipientIds=setOf(entry.artistId) }
                         }
                     }
                 }
@@ -135,12 +137,22 @@ internal val sceneAccent = WaveMixerTheme.capsuleAccentSoft
     var advanced by remember { mutableStateOf(false) }
     SceneSheet(if(state.data.program.any { it.id==entry.id })"Modifier le passage" else "Nouveau passage",dismiss) {
         SceneField("Titre",draft.title,{draft=draft.copy(title=it.take(100))})
-        SceneChoice("Artiste · "+draft.artistName,listOf("" to "Autre intervenant / régie")+state.people.map { it.id to it.name }) { id -> draft=draft.copy(artistId=id,artistName=state.people.find { it.id==id }?.name.orEmpty(),textId="") }
+        SceneChoice("Artiste · "+draft.artistName,listOf("host" to "Moi · Mon show")+state.people.map { it.id to it.name }) { id -> draft=draft.copy(artistId=id,artistName=state.people.find { it.id==id }?.name ?: "Mon show",memberIds=emptyList(),textId="") }
+        Text("Les artistes proposés ont déjà rejoint les coulisses.",color=sceneMuted,fontSize=11.sp)
+        if(draft.artistId!="host" && draft.artistId.isNotBlank()) {
+            val members=state.performerIds(draft)
+            if(members.size<3) SceneChoice("Ajouter un artiste au passage",state.people.filter { it.id !in members }.map { it.id to it.name }) { id -> draft=draft.copy(memberIds=(members+id).toList(),kind="Collaboration") }
+            members.filter { it!=draft.artistId }.forEach { id -> Row(verticalAlignment=Alignment.CenterVertically) {
+                Text(state.people.find { it.id==id }?.name ?: "Artiste absent",color=sceneMuted,fontSize=12.sp,modifier=Modifier.weight(1f))
+                SceneIcon(WaveIcons.Close,"Retirer du passage") { draft=draft.copy(memberIds=(members-id).toList()) }
+            } }
+            if(members.size>1) SceneField("Nom du groupe",draft.artistName,{draft=draft.copy(artistName=it.take(80))})
+        }
         if(draft.artistId.isBlank()) SceneField("Nom au programme",draft.artistName,{draft=draft.copy(artistName=it.take(80))})
         SceneChoice("Type · "+draft.kind,sceneKinds.map { it to it }) { draft=draft.copy(kind=it,evaluation=if(it in listOf("Présentation","Autre"))false else draft.evaluation) }
         SceneField("Durée en minutes · 1 à 180",minutes,{minutes=it.filter(Char::isDigit).take(3)},number=true)
         SceneField("Description publique",draft.description,{draft=draft.copy(description=it.take(1200))},lines=3)
-        SceneToggle("Évaluation après le passage",draft.evaluation) { draft=draft.copy(evaluation=it) }
+        SceneToggle("Vote du public à la fin",draft.evaluation) { draft=draft.copy(evaluation=it) }
         SceneButton(if(advanced)"Masquer les options" else "Horaire et prompteur",Modifier.fillMaxWidth(),icon=WaveIcons.Tune) { advanced=!advanced }
         if(advanced) {
             SceneDateField("Horaire prévu",draft.scheduledAt) { draft=draft.copy(scheduledAt=it) }

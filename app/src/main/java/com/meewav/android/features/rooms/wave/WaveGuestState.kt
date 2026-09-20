@@ -197,6 +197,24 @@ internal class WaveGuestState(private val cageDemo: Boolean = false, private val
             else -> "Invitation acceptée · préparation disponible"
         }
     }
+    /** Atomic program handoff used only by La Scène. Backstage is the completed preparation gate. */
+    fun transitionScenePassage(incoming: Set<String>, outgoing: Set<String>): Boolean {
+        val candidates = incoming.map { id -> guests.find { it.id == id } ?: return false }
+        if (candidates.any { !it.connected || !it.canParticipate || it.location !in setOf(WaveGuestLocation.BACKSTAGE, WaveGuestLocation.STAGE) }) return false
+        val remaining = (onStage.map { it.id }.toSet() - outgoing) + incoming
+        if (remaining.size > 3) return false
+        guests = guests.map { person -> when {
+            person.id in incoming -> person.copy(location = WaveGuestLocation.STAGE, appeared = true)
+            person.id in outgoing && person.location == WaveGuestLocation.STAGE -> person.copy(location = WaveGuestLocation.BACKSTAGE)
+            else -> person
+        } }
+        if (mixerGuestId in outgoing && mixerGuestId !in incoming) mixerGuestId = null
+        if (dragId in incoming || dragId in outgoing) cancelDrag()
+        selected = emptySet()
+        primaryId = incoming.firstOrNull() ?: "host"
+        composition = if (incoming.size == 1 && remaining.size == 1) WaveComposition.FOCUS else WaveComposition.ENSEMBLE
+        return true
+    }
     fun addSceneDemoPeople(people: List<WaveGuest>) {
         guests = people.filter { incoming -> guests.none { it.id == incoming.id } } + guests
     }

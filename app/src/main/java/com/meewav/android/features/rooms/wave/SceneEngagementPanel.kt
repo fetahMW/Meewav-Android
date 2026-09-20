@@ -27,7 +27,7 @@ import java.net.URL
 import java.util.Locale
 
 @Composable internal fun SceneEvaluationPanel(state:SceneToolsState) {
-    var selected by remember { mutableStateOf(state.data.program.lastOrNull { it.status=="done" }?.id ?: state.live?.id ?: state.data.program.firstOrNull()?.id) }
+    var selected by remember { mutableStateOf(state.live?.id ?: state.next?.id ?: state.data.program.lastOrNull { it.status=="done" }?.id) }
     val entry=state.data.program.find { it.id==selected }?:state.data.program.firstOrNull()
     var settings by remember { mutableStateOf(false) }
     if(entry==null) { Text("Ajoute une prestation dans Programme pour recueillir les avis.",color=sceneMuted,fontSize=13.sp,modifier=Modifier.padding(16.dp));return }
@@ -36,6 +36,10 @@ import java.util.Locale
     fun configure(enabled:Boolean=entry.evaluation,minimum:Int=evaluation.minimum,public:Boolean=evaluation.public) { state.configureEvaluation(entry.id,enabled,minimum,public) }
     LazyColumn(Modifier.fillMaxSize(),contentPadding=PaddingValues(top=5.dp,bottom=12.dp),verticalArrangement=Arrangement.spacedBy(9.dp)) {
         item { SceneChoice(entry.artistName+" · "+entry.title,state.data.program.map { it.id to (it.artistName+" · "+it.title+" — "+it.statusLabel) }) { selected=it } }
+        item { SceneCard {
+            SceneToggle("Vote du public à la fin",entry.evaluation) { configure(enabled=it) }
+            Text(if(!entry.evaluation) "Ce passage se termine sans vote. Tu peux l’activer ici." else if(entry.status=="done") "Le passage est terminé : les avis peuvent être recueillis." else "Les avis s’ouvriront quand tu termineras ce passage.",color=sceneMuted,fontSize=12.sp)
+        } }
         item { SceneCard {
             Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(10.dp)) {
                 SceneArtist(state,entry.artistId)
@@ -56,7 +60,6 @@ import java.util.Locale
             } else Text(if(!entry.evaluation)"Les avis sont désactivés." else if(entry.status=="done")"En attente des premiers avis." else "Les avis s’ouvrent à la fin de la prestation.",color=sceneMuted,fontSize=12.sp)
         } }
         item { SceneCard {
-            SceneToggle("Recueillir les avis",entry.evaluation) { configure(enabled=it) }
             Row(verticalAlignment=Alignment.CenterVertically) {
                 Icon(if(evaluation.public)Icons.Default.Visibility else Icons.Default.VisibilityOff,null,tint=sceneAccent,modifier=Modifier.size(19.dp));Spacer(Modifier.width(8.dp))
                 Column(Modifier.weight(1f)) {

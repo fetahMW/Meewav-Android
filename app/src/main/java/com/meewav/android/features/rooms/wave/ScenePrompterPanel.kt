@@ -58,7 +58,7 @@ import kotlinx.coroutines.withContext
         } }
         item { Row(horizontalArrangement=Arrangement.spacedBy(7.dp)) {
             SceneButton("Modifier",Modifier.weight(1f),icon=Icons.Default.Edit,enabled=text!=null) { editing=text }
-            SceneButton("Lecture",Modifier.weight(1f),icon=WaveIcons.Tune) { settings=true }
+            SceneButton("Réglages",Modifier.weight(1f),icon=WaveIcons.Tune) { settings=true }
         } }
         if(text!=null&&text.markers.isNotEmpty()) item {
             Row(Modifier.horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(7.dp)) {
