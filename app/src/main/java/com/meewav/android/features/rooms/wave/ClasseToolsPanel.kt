@@ -1,5 +1,7 @@
 package com.meewav.android.features.rooms.wave
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -12,6 +14,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.*
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,6 +41,30 @@ internal fun ClasseToolsPanel(state: ClasseToolsState, onInvite: () -> Unit) {
     var questionStudent by remember { mutableStateOf<String?>(null) }
     var removeId by remember { mutableStateOf<String?>(null) }
     var demo by remember { mutableStateOf(false) }
+    val gridState = rememberLazyGridState()
+    var actionsVisible by remember { mutableStateOf(true) }
+    val density = LocalDensity.current
+    val hideThreshold = with(density) { 28.dp.toPx() }
+    val revealThreshold = with(density) { 12.dp.toPx() }
+    val scrollConnection = remember(hideThreshold, revealThreshold) {
+        object : NestedScrollConnection {
+            var travel = 0f
+            override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
+                if (source != NestedScrollSource.UserInput) return Offset.Zero
+                val delta = consumed.y
+                if (delta == 0f) return Offset.Zero
+                if (travel * delta < 0f) travel = 0f
+                travel += delta
+                if (travel <= -hideThreshold) { actionsVisible = false; travel = 0f }
+                if (travel >= revealThreshold) { actionsVisible = true; travel = 0f }
+                return Offset.Zero
+            }
+        }
+    }
+    LaunchedEffect(state.selectedStudent, state.tab, questions) { actionsVisible = true }
+    LaunchedEffect(gridState.firstVisibleItemIndex, gridState.firstVisibleItemScrollOffset) {
+        if (state.tab == 0 && !questions && gridState.firstVisibleItemIndex == 0 && gridState.firstVisibleItemScrollOffset == 0) actionsVisible = true
+    }
     var tick by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(state.speakerId) { while (state.speakerId != null) { tick = System.currentTimeMillis(); delay(1000) } }
     LaunchedEffect(state.understandingActive) {
@@ -51,7 +80,7 @@ internal fun ClasseToolsPanel(state: ClasseToolsState, onInvite: () -> Unit) {
             }
         }
     }
-    Column(Modifier.fillMaxSize()) {
+    Column(Modifier.fillMaxSize().nestedScroll(scrollConnection)) {
         Row(Modifier.fillMaxWidth().height(44.dp), verticalAlignment = Alignment.CenterVertically) {
             listOf("Élèves", "Ressources").forEachIndexed { index, text ->
                 Column(Modifier.weight(1f).fillMaxHeight().clickable { state.tab = index; state.selectedStudent = null; questions = false }, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
@@ -73,6 +102,9 @@ internal fun ClasseToolsPanel(state: ClasseToolsState, onInvite: () -> Unit) {
         } else if (state.tab == 1) {
             ClasseResourcesPanel(state, Modifier.weight(1f))
         } else {
+            LazyVerticalGrid(columns = GridCells.Fixed(4), state = gridState, modifier = Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(top = 8.dp, bottom = 12.dp)) {
+                item(key = "class-header", span = { GridItemSpan(maxLineSpan) }) {
+                    Column {
             Row(Modifier.fillMaxWidth().height(40.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("${state.students.size}/24 élèves", color = classeMuted, fontSize = 11.sp, modifier = Modifier.weight(1f))
                 ClasseToggleChip("Mains", state.handsOpen) { state.handsOpen = !state.handsOpen }
@@ -81,7 +113,8 @@ internal fun ClasseToolsPanel(state: ClasseToolsState, onInvite: () -> Unit) {
             if (state.understandingActive) Row(Modifier.fillMaxWidth().padding(bottom = 6.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
                 ClasseUnderstanding.entries.forEach { response -> Text("${state.understanding.values.count { it == response }} ${response.label}", fontSize = 10.sp, color = response.color()) }
             }
-            LazyVerticalGrid(columns = GridCells.Fixed(4), modifier = Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(top = 8.dp, bottom = 12.dp)) {
+                    }
+                }
                 items(state.students, key = { it.id }) { student ->
                     val selected = state.selectedStudent == student.id
                     val speaking = state.speakerId == student.id
@@ -89,7 +122,7 @@ internal fun ClasseToolsPanel(state: ClasseToolsState, onInvite: () -> Unit) {
                     val response = state.understanding[student.id]
                     val size by animateFloatAsState(if (selected) 1.07f else 1f, label = "selected-student")
                     Column(Modifier.fillMaxWidth().clickable { state.selectedStudent = if (selected) null else student.id }.padding(vertical = 3.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Box(Modifier.fillMaxWidth().aspectRatio(1f).scale(size)) {
+                        Box(Modifier.size(64.dp).scale(size)) {
                             Image(painterResource(student.portrait), "Sélectionner ${student.name}", Modifier.fillMaxSize().clip(CircleShape)
                                 .border(if (selected || speaking || response != null) 2.dp else .5.dp, response?.color() ?: if (speaking) Color(0xFF7ABFA2) else if (selected) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .15f), CircleShape), contentScale = ContentScale.Crop)
                             if (hand || speaking || student.id in state.invitedToSpeak) Icon(if (speaking) WaveIcons.Mic else if (hand) Icons.Filled.BackHand else Icons.Filled.Schedule,
@@ -110,6 +143,9 @@ internal fun ClasseToolsPanel(state: ClasseToolsState, onInvite: () -> Unit) {
             }
         }
         val selected = state.students.find { it.id == state.selectedStudent }
+        AnimatedVisibility(visible = actionsVisible,
+            enter = expandVertically(animationSpec = tween(180), expandFrom = Alignment.Bottom) + fadeIn(tween(150)),
+            exit = shrinkVertically(animationSpec = tween(180), shrinkTowards = Alignment.Bottom) + fadeOut(tween(120))) {
         Column(Modifier.fillMaxWidth().padding(vertical = 6.dp).hifiBlackSurface(14.dp).padding(6.dp)) {
             if (selected != null && !questions && state.tab == 0) {
                 val hand = state.hands.firstOrNull { it.studentId == selected.id }
@@ -135,6 +171,7 @@ internal fun ClasseToolsPanel(state: ClasseToolsState, onInvite: () -> Unit) {
                 ClasseTool(if (state.hands.isEmpty()) "Mains" else "${state.hands.count { it.studentId != state.speakerId }} mains", Icons.Filled.BackHand, Modifier.weight(1f)) { state.tab = 0; questions = false; state.selectedStudent = state.hands.firstOrNull { it.studentId != state.speakerId }?.studentId }
             }
         }
+    }
     }
     if (removeId != null) AlertDialog(onDismissRequest = { removeId = null }, containerColor = Color(0xFF15141B), title = { Text("Retirer cet élève ?", color = Color.White) }, text = { Text("Il quittera la salle et retournera dans les demandes.", color = classeMuted) }, confirmButton = { TextButton(onClick = { state.removeStudent(removeId!!); removeId = null }) { Text("Retirer", color = Color(0xFFE99A9E)) } }, dismissButton = { TextButton(onClick = { removeId = null }) { Text("Annuler") } })
     if (settings) ClasseSheet("Réglages de la classe", { settings = false }) {
