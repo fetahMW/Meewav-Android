@@ -18,6 +18,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.meewav.android.R
@@ -25,15 +26,18 @@ import com.meewav.android.R
 internal fun CageToolsState.openProfile(id: String) { guests.previewId = null; guests.profilePreviewId = id }
 
 @Composable
-internal fun CageArtistCompact(state: CageToolsState, id: String?, modifier: Modifier = Modifier, winner: Boolean = false, beforeProfile: () -> Unit = {}) {
+internal fun CageArtistCompact(state: CageToolsState, id: String?, modifier: Modifier = Modifier, winner: Boolean = false, beforeProfile: () -> Unit = {}, duelSide: Int = 0) {
     val person = state.person(id)
-    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    val portrait: @Composable () -> Unit = {
         Box(Modifier.size(38.dp).clip(CircleShape).background(Color(0xFF222129)).clickable(enabled = person != null) { person?.let { beforeProfile(); state.openProfile(it.id) } }, contentAlignment = Alignment.Center) {
             if (person != null) Image(painterResource(person.portrait), "Pré-profil de " + person.name, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
             else Text("?", color = Color.Gray)
         }
-        Column(Modifier.weight(1f)) {
-            Text(person?.name ?: "À déterminer", color = if (winner) WaveMixerTheme.capsuleAccentSoft else Color.White, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        if (duelSide >= 0) portrait()
+        Column(Modifier.weight(1f), horizontalAlignment = if (duelSide > 0) Alignment.End else Alignment.Start) {
+            Text(person?.name ?: "À déterminer", color = if (winner) WaveMixerTheme.capsuleAccentSoft else Color.White, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = if (duelSide > 0) TextAlign.End else TextAlign.Start)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 person?.let {
                     val badges = listOf(R.drawable.wave_grade_1, R.drawable.wave_grade_2, R.drawable.wave_grade_3, R.drawable.wave_grade_4, R.drawable.wave_grade_5, R.drawable.wave_grade_6)
@@ -55,6 +59,7 @@ internal fun CageArtistCompact(state: CageToolsState, id: String?, modifier: Mod
                 }
             }
         }
+        if (duelSide < 0) portrait()
     }
 }
 
@@ -66,9 +71,9 @@ internal fun CageDuelCard(state: CageToolsState, match: CageMatch, showStatus: B
             Text(if (match.completed) if (match.b == null) "Qualifié d’office" else "Terminé" else if (state.activeId == match.id) "En cours" else "À venir", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 10.sp)
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            CageArtistCompact(state, match.a, Modifier.weight(1f), match.winner == match.a)
+            CageArtistCompact(state, match.a, Modifier.weight(1f), match.winner == match.a, duelSide = -1)
             Text(if (match.b == null) "—" else "VS", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-            CageArtistCompact(state, match.b, Modifier.weight(1f), match.b != null && match.winner == match.b)
+            CageArtistCompact(state, match.b, Modifier.weight(1f), match.b != null && match.winner == match.b, duelSide = 1)
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             listOfNotNull(match.a, match.b).forEach { id ->
