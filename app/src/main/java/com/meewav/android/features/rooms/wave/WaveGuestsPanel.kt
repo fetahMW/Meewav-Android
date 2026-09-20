@@ -152,7 +152,7 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
         2 -> it.location == WaveGuestLocation.STAGE
         else -> it.location == WaveGuestLocation.JURY
     } }
-    val originFilterEnabled = page == 1 || (cage != null && page == 0)
+    val originFilterEnabled = page == 1 || page == 0
     val originParticipants = participants.filter { !originFilterEnabled || originFilter == 0 || (originFilter == 1 && it.origin == GuestOrigin.CANDIDATURE) || (originFilter == 2 && it.origin == GuestOrigin.INVITATION) }
     val shown = originParticipants.filter(state.filters::matches)
     fun selectRequests(origin: Int, limit: Int) {
@@ -216,10 +216,10 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                 }
             } else Text(if (page == 0) "Glisse un invité vers la vidéo" else if (page == 3) "${state.jury.size}/6 membres du jury" else "3 invités maximum sur scène",
                 modifier = Modifier.weight(1f), color = Color.White.copy(alpha = .48f), fontSize = 11.sp)
-            if (originFilterEnabled && (cage != null || state.selected.isEmpty())) Box {
+            if (originFilterEnabled) Box {
                 Box(Modifier.height(48.dp).widthIn(min = 96.dp).clickable { originMenu = true }, contentAlignment = Alignment.Center) {
                     Box(Modifier.height(28.dp).widthIn(min = 96.dp).hifiBlackSurface(8.dp).padding(horizontal = 12.dp), contentAlignment = Alignment.Center) {
-                    Text(listOf("Tous", "Candidatures", "Invitations")[originFilter] + if (requestLimit > 0 && cage != null) " · $requestLimit ▾" else " ▾", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 11.sp, maxLines = 1)
+                    Text(listOf("Tous", "Candidatures", "Invitations")[originFilter] + if (requestLimit > 0) " · $requestLimit ▾" else " ▾", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 11.sp, maxLines = 1)
                     }
                 }
                 DropdownMenu(expanded = originMenu, onDismissRequest = { originMenu = false },
@@ -228,14 +228,12 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                     listOf("Tous", "Candidatures", "Invitations envoyées").forEachIndexed { index, label ->
                         DropdownMenuItem(text = { Text(label, color = if (originFilter == index) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .85f), fontSize = 13.sp) },
                             trailingIcon = { if (originFilter == index) Icon(Icons.Filled.Check, null, tint = WaveMixerTheme.capsuleAccentSoft, modifier = Modifier.size(16.dp)) },
-                            onClick = { if (cage != null) selectRequests(index, requestLimit) else { originFilter = index; originMenu = false } })
+                            onClick = { selectRequests(index, requestLimit) })
                     }
-                    if (cage != null) {
-                        HorizontalDivider(color = Color.White.copy(alpha = .08f))
-                        listOf(0, 8, 16, 32).forEach { count ->
-                            DropdownMenuItem(text = { Text(if (count == 0) "Sélectionner tous" else "Les $count premiers", color = if (requestLimit == count) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .85f), fontSize = 13.sp) },
-                                onClick = { selectRequests(originFilter, count) })
-                        }
+                    HorizontalDivider(color = Color.White.copy(alpha = .08f))
+                    listOf(0, 8, 16, 32).forEach { count ->
+                        DropdownMenuItem(text = { Text(if (count == 0) "Sélectionner tous" else "Les $count premiers", color = if (requestLimit == count) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .85f), fontSize = 13.sp) },
+                            onClick = { selectRequests(originFilter, count) })
                     }
                 }
             }
