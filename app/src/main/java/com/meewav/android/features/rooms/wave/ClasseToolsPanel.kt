@@ -1,0 +1,221 @@
+package com.meewav.android.features.rooms.wave
+
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
+
+internal val classeBlue = Color(0xFF438FFF)
+private val classeMuted = Color(0xFFA7A3B2)
+
+@Composable
+internal fun ClasseToolsPanel(state: ClasseToolsState, onInvite: () -> Unit) {
+    var settings by remember { mutableStateOf(false) }
+    var questions by remember { mutableStateOf(false) }
+    var questionStudent by remember { mutableStateOf<String?>(null) }
+    var removeId by remember { mutableStateOf<String?>(null) }
+    var demo by remember { mutableStateOf(false) }
+    var tick by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(state.speakerId) { while (state.speakerId != null) { tick = System.currentTimeMillis(); delay(1000) } }
+    LaunchedEffect(state.understandingActive) {
+        if (state.understandingActive && com.meewav.android.BuildConfig.DEBUG) {
+            // Same temporary showcase responses as the iOS classroom, never backend ballots.
+            state.students.forEachIndexed { index, student ->
+                delay(180)
+                if (student.id !in state.understanding) state.respond(student.id, when (index % 7) {
+                    3 -> ClasseUnderstanding.PARTIAL
+                    6 -> ClasseUnderstanding.LOST
+                    else -> ClasseUnderstanding.UNDERSTOOD
+                })
+            }
+        }
+    }
+    Column(Modifier.fillMaxSize()) {
+        Row(Modifier.fillMaxWidth().height(44.dp), verticalAlignment = Alignment.CenterVertically) {
+            listOf("Élèves", "Ressources").forEachIndexed { index, text ->
+                Column(Modifier.weight(1f).fillMaxHeight().clickable { state.tab = index; state.selectedStudent = null; questions = false }, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                    Text(text, color = if (state.tab == index && !questions) Color.White else classeMuted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    Spacer(Modifier.height(5.dp))
+                    Box(Modifier.width(30.dp).height(2.dp).background(if (state.tab == index && !questions) WaveMixerTheme.capsuleAccentSoft else Color.Transparent, CircleShape))
+                }
+            }
+            IconButton(onClick = { settings = true }, modifier = Modifier.size(44.dp)) { Icon(WaveIcons.Tune, "Réglages de la classe", tint = WaveMixerTheme.capsuleAccentSoft, modifier = Modifier.size(20.dp)) }
+        }
+        state.notice?.let { message ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(message, color = WaveMixerTheme.capsuleAccentSoft, fontSize = 11.sp, modifier = Modifier.weight(1f))
+                IconButton(onClick = { state.notice = null }, modifier = Modifier.size(32.dp)) { Icon(WaveIcons.Close, "Fermer l’information", modifier = Modifier.size(16.dp)) }
+            }
+        }
+        if (questions) {
+            ClasseQuestions(state, questionStudent, Modifier.weight(1f)) { questions = false; questionStudent = null }
+        } else if (state.tab == 1) {
+            ClasseResourcesPanel(state, Modifier.weight(1f))
+        } else {
+            Row(Modifier.fillMaxWidth().height(40.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("${state.students.size}/24 élèves", color = classeMuted, fontSize = 11.sp, modifier = Modifier.weight(1f))
+                ClasseToggleChip("Mains", state.handsOpen) { state.handsOpen = !state.handsOpen }
+                IconButton(onClick = onInvite, modifier = Modifier.size(40.dp)) { Icon(WaveIcons.Add, "Inviter des élèves", tint = WaveMixerTheme.capsuleAccentSoft, modifier = Modifier.size(20.dp)) }
+            }
+            if (state.understandingActive) Row(Modifier.fillMaxWidth().padding(bottom = 6.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+                ClasseUnderstanding.entries.forEach { response -> Text("${state.understanding.values.count { it == response }} ${response.label}", fontSize = 10.sp, color = response.color()) }
+            }
+            LazyVerticalGrid(columns = GridCells.Fixed(4), modifier = Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(top = 8.dp, bottom = 12.dp)) {
+                items(state.students, key = { it.id }) { student ->
+                    val selected = state.selectedStudent == student.id
+                    val speaking = state.speakerId == student.id
+                    val hand = state.hands.any { it.studentId == student.id } && !speaking
+                    val response = state.understanding[student.id]
+                    val size by animateFloatAsState(if (selected) 1.07f else 1f, label = "selected-student")
+                    Column(Modifier.fillMaxWidth().clickable { state.selectedStudent = if (selected) null else student.id }.padding(vertical = 3.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Box(Modifier.fillMaxWidth().aspectRatio(1f).scale(size)) {
+                            Image(painterResource(student.portrait), "Sélectionner ${student.name}", Modifier.fillMaxSize().clip(CircleShape)
+                                .border(if (selected || speaking || response != null) 2.dp else .5.dp, response?.color() ?: if (speaking) Color(0xFF7ABFA2) else if (selected) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .15f), CircleShape), contentScale = ContentScale.Crop)
+                            if (hand || speaking || student.id in state.invitedToSpeak) Icon(if (speaking) WaveIcons.Mic else if (hand) Icons.Filled.BackHand else Icons.Filled.Schedule,
+                                if (speaking) "A la parole" else if (hand) "Main levée" else "Invité à parler", tint = if (speaking) Color(0xFF7ABFA2) else WaveMixerTheme.capsuleAccentSoft,
+                                modifier = Modifier.align(Alignment.BottomEnd).size(23.dp).background(Color(0xFF121017), CircleShape).padding(4.dp))
+                            val count = state.rankedQuestions.count { it.studentId == student.id }
+                            if (count > 0) Text("$count", color = Color.White, fontSize = 9.sp, modifier = Modifier.align(Alignment.TopEnd).background(Color(0xFF453677), CircleShape).padding(horizontal = 5.dp, vertical = 2.dp))
+                        }
+                        Spacer(Modifier.height(6.dp))
+                        Text(student.name, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(response?.label ?: if (speaking) "${((tick - state.speakingSince) / 1000).coerceAtLeast(0)} s · Parole" else if (!student.connected) "Déconnecté" else if (hand) "Main levée" else "Élève", color = response?.color() ?: classeMuted, fontSize = 9.sp, maxLines = 1)
+                    }
+                }
+                if (state.students.size < 24) item { Column(Modifier.aspectRatio(.75f).clickable(onClick = onInvite), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                    Icon(WaveIcons.Add, "Inviter", tint = WaveMixerTheme.capsuleAccentSoft, modifier = Modifier.size(38.dp).hifiBlackSurface(18.dp).padding(8.dp))
+                    Text("Inviter", color = classeMuted, fontSize = 10.sp)
+                } }
+            }
+        }
+        val selected = state.students.find { it.id == state.selectedStudent }
+        Column(Modifier.fillMaxWidth().padding(vertical = 6.dp).hifiBlackSurface(14.dp).padding(6.dp)) {
+            if (selected != null && !questions && state.tab == 0) {
+                val hand = state.hands.firstOrNull { it.studentId == selected.id }
+                hand?.let { Text(it.reason, color = classeMuted, fontSize = 11.sp, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)) }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    ClasseTool(if (state.speakerId == selected.id) "Couper" else if (hand != null) "Parole" else if (selected.id in state.invitedToSpeak) "Annuler" else "Inviter", if (state.speakerId == selected.id) WaveIcons.MicOff else WaveIcons.Mic, Modifier.weight(1f)) { if (state.speakerId == selected.id) state.releaseFloor() else state.grantFloor(selected.id) }
+                    ClasseTool("Message", WaveIcons.Chat, Modifier.weight(1f)) { state.guests.messageRecipientIds = setOf(selected.id) }
+                    ClasseTool("Profil", WaveIcons.Eye, Modifier.weight(1f)) { state.guests.previewId = null; state.guests.profilePreviewId = selected.id }
+                    var menu by remember(selected.id) { mutableStateOf(false) }
+                    Box(Modifier.weight(1f)) {
+                        ClasseTool("Options", WaveIcons.More, Modifier.fillMaxWidth()) { menu = true }
+                        DropdownMenu(menu, { menu = false }, containerColor = Color(0xFF15141B)) {
+                            DropdownMenuItem(text = { Text("Voir ses questions", color = Color.White) }, onClick = { questionStudent = selected.id; questions = true; menu = false })
+                            if (hand != null) DropdownMenuItem(text = { Text("Baisser la main", color = Color.White) }, onClick = { state.dismissHand(selected.id); menu = false })
+                            DropdownMenuItem(text = { Text("Retirer de la classe", color = Color(0xFFE99A9E)) }, onClick = { removeId = selected.id; menu = false })
+                        }
+                    }
+                    ClasseTool("Annuler", WaveIcons.Close, Modifier.weight(1f)) { state.selectedStudent = null }
+                }
+            } else Row {
+                ClasseTool("Questions ${state.rankedQuestions.size}", Icons.Filled.QuestionAnswer, Modifier.weight(1f)) { questions = !questions; questionStudent = null }
+                ClasseTool(if (state.understandingActive) "Terminer" else "Compréhension", Icons.Filled.Psychology, Modifier.weight(1f), active = state.understandingActive) { state.toggleUnderstanding(); if (state.understandingActive) { state.tab = 0; questions = false } }
+                ClasseTool(if (state.hands.isEmpty()) "Mains" else "${state.hands.count { it.studentId != state.speakerId }} mains", Icons.Filled.BackHand, Modifier.weight(1f)) { state.tab = 0; questions = false; state.selectedStudent = state.hands.firstOrNull { it.studentId != state.speakerId }?.studentId }
+            }
+        }
+    }
+    if (removeId != null) AlertDialog(onDismissRequest = { removeId = null }, containerColor = Color(0xFF15141B), title = { Text("Retirer cet élève ?", color = Color.White) }, text = { Text("Il quittera la salle et retournera dans les demandes.", color = classeMuted) }, confirmButton = { TextButton(onClick = { state.removeStudent(removeId!!); removeId = null }) { Text("Retirer", color = Color(0xFFE99A9E)) } }, dismissButton = { TextButton(onClick = { removeId = null }) { Text("Annuler") } })
+    if (settings) ClasseSheet("Réglages de la classe", { settings = false }) {
+        ClasseSetting("Autoriser les mains levées", state.handsOpen) { state.handsOpen = it }
+        ClasseSetting("Autoriser les questions", state.questionsOpen) { state.questionsOpen = it }
+        TextButton(onClick = { state.lowerAllHands() }) { Text("Baisser toutes les mains en attente", color = WaveMixerTheme.capsuleAccentSoft) }
+        if (state.speakerId != null) TextButton(onClick = { state.releaseFloor() }) { Text("Reprendre la parole", color = WaveMixerTheme.capsuleAccentSoft) }
+        if (com.meewav.android.BuildConfig.DEBUG) TextButton(onClick = { settings = false; demo = true }) { Text("Simuler une intervention d’élève", color = classeMuted) }
+    }
+    if (demo) ClasseDemoSheet(state) { demo = false }
+}
+
+@Composable internal fun ClasseToggleChip(label: String, enabled: Boolean, action: () -> Unit) {
+    Row(Modifier.height(36.dp).hifiBlackSurface(18.dp).clickable(onClick = action).padding(horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Box(Modifier.size(5.dp).background(if (enabled) Color(0xFF79B69A) else Color(0xFFBD7885), CircleShape))
+        Text("$label ${if (enabled) "ouvertes" else "fermées"}", color = Color(0xFFCAC5D4), fontSize = 10.sp)
+    }
+}
+@Composable internal fun ClasseTool(label: String, icon: ImageVector, modifier: Modifier = Modifier, active: Boolean = false, onClick: () -> Unit) {
+    Column(modifier.heightIn(min = 48.dp).clip(RoundedCornerShape(10.dp)).clickable(onClick = onClick).padding(vertical = 5.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Icon(icon, label, tint = if (active) Color(0xFF7ABFA2) else WaveMixerTheme.capsuleAccentSoft, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.height(3.dp)); Text(label, fontSize = 9.sp, color = Color(0xFFCBC6D7), maxLines = 1)
+    }
+}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable internal fun ClasseSheet(title: String, onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Color(0xFF111115), contentColor = Color.White, dragHandle = null) {
+        Column(Modifier.fillMaxWidth().heightIn(max = 560.dp).imePadding().padding(horizontal = 16.dp, vertical = 8.dp)) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { Text(title, Modifier.weight(1f), fontSize = 16.sp, fontWeight = FontWeight.SemiBold); IconButton(onClick = onDismiss) { Icon(WaveIcons.Close, "Fermer", tint = WaveMixerTheme.capsuleAccentSoft) } }
+            content()
+        }
+    }
+}
+@Composable private fun ClasseSetting(text: String, checked: Boolean, onCheck: (Boolean) -> Unit) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp).hifiBlackSurface(12.dp).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) { Text(text, Modifier.weight(1f), fontSize = 12.sp); Switch(checked, onCheck, colors = SwitchDefaults.colors(checkedTrackColor = Color(0xFF453677))) }
+}
+private fun ClasseUnderstanding.color() = when (this) { ClasseUnderstanding.UNDERSTOOD -> Color(0xFF79C5A1); ClasseUnderstanding.PARTIAL -> Color(0xFFD4B477); ClasseUnderstanding.LOST -> Color(0xFFCC8792) }
+
+@Composable private fun ClasseQuestions(state: ClasseToolsState, studentId: String?, modifier: Modifier, onClose: () -> Unit) {
+    Column(modifier) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = onClose) { Icon(WaveIcons.ChevronLeft, "Revenir aux élèves", tint = WaveMixerTheme.capsuleAccentSoft) }
+            Text("Questions", color = Color.White, modifier = Modifier.weight(1f), fontSize = 14.sp)
+            ClasseToggleChip("Questions", state.questionsOpen) { state.questionsOpen = !state.questionsOpen }
+        }
+        val questions = state.rankedQuestions.filter { studentId == null || it.studentId == studentId }
+        if (questions.isEmpty()) Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Aucune question en attente", color = classeMuted, fontSize = 12.sp) }
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(bottom = 8.dp)) {
+            items(questions, key = { it.id }) { question ->
+                val student = state.guests.guests.find { it.id == question.studentId }
+                Column(Modifier.fillMaxWidth().hifiBlackSurface(14.dp).padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        student?.let { Image(painterResource(it.portrait), "Profil de ${it.name}", Modifier.size(32.dp).clip(CircleShape).clickable { state.guests.profilePreviewId = it.id }, contentScale = ContentScale.Crop) }
+                        Text(student?.name ?: "Élève", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                        TextButton(onClick = { state.likeQuestion(question.id) }) { Icon(WaveIcons.Heart, "Soutenir la question", modifier = Modifier.size(15.dp), tint = if (question.liked) WaveMixerTheme.capsuleAccentSoft else classeMuted); Text(" ${question.likes}", fontSize = 11.sp, color = classeMuted) }
+                    }
+                    Text(question.text, color = Color(0xFFDDD9E5), fontSize = 13.sp)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextButton(onClick = { state.resolveQuestion(question.id, true) }, modifier = Modifier.weight(1f).hifiBlackSurface(10.dp)) { Text("Répondue", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 11.sp) }
+                        TextButton(onClick = { state.resolveQuestion(question.id, false) }, modifier = Modifier.weight(1f).hifiBlackSurface(10.dp)) { Text("Écarter", color = classeMuted, fontSize = 11.sp) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable private fun ClasseDemoSheet(state: ClasseToolsState, onDismiss: () -> Unit) {
+    var studentId by remember { mutableStateOf(state.selectedStudent ?: state.students.firstOrNull()?.id) }
+    var text by remember { mutableStateOf("Je voudrais essayer cet exercice.") }
+    var menu by remember { mutableStateOf(false) }
+    ClasseSheet("Intervention · démo locale", onDismiss) {
+        Box {
+            TextButton(onClick = { menu = true }) { Text((state.students.find { it.id == studentId }?.name ?: "Choisir un élève") + " ▾", color = WaveMixerTheme.capsuleAccentSoft) }
+            DropdownMenu(menu, { menu = false }, containerColor = Color(0xFF17151D), modifier = Modifier.heightIn(max = 250.dp)) { state.students.forEach { student -> DropdownMenuItem(text = { Text(student.name, color = Color.White) }, onClick = { studentId = student.id; menu = false }) } }
+        }
+        OutlinedTextField(text, { text = it.take(1000) }, label = { Text("Message de l’élève") }, modifier = Modifier.fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White, focusedBorderColor = WaveMixerTheme.capsuleAccentSoft))
+        Row {
+            TextButton(onClick = { studentId?.let { state.requestFloor(it, text) }; onDismiss() }, enabled = state.handsOpen && studentId != null && text.isNotBlank()) { Text("Lever la main") }
+            TextButton(onClick = { studentId?.let { state.submitQuestion(it, text) }; onDismiss() }, enabled = state.questionsOpen && studentId != null && text.isNotBlank()) { Text("Poser la question") }
+        }
+        if (state.understandingActive) ClasseUnderstanding.entries.forEach { response -> TextButton(onClick = { studentId?.let { state.respond(it, response) }; onDismiss() }) { Text(response.label, color = response.color()) } }
+    }
+}
