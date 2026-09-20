@@ -45,15 +45,12 @@ internal fun WaveMixerPads(tools: WaveMixerToolsState, modifier: Modifier) {
     }
     LazyColumn(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         item {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text("Pads", color = Color.White, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                WaveControl(if (tools.padPaused) Icons.Default.PlayArrow else Icons.Default.Pause, "Pause ou reprise du pad", enabled = tools.activePad != null && !tools.padLoading) { tools.togglePadPause() }
-                WaveControl(Icons.Default.Stop, "Arrêter les pads", enabled = tools.activePad != null) { tools.stopAllPads() }
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.VolumeUp, null, tint = WaveMixerTheme.capsuleAccentSoft, modifier = Modifier.size(18.dp))
-                WaveOutputFader(tools.padVolume, tools::volume, Modifier.weight(1f).height(40.dp))
-                Text("${(tools.padVolume * 100).toInt()} %", color = Color(0xFFB4B1BC), fontSize = 11.sp, modifier = Modifier.width(38.dp))
+            Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
+                Icon(Icons.Default.VolumeUp,"Volume des pads",tint=WaveMixerTheme.capsuleAccentSoft,modifier=Modifier.size(18.dp))
+                WaveOutputFader(tools.padVolume,tools::volume,Modifier.weight(1f).height(40.dp))
+                Text("${(tools.padVolume*100).toInt()} %",color=Color(0xFFB4B1BC),fontSize=11.sp,modifier=Modifier.width(38.dp))
+                WaveControl(if(tools.padPaused)Icons.Default.PlayArrow else Icons.Default.Pause,"Pause ou reprise du pad",enabled=tools.activePad!=null&&!tools.padLoading){tools.togglePadPause()}
+                WaveControl(Icons.Default.Stop,"Arrêter les pads",enabled=tools.activePad!=null){tools.stopAllPads()}
             }
         }
         item {

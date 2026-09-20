@@ -67,8 +67,14 @@ internal val logeGiftCatalog=listOf(
     Column(Modifier.fillMaxSize()) {
         state.notice?.let{Text(it,color=logeRed,fontSize=11.sp)}
         Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)){
-            SceneButton("Offrir",Modifier.weight(1f),primary=!drawMode&&!history,icon=Icons.Default.CardGiftcard){drawMode=false;history=false;reset()}
-            SceneButton("Tirage",Modifier.weight(1f),primary=drawMode&&!history,icon=Icons.Default.Casino){drawMode=true;history=false;reset()}
+            Row(Modifier.weight(1f).hifiBlackSurface(10.dp),verticalAlignment=Alignment.CenterVertically) {
+                listOf("Offrir","Tirage").forEachIndexed { index,label ->
+                    val active=!history && drawMode==(index==1)
+                    Box(Modifier.weight(1f).height(40.dp).background(if(active)WaveMixerTheme.capsuleAccent.copy(alpha=.17f)else Color.Transparent,RoundedCornerShape(10.dp)).clickable { drawMode=index==1;history=false;reset() },contentAlignment=Alignment.Center) {
+                        Text(label,color=if(active)WaveMixerTheme.capsuleAccentSoft else sceneMuted,fontSize=12.sp,fontWeight=FontWeight.SemiBold)
+                    }
+                }
+            }
             SceneIcon(Icons.Default.History,"Historique des cadeaux"){history=!history}
         }
         if(history) {
@@ -82,7 +88,7 @@ internal val logeGiftCatalog=listOf(
                 SceneButton("Préparer un autre cadeau",Modifier.fillMaxWidth(),icon=Icons.Default.Add){reset()}
             }
         } else {
-            Row(Modifier.padding(vertical=10.dp),horizontalArrangement=Arrangement.spacedBy(7.dp)) {
+            Row(Modifier.padding(vertical=6.dp),horizontalArrangement=Arrangement.spacedBy(7.dp)) {
                 listOf("Cadeau",if(drawMode)"Participants"else"Destinataire",if(drawMode)"Diffusion"else"Envoi").forEachIndexed { i,label->
                     Text("${i+1} · $label",color=if(i==step)logeGold else sceneMuted.copy(alpha=.6f),fontSize=10.sp,modifier=Modifier.weight(1f))
                 }
@@ -90,13 +96,22 @@ internal val logeGiftCatalog=listOf(
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(9.dp)) {
                 when(step) {
                     0 -> {
-                        logeGiftCatalog.chunked(2).forEachIndexed { row,items->Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){items.forEachIndexed { col,gift->
-                            val index=row*2+col;val available=state.data.stock[index]>0
-                            Column(Modifier.weight(1f).heightIn(min=76.dp).hifiBlackSurface(14.dp).then(if(code==index)Modifier.border(.8.dp,gift.color,RoundedCornerShape(14.dp))else Modifier).clickable(enabled=available){code=index}.padding(10.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
-                                Row(verticalAlignment=Alignment.CenterVertically){RoomGiftBadge(index);Spacer(Modifier.weight(1f));Text("${state.data.stock[index]} dispo.",color=sceneMuted,fontSize=9.sp)}
-                                Text(gift.name,color=if(available)Color.White else sceneMuted,fontSize=12.sp,maxLines=1,overflow=TextOverflow.Ellipsis,fontWeight=FontWeight.SemiBold)
+                        BoxWithConstraints(Modifier.fillMaxWidth()) {
+                            val cardWidth=(maxWidth-20.dp)/2.2f
+                            LazyRow(horizontalArrangement=Arrangement.spacedBy(8.dp),contentPadding=PaddingValues(vertical=2.dp)) {
+                                itemsIndexed(logeGiftCatalog) { index,gift ->
+                                    val available=state.data.stock[index]>0
+                                    Column(Modifier.width(cardWidth).hifiBlackSurface(14.dp)
+                                        .then(if(code==index)Modifier.border(.8.dp,gift.color,RoundedCornerShape(14.dp))else Modifier)
+                                        .clickable(enabled=available){code=index}.padding(horizontal=8.dp,vertical=8.dp),
+                                        horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(3.dp)) {
+                                        RoomGiftBadge(index,72.dp)
+                                        Text(gift.name,color=if(available)Color.White else sceneMuted,fontSize=11.sp,maxLines=2,minLines=2,textAlign=androidx.compose.ui.text.style.TextAlign.Center,fontWeight=FontWeight.SemiBold)
+                                        Text("${state.data.stock[index]} disponibles",color=sceneMuted,fontSize=10.sp)
+                                    }
+                                }
                             }
-                        }}}
+                        }
                         if(code==2){SceneField("Nom du cadeau surprise",customTitle,{customTitle=it.take(80)});SceneButton(if(customImage.isBlank())"Ajouter une image"else"Changer l’image",Modifier.fillMaxWidth(),icon=Icons.Default.Image){picker.launch(arrayOf("image/*"))};if(customImage.isNotBlank())SceneCampaignCover(customImage)}
                     }
                     1 -> {
