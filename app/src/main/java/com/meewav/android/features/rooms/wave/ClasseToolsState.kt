@@ -32,7 +32,6 @@ internal class ClasseToolsState(context: Context, val guests: WaveGuestState, sc
     var invitedToSpeak by mutableStateOf(emptySet<String>()); private set
     var notice by mutableStateOf<String?>(null)
     init {
-        if (com.meewav.android.BuildConfig.DEBUG) grantFloor("solen")
         runCatching {
             val array = JSONArray(prefs.getString("resources", "[]"))
             resources = (0 until array.length()).map { i -> val r = array.getJSONObject(i); ClasseResource(r.getString("id"), r.getString("title"), r.getString("uri"), r.getString("mime")) }
