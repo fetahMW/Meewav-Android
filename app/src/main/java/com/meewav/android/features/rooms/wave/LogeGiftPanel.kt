@@ -96,12 +96,13 @@ internal val logeGiftCatalog=listOf(
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(9.dp)) {
                 when(step) {
                     0 -> {
-                        BoxWithConstraints(Modifier.fillMaxWidth()) {
-                            val cardWidth=(maxWidth-20.dp)/2.2f
-                            LazyRow(horizontalArrangement=Arrangement.spacedBy(8.dp),contentPadding=PaddingValues(vertical=2.dp)) {
-                                itemsIndexed(logeGiftCatalog) { index,gift ->
+                        Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                            logeGiftCatalog.chunked(2).forEachIndexed { row,gifts ->
+                                Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                                gifts.forEachIndexed { column,gift ->
+                                    val index=row*2+column
                                     val available=state.data.stock[index]>0
-                                    Column(Modifier.width(cardWidth).hifiBlackSurface(14.dp)
+                                    Column(Modifier.weight(1f).hifiBlackSurface(14.dp)
                                         .then(if(code==index)Modifier.border(.8.dp,gift.color,RoundedCornerShape(14.dp))else Modifier)
                                         .clickable(enabled=available){code=index}.padding(horizontal=8.dp,vertical=8.dp),
                                         horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(3.dp)) {
@@ -110,6 +111,7 @@ internal val logeGiftCatalog=listOf(
                                         Text("${state.data.stock[index]} disponibles",color=sceneMuted,fontSize=10.sp)
                                     }
                                 }
+                            }
                             }
                         }
                         if(code==2){SceneField("Nom du cadeau surprise",customTitle,{customTitle=it.take(80)});SceneButton(if(customImage.isBlank())"Ajouter une image"else"Changer l’image",Modifier.fillMaxWidth(),icon=Icons.Default.Image){picker.launch(arrayOf("image/*"))};if(customImage.isNotBlank())SceneCampaignCover(customImage)}
