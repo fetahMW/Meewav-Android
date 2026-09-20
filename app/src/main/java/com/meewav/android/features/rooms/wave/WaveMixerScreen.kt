@@ -106,7 +106,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     val guestState = remember(room) { WaveGuestState(cageDemo = room == RoomModule.CAGE) }
     // Temporary workshop override requested for rapid Cage simulations; saved rules stay intact.
     val cage = remember(room, guestState, mixerDeck) { if (room == RoomModule.CAGE) CageToolsState(guestState,
-        simulationPassageSeconds = if (com.meewav.android.BuildConfig.DEBUG) 2 else null,
+        simulationPassageSeconds = if (com.meewav.android.BuildConfig.DEBUG) 5 else null,
         onPassageEnd = mixerDeck.tools::playEndHorn).also { state ->
         if (cageProgram != null) runCatching { state.applyProgram(CageProgram.decode(org.json.JSONObject(cageProgram))) }
             .onFailure { state.notice = "Le programme n’a pas pu être chargé. Choisis-le à nouveau dans Mes programmes." }

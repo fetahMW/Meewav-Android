@@ -206,8 +206,11 @@ internal fun CageToolsPanel(state: CageToolsState, programScope: String) {
             Text("Atelier local · votes et résultats non synchronisés au serveur.", color = cageMuted, fontSize = 11.sp)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) { CageFormat.entries.forEach { format -> TextButton(onClick = { state.chooseFormat(format) }, enabled = !state.locked) { Text(format.title, color = if (state.format == format) WaveMixerTheme.capsuleAccentSoft else cageMuted) } } }
             CageSettingSelect("En cas d’égalité", state.tieBreak, linkedMapOf("sudden-death" to "Manche décisive", "replay" to "Rejouer la rencontre"), !state.locked) { state.preparationRules(tie = it) }
-            Text(if (state.simulationPassageSeconds != null) "Simulation · 2 secondes par passage" else "Durée d’un passage", color = cageMuted, fontSize = 12.sp)
-            if (state.simulationPassageSeconds == null) Row(Modifier.horizontalScroll(rememberScrollState())) { (listOf(30, 60, 90, 120, 180, 240, 300) + state.passageSeconds).distinct().sorted().forEach { duration -> TextButton(onClick = { state.configure(duration, state.rounds, state.performance) }, enabled = !state.locked) { Text("${duration}s", color = if (duration == state.passageSeconds) WaveMixerTheme.capsuleAccentSoft else cageMuted) } } }
+            Text("Durée d’un passage", color = cageMuted, fontSize = 12.sp)
+            Row(Modifier.horizontalScroll(rememberScrollState())) { (listOf(30, 60, 90, 120, 180, 240, 300) + state.passageSeconds).distinct().sorted().forEach { duration -> TextButton(onClick = { state.configure(duration, state.rounds, state.performance) }, enabled = !state.locked) { Text("${duration}s", color = if (duration == state.passageSeconds) WaveMixerTheme.capsuleAccentSoft else cageMuted) } } }
+            state.simulationPassageSeconds?.let { seconds ->
+                Text("Simulation · $seconds secondes par passage. La durée choisie reste enregistrée dans le programme.", color = cageMuted, fontSize = 11.sp)
+            }
             Row { listOf(1, 2, 3, 5).forEach { count -> TextButton(onClick = { state.configure(state.passageSeconds, count, state.performance) }, enabled = !state.locked) { Text("$count round${if (count > 1) "s" else ""}", color = if (state.rounds == count) WaveMixerTheme.capsuleAccentSoft else cageMuted) } } }
             Row { listOf("Successif", "Alterné", "Simultané").forEach { mode -> TextButton(onClick = { state.configure(state.passageSeconds, state.rounds, mode) }, enabled = !state.locked) { Text(mode, color = if (state.performance == mode) WaveMixerTheme.capsuleAccentSoft else cageMuted, fontSize = 11.sp) } } }
             CageAction("Recommencer la préparation") { reset = true }
