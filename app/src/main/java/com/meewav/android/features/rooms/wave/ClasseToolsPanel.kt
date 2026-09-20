@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.semantics
@@ -61,10 +62,10 @@ internal fun ClasseToolsPanel(state: ClasseToolsState) {
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().height(44.dp), verticalAlignment = Alignment.CenterVertically) {
             listOf("Élèves", "Ressources").forEachIndexed { index, text ->
-                Column(Modifier.weight(1f).fillMaxHeight().clickable { state.tab = index; state.selectedStudent = null; questions = false }, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                Box(Modifier.weight(1f).height(44.dp).clip(RoundedCornerShape(8.dp)).clickable { state.tab = index; state.selectedStudent = null; questions = false }, contentAlignment = Alignment.Center) {
                     Text(if (index == 0) "Élèves · ${state.students.size}/24" else text, color = if (state.tab == index && !questions) Color.White else classeMuted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                    Spacer(Modifier.height(5.dp))
-                    Box(Modifier.width(30.dp).height(2.dp).background(if (state.tab == index && !questions) WaveMixerTheme.capsuleAccentSoft else Color.Transparent, CircleShape))
+                    if (state.tab == index && !questions) Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 5.dp).width(32.dp).height(2.dp)
+                        .background(Brush.horizontalGradient(listOf(Color.Transparent, WaveMixerTheme.capsuleAccentSoft, Color.Transparent)), RoundedCornerShape(50)))
                 }
             }
             IconButton(onClick = { settings = true }, modifier = Modifier.size(44.dp)) { Icon(WaveIcons.Tune, "Réglages de la classe", tint = WaveMixerTheme.capsuleAccentSoft, modifier = Modifier.size(20.dp)) }
