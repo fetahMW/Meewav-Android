@@ -124,3 +124,13 @@ En plein écran portrait, les deux artistes conservent leurs moitiés haut/bas e
 
 ### Correction de l’interlude Open Mic Battle
 Après validation du verdict, le perdant sort et le gagnant partage le cadre avec le host (haut/bas en plein écran portrait). Le host reste dans cette disposition tant que le prochain duo ne monte pas réellement sur scène. Il repasse alors en miniature. Cette règle remplace le retour host seul pour Open Mic Battle uniquement.
+
+## Organisation des outils — Compétition / Direct / Participants
+
+Les quatre routes Programme/Régie/Match/Vote sont remplacées par trois routes : 0 Compétition, 1 Direct, 2 Participants. Le CTA unique et les transitions automatiques utilisent Direct pour le passage et le vote. Compétition affiche un bracket de tournoi horizontal par tour (avec tours futurs à qualifier), un classement championnat, les duels Open Mic ou le prochain challenger Battle. Le podium reste disponible à la fin.
+
+Cartes compactes : portraits côte à côte, VS, statut, grade et message individuel. Les portraits ouvrent le pré-profil partagé, y compris dans le classement, le choix d'un remplaçant et le podium. La feuille de messages existante est rendue au niveau écran pour être accessible depuis les outils autant que depuis Invités. Participants liste uniquement les inscrits au programme ; la sélection et l'admission restent dans Invités. Un remplacement est possible avant le passage, avec un artiste prêt en coulisses, sans modifier les matchs terminés. Pause, annulation du countdown et incident restent dans Direct. Paramètres du vote dans Réglages.
+
+Cagnotte : objectif, bénéficiaire, montant cible, ouverture/clôture/réouverture, visibilité sur le retour vidéo et simulation explicite de contributions (debug). Inspirée des commandes du SceneFundraiserPanel web. Aucun paiement, solde ou versement réel implémenté ; transport et paiement restent à raccorder. État local à la session, non synchronisé aux viewers réseau. Billetterie inchangée dans le lancement.
+
+APK compilé ; aucun test ni inspection visuelle automatique lancé pour cette réorganisation.

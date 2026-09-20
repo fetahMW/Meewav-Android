@@ -37,6 +37,19 @@ internal class CageToolsState(val guests: WaveGuestState,
     var title by mutableStateOf("Battle Rap — Paris vs Marseille")
     var templateId: String? = null
     var capacity by mutableIntStateOf(16); private set
+    val fundraiser = CageFundraiserState()
+    fun canReplaceParticipant(id: String): Boolean = id in roster && !finished && !clockRunning && !awaitingCountdown && !voteOpen && !voteClosed &&
+        matches.none { it.completed && id in listOfNotNull(it.a, it.b) } &&
+        (active?.let { id !in listOfNotNull(it.a, it.b) } != false || phase in listOf("Prêt", "Appel"))
+    fun replaceParticipant(oldId: String, newId: String) {
+        val replacement = person(newId) ?: return
+        if (!canReplaceParticipant(oldId) || newId in roster || !replacement.canParticipate || !replacement.connected || replacement.location != WaveGuestLocation.BACKSTAGE) {
+            notice = "Remplacement indisponible : choisis un artiste prêt en coulisses avant son passage."; return
+        }
+        roster = roster.map { if (it == oldId) newId else it }
+        matches = matches.map { if (it.completed) it else it.copy(a = if (it.a == oldId) newId else it.a, b = if (it.b == oldId) newId else it.b) }
+        log("Remplacement · " + person(oldId)?.name + " → " + replacement.name)
+    }
     var selectionMode by mutableStateOf(false)
     var artistAttentionId by mutableStateOf<String?>(null)
     var rosterMode by mutableStateOf("manual"); private set
@@ -183,13 +196,13 @@ internal class CageToolsState(val guests: WaveGuestState,
             voteClosed && !revealed -> reveal()
             voteClosed && publicBallots.isEmpty() && juryBallots.isEmpty() -> { clearVote(); openVote() }
             voteClosed && score("A") == score("B") -> {
-                clearVote(); decisive = tieBreak == "sudden-death"; step = 0; remainingMs = passageDurationMs; phase = "Sur scène"; page = 2
+                clearVote(); decisive = tieBreak == "sudden-death"; step = 0; remainingMs = passageDurationMs; phase = "Sur scène"; page = 1
                 log("Égalité · nouvelle manche décisive")
             }
             voteClosed -> active?.let { verdict(if (score("A") > score("B")) it.a else it.b ?: it.a) }
-            phase == "Prêt au vote" -> { page = 3; openVote() }
-            clockRunning || phase == "Temps écoulé" -> { nextStep(); page = if (phase == "Prêt au vote") 3 else 2 }
-            else -> { start(); page = 2 }
+            phase == "Prêt au vote" -> { page = 1; openVote() }
+            clockRunning || phase == "Temps écoulé" -> { nextStep(); page = 1 }
+            else -> { start(); page = 1 }
         }
     }
     fun chooseFormat(value: CageFormat) { if (!locked) { format = value; capacity = capacity.coerceAtLeast(2); matches = emptyList() } }
@@ -250,7 +263,7 @@ internal class CageToolsState(val guests: WaveGuestState,
         val ids = listOfNotNull(match.a, match.b).toSet()
         guests.move(guests.onStage.map { it.id }.filterNot { it in ids }.toSet(), WaveGuestLocation.BACKSTAGE)
         guests.move(ids, WaveGuestLocation.STAGE)
-        if (ids.all { id -> guests.onStage.any { it.id == id } }) { phase = "Sur scène"; page = 2; log("Artistes sur scène") }
+        if (ids.all { id -> guests.onStage.any { it.id == id } }) { phase = "Sur scène"; page = 1; log("Artistes sur scène") }
     }
     fun start() {
         if (awaitingCountdown) return
@@ -279,7 +292,7 @@ internal class CageToolsState(val guests: WaveGuestState,
         if (active == null || active?.completed == true || phase !in listOf("Performance", "Pause", "Temps écoulé", "Sur scène")) return
         clockRunning = false
         if (step + 1 < steps.size) { step++; remainingMs = passageDurationMs; phase = "Sur scène" }
-        else { phase = "Prêt au vote"; page = 3; log("Passages terminés") }
+        else { phase = "Prêt au vote"; page = 1; log("Passages terminés") }
     }
     fun report(reason: String) { if (active == null || active?.completed == true || voteOpen || voteClosed || phase == "Appel") return; incidentResumePhase = if (clockRunning) "Pause" else phase; pause(); incident = reason; phase = "Incident"; log("Incident · $reason") }
     fun resumeIncident() { if (incident != null) { incident = null; phase = incidentResumePhase; log("Incident résolu") } }
@@ -315,10 +328,10 @@ internal class CageToolsState(val guests: WaveGuestState,
     fun closeVote() {
         if (!voteOpen || (automaticPublicVote && now() < voteDeadline)) return
         updateSimulatedPublicVote()
-        voteOpen = false; voteClosed = true; page = 3; log("Vote fermé")
+        voteOpen = false; voteClosed = true; page = 1; log("Vote fermé")
         if (simulatesPublicVote) revealed = true
     }
-    fun reveal() { if (voteClosed) { revealed = !revealed; page = 3 } }
+    fun reveal() { if (voteClosed) { revealed = !revealed; page = 1 } }
     fun verdict(id: String) {
         val match = active ?: return
         if (voteOpen || !voteClosed || !revealed || match.completed || id !in listOfNotNull(match.a, match.b)) return

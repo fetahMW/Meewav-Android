@@ -90,6 +90,11 @@ internal fun CageVideoStage(state: CageToolsState, interactive: Boolean, audible
                 Text("HOST", color = WaveMixerTheme.capsuleAccentSoft, fontSize = if (hostInset) 8.sp else 10.sp,
                     modifier = Modifier.align(Alignment.BottomStart).background(Color.Black.copy(alpha = .65f)).padding(horizontal = 6.dp, vertical = 2.dp))
             }
+            if (state.fundraiser.visible && state.fundraiser.status != "Brouillon") {
+                Text("Cagnotte démo · " + state.fundraiser.collectedEuros + " € / " + state.fundraiser.targetEuros + " €",
+                    color = WaveMixerTheme.capsuleAccentSoft, fontSize = if (fullscreen) 11.sp else 9.sp,
+                    modifier = Modifier.align(Alignment.BottomEnd).padding(8.dp).background(Color.Black.copy(alpha = .8f), CircleShape).padding(horizontal = 10.dp, vertical = 5.dp))
+            }
             if (shown.size == 2) Text("VS", color = Color.White, fontSize = 11.sp, modifier = Modifier.align(Alignment.Center).background(Color.Black, CircleShape).padding(5.dp))
             if (fullscreen && feeds.size >= 2) {
                 state.voteTick

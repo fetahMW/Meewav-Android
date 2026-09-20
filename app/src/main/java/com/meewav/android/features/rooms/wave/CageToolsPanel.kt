@@ -43,11 +43,13 @@ internal fun CageToolsPanel(state: CageToolsState, programScope: String) {
     var reset by remember { mutableStateOf(false) }
     var incident by remember { mutableStateOf(false) }
     var simulation by remember { mutableStateOf(false) }
+    var fundraiserOpen by remember { mutableStateOf(false) }
+    var replacementId by remember { mutableStateOf<String?>(null) }
     var voter by remember { mutableStateOf("public-1") }
     var voterJury by remember { mutableStateOf(false) }
     Column(Modifier.fillMaxSize().padding(top = 2.dp)) {
         Row(Modifier.fillMaxWidth().height(44.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            listOf(if (state.format == CageFormat.LEAGUE) "Classement" else "Programme", "Régie", "Match", "Vote").forEachIndexed { index, label ->
+            listOf("Compétition", "Direct", "Participants").forEachIndexed { index, label ->
                 Box(Modifier.weight(1f).height(44.dp).clip(RoundedCornerShape(8.dp)).clickable { state.page = index }, contentAlignment = Alignment.Center) {
                     Text(label, color = Color.White.copy(alpha = if (state.page == index) .95f else .5f), fontSize = 11.sp, fontWeight = if (state.page == index) FontWeight.SemiBold else FontWeight.Normal)
                     if (state.page == index) Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 5.dp).width(32.dp).height(2.dp)
@@ -71,14 +73,12 @@ internal fun CageToolsPanel(state: CageToolsState, programScope: String) {
             }
             when (state.page) {
                 0 -> {
-                    item {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            CageAction("Participants", Modifier.weight(1f), !state.locked) { manageParticipants() }
-                            CageAction("Mélanger", Modifier.weight(1f), !state.locked) { state.shuffle() }
-                        }
-                    }
                     if (!state.locked) item { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        CageAction("Charger un programme", Modifier.weight(1f)) {
+                        CageAction("Choisir les artistes", Modifier.weight(1f)) { manageParticipants() }
+                        CageAction("Mélanger", Modifier.weight(1f), state.roster.size > 1) { state.shuffle() }
+                    } }
+                    if (!state.locked) item { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        CageAction("Charger", Modifier.weight(1f)) {
                             val entries = store.list(); library = (0 until entries.length()).map { entries.getJSONObject(it) }; libraryOpen = true
                         }
                         CageAction(if (saving) "Enregistrement…" else "Enregistrer", Modifier.weight(1f), !saving) {
@@ -86,130 +86,80 @@ internal fun CageToolsPanel(state: CageToolsState, programScope: String) {
                             val snapshot = state.program().json()
                             scope.launch {
                                 runCatching { kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { store.save(org.json.JSONObject().put("id", state.templateId).put("configuration", snapshot)) } }
-                                    .onSuccess { state.templateId = it.getString("id"); state.notice = "Programme enregistré dans Mes Cages sur ce téléphone." }
-                                    .onFailure { state.notice = "Enregistrement impossible. Vérifie le titre et réessaie." }
+                                    .onSuccess { state.templateId = it.getString("id"); state.notice = "Programme enregistré dans Mes Cages." }
+                                    .onFailure { state.notice = "Enregistrement impossible. Réessaie." }
                                 saving = false
                             }
                         }
                     } }
-                    if (!state.locked && state.matches.isEmpty() && state.roster.isNotEmpty()) items(state.roster, key = { "roster-$it" }) { id -> CageCard {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(Modifier.weight(1f)) { CagePerson(state.person(id)) }
-                            IconButton(onClick = { state.removeParticipants(setOf(id)) }) { Icon(Icons.Default.Close, "Retirer du programme", tint = cageMuted) }
-                        }
-                        Text(state.person(id)?.originLabel.orEmpty(), color = cageMuted, fontSize = 10.sp)
+                    item { CageFundraiserSummary(state.fundraiser) { fundraiserOpen = true } }
+                    if (state.matches.isEmpty()) item { CageCard {
+                        Text(if (state.roster.isEmpty()) "Choisis les participants pour préparer la compétition." else state.roster.size.toString() + " artistes retenus. Le bouton principal prépare leurs rencontres.", color = cageMuted, fontSize = 12.sp)
                     } }
-                    if (state.matches.isEmpty()) item { CageCard { Text("Choisis les artistes et le format, puis utilise le bouton en bas pour préparer le programme.", color = cageMuted, fontSize = 12.sp) } }
-                    items(state.matches, key = { it.id }) { match ->
-                        CageCard {
-                            Text("Tour ${match.round} · Match ${match.id + 1}", color = cageMuted, fontSize = 10.sp)
-                            CagePerson(state.person(match.a), match.winner == match.a)
-                            match.b?.let { CagePerson(state.person(it), match.winner == it) }
-                            if (match.completed) Text(match.score?.let { "Note : ${it / 20f} / 5" } ?: "Qualifié : ${state.person(match.winner)?.name}", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 11.sp)
-                        }
-                    }
-                    if (state.format == CageFormat.LEAGUE && state.matches.any { it.completed }) item {
-                        CageCard {
-                            Text("Classement", color = cageInk, fontWeight = FontWeight.SemiBold)
-                            state.roster.sortedByDescending { id -> state.matches.count { it.winner == id } }.forEachIndexed { index, id ->
-                                Text("${index + 1}. ${state.person(id)?.name} · ${state.matches.count { it.winner == id } * 3} pts", color = cageMuted, fontSize = 12.sp)
+                    else if (state.format == CageFormat.TOURNAMENT) item { CageBracket(state) }
+                    else {
+                        if (state.format == CageFormat.LEAGUE) item { CageCard {
+                            Text("Classement · 3 points par victoire", color = cageInk, fontSize = 12.sp)
+                            state.roster.sortedByDescending { id -> state.matches.count { it.winner == id && it.b != null } }.forEachIndexed { index, id ->
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text((index + 1).toString(), color = WaveMixerTheme.capsuleAccentSoft, modifier = Modifier.width(24.dp), fontSize = 12.sp)
+                                    CageArtistCompact(state, id, Modifier.weight(1f))
+                                    Text((state.matches.count { it.winner == id && it.b != null } * 3).toString() + " pts", color = cageInk, fontSize = 12.sp)
+                                }
                             }
-                        }
+                        } }
+                        if (state.format == CageFormat.CHALLENGER) item { CageCard {
+                            Text("Le gagnant reste · prochain challenger", color = cageMuted, fontSize = 11.sp)
+                            val next = if (state.active?.completed == true) state.matches.firstOrNull { !it.completed }?.b else state.roster.getOrNull(state.matches.size + 1)
+                            if (next != null) CageArtistCompact(state, next) else Text(if (state.finished) "Tous les challengers sont passés" else "Dernier duel programmé", color = cageInk, fontSize = 12.sp)
+                        } }
+                        items(state.matches, key = { "match-" + it.id }) { match -> CageDuelCard(state, match) }
                     }
-                    if (state.finished && state.format in listOf(CageFormat.TOURNAMENT, CageFormat.CHALLENGER)) item { CageCard {
-                        Text("Vainqueur", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 12.sp)
-                        CagePerson(state.person(state.matches.lastOrNull()?.winner), true)
-                    } }
+                    if (state.finished) item { CageAction("Podium et résultats") { state.resultsOpen = true } }
                 }
                 1 -> {
-                    if (!state.locked) item { Text("Prépare les artistes et le programme avant leur entrée en scène.", color = cageMuted, fontSize = 12.sp) }
+                    val match = state.active ?: state.matches.firstOrNull { !it.completed }
+                    if (match == null) item { CageCard { Text("Prépare le programme dans Compétition. Le prochain duel apparaîtra ici.", color = cageMuted, fontSize = 12.sp) } }
                     else {
-                        items(state.matches.filterNot { it.completed }, key = { it.id }) { match ->
-                            CageCard {
-                                Text("Match ${match.id + 1}", color = cageMuted, fontSize = 11.sp)
-                                listOfNotNull(match.a, match.b).forEach { id ->
-                                    val person = state.person(id)
-                                    CagePerson(person)
-                                    Text(if (person?.connected != true) "Connexion perdue" else if (!person.canParticipate) "Invitation en attente" else if (person.location == WaveGuestLocation.BACKSTAGE) "Prêt à monter" else person.location.label,
-                                        color = if (person?.connected == true) cageMuted else Color(0xFFC88B90), fontSize = 10.sp)
-                                    if (com.meewav.android.BuildConfig.DEBUG && person != null && (!person.canParticipate || !person.connected)) {
-                                        CageAction("Simuler son arrivée") {
-                                            state.guests.demoInvitationResponse(id, true)
-                                            state.guests.demoReconnect(id)
-                                            state.guests.move(setOf(id), WaveGuestLocation.BACKSTAGE)
-                                            state.notice = null
-                                        }
-                                    }
+                        item { CageDuelCard(state, match) }
+                        if (state.phase == "Appel") items(state.readinessIssues(), key = { "issue-" + it.first }) { issue ->
+                            CageParticipantCard(state, issue.first) { replacementId = it }
+                        }
+                        if (state.active != null && !match.completed) item { CageCard {
+                            val voting = state.voteOpen || state.voteClosed || state.phase == "Prêt au vote"
+                            state.voteTick
+                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                Column(Modifier.weight(1f)) {
+                                    Text(if (voting) "Vote · " + state.voteMode else if (state.awaitingCountdown) "Compte à rebours" else state.phase, color = cageInk, fontSize = 13.sp)
+                                    Text(if (voting) state.publicBallots.size.toString() + " bulletins public · " + state.juryBallots.size + " jury" else "Passage " + (state.step + 1) + "/" + state.steps.size + " · " + state.person(if (state.speaker.contains("A")) match.a else match.b)?.name, color = cageMuted, fontSize = 11.sp)
                                 }
+                                val seconds = if (state.voteOpen) state.voteRemaining else (state.remainingMs + 999) / 1000
+                                Text(if (state.voteClosed) "Terminé" else "%02d:%02d".format(seconds / 60, seconds % 60), fontSize = 28.sp, fontFamily = FontFamily.Monospace, color = WaveMixerTheme.capsuleAccentSoft)
                             }
-                        }
-                    }
-                }
-                2 -> {
-                    val match = state.active
-                    if (match == null) item { Text("Le prochain passage apparaîtra ici après la préparation.", color = cageMuted, fontSize = 12.sp) }
-                    else {
-                        item { CageCard {
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                CageMatchArtist(state.person(match.a), state.speaker.contains("A"), Modifier.weight(1f))
-                                match.b?.let { opponent ->
-                                    Box(Modifier.height(80.dp).width(52.dp), contentAlignment = Alignment.Center) {
-                                        Box(Modifier.size(52.dp).background(Brush.radialGradient(listOf(WaveMixerTheme.capsuleAccentSoft.copy(alpha = .18f), Color.Transparent)), CircleShape), contentAlignment = Alignment.Center) {
-                                            Text("VS", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 24.sp, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, letterSpacing = 1.sp)
-                                        }
-                                    }
-                                    CageMatchArtist(state.person(opponent), state.speaker.contains("B"), Modifier.weight(1f))
-                                }
-                            }
-                            val seconds = (state.remainingMs + 999) / 1000
-                            Text("%02d:%02d".format(seconds / 60, seconds % 60), modifier = Modifier.align(Alignment.CenterHorizontally), fontSize = 38.sp, fontFamily = FontFamily.Monospace, color = WaveMixerTheme.capsuleAccentSoft)
-                            Text("${state.phase} · ${state.speaker} · ${state.step + 1}/${state.steps.size}", color = cageMuted, fontSize = 11.sp, modifier = Modifier.align(Alignment.CenterHorizontally))
-                        } }
-                        if (state.clockRunning) item { CageAction("Mettre en pause") { state.pause() } }
-                        item {
-                            if (state.incident != null) CageCard {
-                                Text(state.incident.orEmpty(), color = Color(0xFFC88B90))
-                            } else CageAction("Signaler un incident", enabled = !match.completed && !state.voteOpen) { incident = true }
-                        }
-                    }
-                }
-                3 -> {
-                    val match = state.active
-                    if (match == null) item { Text("Le vote sera disponible après les passages des artistes.", color = cageMuted, fontSize = 12.sp) }
-                    else {
-                        item { Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            listOf("Public", "Jury", "Hybride").forEach { mode -> CageAction(mode, Modifier.weight(1f), !state.voteOpen && !state.voteClosed, primary = state.voteMode == mode) { state.voteConfig(mode, state.voteSeconds) } }
-                        } }
-                        item { Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            listOf(30, 45, 60, 90).forEach { seconds -> CageAction("${seconds}s", Modifier.weight(1f), !state.voteOpen && !state.voteClosed, primary = state.voteSeconds == seconds) { state.voteConfig(state.voteMode, seconds) } }
-                        } }
-                        if (state.simulatesPublicVote) item {
-                            Text(if (state.voteMode == "Public") "Simulation automatique du public · ${state.simulationVoteSeconds} secondes. La durée choisie reste enregistrée."
-                                else "Public simulé automatiquement en ${state.simulationVoteSeconds} secondes · durée du jury inchangée.", color = cageMuted, fontSize = 11.sp)
-                        }
-                        item { CageCard {
-                            CagePerson(state.person(match.a))
-                            match.b?.let { CagePerson(state.person(it)) }
-                            if (state.voteOpen) { state.voteTick; Text("${state.voteRemaining}s · Vote ouvert", color = WaveMixerTheme.capsuleAccentSoft) }
-                            run {
-                                Text(if (state.revealed) "A : ${state.score("A").toInt()} %" + if (match.b != null) " · B : ${state.score("B").toInt()} %" else "" else "Résultats masqués", color = cageMuted, fontSize = 12.sp)
-                                Text("${state.publicBallots.size} bulletins public · ${state.juryBallots.size} jury", color = cageMuted, fontSize = 11.sp)
+                            if (voting) {
+                                Text(if (state.revealed) "A : " + state.score("A").toInt() + " %   ·   B : " + state.score("B").toInt() + " %" else "Résultats masqués jusqu’à la clôture", color = cageMuted, fontSize = 11.sp)
+                                if (state.revealed) LinearProgressIndicator(progress = { (state.score("A") / 100f).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth(), color = WaveMixerTheme.capsuleAccentSoft, trackColor = Color(0xFF4A2B38))
                             }
                         } }
-                        if (!state.simulatesPublicVote || state.voteMode != "Public") item {
-                            CageAction(if (state.simulatesPublicVote || state.voteMode == "Jury") "Bulletins du jury" else "Bulletins de démonstration", enabled = state.voteOpen) {
+                        if (state.active != null && !match.completed) item { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            if (state.clockRunning || state.awaitingCountdown) CageAction(if (state.awaitingCountdown) "Annuler le départ" else "Pause", Modifier.weight(1f)) { state.pause() }
+                            CageAction("Incident", Modifier.weight(1f), !state.voteOpen && !state.voteClosed) { incident = true }
+                        } }
+                        if (state.voteOpen && (!state.simulatesPublicVote || state.voteMode != "Public")) item {
+                            CageAction(if (state.simulatesPublicVote || state.voteMode == "Jury") "Bulletins du jury" else "Bulletins de démonstration") {
                                 voterJury = state.simulatesPublicVote || state.voteMode == "Jury"
                                 voter = if (voterJury) state.guests.jury.firstOrNull()?.id.orEmpty() else "public-1"
                                 simulation = true
                             }
                         }
-                        if (state.revealed && state.voteClosed && !match.completed) {
-                            item {
-                                val a = state.score("A"); val b = state.score("B")
-                                if (a == b) Text("Égalité · lance une manche décisive avec le bouton principal.", color = cageMuted, fontSize = 11.sp)
-                            }
-                        }
+                        state.incident?.let { reason -> item { Text(reason, color = Color(0xFFC88B90), fontSize = 12.sp) } }
                     }
+                    item { CageFundraiserSummary(state.fundraiser) { fundraiserOpen = true } }
+                }
+                2 -> {
+                    if (!state.locked) item { CageAction("Choisir dans Invités") { manageParticipants() } }
+                    if (state.roster.isEmpty()) item { Text("Les artistes retenus pour ce programme apparaîtront ici.", color = cageMuted, fontSize = 12.sp) }
+                    items(state.roster, key = { "person-" + it }) { id -> CageParticipantCard(state, id) { replacementId = it } }
                 }
             }
         }
@@ -217,6 +167,23 @@ internal fun CageToolsPanel(state: CageToolsState, programScope: String) {
             Text(state.active?.let { listOfNotNull(state.person(it.a)?.name, state.person(it.b)?.name).joinToString(" · ") } ?: "${state.roster.size} artistes", color = cageMuted, fontSize = 10.sp, maxLines = 1, modifier = Modifier.padding(bottom = 4.dp))
             Text(state.commandHint, color = cageMuted, fontSize = 11.sp, modifier = Modifier.padding(bottom = 6.dp))
             CageAction(state.commandLabel, enabled = state.commandEnabled, primary = true) { state.advance() }
+        }
+    }
+    if (fundraiserOpen) CageFundraiserSheet(state.fundraiser) { fundraiserOpen = false }
+    replacementId?.let { original ->
+        ModalBottomSheet(onDismissRequest = { replacementId = null }, containerColor = Color(0xFF111216), contentColor = cageInk) {
+            Column(Modifier.padding(16.dp)) {
+                Text("Remplacer " + state.person(original)?.name, fontSize = 17.sp)
+                Text("Artistes prêts en coulisses, hors programme", color = cageMuted, fontSize = 11.sp)
+                val candidates = state.guests.guests.filter { it.id !in state.roster && it.location == WaveGuestLocation.BACKSTAGE && it.canParticipate && it.connected }
+                LazyColumn(Modifier.heightIn(max = 360.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (candidates.isEmpty()) item { Text("Aucun remplaçant disponible", color = cageMuted, modifier = Modifier.padding(vertical = 16.dp)) }
+                    items(candidates, key = { it.id }) { candidate -> Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        CageArtistCompact(state, candidate.id, Modifier.weight(1f), beforeProfile = { replacementId = null })
+                        TextButton(onClick = { state.replaceParticipant(original, candidate.id); replacementId = null }) { Text("Choisir", color = WaveMixerTheme.capsuleAccentSoft) }
+                    } }
+                }
+            }
         }
     }
     if (settings) ModalBottomSheet(onDismissRequest = { settings = false }, containerColor = Color(0xFF111216)) {
@@ -235,6 +202,10 @@ internal fun CageToolsPanel(state: CageToolsState, programScope: String) {
             }
             Row { listOf(1, 2, 3, 5).forEach { count -> TextButton(onClick = { state.configure(state.passageSeconds, count, state.performance) }, enabled = !state.locked) { Text("$count round${if (count > 1) "s" else ""}", color = if (state.rounds == count) WaveMixerTheme.capsuleAccentSoft else cageMuted) } } }
             Row { listOf("Successif", "Alterné", "Simultané").forEach { mode -> TextButton(onClick = { state.configure(state.passageSeconds, state.rounds, mode) }, enabled = !state.locked) { Text(mode, color = if (state.performance == mode) WaveMixerTheme.capsuleAccentSoft else cageMuted, fontSize = 11.sp) } } }
+            Text("Vote", color = cageInk, fontSize = 13.sp)
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf("Public", "Jury", "Hybride").forEach { mode -> CageAction(mode, Modifier.weight(1f), !state.voteOpen && !state.voteClosed, primary = state.voteMode == mode) { state.voteConfig(mode, state.voteSeconds) } } }
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf(30, 45, 60, 90).forEach { duration -> CageAction(duration.toString() + " s", Modifier.weight(1f), !state.voteOpen && !state.voteClosed, primary = state.voteSeconds == duration) { state.voteConfig(state.voteMode, duration) } } }
+            if (state.simulatesPublicVote) Text("Public simulé · " + state.simulationVoteSeconds + " secondes", color = cageMuted, fontSize = 11.sp)
             CageAction("Recommencer la préparation") { reset = true }
             Text("Journal de session", color = cageInk)
             state.history.takeLast(8).reversed().forEach { Text(it, color = cageMuted, fontSize = 11.sp) }
@@ -301,37 +272,7 @@ private fun CageCard(content: @Composable ColumnScope.() -> Unit) {
     Column(Modifier.fillMaxWidth().hifiBlackSurface(13.dp).padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp), content = content)
 }
 @Composable
-private fun CageMatchArtist(guest: WaveGuest?, emphasized: Boolean, modifier: Modifier = Modifier) {
-    val ringColor by animateColorAsState(if (emphasized) WaveMixerTheme.capsuleAccentSoft else cageInk.copy(alpha = .18f), label = "cageMatchRing")
-    val nameColor by animateColorAsState(if (emphasized) WaveMixerTheme.capsuleAccentSoft else cageInk, label = "cageMatchName")
-    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Box(Modifier.size(80.dp)) {
-            Box(Modifier.fillMaxSize().clip(CircleShape)
-                .background(cageInk.copy(alpha = .05f))
-                .border(2.dp, ringColor, CircleShape)
-                .padding(4.dp), contentAlignment = Alignment.Center) {
-                if (guest != null) Image(painterResource(guest.portrait), null, Modifier.fillMaxSize().clip(CircleShape), contentScale = androidx.compose.ui.layout.ContentScale.Crop)
-                else Icon(Icons.Default.Person, null, Modifier.size(32.dp), tint = cageMuted)
-            }
-            guest?.let { CageVictoryBadge(it.cageVictories, Modifier.align(Alignment.BottomCenter)) }
-        }
-        Text(guest?.name ?: "À déterminer", color = nameColor, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
-        Text(guest?.role.orEmpty(), color = cageMuted, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
-    }
-}
-@Composable
-private fun CagePerson(guest: WaveGuest?, emphasized: Boolean = false) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        guest?.let { Image(painterResource(it.portrait), null, Modifier.size(32.dp).clip(CircleShape), contentScale = androidx.compose.ui.layout.ContentScale.Crop) }
-        guest?.let { CageVictoryBadge(it.cageVictories) }
-        Column(Modifier.weight(1f)) {
-            Text(guest?.name ?: "À déterminer", color = if (emphasized) WaveMixerTheme.capsuleAccentSoft else cageInk, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(guest?.role.orEmpty(), color = cageMuted, fontSize = 10.sp, maxLines = 1)
-        }
-    }
-}
-@Composable
-private fun CageAction(label: String, modifier: Modifier = Modifier.fillMaxWidth(), enabled: Boolean = true, primary: Boolean = false, onClick: () -> Unit) {
+internal fun CageAction(label: String, modifier: Modifier = Modifier.fillMaxWidth(), enabled: Boolean = true, primary: Boolean = false, onClick: () -> Unit) {
     Box(modifier.heightIn(min = 42.dp).hifiBlackSurface(9.dp).then(if (primary) Modifier.background(WaveMixerTheme.primaryCta.copy(alpha = .28f), RoundedCornerShape(9.dp)) else Modifier)
         .clickable(enabled = enabled, onClick = onClick).padding(horizontal = 8.dp, vertical = 9.dp), contentAlignment = Alignment.Center) {
         Text(label, color = (if (primary) WaveMixerTheme.capsuleAccentSoft else cageInk).copy(alpha = if (enabled) 1f else .35f), fontSize = 11.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)

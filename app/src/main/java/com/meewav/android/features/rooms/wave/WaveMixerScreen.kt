@@ -256,6 +256,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                 }
             }
         }
+        WaveGuestMessageSheet(guestState)
         GuestPreProfileHost(guestState, (maxHeight - 44.dp - videoViewportHeight - 6.dp).coerceAtLeast(0.dp))
         }
         WaveGuestDragOverlay(guestState)

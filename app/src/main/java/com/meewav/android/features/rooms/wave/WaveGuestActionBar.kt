@@ -21,14 +21,11 @@ import androidx.compose.ui.unit.sp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun WaveGuestActionBar(state: WaveGuestState, guests: List<WaveGuest>, page: Int, onClear: () -> Unit) {
-    val messageRecipients = state.guests.filter { it.id in state.messageRecipientIds }
-    var draft by remember { mutableStateOf("") }
-    LaunchedEffect(state.messageRecipientIds) { draft = "" }
     val ids = guests.map { it.id }.toSet()
     val enabled = guests.isNotEmpty()
     Column(Modifier.fillMaxWidth().padding(top = 6.dp).hifiBlackSurface(14.dp).padding(horizontal = 6.dp, vertical = 4.dp)) {
         Row(Modifier.fillMaxWidth()) {
-            GuestAction("Message", WaveIcons.Envelope, enabled, Modifier.weight(1f)) { state.messageRecipientIds = ids; draft = "" }
+            GuestAction("Message", WaveIcons.Envelope, enabled, Modifier.weight(1f)) { state.messageRecipientIds = ids }
             GuestAction("Aperçu", WaveIcons.Eye, guests.size == 1, Modifier.weight(1f)) { state.previewId = guests.single().id }
             if (page == 0) {
                 GuestAction("Scène", Icons.Filled.ArrowUpward, enabled && guests.all { it.connected && it.canParticipate } && state.onStage.size + guests.size <= 3, Modifier.weight(1f)) {
@@ -47,6 +44,14 @@ internal fun WaveGuestActionBar(state: WaveGuestState, guests: List<WaveGuest>, 
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun WaveGuestMessageSheet(state: WaveGuestState) {
+    val messageRecipients = state.guests.filter { it.id in state.messageRecipientIds }
+    var draft by remember { mutableStateOf("") }
+    LaunchedEffect(state.messageRecipientIds) { draft = "" }
     if (messageRecipients.isNotEmpty()) ModalBottomSheet(onDismissRequest = { state.messageRecipientIds = emptySet() },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Color(0xFF101114), contentColor = Color.White) {
         Column(Modifier.fillMaxWidth().imePadding().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
