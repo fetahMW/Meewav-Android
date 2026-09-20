@@ -105,7 +105,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     // Keep the highlighted snapshot even if the live feed trims old messages or tabs change.
     var pinnedChatMessage by remember { mutableStateOf<WaveChatMessage?>(null) }
     var waveNotificationsRead by remember { mutableStateOf(false) }
-    val guestState = remember(room) { WaveGuestState(cageDemo = room == RoomModule.CAGE) }
+    val guestState = remember(room) { WaveGuestState(cageDemo = room == RoomModule.CAGE, classeDemo = room == RoomModule.CLASSE) }
     val classe = remember(room, guestState, programScope) { if (room == RoomModule.CLASSE) ClasseToolsState(context.applicationContext, guestState, programScope).also { if (!roomTitle.isNullOrBlank()) it.title = roomTitle } else null }
     LaunchedEffect(classe, guestState.guests) { classe?.syncStudents() }
     // Temporary workshop override requested for rapid Cage simulations; saved rules stay intact.

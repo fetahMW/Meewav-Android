@@ -110,8 +110,10 @@ internal fun ClasseToolsPanel(state: ClasseToolsState) {
                                 .border(if (selected || speaking || response != null) 2.dp else .5.dp, if (speaking) Color(0xFF7ABFA2) else response?.color() ?: if (selected) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .15f), CircleShape), contentScale = ContentScale.Crop)
                             if (!student.connected) Icon(Icons.Filled.WifiOff, "Connexion perdue",
                                 tint = Color(0xFFE39199), modifier = Modifier.align(Alignment.Center).size(22.dp))
-                            if (hand || speaking || student.id in state.invitedToSpeak) Icon(if (speaking) WaveIcons.Mic else if (hand) Icons.Filled.BackHand else Icons.Filled.Schedule,
-                                if (speaking) "A la parole" else if (hand) "Main levée" else "Invité à parler", tint = if (speaking) Color(0xFF7ABFA2) else WaveMixerTheme.capsuleAccentSoft,
+                            if (hand) Icon(Icons.Filled.BackHand, "Main levée", tint = WaveMixerTheme.capsuleAccentSoft,
+                                modifier = Modifier.align(Alignment.TopStart).size(20.dp))
+                            if (speaking || student.id in state.invitedToSpeak) Icon(if (speaking) WaveIcons.Mic else Icons.Filled.Schedule,
+                                if (speaking) "A la parole" else "Invité à parler", tint = if (speaking) Color(0xFF7ABFA2) else WaveMixerTheme.capsuleAccentSoft,
                                 modifier = Modifier.align(Alignment.BottomEnd).size(23.dp).background(Color(0xFF121017), CircleShape).padding(4.dp))
                             if (state.rankedQuestions.any { it.studentId == student.id }) {
                                 ClasseQuestionBubble(Modifier.align(Alignment.TopEnd).size(20.dp))

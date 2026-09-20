@@ -45,7 +45,7 @@ internal val WaveGuest.healthLabel: String get() = when {
 }
 
 /** Native demo room state. No RTC or Supabase success is inferred from a local move. */
-internal class WaveGuestState(private val cageDemo: Boolean = false) {
+internal class WaveGuestState(private val cageDemo: Boolean = false, private val classeDemo: Boolean = false) {
     private fun roomVideo(guest: WaveGuest) = if (cageDemo) guest.copy(demoVideo = cageGuestDemoVideo(guest.id), sourceAspectRatio = 9f / 16f,
         connected = if (guest.location == WaveGuestLocation.BACKSTAGE) true else guest.connected,
         mic = if (guest.location == WaveGuestLocation.BACKSTAGE) true else guest.mic,
@@ -86,7 +86,7 @@ internal class WaveGuestState(private val cageDemo: Boolean = false) {
         guest.copy(gradeLevel = index % 6 + 1, latencyMs = listOf(35, 65, 110, 48)[index % 4],
             origin = if (index in 4..5) GuestOrigin.INVITATION else GuestOrigin.CANDIDATURE,
             invitation = if (index == 4) GuestInvitation.PENDING else if (index == 5) GuestInvitation.ACCEPTED else GuestInvitation.NONE)
-    } + List(20) { demoGuest(it, WaveGuestLocation.BACKSTAGE) } + List(38) { demoGuest(it, WaveGuestLocation.REQUESTED) }).map(::roomVideo))
+    } + List(20) { demoGuest(it, WaveGuestLocation.BACKSTAGE) } + List(38) { demoGuest(it, WaveGuestLocation.REQUESTED) }).map(::roomVideo).let { if (classeDemo) classeDemoPortraits(it) else it })
         private set
     var filters by mutableStateOf(WaveGuestFilters())
     val availableInvites get() = (initialGuests + listOf(
