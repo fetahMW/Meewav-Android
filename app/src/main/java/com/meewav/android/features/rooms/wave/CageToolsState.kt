@@ -12,7 +12,8 @@ internal data class CageMatch(val id: Int, val a: String, val b: String? = null,
 internal class CageToolsState(val guests: WaveGuestState,
     private val now: () -> Long = { SystemClock.elapsedRealtime() },
     dispatcher: CoroutineDispatcher = Dispatchers.Main.immediate,
-    ticking: Boolean = true) : AutoCloseable {
+    ticking: Boolean = true,
+    val simulationPassageSeconds: Int? = null) : AutoCloseable {
     private val scope = CoroutineScope(SupervisorJob() + dispatcher)
     var page by mutableIntStateOf(0)
     var videoMode by mutableStateOf("Face à face")
@@ -58,7 +59,8 @@ internal class CageToolsState(val guests: WaveGuestState,
     var passageSeconds by mutableIntStateOf(60); private set
     var performance by mutableStateOf("Successif"); private set
     var step by mutableIntStateOf(0); private set
-    var remainingMs by mutableLongStateOf(60_000); private set
+    var remainingMs by mutableLongStateOf((simulationPassageSeconds ?: 60) * 1000L); private set
+    private val passageDurationMs get() = (simulationPassageSeconds ?: passageSeconds) * 1000L
     var clockRunning by mutableStateOf(false); private set
     var voteMode by mutableStateOf("Public"); private set
     var voteSeconds by mutableIntStateOf(30); private set
@@ -83,6 +85,16 @@ internal class CageToolsState(val guests: WaveGuestState,
         when (performance) { "Simultané" -> listOf("A + B"); "Alterné" -> if (r % 2 == 0) listOf("A", "B") else listOf("B", "A"); else -> listOf("A", "B") }
     }
     val speaker get() = steps.getOrElse(step) { "Terminé" }
+    // The participant's microphone readiness is separate from the programme's audio gate.
+    // Muting the other turn must not make ready() reject the next participant.
+    fun microphoneOpen(id: String): Boolean {
+        val match = active ?: return false
+        val guest = person(id) ?: return false
+        if (!clockRunning || now() >= deadline || phase != "Performance" || incident != null || match.completed
+            || !guest.mic || !guest.connected || guest.location != WaveGuestLocation.STAGE) return false
+        return (id == match.a && speaker.contains("A")) || (id == match.b && speaker.contains("B"))
+    }
+    fun microphoneGain(id: String) = if (microphoneOpen(id)) guests.guestGain(id) else 0f
     val voteRemaining get() = ((voteDeadline - now()).coerceAtLeast(0) + 999) / 1000
     var voteTick by mutableLongStateOf(0); private set
     fun person(id: String?) = guests.guests.find { it.id == id }
@@ -138,7 +150,7 @@ internal class CageToolsState(val guests: WaveGuestState,
             voteClosed && !revealed -> reveal()
             voteClosed && !isSolo && publicBallots.isEmpty() && juryBallots.isEmpty() -> { clearVote(); openVote() }
             voteClosed && !isSolo && score("A") == score("B") -> {
-                clearVote(); decisive = tieBreak == "sudden-death"; step = 0; remainingMs = passageSeconds * 1000L; phase = "Sur scène"; page = 2
+                clearVote(); decisive = tieBreak == "sudden-death"; step = 0; remainingMs = passageDurationMs; phase = "Sur scène"; page = 2
                 log("Égalité · nouvelle manche décisive")
             }
             voteClosed -> active?.let { verdict(if (isSolo || score("A") > score("B")) it.a else it.b ?: it.a) }
@@ -148,7 +160,7 @@ internal class CageToolsState(val guests: WaveGuestState,
         }
     }
     fun chooseFormat(value: CageFormat) { if (!locked) { format = value; capacity = capacity.coerceAtLeast(if (isSolo) 1 else 2); matches = emptyList() } }
-    fun configure(duration: Int, count: Int, mode: String) { if (!locked) { passageSeconds = duration; rounds = count; performance = mode; remainingMs = duration * 1000L } }
+    fun configure(duration: Int, count: Int, mode: String) { if (!locked) { passageSeconds = duration; rounds = count; performance = mode; remainingMs = passageDurationMs } }
     fun select(id: String) { if (id in roster) removeParticipants(setOf(id)) else addParticipants(setOf(id)) }
     fun shuffle() { if (!locked) { roster = roster.shuffled(); matches = emptyList() } }
     fun generate() {
@@ -179,7 +191,7 @@ internal class CageToolsState(val guests: WaveGuestState,
     fun call(id: Int) {
         val match = matches.find { it.id == id && !it.completed } ?: return
         if (!locked || clockRunning || voteOpen || active?.let { !it.completed && phase != "Prêt" && phase != "Appel" } == true) return
-        activeId = match.id; decisive = false; step = 0; remainingMs = passageSeconds * 1000L; phase = "Appel"; incident = null; clearVote()
+        activeId = match.id; decisive = false; step = 0; remainingMs = passageDurationMs; phase = "Appel"; incident = null; clearVote()
         val pair = listOfNotNull(match.a, match.b).toSet()
         guests.move(pair.filterNot { format == CageFormat.CHALLENGER && person(it)?.location == WaveGuestLocation.STAGE }.toSet(), WaveGuestLocation.BACKSTAGE)
         log("Appel · ${person(match.a)?.name} ${match.b?.let { "vs ${person(it)?.name}" }.orEmpty()}")
@@ -204,7 +216,7 @@ internal class CageToolsState(val guests: WaveGuestState,
     fun nextStep() {
         if (active == null || active?.completed == true || phase !in listOf("Performance", "Pause", "Temps écoulé", "Sur scène")) return
         clockRunning = false
-        if (step + 1 < steps.size) { step++; remainingMs = passageSeconds * 1000L; phase = "Sur scène" }
+        if (step + 1 < steps.size) { step++; remainingMs = passageDurationMs; phase = "Sur scène" }
         else { phase = "Prêt au vote"; page = 3; log("Passages terminés") }
     }
     fun report(reason: String) { if (active == null || active?.completed == true || voteOpen || voteClosed || phase == "Appel") return; incidentResumePhase = if (clockRunning) "Pause" else phase; pause(); incident = reason; phase = "Incident"; log("Incident · $reason") }

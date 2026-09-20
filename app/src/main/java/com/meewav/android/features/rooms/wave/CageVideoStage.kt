@@ -31,13 +31,12 @@ internal fun CageVideoStage(state: CageToolsState, interactive: Boolean, audible
         val portrait = maxHeight > maxWidth
         @Composable fun Feed(id: String, modifier: Modifier) {
             val guest = feeds.first { it.id == id }
-            val side = if (pair.indexOf(id) == 1) "B" else "A"
-            val live = state.clockRunning && state.speaker.contains(side)
+            val live = state.microphoneOpen(id)
             Box(modifier.padding(1.dp).clickable { state.guests.mixerGuestId = id }) {
-                if (guest.connected && guest.camera) WaveGuestVideo(guest, Modifier.fillMaxSize(), if (audible && guest.mic) state.guests.guestGain(id) else 0f)
+                if (guest.connected && guest.camera) WaveGuestVideo(guest, Modifier.fillMaxSize(), if (audible) state.microphoneGain(id) else 0f)
                 else Text("${guest.name} · Signal indisponible", color = Color.White, modifier = Modifier.align(Alignment.Center))
                 if (live || state.guests.mixerGuestId == id) Box(Modifier.fillMaxSize().border(1.dp, if (live) Color(0xFFFF5B73) else WaveMixerTheme.capsuleAccentSoft))
-                Text(guest.name + if (state.active?.winner == id) " · Vainqueur" else if (live) " · En scène" else "",
+                Text(guest.name + if (state.active?.winner == id) " · Vainqueur" else if (live) " · Micro ouvert" else " · Micro fermé",
                     color = Color.White, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth().background(Color.Black.copy(alpha = .7f)).padding(5.dp))
             }

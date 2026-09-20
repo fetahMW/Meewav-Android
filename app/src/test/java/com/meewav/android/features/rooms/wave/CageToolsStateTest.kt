@@ -5,6 +5,45 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class CageToolsStateTest {
+    @Test fun microphoneFollowsTheTurnWithoutChangingReadiness() {
+        session(CageFormat.TOURNAMENT, 2).use { s ->
+            s.advance(); s.advance()
+            val a = s.active!!.a; val b = s.active!!.b!!
+            assertFalse(s.microphoneOpen(a)); assertFalse(s.microphoneOpen(b))
+            s.advance()
+            assertTrue(s.microphoneOpen(a)); assertFalse(s.microphoneOpen(b))
+            assertEquals(0f, s.microphoneGain(b))
+            s.guests.setGuestGain(a, .3f); assertEquals(.3f, s.microphoneGain(a))
+            s.guests.toggleMic(a); assertFalse(s.microphoneOpen(a)); s.guests.toggleMic(a)
+            s.pause(); assertFalse(s.microphoneOpen(a)); s.advance(); assertTrue(s.microphoneOpen(a))
+            s.advance(); assertFalse(s.microphoneOpen(a)); assertFalse(s.microphoneOpen(b))
+            assertTrue(s.ready()); s.advance()
+            assertFalse(s.microphoneOpen(a)); assertTrue(s.microphoneOpen(b))
+            s.report("Incident audio"); assertFalse(s.microphoneOpen(b)); s.advance(); s.advance()
+            assertTrue(s.microphoneOpen(b)); s.advance(); assertFalse(s.microphoneOpen(b))
+            s.advance(); assertTrue(s.voteOpen)
+            assertFalse(s.microphoneOpen(a)); assertFalse(s.microphoneOpen(b))
+        }
+    }
+    @Test fun onlyExplicitSimultaneousModeOpensBothMicrophones() {
+        session(CageFormat.TOURNAMENT, 2).use { s ->
+            s.reset(); s.configure(90, 1, "Simultané"); s.advance(); s.advance()
+            s.advance(); s.advance(); s.advance()
+            assertTrue(s.microphoneOpen(s.active!!.a)); assertTrue(s.microphoneOpen(s.active!!.b!!))
+        }
+    }
+    @Test fun twoSecondWorkshopOverridePreservesSavedRulesAndClosesAudioAtDeadline() {
+        var time = 0L
+        CageToolsState(WaveGuestState(), { time }, Dispatchers.Unconfined, false, simulationPassageSeconds = 2).use { s ->
+            s.applyProgram(CageProgram(roster = listOf("naya", "keo"), passage = 180))
+            s.advance(); s.advance(); s.advance(); s.advance(); s.advance()
+            assertEquals(2_000L, s.remainingMs); assertEquals(180, s.program().passage)
+            assertTrue(s.microphoneOpen("naya"))
+            time = 2_001L; assertFalse(s.microphoneOpen("naya"))
+            s.nextStep(); assertEquals(2_000L, s.remainingMs)
+            s.start(); assertTrue(s.microphoneOpen("keo")); assertFalse(s.microphoneOpen("naya"))
+        }
+    }
     private fun session(format: CageFormat, size: Int): CageToolsState {
         val guests = WaveGuestState()
         val state = CageToolsState(guests, { 1000L }, Dispatchers.Unconfined, false)

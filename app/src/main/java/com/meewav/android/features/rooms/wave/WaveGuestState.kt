@@ -44,7 +44,8 @@ internal val WaveGuest.healthLabel: String get() = when {
 }
 
 /** Native demo room state. No RTC or Supabase success is inferred from a local move. */
-internal class WaveGuestState {
+internal class WaveGuestState(private val cageDemo: Boolean = false) {
+    private fun roomVideo(guest: WaveGuest) = if (cageDemo) guest.copy(demoVideo = cageGuestDemoVideo(guest.id), sourceAspectRatio = 9f / 16f) else guest
     var guestPage by mutableIntStateOf(0)
     var composition by mutableStateOf(WaveComposition.ENSEMBLE)
     var requestsOpen by mutableStateOf(true)
@@ -77,11 +78,11 @@ internal class WaveGuestState {
             location = location, gradeLevel = index % 6 + 1, latencyMs = listOf(32, 58, 210, 125, 45, 68)[index % 6],
             connected = index % 9 != 2, mic = index % 7 != 3, camera = index % 8 != 4)
     }
-    var guests by mutableStateOf(initialGuests.mapIndexed { index, guest ->
+    var guests by mutableStateOf((initialGuests.mapIndexed { index, guest ->
         guest.copy(gradeLevel = index % 6 + 1, latencyMs = listOf(35, 65, 110, 48)[index % 4],
             origin = if (index in 4..5) GuestOrigin.INVITATION else GuestOrigin.CANDIDATURE,
             invitation = if (index == 4) GuestInvitation.PENDING else if (index == 5) GuestInvitation.ACCEPTED else GuestInvitation.NONE)
-    } + List(20) { demoGuest(it, WaveGuestLocation.BACKSTAGE) } + List(38) { demoGuest(it, WaveGuestLocation.REQUESTED) })
+    } + List(20) { demoGuest(it, WaveGuestLocation.BACKSTAGE) } + List(38) { demoGuest(it, WaveGuestLocation.REQUESTED) }).map(::roomVideo))
         private set
     var filters by mutableStateOf(WaveGuestFilters())
     val availableInvites get() = (initialGuests + listOf(
@@ -197,8 +198,8 @@ internal class WaveGuestState {
         notice = "Invité retiré de la démo"
     }
     fun invite(guest: WaveGuest) {
-        if (guests.none { it.id == guest.id }) guests = guests + guest.copy(location = WaveGuestLocation.INVITED,
-            origin = GuestOrigin.INVITATION, invitation = GuestInvitation.PENDING, connected = false)
+        if (guests.none { it.id == guest.id }) guests = guests + roomVideo(guest.copy(location = WaveGuestLocation.INVITED,
+            origin = GuestOrigin.INVITATION, invitation = GuestInvitation.PENDING, connected = false))
         notice = "Invitation ajoutée à la démo"
     }
     fun reserveProgramInvite(id: String, name: String) {

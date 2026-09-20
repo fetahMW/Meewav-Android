@@ -27,6 +27,14 @@ internal fun WaveGuestVideo(guest: WaveGuest, modifier: Modifier, volume: Float 
         onRelease = { it.releasePlayer() })
 }
 
+// Original Cage battle pool from LinkWave Flutter's BattleVideoManager, bundled for offline demos.
+internal fun cageGuestDemoVideo(id: String): String {
+    val clips = listOf("akamalaime", "naylil", "iso", "chil-p", "snooper", "rnueve", "fenvo-2", "la-2", "dwrt", "r-keto", "fenvo", "chaka", "heptys")
+    val index = when (id) { "naya" -> 0; "keo" -> 1; "solen" -> 2; "azur" -> 3
+        else -> (id.hashCode() and Int.MAX_VALUE) % clips.size }
+    return "cage-demo/${clips[index]}.mp4"
+}
+
 private class GuestVideoView(context: Context, private val asset: String) : TextureView(context), TextureView.SurfaceTextureListener {
     private var player: MediaPlayer? = null
     private var prepared = false

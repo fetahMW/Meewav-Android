@@ -25,7 +25,7 @@ Références lues dans Meewav-Web : `CageCompetitionWorkspace.tsx` (notamment
 
 ## Vérification effectuée
 
-14 tests JVM ciblés : tournois 2/3/4/5/8/16/32 participants, championnat 8 artistes
+17 tests JVM ciblés : tournois 2/3/4/5/8/16/32 participants, championnat 8 artistes
 (28 rencontres distinctes), battle, open mic, votes vides/égalité, incidents,
 préparation, déduplication, 3 rounds successifs/alternés/simultanés,
 jury/hybride et échéance. Ajouts : programme vide, sélection sans déplacement,
@@ -49,6 +49,22 @@ Compilation debug effectuée. Pas de validation visuelle ni de test multi-appare
   pas le modèle sauvegardé ; un enregistrement explicite le met à jour.
 
 ## Limites restantes — ne pas confondre avec la régie web complète
+
+### Simulation accélérée et micro — 20 septembre 2026
+
+- À la demande de l’utilisateur, le build debug force temporairement chaque
+  passage à **2 secondes**, dans `WaveMixerScreen` (`simulationPassageSeconds`).
+  La durée du programme sauvegardé et le chronomètre des votes restent inchangés.
+  Retirer cet argument pour rétablir les durées configurées dans l’atelier.
+- L’audio suit le passage actif : A puis B, silence en pause, incident, vote ou
+  temps écoulé. Le mode Simultané reste une exception explicitement choisie.
+  Cette porte audio ne modifie pas l’état de préparation du micro du participant.
+- Le retour normal, le plein écran et l’état muet du mixeur utilisent cette même règle.
+- 13 clips du pool `BattleVideoManager` de LinkWave Flutter ont été repris pour
+  les démonstrations Cage uniquement. Origines dans `cage-demo/sources.json` ;
+  import reproductible via `scripts/import-cage-demo.ps1`.
+- Trois tests ciblés supplémentaires couvrent le tour de parole, les pauses,
+  le mode simultané et l’override 2 secondes sans modifier les programmes.
 
 Le moteur reste local : ni votes publics réseau, ni commandes Supabase avec
 révision/idempotence, ni reprise persistante de compétition. Les flux sont les

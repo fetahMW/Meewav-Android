@@ -101,8 +101,10 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     // Keep the highlighted snapshot even if the live feed trims old messages or tabs change.
     var pinnedChatMessage by remember { mutableStateOf<WaveChatMessage?>(null) }
     var waveNotificationsRead by remember { mutableStateOf(false) }
-    val guestState = remember { WaveGuestState() }
-    val cage = remember(room, guestState) { if (room == RoomModule.CAGE) CageToolsState(guestState).also { state ->
+    val guestState = remember(room) { WaveGuestState(cageDemo = room == RoomModule.CAGE) }
+    // Temporary workshop override requested for rapid Cage simulations; saved rules stay intact.
+    val cage = remember(room, guestState) { if (room == RoomModule.CAGE) CageToolsState(guestState,
+        simulationPassageSeconds = if (com.meewav.android.BuildConfig.DEBUG) 2 else null).also { state ->
         if (cageProgram != null) runCatching { state.applyProgram(CageProgram.decode(org.json.JSONObject(cageProgram))) }
             .onFailure { state.notice = "Le programme n’a pas pu être chargé. Choisis-le à nouveau dans Mes programmes." }
         else if (!roomTitle.isNullOrBlank()) state.title = roomTitle
@@ -152,7 +154,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
     ) {
         Box(Modifier.fillMaxSize().background(Color.Black).systemBarsPadding()) {
-            if (cage != null) CageVideoStage(cage, interactive = false) { WaveVideo(true, Modifier.fillMaxSize(), room.label, roomAccent) } else WaveGuestStage(guestState, interactive = false) {
+            if (cage != null) CageVideoStage(cage, interactive = false) { guestState.guests.firstOrNull()?.let { WaveGuestVideo(it, Modifier.fillMaxSize()) } } else WaveGuestStage(guestState, interactive = false) {
                 WaveVideo(cameraOff = true, modifier = Modifier.fillMaxSize(), roomLabel = room.label, roomAccent = roomAccent)
             }
             androidx.compose.material3.IconButton(onClick = { stageFullscreen = false },
@@ -174,7 +176,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
             WaveHeader(title = cage?.title ?: roomTitle?.takeIf { it.isNotBlank() } ?: if (room == RoomModule.WAVE) "Freestyle session — Luma invite" else room.label,
                 onBack = { showLeaveConfirm = true }, onClose = { showLeaveConfirm = true })
             Box(Modifier.fillMaxWidth().height(videoViewportHeight).clipToBounds()) {
-                if (cage != null) CageVideoStage(cage, interactive = activeTab == WaveTab.INVITES, audible = !stageFullscreen, onFullscreen = { stageFullscreen = true }) { WaveVideo(true, Modifier.fillMaxSize(), room.label, roomAccent) } else WaveGuestStage(guestState, interactive = activeTab == WaveTab.INVITES, onFullscreen = { stageFullscreen = true }, audible = !stageFullscreen) {
+                if (cage != null) CageVideoStage(cage, interactive = activeTab == WaveTab.INVITES, audible = !stageFullscreen, onFullscreen = { stageFullscreen = true }) { guestState.guests.firstOrNull()?.let { WaveGuestVideo(it, Modifier.fillMaxSize()) } } else WaveGuestStage(guestState, interactive = activeTab == WaveTab.INVITES, onFullscreen = { stageFullscreen = true }, audible = !stageFullscreen) {
                     WaveVideo(cameraOff = true, modifier = Modifier.fillMaxSize(), roomLabel = room.label, roomAccent = roomAccent)
                 }
             }
@@ -212,7 +214,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                     WaveTab.MIXEUR -> MixerBody(
                         guest = guestState.mixerGuest, deck = mixerDeck, onDeckPlay = { composition?.suspendAudio(); mixerDeck.toggle() },
                         micGain = guestState.mixerGuest?.let { guestState.guestGain(it.id) } ?: micGain, audioGain = audioGain,
-                        micMuted = guestState.mixerGuest?.let { !it.mic } ?: micMuted, audioMuted = audioMuted,
+                        micMuted = guestState.mixerGuest?.let { if (cage != null) !cage.microphoneOpen(it.id) else !it.mic } ?: micMuted, audioMuted = audioMuted,
                         onMicGain = { value -> guestState.mixerGuest?.let { guestState.setGuestGain(it.id, value) } ?: run { micGain = value } }, onAudioGain = { audioGain = it },
                         onMicMute = { guestState.mixerGuest?.let { guestState.toggleMic(it.id) } ?: run { micMuted = !micMuted } }, onAudioMute = { audioMuted = !audioMuted },
                         isPro = isPro, onProChange = { isPro = it },
