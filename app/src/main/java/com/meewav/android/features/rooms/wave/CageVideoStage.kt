@@ -1,6 +1,13 @@
 package com.meewav.android.features.rooms.wave
 
 import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.zIndex
+import kotlin.math.roundToInt
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,6 +31,9 @@ import com.meewav.android.R
 internal fun CageVideoStage(state: CageToolsState, interactive: Boolean, audible: Boolean = true,
     onFullscreen: (() -> Unit)? = null, fullscreen: Boolean = false, hostVolume: Float = .72f) {
     var director by remember { mutableStateOf(false) }
+    // Per-screen presentation preference, never a room command broadcast to other viewers.
+    var hostX by rememberSaveable(fullscreen) { mutableFloatStateOf(1f) }
+    var hostY by rememberSaveable(fullscreen) { mutableFloatStateOf(0f) }
     val host = remember { WaveGuest("cage-host", "HOST", "Host", R.drawable.wave_chat_artist_0,
         WaveGuestLocation.STAGE, demoVideo = "cage-demo/host.mp4", sourceAspectRatio = 16f / 9f) }
     val podium = state.resultsOnStage && state.finished
@@ -77,8 +87,26 @@ internal fun CageVideoStage(state: CageToolsState, interactive: Boolean, audible
                 }
             }
             // One stable host slot: switching between main view, split and thumbnail does not restart the clip.
+            val density = LocalDensity.current
+            val insetWidth = minOf(if (fullscreen) 112.dp else 82.dp, maxWidth, maxHeight * (16f / 9f))
+            val insetHeight = insetWidth * (9f / 16f)
+            val insetMarginX = minOf(8.dp, ((maxWidth - insetWidth) / 2).coerceAtLeast(0.dp))
+            val insetMarginY = minOf(8.dp, ((maxHeight - insetHeight) / 2).coerceAtLeast(0.dp))
+            val travelX = with(density) { (maxWidth - insetWidth - insetMarginX * 2).coerceAtLeast(0.dp).toPx() }
+            val travelY = with(density) { (maxHeight - insetHeight - insetMarginY * 2).coerceAtLeast(0.dp).toPx() }
+            val marginX = with(density) { insetMarginX.toPx() }
+            val marginY = with(density) { insetMarginY.toPx() }
             val hostModifier = when {
-                hostInset -> Modifier.align(Alignment.TopEnd).padding(8.dp).width(if (fullscreen) 112.dp else 82.dp).aspectRatio(16f / 9f)
+                hostInset -> Modifier.align(Alignment.TopStart).zIndex(2f)
+                    .offset { IntOffset((marginX + hostX * travelX).roundToInt(), (marginY + hostY * travelY).roundToInt()) }
+                    .size(insetWidth, insetHeight)
+                    .pointerInput(travelX, travelY) {
+                        detectDragGestures { change, delta ->
+                            change.consume()
+                            if (travelX > 0f) hostX = (hostX + delta.x / travelX).coerceIn(0f, 1f)
+                            if (travelY > 0f) hostY = (hostY + delta.y / travelY).coerceIn(0f, 1f)
+                        }
+                    }
                 hostBesideGuest && portrait -> Modifier.align(Alignment.TopStart).fillMaxWidth().height(maxHeight / 2)
                 hostBesideGuest -> Modifier.align(Alignment.TopStart).width(maxWidth / 2).fillMaxHeight()
                 else -> Modifier.fillMaxSize()
