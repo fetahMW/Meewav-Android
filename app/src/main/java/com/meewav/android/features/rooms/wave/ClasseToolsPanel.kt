@@ -266,7 +266,8 @@ private fun ClasseUnderstanding.color() = when (this) { ClasseUnderstanding.UNDE
 }
 
 @Composable private fun ClasseQuestionBubble(modifier: Modifier = Modifier) {
-    Canvas(modifier.semantics { contentDescription = "Question en attente" }) {
+    Box(modifier.semantics { contentDescription = "Question en attente" }) {
+    Canvas(Modifier.fillMaxSize()) {
         val w = size.width
         val h = size.height
         val bubble = Path().apply {
@@ -282,5 +283,9 @@ private fun ClasseUnderstanding.color() = when (this) { ClasseUnderstanding.UNDE
         }
         drawPath(bubble, Color(0xFF191B20))
         drawPath(bubble, Color(0xFF79B4FF), style = Stroke(width = 1.2.dp.toPx()))
+    }
+    Text("?", color = Color(0xFF79B4FF), fontSize = 10.sp, lineHeight = 11.sp,
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier.align(Alignment.Center).offset(y = (-1).dp))
     }
 }
