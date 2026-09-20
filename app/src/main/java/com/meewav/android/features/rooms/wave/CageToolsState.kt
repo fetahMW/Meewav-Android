@@ -15,6 +15,7 @@ internal class CageToolsState(val guests: WaveGuestState,
     ticking: Boolean = true,
     val simulationPassageSeconds: Int? = null,
     val simulationVoteSeconds: Int? = null,
+    private val onPassageStart: () -> Unit = {},
     private val onPassageEnd: () -> Unit = {}) : AutoCloseable {
     private val scope = CoroutineScope(SupervisorJob() + dispatcher)
     var page by mutableIntStateOf(0)
@@ -248,7 +249,9 @@ internal class CageToolsState(val guests: WaveGuestState,
         else { phase = "Prêt au vote"; page = 3; log("Passages terminés") }
     }
     fun report(reason: String) { if (active == null || active?.completed == true || voteOpen || voteClosed || phase == "Appel") return; incidentResumePhase = if (clockRunning) "Pause" else phase; pause(); incident = reason; phase = "Incident"; log("Incident · $reason") }
+        val beginning = phase != "Pause"
     fun resumeIncident() { if (incident != null) { incident = null; phase = incidentResumePhase; log("Incident résolu") } }
+        if (beginning) onPassageStart()
     fun voteConfig(mode: String, seconds: Int) { if (!voteOpen && !voteClosed) { voteMode = mode; voteSeconds = seconds } }
     fun openVote() {
         if (phase != "Prêt au vote" || active == null || voteOpen || voteClosed) return
