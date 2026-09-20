@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.shape.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -47,7 +46,6 @@ internal val logeRed=Color(0xFFD6949A)
     Image(painterResource(person.portrait),"Pré-profil de "+person.name,Modifier.size(size).clip(CircleShape).clickable { state.profile(person.id) },contentScale=ContentScale.Crop)
 }
 @Composable private fun LogeVipPanel(state:LogeToolsState,onGuests:()->Unit) {
-    var search by remember { mutableStateOf("") }
     var source by remember { mutableStateOf("all") }
     var history by remember { mutableStateOf(false) }
     var sourceMenu by remember { mutableStateOf(false) }
@@ -67,17 +65,6 @@ internal val logeRed=Color(0xFFD6949A)
         return
     }
     Column(Modifier.fillMaxSize()) {
-        Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)) {
-            BasicTextField(search,{search=it.take(80)},Modifier.weight(1f).height(44.dp).hifiBlackSurface(12.dp),singleLine=true,
-                textStyle=androidx.compose.ui.text.TextStyle(color=Color.White,fontSize=12.sp),cursorBrush=SolidColor(sceneAccent),
-                decorationBox={field -> Row(Modifier.fillMaxSize().padding(horizontal=12.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(9.dp)) {
-                    Icon(Icons.Default.Search,null,Modifier.size(17.dp),tint=sceneMuted)
-                    Box(Modifier.weight(1f)){if(search.isEmpty())Text("Rechercher un membre",color=sceneMuted,fontSize=12.sp);field()}
-                    if(search.isNotEmpty())IconButton(onClick={search=""},modifier=Modifier.size(40.dp)){Icon(WaveIcons.Close,"Effacer la recherche",Modifier.size(16.dp),tint=sceneMuted)}
-                } })
-            SceneIcon(Icons.Default.History,"Historique VIP") { history=!history }
-        }
-        Spacer(Modifier.height(8.dp))
         Box {
             Row(Modifier.fillMaxWidth().height(44.dp).hifiBlackSurface(12.dp).clickable(role=Role.Button){sourceMenu=true}.padding(horizontal=12.dp),verticalAlignment=Alignment.CenterVertically) {
                 Text(if(history)"Historique VIP"else when(source){"queue"->"Demandes";"vip"->"Membres VIP";else->"Tous les membres"},Modifier.weight(1f),color=Color(0xFFD1CED8),fontSize=12.sp)
@@ -89,7 +76,7 @@ internal val logeRed=Color(0xFFD6949A)
                 }
             }
         }
-        val filtered=state.people.filter { (search.isBlank() || (it.name+" "+it.role).contains(search,true)) && when(source){"queue"->it.location==WaveGuestLocation.REQUESTED;"vip"->it.role.contains("VIP",true);else->true} }
+        val filtered=state.people.filter { when(source){"queue"->it.location==WaveGuestLocation.REQUESTED;"vip"->it.role.contains("VIP",true);else->true} }
         LazyColumn(Modifier.weight(1f),contentPadding=PaddingValues(vertical=8.dp),verticalArrangement=Arrangement.spacedBy(7.dp)) {
             if(history) {
                 items(state.data.moments,key={it.id}) { moment ->
