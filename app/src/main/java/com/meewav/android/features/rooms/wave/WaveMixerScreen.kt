@@ -97,14 +97,17 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                     onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
+    val context = LocalContext.current
+    val mixerDeck = remember(context) { WaveMixerDeckState(context.applicationContext) }
     var activeTab by remember(room) { mutableStateOf(if (room == RoomModule.CAGE) WaveTab.WAVE else WaveTab.MIXEUR) }
     // Keep the highlighted snapshot even if the live feed trims old messages or tabs change.
     var pinnedChatMessage by remember { mutableStateOf<WaveChatMessage?>(null) }
     var waveNotificationsRead by remember { mutableStateOf(false) }
     val guestState = remember(room) { WaveGuestState(cageDemo = room == RoomModule.CAGE) }
     // Temporary workshop override requested for rapid Cage simulations; saved rules stay intact.
-    val cage = remember(room, guestState) { if (room == RoomModule.CAGE) CageToolsState(guestState,
-        simulationPassageSeconds = if (com.meewav.android.BuildConfig.DEBUG) 2 else null).also { state ->
+    val cage = remember(room, guestState, mixerDeck) { if (room == RoomModule.CAGE) CageToolsState(guestState,
+        simulationPassageSeconds = if (com.meewav.android.BuildConfig.DEBUG) 2 else null,
+        onPassageEnd = mixerDeck.tools::playEndHorn).also { state ->
         if (cageProgram != null) runCatching { state.applyProgram(CageProgram.decode(org.json.JSONObject(cageProgram))) }
             .onFailure { state.notice = "Le programme n’a pas pu être chargé. Choisis-le à nouveau dans Mes programmes." }
         else if (!roomTitle.isNullOrBlank()) state.title = roomTitle
@@ -137,11 +140,9 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     var tuneScale by remember { mutableStateOf("Mineur") }
     var selector by remember { mutableStateOf<String?>(null) } // "key" | "scale"
     var multitrack by remember { mutableStateOf(false) }
-    val context = LocalContext.current
     val composition = remember(context, room, roomTitle) {
         if (room == RoomModule.WAVE) WaveCompositionState(context.applicationContext, roomTitle ?: "wave-demo") else null
     }
-    val mixerDeck = remember(context) { WaveMixerDeckState(context.applicationContext) }
     LaunchedEffect(audioGain, audioMuted) { mixerDeck.volume(if (audioMuted) 0f else audioGain) }
     LaunchedEffect(composition?.snapshot?.running, composition?.snapshot?.cue) {
         if (composition?.playing == true) mixerDeck.suspendAudio()

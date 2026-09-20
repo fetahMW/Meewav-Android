@@ -13,7 +13,8 @@ internal class CageToolsState(val guests: WaveGuestState,
     private val now: () -> Long = { SystemClock.elapsedRealtime() },
     dispatcher: CoroutineDispatcher = Dispatchers.Main.immediate,
     ticking: Boolean = true,
-    val simulationPassageSeconds: Int? = null) : AutoCloseable {
+    val simulationPassageSeconds: Int? = null,
+    private val onPassageEnd: () -> Unit = {}) : AutoCloseable {
     private val scope = CoroutineScope(SupervisorJob() + dispatcher)
     var page by mutableIntStateOf(0)
     var videoMode by mutableStateOf("Face à face")
@@ -99,7 +100,10 @@ internal class CageToolsState(val guests: WaveGuestState,
     init { if (ticking) scope.launch { while (isActive) {
         if (clockRunning) {
             remainingMs = (deadline - now()).coerceAtLeast(0)
-            if (remainingMs == 0L) { clockRunning = false; phase = "Temps écoulé"; log("Fin du passage $speaker") }
+            if (remainingMs == 0L) {
+                clockRunning = false; phase = "Temps écoulé"; log("Fin du passage $speaker")
+                onPassageEnd()
+            }
         }
         if (voteOpen) { voteTick++; if (now() >= voteDeadline) closeVote() }
         delay(100)

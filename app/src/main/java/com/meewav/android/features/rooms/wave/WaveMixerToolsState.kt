@@ -95,8 +95,9 @@ internal class WaveMixerToolsState(private val context: Context, private val onT
     fun finish(stopBeat: Boolean = false) {
         cancelStart(); timerRunning = false; remainingMs = durationSeconds * 1000L
         if (stopBeat) onTimerEnd()
-        if (hornAfter) playSource(1, defaults[1])
+        playEndHorn()
     }
+    fun playEndHorn() { if (hornAfter) { cancelStart(); playSource(1, defaults[1]) } }
     fun trigger(index: Int) {
         val pad = pads.getOrNull(index) ?: return
         cancelStart(); playSource(index, pad)
