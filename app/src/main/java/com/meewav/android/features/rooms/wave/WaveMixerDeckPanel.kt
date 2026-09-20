@@ -88,7 +88,7 @@ private fun MixerPageButton(label: String, icon: androidx.compose.ui.graphics.ve
     Row(Modifier.fillMaxWidth().height(46.dp).hifiBlackSurface(10.dp).clickable(onClick = onClick),
         horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
         val tint = if (selected) WaveMixerTheme.capsuleAccentSoft else Color(0xFFABA7B4)
-        Icon(icon, null, tint = tint, modifier = Modifier.size(17.dp))
+        Icon(icon, null, tint = WaveMixerTheme.capsuleAccentSoft, modifier = Modifier.size(17.dp))
         Spacer(Modifier.width(5.dp))
         Text(label, color = tint, fontSize = 11.sp, maxLines = 1)
     }
