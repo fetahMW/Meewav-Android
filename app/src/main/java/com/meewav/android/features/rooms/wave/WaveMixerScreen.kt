@@ -110,6 +110,15 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
         else if (!roomTitle.isNullOrBlank()) state.title = roomTitle
     } else null }
     LaunchedEffect(cage?.selectionMode) { if (cage?.selectionMode == true) activeTab = WaveTab.INVITES }
+    LaunchedEffect(cage?.artistAttentionId) {
+        cage?.artistAttentionId?.let { id ->
+            val guest = guestState.guests.find { it.id == id }
+            activeTab = WaveTab.INVITES
+            guestState.guestPage = when (guest?.location) { WaveGuestLocation.STAGE -> 2; WaveGuestLocation.BACKSTAGE -> 0; WaveGuestLocation.JURY -> 3; else -> 1 }
+            guestState.selected = setOf(id); guestState.previewId = guest?.id
+            cage.artistAttentionId = null
+        }
+    }
     DisposableEffect(cage) { onDispose { cage?.close() } }
     val roomAccent = if (room == RoomModule.CAGE) Color(0xFFFF5B73) else Color(0xFF27C2D1)
     var emojiPanelOpen by remember { mutableStateOf(false) }
@@ -154,7 +163,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
     ) {
         Box(Modifier.fillMaxSize().background(Color.Black).systemBarsPadding()) {
-            if (cage != null) CageVideoStage(cage, interactive = false) { guestState.guests.firstOrNull()?.let { WaveGuestVideo(it, Modifier.fillMaxSize()) } } else WaveGuestStage(guestState, interactive = false) {
+            if (cage != null) CageVideoStage(cage, interactive = false, fullscreen = true) { guestState.guests.firstOrNull()?.let { WaveGuestVideo(it, Modifier.fillMaxSize()) } } else WaveGuestStage(guestState, interactive = false) {
                 WaveVideo(cameraOff = true, modifier = Modifier.fillMaxSize(), roomLabel = room.label, roomAccent = roomAccent)
             }
             androidx.compose.material3.IconButton(onClick = { stageFullscreen = false },

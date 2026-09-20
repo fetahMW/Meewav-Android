@@ -66,19 +66,19 @@ type CageFormat = "tournament" | "championship" | "open-mic" | "open-mic-battle"
 const CAGE_FORMAT_LABELS: Record<CageFormat, string> = {
   tournament: "Tournoi à élimination",
   championship: "Championnat · classement",
-  "open-mic": "Open Mic libre · passages individuels",
+  "open-mic": "Open Mic · duels successifs",
   "open-mic-battle": "Open Mic Battle · le gagnant reste",
 };
 const CAGE_FORMAT_DESCRIPTIONS: Record<CageFormat, string> = {
   tournament: "Un tableau à élimination : chaque confrontation qualifie un gagnant vers le tour suivant, jusqu'à la finale.",
   championship: "Un calendrier de rencontres et un classement par victoires. Tous les participants conservent leurs rencontres ; les ex æquo restent visibles.",
   "open-mic-battle": "Deux artistes s'affrontent. Le gagnant reste sur scène, le perdant sort et le challenger suivant monte.",
-  "open-mic": "Un ordre de passage, un artiste à la fois. Chaque performance est individuelle, sans adversaire ni élimination.",
+  "open-mic": "Deux artistes par duel, chacun son tour au micro. Une nouvelle paire entre après le vote.",
 };
 const CAGE_FORMAT_META: Record<CageFormat, { icon: typeof Mic; tint: string; short: string; tagline: string }> = {
   tournament: { icon: Trophy, tint: "#e16e78", short: "Tournoi", tagline: "Élimination directe" },
   championship: { icon: Crown, tint: "#f6d381", short: "Championnat", tagline: "Classement par victoires" },
-  "open-mic": { icon: Mic, tint: "#f0b27a", short: "Open Mic libre", tagline: "Passages individuels" },
+  "open-mic": { icon: Mic, tint: "#f0b27a", short: "Open Mic", tagline: "Duels successifs" },
   "open-mic-battle": { icon: Swords, tint: "#ff7a3d", short: "Open Mic Battle", tagline: "Le gagnant reste" },
 };
 const CAGE_FORMAT_ORDER: CageFormat[] = ["tournament", "championship", "open-mic", "open-mic-battle"];
@@ -243,7 +243,7 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
       performanceMode: cagePerfMode, votingMode: cageVoting, votingDurationSeconds: cageVoteDuration,
       openMicFeedback: cageFeedback, tieBreak: cageTieBreak } });
   const applyProgram = (config: CageProgram, id?: string) => {
-    setTitle(config.title); setCageFormat(config.format); setCageParticipants(config.participantCount);
+    setTitle(config.title); setCageFormat(config.format); setCageParticipants(Math.max(2, config.participantCount));
     setCageRoster(config.rosterMode as keyof typeof CAGE_ROSTER_LABELS); setProgramRoster(config.rosterProfileIds);
     setProgramMembers(config.rosterMembers ?? []); setCageRounds(config.rules.rounds);
     setCagePassageDuration(config.rules.passageDurationSeconds); setCagePerfMode(config.rules.performanceMode as typeof cagePerfMode);
@@ -355,13 +355,12 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
     nav.scrollTo({ left: target.offsetLeft, behavior: "smooth" });
   }, [selectedTab]);
 
-  const cageOpenMic = cageFormat === "open-mic";
+
   const cageBracketSlots = cageFormat === "tournament" ? 2 ** Math.ceil(Math.log2(Math.max(cageParticipants, 2))) : cageParticipants;
 
   const selectCageFormat = (format: CageFormat) => {
     setCageFormat(format);
-    if (format === "open-mic") setCageParticipants((count) => Math.max(count, 1));
-    else setCageParticipants((count) => Math.max(count, 2));
+    setCageParticipants((count) => Math.max(count, 2));
   };
 
   const goToStep = (next: number) => {
@@ -526,7 +525,7 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
               <LaunchSelect
                 label="Participants"
                 value={String(cageParticipants)}
-                options={(cageOpenMic ? [1, ...CAGE_PARTICIPANT_COUNTS] : CAGE_PARTICIPANT_COUNTS).map((count) => ({ value: String(count), label: `${count} participant${count > 1 ? "s" : ""}` }))}
+                options={CAGE_PARTICIPANT_COUNTS.map((count) => ({ value: String(count), label: `${count} participant${count > 1 ? "s" : ""}` }))}
                 onChange={(value) => setCageParticipants(Number(value))}
               />
               <LaunchSelect
@@ -540,19 +539,8 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
               <p className="launch-hint">{cageParticipants} participants · tableau de {cageBracketSlots} places · {cageBracketSlots - cageParticipants} exemptions automatiques au premier tour.</p>
             ) : null}
             <DottedSeparator />
-            {cageOpenMic ? (
-              <>
-                <FieldLabel icon={Mic}>Après chaque passage</FieldLabel>
-                <LaunchSelect
-                  label="Après chaque passage"
-                  value={cageFeedback}
-                  options={Object.entries(CAGE_FEEDBACK_LABELS).map(([value, label]) => ({ value, label }))}
-                  onChange={(value) => setCageFeedback(value as keyof typeof CAGE_FEEDBACK_LABELS)}
-                />
-                <p className="launch-hint">{CAGE_FEEDBACK_NOTES[cageFeedback]}</p>
-              </>
-            ) : (
-              <>
+            <>
+
                 <FieldLabel icon={Users}>Règlement des rencontres</FieldLabel>
                 <div className="launch-selectors">
                   <LaunchSelect
@@ -594,7 +582,6 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
                   />
                 </div>
               </>
-            )}
             <div className="launch-selectors">
               <LaunchSelect
                 label="Durée d'un passage"
@@ -602,7 +589,7 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
                 options={[...new Set([...CAGE_PASSAGE_DURATIONS, cagePassageDuration])].sort((a, b) => a - b).map((seconds) => ({ value: String(seconds), label: `${seconds} secondes` }))}
                 onChange={(value) => setCagePassageDuration(Number(value))}
               />
-              {(!cageOpenMic || cageFeedback !== "none") && <LaunchSelect
+              {<LaunchSelect
                 label="Durée du vote"
                 value={String(cageVoteDuration)}
                 options={[...new Set([15, 30, 45, 60, 90, 120, 180, 300, cageVoteDuration])].sort((a, b) => a - b).map(seconds => ({ value: String(seconds), label: `${seconds} secondes` }))}
@@ -612,7 +599,7 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
             <DottedSeparator />
             {regisseurRow}
             <DottedSeparator />
-            {!cageOpenMic && cageVoting !== "public" && <p className="launch-hint">Choisis jusqu’à 6 jurés dans Invités → Jury avant d’ouvrir le vote.</p>}
+            {cageVoting !== "public" && <p className="launch-hint">Choisis jusqu’à 6 jurés dans Invités → Jury avant d’ouvrir le vote.</p>}
             <FieldLabel icon={SlidersHorizontal}>Options</FieldLabel>
             <div className="launch-checkbox-row">
               <button type="button" role="checkbox" aria-checked={cageCagnotte} className={`launch-checkbox${cageCagnotte ? " is-on" : ""}`} style={cageCagnotte ? { borderColor: accent, color: accent } : undefined} onClick={() => setCageCagnotte((value) => !value)}>Cagnotte</button>

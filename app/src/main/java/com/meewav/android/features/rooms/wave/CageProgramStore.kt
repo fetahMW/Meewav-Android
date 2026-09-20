@@ -53,7 +53,9 @@ internal data class CageProgram(
             require(json.optInt("version") == 1)
             val format = CageFormat.entries.firstOrNull { it.route == json.optString("format") } ?: error("Format inconnu")
             val title = json.getString("title").trim(); require(title.isNotEmpty() && title.length <= 100)
-            val capacity = json.getInt("participantCount"); require(capacity in (if(format == CageFormat.OPEN_MIC) 1 else 2)..64)
+            // Older individual Open Mic templates migrate to at least one two-person duel.
+            val storedCapacity = json.getInt("participantCount"); require(storedCapacity in 1..64)
+            val capacity = storedCapacity.coerceAtLeast(2)
             val rules = json.getJSONObject("rules")
             val rounds = rules.optInt("rounds", 1); require(rounds in listOf(1, 2, 3, 5))
             val duration = rules.optInt("passageDurationSeconds", 90); require(duration in 30..1800)

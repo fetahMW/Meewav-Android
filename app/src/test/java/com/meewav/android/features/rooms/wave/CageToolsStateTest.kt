@@ -5,6 +5,46 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class CageToolsStateTest {
+    @Test fun waitingButtonTargetsTheArtistInsteadOfBlockingTheRoute() {
+        session(CageFormat.CHALLENGER, 2).use { s ->
+            s.advance(); val id = s.active!!.a
+            s.guests.toggleCamera(id)
+            assertTrue(s.commandHint.contains("caméra coupée")); assertTrue(s.commandEnabled)
+            s.advance(); assertEquals(id, s.artistAttentionId); assertEquals("Appel", s.phase)
+            s.guests.toggleCamera(id); s.advance(); assertEquals(2, s.guests.onStage.size)
+        }
+    }
+    @Test fun automaticOpenMicSelectionExcludesUnpreparedGuests() {
+        CageToolsState(WaveGuestState(), { 0L }, Dispatchers.Unconfined, false).use { s ->
+            s.applyProgram(CageProgram(format = CageFormat.OPEN_MIC, capacity = 8, rosterMode = "first-eligible"))
+            s.advance(); s.advance()
+            assertEquals(8, s.roster.size)
+            assertTrue(s.roster.all { s.person(it)!!.let { guest -> guest.connected && guest.mic && guest.camera && guest.canParticipate } })
+            s.advance(); assertTrue(s.ready()); s.advance(); assertEquals(2, s.guests.onStage.size)
+        }
+    }
+    @Test fun battleCrownCountsValidatedWinsAndSurvivesTheNextChallenger() {
+        session(CageFormat.CHALLENGER, 4).use { s ->
+            val champion = s.roster.first()
+            perform(s); resolve(s)
+            assertEquals(1, s.person(champion)!!.cageVictories)
+            s.verdict(champion); assertEquals(1, s.person(champion)!!.cageVictories)
+            assertEquals(listOf(champion), s.guests.onStage.map { it.id })
+            perform(s); assertEquals(2, s.guests.onStage.size); resolve(s)
+            assertEquals(2, s.person(champion)!!.cageVictories)
+            s.reset(); assertEquals(0, s.person(champion)!!.cageVictories)
+        }
+    }
+    @Test fun openMicKeepsTheResultVisibleThenReplacesBothArtists() {
+        session(CageFormat.OPEN_MIC, 4).use { s ->
+            val firstPair = setOf(s.roster[0], s.roster[1])
+            perform(s); resolve(s)
+            assertEquals(firstPair, s.guests.onStage.map { it.id }.toSet())
+            assertEquals(1, s.person(s.roster[0])!!.cageVictories)
+            s.advance(); s.advance()
+            assertEquals(s.roster.drop(2).toSet(), s.guests.onStage.map { it.id }.toSet())
+        }
+    }
     @Test fun microphoneFollowsTheTurnWithoutChangingReadiness() {
         session(CageFormat.TOURNAMENT, 2).use { s ->
             s.advance(); s.advance()
@@ -65,7 +105,7 @@ class CageToolsStateTest {
     }
     private fun resolve(s: CageToolsState) {
         assertTrue(s.voteOpen)
-        if (s.isSolo) s.feedbackBallot("viewer", 4) else s.ballot("viewer", "A", false)
+        s.ballot("viewer", "A", false)
         s.advance(); s.advance()
         s.advance(); assertTrue(s.active!!.completed)
     }
@@ -87,8 +127,9 @@ class CageToolsStateTest {
         repeat(3) { perform(s); resolve(s); assertEquals(listOf(s.active!!.winner), s.guests.onStage.map { it.id }) }
         assertTrue(s.finished)
     } }
-    @Test fun soloDoesNotRequireFictitiousDuelVotes() { session(CageFormat.OPEN_MIC, 4).use { s ->
-        repeat(4) { perform(s); resolve(s) }; assertTrue(s.finished)
+    @Test fun openMicPlaysTwoSuccessiveDuels() { session(CageFormat.OPEN_MIC, 4).use { s ->
+        assertEquals(2, s.matches.size); assertTrue(s.matches.all { it.b != null });
+        repeat(2) { perform(s); resolve(s) }; assertTrue(s.finished)
     } }
     @Test fun emptyVotesRetryAndTiesReplayWithoutChoosingWinner() { session(CageFormat.TOURNAMENT, 2).use { s ->
         perform(s); s.advance(); s.advance(); s.advance(); assertTrue(s.voteOpen)
@@ -97,7 +138,7 @@ class CageToolsStateTest {
         s.advance(); assertEquals("Sur scène", s.phase); assertTrue(s.publicBallots.isEmpty())
     } }
     @Test fun incidentAndNotReadyCannotStartTimer() { session(CageFormat.TOURNAMENT, 2).use { s ->
-        s.advance(); s.guests.toggleMic(s.active!!.a); assertFalse(s.commandEnabled)
+        s.advance(); s.guests.toggleMic(s.active!!.a); assertTrue(s.commandEnabled); assertTrue(s.commandHint.contains("micro coupé"))
         s.advance(); assertEquals("Appel", s.phase)
         s.guests.toggleMic(s.active!!.a); s.advance(); s.advance()
         s.report("Audio"); assertFalse(s.clockRunning); s.advance(); assertEquals("Pause", s.phase)
@@ -167,10 +208,12 @@ class CageToolsStateTest {
             guests.move(setOf("azur"), WaveGuestLocation.JURY); s.addParticipants(setOf("naya", "azur")); assertEquals(listOf("naya"), s.roster)
         }
     }
-    @Test fun openMicWithoutFeedbackAdvancesWithoutCreatingAVote() {
+    @Test fun openMicRequiresPairsEvenForOldNoFeedbackTemplates() {
         CageToolsState(WaveGuestState(), { 0L }, Dispatchers.Unconfined, false).use { s ->
             s.applyProgram(CageProgram(format = CageFormat.OPEN_MIC, roster = listOf("naya"), feedback = "none"))
-            s.advance(); s.advance(); perform(s); assertTrue(s.finished); assertFalse(s.voteOpen)
+            s.advance(); assertTrue(s.matches.isEmpty()); assertFalse(s.locked)
+            s.select("keo"); s.advance(); s.advance(); perform(s)
+            assertTrue(s.voteOpen); resolve(s); assertTrue(s.finished)
         }
     }
 }

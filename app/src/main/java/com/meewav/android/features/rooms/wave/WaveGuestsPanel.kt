@@ -246,6 +246,7 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                         horizontalAlignment = Alignment.CenterHorizontally) {
                         Box(Modifier.weight(1f)) {
                             Image(painterResource(guest.portrait), guest.name, modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Crop)
+                            CageVictoryBadge(guest.cageVictories, Modifier.align(Alignment.BottomEnd).padding(3.dp))
                             if (cage != null && guest.id in cage.roster) Text("RETENU", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 8.sp,
                                 modifier = Modifier.align(Alignment.TopStart).background(Color(0xEE141019), RoundedCornerShape(5.dp)).padding(4.dp))
                             if (guest.location == WaveGuestLocation.JURY) Text("JURY",
@@ -315,12 +316,16 @@ internal fun GuestPreviewContent(state: WaveGuestState, guest: WaveGuest) {
                 Row { TextButton(onClick = { state.demoInvitationResponse(guest.id, true) }) { Text("Simuler l’acceptation", fontSize = 11.sp) }
                     TextButton(onClick = { state.demoInvitationResponse(guest.id, false) }) { Text("Simuler le refus", fontSize = 11.sp) } }
             }
+            if (!guest.connected && guest.canParticipate) TextButton(onClick = { state.demoReconnect(guest.id) }) {
+                Text("Simuler la reconnexion", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 12.sp)
+            }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Image(painterResource(guest.portrait), null, modifier = Modifier.size(52.dp).clip(CircleShape), contentScale = ContentScale.Crop)
                 Column(Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(guest.name, modifier = Modifier.weight(1f, fill = false), maxLines = 1, overflow = TextOverflow.Ellipsis, fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
                         GuestGrade(guest.gradeLevel)
+                        CageVictoryBadge(guest.cageVictories)
                     }
                     GuestHealth(guest)
                 }

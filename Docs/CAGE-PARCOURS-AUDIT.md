@@ -12,7 +12,8 @@ Références lues dans Meewav-Web : `CageCompetitionWorkspace.tsx` (notamment
 - Tournoi : qualifications automatiques et exemptions pour un nombre impair.
   Championnat : toutes les paires se rencontrent, sans élimination.
 - Battle : le vainqueur reste sur scène, seul le perdant descend et le prochain
-  challenger est appelé. Open mic : passage individuel puis évaluation.
+  challenger est appelé. Open mic : duels successifs, deux nouveaux artistes
+  après chaque duel (correction explicitement confirmée le 20 septembre).
 - Vote vide : relance possible. Égalité : nouvelle manche, sans vainqueur
   arbitraire. Un verdict ne peut pas contredire les scores. Bulletins dédupliqués,
   contrôle du jury et refus des bulletins après échéance.
@@ -25,11 +26,13 @@ Références lues dans Meewav-Web : `CageCompetitionWorkspace.tsx` (notamment
 
 ## Vérification effectuée
 
-17 tests JVM ciblés : tournois 2/3/4/5/8/16/32 participants, championnat 8 artistes
+21 tests JVM ciblés : tournois 2/3/4/5/8/16/32 participants, championnat 8 artistes
 (28 rencontres distinctes), battle, open mic, votes vides/égalité, incidents,
 préparation, déduplication, 3 rounds successifs/alternés/simultanés,
 jury/hybride et échéance. Ajouts : programme vide, sélection sans déplacement,
-chargement des règles et invitations en attente, capacité/jury, open mic sans vote.
+chargement des règles et invitations en attente, capacité/jury, Open Mic en duels,
+attente résoluble, sélection automatique des artistes prêts, couronnes de victoires
+et remplacement des deux artistes en Open Mic / conservation du gagnant en Battle.
 Compilation debug effectuée. Pas de validation visuelle ni de test multi-appareil.
 
 ## Préparation et participants — 20 septembre 2026
@@ -50,6 +53,22 @@ Compilation debug effectuée. Pas de validation visuelle ni de test multi-appare
 
 ## Limites restantes — ne pas confondre avec la régie web complète
 
+### Open Mic et Open Mic Battle — parcours corrigés
+
+- Les deux routes Android sont des face-à-face, minimum deux artistes et vote A/B.
+  Open Mic forme des paires successives ; Open Mic Battle conserve le gagnant.
+  Les anciens paramètres de retour individuel sont conservés à la lecture des
+  modèles mais ne désactivent plus le vote du duel. Ce changement Android est
+  explicite ; le contrat Web de l’ancien Open Mic individuel n’a pas été modifié.
+- La sélection automatique exclut les caméras/micros coupés et les connexions
+  perdues. Une sélection manuelle reste possible ; le bouton de progression
+  expose le motif et ouvre la fiche de l’artiste à préparer, au lieu de se désactiver.
+- Le plein écran portrait impose deux moitiés égales, haut/bas, même si Focus
+  ou Solo était choisi dans le petit retour. Recadrage centré sans bandes latérales.
+- Chaque victoire validée attribue une couronne numérotée sur la vidéo, les
+  cartes de programme et les vignettes/fiches Invités. Les BYE n’ajoutent pas de
+  victoire. Le résultat reste visible avant l’appel suivant ; un reset efface les compteurs.
+
 ### Simulation accélérée et micro — 20 septembre 2026
 
 - À la demande de l’utilisateur, le build debug force temporairement chaque
@@ -69,9 +88,9 @@ Compilation debug effectuée. Pas de validation visuelle ni de test multi-appare
 Le moteur reste local : ni votes publics réseau, ni commandes Supabase avec
 révision/idempotence, ni reprise persistante de compétition. Les flux sont les
 vidéos de démonstration existantes, pas des publications RTC. Les programmes
-sont enregistrés sur ce téléphone, sans synchronisation cloud. L’open mic accepte
-des bulletins locaux dédupliqués (note 1 à 5, appréciation ou aucun vote) ; le
-transport des votes du public reste à brancher. La scénographie mobile reprend les états du programme mais pas toutes
+sont enregistrés sur ce téléphone, sans synchronisation cloud. Les duels acceptent
+des bulletins A/B locaux dédupliqués ; le transport des votes du public reste à
+brancher. La scénographie mobile reprend les états du programme mais pas toutes
 les annonces animées du ring web. Les sanctions, remplacements et reports du
 moteur web ne sont pas encore reproduits : l’incident permet pause/reprise.
 Ces limites ne sont pas couvertes par les tests locaux et ne constituent pas

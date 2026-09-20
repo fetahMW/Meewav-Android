@@ -123,7 +123,7 @@ const cageStepDetails: Array<{ icon: LucideIcon; title: string; subtitle: string
 
 const cageModels: Array<{ title: string; detail: string; icon: LucideIcon; type?: string; format?: string }> = [
   { title: "Configurer manuellement", detail: "Créer un format entièrement sur mesure.", icon: SlidersHorizontal },
-  { title: "Open mic", detail: "Passages individuels dans un ordre ouvert.", icon: Mic2, type: "Open mic", format: "Passages libres" },
+  { title: "Open mic", detail: "Duels successifs avec deux nouveaux artistes à chaque rencontre.", icon: Mic2, type: "Open mic", format: "Duels successifs" },
   { title: "1v1 standard", detail: "Face-à-face adaptable à toutes les disciplines.", icon: AudioLines, type: "1v1 standard", format: "Élimination directe" },
   { title: "Équipe vs équipe", detail: "Confrontation collective avec passages alternés.", icon: Users, type: "Équipe vs équipe", format: "Round robin" },
   { title: "Tournoi", detail: "Tableau à élimination ou classement par points.", icon: Trophy, type: "Tournoi", format: "Élimination directe" },
@@ -175,7 +175,7 @@ const defaultDraft: CageDraft = {
   title: "Nouvelle Cage",
   description: "Session ouverte à tous les talents.",
   type: "Open mic",
-  format: "Passages libres",
+  format: "Duels successifs",
   duration: "45 min",
   participants: 8,
   importSource: "Abonnés",
@@ -184,7 +184,7 @@ const defaultDraft: CageDraft = {
   invitationsSent: false,
   roundsOverride: null,
   passage: "90 sec",
-  vote: "Aucun vote",
+  vote: "Public",
   criteria: "Aucun classement",
   reward: "Golden Like",
   date: "",
@@ -316,10 +316,10 @@ export default function ProfileCageWorkspace({ storageScope, onBack, onDone }: P
         if (disposed || request !== revision) return;
         setEntries(saved.map(p => ({ ...defaultDraft, ...p.profile, nativeConfiguration: p.configuration, id: p.id, title: p.configuration.title,
           type: p.configuration.format === 'open-mic' ? 'Open mic' : p.configuration.format === 'open-mic-battle' ? 'Open mic battle' : 'Tournoi',
-          format: p.configuration.format === 'championship' ? 'Classement par points' : p.configuration.format === 'open-mic-battle' ? 'Le gagnant reste' : p.configuration.format === 'open-mic' ? 'Passages libres' : 'Élimination directe',
-          participants: p.configuration.participantCount, inviteeIds: p.configuration.rosterProfileIds,
+          format: p.configuration.format === 'championship' ? 'Classement par points' : p.configuration.format === 'open-mic-battle' ? 'Le gagnant reste' : p.configuration.format === 'open-mic' ? 'Duels successifs' : 'Élimination directe',
+          participants: Math.max(2, p.configuration.participantCount), inviteeIds: p.configuration.rosterProfileIds,
           passage: `${p.configuration.rules.passageDurationSeconds} sec`, roundsOverride: String(p.configuration.rules.rounds),
-          vote: p.configuration.format === 'open-mic' && p.configuration.rules.openMicFeedback === 'none' ? 'Aucun vote' : p.configuration.rules.votingMode === 'jury' ? 'Jury' : p.configuration.rules.votingMode === 'mixed' ? 'Public + jury' : 'Public',
+          vote: p.configuration.rules.votingMode === 'jury' ? 'Jury' : p.configuration.rules.votingMode === 'mixed' ? 'Public + jury' : 'Public',
           status: (p.profile?.status ?? 'Brouillon') as CageStatus, schedule: String(p.profile?.schedule ?? 'Non programmée'),
           info: `${p.configuration.participantCount} places`, lastStep: Number(p.profile?.lastStep ?? 0),
         } as CageEntry)).concat(entriesRef.current.filter(e => !saved.some(p => p.id === e.id))));
@@ -397,29 +397,25 @@ export default function ProfileCageWorkspace({ storageScope, onBack, onDone }: P
   }, [entries, draft]);
   const selectedInvitees = draft.inviteeIds.map((id) => availableContacts.find((contact) => contact.id === id)).filter((contact): contact is CageContact => Boolean(contact));
   const displayedParticipants = [...selectedInvitees.map((contact) => contact.name), ...participantNames.filter((name) => !selectedInvitees.some((contact) => contact.name === name))].slice(0, draft.participants);
-  const isOpenMic = draft.type === "Open mic";
+
   const isTeamFormat = draft.type === "Équipe vs équipe";
-  const roundsLabel = draft.roundsOverride ?? (isOpenMic ? "1 passage" : "1 round");
-  const roundsFieldLabel = isOpenMic ? "Passages" : isTeamFormat ? "Manches" : "Rounds";
-  const roundsOptions = isOpenMic
-    ? ["1 passage"]
-    : isTeamFormat
+  const roundsLabel = draft.roundsOverride ?? "1 round";
+  const roundsFieldLabel = isTeamFormat ? "Manches" : "Rounds";
+  const roundsOptions = isTeamFormat
       ? ["1 manche", "2 manches", "3 manches", "5 manches"]
       : ["1 round", "2 rounds", "3 rounds", "5 rounds"];
-  const voteOptions = isOpenMic ? ["Aucun vote", "Public"] : ["Public", "Jury", "Public + jury"];
-  const criteriaOptions = isOpenMic
-    ? ["Aucun classement", "Maîtrise, présence, originalité", "Engagement du public"]
-    : ["Maîtrise, présence, originalité", "Technique, créativité, impact", "Énergie, précision, engagement du public"];
+  const voteOptions = ["Public", "Jury", "Public + jury"];
+  const criteriaOptions = ["Maîtrise, présence, originalité", "Technique, créativité, impact", "Énergie, précision, engagement du public"];
   const plannedSchedule = draft.date && draft.time ? `${draft.date.split("-").reverse().join("/")} · ${draft.time} · ${draft.room}` : "Non programmée";
   const computedStatus: CageStatus = draft.scheduled ? "Programmée" : draft.invitationsSent ? "Invitations en attente" : "Brouillon";
-  const isStepValid = step === 1 ? draft.title.trim().length > 0 : step === 2 ? draft.participants >= (isOpenMic ? 1 : 2) && draft.inviteeIds.length <= draft.participants : true;
+  const isStepValid = step === 1 ? draft.title.trim().length > 0 : step === 2 ? draft.participants >= 2 && draft.inviteeIds.length <= draft.participants : true;
   const minDate = new Date().toISOString().slice(0, 10);
 
   const validateBaseConfiguration = (source: CageDraft) => {
     if (source.title.trim().length < 3) return { step: 1, message: "Donne un nom d’au moins 3 caractères à la Cage" };
     if (!source.description.trim()) return { step: 1, message: "Ajoute une courte description de la session" };
     if (!source.type.trim() || !source.format.trim() || !source.duration.trim()) return { step: 1, message: "Complète le type, le format et la durée" };
-    const minimum = source.type === "Open mic" ? 1 : 2;
+    const minimum = 2;
     if (!Number.isInteger(source.participants) || source.participants < minimum || source.participants > 64) return { step: 2, message: `Choisis une capacité comprise entre ${minimum} et 64 participants` };
     if (source.inviteeIds.length > source.participants) return { step: 2, message: "Le nombre d’invités dépasse la capacité de la Cage" };
     return null;
@@ -468,8 +464,8 @@ export default function ProfileCageWorkspace({ storageScope, onBack, onDone }: P
       model: matchingPreset?.title ?? current.model,
       format: matchingPreset?.format ?? current.format,
       roundsOverride: null,
-      vote: openMic ? "Aucun vote" : "Public + host",
-      criteria: openMic ? "Aucun classement" : "Maîtrise, présence, originalité",
+      vote: "Public",
+      criteria: "Maîtrise, présence, originalité",
     }));
     setFormMessage("");
   };
@@ -483,8 +479,8 @@ export default function ProfileCageWorkspace({ storageScope, onBack, onDone }: P
         type: model.type,
         format: model.format,
         roundsOverride: null,
-        vote: openMic ? "Aucun vote" : "Public + host",
-        criteria: openMic ? "Aucun classement" : "Maîtrise, présence, originalité",
+        vote: "Public",
+        criteria: "Maîtrise, présence, originalité",
       } : {}),
     }));
     setFormMessage("");
@@ -785,9 +781,9 @@ export default function ProfileCageWorkspace({ storageScope, onBack, onDone }: P
     if (invitePickerOpen && step === 3) return renderInvitePicker();
     if (step === 0) return <div className="profile-studio-choice-list is-real profile-cage-model-grid">{cageModels.map((item) => { const Icon = item.icon; const selected = draft.model === item.title; return <button key={item.title} type="button" className={selected ? "is-active" : ""} onClick={() => selectCageModel(item)}><span><Icon size={20} /></span><span><strong>{item.title}</strong><small>{item.detail}</small></span><i>{selected ? <Check size={14} /> : null}</i></button>; })}</div>;
 
-    if (step === 1) return <div className="profile-studio-form-grid is-real profile-cage-info-grid"><label><span>Nom de la Cage</span><input value={draft.title} placeholder="Session Alpha" onChange={(event) => updateDraft("title", event.target.value)} /></label><label className="is-wide"><span>Description</span><textarea value={draft.description} placeholder="Session ouverte à tous les talents." onChange={(event) => updateDraft("description", event.target.value)} /></label><CageSelect label="Type" value={draft.type} options={["Open mic", "Open mic battle", "Tournoi", "Championnat"]} onChange={changeCageType} /><CageSelect label="Format" value={draft.format} options={["Passages libres", "Le gagnant reste", "Élimination directe", "Classement par points"]} onChange={(value) => updateDraft("format", value)} /><CageSelect label="Durée estimée" value={draft.duration} options={["30 min", "45 min", "60 min", "90 min"]} onChange={(value) => updateDraft("duration", value)} /></div>;
+    if (step === 1) return <div className="profile-studio-form-grid is-real profile-cage-info-grid"><label><span>Nom de la Cage</span><input value={draft.title} placeholder="Session Alpha" onChange={(event) => updateDraft("title", event.target.value)} /></label><label className="is-wide"><span>Description</span><textarea value={draft.description} placeholder="Session ouverte à tous les talents." onChange={(event) => updateDraft("description", event.target.value)} /></label><CageSelect label="Type" value={draft.type} options={["Open mic", "Open mic battle", "Tournoi", "Championnat"]} onChange={changeCageType} /><CageSelect label="Format" value={draft.format} options={["Duels successifs", "Le gagnant reste", "Élimination directe", "Classement par points"]} onChange={(value) => updateDraft("format", value)} /><CageSelect label="Durée estimée" value={draft.duration} options={["30 min", "45 min", "60 min", "90 min"]} onChange={(value) => updateDraft("duration", value)} /></div>;
 
-    if (step === 2) return <div className="profile-cage-participants"><section className="profile-cage-capacity"><div><span className="profile-kicker"><Users size={14} /> Nombre</span><strong>{draft.participants} places</strong><p>La capacité adapte les passages, les équipes et le nombre de rounds.</p></div><div className="profile-studio-segmented">{(isOpenMic ? [1, 2, 4, 8, 16, 32, 64] : [2, 4, 8, 16, 32, 64]).map((count) => <button key={count} type="button" className={draft.participants === count ? "is-active" : ""} onClick={() => updateDraft("participants", count)}>{count}</button>)}</div></section><div className="profile-cage-import-actions"><button type="button" className={draft.importSource === "Recherche" ? "is-active" : ""} onClick={() => updateDraft("importSource", "Recherche")}><span><Search size={18} /></span><span><strong>Rechercher</strong><small>Trouver un profil Meewav</small></span><ChevronRight size={16} /></button><button type="button" className={draft.importSource !== "Recherche" ? "is-active" : ""} onClick={() => { const sources = cageImportSources.filter((source) => source !== "Recherche"); const current = sources.indexOf(draft.importSource as (typeof sources)[number]); updateDraft("importSource", sources[(current + 1 + sources.length) % sources.length]); }}><span><Users size={18} /></span><span><strong>Importer</strong><small>{draft.importSource === "Recherche" ? "Abonnés" : draft.importSource}</small></span><ChevronRight size={16} /></button></div><div className="profile-cage-participant-pills">{displayedParticipants.map((name, index) => <span key={`${name}-${index}`}><i>{index + 1}</i>{name}<Timer size={13} /></span>)}</div></div>;
+    if (step === 2) return <div className="profile-cage-participants"><section className="profile-cage-capacity"><div><span className="profile-kicker"><Users size={14} /> Nombre</span><strong>{draft.participants} places</strong><p>La capacité adapte les passages, les équipes et le nombre de rounds.</p></div><div className="profile-studio-segmented">{[2, 4, 8, 16, 32, 64].map((count) => <button key={count} type="button" className={draft.participants === count ? "is-active" : ""} onClick={() => updateDraft("participants", count)}>{count}</button>)}</div></section><div className="profile-cage-import-actions"><button type="button" className={draft.importSource === "Recherche" ? "is-active" : ""} onClick={() => updateDraft("importSource", "Recherche")}><span><Search size={18} /></span><span><strong>Rechercher</strong><small>Trouver un profil Meewav</small></span><ChevronRight size={16} /></button><button type="button" className={draft.importSource !== "Recherche" ? "is-active" : ""} onClick={() => { const sources = cageImportSources.filter((source) => source !== "Recherche"); const current = sources.indexOf(draft.importSource as (typeof sources)[number]); updateDraft("importSource", sources[(current + 1 + sources.length) % sources.length]); }}><span><Users size={18} /></span><span><strong>Importer</strong><small>{draft.importSource === "Recherche" ? "Abonnés" : draft.importSource}</small></span><ChevronRight size={16} /></button></div><div className="profile-cage-participant-pills">{displayedParticipants.map((name, index) => <span key={`${name}-${index}`}><i>{index + 1}</i>{name}<Timer size={13} /></span>)}</div></div>;
 
     if (step === 3) return <div className="profile-cage-invitations"><label className="profile-cage-message"><span>Message</span><textarea value={draft.inviteMessage} placeholder="Message envoyé aux participants..." onChange={(event) => updateDraft("inviteMessage", event.target.value)} /></label><div className="profile-cage-status-tile"><span><Users size={18} /></span><div><small>Invités</small><strong>{selectedInvitees.length === 0 ? "Aucun invité sélectionné" : `${selectedInvitees.length} invité${selectedInvitees.length > 1 ? "s" : ""} sélectionné${selectedInvitees.length > 1 ? "s" : ""}`}</strong></div></div><button type="button" className={`profile-cage-wide-choice ${selectedInvitees.length ? "is-selected" : ""}`} onClick={openInvitePicker}><span><UserPlus size={19} /></span><span><strong>{selectedInvitees.length ? "Modifier les invités" : "Choisir les invités"}</strong><small>Choisir parmi les profils Meewav.</small></span><ChevronRight size={17} /></button>{selectedInvitees.length > 0 && <div className="profile-cage-selected-pills">{selectedInvitees.map((contact) => <span key={contact.id}><Users size={13} />{contact.name}</span>)}</div>}<div className="profile-cage-status-tile"><span><Mail size={18} /></span><div><small>Réponses</small><strong>{draft.invitationsSent ? "Invitations envoyées · réponses en attente" : "Prêtes à envoyer après sélection"}</strong></div></div><button type="button" className={`profile-cage-wide-choice ${draft.invitationsSent ? "is-selected" : ""}`} onClick={sendInvitations}><span><Send size={19} /></span><span><strong>{draft.invitationsSent ? "Relancer les absents" : "Envoyer invitations"}</strong><small>{draft.invitationsSent ? "Relancer les participants sans réponse." : "Passer la Cage en invitations en attente."}</small></span><ChevronRight size={17} /></button></div>;
 

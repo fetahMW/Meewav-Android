@@ -23,6 +23,7 @@ internal data class WaveGuest(
     val connected: Boolean = true,
     val origin: GuestOrigin = GuestOrigin.CANDIDATURE,
     val invitation: GuestInvitation = GuestInvitation.NONE,
+    val cageVictories: Int = 0,
 )
 
 internal val WaveGuest.canParticipate get() = invitation !in setOf(GuestInvitation.PENDING, GuestInvitation.DECLINED)
@@ -171,6 +172,9 @@ internal class WaveGuestState(private val cageDemo: Boolean = false) {
         }
     }
     fun toggleMic(id: String) { guests = guests.map { if (it.id == id) it.copy(mic = !it.mic) else it } }
+    fun awardCageVictory(id: String) { guests = guests.map { if (it.id == id) it.copy(cageVictories = it.cageVictories + 1) else it } }
+    fun clearCageVictories() { guests = guests.map { it.copy(cageVictories = 0) } }
+    fun demoReconnect(id: String) { guests = guests.map { if (it.id == id && it.canParticipate) it.copy(connected = true, latencyMs = 45) else it } }
     var privateDemoMessages by mutableStateOf<Map<String, List<String>>>(emptyMap())
         private set
     fun addPrivateDemoMessage(ids: Set<String>, text: String) {

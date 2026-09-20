@@ -21,8 +21,8 @@ internal fun waveGuestDemoVideo(id: String): String {
 }
 
 @Composable
-internal fun WaveGuestVideo(guest: WaveGuest, modifier: Modifier, volume: Float = 0f) {
-    AndroidView(modifier = modifier, factory = { GuestVideoView(it, guest.demoVideo) },
+internal fun WaveGuestVideo(guest: WaveGuest, modifier: Modifier, volume: Float = 0f, fillFrame: Boolean = false) {
+    AndroidView(modifier = modifier, factory = { GuestVideoView(it, guest.demoVideo, fillFrame) },
         update = { it.setGain(volume) },
         onRelease = { it.releasePlayer() })
 }
@@ -35,7 +35,7 @@ internal fun cageGuestDemoVideo(id: String): String {
     return "cage-demo/${clips[index]}.mp4"
 }
 
-private class GuestVideoView(context: Context, private val asset: String) : TextureView(context), TextureView.SurfaceTextureListener {
+private class GuestVideoView(context: Context, private val asset: String, private val fillFrame: Boolean) : TextureView(context), TextureView.SurfaceTextureListener {
     private var player: MediaPlayer? = null
     private var prepared = false
     private var gain = 0f
@@ -67,7 +67,7 @@ private class GuestVideoView(context: Context, private val asset: String) : Text
 
     private fun fitVideo() {
         if (width == 0 || height == 0 || videoWidth == 0 || videoHeight == 0) return
-        val scale = minOf(width.toFloat() / videoWidth, height.toFloat() / videoHeight)
+        val scale = if (fillFrame) maxOf(width.toFloat() / videoWidth, height.toFloat() / videoHeight) else minOf(width.toFloat() / videoWidth, height.toFloat() / videoHeight)
         setTransform(Matrix().apply {
             setScale(videoWidth * scale / width, videoHeight * scale / height, width / 2f, height / 2f)
         })
