@@ -244,7 +244,7 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                 }
             }
         }
-        Box(Modifier.weight(1f).fillMaxWidth()
+        BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()
             .onGloballyPositioned { state.backstageBounds = it.boundsInRoot() }
             .then(if (state.overBackstage && state.dragged?.location == WaveGuestLocation.STAGE)
                 Modifier.border(1.dp, WaveMixerTheme.capsuleAccentSoft, RoundedCornerShape(14.dp)) else Modifier)) {
@@ -253,11 +253,12 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                 Text(if (participants.isNotEmpty()) "Aucun profil pour ces filtres" else if (page == 2) "Personne sur scène" else "Aucun invité ici", color = Color.White.copy(alpha = .6f), fontSize = 13.sp)
                 if (state.filters.count > 0) TextButton(onClick = { state.filters = WaveGuestFilters() }) { Text("Tout effacer", color = WaveMixerTheme.capsuleAccentSoft) }
             }
+            val cardWidth = ((maxWidth - 16.dp) / 2.5f).coerceAtLeast(1.dp)
             LazyHorizontalGrid(rows = GridCells.Fixed(2), modifier = Modifier.fillMaxSize(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(bottom = 8.dp)) {
                 items(shown, key = { it.id }) { guest ->
-                    Column(Modifier.width(112.dp).fillMaxHeight().hifiBlackSurface(12.dp).clip(RoundedCornerShape(12.dp))
+                    Column(Modifier.width(cardWidth).fillMaxHeight().hifiBlackSurface(12.dp).clip(RoundedCornerShape(12.dp))
                         .border(if (guest.id in state.selected) 1.dp else 0.dp, if (guest.id in state.selected) WaveMixerTheme.capsuleAccentSoft else Color.Transparent, RoundedCornerShape(12.dp))
                         .guestDrag(state, guest, cage?.selectionMode != true && !multiSelect && state.selected.size <= 1 && guest.location in listOf(WaveGuestLocation.BACKSTAGE, WaveGuestLocation.STAGE))
                         .combinedClickable(
