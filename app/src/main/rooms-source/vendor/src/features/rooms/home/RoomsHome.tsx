@@ -171,12 +171,13 @@ function toggleValue<T>(values: readonly T[], value: T): T[] {
 }
 
 type RoomsHomeProps = {
+  catalog?: readonly RoomsHomeRoom[];
   roomType?: RoomsHomeRoomType;
   collectionSlug?: string | null;
   onOpenRoom?: (room: RoomsHomeRoom) => void;
 };
 
-export function RoomsHome({ collectionSlug = null, roomType, onOpenRoom }: RoomsHomeProps) {
+export function RoomsHome({ catalog = ROOMS_HOME_CATALOG, collectionSlug = null, roomType, onOpenRoom }: RoomsHomeProps) {
   const navigate = useNavigate();
   const initialSnapshotRef = useRef(readRoomsHomeSessionSnapshot());
   const scrollSurfaceRef = useRef<HTMLDivElement | null>(null);
@@ -201,13 +202,13 @@ export function RoomsHome({ collectionSlug = null, roomType, onOpenRoom }: Rooms
   const activeFilterCount = filterCount(filters);
 
   const filteredCatalog = useMemo(
-    () => ROOMS_HOME_CATALOG.filter((room) => room.country === "FR" && (!roomType || room.roomType === roomType) && roomMatchesFilters(room, query, filters)
+    () => catalog.filter((room) => room.country === "FR" && (!roomType || room.roomType === roomType) && roomMatchesFilters(room, query, filters)
       && (feedScope === "following" ? room.isFollowedHost : feedScope === "recent" ? recentIds.includes(room.id) : true)),
-    [filters, query, roomType, feedScope, recentIds],
+    [catalog, filters, query, roomType, feedScope, recentIds],
   );
   const draftResultCount = useMemo(
-    () => ROOMS_HOME_CATALOG.filter((room) => room.country === "FR" && (!roomType || room.roomType === roomType) && roomMatchesFilters(room, query, draftFilters)).length,
-    [draftFilters, query, roomType],
+    () => catalog.filter((room) => room.country === "FR" && (!roomType || room.roomType === roomType) && roomMatchesFilters(room, query, draftFilters)).length,
+    [catalog, draftFilters, query, roomType],
   );
 
   const rails = useMemo(() => {

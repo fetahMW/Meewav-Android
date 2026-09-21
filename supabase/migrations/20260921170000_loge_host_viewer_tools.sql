@@ -39,11 +39,12 @@ begin
  select state into s from public.room_loge_tools_v1 where room_id=p_room_id for update;
  if p_action='question' then
   if not coalesce((s->>'questionsOpen')::boolean,true) then raise exception 'Questions fermées'; end if;
-  if length(btrim(p_payload->>'text')) not between 1 and 280 then raise exception 'Question invalide'; end if;
+  if length(btrim(coalesce(p_payload->>'text',''))) not between 1 and 280 then raise exception 'Question invalide'; end if;
   if exists(select 1 from jsonb_array_elements(s->'questions') q where q->>'personId'=u::text and q->>'status' in ('pending','selected')) then raise exception 'Une question est déjà en attente'; end if;
   s:=jsonb_set(s,'{questions}',s->'questions'||jsonb_build_array(jsonb_build_object('id',gen_random_uuid(),'personId',u,'text',btrim(p_payload->>'text'),'status','pending','supports',0)));
  elsif p_action='questions.open' then
   if u<>h then raise exception 'Réservé au host' using errcode='42501'; end if;
+  if jsonb_typeof(p_payload->'open') is distinct from 'boolean' then raise exception 'Valeur invalide';end if;
   s:=jsonb_set(s,'{questionsOpen}',to_jsonb((p_payload->>'open')::boolean));
  elsif p_action in ('request','moment.add','experience.add') then
   if p_action='request' then target:=u;else
@@ -53,7 +54,7 @@ begin
   end if;
   key:=case when p_action='experience.add' then 'experiences' else 'moments' end;
   if p_action='experience.add' then
-   if p_payload->>'type' not in ('Concert','Sur scène','Rencontre','Session studio') or length(btrim(p_payload->>'detail')) not between 1 and 240 then raise exception 'Invitation invalide'; end if;
+   if coalesce(p_payload->>'type','') not in ('Concert','Sur scène','Rencontre','Session studio') or length(btrim(coalesce(p_payload->>'detail',''))) not between 1 and 240 then raise exception 'Invitation invalide'; end if;
    item:=jsonb_build_object('id',coalesce(nullif(p_payload->>'id','')::uuid,gen_random_uuid()),'personId',target,'type',p_payload->>'type','detail',btrim(p_payload->>'detail'),'status','pending');
   else
    if coalesce(p_payload->>'format','live') not in ('live','audio','video') then raise exception 'Format invalide'; end if;
@@ -69,12 +70,13 @@ begin
     found_item:=true;
     if p_action in ('moment','experience','cancel-request') then
      if item->>'personId'<>u::text then raise exception 'Ce message ne vous est pas destiné' using errcode='42501'; end if;
+     if p_action<>'cancel-request' and jsonb_typeof(p_payload->'accept') is distinct from 'boolean' then raise exception 'Valeur invalide';end if;
      new_status:=case when p_action='cancel-request' then 'cancelled' when (p_payload->>'accept')::boolean then 'accepted' else 'declined' end;
      if item->>'status'=new_status then null;
-     elsif item->>'status'<>case when p_action='moment' then 'scheduled' else 'pending' end then raise exception 'La demande a déjà changé';end if;
+     elsif item->>'status'<>(case when p_action='moment' then 'scheduled' else 'pending' end) then raise exception 'La demande a déjà changé';end if;
     else
      if u<>h then raise exception 'Réservé au host' using errcode='42501'; end if;
-     new_status:=p_payload->>'status';
+     new_status:=coalesce(p_payload->>'status','');
      if key='questions' then
       if new_status not in ('pending','selected','answered','rejected') then raise exception 'Statut invalide';end if;
      elsif not ((item->>'status'='pending' and new_status in ('scheduled','declined','cancelled')) or (item->>'status'='scheduled' and new_status='cancelled') or (item->>'status'='accepted' and new_status in ('live','completed','cancelled')) or (item->>'status'='live' and new_status='completed') or item->>'status'=new_status) then raise exception 'Transition invalide';end if;
@@ -100,8 +102,8 @@ language plpgsql security definer set search_path='' as $$
 declare u uuid:=auth.uid();
 begin
  if u is null then raise exception 'Connexion requise' using errcode='42501';end if;
- if length(btrim(p_title)) not between 1 and 160 or p_room_id is null then raise exception 'Titre invalide';end if;
- if exists(select 1 from public.rooms_v2 where id=p_room_id and host_id<>u) then raise exception 'Room indisponible' using errcode='42501';end if;
+ if length(btrim(coalesce(p_title,''))) not between 1 and 160 or p_room_id is null then raise exception 'Titre invalide';end if;
+ if exists(select 1 from public.rooms_v2 where id=p_room_id and (host_id<>u or type<>'loge' or status<>'live')) then raise exception 'Room indisponible' using errcode='42501';end if;
  insert into public.rooms_v2(id,host_id,type,title,status,livekit_room_name,queue_open) values(p_room_id,u,'loge',btrim(p_title),'live','room-'||p_room_id::text,true) on conflict(id) do nothing;
  insert into public.room_loge_tools_v1(room_id) values(p_room_id) on conflict do nothing;
  return jsonb_build_object('id',p_room_id,'title',btrim(p_title));

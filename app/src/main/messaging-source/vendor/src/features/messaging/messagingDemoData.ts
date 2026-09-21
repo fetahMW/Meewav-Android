@@ -458,6 +458,14 @@ demoConversations.push(...demoConversations.map(conversation => ({
   pinned: false, unread: 0, messages: conversation.messages.map(message => ({ ...message })),
 })));
 
+// Stable extra demo contacts, independent from the real account inbox.
+const scrollDemoNames = ["Mila Rose", "Yanis Blue", "Léa Nova", "Adam Groove", "Inès Soul", "Sami Keys", "Nora Vibe", "Elias Drum", "Jade Luna", "Noé Jazz", "Lina Wave", "Amir Bass", "Zoé Velvet", "Lucas Tone", "Aya Moon", "Tom Echo", "Sarah Bloom", "Malik Flow", "Emma Sky", "Ilyes Sound", "Lou Pulse", "Rayan Beat", "Anna June", "Sacha Gold", "Maya Star", "Nino Funk", "Eva Pearl", "Sofiane Mix", "Iris Day", "Hugo Voice", "Camille Dawn", "Enzo Light", "Yara Notes", "Théo Sunset", "Naïm Studio", "Alma River", "Clara Vinyl", "Idriss Loops", "Manon Air", "Oscar Melo"];
+scrollDemoNames.forEach((name, index) => {
+  const source = baseDemoConversations[index % baseDemoConversations.length];
+  demoConversations.push({ ...source, id: `demo-scroll-contact-${index}`, name, pinned: false, unread: 0,
+    messages: source.messages.map(message => ({ ...message })) });
+});
+
 const baseDemoCollabs: DemoCollab[] = [
   {
     id: "collab_1",

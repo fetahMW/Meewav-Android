@@ -440,16 +440,28 @@ export default function ShortsCreatorDrawer({
       return;
     }
 
+    if(user && !media.file) { onNotify("Choisis ton fichier avant de publier sur ton compte."); return; }
     setPublishing(true);
     let persistedMediaId: string | null = null;
     let persistedSourceUrl = media.url;
     if (media.file && user) {
       try {
         const uploaded = await profileMediaRepository.uploadOwnerMedia(user.id, media.file, { sourcePillar: "shorts" });
-        const renamed = await profileMediaRepository.renameOwnerMedia(user.id, uploaded.id, title.trim());
-        const persisted = visibility === "public"
-          ? await profileMediaRepository.setOwnerMediaVisibility(user.id, renamed.id, true)
-          : renamed;
+        let secondaryMediaId: string | null = null;
+        if(multicamEnabled && secondaryMedia?.file) {
+          const secondary = await profileMediaRepository.uploadOwnerMedia(user.id, secondaryMedia.file, {sourcePillar:"shorts"});
+          secondaryMediaId = secondary.id;
+          if(visibility === "public") await profileMediaRepository.setOwnerMediaVisibility(user.id,secondary.id,true);
+        }
+        const persisted = await profileMediaRepository.updateOwnerMediaDetails(user.id, uploaded.id, {
+          name:title.trim(),description,contentType:contentTypeLabel,city,language:"fr",visibility:visibility === "public" ? "public" : "private",
+          sceneMetadata:{format:outputFormat,sourceFormat:format,secondaryMediaId,multicamLayout:multicamEnabled ? multicamLayout : null,
+            publicationLinks:publicationLinks.filter(link=>/^https?:\/\//i.test(link.url)),
+            credits:governancePreflight.credits,requestedUses:governancePreflight.requestedUses,
+            confirmations:{musicRights:musicRightsConfirmed,imageRights:imageRightsConfirmed},
+            hashtags:[...new Set(hashtagsText.split(/[\s,;]+/).map(tag=>tag.trim().replace(/^#+/,"")).filter(Boolean))].slice(0,12),
+            associatedContent:associatedType !== "none" ? {type:associatedType,label:associatedLabel,url:associatedUrl} : null},
+        });
         persistedMediaId = persisted.id;
         persistedSourceUrl = persisted.sourceUrl ?? uploaded.sourceUrl ?? media.url;
       } catch (error) {
@@ -503,7 +515,7 @@ export default function ShortsCreatorDrawer({
       role,
       city: city.trim() || "France",
       views: "Nouvelle",
-      gradeLevel: 3,
+      gradeLevel: Math.max(1,Math.min(6,Number(user?.user_metadata?.grade) || 1)) as 1|2|3|4|5|6,
       likeCount: 0,
       goldenLikeCount: 0,
       badge: "Ta publication",
@@ -521,7 +533,7 @@ export default function ShortsCreatorDrawer({
         ? { type: associatedType, label: associatedLabel.trim(), url: /^https?:\/\//i.test(associatedUrl.trim()) ? associatedUrl.trim() : undefined }
         : undefined,
       hashtags: [...new Set(hashtagsText.split(/[\s,;]+/).map((hashtag) => hashtag.trim().replace(/^#+/, "")).filter(Boolean))].slice(0, 12),
-      verified: true,
+      verified: user?.user_metadata?.is_verified === true,
       publicationGovernance: {
         validation: "local-preflight",
         requestedUses: governancePreflight.requestedUses,

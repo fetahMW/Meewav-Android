@@ -77,7 +77,7 @@ export default function ClassStudentPreProfile({ person, source, onClose, return
     aria-label={`Pré-profil de ${person.name}`}
     style={{ zoom: scale, width: bounds.width > 0 ? bounds.width / scale : 413, height: bounds.height > 0 ? bounds.height / scale : 588 }}
     onKeyDown={(event) => { if (event.key === "Escape" && !event.defaultPrevented) { event.preventDefault(); event.stopPropagation(); requestClose(); } }}>
-    <RoomArtistProfileContent artist={artist} demo={source === "demo"} onOffer={() => { onClose(); window.dispatchEvent(new CustomEvent("meewav:offer-gift", {detail:person})); }} onOpenProfile={id => {
+    <RoomArtistProfileContent artist={artist} demo={source === "demo"} onContact={id => navigate(`/messages?${new URLSearchParams({space:"messages",intent:"message",source:"rooms",mode:source === "demo" ? "demo" : "real",[source === "demo" ? "mockArtistId" : "profileId"]:id,mockArtistName:person.name})}`)} onCollabRequest={id => navigate(`/messages?${new URLSearchParams({space:"collabs",intent:"collaboration",source:"rooms",mode:source === "demo" ? "demo" : "real",[source === "demo" ? "mockArtistId" : "profileId"]:id,mockArtistName:person.name})}`)} onOffer={() => { onClose(); window.dispatchEvent(new CustomEvent("meewav:offer-gift", {detail:person})); }} onOpenProfile={id => {
       const details=new URLSearchParams({name:person.name,role:person.role,portrait:person.avatarUrl,grade:String(person.gradeLevel??1)});
       navigate(`/profile/view/${encodeURIComponent(id)}?${details}`);
     }} />

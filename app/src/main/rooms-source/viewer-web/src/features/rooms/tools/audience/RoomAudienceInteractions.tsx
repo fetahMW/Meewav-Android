@@ -401,6 +401,7 @@ function ClasseAudience({ classe, role, accountId, roomId, canEngage, busy, exec
   const privateActive = classe.privateTalkStudentId === accountId;
   const questions = classe.questions ?? [];
   const resources = classe.resources ?? [];
+  const teacherId = source === "demo" ? classe.people[0]?.id : (classe as typeof classe & {teacherId?:string}).teacherId;
   const canAccessResources = Boolean(seat) || role === "host" || role === "teacher" || role === "regisseur";
   const visibleQuestions = [...questions].sort((left, right) => {
     if (left.id === sentQuestionId) return -1;
@@ -453,7 +454,7 @@ function ClasseAudience({ classe, role, accountId, roomId, canEngage, busy, exec
       <ClassroomRoster classe={classe} onSelectFreeSeat={!seat && !classe.seatsLocked ? number => { setTicketError(null); setTicketSeat(number); } : undefined} selectedStudentId={selectedStudentId} onSelectStudent={(id) => { profileTriggerRef.current = document.activeElement as HTMLElement; setSelectedStudentId(id); }} audioBridge={{ mode: privateActive ? "private" : active ? "public" : null, studentId: privateActive || active ? accountId : null, phase: privateActive || active ? "active" : "idle" }} />
     </div> : null}
 
-    {seat && classe.people[0] ? <ClassroomMessageBubble roomId={roomId} accountId={accountId} peerId={classe.people[0].id} peerName={classe.people[0].name} source={source} /> : null}
+    {seat && teacherId ? <ClassroomMessageBubble roomId={roomId} accountId={accountId} peerId={teacherId} peerName={source === "demo" ? classe.people[0]?.name : "Le professeur"} source={source} /> : null}
     {ticketSeat !== null ? <div className="classe-ticket" role="dialog" aria-modal="true" aria-label={`Ticket place ${ticketSeat}`}><button type="button" aria-label="Fermer le ticket" onClick={() => setTicketSeat(null)}><X /></button><Armchair /><h3>Votre place dans La Classe</h3><p>Place {ticketSeat} · {((classe.seatPriceCents ?? 499) / 100).toLocaleString("fr-FR", {style:"currency",currency:"EUR"})}</p><p>{source === "demo" ? "Maquette : aucun débit réel." : "L’achat sécurisé de places n’est pas encore disponible."}</p>{ticketError ? <p role="alert">{ticketError}</p> : null}<button type="button" disabled={busy || source !== "demo" || !canEngage} onClick={() => { void execute({type:"classe.demo.seat.purchase", seat:ticketSeat, cents:classe.seatPriceCents ?? 499, person:{...classe.people[1], id:accountId, name:"Vous", microphone:"ready"}}).then(() => {setTicketSeat(null); setPanel("class");}).catch(() => setTicketError("Cette place ou son prix a changé. Fermez puis choisissez à nouveau.")); }}>Simuler l’achat et entrer</button></div> : null}
     {selectedStudent ? <Suspense fallback={null}><ClassStudentPreProfile returnFocusTo={profileTriggerRef.current} boundsElement={classroomRef.current} person={selectedStudent} source={source} onClose={() => setSelectedStudentId(null)} /></Suspense> : null}
     {panel === "resources" && canAccessResources && resources.length ? <Section eyebrow="RESSOURCES DU COURS" title="À garder après la classe" action={<span className="room-audience-count">{resources.length}</span>}>

@@ -76,7 +76,7 @@ internal fun CageResultsCard(state: CageToolsState, modifier: Modifier = Modifie
                     Row(Modifier.fillMaxWidth().hifiBlackSurface(10.dp).padding(10.dp), verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text("${index + 4}e", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.width(32.dp))
-                        guest?.let { Image(painterResource(it.portrait), null, Modifier.size(36.dp).clip(CircleShape).clickable { state.resultsOpen = false; state.openProfile(it.id) }, contentScale = ContentScale.Crop) }
+                        guest?.let { WaveGuestPortrait(it, null, Modifier.size(36.dp).clip(CircleShape).clickable { state.resultsOpen = false; state.openProfile(it.id) }, contentScale = ContentScale.Crop) }
                         Column(Modifier.weight(1f)) {
                             Text(guest?.name ?: "Artiste indisponible", color = Color.White, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Text(guest?.role.orEmpty(), color = Color(0xFFBBB7C6), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -97,7 +97,7 @@ private fun CagePodiumPlace(guest: WaveGuest?, place: Int, compact: Boolean, mod
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(if (place == 1) "VAINQUEUR" else "${place}ᵉ PLACE", color = if (place == 1) accent else Color(0xFFBBB7C6), fontSize = if (compact) 8.sp else 9.sp, fontWeight = FontWeight.SemiBold)
         Box(Modifier.size(if (compact) 42.dp else if (place == 1) 78.dp else 64.dp).border(if (place == 1) 2.dp else 1.dp, accent.copy(alpha = if (place == 1) 1f else .4f), CircleShape).padding(4.dp).clip(CircleShape).background(Color(0xFF25232C)), contentAlignment = Alignment.Center) {
-            if (guest != null) Image(painterResource(guest.portrait), null, Modifier.fillMaxSize().clickable(onClick = onProfile), contentScale = ContentScale.Crop)
+            if (guest != null) WaveGuestPortrait(guest, null, Modifier.fillMaxSize().clickable(onClick = onProfile), contentScale = ContentScale.Crop)
             else Text("—", color = Color(0xFFBBB7C6))
         }
         Text(guest?.name ?: "Non attribuée", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = if (compact) 10.sp else 12.sp,

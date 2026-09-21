@@ -311,6 +311,12 @@ export default function SceneTvSchedule({
   const [volume, setVolume] = useState(0.72);
   const [autoplayBlocked, setAutoplayBlocked] = useState(false);
   const [cinemaMode, setCinemaMode] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
+  useEffect(() => {
+    const update = () => setFullscreen(document.fullscreenElement === playerFrameRef.current);
+    document.addEventListener("fullscreenchange", update);
+    return () => document.removeEventListener("fullscreenchange", update);
+  }, []);
   const [fallbackMediaUrl, setFallbackMediaUrl] = useState<string | null>(null);
   const [mediaUnavailable, setMediaUnavailable] = useState(false);
   const [playerNotice, setPlayerNotice] = useState("Chargement de l’antenne…");
@@ -563,7 +569,8 @@ export default function SceneTvSchedule({
 
   const enterFullscreen = async () => {
     try {
-      await playerFrameRef.current?.requestFullscreen?.();
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await playerFrameRef.current?.requestFullscreen?.();
       trackSceneTv({ event: "tv_fullscreen", programId: currentProgram?.id });
     } catch {
       setPlayerNotice("Le plein écran n’est pas disponible ici");
@@ -821,8 +828,8 @@ export default function SceneTvSchedule({
             >
               {cinemaMode ? <Minimize2 /> : <Maximize2 />}
             </button>
-            <button type="button" onClick={() => void enterFullscreen()} aria-label="Afficher MeeWav TV en plein écran">
-              <Maximize2 />
+            <button type="button" onClick={() => void enterFullscreen()} aria-label={fullscreen ? "Quitter le plein écran de MeeWav TV" : "Afficher MeeWav TV en plein écran"}>
+              {fullscreen ? <Minimize2 /> : <Maximize2 />}
             </button>
           </div>
           <div className="scene-tv-player__program-progress" style={playerProgressStyle} aria-hidden="true" />

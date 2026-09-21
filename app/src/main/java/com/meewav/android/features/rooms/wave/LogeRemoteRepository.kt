@@ -15,16 +15,20 @@ import java.net.URL
 
 internal class LogeRemoteRepository(context:Context,val roomId:String) {
  private val auth=(context.applicationContext as MeewavApplication).authRepository
- suspend fun rpc(name:String,payload:JSONObject):JSONObject {
+ fun currentUserId():String? = auth.auth.currentUserOrNull()?.id
+ suspend fun rpc(name:String,payload:JSONObject):JSONObject = request("/rpc/"+name,payload)
+ suspend fun table(path:String):org.json.JSONArray = request("/"+path,null).optJSONArray("items")?:org.json.JSONArray()
+ private suspend fun request(path:String,payload:JSONObject?):JSONObject {
   val session=withTimeout(15000){auth.auth.sessionStatus.filterIsInstance<SessionStatus.Authenticated>().first()}.session
   return withContext(Dispatchers.IO) {
-   val connection=URL(BuildConfig.SUPABASE_URL.trimEnd('/')+"/rest/v1/rpc/"+name).openConnection() as HttpURLConnection
+   val connection=URL(BuildConfig.SUPABASE_URL.trimEnd('/')+"/rest/v1"+path).openConnection() as HttpURLConnection
    try {
-    connection.requestMethod="POST";connection.connectTimeout=15000;connection.readTimeout=15000;connection.instanceFollowRedirects=false;connection.doOutput=true
+    connection.requestMethod=if(payload==null)"GET" else "POST";connection.connectTimeout=15000;connection.readTimeout=15000;connection.instanceFollowRedirects=false;connection.doOutput=payload!=null
     connection.setRequestProperty("apikey",BuildConfig.SUPABASE_PUBLISHABLE_KEY);connection.setRequestProperty("Authorization","Bearer "+session.accessToken);connection.setRequestProperty("Content-Type","application/json")
-    connection.outputStream.use{it.write(payload.toString().toByteArray())}
+    if(payload!=null)connection.outputStream.use{it.write(payload.toString().toByteArray())}
     val ok=connection.responseCode in 200..299
-    val result=JSONObject((if(ok)connection.inputStream else connection.errorStream).bufferedReader().use{it.readText()})
+    val raw=(if(ok)connection.inputStream else connection.errorStream).bufferedReader().use{it.readText()}
+    val result=if(raw.trim().startsWith("["))JSONObject().put("items",org.json.JSONArray(raw)) else if(raw.isBlank()||raw.trim()=="null")JSONObject() else JSONObject(raw)
     check(ok){result.optString("message","Synchronisation impossible")};result
    }finally{connection.disconnect()}
   }

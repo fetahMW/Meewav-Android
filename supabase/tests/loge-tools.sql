@@ -1,0 +1,23 @@
+create extension if not exists pgtap with schema extensions;
+select plan(9);
+insert into auth.users(instance_id,id,aud,role,email,encrypted_password,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
+select '00000000-0000-0000-0000-000000000000',('75000000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid,'authenticated','authenticated','loge-test-'||n||'@example.test','',now(),'{}','{}',now(),now() from generate_series(1,3)n;
+select set_config('request.jwt.claim.sub','75000000-0000-0000-0000-000000000001',true);
+set local role authenticated;
+select lives_ok($$select public.rooms_loge_launch_v1('Recette','76000000-0000-0000-0000-000000000001')$$,'host launches');
+reset role;
+insert into public.room_participants_v2(room_id,user_id,role,left_at) values('76000000-0000-0000-0000-000000000001','75000000-0000-0000-0000-000000000002','viewer',null);
+select set_config('request.jwt.claim.sub','75000000-0000-0000-0000-000000000003',true);
+set local role authenticated;
+select throws_ok($$select public.rooms_loge_read_v1('76000000-0000-0000-0000-000000000001')$$,'42501','Rejoignez la Loge','outsider denied');
+select set_config('request.jwt.claim.sub','75000000-0000-0000-0000-000000000002',true);
+select throws_ok($$select public.rooms_loge_action_v1('76000000-0000-0000-0000-000000000001','questions.open','{"open":false}')$$,'42501','Réservé au host','viewer cannot close questions');
+select throws_ok($$select public.rooms_loge_action_v1('76000000-0000-0000-0000-000000000001','question','{}')$$,'P0001','Question invalide','missing question rejected');
+select lives_ok($$select public.rooms_loge_action_v1('76000000-0000-0000-0000-000000000001','question','{"text":"Bonjour"}')$$,'question persists');
+select is(jsonb_array_length(public.rooms_loge_read_v1('76000000-0000-0000-0000-000000000001')->'questions'),1,'viewer receives question');
+select throws_ok($$select public.rooms_loge_action_v1('76000000-0000-0000-0000-000000000001','question','{"text":"Encore"}')$$,'P0001','Une question est déjà en attente','one pending question');
+select set_config('request.jwt.claim.sub','75000000-0000-0000-0000-000000000001',true);
+select is(jsonb_array_length(public.rooms_loge_read_v1('76000000-0000-0000-0000-000000000001')->'questions'),1,'host receives question');
+select ok(not has_function_privilege('anon','public.rooms_loge_action_v1(uuid,text,jsonb)','execute'),'anonymous mutations denied');
+reset role;
+select * from finish();

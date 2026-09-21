@@ -33,8 +33,6 @@ class MainActivity : ComponentActivity() {
         const val EXTRA_OPEN_PROFILE = "com.meewav.android.OPEN_PROFILE"
         const val EXTRA_OPEN_WAVE_MIXER = "com.meewav.android.OPEN_WAVE_MIXER"
         const val EXTRA_LIVE_AUTH = "com.meewav.android.LIVE_AUTH"
-        // Temporary Market workshop entry. Set false to restore authentication.
-        private const val OPEN_FEATURE_WORKSHOP = true
     }
     private lateinit var authViewModel: AuthViewModel
 
@@ -86,7 +84,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun openFeatureWorkshopIfRequested(intent: Intent?): Boolean {
-        if (!BuildConfig.DEBUG || !OPEN_FEATURE_WORKSHOP || intent == null
+        if (!BuildConfig.DEBUG || intent == null
             || intent.action == Intent.ACTION_VIEW
             || intent.getBooleanExtra(EXTRA_LIVE_AUTH, false)
             || intent.getBooleanExtra(EXTRA_OPEN_GLOBE, false)) return false
@@ -96,7 +94,8 @@ class MainActivity : ComponentActivity() {
             intent.getBooleanExtra(EXTRA_OPEN_TREMPLIN, false) -> com.meewav.android.features.tremplin.TremplinActivity::class.java
             intent.getBooleanExtra(EXTRA_OPEN_MESSAGES, false) -> MessagingActivity::class.java
             intent.getBooleanExtra(EXTRA_OPEN_PROFILE, false) -> ProfileActivity::class.java
-            else -> com.meewav.android.features.market.MarketActivity::class.java
+            intent.getBooleanExtra(EXTRA_OPEN_MARKET, false) -> com.meewav.android.features.market.MarketActivity::class.java
+            else -> return false // A normal launch always starts with authentication.
         }
         startActivity(Intent(this, workshop).putExtra("preview", true).apply {
             if (workshop == com.meewav.android.features.rooms.wave.WaveMixerActivity::class.java) {
@@ -109,6 +108,11 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleAuthIntent(intent: Intent?) {
+        if (intent?.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_LAUNCHER)
+            && authViewModel.state.value.localPreview) {
+            authViewModel.navigate(AuthPage.Login)
+            return
+        }
         // The debug workshop can open a feature without an existing globe activity.
         if (intent?.getBooleanExtra(EXTRA_OPEN_GLOBE, false) == true) {
             authViewModel.navigate(AuthPage.Globe)

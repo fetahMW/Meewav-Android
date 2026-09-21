@@ -15,7 +15,7 @@ const fitCard = () => {
 fitCard();
 window.addEventListener('resize', fitCard);
 new ResizeObserver(fitCard).observe(document.documentElement);
-window.addEventListener('meewav:navigate', () => { location.href = '/native/contact'; });
+
 
 type Guest = { id: string; name: string; grade: number; portrait: string };
 function GuestCard({ guest }: { guest: Guest }) {
@@ -35,7 +35,7 @@ function GuestCard({ guest }: { guest: Guest }) {
   };
   return <div className="ring-artist-preprofile" role="region" aria-label={`Pré-profil de ${selection.name}`}
     style={{ '--guest-grade-image': `url("/guest-grade/${Math.max(1, Math.min(6, Math.round(guest.grade)))}")` } as CSSProperties}>
-    <ArtistProfileCard selection={selection} onClose={() => { location.href = '/native/close'; }} />
+    <ArtistProfileCard selection={selection} onOpenProfile={() => { location.href="/native/profile"; }} onContact={() => { location.href="/native/contact"; }} onCollabRequest={() => { location.href="/native/collaboration"; }} onClose={() => { location.href = '/native/close'; }} />
     {footer && createPortal(<button className="guest-offer" type="button" onClick={() => { location.href='/native/gift'; }} aria-label={`Offrir un cadeau à ${guest.name}`}>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M3 8h18v4H3zM5 12v9h14v-9M12 8v13M12 8H8a3 3 0 1 1 3-3l1 3Zm0 0h4a3 3 0 1 0-3-3l-1 3Z"/></svg><span>Offrir</span>
     </button>,footer)}

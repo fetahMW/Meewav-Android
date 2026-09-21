@@ -88,7 +88,7 @@ internal fun ClasseToolsPanel(state: ClasseToolsState) {
                 val hand = state.hands.firstOrNull { it.studentId == selected.id }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     ClasseTool(if (state.speakerId == selected.id) "Couper" else if (hand != null) "Parole" else if (selected.id in state.invitedToSpeak) "Annuler" else "Inviter", if (state.speakerId == selected.id) WaveIcons.MicOff else WaveIcons.Mic, Modifier.weight(1f)) { if (state.speakerId == selected.id) state.releaseFloor() else state.grantFloor(selected.id) }
-                    ClasseTool("Message", WaveIcons.Chat, Modifier.weight(1f)) { state.guests.messageRecipientIds = setOf(selected.id) }
+                    ClasseTool("Message", WaveIcons.Chat, Modifier.weight(1f)) { state.guests.classroomQuickMessage = true; state.guests.messageRecipientIds = setOf(selected.id) }
                     ClasseTool("Profil", WaveIcons.Eye, Modifier.weight(1f)) { state.guests.previewId = null; state.guests.profilePreviewId = selected.id }
                     var menu by remember(selected.id) { mutableStateOf(false) }
                     Box(Modifier.weight(1f)) {
@@ -103,7 +103,7 @@ internal fun ClasseToolsPanel(state: ClasseToolsState) {
             } else Row {
                 ClasseTool("Questions ${state.rankedQuestions.size}", Icons.Filled.QuestionAnswer, Modifier.weight(1f)) { questions = !questions; questionStudent = null }
                 ClasseTool(if (state.understandingActive) "Terminer" else "Compréhension", Icons.Filled.Psychology, Modifier.weight(1f), active = state.understandingActive) { state.toggleUnderstanding(); if (state.understandingActive) { state.tab = 0; questions = false } }
-                ClasseTool(if (state.handsOpen) "Mains ouvertes" else "Mains fermées", Icons.Filled.BackHand, Modifier.weight(1f), tint = if (state.handsOpen) WaveMixerTheme.capsuleAccentSoft else classeMuted) { state.handsOpen = !state.handsOpen }
+                ClasseTool(if (state.handsOpen) "Mains ouvertes" else "Mains fermées", Icons.Filled.BackHand, Modifier.weight(1f), tint = if (state.handsOpen) WaveMixerTheme.capsuleAccentSoft else classeMuted) { state.setHands(!state.handsOpen) }
                 ClasseTool("Ressources", Icons.Filled.FolderOpen, Modifier.weight(1f), tint = WaveMixerTheme.capsuleAccentSoft) { resources = true }
             }
         }
@@ -151,7 +151,7 @@ private fun ClasseUnderstanding.color() = when (this) { ClasseUnderstanding.UNDE
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onClose) { Icon(WaveIcons.ChevronLeft, "Revenir aux élèves", tint = WaveMixerTheme.capsuleAccentSoft) }
             Text("Questions", color = Color.White, modifier = Modifier.weight(1f), fontSize = 14.sp)
-            ClasseToggleChip("Questions", state.questionsOpen) { state.questionsOpen = !state.questionsOpen }
+            ClasseToggleChip("Questions", state.questionsOpen) { state.setQuestions(!state.questionsOpen) }
         }
         val questions = state.rankedQuestions.filter { studentId == null || it.studentId == studentId }
         if (questions.isEmpty()) Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Aucune question en attente", color = classeMuted, fontSize = 12.sp) }
@@ -160,7 +160,7 @@ private fun ClasseUnderstanding.color() = when (this) { ClasseUnderstanding.UNDE
                 val student = state.guests.guests.find { it.id == question.studentId }
                 Column(Modifier.fillMaxWidth().hifiBlackSurface(14.dp).padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        student?.let { Image(painterResource(it.portrait), "Profil de ${it.name}", Modifier.size(32.dp).clip(CircleShape).clickable { state.guests.profilePreviewId = it.id }, contentScale = ContentScale.Crop) }
+                        student?.let { WaveGuestPortrait(it, "Profil de ${it.name}", Modifier.size(32.dp).clip(CircleShape).clickable { state.guests.profilePreviewId = it.id }, contentScale = ContentScale.Crop) }
                         Text(student?.name ?: "Élève", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                         TextButton(onClick = { state.likeQuestion(question.id) }) { Icon(WaveIcons.Heart, "Soutenir la question", modifier = Modifier.size(15.dp), tint = if (question.liked) WaveMixerTheme.capsuleAccentSoft else classeMuted); Text(" ${question.likes}", fontSize = 11.sp, color = classeMuted) }
                     }
@@ -253,7 +253,7 @@ private fun ClasseUnderstanding.color() = when (this) { ClasseUnderstanding.UNDE
             Column(Modifier.fillMaxSize().padding(horizontal = 3.dp, vertical = 3.dp),
                 horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                 if (student != null) {
-                    Image(painterResource(student.portrait), "Sélectionner ${student.name}",
+                    WaveGuestPortrait(student, "Sélectionner ${student.name}",
                         Modifier.size(portraitSize).clip(CircleShape).alpha(if (student.connected) 1f else .42f), contentScale = ContentScale.Crop)
                 } else Icon(Icons.Filled.EventSeat, "Place libre", tint = classeMuted.copy(alpha = .5f), modifier = Modifier.size(portraitSize).padding(5.dp))
                 Spacer(Modifier.height(2.dp))

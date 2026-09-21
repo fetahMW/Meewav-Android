@@ -22,6 +22,7 @@ export default function GroupToolsLive({ groupId, kind, revision, readOnly = fal
   const [pages, setPages] = useState(1);
   const [more, setMore] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<Tool | null>(null);
   const [title, setTitle] = useState('');
   const [starts, setStarts] = useState('');
   const [place, setPlace] = useState('');
@@ -96,6 +97,24 @@ export default function GroupToolsLive({ groupId, kind, revision, readOnly = fal
     }
     const payload = kind === 'session' ? { kind, title: title.trim(), startsAt: time.toISOString(), place: place.trim() }
       : { kind, title: title.trim(), options: list };
+    if (editing) {
+      if (mutation.current || readOnly) return;
+      mutation.current = true; setBusy(true); setError(null);
+      try {
+        const { error: failure } = await supabase.rpc('edit_artist_group_session_v1', {
+          p_group_id: groupId, p_item_id: editing.id,
+          p_expected: { title: editing.title, startsAt: editing.startsAt, place: editing.place },
+          p_title: title.trim(), p_starts_at: time.toISOString(), p_place: place.trim(),
+        });
+        if (failure) throw failure;
+        setEditing(null); setFormOpen(false); setTitle(''); setStarts(''); setPlace('');
+        await refresh();
+      } catch (failure) {
+        setError((failure as { code?: string }).code === '40001'
+          ? 'La session a changé. Actualise avant de la modifier.' : 'Modification non confirmée. Tu peux réessayer.');
+      } finally { mutation.current = false; if (mounted.current) setBusy(false); }
+      return;
+    }
     const fingerprint = JSON.stringify(payload);
     let id = drafts.current.get(fingerprint);
     if (!id) { id = crypto.randomUUID(); drafts.current.set(fingerprint, id); }
@@ -129,6 +148,11 @@ export default function GroupToolsLive({ groupId, kind, revision, readOnly = fal
           {item.myChoice === null ? 'Valider mon vote' : 'Modifier mon vote'}
         </button>}
       </>}
+      {active && !readOnly && item.canManage && kind === 'session' && <button className='agw-secondary-button is-small' disabled={busy} onClick={() => {
+        const date = new Date(item.startsAt!);
+        setEditing(item); setTitle(item.title); setPlace(item.place ?? '');
+        setStarts(new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0,16)); setFormOpen(true);
+      }}>Modifier</button>}
       {active && !readOnly && item.canManage && <button className='agw-secondary-button is-small' disabled={busy}
         onClick={() => void mutate(item.id, kind === 'session' ? 'cancel' : 'close')}>
         {kind === 'session' ? 'Annuler la session' : 'Clôturer le vote'}
@@ -139,19 +163,20 @@ export default function GroupToolsLive({ groupId, kind, revision, readOnly = fal
   return <div className='agw-subview agw-planning-subview agw-tools-live'>
     <div className='agw-subview__heading'><div><small>{kind === 'session' ? 'COORDINATION' : 'VOTE DU GROUPE'}</small>
       <h2>{kind === 'session' ? 'Sessions du groupe' : 'Décider ensemble'}</h2></div>
-      {!readOnly && <button className='agw-primary-button is-small' disabled={busy} aria-expanded={formOpen} onClick={() => setFormOpen(!formOpen)}><Plus size={18} />{kind === 'session' ? 'Ajouter' : 'Nouveau'}</button>}
+      {!readOnly && <button className='agw-primary-button is-small' disabled={busy} aria-expanded={formOpen} onClick={() => {setEditing(null);setTitle('');setStarts('');setPlace('');setFormOpen(!formOpen);}}><Plus size={18} />{kind === 'session' ? 'Ajouter' : 'Nouveau'}</button>}
     </div>
     {error && <div role='alert' className='agw-empty-inline'><span>{error}</span><button className='agw-secondary-button' onClick={() => void refresh()}>Actualiser</button></div>}
     {readOnly && <p>Groupe archivé · consultation uniquement</p>}
     {formOpen && !readOnly && <form className='agw-inline-form' onSubmit={create}>
-      <h3>{kind === 'session' ? 'Nouvelle session' : 'Nouvelle décision'}</h3>
+      <h3>{editing ? 'Modifier la session' : kind === 'session' ? 'Nouvelle session' : 'Nouvelle décision'}</h3>
+      {editing && <p>Changer la date ou le lieu demandera aux membres de confirmer à nouveau leur présence.</p>}
       <label><span>Titre</span><input required minLength={2} maxLength={160} value={title} disabled={busy} onChange={e => setTitle(e.target.value)} /></label>
       {kind === 'session' ? <>
         <label><span>Date et heure</span><input type='datetime-local' required value={starts} disabled={busy} onChange={e => setStarts(e.target.value)} /></label>
         <label><span>Lieu</span><input maxLength={240} value={place} disabled={busy} onChange={e => setPlace(e.target.value)} /></label>
       </> : <label><span>Options, séparées par des virgules</span><input required maxLength={960} value={options} disabled={busy} onChange={e => setOptions(e.target.value)} /></label>}
       <div><button type='button' className='agw-secondary-button' disabled={busy} onClick={() => setFormOpen(false)}>Annuler</button>
-        <button type='submit' className='agw-primary-button' disabled={busy}>{busy ? 'Enregistrement…' : kind === 'session' ? 'Créer' : 'Publier'}</button></div>
+        <button type='submit' className='agw-primary-button' disabled={busy}>{busy ? 'Enregistrement…' : editing ? 'Enregistrer' : kind === 'session' ? 'Créer' : 'Publier'}</button></div>
     </form>}
     {loading ? <p role='status'>Chargement…</p> : <>
       {!error && open.length === 0 && <div className='agw-empty-inline'>{kind === 'session' ? <CalendarClock /> : <Vote />}<strong>{kind === 'session' ? 'Aucune session à venir' : 'Aucune décision en attente'}</strong></div>}

@@ -229,7 +229,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                                     }
                                 } else Spacer(Modifier.height(22.dp))
                                     PrimaryAction(when (state.page) {
-                                        AuthPage.Login -> "Se connecter"
+                                        AuthPage.Login -> if (state.localPreview) "Suivant" else "Se connecter"
                                         AuthPage.Forgot -> "Recevoir le lien"
                                         else -> "Enregistrer"
                                     }, state.busy, submit)

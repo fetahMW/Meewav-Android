@@ -15,6 +15,8 @@ try {
  const lines=(Array.isArray(results)?results:[results]).flatMap(r=>r.rows.flatMap(row=>Object.values(row).filter(v=>typeof v==='string'))).flatMap(v=>v.split('\n'));
  const failures=lines.filter(l=>/^not ok|^#.*(?:failed|planned)/i.test(l));
  const plan=lines.find(l=>/^1\.\.\d+$/.test(l));const passed=lines.filter(l=>/^ok \d+/.test(l)).length;
- if(failures.length||!plan||passed!==Number(plan.slice(3)))throw Error(JSON.stringify({plan,passed,failures}));
+ if(failures.length||!plan||passed!==Number(plan.slice(3)))throw Error(JSON.stringify({plan,passed,failures,details:lines.filter(l=>l.startsWith("#"))}));
  await client.query('ROLLBACK');console.log(JSON.stringify({result:'passed-rolled-back',passed,plan}));
-} catch(e){await client.query('ROLLBACK').catch(()=>{});console.error(e.code||e.name,e.message);process.exitCode=1;}finally{await client.end()}
+} catch(e){await client.query('ROLLBACK').catch(()=>{});console.error(e.code||e.name,e.message,e.where||"",e.position||"");process.exitCode=1;}finally{await client.end()}
+
+

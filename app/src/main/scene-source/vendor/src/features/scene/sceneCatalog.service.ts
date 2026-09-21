@@ -31,14 +31,16 @@ async function resolveMediaUrl(media: PublishedPreProfileMedia) {
  * fallback, but canonical rows are placed first so Profile, Message, Collab,
  * Follow and Golden Like all receive the UUID expected by their services.
  */
-export async function getPublishedSceneCatalog(limit = SCENE_CATALOG_LIMIT): Promise<ShortsVideoItem[]> {
+export async function getPublishedSceneCatalog(limit = SCENE_CATALOG_LIMIT, mediaId?:string): Promise<ShortsVideoItem[]> {
   const safeLimit = Math.max(1, Math.min(Math.trunc(limit), SCENE_CATALOG_LIMIT));
-  const { data: mediaRows, error: mediaError } = await supabase
+  let query = supabase
     .from("published_media_files")
-    .select("id,owner_profile_id,type,name,format,duration_ms,file_url,cover_url,storage_bucket,storage_path,mime_type,source_pillar,published_at")
+    .select("id,owner_profile_id,type,name,format,duration_ms,file_url,cover_url,storage_bucket,storage_path,mime_type,source_pillar,published_at,metadata")
     .in("type", ["video", "audio"])
     .order("published_at", { ascending: false, nullsFirst: false })
     .limit(safeLimit);
+  if(mediaId) query=query.eq("id",mediaId);
+  const {data:mediaRows,error:mediaError}=await query;
   if (mediaError) throw mediaError;
 
   const media = (mediaRows ?? []) as unknown as PublishedPreProfileMedia[];
@@ -56,10 +58,21 @@ export async function getPublishedSceneCatalog(limit = SCENE_CATALOG_LIMIT): Pro
     const profile = profiles.get(item.owner_profile_id);
     const mediaUrl = await resolveMediaUrl(item);
     if (!profile || !mediaUrl) return null;
+    const metadata = (item as PublishedPreProfileMedia & {metadata?:Record<string,any>}).metadata ?? {};
+    const publication = metadata.scene_publication ?? {};
+    let secondaryVideo: string | undefined;
+    if(typeof publication.secondaryMediaId === "string") {
+      const {data:secondary}=await supabase.from("published_media_files").select("file_url,storage_bucket,storage_path").eq("id",publication.secondaryMediaId).maybeSingle();
+      if(secondary) secondaryVideo=(await resolveMediaUrl(secondary as PublishedPreProfileMedia)) ?? undefined;
+    }
+    const portraitFormat = publication.format === "portrait";
     const isAudio = item.type.toLocaleLowerCase("fr-FR") === "audio";
     const artist = profile.display_name?.trim() || profile.username?.trim() || "Artiste MeeWav";
     const portrait = profile.profile_image_url || profile.avatar_url || undefined;
-    const cover = item.cover_url || portrait || "/images/shorts/catalog-v3/daily-01-soul-singer.webp";
+    const coverReference=metadata.scene_cover;
+    const signedCover=coverReference?.storage_bucket && coverReference?.storage_path
+      ? await supabase.storage.from(coverReference.storage_bucket).createSignedUrl(coverReference.storage_path,SIGNED_MEDIA_TTL_SECONDS) : null;
+    const cover = signedCover?.data?.signedUrl || item.cover_url || portrait || "/images/shorts/catalog-v3/daily-01-soul-singer.webp";
     const grade = Math.min(6, Math.max(1, Math.trunc(profile.grade ?? 1))) as 1 | 2 | 3 | 4 | 5 | 6;
     return {
       id: item.id,
@@ -72,9 +85,11 @@ export async function getPublishedSceneCatalog(limit = SCENE_CATALOG_LIMIT): Pro
       artistPortrait: portrait,
       image: cover,
       video: mediaUrl,
+      secondaryVideo,
+      multicamLayout: secondaryVideo ? publication.multicamLayout : undefined,
       audioUrl: isAudio ? mediaUrl : undefined,
-      format: "landscape",
-      presentationFormat: isAudio ? "audio_visualizer" : "landscape",
+      format: portraitFormat ? "portrait" : "landscape",
+      presentationFormat: isAudio ? "audio_visualizer" : portraitFormat ? "vertical" : "landscape",
       sourceFormat: "landscape",
       alt: `${artist} présente ${item.name?.trim() || "une création"}`,
       duration: durationLabel(item.duration_ms),
@@ -88,7 +103,12 @@ export async function getPublishedSceneCatalog(limit = SCENE_CATALOG_LIMIT): Pro
       goldenLikeCount: Math.max(0, profile.golden_likes_count ?? 0),
       availability: profile.collab_available ? "Ouvert aux collaborations" : undefined,
       collabAvailable: profile.collab_available,
-      description: profile.bio?.trim() || "Création publiée dans La Scène.",
+      description: (typeof metadata.scene_description === "string" ? metadata.scene_description : "") || "Création publiée dans La Scène.",
+      publicationLinks: Array.isArray(publication.publicationLinks) ? publication.publicationLinks.filter((link:any)=>typeof link?.label === "string" && typeof link?.url === "string" && /^https?:\/\//i.test(link.url)) : [],
+      hashtags: Array.isArray(publication.hashtags) ? publication.hashtags.filter((tag:any)=>typeof tag === "string") : [],
+      credits: (Array.isArray(publication.credits) ? publication.credits : []).filter((credit:any)=>typeof credit?.displayName === "string" && typeof credit?.role === "string").map((credit:any)=>({name:credit.displayName,role:credit.role})),
+      associatedContent: publication.associatedContent ?? undefined,
+      publishedAt: item.published_at ?? undefined,
       verified: profile.is_verified,
     };
   }));

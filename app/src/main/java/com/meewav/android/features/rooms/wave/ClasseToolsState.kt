@@ -13,6 +13,68 @@ internal enum class ClasseUnderstanding(val label: String) { UNDERSTOOD("Compris
 
 /** Port of ClasseSessionViewModel. This room entry is the local investor demonstration. */
 internal class ClasseToolsState(context: Context, val guests: WaveGuestState, scope: String) {
+    var remoteRoomId: String? = null
+    var remoteAction: ((String, JSONObject) -> Unit)? = null
+    var remoteBusy by mutableStateOf(false)
+    private var floorRequests = emptyMap<String,String>()
+    private var participationIds = emptyMap<String,String>()
+    private var applicationsOpen = true
+    private fun remote(name:String,args:JSONObject):Boolean {
+        if(remoteRoomId==null)return false
+        if(remoteBusy) {notice="Enregistrement en cours…";return true}
+        remoteAction?.invoke(name,args)?:run{notice="Connexion en cours…"}
+        return true
+    }
+    fun setHands(open:Boolean) { if(!remote("rooms_classe_set_hands_open_v1",JSONObject().put("p_room_id",remoteRoomId).put("p_hands_open",open)))handsOpen=open }
+    fun setQuestions(open:Boolean) { if(!remote("rooms_classe_configure_v1",JSONObject().put("p_room_id",remoteRoomId).put("p_applications_open",applicationsOpen).put("p_questions_open",open)))questionsOpen=open }
+    fun beginRemote(roomId:String) {
+        guests.remoteMode=true
+        remoteRoomId=roomId;hands=emptyList();questions=emptyList();resources=emptyList();speakerId=null
+        guests.replaceRemoteGuests(emptyList())
+        guests.remoteRequests={open->remote("rooms_classe_configure_v1",JSONObject().put("p_room_id",roomId).put("p_applications_open",open).put("p_questions_open",questionsOpen))}
+        guests.remoteRefuse={ids->
+            val selected=ids.mapNotNull{participationIds[it]}
+            if(selected.size==ids.size&&selected.isNotEmpty())remote("rooms_classe_reject_applications_v1",JSONObject().put("p_room_id",roomId).put("p_participation_ids",JSONArray(selected)))
+        }
+        guests.remoteMove={ids,target->moveRemote(ids,target)}
+        guests.remoteRemove={ids->
+            val selected=ids.mapNotNull{participationIds[it]}
+            if(selected.size==ids.size&&selected.isNotEmpty())remote("rooms_classe_remove_participants_v1",JSONObject().put("p_room_id",roomId).put("p_participation_ids",JSONArray(selected)).put("p_ban",false))
+        }
+        guests.remoteInvite={person->
+            if(runCatching{UUID.fromString(person.id)}.isSuccess)remote("rooms_classe_invite_v1",JSONObject().put("p_room_id",roomId).put("p_user_ids",JSONArray().put(person.id)).put("p_client_request_id",UUID.randomUUID().toString()))
+            else notice="Sélectionne un compte réel pour envoyer une invitation."
+        }
+    }
+    private fun moveRemote(ids:Set<String>,target:WaveGuestLocation) {
+        val people=guests.guests.filter{it.id in ids}
+        val selected=ids.mapNotNull{participationIds[it]}
+        if(selected.size!=ids.size||selected.isEmpty())return
+        val args=JSONObject().put("p_room_id",remoteRoomId).put("p_participation_ids",JSONArray(selected))
+        when {
+            target==WaveGuestLocation.STAGE->remote("rooms_classe_set_stage_v1",args.put("p_onstage",true))
+            target==WaveGuestLocation.BACKSTAGE&&people.all{it.location==WaveGuestLocation.STAGE}->remote("rooms_classe_set_stage_v1",args.put("p_onstage",false))
+            target==WaveGuestLocation.BACKSTAGE&&people.all{it.location==WaveGuestLocation.REQUESTED}->remote("rooms_classe_accept_applications_v1",args)
+            else->notice="Sélectionne des candidatures à accepter ou des élèves admis à déplacer."
+        }
+    }
+    fun detachRemoteGuests(){guests.remoteMove=null;guests.remoteRemove=null;guests.remoteInvite=null;guests.remoteRequests=null;guests.remoteRefuse=null;remoteAction=null}
+    fun acceptRemote(data:JSONObject) {
+        val settings=data.getJSONObject("room")
+        title=settings.getString("title");handsOpen=settings.optBoolean("hands_open");questionsOpen=settings.optBoolean("questions_open");applicationsOpen=settings.optBoolean("applications_open")
+        guests.acceptRemoteRequests(applicationsOpen)
+        fun rows(key:String):List<JSONObject> {val a=data.optJSONArray(key)?:return emptyList();return (0 until a.length()).map{a.getJSONObject(it)}}
+        val roster=listOf("applications" to WaveGuestLocation.REQUESTED,"invitations" to WaveGuestLocation.INVITED,"backstage" to WaveGuestLocation.BACKSTAGE,"onstage" to WaveGuestLocation.STAGE).flatMap{(key,location)->rows(key).map{row->val u=row.getJSONObject("user");WaveGuest(u.getString("user_id"),u.optString("username","Artiste"),u.optString("artist_type"),android.R.drawable.ic_menu_myplaces,location,mic=false,camera=false,demoVideo="",latencyMs=null,avatarUrl=u.optString("avatar_url").takeUnless{it=="null"}.orEmpty())}}
+        participationIds=listOf("applications","invitations","backstage","onstage").flatMap{rows(it)}.associate{it.getJSONObject("user").getString("user_id") to it.getString("id")}
+        guests.replaceRemoteGuests(roster)
+        val floor=rows("floor_requests")
+        floorRequests=floor.associate{it.getJSONObject("user").getString("user_id") to it.getString("id")}
+        hands=floor.filter{it.optString("status")=="requested"}.map{ClasseHand(it.getJSONObject("user").getString("user_id"),it.optString("reason"))}
+        val nextSpeaker=floor.firstOrNull{it.optString("status")=="granted"}?.getJSONObject("user")?.getString("user_id")
+        if(speakerId!=nextSpeaker){guests.releaseAudioFloor(speakerId);speakerId=nextSpeaker;speakingSince=System.currentTimeMillis()}
+        nextSpeaker?.let{guests.grantAudioFloor(it)}
+        questions=rows("questions").map{ClasseQuestion(it.getString("id"),it.getJSONObject("user").getString("user_id"),it.getString("body"),it.optInt("like_count"),it.optBoolean("current_user_has_liked"))}
+    }
     private val prefs = context.getSharedPreferences("classe-resources-" + scope.hashCode(), Context.MODE_PRIVATE)
     val capacity = 24
     var tab by mutableIntStateOf(0)
@@ -39,7 +101,7 @@ internal class ClasseToolsState(context: Context, val guests: WaveGuestState, sc
             resources = (0 until array.length()).map { i -> val r = array.getJSONObject(i); ClasseResource(r.getString("id"), r.getString("title"), r.getString("uri"), r.getString("mime")) }
         }.onFailure { notice = "Les ressources enregistrées n’ont pas pu être chargées." }
     }
-    fun addResources(items: List<ClasseResource>) { resources = resources + items; saveResources() }
+    fun addResources(items: List<ClasseResource>) { if(remoteRoomId!=null){notice="Le transfert des ressources du cours nécessite encore son raccordement.";return}; resources = resources + items; saveResources() }
     fun deleteResource(id: String) { resources = resources.filterNot { it.id == id }; saveResources() }
     private fun saveResources() {
         val array = JSONArray().apply { resources.forEach { put(JSONObject().put("id", it.id).put("title", it.title).put("uri", it.uri).put("mime", it.mime)) } }
@@ -51,6 +113,8 @@ internal class ClasseToolsState(context: Context, val guests: WaveGuestState, sc
     }
     fun inviteFloor(id: String) { invitedToSpeak = if (id in invitedToSpeak) invitedToSpeak - id else invitedToSpeak + id }
     fun grantFloor(id: String) {
+        if(remoteRoomId!=null){val request=floorRequests[id];if(request==null){notice="Cet élève doit demander la parole avant d’activer son micro.";return};remote("rooms_classe_grant_floor_v1",JSONObject().put("p_request_id",request));return}
+
         val person = students.find { it.id == id && it.connected } ?: run { notice = "Cet élève n’est pas disponible."; return }
         if (hands.none { it.studentId == id }) { inviteFloor(id); return }
         releaseFloor()
@@ -59,6 +123,8 @@ internal class ClasseToolsState(context: Context, val guests: WaveGuestState, sc
         guests.mixerGuestId = id
     }
     fun releaseFloor() {
+        if(remoteRoomId!=null){val request=floorRequests[speakerId]?:return;remote("rooms_classe_release_floor_v1",JSONObject().put("p_request_id",request));return}
+
         speakerId?.let { id -> hands = hands.filterNot { it.studentId == id }; guests.releaseAudioFloor(id) }
         speakerId = null; speakingSince = 0
     }
@@ -66,9 +132,11 @@ internal class ClasseToolsState(context: Context, val guests: WaveGuestState, sc
         if (speakerId != null && students.none { it.id == speakerId && it.connected }) releaseFloor()
         if (students.none { it.id == selectedStudent }) selectedStudent = null
     }
-    fun dismissHand(id: String) { if (speakerId == id) releaseFloor(); hands = hands.filterNot { it.studentId == id } }
+    fun dismissHand(id: String) { if(remoteRoomId!=null){val request=floorRequests[id]?:return;remote("rooms_classe_dismiss_floor_v1",JSONObject().put("p_request_id",request));return}; if (speakerId == id) releaseFloor(); hands = hands.filterNot { it.studentId == id } }
     fun lowerAllHands() { hands = hands.filter { it.studentId == speakerId } }
     fun banStudent(id: String) {
+        if(remoteRoomId!=null){val participation=participationIds[id]?:return;remote("rooms_classe_remove_participants_v1",JSONObject().put("p_room_id",remoteRoomId).put("p_participation_ids",JSONArray().put(participation)).put("p_ban",true).put("p_reason","host_removed"));return}
+
         if (students.none { it.id == id }) return
         dismissHand(id)
         excluded = excluded + id
@@ -87,7 +155,7 @@ internal class ClasseToolsState(context: Context, val guests: WaveGuestState, sc
         questions = questions + ClasseQuestion(studentId = id, text = text.trim().take(1000))
     }
     fun likeQuestion(id: String) { questions = questions.map { if (it.id == id) it.copy(likes = (it.likes + if (it.liked) -1 else 1).coerceAtLeast(0), liked = !it.liked) else it } }
-    fun resolveQuestion(id: String, answered: Boolean) { questions = questions.map { if (it.id == id) it.copy(resolution = if (answered) "Répondue" else "Écartée") else it } }
-    fun toggleUnderstanding() { understandingActive = !understandingActive; understanding = emptyMap() }
+    fun resolveQuestion(id: String, answered: Boolean) { if(remote("rooms_classe_resolve_question_v1",JSONObject().put("p_question_id",id).put("p_resolution",if(answered)"answered" else "dismissed")))return; questions = questions.map { if (it.id == id) it.copy(resolution = if (answered) "Répondue" else "Écartée") else it } }
+    fun toggleUnderstanding() { if(remoteRoomId!=null){notice="Le sondage de compréhension nécessite encore son raccordement.";return}; understandingActive = !understandingActive; understanding = emptyMap() }
     fun respond(id: String, response: ClasseUnderstanding) { if (understandingActive && students.any { it.id == id }) understanding = understanding + (id to response) }
 }

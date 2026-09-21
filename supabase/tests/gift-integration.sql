@@ -1,0 +1,23 @@
+create extension if not exists pgtap with schema extensions;
+select plan(9);
+insert into auth.users(instance_id,id,aud,role,email,encrypted_password,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
+select '00000000-0000-0000-0000-000000000000',('79000000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid,'authenticated','authenticated','gift-integration-'||n||'@example.test','',now(),'{}','{}',now(),now() from generate_series(1,2)n;
+select public.profile_activate_gift_inventory_v1('android-shared-inventory-20260921','[]');
+select public.profile_grant_gift_inventory_v1('79000000-0000-0000-0000-000000000001','force-card',1,'test','fixture-one','fixture-grant-one');
+insert into public.rooms_v2(id,host_id,type,title,status,livekit_room_name) values('7a000000-0000-0000-0000-000000000001','79000000-0000-0000-0000-000000000001','loge','Test cadeaux','live','gift-test');
+insert into public.room_participants_v2(room_id,user_id,role) values('7a000000-0000-0000-0000-000000000001','79000000-0000-0000-0000-000000000002','viewer');
+insert into public.room_queue_v2(room_id,user_id) values('7a000000-0000-0000-0000-000000000001','79000000-0000-0000-0000-000000000002');
+select set_config('request.jwt.claim.sub','79000000-0000-0000-0000-000000000001',true);
+set local role authenticated;
+select ok(not has_function_privilege('authenticated','public.profile_grant_gift_inventory_v1(uuid,text,integer,text,text,text)','execute'),'client cannot mint stock');
+select is((select available_quantity from public.profile_list_my_gift_inventory_v1() where gift_code='force-card'),1,'stock read');
+select lives_ok($$select public.rooms_submit_gift_v1('7a000000-0000-0000-0000-000000000001','force-card','Carte de Force','79000000-0000-0000-0000-000000000002','send_now',null,null,'gift-test-delivery-1')$$,'send succeeds');
+select is((select available_quantity from public.profile_list_my_gift_inventory_v1() where gift_code='force-card'),0,'stock consumed');
+select lives_ok($$select public.rooms_submit_gift_v1('7a000000-0000-0000-0000-000000000001','force-card','Carte de Force','79000000-0000-0000-0000-000000000002','send_now',null,null,'gift-test-delivery-1')$$,'retry idempotent');
+select throws_ok($$select public.rooms_submit_gift_v1('7a000000-0000-0000-0000-000000000001','force-card','Carte de Force','79000000-0000-0000-0000-000000000002','send_now',null,null,'gift-test-delivery-2')$$,'22003','profile_gift_inventory_insufficient_available','empty stock blocks delivery');
+select set_config('request.jwt.claim.sub','79000000-0000-0000-0000-000000000002',true);
+select is((select available_quantity from public.profile_list_my_gift_inventory_v1() where gift_code='force-card'),1,'recipient credited once');
+select lives_ok($$select public.get_profile_certif_summary_v1('79000000-0000-0000-0000-000000000002')$$,'certif summary available');
+select ok(not has_table_privilege('authenticated','public.profile_gift_inventory_movements_v1','UPDATE'),'ledger immutable for client');
+reset role;
+select * from finish();

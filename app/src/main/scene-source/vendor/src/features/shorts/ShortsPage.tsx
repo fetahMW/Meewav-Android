@@ -1,3 +1,5 @@
+import { sceneInteraction } from "../scene/comments/sceneCommentsLive";
+import { scenePrivateKey } from "../scene/scenePrivateStorage";
 import GoldenLikeConfirmationDialog from "../goldenLikes/GoldenLikeConfirmationDialog";
 import AppRouteLoading from "../../components/shared/AppRouteLoading";
 import { readSceneRecommendationPreferences } from "../scene/recommendations/sceneRecommendationPreferences";
@@ -917,12 +919,12 @@ function scenePublishedLabel(item: VideoItem) {
 
 function appendScenePreference(storageKey: string, value: string) {
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(storageKey) ?? "[]");
+    const parsed = JSON.parse(window.localStorage.getItem(scenePrivateKey(storageKey)) ?? "[]");
     const values = new Set<string>(
       Array.isArray(parsed) ? parsed.filter((entry) => typeof entry === "string") : [],
     );
     values.add(value);
-    window.localStorage.setItem(storageKey, JSON.stringify([...values]));
+    window.localStorage.setItem(scenePrivateKey(storageKey), JSON.stringify([...values]));
   } catch {
     // The preference remains acknowledged for the current interaction when storage is unavailable.
   }
@@ -2137,16 +2139,32 @@ function SceneWorkspace() {
     return () => window.clearTimeout(timer);
   }, [goldenBurstVideoId]);
 
+  const [preferencesVersion, setPreferencesVersion] = useState(0);
+  const [catalogError, setCatalogError] = useState("");
   const allVideos = useMemo(
-    () => [...publishedItems, ...remoteSceneItems, ...ALL_VIDEOS],
-    [publishedItems, remoteSceneItems],
+    () => {
+      const read = (key:string):string[] => { try { return JSON.parse(localStorage.getItem(scenePrivateKey(key)) || '[]'); } catch { return []; } };
+      const hidden = read('meewav:scene:not-interested'), muted = read('meewav:scene:muted-artists');
+      const rows = [...publishedItems, ...remoteSceneItems, ...(isLocalAuthPreviewEnabled() ? ALL_VIDEOS : [])];
+      const preferences=readSceneRecommendationPreferences();
+      const unique=[...new Map(rows.map(item=>[item.id,item])).values()];
+      if(watchRoute)return unique;
+      return unique.filter(item=>!hidden.includes(item.id) && !muted.includes(item.artistId || item.artist) && !preferences.hiddenArtistIds.includes(item.artistId))
+        .sort((a,b)=>{
+          if(!preferences.personalizationEnabled)return 0;
+          const score=(item:VideoItem)=>{const record=sceneVideoFromShortsItem(item);return (record.styles.some(style=>preferences.preferredStyles.includes(style)) ? 1:0)-(preferences.reducedFormats.includes(item.presentationFormat || item.format) ? 1:0);};
+          return score(b)-score(a);
+        });
+    },
+    [publishedItems, remoteSceneItems, preferencesVersion, location.key, watchRoute],
   );
 
   useEffect(() => {
-    let active = true; setCatalogLoading(true);
-    const timer = window.setTimeout(() => { if (active) { active = false; setCatalogLoading(false); } }, 12000);
+    if(isLocalAuthPreviewEnabled()) { setCatalogLoading(false); return; }
+    let active = true; setCatalogLoading(true); setCatalogError("");
+    const timer = window.setTimeout(() => { if (active) { active = false; setCatalogLoading(false); setCatalogError("Le catalogue met trop de temps à répondre. Réessaie."); } }, 12000);
     void getPublishedSceneCatalog().then((items) => { if (active) setRemoteSceneItems(items); })
-      .catch(() => { /* Keep the available catalogue on a refresh failure. */ })
+      .catch(() => { if(active) setCatalogError("Le catalogue ne peut pas être chargé. Réessaie."); })
       .finally(() => { window.clearTimeout(timer); if (active) setCatalogLoading(false); });
     return () => { active = false; window.clearTimeout(timer); };
   }, [catalogAttempt]);
@@ -2167,6 +2185,15 @@ function SceneWorkspace() {
   useEffect(() => {
     if (isUploadRoute && canPublish) setCreateOpen(true);
   }, [canPublish, isUploadRoute]);
+  useEffect(()=>{
+    if(isLocalAuthPreviewEnabled())return;
+    const reference=getSceneWatchSlug(location.pathname) || getSceneVerticalVideoId(location.pathname) || searchParams.get("video") || "";
+    const id=reference.match(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i)?.[0];
+    if(!id || remoteSceneItems.some(item=>item.id===id))return;
+    let active=true;
+    getPublishedSceneCatalog(1,id).then(items=>{if(active && items.length)setRemoteSceneItems(current=>[...current.filter(item=>item.id!==id),...items]);}).catch(()=>{if(active)setCatalogError("Impossible de charger cette vidéo.");});
+    return ()=>{active=false;};
+  },[location.pathname,location.search,catalogAttempt,remoteSceneItems]);
   const sceneCities = useMemo(
     () => [...new Set(allVideos.map((item) => item.city))].sort((left, right) => left.localeCompare(right, "fr")),
     [allVideos],
@@ -3017,6 +3044,9 @@ function SceneWorkspace() {
     const route = item.presentationFormat === "vertical" || item.format === "portrait"
       ? getSceneVerticalPath(item.id)
       : getSceneWatchPath(sceneVideoSlug(item));
+    if(window.location.hostname === "appassets.androidplatform.net") {
+      notify("Le domaine public de partage doit encore être configuré."); return;
+    }
     const url = `${window.location.origin}${route}`;
     try {
       if (navigator.share) {
@@ -3133,6 +3163,7 @@ function SceneWorkspace() {
   const markNotInterested = useCallback((item: VideoItem) => {
     setOpenMenuId(null);
     appendScenePreference("meewav:scene:not-interested", item.id);
+    setPreferencesVersion(v=>v+1);
     trackSceneAnalytics({ event: "not_interested", mediaId: item.id });
     notify("Cette préférence affinera tes prochaines recommandations.");
   }, [notify]);
@@ -3140,13 +3171,15 @@ function SceneWorkspace() {
   const muteArtistRecommendations = useCallback((item: VideoItem) => {
     setOpenMenuId(null);
     appendScenePreference("meewav:scene:muted-artists", item.artistId || item.artist);
+    setPreferencesVersion(v=>v+1);
     notify(`${item.artist} ne sera plus proposé dans tes recommandations.`);
   }, [notify]);
 
-  const reportVideo = useCallback((item: VideoItem) => {
+  const reportVideo = useCallback(async (item: VideoItem) => {
     setOpenMenuId(null);
-    appendScenePreference("meewav:scene:reported", item.id);
-    notify("Signalement enregistré pour vérification.");
+    if(isLocalAuthPreviewEnabled()) { appendScenePreference("meewav:scene:reported", item.id); notify("Signalement simulé dans la démonstration."); return; }
+    try { await sceneInteraction("report",item.id,null,"Signalement depuis La Scène : contenu à examiner"); notify("Signalement transmis pour vérification."); }
+    catch { notify("Le signalement n’a pas été transmis. Réessaie."); }
   }, [notify]);
 
   const handleCollaborationSubmitted = useCallback((requestId: string) => {
@@ -3345,7 +3378,7 @@ function SceneWorkspace() {
       : routeVerticalVideoId
         ? allVideos.find((item) => item.id === routeVerticalVideoId) ?? null
       : routeWatchSlug
-        ? allVideos.find((item) => sceneVideoSlug(item) === routeWatchSlug) ?? null
+        ? allVideos.find((item) => sceneVideoSlug(item) === routeWatchSlug || item.id === routeWatchSlug || routeWatchSlug.endsWith(`-${item.id}`)) ?? null
         : null;
     setSelectedVideo((current) => routeVideo
       ? (current?.id === routeVideo.id ? current : routeVideo)
@@ -3523,6 +3556,7 @@ function SceneWorkspace() {
   return (
     <main className={`shorts-page scene-page has-unified-header${activeTab !== "tv" || watchRoute ? " is-document" : ""}${watchRoute ? " has-watch-page" : ""}${isCreatorStudioRoute ? " is-creator-studio" : ""}${showBrowseNavigation ? ` has-browse-nav${browseMenuOpen ? "" : " is-browse-collapsed"}` : ""}`} aria-label={SCENE_NAME}>
       <SceneNavigationProgress navigationKey={location.key} pending={catalogLoading} />
+      {catalogError && <div role="alert">{catalogError}<button onClick={()=>setCatalogAttempt(v=>v+1)}>Réessayer</button></div>}
       <div className="shorts-page__background" aria-hidden="true" />
 
       <aside className="shorts-primary-rail">

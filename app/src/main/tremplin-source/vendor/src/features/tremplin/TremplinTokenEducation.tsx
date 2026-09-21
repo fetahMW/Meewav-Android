@@ -1,5 +1,5 @@
 import { ArrowDownUp, ArrowRight, ChevronRight, Heart, Info, PlayCircle, Radio, Clapperboard, Globe2, Sparkles, ShieldCheck } from "lucide-react";
-import { useId, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useId, useMemo, useState, type CSSProperties } from "react";
 import TremplinGradeProgression from "./TremplinGradeProgression";
 import { SCENE_ROUTE } from "../shorts/sceneContract";
 import { trackTremplinEvent } from "./tremplinAnalytics";
@@ -223,6 +223,22 @@ type TremplinTokenEducationProps = {
 /** One mobile reading surface; optional details expand in place. */
 export default function TremplinTokenEducation({ onDiscover, onOpenRoute }: TremplinTokenEducationProps) {
   const [videoOpen, setVideoOpen] = useState(false);
+  const [demoVideoSource, setDemoVideoSource] = useState<string | null>(null);
+  useEffect(() => {
+    // This short, bundled 9 MB demo is loaded completely before playback.
+    // Blob playback avoids repeated APK byte-range reads midway through the film.
+    const abort = new AbortController();
+    let objectUrl: string | undefined;
+    fetch(MEEWAV_ECOSYSTEM_VIDEO_SRC, { signal: abort.signal })
+      .then(response => { if (!response.ok) throw new Error("Video unavailable"); return response.blob(); })
+      .then(blob => {
+        if (abort.signal.aborted) return;
+        objectUrl = URL.createObjectURL(blob);
+        setDemoVideoSource(objectUrl);
+      })
+      .catch(() => { if (!abort.signal.aborted) setDemoVideoSource(MEEWAV_ECOSYSTEM_VIDEO_SRC); });
+    return () => { abort.abort(); if (objectUrl) URL.revokeObjectURL(objectUrl); };
+  }, []);
   return <article className="tremplin-guide" aria-labelledby="tremplin-guide-title">
     <header className="tg-intro">
       <span>LE TREMPLIN, SIMPLEMENT</span>
@@ -236,7 +252,8 @@ export default function TremplinTokenEducation({ onDiscover, onOpenRoute }: Trem
       <li><span aria-hidden="true"><ShieldCheck size={19} /></span><div><h2>Soutiens si tu le souhaites</h2><p>Certains artistes proposent un jeton de talent payant. L’achat reste facultatif.</p></div></li>
     </ol>
     <button type="button" className="tg-video-play" onClick={() => setVideoOpen(open => !open)} aria-expanded={videoOpen}><PlayCircle size={20} /><span>Regarder la vidéo · 1 min 40</span></button>
-    {videoOpen && <video className="tg-video" controls autoPlay playsInline poster={tremplinArtists[0].artwork} aria-label="Présentation de MeeWav"><source src={MEEWAV_ECOSYSTEM_VIDEO_SRC} type="video/mp4" />Ton navigateur ne peut pas lire cette vidéo.</video>}
+    {videoOpen && !demoVideoSource && <p role="status">Préparation de la vidéo…</p>}
+    {videoOpen && demoVideoSource && <video className="tg-video" controls preload="auto" autoPlay playsInline poster={tremplinArtists[0].artwork} aria-label="Présentation de MeeWav"><source src={demoVideoSource} type="video/mp4" />Ton navigateur ne peut pas lire cette vidéo.</video>}
     <p className="tg-essential">Le prix peut baisser. Aucun gain n’est garanti et la revente peut prendre du temps.</p>
     <button type="button" className="tg-primary" onClick={() => { trackTremplinEvent("how_it_works_completed"); onDiscover(); }}>Découvrir les artistes <ArrowRight size={18} /></button>
     <TremplinGradeProgression id="tremplin-grades">

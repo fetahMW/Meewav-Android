@@ -169,7 +169,7 @@ open class MessagingActivity : ComponentActivity() {
         container.addView(web, FrameLayout.LayoutParams(-1, -1))
         web.webChromeClient = object : WebChromeClient() {
             override fun onShowCustomView(view: View, callback: CustomViewCallback) {
-                if (assetSurface !in setOf("scene", "rooms") || fullscreenView != null) { callback.onCustomViewHidden(); return }
+                if (assetSurface !in setOf("scene", "rooms", "tremplin") || fullscreenView != null) { callback.onCustomViewHidden(); return }
                 fullscreenView = view
                 fullscreenCallback = callback
                 orientationBeforeVideo = requestedOrientation
@@ -382,7 +382,7 @@ open class MessagingActivity : ComponentActivity() {
                     val item = manifest.getJSONObject(name)
                     val mime = item.getString("mime")
                     if (mime.startsWith("audio/") || mime.startsWith("video/"))
-                        localMediaAsset(this@MessagingActivity, "$assetSurface/$name", mime, item.getLong("bytes"), request.requestHeaders["Range"])
+                        localMediaAsset(this@MessagingActivity, "$assetSurface/$name", mime, item.getLong("bytes"), request.requestHeaders.entries.firstOrNull { it.key.equals("Range", ignoreCase = true) }?.value)
                     else WebResourceResponse(mime, if (mime.startsWith("image/") || mime.startsWith("font/")) null else "utf-8", 200, "OK",
                         mapOf("Cache-Control" to "no-store", "X-Content-Type-Options" to "nosniff", "Content-Security-Policy" to csp()), assets.open("$assetSurface/$name"))
                 } catch (_: Exception) { denied() }

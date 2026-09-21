@@ -35,7 +35,7 @@ internal fun CageArtistCompact(state: CageToolsState, id: String?, modifier: Mod
             Box(Modifier.size(48.dp)) {
                 Box(Modifier.fillMaxSize().clip(CircleShape).background(Color(0xFF222129))
                     .clickable(enabled = person != null) { person?.let { beforeProfile(); state.openProfile(it.id) } }, contentAlignment = Alignment.Center) {
-                    if (person != null) Image(painterResource(person.portrait), "Pré-profil de " + person.name, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                    if (person != null) WaveGuestPortrait(person, "Pré-profil de " + person.name, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                     else Text("?", color = Color.Gray)
                 }
                 if (winner || champion) Icon(Icons.Default.EmojiEvents, if (champion) "Champion" else "Vainqueur", Modifier.align(Alignment.BottomEnd).size(15.dp).background(Color(0xFF17140F), CircleShape), tint = Color(0xFFE4C47F))
@@ -58,7 +58,7 @@ internal fun CageArtistCompact(state: CageToolsState, id: String?, modifier: Mod
     }
     val portrait: @Composable () -> Unit = {
         Box(Modifier.size(38.dp).clip(CircleShape).background(Color(0xFF222129)).clickable(enabled = person != null) { person?.let { beforeProfile(); state.openProfile(it.id) } }, contentAlignment = Alignment.Center) {
-            if (person != null) Image(painterResource(person.portrait), "Pré-profil de " + person.name, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+            if (person != null) WaveGuestPortrait(person, "Pré-profil de " + person.name, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
             else Text("?", color = Color.Gray)
         }
     }

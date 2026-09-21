@@ -106,6 +106,7 @@ data class WaveChatMessage(
     val isHost: Boolean = false,
     val isOwn: Boolean = false,
     val isSystem: Boolean = false,
+    val serverId: String? = null,
 )
 
 private val chatAccent = Color(0xFFA98EF0)
@@ -202,11 +203,19 @@ internal fun chatAnnotatedText(content: String): Pair<AnnotatedString, Map<Strin
 private fun messageClock(ms: Long): String =
     java.text.SimpleDateFormat("HH:mm", java.util.Locale.FRANCE).format(java.util.Date(ms))
 
-internal class WaveChatSession {
+internal class WaveChatSession(val live:Boolean=false) {
+    var error by mutableStateOf<String?>(null)
+    var busy by mutableStateOf(false)
+    var pinned by mutableStateOf<WaveChatMessage?>(null)
+    var send: (suspend (String)->Boolean)? = null
+    var delete: ((WaveChatMessage)->Unit)? = null
+    var pin: ((WaveChatMessage?)->Unit)? = null
+    var launchPoll: ((String,List<String>,Int)->Unit)? = null
+    var stopPoll: (()->Unit)? = null
     private val now=System.currentTimeMillis()
     val nextId=mutableLongStateOf(9L)
     val messages =         mutableStateOf(
-            listOf(
+            if(live)emptyList()else listOf(
                 WaveChatMessage(1, "sys", "", "La Wave est en direct — bienvenue dans le chat", now - 9 * 60_000, isSystem = true),
                 WaveChatMessage(2, "u_luca", "luca.maris", "Cette base est lourde [[mw:coeur-en-flamme]]", now - 8 * 60_000, avatarRes = R.drawable.chat_av_luca),
                 WaveChatMessage(3, "u_mina", "mina.lune", "J'ai envoyé une boucle au sas [[mw:micro-flamme]]", now - 6 * 60_000, avatarRes = R.drawable.chat_av_mina),
@@ -267,7 +276,8 @@ internal fun WaveChatPanel(
         )
     }
     var liveIndex by remember { mutableIntStateOf(0) }
-    LaunchedEffect(Unit) {
+    LaunchedEffect(chatSession.live) {
+        if(chatSession.live)return@LaunchedEffect
         val delays = longArrayOf(650, 900, 450, 1200, 550, 750, 400, 1000, 600, 800)
         var i = 0
         while (true) {
@@ -321,6 +331,7 @@ internal fun WaveChatPanel(
         val emojiHeight = (maxHeight - 100.dp - if (pinnedMessage != null) 86.dp else 0.dp)
             .coerceIn(80.dp, 260.dp)
         Column(Modifier.fillMaxSize()) {
+            chatSession.error?.let{Text(it,color=Color(0xFFE9A1AF),fontSize=11.sp,modifier=Modifier.padding(8.dp))}
             pinnedMessage?.let { pinned ->
                 Row(
                     Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 6.dp)
@@ -418,7 +429,12 @@ internal fun WaveChatPanel(
                 onToggleEmoji = { emojiWallOpen = !emojiWallOpen },
                 onSend = {
                     val text = draft.trim()
-                    if (text.isNotEmpty()) {
+                    if (text.isNotEmpty() && chatSession.live) {
+                        if(!chatSession.busy)scope.launch {
+                            val confirmed=chatSession.send?.invoke(text)?:false
+                            if(confirmed&&draft.trim()==text)draft=""
+                        }
+                    } else if (text.isNotEmpty()) {
                         messages = messages + WaveChatMessage(
                             id = nextId++, userId = "host", userName = "Luma",
                             content = text, createdAtMs = System.currentTimeMillis(),
@@ -440,14 +456,16 @@ internal fun WaveChatPanel(
                 poll = livePoll,
                 onDismiss = { toolsOpen = false },
                 onLaunch = { question, choices, duration ->
+                    if(chatSession.live)chatSession.launchPoll?.invoke(question,choices,duration) else {
                     livePoll = WaveChatPoll(question, choices, System.currentTimeMillis() + duration * 1000L)
                     messages = messages + WaveChatMessage(
                         id = nextId++, userId = "sys", userName = "",
                         content = "Sondage · $question · ${choices.joinToString(" / ")}",
                         createdAtMs = System.currentTimeMillis(), isSystem = true,
                     )
+                    }
                 },
-                onStop = { livePoll = livePoll?.copy(endsAt = System.currentTimeMillis()) },
+                onStop = { if(chatSession.live)chatSession.stopPoll?.invoke()else livePoll = livePoll?.copy(endsAt = System.currentTimeMillis()) },
                 onNewPoll = { livePoll = null },
                 hostMessages = messages.filter { it.isHost && !it.isSystem },
                 pinnedMessage = pinnedMessage,
@@ -463,8 +481,10 @@ internal fun WaveChatPanel(
                 onDismiss = { actionMessage = null },
                 onPin = { if (msg.isHost) onPinMessage(msg); actionMessage = null },
                 onDelete = {
+                    if(chatSession.live)chatSession.delete?.invoke(msg)else {
                     if (pinnedMessage?.id == msg.id) onPinMessage(null)
                     messages = messages.filter { it.id != msg.id }
+                    }
                     actionMessage = null
                 }
             )

@@ -133,6 +133,7 @@ export default function ProfilePage() {
   const [reloadKey, setReloadKey] = useState(0);
   const [toast, setToast] = useState<ToastState>(null);
 
+  useEffect(()=>{ const reload=()=>setReloadKey(v=>v+1); window.addEventListener("meewav:profile-updated",reload); return ()=>window.removeEventListener("meewav:profile-updated",reload); },[]);
   const showToast = (message: string) => setToast({ id: Date.now(), message });
 
   useLayoutEffect(() => {
@@ -162,6 +163,7 @@ export default function ProfilePage() {
         setNotificationsError(null);
         setProfileStatus("ready");
       }
+      if(!localAuthPreviewEnabled) { setProfile(emptyProfile); setNotifications([]); setProfileStatus("fallback"); setProfileError("Reconnecte-toi pour accéder à ton profil."); }
       return undefined;
     }
 

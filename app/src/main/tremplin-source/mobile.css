@@ -188,3 +188,12 @@
 
 /* Acoustic background approved for the main feature, independent of live rooms. */
 #root .mobile-tremplin .tremplin-page__background {background:#08090b url("/tremplin/images/acoustic-black-background-trial.png") center center / cover no-repeat!important;opacity:1!important;}
+
+/* Statistics: opaque mixer surfaces, readable figures, one selection colour. */
+#root .mobile-tremplin .tremplin-statistics__list { background: #111216; padding: 4px 14px; border-color: #ffffff20; backdrop-filter: none; -webkit-backdrop-filter: none; }
+#root .mobile-tremplin .tremplin-statistics__filters button { background: #202127; border-color: #ffffff20; color: #cac7d1; box-shadow: inset 0 1px #ffffff08; }
+#root .mobile-tremplin .tremplin-statistics__filters button[data-sort],
+#root .mobile-tremplin .tremplin-statistics__filters button[data-sort][aria-pressed="false"] { background: #202127; border-color: #ffffff20; color: #cac7d1; box-shadow: none; }
+#root .mobile-tremplin .tremplin-statistics__filters button[data-sort][aria-pressed="true"] { background: #362a48; border-color: #bba4dc66; color: #f1e8ff; box-shadow: inset 0 1px #ffffff12; }
+#root .mobile-tremplin .tremplin-statistics__metrics > span { background: #1d1e25; padding: 10px; }
+#root .mobile-tremplin .tremplin-statistics__metrics [data-selected="true"] { background: #2c243a; }

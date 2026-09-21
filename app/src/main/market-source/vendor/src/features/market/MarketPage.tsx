@@ -1429,7 +1429,7 @@ export default function MarketPage() {
   const marketNavigationId = sellerDraftsOpen
     ? "seller-drafts"
     : queryNormalized || isAllCatalog ? "search" : isHome ? "home" : activePillar;
-  const sellerName = authMetadataText(user?.user_metadata, "full_name", "display_name", "name")
+  const sellerName = authMetadataText(user?.user_metadata, "display_name", "full_name", "name")
     ?? user?.email?.split("@")[0]
     ?? "Profil Meewav";
   const sellerIdentity = {
@@ -1443,10 +1443,10 @@ export default function MarketPage() {
   };
   const currentUserAvatar = authMetadataText(
     user?.user_metadata,
+    "profile_image_url",
     "avatar_url",
     "picture",
-    "profile_image_url",
-  ) ?? "/images/preprofile/portraits/profile-21.webp";
+  ) ?? "/avatars/utilisateur.png";
 
   const closeListingComposer = () => {
     if (listingPublishInFlightRef.current) {

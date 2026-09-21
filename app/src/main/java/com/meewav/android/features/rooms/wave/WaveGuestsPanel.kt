@@ -65,7 +65,7 @@ internal fun Modifier.guestDrag(state: WaveGuestState, guest: WaveGuest, enabled
 internal fun WaveGuestDragOverlay(state: WaveGuestState) {
     val guest = state.dragged ?: return
     val radius = with(LocalDensity.current) { 34.dp.toPx() }
-    Image(painterResource(guest.portrait), guest.name,
+    WaveGuestPortrait(guest, guest.name,
         modifier = Modifier.offset { IntOffset((state.dragPoint.x - radius).roundToInt(), (state.dragPoint.y - radius).roundToInt()) }
             .size(68.dp).clip(CircleShape)
             .border(2.dp, if (state.canDrop) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .4f), CircleShape),
@@ -278,7 +278,7 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                                 else { multiSelect = true; state.previewId = null; state.selected = state.selected + guest.id }
                             },
                         ).alpha(if (state.dragId == guest.id) .3f else 1f)) {
-                        Image(painterResource(guest.portrait), guest.name, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                        WaveGuestPortrait(guest, guest.name, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = .12f), Color.Black.copy(alpha = .95f)))))
                         if (guest.location == WaveGuestLocation.BACKSTAGE) Box(Modifier.align(Alignment.TopStart).padding(5.dp).background(Color.Black.copy(alpha = .65f), RoundedCornerShape(5.dp)).padding(3.dp)) { GuestHealth(guest) }
                         CageVictoryBadge(guest.cageVictories, Modifier.align(Alignment.TopEnd).padding(4.dp))
@@ -331,7 +331,7 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                 catalog.forEach { guest ->
                     Row(Modifier.fillMaxWidth().hifiBlackSurface(14.dp).clickable { state.invite(guest); page = 1; inviteOpen = false }.padding(14.dp),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Image(painterResource(guest.portrait), null, modifier = Modifier.size(40.dp).clip(CircleShape), contentScale = ContentScale.Crop)
+                        WaveGuestPortrait(guest, null, modifier = Modifier.size(40.dp).clip(CircleShape), contentScale = ContentScale.Crop)
                         Text(guest.name, modifier = Modifier.weight(1f))
                         Icon(WaveIcons.Add, "Inviter", tint = WaveMixerTheme.capsuleAccentSoft)
                     }
@@ -355,7 +355,7 @@ internal fun GuestPreviewContent(state: WaveGuestState, guest: WaveGuest) {
                 Text("Simuler la reconnexion", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 12.sp)
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Image(painterResource(guest.portrait), null, modifier = Modifier.size(52.dp).clip(CircleShape), contentScale = ContentScale.Crop)
+                WaveGuestPortrait(guest, null, modifier = Modifier.size(52.dp).clip(CircleShape), contentScale = ContentScale.Crop)
                 Column(Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(guest.name, modifier = Modifier.weight(1f, fill = false), maxLines = 1, overflow = TextOverflow.Ellipsis, fontSize = 22.sp, fontWeight = FontWeight.SemiBold)

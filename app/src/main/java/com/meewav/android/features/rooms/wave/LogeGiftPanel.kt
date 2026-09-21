@@ -1,5 +1,6 @@
 package com.meewav.android.features.rooms.wave
 
+import kotlinx.coroutines.launch
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -37,6 +38,8 @@ internal val logeGiftCatalog=listOf(
 }
 
 @Composable internal fun LogeGiftPanel(state:LogeToolsState,directRecipientId:String?=null) {
+    val scope=rememberCoroutineScope()
+    val catalog=if(state.giftLive)logeGiftCatalog.mapIndexed{i,g->when(i){0->g.copy(name="Carte de Force");2->g.copy(name="Accès privé",detail="Un accès offert à un membre.");3->g.copy(name="Golden Like",detail="Un signe de reconnaissance.");else->g}}else logeGiftCatalog
     var drawMode by remember{mutableStateOf(false)}
     var step by remember{mutableIntStateOf(0)}
     var code by remember{mutableIntStateOf(-1)}
@@ -97,7 +100,7 @@ internal val logeGiftCatalog=listOf(
                 when(step) {
                     0 -> {
                         Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                            logeGiftCatalog.chunked(2).forEachIndexed { row,gifts ->
+                            catalog.chunked(2).forEachIndexed { row,gifts ->
                                 Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                                 gifts.forEachIndexed { column,gift ->
                                     val index=row*2+column
@@ -114,7 +117,7 @@ internal val logeGiftCatalog=listOf(
                             }
                             }
                         }
-                        if(code==2){SceneField("Nom du cadeau surprise",customTitle,{customTitle=it.take(80)});SceneButton(if(customImage.isBlank())"Ajouter une image"else"Changer l’image",Modifier.fillMaxWidth(),icon=Icons.Default.Image){picker.launch(arrayOf("image/*"))};if(customImage.isNotBlank())SceneCampaignCover(customImage)}
+                        if((code==2&&!state.giftLive)){SceneField("Nom du cadeau surprise",customTitle,{customTitle=it.take(80)});SceneButton(if(customImage.isBlank())"Ajouter une image"else"Changer l’image",Modifier.fillMaxWidth(),icon=Icons.Default.Image){picker.launch(arrayOf("image/*"))};if(customImage.isNotBlank())SceneCampaignCover(customImage)}
                     }
                     1 -> {
                         if(drawMode) {
@@ -134,28 +137,28 @@ internal val logeGiftCatalog=listOf(
                         }
                     }
                     2 -> {
-                        val gift=logeGiftCatalog.getOrNull(code)
+                        val gift=catalog.getOrNull(code)
                         if(gift!=null)SceneCard{
-                            Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)){Icon(gift.icon,null,tint=gift.color,modifier=Modifier.size(30.dp));Column{Text(if(code==2)customTitle else gift.name,color=Color.White,fontSize=15.sp);Text(if(drawMode)"${candidates.size} participants"else state.people.find{it.id==recipient}?.name.orEmpty(),color=logeGold,fontSize=12.sp)}}
+                            Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)){Icon(gift.icon,null,tint=gift.color,modifier=Modifier.size(30.dp));Column{Text(if((code==2&&!state.giftLive))customTitle else gift.name,color=Color.White,fontSize=15.sp);Text(if(drawMode)"${candidates.size} participants"else state.people.find{it.id==recipient}?.name.orEmpty(),color=logeGold,fontSize=12.sp)}}
                             Text(gift.detail,color=sceneMuted,fontSize=11.sp)
                         }
-                        SceneChoice(when(delivery){"scheduled"->"Programmer";"round"->"Ajouter à une ronde";else->if(drawMode)"Préparer maintenant"else"Envoyer maintenant"},(listOf("now" to if(drawMode)"Préparer maintenant"else"Envoyer maintenant","scheduled" to "Programmer")+if(drawMode)emptyList()else listOf("round" to "Ajouter à une ronde"))){delivery=it}
+                        SceneChoice(when(delivery){"scheduled"->"Programmer";"round"->"Ajouter à une ronde";else->if(drawMode)"Préparer maintenant"else"Envoyer maintenant"},(listOf("now" to if(drawMode)"Préparer maintenant"else"Envoyer maintenant","scheduled" to "Programmer")+if(drawMode||state.giftLive)emptyList()else listOf("round" to "Ajouter à une ronde"))){delivery=it}
                         if(delivery=="scheduled")SceneDateField("Date et heure",date){date=it}
                         if(delivery=="round")SceneChoice(round,listOf("Ronde actuelle","Nouvelle ronde","Fans récents","Participants actifs").map{it to it}){round=it}
                         if(drawMode){Text("Animation à l’écran",color=sceneMuted,fontSize=11.sp);Row(horizontalArrangement=Arrangement.spacedBy(6.dp)){listOf(5,7,10).forEach{n->SceneButton("$n s",Modifier.weight(1f),primary=seconds==n){seconds=n}}};Text("Seuls le compteur et le gagnant apparaissent à l’écran. Les autres noms restent privés.",color=sceneMuted,fontSize=11.sp)}
-                        Text("Inventaire et envois de démonstration. La programmation s’exécute à l’ouverture de cet atelier, sans transfert réel.",color=sceneMuted,fontSize=10.sp)
+                        if(!state.giftLive)Text("Inventaire et envois de démonstration. La programmation s’exécute à l’ouverture de cet atelier, sans transfert réel.",color=sceneMuted,fontSize=10.sp)
                     }
                 }
                 Spacer(Modifier.height(4.dp))
             }
-            val canNext=when(step){0->code>=0&&state.data.stock.getOrElse(code){0}>0&&(code!=2||customTitle.isNotBlank());1->if(drawMode)candidates.size>=2 else state.people.any{it.id==recipient};else->delivery!="scheduled"||(date?:0)>state.now}
+            val canNext=when(step){0->code>=0&&state.data.stock.getOrElse(code){0}>0&&(state.giftLive||code!=2||customTitle.isNotBlank());1->if(drawMode)candidates.size>=2 else state.people.any{it.id==recipient};else->delivery!="scheduled"||(date?:0)>state.now}
             Row(Modifier.padding(vertical=8.dp),horizontalArrangement=Arrangement.spacedBy(6.dp)){
                 if(step>0)SceneButton("Retour",icon=WaveIcons.ChevronLeft){step=if(directRecipientId!=null)0 else step-1}
-                SceneButton(if(step<2)"Continuer"else if(drawMode)"Préparer le tirage"else"Confirmer · démo",Modifier.weight(1f),primary=true,enabled=canNext){
+                SceneButton(if(step<2)"Continuer"else if(drawMode)"Préparer le tirage"else if(state.giftLive)"Confirmer"else"Confirmer · démo",Modifier.weight(1f),primary=true,enabled=canNext&&!state.remoteBusy){
                     if(step<2)step=if(directRecipientId!=null)2 else step+1 else {
-                        val g=LogeGift(operationId,code,recipientId=if(drawMode)""else recipient,recipientName=if(drawMode)""else state.people.find{it.id==recipient}?.name.orEmpty(),title=if(code==2)customTitle else logeGiftCatalog[code].name,image=customImage,
+                        val g=LogeGift(operationId,code,recipientId=if(drawMode)""else recipient,recipientName=if(drawMode)""else state.people.find{it.id==recipient}?.name.orEmpty(),title=if((code==2&&!state.giftLive))customTitle else catalog[code].name,image=customImage,
                             status=if(delivery=="scheduled")"scheduled"else if(drawMode)"ready"else if(delivery=="round")"round"else"sent",scheduledAt=date,round=if(delivery=="round")round else"",pool=if(drawMode)candidates else emptyList(),animationSeconds=seconds)
-                        if(state.gift(g))completedId=operationId
+                        scope.launch { state.sendGift(g)?.let{completedId=it.id} }
                     }
                 }
             }
@@ -167,13 +170,13 @@ internal val logeGiftCatalog=listOf(
     val type=logeGiftCatalog.getOrNull(g.code)?:return
     SceneCard {
         Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(10.dp)){
-            RoomGiftBadge(g.code);Column(Modifier.weight(1f)){Text(g.title.ifBlank{type.name},color=Color.White,fontSize=14.sp,fontWeight=FontWeight.SemiBold);Text(when(g.status){"ready"->"Prêt à diffuser";"scheduled"->"Programmé · "+(g.scheduledAt?.let(::sceneDate)?:"");"spinning"->"Tirage en cours";"revealed"->"Gagnant révélé";"round"->g.round;"cancelled"->"Annulé";else->"Attribué · démo"},color=logeGold,fontSize=11.sp)}
+            RoomGiftBadge(g.code);Column(Modifier.weight(1f)){Text(g.title.ifBlank{type.name},color=Color.White,fontSize=14.sp,fontWeight=FontWeight.SemiBold);Text(when(g.status){"ready"->"Prêt à diffuser";"scheduled"->"Programmé · "+(g.scheduledAt?.let(::sceneDate)?:"");"spinning"->"Tirage en cours";"revealed"->"Gagnant révélé";"round"->g.round;"cancelled"->"Annulé";else->if(state.giftLive)"Attribué"else"Attribué · démo"},color=logeGold,fontSize=11.sp)}
         }
-        Text(if(g.pool.isEmpty())"Pour "+g.recipientName else if(g.status=="revealed")"Gagnant · "+g.winner?.name.orEmpty()else"${g.pool.size} participants",color=sceneMuted,fontSize=12.sp)
+        Text(if(g.pool.isEmpty())"Pour "+g.recipientName else if(g.status=="revealed")"Gagnant · "+g.winner?.name.orEmpty()else"${g.eligibleCount?:g.pool.size} participants",color=sceneMuted,fontSize=12.sp)
         if(g.status in setOf("ready","round","scheduled"))Row(horizontalArrangement=Arrangement.spacedBy(6.dp)){
             if(g.status=="ready")SceneButton("Lancer à l’écran",Modifier.weight(1f),primary=true,icon=WaveIcons.Play){state.startDraw(g.id)}
             if(g.status=="round")SceneButton("Attribuer maintenant",Modifier.weight(1f),primary=true){state.deliverRound(g.id)}
-            SceneButton("Annuler"){state.cancelGift(g.id)}
+            if(!state.giftLive||g.pool.isNotEmpty())SceneButton("Annuler"){state.cancelGift(g.id)}
         }
         if(g.status=="spinning")LinearProgressIndicator(progress={((state.now-(g.startedAt?:state.now)).toFloat()/(g.animationSeconds*1000)).coerceIn(0f,1f)},modifier=Modifier.fillMaxWidth().height(3.dp),color=sceneAccent,trackColor=Color(0xFF2C2637))
         if(g.status=="revealed")SceneButton("Afficher le gagnant",Modifier.fillMaxWidth(),icon=Icons.Default.EmojiEvents){state.showWinner(g.id)}

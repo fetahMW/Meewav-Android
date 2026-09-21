@@ -1,3 +1,5 @@
+> Document historique : pour les statuts consolidés après les corrections, utiliser [la liste maîtresse du câblage](SUIVI_CABLAGE_COMPLET.md).
+
 # Audit du câblage Android — 21 septembre 2026
 
 ## RÉSUMÉ

@@ -1,3 +1,4 @@
+import { supabase } from "../../../lib/supabaseClient";
 import {
   ClipboardSignature,
   ReceiptText,
@@ -7,7 +8,7 @@ import {
   Wrench,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import { spaceModules, type DemoProfile, type SpaceModuleId } from "../profile.data";
@@ -91,6 +92,27 @@ export default function ProfileSpaceView({
     collab: profile.visibility.collab,
     viewer: profile.visibility.viewerMenu,
   }));
+
+  const savingVisibility = useRef(false);
+  const toggleVisibility = async (id: keyof typeof visibilityLabels) => {
+    if(savingVisibility.current) return;
+    const nextValue=!visibility[id];
+    if(!dashboardState.isDemo) {
+      if(!user) { onToast("Reconnecte-toi pour modifier ton profil."); return; }
+      savingVisibility.current=true;
+      try {
+        const {data,error}=await supabase.from("profiles").select("public_profile_preferences").eq("id",user.id).single();
+        if(error) throw error;
+        const key={bio:"show_bio",role:"show_role",grade:"show_grade",collab:"show_collab",viewer:"show_viewer_menu"}[id];
+        const {error:saveError}=await supabase.from("profiles").update({public_profile_preferences:{...data.public_profile_preferences,[key]:nextValue}}).eq("id",user.id).select("id").single();
+        if(saveError) throw saveError;
+        window.dispatchEvent(new Event("meewav:profile-updated"));
+      } catch { onToast("Modification non enregistrée. Réessaie."); return; }
+      finally { savingVisibility.current=false; }
+    }
+    setVisibility(current=>({...current,[id]:nextValue}));
+    onToast(`${visibilityLabels[id]} ${nextValue ? "activé" : "masqué"}`);
+  };
 
   const routeSegments = location.pathname.split("/").filter(Boolean);
   const routeSlug = routeSegments[routeSegments.length - 1] ?? "";
@@ -181,13 +203,7 @@ export default function ProfileSpaceView({
                 allowDemoActions={dashboardState.isDemo}
                 onRetry={() => void loadPrivateDashboard()}
                 profileVisibility={visibility}
-                onToggleProfileVisibility={(id) => {
-                  setVisibility((current) => {
-                    const nextValue = !current[id];
-                    onToast(`${visibilityLabels[id]} ${nextValue ? "activé" : "masqué"}`);
-                    return { ...current, [id]: nextValue };
-                  });
-                }}
+                onToggleProfileVisibility={(id) => { void toggleVisibility(id); }}
                 onEditProfile={onEditProfile}
                 onViewerPreview={onViewerPreview}
                 onBack={() => openModule("wallet")}

@@ -784,7 +784,7 @@ export function createPlaceRepository(client: SupabaseClient = supabase) {
         client.from("room_invitations_v2").select("id,guest_id,status,created_at").eq("room_id", room.id).in("status", ["accepted", "ready", "backstage", "onstage", "pending"]),
         client.from("room_queue_v2").select("id,user_id,preview_url,joined_queue_at,removed_at").eq("room_id", room.id).is("removed_at", null).order("joined_queue_at", { ascending: true }),
         client.from("room_messages_v2").select("id,user_id,content,created_at,is_system,is_highlighted").eq("room_id", room.id).order("created_at", { ascending: false }).limit(80),
-        client.from("room_mixer_state_v2").select("guest_id,is_mic_muted,is_music_muted,is_video_off,self_video_off,host_video_forced_off,mic_gain,local_mic_gain,music_gain,host_music_gain,host_mic_forced_muted,audio_live_enabled,audio_preview_ready,audio_playback_state,audio_track_title,audio_track_artist,audio_track_duration_seconds").eq("room_id", room.id),
+        client.from("room_mixer_state_v2").select("*").eq("room_id", room.id),
         client.from("room_broadcasts_v2").select("mux_playback_id,mux_status,started_at").eq("room_id", room.id).maybeSingle(),
         client.rpc("rooms_engagement_state_v1", { p_room_id: room.id }),
         client.from("room_polls_v2").select("id,question,options,duration_seconds,show_results,is_active,created_at").eq("room_id", room.id).order("created_at", { ascending: false }).limit(1).maybeSingle(),
@@ -837,10 +837,10 @@ export function createPlaceRepository(client: SupabaseClient = supabase) {
       const pollWeightedPercentages: Array<number | undefined> = [];
       let currentUserPollVoteIndex: number | null = null;
       if (activePoll) {
-        const pollStateResult = await client.rpc("rooms_poll_state_v3", { p_poll_id: activePoll.id });
+        const pollStateResult = await client.rpc("rooms_poll_state_v1", { p_poll_id: activePoll.id });
         if (pollStateResult.error) throw pollStateResult.error;
         const pollAggregate = asRecord(pollStateResult.data) as PollAggregateRow;
-        const counts = Array.isArray(pollAggregate.counts) ? pollAggregate.counts : [];
+        const counts = Array.isArray((pollAggregate as any).vote_counts) ? (pollAggregate as any).vote_counts.map((votes:number,option_index:number)=>({votes,option_index})) : [];
         pollVoteCounts = counts.reduce<number[]>((result, item) => {
           const optionIndex = numberValue(item.option_index, -1);
           if (optionIndex >= 0) { result[optionIndex] = Math.max(0, numberValue(item.votes, 0));pollWeightedPercentages[optionIndex]=typeof item.weighted_percent === "number" ? item.weighted_percent : undefined; }
@@ -933,13 +933,26 @@ export function createPlaceRepository(client: SupabaseClient = supabase) {
     },
 
     async enterRoom(roomId: string) {
-      const { error } = await client.rpc("rooms_enter_room_v2", { p_room_id: roomId });
-      if (error) throw error;
+      const room=await client.from("rooms_v2").select("type,host_id,status").eq("id",roomId).single();
+      if(room.error)throw room.error;
+      if(room.data.status!=="live")throw new Error("room_ended");
+      if(room.data.type==="classe") {
+        const {error}=await client.rpc("rooms_join_classe_v1",{p_room_id:roomId});if(error)throw error;return;
+      }
+      const {data:{user},error:authError}=await client.auth.getUser();
+      if(authError||!user)throw new Error("authentication_required");
+      const {error}=await client.from("room_participants_v2").upsert({room_id:roomId,user_id:user.id,role:room.data.host_id===user.id?"host":"viewer",left_at:null},{onConflict:"room_id,user_id"});
+      if(error)throw error;
     },
 
     async leaveRoom(roomId: string) {
-      const { error } = await client.rpc("rooms_leave_room_v2", { p_room_id: roomId });
-      if (error) throw error;
+      const room=await client.from("rooms_v2").select("type").eq("id",roomId).single();
+      if(room.error)throw room.error;
+      if(room.data.type==="classe") {const {error}=await client.rpc("rooms_leave_classe_v1",{p_room_id:roomId});if(error)throw error;return;}
+      const {data:{user},error:authError}=await client.auth.getUser();
+      if(authError||!user)throw new Error("authentication_required");
+      const {error}=await client.from("room_participants_v2").update({left_at:new Date().toISOString()}).eq("room_id",roomId).eq("user_id",user.id);
+      if(error)throw error;
     },
 
     async setOwnMicGain(roomId: string, gain: number) {
@@ -1213,7 +1226,7 @@ export function createPlaceRepository(client: SupabaseClient = supabase) {
     },
 
     async endRoom(roomId: string) {
-      const { error } = await client.rpc("rooms_end_place_v3", { p_room_id: roomId });
+      const { error } = await client.rpc("rooms_end_room_v1", { p_room_id: roomId });
       if (error) throw error;
     },
 

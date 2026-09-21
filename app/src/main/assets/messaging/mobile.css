@@ -1090,3 +1090,16 @@ button:disabled { opacity: .4; cursor: default; }
 #root .mobile-messaging:not(.is-detail) .mw-conversation-list { overscroll-behavior: none; touch-action: pan-y; overflow-x: hidden; overflow-anchor: none; }
 #root .mobile-messaging:not(.is-detail) .mw-chat-header { transform: translateZ(0); isolation: isolate; }
 #root .mobile-messaging:not(.is-detail) .mw-chat-header::after { content: ''; display: block; position: absolute; left: 0; right: 0; bottom: -12px; height: 12px; background: linear-gradient(#10101960,transparent); pointer-events: none; }
+
+/* The atmosphere belongs to the stationary rail, never its scrolling content. */
+#root .mobile-messaging:not(.is-detail) .mw-conversation-rail { background: transparent; }
+#root .mobile-messaging:not(.is-detail) .mw-conversation-list { background: transparent; overscroll-behavior-y: none; }
+#root .mobile-messaging:not(.is-detail) .mw-conversation-list > article::before { display: none; }
+/* Inbox owns exactly one bounded scroller above the fixed acoustic image. */
+#root .mobile-messaging:not(.is-detail) :is(.messaging-page,.messaging-stage,.mw-workspace,.mw-conversation-rail,.mw-conversation-list) { background: transparent !important; background-image: none !important; box-shadow: none; }
+#root .mobile-messaging:not(.is-detail) :is(.messaging-page,.messaging-stage,.mw-workspace,.mw-conversation-rail)::before,
+#root .mobile-messaging:not(.is-detail) :is(.messaging-page,.messaging-stage,.mw-workspace,.mw-conversation-rail)::after { display: none !important; }
+#root .mobile-messaging:not(.is-detail) .mw-workspace { position: absolute; inset: 0; height: 100%; min-height: 0; overflow: hidden; }
+#root .mobile-messaging:not(.is-detail) .mw-conversation-rail { position: absolute; inset: 0; height: 100%; min-height: 0; overflow: hidden; }
+#root .mobile-messaging:not(.is-detail) .mw-conversation-list { position: absolute; inset: 0; height: auto; max-height: none; min-height: 0; padding: 64px 10px 24px; overflow-y: auto !important; overflow-x: hidden; touch-action: pan-y; }
+#root .mobile-messaging:not(.is-detail) .mw-context-pane { display: none; }

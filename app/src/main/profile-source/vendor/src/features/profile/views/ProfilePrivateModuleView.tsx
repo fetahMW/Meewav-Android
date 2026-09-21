@@ -931,7 +931,7 @@ export default function ProfilePrivateModuleView({
         <p className="profile-private-security-identity__bio">{profile.bio}</p>
         <div className="profile-private-security-identity__visibility" aria-label={`${visibleProfileRows} informations publiques sur ${profileVisibilityRows.length}`}>
           {profileVisibilityRows.map(({ id, label, detail }) => (
-            <button key={id} type="button" disabled={!allowDemoActions} aria-pressed={profileVisibility[id]} onClick={() => allowDemoActions && onToggleProfileVisibility(id)}>
+            <button key={id} type="button" aria-pressed={profileVisibility[id]} onClick={() => onToggleProfileVisibility(id)}>
               <span><strong>{label}</strong><small>{detail}</small></span>
               <span className={`profile-switch ${profileVisibility[id] ? "is-on" : ""}`}><i /></span>
             </button>

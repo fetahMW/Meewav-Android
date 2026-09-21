@@ -16,6 +16,7 @@ await build({entryPoints:[resolve(root,'app/src/main/messaging-source/runtime.ts
  b.onResolve({filter:/^@supabase\/supabase-js$/},()=>({path:'backend',namespace:'stub'}));
  b.onLoad({filter:/.*/,namespace:'stub'},()=>({contents:'export const createClient=()=>({realtime:{setAuth:async()=>{}},removeAllChannels:async()=>{}});'}));
 }}]});
+globalThis.fetch=async()=>({ok:false});
 const {useAuth,configure,updateToken}=await import(pathToFileURL(output));
 test('native identity stays stable during UI rerenders/token refresh and clears on logout',async()=>{
  const native={preview:false,url:'https://example.supabase.co',key:'public',token:'token-one',userId:'owner-a'};

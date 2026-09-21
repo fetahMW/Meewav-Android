@@ -1,0 +1,20 @@
+create extension if not exists pgtap with schema extensions;
+select plan(8);
+insert into auth.users(instance_id,id,aud,role,email,encrypted_password,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
+select '00000000-0000-0000-0000-000000000000',('77000000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid,'authenticated','authenticated','market-integration-'||n||'@example.test','',now(),'{}','{}',now(),now() from generate_series(1,2)n;
+update public.profiles set show_on_public_profile=true,is_ghost_mode=false where id in ('77000000-0000-0000-0000-000000000001','77000000-0000-0000-0000-000000000002');
+insert into public.marketplace_seller_profiles(profile_id) values('77000000-0000-0000-0000-000000000001');
+insert into public.marketplace_listings(id,seller_profile_id,slug,pillar,category_code,title,short_description,description,status,pickup_enabled,published_at) values('78000000-0000-0000-0000-000000000001','77000000-0000-0000-0000-000000000001','integration-fixture','new','synthesizers','Synthé','Description','Description','published',true,now());
+select set_config('request.jwt.claim.sub','77000000-0000-0000-0000-000000000002',true);
+set local role authenticated;
+select ok(not has_table_privilege('authenticated','public.marketplace_listings','UPDATE'),'direct listing writes denied');
+select ok(not has_function_privilege('anon','public.set_marketplace_favorite_v1(uuid,boolean,text)','EXECUTE'),'anonymous favorite denied');
+select is((public.set_marketplace_favorite_v1('78000000-0000-0000-0000-000000000001',true,'favorite-test-001')->>'favorite')::boolean,true,'favorite saved');
+select is((public.set_marketplace_favorite_v1('78000000-0000-0000-0000-000000000001',true,'favorite-test-001')->>'idempotent')::boolean,true,'retry is idempotent');
+select throws_ok($$select public.set_marketplace_favorite_v1('78000000-0000-0000-0000-000000000001',false,'favorite-test-001')$$,'23505','idempotency_conflict','mismatched retry rejected');
+select is(jsonb_array_length(public.get_my_marketplace_state_v1()->'favorite_listing_ids'),1,'favorite returned');
+select lives_ok($$select public.get_marketplace_catalog_capabilities_v1()$$,'filter capabilities available');
+select set_config('request.jwt.claim.sub','77000000-0000-0000-0000-000000000001',true);
+select is(jsonb_array_length(public.get_my_marketplace_state_v1()->'favorite_listing_ids'),0,'other account isolated');
+reset role;
+select * from finish();

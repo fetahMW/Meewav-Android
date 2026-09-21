@@ -46,7 +46,7 @@ import androidx.compose.ui.unit.*
 @Composable private fun PlaceDuration(seconds:Int,onSelect:(Int)->Unit){PlaceChoice("Durée · "+sceneClock(seconds.toLong()),placeDurations.map{it to sceneClock(it.toLong())},onSelect=onSelect)}
 @Composable private fun PlacePortrait(state:PlaceToolsState,id:String?,size:Dp=40.dp) {
     val person=state.guests.guests.find{it.id==id}
-    if(person!=null)Image(painterResource(person.portrait),"Pré-profil de "+person.name,Modifier.size(size).clip(CircleShape).clickable{state.profile(person.id)},contentScale=ContentScale.Crop)
+    if(person!=null)WaveGuestPortrait(person,"Pré-profil de "+person.name,Modifier.size(size).clip(CircleShape).clickable{state.profile(person.id)},contentScale=ContentScale.Crop)
     else Box(Modifier.size(size).background(Color(0xFF161619),CircleShape),contentAlignment=Alignment.Center){Icon(if(id=="host")Icons.Default.Person else Icons.Default.Mic,null,tint=sceneAccent,modifier=Modifier.size(size*.48f))}
 }
 private fun PlaceToolsState.name(id:String?)=if(id=="host")"Vous"else guests.guests.find{it.id==id}?.name?:"Participant indisponible"

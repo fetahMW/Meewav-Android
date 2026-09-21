@@ -1,4 +1,4 @@
-import {getSessionUser} from "../profile-source/runtime";
+import {getSessionUser,supabase} from "../profile-source/runtime";
 import "./viewer-video-controls.css";
 import NativeViewerSurfaces from './NativeViewerSurfaces';
 import WaveLiveAudio from './WaveLiveAudio';
@@ -43,7 +43,13 @@ export default function RoomViewer({room,onLeave}:{room:RoomsHomeRoom;onLeave:()
  useEffect(()=>{void getSessionUser().then(({data})=>setRealUserId(data.user?.id??null));},[]);
  const demo=useMemo(()=>createRoomsHomeDemoState(room,PLACE_DEMO_PROFILES.viewerA.id),[room]);
  const [preProfile,setPreProfile]=useState<{person:RoomPerson;trigger:HTMLElement|null}|null>(null);
- const openPreProfile=(id:string)=>{
+ const openPreProfile=async(id:string)=>{
+  if(room.source==='live') {
+   const {data,error}=await supabase.from('public_profiles').select('id,display_name,username,avatar_url,primary_role_key,grade').eq('id',id).single();
+   if(error||!data)return;
+   setPreProfile({person:{id:data.id,name:data.display_name||data.username||'Artiste',role:data.primary_role_key||'',avatarUrl:data.avatar_url||'',gradeLevel:data.grade,microphone:'off',camera:'off'},trigger:document.activeElement as HTMLElement|null});
+   return;
+  }
   const profiles=[demo.host,demo.currentUserProfile,...demo.participants.map(p=>p.profile),...demo.queue.map(p=>p.profile),...Object.values(PLACE_DEMO_PROFILES)];
   const profile=profiles.find(p=>p?.id===id);
   if(!profile)return;
@@ -65,11 +71,11 @@ export default function RoomViewer({room,onLeave}:{room:RoomsHomeRoom;onLeave:()
   <header className="android-room-viewer__header"><button type="button" aria-label="Retour aux rooms" onClick={onLeave}><ArrowLeft/></button><h1>{room.title}</h1><button type="button" aria-label="Quitter le live" onClick={onLeave}><X/></button></header>
   <AudioEngineProvider><RoomPresentationProvider presentation={LIVE_ROOM_PRESENTATIONS[room.roomType]}>
    {room.source==='live'&&room.roomType==='wave'?<WaveLiveAudio roomId={room.id}/>:null}
-   <PlaceRoomExperience initialPanelCollapsed={false} demoRole={room.source==='live'&&room.roomType==='wave'?undefined:'viewer'} demoRoom={room.source==="live"?undefined:demo} requestedRoomId={room.source==="live"?room.id:undefined} currentUserId={room.source==="live"?realUserId:PLACE_DEMO_PROFILES.viewerA.id}
+   <PlaceRoomExperience initialPanelCollapsed={false} demoRole={room.source==='live'?undefined:'viewer'} demoRoom={room.source==="live"?undefined:demo} requestedRoomId={room.source==="live"?room.id:undefined} currentUserId={room.source==="live"?realUserId:PLACE_DEMO_PROFILES.viewerA.id}
     onLeaveRoom={onLeave} onOpenProfile={openPreProfile}
     onMessageProfile={id=>openMessaging(id,'message')}
     onCollaborateProfile={(id,requestId)=>openMessaging(id,'collaboration',requestId)}/>
   </RoomPresentationProvider></AudioEngineProvider>
-  {preProfile?<AndroidViewerPreProfile person={preProfile.person} source="demo" onClose={()=>setPreProfile(null)} returnFocusTo={preProfile.trigger} boundsElement={document.querySelector('.android-room-viewer')} topBoundaryElement={document.querySelector('.place-stage')}/>:null}
+  {preProfile?<AndroidViewerPreProfile person={preProfile.person} source={room.source === "live" ? "live" : "demo"} onClose={()=>setPreProfile(null)} returnFocusTo={preProfile.trigger} boundsElement={document.querySelector('.android-room-viewer')} topBoundaryElement={document.querySelector('.place-stage')}/>:null}
  </main>;
 }

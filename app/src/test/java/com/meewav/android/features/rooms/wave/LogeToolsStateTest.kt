@@ -4,6 +4,21 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class LogeToolsStateTest {
+    @Test fun liveDrawDoesNotChooseWinnerLocallyOrRefundWithoutConfirmation() {
+        val s=state();s.giftLive=true
+        val g=LogeGift("server-draw",0,status="ready",pool=listOf(LogeCandidate("a","A"),LogeCandidate("b","B")))
+        s.acceptGiftInventory(List(6){0},listOf(g))
+        var command="";s.giftCommand={action,_->command=action}
+        s.startDraw(g.id);assertEquals("start",command);assertNull(s.data.gifts.single().winner)
+        s.cancelGift(g.id);assertEquals("cancel",command);assertEquals(0,s.data.stock[0]);assertEquals("ready",s.data.gifts.single().status)
+    }
+    @Test fun liveDrawWaitsForServerEvenWhenAnimationTimeElapsed() {
+        val s=state();s.giftLive=true
+        val g=LogeGift("draw",0,status="spinning",startedAt=1,animationSeconds=5)
+        s.acceptGiftInventory(List(6){0},listOf(g));s.tick()
+        assertEquals("spinning",s.data.gifts.single().status);assertNull(s.data.gifts.single().winner)
+        assertEquals("draw",s.showDrawId)
+    }
     private fun state()=LogeToolsState(WaveGuestState(),{null},{})
     @Test fun invitationRequiresConsentAndReturnsToBackstage() {
         val s=state();s.choose("loge-a");s.invite(5);val m=s.activeMoment!!

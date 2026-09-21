@@ -1,5 +1,7 @@
+import {previewEnabled} from '../profile-source/runtime';
+import {listLiveRooms,createLiveRoom} from './liveRooms';
 import type { CageProgram } from '../shared-ui/cagePrograms';
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { DoorOpen, GraduationCap, Home, MapPin, Mic, Play, Plus, Waves, X } from 'lucide-react';
@@ -25,6 +27,17 @@ type RoomTab = 'home' | (typeof ROOMS)[number]['id'];
 
 export default function RoomsPage() {
   const location = useLocation();
+  const demoMode = previewEnabled();
+  const [catalog,setCatalog]=useState<RoomsHomeRoom[]>([]);
+  const [launching,setLaunching]=useState(false);
+  const launchRequest=useRef(crypto.randomUUID());
+  useEffect(()=>{
+    if(demoMode)return;
+    let active=true;
+    const refresh=async()=>{try{const rooms=await listLiveRooms();if(active)setCatalog(rooms);}catch{if(active)setRoomNotice('Impossible de charger les rooms. Nouvelle tentative en cours.');}};
+    void refresh();const timer=window.setInterval(()=>void refresh(),15000);
+    return()=>{active=false;window.clearInterval(timer);};
+  },[demoMode]);
   const [viewing,setViewing]=useState<RoomsHomeRoom|null>(null);
   const [tab, setTab] = useState<RoomTab>('home');
   const [sequencerOpen, setSequencerOpen] = useState(new URLSearchParams(location.search).get('launch') === 'cage');
@@ -41,7 +54,7 @@ export default function RoomsPage() {
     window.setTimeout(() => setRoomNotice(''), 4000);
   };
   const openSession = (roomType: RoomsHomeRoomType, title: string, id?: string, program?: CageProgram) => {
-    const params = new URLSearchParams({ type: roomType, title, ...(id ? { id } : {}), ...(program ? { program: JSON.stringify(program) } : {}) });
+    const params = new URLSearchParams({ type: roomType, title, ...(id ? { id, source: "live" } : {}), ...(program ? { program: JSON.stringify(program) } : {}) });
     window.location.assign(`/native/room-session?${params}`);
   };
   const openRoom = (room: RoomsHomeRoom) => setViewing(room);
@@ -57,6 +70,7 @@ export default function RoomsPage() {
     </header>
     <div className="rooms-page__home">
       <RoomsHome
+        catalog={demoMode ? undefined : catalog}
         roomType={tab === 'home' ? undefined : (tab as RoomsHomeRoomType)}
         collectionSlug={collectionSlug}
         onOpenRoom={openRoom}
@@ -67,7 +81,8 @@ export default function RoomsPage() {
         type="button"
         className="rooms-page__launch-fab"
         aria-label="Créer une Room"
-        onClick={() => setSequencerOpen(true)}
+        disabled={launching}
+        onClick={() => {launchRequest.current=crypto.randomUUID();setSequencerOpen(true);}}
       >
         <Plus aria-hidden="true" />
       </button>
@@ -79,9 +94,13 @@ export default function RoomsPage() {
           initialProgram={(() => { try { return JSON.parse(new URLSearchParams(location.search).get("program") ?? "null") ?? undefined; } catch { return undefined; } })()}
           initialType={new URLSearchParams(location.search).get("launch") === "cage" ? "cage" : tab === 'home' ? undefined : (tab as RoomsHomeRoomType)}
           onClose={() => setSequencerOpen(false)}
-          onLaunched={(label, roomType, program) => {
-            setSequencerOpen(false);
-            openSession(roomType, label, undefined, program);
+          onLaunched={async (label, roomType, program) => {
+            if(launching)return;
+            if(demoMode){setSequencerOpen(false);openSession(roomType,label,undefined,program);return;}
+            setLaunching(true);
+            try{const id=await createLiveRoom(roomType,label,launchRequest.current);setSequencerOpen(false);openSession(roomType,label,id,program);}
+            catch{notice('La room n’a pas été créée. Vérifie ta connexion puis réessaie.');}
+            finally{setLaunching(false);}
           }}
         />
       </div>

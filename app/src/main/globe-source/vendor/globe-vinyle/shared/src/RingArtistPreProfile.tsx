@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { PreProfileFrame } from "./reference/features/globe/components/PreProfileFrame";
 import HoverPreProfileContent from "./reference/features/globe/components/preProfile/HoverPreProfileContent";
-import { getPreProfileArtistForSeed } from "./reference/features/globe/components/preProfile/demoPreProfileArtist";
+import { getPreProfileArtistForSeed, type PreProfileDemoArtist } from "./reference/features/globe/components/preProfile/demoPreProfileArtist";
 import { sceneDemoArtist } from "./reference/features/shorts/sceneArtistPortraits";
 import { getGradeBadgeMeta } from "./reference/features/grades/gradeBadges";
 import "./ring-artist-preprofile.css";
@@ -98,11 +98,13 @@ export default function RingArtistPreProfile({ selection, onClose, navigation, p
   </div>, document.body);
 }
 
-export function ArtistProfileCard({ selection, onClose, closeButton }: {
+export function ArtistProfileCard({ selection, onClose, closeButton, profileArtist, demo = true, onOpenProfile, onContact, onCollabRequest }: {
   selection: PortraitSelection; onClose: () => void; closeButton?: RefObject<HTMLButtonElement | null>;
+  profileArtist?: PreProfileDemoArtist; demo?: boolean; onOpenProfile?: (id: string) => void; onContact?: (id: string) => void; onCollabRequest?: (id: string) => void;
 }) {
   const [notice, setNotice] = useState('');
   const artist = useMemo(() => {
+    if (profileArtist) return profileArtist;
     const original = sceneDemoArtist(selection.name);
     const grade = selection.gradeLevel == null ? RING_ARTIST_GRADE : getGradeBadgeMeta(selection.gradeLevel);
     const seed = getPreProfileArtistForSeed({
@@ -114,7 +116,7 @@ export function ArtistProfileCard({ selection, onClose, closeButton }: {
       bio: original ? `${original.role} à ${original.city}. Univers ${original.style.toLowerCase()}.` : seed.bio,
       followersLabel: '0 abonnés', online: false, verified: false, goldenLikesCount: 0, golden_likes_count: 0,
     };
-  }, [selection]);
+  }, [selection, profileArtist]);
   useEffect(() => {
     if (!notice) return;
     const timeout = window.setTimeout(() => setNotice(''), 3500);
@@ -122,10 +124,10 @@ export function ArtistProfileCard({ selection, onClose, closeButton }: {
   }, [notice]);
   return <>
     <PreProfileFrame arrow>
-      <HoverPreProfileContent artist={artist} demoFollow showMapPin={false}
-        onOpenProfile={() => setNotice('Le profil complet sera bientôt disponible.')}
-        onContact={() => openArtistMessaging(artist)}
-        onCollabRequest={() => setNotice('Les demandes de collaboration seront bientôt disponibles.')} />
+      <HoverPreProfileContent artist={artist} demoFollow={demo} showMapPin={false}
+        onOpenProfile={() => onOpenProfile ? onOpenProfile(artist.id) : window.dispatchEvent(new CustomEvent('meewav:navigate', { detail: { path: `/profile/view/${encodeURIComponent(artist.id)}` } }))}
+        onContact={() => onContact ? onContact(artist.id) : openArtistMessaging(artist)}
+        onCollabRequest={() => onCollabRequest ? onCollabRequest(artist.id) : openArtistMessaging(artist, 'collaboration')} />
     </PreProfileFrame>
     <button ref={closeButton} className="ring-artist-preprofile__close" type="button" onClick={onClose} aria-label="Fermer le pré-profil">
       <X aria-hidden="true" />

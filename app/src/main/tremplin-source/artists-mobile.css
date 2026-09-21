@@ -92,3 +92,8 @@
 #root .mobile-tremplin .tremplin-my-dashboard__operations article { min-width: 0; width: 100%; }
 #root .mobile-tremplin .tremplin-my-dashboard__operations { overflow: visible; }
 #root .mobile-tremplin .tremplin-my-dashboard__activity article::before { display: none; }
+
+/* Private content stays legible over the acoustic background. */
+#root .mobile-tremplin :is(.ttw-workspace,.ttw-creator-shell,.ttw-creator-workspace,.tremplin-token-workspace,.tremplin-token-flow) { background: #111218; --ttw-surface: #191a22; --ttw-surface-soft: #20212b; --ttw-surface-quiet: #16171e; }
+#root .mobile-tremplin :is(.ttw-topbar,.ttw-creator-topbar,.ttw-dashboard-tabs,.mobile-tremplin-section) { background: #191823; }
+#root .mobile-tremplin .tremplin-my-dashboard :is(.tremplin-my-token-card,.tremplin-my-artists-summary,section > div > article) { background: linear-gradient(145deg,#24252b,#101116); }

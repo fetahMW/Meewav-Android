@@ -49,6 +49,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -108,7 +109,8 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     var roomTitle by remember(initialTitle){mutableStateOf(initialTitle)}
     var switchOpen by remember{mutableStateOf(false)}
     val switchState=remember(initialRoom){RoomSwitchState(initialRoom)}
-    val chatSession=remember{WaveChatSession()}
+    val chatSession=remember(liveRoomId){WaveChatSession(liveRoomId!=null)}
+    BindRoomChat(chatSession,liveRoomId)
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val context = LocalContext.current
@@ -117,10 +119,33 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     // Keep the highlighted snapshot even if the live feed trims old messages or tabs change.
     var pinnedChatMessage by remember { mutableStateOf<WaveChatMessage?>(null) }
     var waveNotificationsRead by remember { mutableStateOf(false) }
-    val guestState = remember(initialRoom) { WaveGuestState(cageDemo = initialRoom == RoomModule.CAGE, classeDemo = initialRoom == RoomModule.CLASSE) }
+    val guestState = remember(initialRoom,liveRoomId) { WaveGuestState(cageDemo = initialRoom == RoomModule.CAGE, classeDemo = initialRoom == RoomModule.CLASSE,live=liveRoomId!=null) }
+    BindRoomGuests(guestState,liveRoomId,room==RoomModule.CLASSE)
     var giftRecipient by remember { mutableStateOf<WaveGuest?>(null) }
     val roomGifts=remember(guestState,programScope){LogeToolsState(context.applicationContext,guestState,"gifts:"+programScope,false)}
     LaunchedEffect(roomGifts){while(true){roomGifts.tick();delay(250)}}
+    LaunchedEffect(roomGifts,liveRoomId) {
+        if(liveRoomId!=null) {
+            roomGifts.giftLive=true
+            roomGifts.acceptGiftInventory(List(6){0},emptyList())
+            val remote=RoomGiftRemote(LogeRemoteRepository(context.applicationContext,liveRoomId))
+            roomGifts.remoteGift={remote.send(it,roomGifts)}
+            roomGifts.giftCommand={action,id->launch{
+                if(!roomGifts.remoteBusy){roomGifts.remoteBusy=true
+                    try{remote.command(action,id);remote.refresh(roomGifts);roomGifts.notice=null}
+                    catch(e:kotlinx.coroutines.CancellationException){throw e}
+                    catch(e:Exception){roomGifts.notice=e.message?:"Action non enregistrée"}
+                    finally{roomGifts.remoteBusy=false}
+                }
+            }}
+            try{while(true){
+                if(!roomGifts.remoteBusy)try{remote.refresh(roomGifts)}
+                catch(e:kotlinx.coroutines.CancellationException){throw e}
+                catch(e:Exception){roomGifts.notice=e.message?:"Inventaire indisponible"}
+                delay(2500)
+            }}finally{roomGifts.remoteGift=null;roomGifts.giftCommand=null}
+        }
+    }
     val classeCache=remember{mutableMapOf<RoomModule,ClasseToolsState>()}
     val sceneCache=remember{mutableMapOf<RoomModule,SceneToolsState>()}
     val logeCache=remember{mutableMapOf<RoomModule,LogeToolsState>()}
@@ -132,6 +157,17 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     val scene = remember(room, guestState, programScope) { if (room == RoomModule.SCENE) sceneCache.getOrPut(room){SceneToolsState(context.applicationContext, guestState, programScope + ":" + roomTitle.orEmpty(),room==initialRoom)} else null }
     val loge = remember(room, guestState, programScope) { if (room == RoomModule.LOGE) logeCache.getOrPut(room){LogeToolsState(context.applicationContext, guestState, if(liveRoomId!=null)"live:"+liveRoomId else programScope + ":" + roomTitle.orEmpty(),liveRoomId==null&&room==initialRoom)} else null }
     val place = remember(room, guestState, programScope) { if (room == RoomModule.PLACE) placeCache.getOrPut(room){PlaceToolsState(context.applicationContext, guestState, programScope + ":" + roomTitle.orEmpty())} else null }
+    val exitScope = rememberCoroutineScope()
+    var endingLive by remember { mutableStateOf(false) }
+    var exitFailure by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(classe, liveRoomId) {
+        if(classe!=null && liveRoomId!=null) {
+            val remote=LogeRemoteRepository(context.applicationContext,liveRoomId)
+            classe.beginRemote(liveRoomId)
+            classe.remoteAction={name,payload->launch{classe.remoteBusy=true;try{remote.rpc(name,payload);classe.acceptRemote(remote.rpc("rooms_classe_host_state_v1",org.json.JSONObject().put("p_room_id",liveRoomId)));classe.notice=null}catch(e:Exception){classe.notice=e.message?:"Action non enregistrée"}finally{classe.remoteBusy=false}}}
+            try{while(true){if(!classe.remoteBusy)try{classe.acceptRemote(remote.rpc("rooms_classe_host_state_v1",org.json.JSONObject().put("p_room_id",liveRoomId)))}catch(e:Exception){classe.notice=e.message?:"Synchronisation impossible"};delay(2500)}}finally{classe.detachRemoteGuests()}
+        }
+    }
     val logeNetwork=remember(liveRoomId){liveRoomId?.let{LogeRemoteRepository(context.applicationContext,it)}}
     LaunchedEffect(loge,logeNetwork) {
         if(loge!=null && logeNetwork!=null) {
@@ -347,8 +383,8 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                         WaveChatPanel(
                             chatSession=chatSession,
                             giftContent={LogeGiftPanel(roomGifts)},
-                        modifier=Modifier.weight(1f), pinnedMessage = pinnedChatMessage,
-                        onPinMessage = { pinnedChatMessage = it },
+                        modifier=Modifier.weight(1f), pinnedMessage = if(chatSession.live)chatSession.pinned else pinnedChatMessage,
+                        onPinMessage = { if(chatSession.live)chatSession.pin?.invoke(it)else pinnedChatMessage = it },
                         notificationsRead = waveNotificationsRead,
                         onReadNotifications = { waveNotificationsRead = true },
                         onEmojiPanelChange = { emojiPanelOpen = it },
@@ -362,7 +398,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                 }
             }
         }
-        WaveGuestMessageSheet(guestState)
+        WaveGuestMessageSheet(guestState, liveRoomId)
         GuestPreProfileHost(guestState, (maxHeight - 44.dp - videoViewportHeight - 6.dp).coerceAtLeast(0.dp)) { person ->
             if(guestState.guests.none{it.id==person.id})roomGifts.externalGiftRecipients=roomGifts.externalGiftRecipients+(person.id to person)
             giftRecipient=person
@@ -388,7 +424,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                 },
                 text = {
                     Text(
-                        "Tu es sur le point de quitter le live.",
+                        exitFailure ?: if (liveRoomId != null) "Tu es sur le point de terminer le live pour tous les participants." else "Tu es sur le point de quitter le live.",
                         color = white(0.72f),
                         fontSize = 13.sp,
                         fontFamily = WaveMixerTheme.fontFamily
@@ -402,7 +438,16 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                         fontFamily = WaveMixerTheme.fontFamily,
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
-                            .clickable { showLeaveConfirm = false; onClose() }
+                            .clickable(enabled = !endingLive) {
+                                if (liveRoomId == null) { showLeaveConfirm = false; onClose() }
+                                else { endingLive = true; exitFailure = null; exitScope.launch {
+                                    try {
+                                        LogeRemoteRepository(context, liveRoomId).rpc("rooms_end_room_v1", org.json.JSONObject().put("p_room_id", liveRoomId))
+                                        showLeaveConfirm = false; onClose()
+                                    } catch (_: Exception) { exitFailure = "Le live n’a pas pu être terminé. Réessaie." }
+                                    finally { endingLive = false }
+                                } }
+                            }
                             .padding(horizontal = 12.dp, vertical = 8.dp)
                     )
                 },

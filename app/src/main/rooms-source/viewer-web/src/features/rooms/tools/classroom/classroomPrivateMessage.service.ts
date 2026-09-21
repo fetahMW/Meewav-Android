@@ -1,10 +1,4 @@
-import {
-  createMessagingClientMessageId,
-  createMessagingIdempotencyKey,
-  createMessagingRepository,
-  type MessagingRepository,
-} from "../../../messaging/messaging.service";
-
+import { supabase } from "../../../../lib/supabaseClient";
 export type ClassroomPrivateMessageInput = {
   roomId: string;
   recipientId: string;
@@ -21,11 +15,6 @@ export type ClassroomPrivateMessageAttempt = {
   clientMessageId: string;
 };
 
-type ClassroomMessagingRepository = Pick<
-  MessagingRepository,
-  "getOrCreateClassroomDirectConversation" | "sendTextMessage"
->;
-
 export function createClassroomPrivateMessageAttempt(
   roomId: string,
   recipientId: string,
@@ -35,15 +24,15 @@ export function createClassroomPrivateMessageAttempt(
     roomId: roomId.trim(),
     recipientId: recipientId.trim(),
     body: body.trim(),
-    idempotencyKey: createMessagingIdempotencyKey("classe-direct"),
-    clientMessageId: createMessagingClientMessageId(),
+    idempotencyKey: crypto.randomUUID(),
+    clientMessageId: crypto.randomUUID(),
   };
 }
 
 export async function sendClassroomPrivateMessage(
   input: ClassroomPrivateMessageInput,
   attempt: ClassroomPrivateMessageAttempt,
-  repository: ClassroomMessagingRepository = createMessagingRepository(),
+  client = supabase,
 ) {
   const roomId = input.roomId.trim();
   const recipientId = input.recipientId.trim();
@@ -62,30 +51,10 @@ export async function sendClassroomPrivateMessage(
     return { conversationId: null, messageId: null, demo: true as const };
   }
 
-  if (!attempt.conversationId) {
-    const conversation = await repository.getOrCreateClassroomDirectConversation(
-      roomId,
-      recipientId,
-      attempt.idempotencyKey,
-    );
-    if (!conversation.ok || !conversation.conversation_id) {
-      throw new Error("class_private_message_conversation_failed");
-    }
-    attempt.conversationId = conversation.conversation_id;
-  }
-  const message = await repository.sendTextMessage({
-    conversationId: attempt.conversationId,
-    clientMessageId: attempt.clientMessageId,
-    body,
-    payload: {
-      context: "room_classe",
-      room_id: roomId,
-    },
+  const { data, error } = await client.rpc("rooms_classe_send_private_message_v1", {
+    p_room_id: roomId, p_peer_id: recipientId, p_body: body,
+    p_client_request_id: attempt.clientMessageId,
   });
-  if (!message.ok || !message.message_id) throw new Error("class_private_message_send_failed");
-  return {
-    conversationId: attempt.conversationId,
-    messageId: message.message_id,
-    demo: false as const,
-  };
+  if (error || !data?.id) throw new Error("class_private_message_send_failed");
+  return { conversationId: null, messageId: data.id as string, demo: false as const };
 }

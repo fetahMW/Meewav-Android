@@ -1,4 +1,8 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { supabase } from "../../../lib/supabaseClient";
+import { isLocalAuthPreviewEnabled } from "../../auth/localAuthPreview";
+import SceneCommentsSection from "../comments/SceneCommentsSection";
+import ScenePlaylistsView from "../playlists/ScenePlaylistsView";
+import { useEffect, useMemo, useState, useRef, type ReactNode } from "react";
 import {
   Activity,
   AlertCircle,
@@ -288,27 +292,60 @@ function TvStudio({ notify }: { notify: (message: string) => void }) {
 
 type DetailTab = "details" | "analytics" | "comments" | "subtitles" | "rights" | "tv";
 
+function LiveAnalytics() {
+ const [days,setDays]=useState(28),[stats,setStats]=useState<Record<string,number>|null>(null),[error,setError]=useState("");
+ useEffect(()=>{let active=true;setStats(null);setError("");supabase.rpc("scene_owner_stats_v1",{p_days:days}).then(({data,error})=>{if(!active)return;if(error)setError("Statistiques indisponibles.");else setStats(data);});return()=>{active=false;};},[days]);
+ return <section className="scene-studio-analytics"><select aria-label="Période" value={days} onChange={e=>setDays(Number(e.target.value))}>{[7,28,90,365].map(n=><option key={n} value={n}>{n} jours</option>)}</select>{error?<p role="alert">{error}</p>:stats?<div className="scene-studio-kpis"><Kpi label="Impressions" value={String(stats.impressions)} delta="" icon={<Eye/>}/><Kpi label="J’aime" value={String(stats.likes)} delta="" icon={<Heart/>}/><Kpi label="Commentaires" value={String(stats.comments)} delta="" icon={<MessageCircle/>}/></div>:<p>Chargement…</p>}</section>;
+}
+
 function ContentDetail({ item, onNavigate, notify, onSaveDetails }: { item: SceneStudioContentItem; onNavigate: (path: string) => void; notify: (message: string) => void; onSaveDetails: (details: { title: string; description: string; contentType: string; city: string; language: string; visibility: "public" | "unlisted" | "private" }) => Promise<boolean> }) {
   const [tab, setTab] = useState<DetailTab>("details");
   const [title, setTitle] = useState(item.title);
-  const [description, setDescription] = useState("Une Session tournée en prise directe. Écriture, voix et interprétation par Naya K.");
+  const demo=isLocalAuthPreviewEnabled();
+  const thumbnailInput=useRef<HTMLInputElement>(null);
+  const [thumbnail,setThumbnail]=useState(item.thumbnailUrl);
+  const { user }=useAuth();
+  const uploadThumbnail=async (file:File)=>{
+    if(!user || demo)return;
+    if(!["image/jpeg","image/png","image/webp"].includes(file.type) || file.size>10*1024*1024) {notify("Choisis une image JPG, PNG ou WebP de moins de 10 Mo.");return;}
+    try {
+      const asset=await profileMediaRepository.uploadOwnerMedia(user.id,file,{sourcePillar:"shorts"});
+      const {data:target,error}=await supabase.from("media_files").select("metadata,visibility").eq("id",item.id).eq("user_id",user.id).single();
+      if(error)throw error;
+      if(target.visibility==="public")await profileMediaRepository.setOwnerMediaVisibility(user.id,asset.id,true);
+      const {data:cover,error:coverError}=await supabase.from("media_files").select("storage_bucket,storage_path").eq("id",asset.id).eq("user_id",user.id).single();
+      if(coverError)throw coverError;
+      const {error:saveError}=await supabase.from("media_files").update({metadata:{...target.metadata,scene_cover:cover}}).eq("id",item.id).eq("user_id",user.id).select("id").single();
+      if(saveError)throw saveError;setThumbnail(asset.sourceUrl || thumbnail);notify("Miniature enregistrée.");
+    } catch {notify("La miniature n’a pas pu être enregistrée.");}
+  };
+  const [detailsReady,setDetailsReady]=useState(demo);
+  const [description, setDescription] = useState(demo ? "Une Session tournée en prise directe. Écriture, voix et interprétation par Naya K." : "");
   const [contentType, setContentType] = useState("session");
   const [visibility, setVisibility] = useState<"public" | "unlisted" | "private">(item.visibility === "Public" ? "public" : item.visibility === "Non répertorié" ? "unlisted" : "private");
-  const [city, setCity] = useState("Grenoble");
+  const [city, setCity] = useState(demo ? "Grenoble" : "");
   const [language, setLanguage] = useState("fr");
   const [saved, setSaved] = useState(true);
+  useEffect(()=>{ if(demo || !user)return; let active=true; setDetailsReady(false);
+    supabase.from("media_files").select("metadata").eq("id",item.id).eq("user_id",user.id).single().then(({data,error})=>{
+      if(!active)return;if(error){notify("Impossible de charger les détails.");return;}
+      const m=data.metadata ?? {};setDescription(m.scene_description ?? "");setCity(m.scene_city ?? "");setContentType(m.scene_content_type ?? "session");setLanguage(m.scene_language ?? "fr");setDetailsReady(true);
+    });return()=>{active=false;};
+  },[item.id,user?.id,demo]);
   const update = (setter: (value: string) => void, value: string) => { setter(value); setSaved(false); };
   return (
     <div className="scene-studio-detail">
+      {!demo && ["subtitles","rights","tv"].includes(tab) && <p role="status">Ce service nécessite encore son raccordement serveur. Aucune opération n’est simulée sur ton compte.</p>}
       <button type="button" className="scene-studio-detail__back" onClick={() => onNavigate("/scene/studio/content")}><ArrowLeft />Retour aux contenus</button>
       <header className="scene-studio-detail__hero"><img src={item.thumbnailUrl} alt="" width="240" height="135" /><div><StudioStatus item={item} /><h2>{title}</h2><p>{item.format} · {item.durationLabel}</p></div>{item.publicSlug ? <button type="button" onClick={() => onNavigate(`/scene/watch/${item.publicSlug}`)}>Voir dans La Scène <ExternalLink /></button> : null}</header>
       <nav className="scene-studio-detail__tabs" aria-label="Gestion du contenu">{[["details","Détails"],["analytics","Analyses"],["comments","Commentaires"],["subtitles","Sous-titres"],["rights","Droits"],["tv","TV"]].map(([value,label]) => <button key={value} type="button" aria-current={tab === value ? "page" : undefined} onClick={() => setTab(value as DetailTab)}>{label}</button>)}</nav>
-      {tab === "details" ? <div className="scene-studio-detail__details"><section><label>Titre<input value={title} maxLength={120} onChange={(event) => update(setTitle, event.target.value)} /></label><label>Description<textarea value={description} rows={7} onChange={(event) => update(setDescription, event.target.value)} /></label><div className="scene-studio-detail__fields"><label>Type<select value={contentType} onChange={(event) => { setContentType(event.target.value); setSaved(false); }}><option value="session">Session</option><option value="clip">Clip</option><option value="performance">Performance</option></select></label><label>Visibilité<select value={visibility} onChange={(event) => { setVisibility(event.target.value as typeof visibility); setSaved(false); }}><option value="public">Public</option><option value="unlisted">Non répertorié</option><option value="private">Privé</option></select></label><label>Ville<input value={city} onChange={(event) => update(setCity, event.target.value)} /></label><label>Langue<select value={language} onChange={(event) => { setLanguage(event.target.value); setSaved(false); }}><option value="fr">Français</option><option value="en">Anglais</option><option value="ar">Arabe</option></select></label></div><button type="button" className="scene-studio-save" disabled={saved} onClick={() => { void onSaveDetails({ title, description, contentType, city, language, visibility }).then((success) => { if (success) setSaved(true); }); }}><Check />{saved ? "Modifications enregistrées" : "Enregistrer"}</button></section><aside><span>MINIATURE</span><img src={item.thumbnailUrl} alt="Aperçu de la miniature" /><button type="button" onClick={() => notify("Sélecteur de miniature ouvert.")}>Modifier la miniature</button><small>Prévisualisation 16:9 · mobile · partage social</small></aside></div> : null}
-      {tab === "analytics" ? <><div className="scene-studio-kpis scene-studio-kpis--detail"><Kpi label="Vues" value={compactNumber(item.views)} delta="+24 %" icon={<Eye />} /><Kpi label="Complétion" value={`${item.completionPercent ?? 0} %`} delta="+4 pts" icon={<Activity />} /><Kpi label="Commentaires" value={String(item.comments)} delta="+12 %" icon={<MessageCircle />} /><Kpi label="Nouveaux suivis" value="+482" delta="+19 %" icon={<UsersRound />} /></div><RetentionChart /></> : null}
-      {tab === "comments" ? <CommentsInbox notify={notify} /> : null}
-      {tab === "subtitles" ? <section className="scene-studio-subtitles"><header><div><span>SOUS-TITRES</span><h2>Langues et transcription</h2></div><button type="button" onClick={() => notify("Transcription IA proposée comme brouillon à relire.")}><Sparkles />Générer une transcription</button></header>{[["Français","Publié","Corrigé manuellement"],["Anglais","Brouillon IA","À relire"],["Arabe","Non ajouté","—"]].map(([language,status,meta]) => <article key={language}><Languages /><div><strong>{language}</strong><span>{meta}</span></div><b>{status}</b><button type="button">Gérer</button></article>)}</section> : null}
-      {tab === "rights" ? <Rights notify={notify} /> : null}
-      {tab === "tv" ? <TvStudio notify={notify} /> : null}
+      {tab === "details" ? <div className="scene-studio-detail__details"><section><label>Titre<input value={title} maxLength={120} onChange={(event) => update(setTitle, event.target.value)} /></label><label>Description<textarea value={description} rows={7} onChange={(event) => update(setDescription, event.target.value)} /></label><div className="scene-studio-detail__fields"><label>Type<select value={contentType} onChange={(event) => { setContentType(event.target.value); setSaved(false); }}><option value="session">Session</option><option value="clip">Clip</option><option value="performance">Performance</option></select></label><label>Visibilité<select value={visibility} onChange={(event) => { setVisibility(event.target.value as typeof visibility); setSaved(false); }}><option value="public">Public</option><option value="unlisted">Non répertorié</option><option value="private">Privé</option></select></label><label>Ville<input value={city} onChange={(event) => update(setCity, event.target.value)} /></label><label>Langue<select value={language} onChange={(event) => { setLanguage(event.target.value); setSaved(false); }}><option value="fr">Français</option><option value="en">Anglais</option><option value="ar">Arabe</option></select></label></div><button type="button" className="scene-studio-save" disabled={saved || !detailsReady} onClick={() => { void onSaveDetails({ title, description, contentType, city, language, visibility }).then((success) => { if (success) setSaved(true); }); }}><Check />{saved ? "Modifications enregistrées" : "Enregistrer"}</button></section><aside><span>MINIATURE</span><img src={thumbnail} alt="Aperçu de la miniature" /><input type="file" hidden ref={thumbnailInput} accept="image/jpeg,image/png,image/webp" onChange={e=>{const file=e.target.files?.[0];if(file)void uploadThumbnail(file);e.target.value="";}}/><button type="button" onClick={() => demo ? notify("Miniature de démonstration.") : thumbnailInput.current?.click()}>Modifier la miniature</button><small>Prévisualisation 16:9 · mobile · partage social</small></aside></div> : null}
+      {tab === "analytics" && !demo ? <LiveAnalytics/> : null}
+      {tab === "analytics" && demo ? <><div className="scene-studio-kpis scene-studio-kpis--detail"><Kpi label="Vues" value={compactNumber(item.views)} delta="+24 %" icon={<Eye />} /><Kpi label="Complétion" value={`${item.completionPercent ?? 0} %`} delta="+4 pts" icon={<Activity />} /><Kpi label="Commentaires" value={String(item.comments)} delta="+12 %" icon={<MessageCircle />} /><Kpi label="Nouveaux suivis" value="+482" delta="+19 %" icon={<UsersRound />} /></div><RetentionChart /></> : null}
+      {tab === "comments" ? demo ? <CommentsInbox notify={notify}/> : <SceneCommentsSection key={item.id} videoId={item.id} demo={false} moderate/> : null}
+      {tab === "subtitles" && demo ? <section className="scene-studio-subtitles"><header><div><span>SOUS-TITRES</span><h2>Langues et transcription</h2></div><button type="button" onClick={() => notify("Transcription IA proposée comme brouillon à relire.")}><Sparkles />Générer une transcription</button></header>{[["Français","Publié","Corrigé manuellement"],["Anglais","Brouillon IA","À relire"],["Arabe","Non ajouté","—"]].map(([language,status,meta]) => <article key={language}><Languages /><div><strong>{language}</strong><span>{meta}</span></div><b>{status}</b><button type="button">Gérer</button></article>)}</section> : null}
+      {tab === "rights" && demo ? <Rights notify={notify} /> : null}
+      {tab === "tv" && demo ? <TvStudio notify={notify} /> : null}
     </div>
   );
 }
@@ -317,16 +354,18 @@ export default function SceneCreatorStudio({ pathname, onNavigate, onPublish }: 
   const { user } = useAuth();
   const activeSection = getSceneStudioSection(pathname);
   const [ownerItems, setOwnerItems] = useState<SceneStudioContentItem[]>([]);
-  const studioItems = ownerItems.length > 0 ? ownerItems : SCENE_STUDIO_DEMO_CONTENT;
+  const demo=isLocalAuthPreviewEnabled();
+  const studioItems = demo ? SCENE_STUDIO_DEMO_CONTENT : ownerItems;
+  const [selectedPlaylist,setSelectedPlaylist]=useState<string|null>(null);
   const detailContentId = getSceneStudioContentId(pathname);
-  const detailItem = studioItems.find(({ id }) => id === detailContentId) ?? getSceneStudioContent(detailContentId);
+  const detailItem = studioItems.find(({ id }) => id === detailContentId) ?? (demo ? getSceneStudioContent(detailContentId) : undefined);
   const copy = SECTION_COPY[activeSection];
   const [toast, setToast] = useState("");
   const notify = (message: string) => { setToast(message); window.setTimeout(() => setToast(""), 3200); };
   const saveOwnerDetails = async (details: { title: string; description: string; contentType: string; city: string; language: string; visibility: "public" | "unlisted" | "private" }) => {
     if (!detailItem || !user || !ownerItems.some(({ id }) => id === detailItem.id)) {
-      notify("Modifications enregistrées dans la démonstration du Studio.");
-      return true;
+      notify(demo ? "Modifications enregistrées dans la démonstration du Studio." : "Ce contenu n’est pas accessible sur ton compte.");
+      return demo;
     }
     try {
       const updated = await profileMediaRepository.updateOwnerMediaDetails(user.id, detailItem.id, {
@@ -376,10 +415,7 @@ export default function SceneCreatorStudio({ pathname, onNavigate, onPublish }: 
         };
       });
       setOwnerItems(mapped);
-    }).catch(() => {
-      // The filled investor fixture remains available when the owner media
-      // projection is unavailable.
-    });
+    }).catch(() => { if(active) notify("Impossible de charger tes contenus. Réouvre le Studio pour réessayer."); });
     return () => { active = false; };
   }, [user]);
 
@@ -391,19 +427,21 @@ export default function SceneCreatorStudio({ pathname, onNavigate, onPublish }: 
       </header>
       <div className="scene-studio__shell">
         <nav className="scene-studio__nav" aria-label="Navigation du Studio créateur">
-          {SCENE_STUDIO_SECTIONS.map((section) => <button key={section.id} type="button" aria-current={activeSection === section.id ? "page" : undefined} onClick={() => onNavigate(section.path)}>{section.id === "dashboard" ? <Activity /> : section.id === "content" ? <FileVideo2 /> : section.id === "analytics" ? <BarChart3 /> : section.id === "comments" ? <MessageCircle /> : section.id === "playlists" ? <ListVideo /> : section.id === "rights" ? <ShieldCheck /> : <Radio />}<span>{section.label}</span>{section.id === "comments" ? <b>3</b> : section.id === "rights" || section.id === "tv" ? <b>1</b> : null}</button>)}
-          <button type="button" className="scene-studio__nav-settings" onClick={() => notify("Les paramètres du Studio sont prêts pour le branchement compte.")}><Filter /><span>Paramètres</span></button>
+          {SCENE_STUDIO_SECTIONS.map((section) => <button key={section.id} type="button" aria-current={activeSection === section.id ? "page" : undefined} onClick={() => onNavigate(section.path)}>{section.id === "dashboard" ? <Activity /> : section.id === "content" ? <FileVideo2 /> : section.id === "analytics" ? <BarChart3 /> : section.id === "comments" ? <MessageCircle /> : section.id === "playlists" ? <ListVideo /> : section.id === "rights" ? <ShieldCheck /> : <Radio />}<span>{section.label}</span>{demo && (section.id === "comments" ? <b>3</b> : section.id === "rights" || section.id === "tv" ? <b>1</b> : null)}</button>)}
+          <button type="button" className="scene-studio__nav-settings" onClick={() => onNavigate("/profile/private/security")}><Filter /><span>Paramètres</span></button>
         </nav>
         <main className="scene-studio__main">
-          {!detailItem ? <header className="scene-studio__section-header"><div><span>{activeSection === "dashboard" ? "VUE D’ENSEMBLE" : activeSection.toLocaleUpperCase("fr-FR")}</span><h2>{copy.title}</h2><p>{copy.description}</p></div>{activeSection !== "dashboard" ? <small>{SCENE_STUDIO_OVERVIEW.periodLabel}</small> : null}</header> : null}
+          {!detailItem ? <header className="scene-studio__section-header"><div><span>{activeSection === "dashboard" ? "VUE D’ENSEMBLE" : activeSection.toLocaleUpperCase("fr-FR")}</span><h2>{activeSection === "dashboard" && !demo ? `Bonjour ${user?.user_metadata?.display_name || ""}.` : copy.title}</h2><p>{copy.description}</p></div>{activeSection !== "dashboard" ? <small>{SCENE_STUDIO_OVERVIEW.periodLabel}</small> : null}</header> : null}
+          {!demo && ["rights","tv"].includes(activeSection) && <p>Le service serveur de ce module n’est pas encore disponible.</p>}
           {detailItem ? <ContentDetail item={detailItem} onNavigate={onNavigate} notify={notify} onSaveDetails={saveOwnerDetails} /> : null}
-          {!detailItem && activeSection === "dashboard" ? <Overview onNavigate={onNavigate} items={studioItems} /> : null}
+          {!detailItem && !demo && activeSection === "dashboard" ? <LiveAnalytics/> : null}
+          {!detailItem && demo && activeSection === "dashboard" ? <Overview onNavigate={onNavigate} items={studioItems} /> : null}
           {!detailItem && activeSection === "content" ? <ContentLibrary onNavigate={onNavigate} notify={notify} sourceItems={studioItems} /> : null}
-          {!detailItem && activeSection === "analytics" ? <Analytics /> : null}
-          {!detailItem && activeSection === "comments" ? <CommentsInbox notify={notify} /> : null}
-          {!detailItem && activeSection === "playlists" ? <Playlists notify={notify} /> : null}
-          {!detailItem && activeSection === "rights" ? <Rights notify={notify} /> : null}
-          {!detailItem && activeSection === "tv" ? <TvStudio notify={notify} /> : null}
+          {!detailItem && activeSection === "analytics" ? demo ? <Analytics/> : <LiveAnalytics/> : null}
+          {!detailItem && activeSection === "comments" ? demo ? <CommentsInbox notify={notify}/> : <>{ownerItems.map(item=><section key={item.id}><h3>{item.title}</h3><SceneCommentsSection videoId={item.id} demo={false} moderate/></section>)}{!ownerItems.length && <p>Aucun contenu publié.</p>}</> : null}
+          {!detailItem && activeSection === "playlists" ? <ScenePlaylistsView videos={studioItems.map(item=>({id:item.id,title:item.title,artist:user?.user_metadata?.display_name ?? "Moi",image:item.thumbnailUrl,alt:item.title,duration:item.durationLabel}))} selectedPlaylistId={selectedPlaylist} onSelectPlaylist={setSelectedPlaylist} onPlay={id=>onNavigate(`/scene/watch/${id}`)} onBack={()=>onNavigate("/scene/studio")} onNotify={notify}/> : null}
+          {!detailItem && demo && activeSection === "rights" ? <Rights notify={notify} /> : null}
+          {!detailItem && demo && activeSection === "tv" ? <TvStudio notify={notify} /> : null}
         </main>
       </div>
       <div className="scene-studio-toast" role="status" aria-live="polite" data-visible={Boolean(toast) || undefined}>{toast}</div>

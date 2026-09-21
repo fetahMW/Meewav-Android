@@ -1,5 +1,12 @@
 package com.meewav.android.features.rooms.wave
 
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
+import org.json.JSONObject
+import java.util.UUID
+import android.content.Intent
+import android.net.Uri
+import com.meewav.android.features.messaging.MessagingActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -25,7 +32,7 @@ internal fun WaveGuestActionBar(state: WaveGuestState, guests: List<WaveGuest>, 
     val enabled = guests.isNotEmpty()
     Column(Modifier.fillMaxWidth().padding(top = 6.dp).hifiBlackSurface(14.dp).padding(horizontal = 6.dp, vertical = 4.dp)) {
         Row(Modifier.fillMaxWidth()) {
-            GuestAction("Message", WaveIcons.Envelope, enabled, Modifier.weight(1f)) { state.messageRecipientIds = ids }
+            GuestAction("Message", WaveIcons.Envelope, enabled, Modifier.weight(1f)) { state.classroomQuickMessage = false; state.messageRecipientIds = ids }
             GuestAction("Aperçu", WaveIcons.Eye, guests.size == 1, Modifier.weight(1f)) { state.previewId = guests.single().id }
             if (page == 0) {
                 GuestAction("Scène", Icons.Filled.ArrowUpward, enabled && guests.all { it.connected && it.canParticipate } && state.onStage.size + guests.size <= 3, Modifier.weight(1f)) {
@@ -48,11 +55,29 @@ internal fun WaveGuestActionBar(state: WaveGuestState, guests: List<WaveGuest>, 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun WaveGuestMessageSheet(state: WaveGuestState) {
+internal fun WaveGuestMessageSheet(state: WaveGuestState, liveRoomId: String? = null) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var busy by remember { mutableStateOf(false) }
+    var failure by remember { mutableStateOf<String?>(null) }
+    var requestId by remember { mutableStateOf(UUID.randomUUID().toString()) }
+    val quick = state.classroomQuickMessage
+    LaunchedEffect(state.messageRecipientIds, quick) {
+        if (!quick && state.messageRecipientIds.size == 1) {
+            val id = state.messageRecipientIds.first()
+            val real = runCatching { UUID.fromString(id) }.isSuccess && liveRoomId != null
+            val route = Uri.Builder().path("/messages").appendQueryParameter("space", "messages")
+                .appendQueryParameter("intent", "message").appendQueryParameter("source", "rooms")
+                .appendQueryParameter("mode", if (real) "real" else "demo")
+                .appendQueryParameter(if (real) "profileId" else "mockArtistId", id).build().toString()
+            context.startActivity(Intent(context, MessagingActivity::class.java).putExtra("route", route).putExtra("preview", !real))
+            state.messageRecipientIds = emptySet()
+        }
+    }
     val messageRecipients = state.guests.filter { it.id in state.messageRecipientIds }
     var draft by remember { mutableStateOf("") }
-    LaunchedEffect(state.messageRecipientIds) { draft = "" }
-    if (messageRecipients.isNotEmpty()) ModalBottomSheet(onDismissRequest = { state.messageRecipientIds = emptySet() },
+    LaunchedEffect(state.messageRecipientIds) { if (state.messageRecipientIds.isEmpty()) state.classroomQuickMessage = false; draft = ""; failure = null; requestId = UUID.randomUUID().toString() }
+    if (messageRecipients.isNotEmpty()) ModalBottomSheet(onDismissRequest = { state.messageRecipientIds = emptySet(); state.classroomQuickMessage = false },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Color(0xFF101114), contentColor = Color.White) {
         Column(Modifier.fillMaxWidth().imePadding().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -60,18 +85,34 @@ internal fun WaveGuestMessageSheet(state: WaveGuestState) {
                     modifier = Modifier.weight(1f), fontSize = 16.sp)
                 IconButton(onClick = { state.messageRecipientIds = emptySet() }) { Icon(WaveIcons.Close, "Fermer") }
             }
-            Text("Message privé · Démonstration locale", fontSize = 11.sp, color = Color.White.copy(alpha = .5f))
+            Text(if (quick && liveRoomId != null) "Message rapide dans la Classe" else "Message privé · Démonstration locale", fontSize = 11.sp, color = Color.White.copy(alpha = .5f))
             if (messageRecipients.size == 1) LazyColumn(Modifier.fillMaxWidth().heightIn(max = 150.dp)) {
                 items(state.privateDemoMessages[messageRecipients.first().id].orEmpty()) {
                     Text(it, modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
                         .background(Color(0xFF262032), RoundedCornerShape(10.dp)).padding(10.dp), fontSize = 13.sp)
                 }
             }
-            OutlinedTextField(value = draft, onValueChange = { draft = it.take(1000) }, placeholder = { Text("Écrire aux invités…") },
+            OutlinedTextField(value = draft, onValueChange = { draft = it.take(if (quick) 280 else 1000); requestId = UUID.randomUUID().toString() }, placeholder = { Text("Écrire aux invités…") },
                 modifier = Modifier.fillMaxWidth(), maxLines = 4, colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = Color.White, unfocusedTextColor = Color.White, focusedBorderColor = WaveMixerTheme.capsuleAccentSoft))
-            Button(onClick = { state.addPrivateDemoMessage(messageRecipients.map { it.id }.toSet(), draft); draft = "" },
-                enabled = draft.isNotBlank(), modifier = Modifier.align(Alignment.End),
+            failure?.let { Text(it, color = Color(0xFFFFA0A0), fontSize = 12.sp) }
+            Button(onClick = {
+                if (quick && liveRoomId != null && messageRecipients.size == 1) {
+                    busy = true; failure = null
+                    val body = draft.trim()
+                    scope.launch {
+                        try {
+                            LogeRemoteRepository(context, liveRoomId).rpc("rooms_classe_send_private_message_v1", JSONObject()
+                                .put("p_room_id", liveRoomId).put("p_peer_id", messageRecipients.first().id)
+                                .put("p_body", body).put("p_client_request_id", requestId))
+                            draft = ""; requestId = UUID.randomUUID().toString()
+                            state.messageRecipientIds = emptySet(); state.classroomQuickMessage = false
+                        } catch (_: Exception) { failure = "Le message n’a pas été envoyé. Réessaie." }
+                        finally { busy = false }
+                    }
+                } else if (liveRoomId != null) { failure = "Sélectionne un seul destinataire pour envoyer un message." } else { state.addPrivateDemoMessage(messageRecipients.map { it.id }.toSet(), draft); draft = "" }
+            },
+                enabled = draft.isNotBlank() && !busy, modifier = Modifier.align(Alignment.End),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF453677))) {
                 Icon(WaveIcons.Send, null, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(8.dp)); Text("Envoyer")
             }

@@ -120,7 +120,7 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
             footer = if (state.initializing) null else if (typingLayout) { {
                 // Le CTA reste à 12 dp du clavier ; le formulaire utilise
                 // l'espace juste au-dessus, sans remonter inutilement les champs.
-                IosAuthAction("Se connecter", state.busy, submit)
+                IosAuthAction(if (state.localPreview) "Suivant" else "Se connecter", state.busy, submit)
             } } else { {
                 IosAuthDivider()
                 Spacer(Modifier.height(6.dp))
@@ -166,7 +166,7 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
                     Text("Mot de passe oublié ?", color = Muted, fontSize = 10.sp)
                 }
                 }
-                if (!typingLayout) IosAuthAction("Se connecter", state.busy, submit)
+                if (!typingLayout) IosAuthAction(if (state.localPreview) "Suivant" else "Se connecter", state.busy, submit)
             }
         }
         if (decorationAlpha > 0f) Box(Modifier.fillMaxWidth().height(stageHeight + AuthStageOverlap)

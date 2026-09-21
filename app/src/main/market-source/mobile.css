@@ -708,3 +708,48 @@
 #root .mobile-market .market-product-card__footer {margin-top:4px;padding-top:0;}
 /* Keep notification counts within their touch targets and below Samsung's status bar. */
 #root .mobile-market .market-topbar__actions .market-icon-button__badge {top:2px;right:2px;transform:none;min-width:15px;height:15px;line-height:15px;padding:0 3px;display:grid;place-items:center;}
+
+/* Cart and filters — WaveMixerTheme surfaces and capsule accent. */
+#root .mobile-market :is(.market-cart-panel,.market-filters-panel) {
+ --market-filter-accent:169,142,240; --cart-violet:#a98ef0; --cart-blue:#a98ef0;
+ background:linear-gradient(180deg,#1f2126,#181a1f 30%,#101216 65%,#08090c);
+ color:#f8f6fa; border:1px solid #ffffff2b; border-bottom:0; border-radius:24px 24px 0 0;
+ box-shadow:inset 0 1px #ffffff12,0 -12px 36px #0008;
+}
+#root .mobile-market :is(.market-cart-panel,.market-filters-panel)::before {display:none;}
+#root .mobile-market :is(.market-cart-panel__header,.market-filters-panel__header) {background:none;min-height:64px;padding:14px 16px;border-bottom:1px solid #ffffff12;}
+#root .mobile-market :is(.market-cart-panel__heading,.market-filters-panel__heading) h2 {font-size:20px;letter-spacing:-.025em;margin:0;}
+#root .mobile-market :is(.market-cart-panel__close,.market-filters-panel__close) {width:44px;height:44px;padding:12px;border:0;background:none;color:#a98ef0;box-shadow:none;}
+#root .mobile-market :is(.market-cart-panel__eyebrow,.market-filters-panel__heading > span) {font-size:10px;color:#b3b0bc;letter-spacing:.04em;}
+#root .mobile-market :is(.market-cart-panel__scroll,.market-filters-panel__scroll) {padding:14px 12px;display:flex;flex-direction:column;gap:14px;}
+#root .mobile-market :is(.market-cart-line,.market-cart-section,.market-cart-protection,.market-filter-section) {margin:0;padding:14px;border:1px solid #ffffff20;border-radius:18px;background:linear-gradient(180deg,#141517,#0e0f11 35%,#070809);box-shadow:inset 0 1px #ffffff0d,0 4px 10px #0004;}
+#root .mobile-market .market-cart-lines {display:grid;gap:12px;}
+#root .mobile-market .market-cart-line {grid-template-columns:82px minmax(0,1fr);gap:12px;}
+#root .mobile-market .market-cart-line__media {height:96px;border-radius:12px;}
+#root .mobile-market .market-cart-line__media img {width:100%;height:100%;object-fit:cover;}
+#root .mobile-market .market-cart-line__topline {flex-wrap:wrap;gap:8px;}
+#root .mobile-market .market-cart-line__topline h4 {font-size:14px;line-height:1.35;}
+#root .mobile-market .market-cart-line__topline > strong {font-size:17px;color:#f8f6fa;}
+#root .mobile-market .market-cart-panel__steps {padding:12px 16px;background:none;border-bottom:1px solid #ffffff0d;}
+#root .mobile-market .market-cart-panel__steps span.is-active {color:#a98ef0;}
+#root .mobile-market .market-cart-panel__steps span.is-active b {background:#302248;box-shadow:none;color:#cbbaf4;}
+#root .mobile-market .market-cart-quantity {border:1px solid #ffffff25;border-radius:12px;background:linear-gradient(#202126,#08090b);}
+#root .mobile-market .market-cart-quantity button {height:40px;width:36px;color:#a98ef0;}
+#root .mobile-market .market-cart-line__remove {min-width:40px;min-height:40px;color:#b5a6d3;}
+#root .mobile-market .market-cart-delivery > button,
+#root .mobile-market .market-filters-panel :is(.market-filter-chips,.market-filter-universes,.market-filter-segmented,.market-filter-methods,.market-filter-sellers,.market-filter-grade) button {min-width:0;min-height:44px;padding:10px 12px;border:1px solid #ffffff22;border-radius:13px;background:linear-gradient(180deg,#222328,#0b0c0e);color:#d6d4dd;font-size:12px;white-space:normal;box-shadow:inset 0 1px #ffffff0b;}
+#root .mobile-market .market-cart-delivery > button.is-selected,
+#root .mobile-market .market-filters-panel button[aria-pressed=true] {border-color:#a98ef066;background:linear-gradient(180deg,#342547,#181021);color:#e4d9fa;box-shadow:inset 0 1px #ffffff12;}
+#root .mobile-market .market-filters-panel .market-filter-chips {display:flex;flex-wrap:wrap;gap:8px;}
+#root .mobile-market .market-filter-universes {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+#root .mobile-market .market-filter-section h3 {font-size:14px;color:#f8f6fa;margin:0 0 12px;}
+#root .mobile-market .market-filter-price {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+#root .mobile-market .market-filter-price input,
+#root .mobile-market .market-filter-sort select {width:100%;min-width:0;min-height:44px;padding:10px;border:1px solid #ffffff25;border-radius:11px;background:#08090c;color:#f8f6fa;color-scheme:dark;box-shadow:inset 0 2px 6px #0008;}
+#root .mobile-market .market-filter-sort {display:grid;grid-template-columns:20px minmax(0,1fr);gap:10px;background:none;padding:0;}
+#root .mobile-market .market-filter-sort select {grid-column:1/-1;}
+#root .mobile-market :is(.market-cart-summary,.market-filters-panel__footer) {padding:14px 16px max(16px,env(safe-area-inset-bottom));background:linear-gradient(#17191d,#08090c);border-top:1px solid #ffffff25;box-shadow:0 -6px 16px #0004;}
+#root .mobile-market :is(.market-cart-summary__checkout,.market-filters-panel__apply,.market-cart-empty > button) {min-height:48px;border:1px solid #a98ef066;border-radius:14px;background:linear-gradient(180deg,#5137a1,#342367);color:#f8f6fa;font-size:14px;box-shadow:inset 0 1px #ffffff18;}
+#root .mobile-market .market-filters-panel__reset {color:#a98ef0;background:none;border:0;box-shadow:none;}
+#root .mobile-market .market-cart-summary__demo {font-size:10px;color:#a5a2ac;line-height:1.4;}
+#root .mobile-market .market-cart-empty__icon {width:64px;height:64px;border-radius:20px;border:1px solid #ffffff22;background:linear-gradient(#222328,#08090c);color:#a98ef0;box-shadow:inset 0 1px #ffffff12;}

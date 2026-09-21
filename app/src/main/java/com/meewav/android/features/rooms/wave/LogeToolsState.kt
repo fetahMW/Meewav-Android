@@ -14,7 +14,7 @@ import java.util.UUID
 @Serializable internal data class LogePoll(val question:String, val choices:List<String>, val endsAt:Long, val votes:Map<String,Int> = emptyMap())
 @Serializable internal data class LogeCandidate(val id:String,val name:String)
 @Serializable internal data class LogeExperience(val id:String=UUID.randomUUID().toString(),val personId:String,val type:String,val detail:String,val status:String="pending")
-@Serializable internal data class LogeGift(val id:String, val code:Int, val recipientId:String="", val recipientName:String="", val title:String="", val image:String="", val status:String="sent", val scheduledAt:Long?=null, val round:String="", val pool:List<LogeCandidate> = emptyList(), val animationSeconds:Int=7, val startedAt:Long?=null, val winner:LogeCandidate?=null)
+@Serializable internal data class LogeGift(val id:String, val code:Int, val recipientId:String="", val recipientName:String="", val title:String="", val image:String="", val status:String="sent", val scheduledAt:Long?=null, val round:String="", val pool:List<LogeCandidate> = emptyList(), val animationSeconds:Int=7, val startedAt:Long?=null, val winner:LogeCandidate?=null, val eligibleCount:Int?=null)
 @Serializable internal data class LogeArchive(val questionsOpen:Boolean=true, val questions:List<LogeQuestion> = logeQuestions(), val moments:List<LogeMoment> = emptyList(), val poll:LogePoll?=null, val gifts:List<LogeGift> = emptyList(), val stock:List<Int> = listOf(3,3,3,1,3,1),val experiences:List<LogeExperience> = emptyList())
 
 internal object LogeRules {
@@ -49,12 +49,30 @@ internal class LogeToolsState(val guests:WaveGuestState,private val load:()->Str
         {context.getSharedPreferences("loge-tools-v1-"+scope.hashCode(),Context.MODE_PRIVATE).edit().putString("state",it).apply()},seedDemoPeople)
     private val json=Json { ignoreUnknownKeys=true;encodeDefaults=true }
     var remoteAction: ((String,org.json.JSONObject)->Unit)? = null
+    var giftLive by mutableStateOf(false)
+    var remoteGift: (suspend (LogeGift)->LogeGift)? = null
+    var giftCommand: ((String,String)->Unit)? = null
+    fun acceptGiftInventory(stock:List<Int>,gifts:List<LogeGift>) {
+        val active=gifts.firstOrNull{it.status=="spinning"}
+        if(active!=null){showDrawId=active.id;drawHideAt=null}
+        if(gifts.any{it.id==showDrawId&&it.status=="revealed"}&&data.gifts.any{it.id==showDrawId&&it.status=="spinning"})drawHideAt=System.currentTimeMillis()+12_000L
+        if(gifts.any{it.id==showDrawId&&it.status=="cancelled"}){showDrawId=null;drawHideAt=null}
+        data=data.copy(stock=stock,gifts=gifts)
+    }
+    suspend fun sendGift(gift:LogeGift):LogeGift? {
+        if(remoteBusy)return null
+        if(!giftLive)return if(gift(gift))gift else null
+        val send=remoteGift?:run{notice="Connexion aux cadeaux en cours…";return null}
+        remoteBusy=true
+        return try{send(gift).also{notice=null}}catch(e:kotlinx.coroutines.CancellationException){throw e}catch(e:Exception){notice=e.message?:"Cadeau non envoyé. Réessaie.";null}finally{remoteBusy=false}
+    }
     var remoteMode = false
+    private var remotePeople by mutableStateOf<List<WaveGuest>>(emptyList())
     var remoteBusy by mutableStateOf(false)
     fun acceptRemote(snapshot:org.json.JSONObject) {
         data=json.decodeFromString<LogeArchive>(snapshot.toString())
         val people=snapshot.optJSONArray("people")?:return
-        guests.addSceneDemoPeople((0 until people.length()).map { i -> val p=people.getJSONObject(i); WaveGuest(p.getString("id"),p.optString("name"),p.optString("role"),R.drawable.loge_artist_0,WaveGuestLocation.REQUESTED) })
+        remotePeople=(0 until people.length()).map { i -> val p=people.getJSONObject(i); WaveGuest(p.getString("id"),p.optString("name"),p.optString("role"),android.R.drawable.ic_menu_myplaces,WaveGuestLocation.REQUESTED,demoVideo="",avatarUrl=p.optString("avatarUrl").takeUnless{it=="null"}.orEmpty()) }
     }
     private fun remote(action:String,payload:org.json.JSONObject=org.json.JSONObject()):Boolean {
         if(!remoteMode)return false
@@ -73,7 +91,7 @@ internal class LogeToolsState(val guests:WaveGuestState,private val load:()->Str
     private var drawHideAt:Long?=null
     fun showWinner(id:String) { showDrawId=id;drawHideAt=System.currentTimeMillis()+12_000L }
     var externalGiftRecipients by mutableStateOf<Map<String,WaveGuest>>(emptyMap())
-    val people get()=(guests.guests+externalGiftRecipients.values).distinctBy{it.id}
+    val people get()=((if(remoteMode)remotePeople else guests.guests)+externalGiftRecipients.values).distinctBy{it.id}
     val selected get()=people.find { it.id==selectedId }
     val activeMoment get()=data.moments.firstOrNull { it.personId==selectedId && it.format=="live" && it.status in setOf("pending","scheduled","accepted","live") }
     val selectedQuestion get()=data.questions.firstOrNull { it.status=="selected" }
@@ -96,18 +114,18 @@ internal class LogeToolsState(val guests:WaveGuestState,private val load:()->Str
     fun offerExperience(personId:String,type:String,detail:String):Boolean {
         if(people.none { it.id==personId } || type !in listOf("Concert","Sur scène","Rencontre","Session studio") || detail.isBlank())return false
         if(data.experiences.any { it.personId==personId && it.type==type && it.detail==detail.trim() && it.status in setOf("pending","accepted") }) { notice="Cette invitation existe déjà.";return false }
-        if(remote("experience.add",org.json.JSONObject().put("id",UUID.randomUUID().toString()).put("personId",personId).put("type",type).put("detail",detail.trim())))return true
+        if(remoteMode && remote("experience.add",org.json.JSONObject().put("id",UUID.randomUUID().toString()).put("personId",personId).put("type",type).put("detail",detail.trim())))return true
         save(data.copy(experiences=listOf(LogeExperience(personId=personId,type=type,detail=detail.trim().take(240)))+data.experiences));notice=null;return true
     }
     fun experienceStatus(id:String,status:String) {
-        if(remote("experience.status",org.json.JSONObject().put("id",id).put("status",status)))return
+        if(remoteMode && remote("experience.status",org.json.JSONObject().put("id",id).put("status",status)))return
         val invitation=data.experiences.find { it.id==id }?:return
         val allowed=when(invitation.status){"pending"->setOf("accepted","declined","cancelled");"accepted"->setOf("completed","cancelled");else->emptySet()}
         if(status in allowed)save(data.copy(experiences=data.experiences.map { if(it.id==id)it.copy(status=status)else it }))
     }
-    fun toggleQuestions() { if(remote("questions.open",org.json.JSONObject().put("open",!data.questionsOpen)))return;save(data.copy(questionsOpen=!data.questionsOpen)) }
+    fun toggleQuestions() { if(remoteMode && remote("questions.open",org.json.JSONObject().put("open",!data.questionsOpen)))return;save(data.copy(questionsOpen=!data.questionsOpen)) }
     fun question(id:String,status:String) {
-        if(remote("question.status",org.json.JSONObject().put("id",id).put("status",status)))return
+        if(remoteMode && remote("question.status",org.json.JSONObject().put("id",id).put("status",status)))return
         if(status !in setOf("pending","selected","answered","rejected") || data.questions.none { it.id==id })return
         save(data.copy(questions=data.questions.map { when { it.id==id -> it.copy(status=status);status=="selected"&&it.status=="selected"->it.copy(status="pending");else->it } }))
         if(status=="selected")questionVisibleUntil=System.currentTimeMillis()+30_000
@@ -117,11 +135,11 @@ internal class LogeToolsState(val guests:WaveGuestState,private val load:()->Str
     fun invite(minutes:Int) {
         val person=selected?:return
         if(minutes !in listOf(5,10,15)||activeMoment!=null)return
-        if(remote("moment.add",org.json.JSONObject().put("id",UUID.randomUUID().toString()).put("personId",person.id).put("format","live").put("minutes",minutes)))return
+        if(remoteMode && remote("moment.add",org.json.JSONObject().put("id",UUID.randomUUID().toString()).put("personId",person.id).put("format","live").put("minutes",minutes)))return
         save(data.copy(moments=listOf(LogeMoment(personId=person.id,minutes=minutes))+data.moments))
     }
     fun moment(id:String,status:String) {
-        if(remote("moment.status",org.json.JSONObject().put("id",id).put("status",status)))return
+        if(remoteMode && remote("moment.status",org.json.JSONObject().put("id",id).put("status",status)))return
         val moment=data.moments.find { it.id==id }?:return
         if(!LogeRules.transition(moment.status,status))return
         if(status=="live") {
@@ -159,12 +177,14 @@ internal class LogeToolsState(val guests:WaveGuestState,private val load:()->Str
         notice=null;return true
     }
     fun cancelGift(id:String) {
+        if(giftLive){giftCommand?.invoke("cancel",id);return}
         val g=data.gifts.find { it.id==id }?:return
         if(g.status !in setOf("scheduled","ready","round"))return
         save(data.copy(gifts=data.gifts.map { if(it.id==id)it.copy(status="cancelled")else it },stock=data.stock.mapIndexed { i,n -> if(i==g.code)n+1 else n }))
     }
-    fun deliverRound(id:String) { val g=data.gifts.find { it.id==id && it.status=="round" }?:return;save(data.copy(gifts=data.gifts.map { if(it.id==g.id)it.copy(status="sent")else it })) }
+    fun deliverRound(id:String) { if(giftLive){notice="La livraison de ronde attend le signal serveur.";return}; val g=data.gifts.find { it.id==id && it.status=="round" }?:return;save(data.copy(gifts=data.gifts.map { if(it.id==g.id)it.copy(status="sent")else it })) }
     fun startDraw(id:String) {
+        if(giftLive){giftCommand?.invoke("start",id);return}
         val g=data.gifts.find { it.id==id && it.status=="ready" && it.pool.size>=2 }?:return
         if(data.gifts.any { it.status=="spinning" }) { notice="Un tirage est déjà en cours.";return }
         val winner=g.pool[SecureRandom().nextInt(g.pool.size)]
@@ -173,6 +193,7 @@ internal class LogeToolsState(val guests:WaveGuestState,private val load:()->Str
         drawHideAt=null
     }
     fun tick() {
+        if(giftLive){now=System.currentTimeMillis();if(drawHideAt?.let{now>=it}==true){showDrawId=null;drawHideAt=null};return}
         if(!remoteMode)load()?.let { saved -> runCatching { json.decodeFromString<LogeArchive>(saved) }.getOrNull()?.let { if(it!=data)data=it } }
         now=System.currentTimeMillis()
         if(!remoteMode)data.moments.filter { it.status=="live" && (now-(it.startedAt?:now)>=it.minutes*60_000L || guests.onStage.none { person -> person.id==it.personId }) }.forEach { moment(it.id,"completed") }

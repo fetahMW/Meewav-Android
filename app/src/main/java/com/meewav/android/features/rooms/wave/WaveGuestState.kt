@@ -24,6 +24,8 @@ internal data class WaveGuest(
     val origin: GuestOrigin = GuestOrigin.CANDIDATURE,
     val invitation: GuestInvitation = GuestInvitation.NONE,
     val cageVictories: Int = 0,
+    val avatarUrl: String = "",
+    val hostMuted: Boolean = false,
 )
 
 internal val WaveGuest.canParticipate get() = invitation !in setOf(GuestInvitation.PENDING, GuestInvitation.DECLINED)
@@ -45,7 +47,14 @@ internal val WaveGuest.healthLabel: String get() = when {
 }
 
 /** Native demo room state. No RTC or Supabase success is inferred from a local move. */
-internal class WaveGuestState(private val cageDemo: Boolean = false, private val classeDemo: Boolean = false) {
+internal class WaveGuestState(private val cageDemo: Boolean = false, private val classeDemo: Boolean = false, live:Boolean=false) {
+    var remoteMode = live
+    var remoteRequests: ((Boolean)->Unit)? = null
+    var remoteRefuse: ((Set<String>)->Unit)? = null
+    var remoteMic: ((String,Boolean)->Unit)? = null
+    var remoteMove: ((Set<String>,WaveGuestLocation)->Unit)? = null
+    var remoteRemove: ((Set<String>)->Unit)? = null
+    var remoteInvite: ((WaveGuest)->Unit)? = null
     private fun roomVideo(guest: WaveGuest) = if (cageDemo) guest.copy(demoVideo = cageGuestDemoVideo(guest.id), sourceAspectRatio = 9f / 16f,
         connected = if (guest.location == WaveGuestLocation.BACKSTAGE) true else guest.connected,
         mic = if (guest.location == WaveGuestLocation.BACKSTAGE) true else guest.mic,
@@ -55,9 +64,12 @@ internal class WaveGuestState(private val cageDemo: Boolean = false, private val
     var requestsOpen by mutableStateOf(true)
         private set
     fun toggleRequests() {
+        remoteRequests?.let{it(!requestsOpen);return}
+        if(remoteMode){notice="Réglage des admissions indisponible";return}
         requestsOpen = !requestsOpen
         notice = if (requestsOpen) "Demandes ouvertes · démo locale" else "Demandes fermées · les demandes reçues restent disponibles"
     }
+    fun acceptRemoteRequests(open:Boolean){requestsOpen=open}
     var primaryId by mutableStateOf("host")
     var mixerGuestId by mutableStateOf<String?>(null)
     private var mixerGains by mutableStateOf(mapOf<String, Float>())
@@ -97,14 +109,15 @@ internal class WaveGuestState(private val cageDemo: Boolean = false, private val
             location = location, gradeLevel = index % 6 + 1, latencyMs = listOf(32, 58, 210, 125, 45, 68)[index % 6],
             connected = index % 9 != 2, mic = index % 7 != 3, camera = index % 8 != 4)
     }
-    var guests by mutableStateOf((initialGuests.mapIndexed { index, guest ->
+    var guests by mutableStateOf(if(live) emptyList() else (initialGuests.mapIndexed { index, guest ->
         guest.copy(gradeLevel = index % 6 + 1, latencyMs = listOf(35, 65, 110, 48)[index % 4],
             origin = if (index in 4..5) GuestOrigin.INVITATION else GuestOrigin.CANDIDATURE,
             invitation = if (index == 4) GuestInvitation.PENDING else if (index == 5) GuestInvitation.ACCEPTED else GuestInvitation.NONE)
     } + List(20) { demoGuest(it, WaveGuestLocation.BACKSTAGE) } + List(38) { demoGuest(it, WaveGuestLocation.REQUESTED) }).map(::roomVideo).let { if (classeDemo) classeDemoPortraits(it) else it })
         private set
+    fun replaceRemoteGuests(people: List<WaveGuest>) { guests = people; selected = selected.intersect(people.map { it.id }.toSet()) }
     var filters by mutableStateOf(WaveGuestFilters())
-    val availableInvites get() = (initialGuests + listOf(
+    val availableInvites get() = if(remoteMode) emptyList() else (initialGuests + listOf(
         WaveGuest("noam", "NOAM A.", "Producteur", R.drawable.wave_chat_artist_8, WaveGuestLocation.INVITED),
         WaveGuest("lina", "LINA V.", "Rappeuse", R.drawable.wave_chat_artist_9, WaveGuestLocation.INVITED),
     )).filter { candidate -> guests.none { it.id == candidate.id } }
@@ -125,6 +138,7 @@ internal class WaveGuestState(private val cageDemo: Boolean = false, private val
         previewId = null
         profilePreviewId = guest.id
     }
+    var classroomQuickMessage by mutableStateOf(false)
     var messageRecipientIds by mutableStateOf<Set<String>>(emptySet())
     var notice by mutableStateOf<String?>(null)
     var dragId by mutableStateOf<String?>(null)
@@ -175,6 +189,8 @@ internal class WaveGuestState(private val cageDemo: Boolean = false, private val
         notice = null
     }
     fun move(ids: Set<String>, target: WaveGuestLocation) {
+        remoteMove?.let{it(ids,target);return}
+        if(remoteMode){notice="Connexion des invités en cours";return}
         val matching = guests.filter { it.id in ids && it.canParticipate && it.id !in classeBannedIds }
         val allowed = matching.filter { guest -> when (target) {
             WaveGuestLocation.STAGE -> guest.location == WaveGuestLocation.BACKSTAGE
@@ -231,9 +247,10 @@ internal class WaveGuestState(private val cageDemo: Boolean = false, private val
         return true
     }
     fun addSceneDemoPeople(people: List<WaveGuest>) {
+        if(remoteMode)return
         guests = people.filter { incoming -> guests.none { it.id == incoming.id } } + guests
     }
-    fun toggleMic(id: String) { guests = guests.map { if (it.id == id) it.copy(mic = !it.mic) else it } }
+    fun toggleMic(id: String) { remoteMic?.let{it(id,guests.find{p->p.id==id}?.hostMuted!=true);return}; if(remoteMode){notice="Commande micro distante indisponible";return}; guests = guests.map { if (it.id == id) it.copy(mic = !it.mic) else it } }
     fun awardCageVictory(id: String) { guests = guests.map { if (it.id == id) it.copy(cageVictories = it.cageVictories + 1) else it } }
     fun clearCageVictories() { guests = guests.map { it.copy(cageVictories = 0) } }
     fun demoReconnect(id: String) { guests = guests.map { if (it.id == id && it.canParticipate) it.copy(connected = true, latencyMs = 45) else it } }
@@ -249,6 +266,8 @@ internal class WaveGuestState(private val cageDemo: Boolean = false, private val
         notice = "Message enregistré pour ${recipients.size} invité(s) · démo locale"
     }
     fun refuseRequests(ids: Set<String>) {
+        remoteRefuse?.let{it(ids);return}
+        if(remoteMode){notice="Refus distant indisponible";return}
         val refused = guests.filter { it.id in ids && it.location in setOf(WaveGuestLocation.REQUESTED, WaveGuestLocation.INVITED) }
         if (refused.isEmpty()) return
         val refusedIds = refused.map { it.id }.toSet()
@@ -257,13 +276,17 @@ internal class WaveGuestState(private val cageDemo: Boolean = false, private val
         if (previewId in refusedIds) previewId = null
         notice = "${refused.size} demande(s) refusée(s) · démo locale"
     }
-    fun toggleCamera(id: String) { guests = guests.map { if (it.id == id) it.copy(camera = !it.camera) else it } }
+    fun toggleCamera(id: String) { if(remoteMode){notice="La caméra reste contrôlée par l’invité";return}; guests = guests.map { if (it.id == id) it.copy(camera = !it.camera) else it } }
     fun remove(ids: Set<String>) {
+        remoteRemove?.let{it(ids);return}
+        if(remoteMode){notice="Retrait distant indisponible";return}
         guests = guests.filterNot { it.id in ids }; selected = emptySet()
         if (previewId in ids) previewId = null
         notice = "Invité retiré de la démo"
     }
     fun invite(guest: WaveGuest) {
+        remoteInvite?.let{it(guest);return}
+        if(remoteMode){notice="Invitation distante indisponible";return}
         if (guest.id in classeBannedIds) { notice = "Cet artiste est banni de cette classe."; return }
         if (guests.none { it.id == guest.id }) guests = guests + roomVideo(guest.copy(location = WaveGuestLocation.INVITED,
             origin = GuestOrigin.INVITATION, invitation = GuestInvitation.PENDING, connected = false))

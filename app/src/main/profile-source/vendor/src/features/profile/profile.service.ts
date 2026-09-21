@@ -8,6 +8,7 @@ export type ProfileRecord = {
   id: string;
   username: string | null;
   full_name: string | null;
+  display_name?: string | null;
   bio: string | null;
   avatar_url: string | null;
   avatar_name: string | null;
@@ -43,6 +44,7 @@ const PROFILE_SELECT = [
   "id",
   "username",
   "full_name",
+  "display_name",
   "bio",
   "avatar_url",
   "avatar_name",
@@ -312,7 +314,7 @@ export function mapProfileRecord(record: ProfileRecord, gradeState?: GradeStateR
   const username = record.username?.trim().replace(/^@+/, "") || "profil";
 
   return {
-    displayName: record.full_name?.trim() || `@${username}`,
+    displayName: record.display_name?.trim() || record.full_name?.trim() || `@${username}`,
     username: `@${username}`,
     role: humanizeRole(record.primary_role_key ?? record.artist_type),
     roleKey: record.primary_role_key

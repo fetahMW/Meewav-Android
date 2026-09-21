@@ -43,7 +43,7 @@ internal val logeRed=Color(0xFFD6949A)
 }
 
 @Composable internal fun LogePortrait(state:LogeToolsState,person:WaveGuest,size:Dp=42.dp) {
-    Image(painterResource(person.portrait),"Pré-profil de "+person.name,Modifier.size(size).clip(CircleShape).clickable { state.profile(person.id) },contentScale=ContentScale.Crop)
+    WaveGuestPortrait(person,"Pré-profil de "+person.name,Modifier.size(size).clip(CircleShape).clickable { state.profile(person.id) },contentScale=ContentScale.Crop)
 }
 @Composable private fun LogeVipPanel(state:LogeToolsState,onGuests:()->Unit) {
     var source by remember { mutableStateOf("all") }
@@ -245,7 +245,7 @@ internal fun logeMomentLabel(status:String)=when(status){"pending"->"Demande re�
         Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(3.dp)) {
             if(draw!=null) {
                 Text(if(draw.status=="spinning")"Tirage · "+((draw.animationSeconds*1000-state.now+(draw.startedAt?:state.now)+999)/1000).coerceAtLeast(0)+" s"else"Cadeau remporté",color=logeGold,fontSize=10.sp)
-                Text(if(draw.status=="spinning")"${draw.pool.size} participants"else draw.winner?.name.orEmpty(),color=Color.White,fontSize=14.sp,fontWeight=FontWeight.SemiBold)
+                Text(if(draw.status=="spinning")"${draw.eligibleCount?:draw.pool.size} participants"else draw.winner?.name.orEmpty(),color=Color.White,fontSize=14.sp,fontWeight=FontWeight.SemiBold)
             } else if(q!=null) {Text("Question de "+(state.people.find{it.id==q.personId}?.name?:"la Loge"),color=logeGold,fontSize=10.sp);Text(q.text,color=Color.White,fontSize=12.sp,maxLines=3,overflow=TextOverflow.Ellipsis)}
         }
         if(draw?.status=="revealed")SceneIcon(WaveIcons.Close,"Masquer le résultat"){state.showDrawId=null}

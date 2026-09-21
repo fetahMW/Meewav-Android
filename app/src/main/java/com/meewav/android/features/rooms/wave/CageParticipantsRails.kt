@@ -36,7 +36,7 @@ internal fun CageParticipantsRails(state: CageToolsState, modifier: Modifier, on
                 Column(Modifier.width(cardWidth).fillMaxHeight().hifiBlackSurface(12.dp).clip(RoundedCornerShape(12.dp))
                     .clickable { state.openProfile(id) }.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(Modifier.weight(1f).fillMaxWidth()) {
-                        Image(painterResource(guest.portrait), "Pré-profil de " + guest.name,
+                        WaveGuestPortrait(guest, "Pré-profil de " + guest.name,
                             Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Crop)
                         CageVictoryBadge(guest.cageVictories, Modifier.align(Alignment.BottomStart).padding(3.dp))
                         IconButton(onClick = { state.guests.messageRecipientIds = setOf(id) },

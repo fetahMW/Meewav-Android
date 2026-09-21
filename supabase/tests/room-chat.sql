@@ -1,0 +1,22 @@
+create extension if not exists pgtap with schema extensions;
+select plan(7);
+insert into auth.users(instance_id,id,aud,role,email,encrypted_password,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
+select '00000000-0000-0000-0000-000000000000',('7b000000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid,'authenticated','authenticated','chat-recipe-'||n||'@example.test','',now(),'{}','{}',now(),now() from generate_series(1,2)n;
+insert into public.rooms_v2(id,host_id,type,title,status,livekit_room_name) values('7c000000-0000-0000-0000-000000000001','7b000000-0000-0000-0000-000000000001','wave','Chat test','live','chat-test');
+insert into public.room_participants_v2(room_id,user_id,role) values('7c000000-0000-0000-0000-000000000001','7b000000-0000-0000-0000-000000000001','host');
+select set_config('request.jwt.claim.sub','7b000000-0000-0000-0000-000000000001',true);
+set local role authenticated;
+select lives_ok($$select public.rooms_send_message_idempotent_v1('7c000000-0000-0000-0000-000000000001','Bonjour','7d000000-0000-0000-0000-000000000001')$$,'send confirmed');
+select lives_ok($$select public.rooms_send_message_idempotent_v1('7c000000-0000-0000-0000-000000000001','Bonjour','7d000000-0000-0000-0000-000000000001')$$,'retry confirmed');
+select is((select count(*)::integer from public.room_messages_v2 where room_id='7c000000-0000-0000-0000-000000000001'),1,'retry produces one message');
+select throws_ok($$select public.rooms_send_message_idempotent_v1('7c000000-0000-0000-0000-000000000001','Autre','7d000000-0000-0000-0000-000000000001')$$,'23505','Message request conflict','changed retry rejected');
+select ok(not has_table_privilege('authenticated','public.room_message_requests_v1','INSERT'),'client cannot forge requests');
+select set_config('request.jwt.claim.sub','7b000000-0000-0000-0000-000000000002',true);
+select throws_ok($$select public.rooms_send_message_idempotent_v1('7c000000-0000-0000-0000-000000000001','Bonjour','7d000000-0000-0000-0000-000000000002')$$,'42501','Room access denied','outsider denied');
+reset role;
+update public.rooms_v2 set status='ended' where id='7c000000-0000-0000-0000-000000000001';
+select set_config('request.jwt.claim.sub','7b000000-0000-0000-0000-000000000001',true);
+set local role authenticated;
+select throws_ok($$select public.rooms_send_message_idempotent_v1('7c000000-0000-0000-0000-000000000001','Bonjour','7d000000-0000-0000-0000-000000000003')$$,'42501','Room access denied','ended room rejects send');
+reset role;
+select * from finish();

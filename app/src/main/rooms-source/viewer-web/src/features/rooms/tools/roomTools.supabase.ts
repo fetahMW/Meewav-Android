@@ -1,10 +1,11 @@
+import {projectClasse,executeClasse} from './classroom/classroomIosAdapter';
 import type { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "../../../lib/supabaseClient";
-import { createRoomToolsFixture } from "./roomTools.fixtures";
+
 import { normalizeWaveState } from "./waveTools.domain";
 import {
   commandAllowed,
-  DemoRoomToolsRepository,
+
   reduceCommand,
   type RoomToolsRealtimeSubscription,
   type RoomToolsRepository,
@@ -38,26 +39,19 @@ function isControl(role: RoomActorRole) {
 }
 
 export class SupabaseRoomToolsRepository implements RoomToolsRepository {
-  private readonly fallback = new DemoRoomToolsRepository();
+
 
   constructor(private readonly client: SupabaseClient = supabase) {}
 
-  private async fallbackProjection(roomType: SpecializedRoomId, roomId: string, role: RoomActorRole, accountId: string) {
-    // The Wave has authoritative votes, protected audio and a server-rendered
-    // program. Falling back to the fixture would present invented state as a
-    // live production, even in a local development build.
-    if (roomType === "wave") throw new Error("wave_production_contract_unavailable");
-    if (!import.meta.env.DEV) throw new Error("room_specialized_contract_unavailable");
-    return this.fallback.projectionForRole(roomType, roomId, role, accountId);
+  private async fallbackProjection(_roomType: SpecializedRoomId, _roomId: string, _role: RoomActorRole, _accountId: string): Promise<RoomToolsState> {
+    throw new Error("room_specialized_contract_unavailable");
   }
 
-  private async fallbackExecute(roomType: SpecializedRoomId, roomId: string, role: RoomActorRole, command: RoomToolsCommand, accountId?: string) {
-    if (roomType === "wave") throw new Error("wave_production_contract_unavailable");
-    if (!import.meta.env.DEV) throw new Error("room_specialized_contract_unavailable");
-    return this.fallback.execute(roomType, roomId, role, command, accountId);
+  private async fallbackExecute(_roomType: SpecializedRoomId, _roomId: string, _role: RoomActorRole, _command: RoomToolsCommand, _accountId?: string): Promise<RoomToolsState> {
+    throw new Error("room_specialized_contract_unavailable");
   }
-
   private async projected(roomType: SpecializedRoomId, roomId: string, role: RoomActorRole, accountId: string) {
+    if(roomType === "classe") return projectClasse(this.client,roomId,isControl(role));
     // A live Wave is never projected from the legacy whole-state JSONB store.
     // Its protected assets, votes and Beat transitions belong to the
     // normalized Wave repository and its append-only recovery stream.
@@ -78,89 +72,21 @@ export class SupabaseRoomToolsRepository implements RoomToolsRepository {
     if (result.error && isMissingContract(result.error)) return this.fallbackProjection(roomType, roomId, role, accountId);
     if (!isControl(role)) return this.fallbackProjection(roomType, roomId, role, accountId);
 
-    const initialState = createRoomToolsFixture(roomType, roomId);
-    // The fixture carries an audio asset for the isolated demo repository.
-    // A newly initialized live Loge must start empty: otherwise the persisted
-    // state would advertise a demo filename that has no private Storage object.
-    if (roomType === "loge" && initialState.loge) {
-      initialState.loge.requestQueues = {};
-      initialState.loge.preview = {
-        ...initialState.loge.preview,
-        mediaName: "",
-        mediaPath: null,
-        playing: false,
-        durationSeconds: null,
-        channels: null,
-        sampleRate: null,
-        waveformPeaks: [],
-      };
-    }
-    if (roomType === "scene" && initialState.scene) {
-      initialState.scene.program = [];
-      initialState.scene.prompter.texts = [];
-      initialState.scene.prompter.activeTextId = "";
-      initialState.scene.evaluation.byPerformance = {};
-      initialState.scene.evaluation.viewerCompletedPerformanceIds = [];
-      initialState.scene.fundraiser = {
-        ...initialState.scene.fundraiser,
-        title: "",
-        beneficiary: "",
-        targetAmount: 0,
-        description: "",
-        imageUrl: "",
-        endAt: null,
-        status: "draft",
-        visibleInLive: false,
-        highlighted: false,
-        collectedAmount: 0,
-        contributionCount: 0,
-        paymentAvailable: false,
-      };
-    }
-    // Investor fixtures must never become live participants. Real Classe
-    // identities and entitlements are projected by the server; the client
-    // initializes only neutral runtime slots.
-    if (roomType === "classe" && initialState.classe) {
-      initialState.classe = {
-        ...initialState.classe,
-        people: [],
-        seats: Array.from({ length: 24 }, (_, index) => ({
-          number: index + 1,
-          status: "free" as const,
-          canSpeak: false,
-          canShareScreen: false,
-          handRaised: false,
-        })),
-        raisedHands: [],
-        activeSpeakerId: null,
-        publicCallStudentId: null,
-        screenShareOwnerId: null,
-        privateTalkStudentId: null,
-        questionsOpen: true,
-        questions: [],
-        featuredQuestionId: null,
-        resources: [],
-      };
-    }
-    const initialized = await this.client.rpc("rooms_initialize_specialized_state_v1", {
-      p_room_id: roomId,
-      p_room_type: roomType,
-      p_initial_state: initialState,
-    }) as RpcResult<RoomToolsState>;
-    if (initialized.error) {
-      if (isMissingContract(initialized.error)) return this.fallbackProjection(roomType, roomId, role, accountId);
-      throw new Error(initialized.error.message ?? "room_specialized_initialize_failed");
-    }
-    if (!initialized.data) throw new Error("room_specialized_initialize_empty");
-    return initialized.data;
+    // Real initialization belongs to the canonical room launch contract.
+    // Never upload investor fixtures when a live state is absent.
+    throw new Error("room_specialized_configuration_missing");
   }
-
   async load(roomType: SpecializedRoomId, roomId: string) {
     return this.projected(roomType, roomId, "viewer", "anonymous");
   }
 
   subscribe(roomType: SpecializedRoomId, roomId: string, listener: (state: RoomToolsState) => void): RoomToolsRealtimeSubscription {
     let active = true;
+    if(roomType === "classe") {
+      const refresh=()=>{void this.load(roomType,roomId).then(state=>{if(active)listener(state);}).catch(()=>undefined);};
+      const timer=setInterval(refresh,2500);refresh();
+      return {unsubscribe:()=>{active=false;clearInterval(timer);}};
+    }
     let channel: RealtimeChannel | null = this.client
       .channel(`room-specialized:${roomType}:${roomId}:${crypto.randomUUID()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "room_specialized_state_signal_v1", filter: `room_id=eq.${roomId}` }, () => {
@@ -181,6 +107,7 @@ export class SupabaseRoomToolsRepository implements RoomToolsRepository {
   }
 
   async execute(roomType: SpecializedRoomId, roomId: string, role: RoomActorRole, command: RoomToolsCommand, accountId?: string): Promise<RoomToolsState> {
+    if(roomType === "classe") return executeClasse(this.client,roomId,command,isControl(role));
     if (command.type === "scene.fundraiser.demo.contribute") throw new Error("scene_real_payment_required");
     if (command.type === "classe.demo.seat.purchase") throw new Error("class_checkout_unavailable");
     if (roomType === "wave") throw new Error("wave_normalized_repository_required");

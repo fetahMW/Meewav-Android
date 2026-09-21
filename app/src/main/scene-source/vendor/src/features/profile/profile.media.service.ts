@@ -383,7 +383,13 @@ export function createProfileMediaRepository(client: SupabaseClient = supabase) 
       // expose its existing “aperçu indisponible” state instead.
       sourceUrl = undefined;
     }
-    return mapMediaFileRecord(record, sourceUrl);
+    const cover=asRecord(asRecord(record.metadata).scene_cover);
+    let coverUrl:string|undefined;
+    if(typeof cover.storage_bucket === "string" && typeof cover.storage_path === "string") {
+      const {data}=await client.storage.from(cover.storage_bucket).createSignedUrl(cover.storage_path,SIGNED_URL_TTL_SECONDS);
+      coverUrl=data?.signedUrl;
+    }
+    return mapMediaFileRecord(record, sourceUrl, coverUrl);
   };
 
   const listLegacyOwnerMedia = async (ownerId: string) => {
@@ -494,6 +500,7 @@ export function createProfileMediaRepository(client: SupabaseClient = supabase) 
       mediaId: string,
       details: {
         name: string;
+        sceneMetadata?: Record<string, unknown>;
         description: string;
         contentType: string;
         city: string;
@@ -521,6 +528,7 @@ export function createProfileMediaRepository(client: SupabaseClient = supabase) 
           published_at: isPublic ? new Date().toISOString() : null,
           metadata: {
             ...metadata,
+            ...(details.sceneMetadata ? { scene_publication: details.sceneMetadata } : {}),
             scene_description: details.description.trim().slice(0, 5_000),
             scene_content_type: details.contentType.trim().slice(0, 80),
             scene_city: details.city.trim().slice(0, 100),

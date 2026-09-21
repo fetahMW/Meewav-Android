@@ -2,6 +2,11 @@ package com.meewav.android.features.rooms.wave
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import java.util.UUID
+import com.meewav.android.features.messaging.MessagingActivity
+import com.meewav.android.features.profile.ProfileActivity
 import android.view.ViewGroup
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
@@ -56,7 +61,7 @@ internal fun GuestPreProfileHost(state: WaveGuestState, availableHeight: Dp, onO
         GuestProfileContent(context, assets,
             onClose = { state.profilePreviewId = null; state.previewId = null },
             onOffer = { person -> state.profilePreviewId=null;state.previewId=null;offer(person) },
-            onContact = { id -> state.profilePreviewId = null; state.previewId = null; state.messageRecipientIds = setOf(id) })
+            onContact = { id -> state.profilePreviewId = null; state.previewId = null; state.classroomQuickMessage = false; state.messageRecipientIds = setOf(id) })
     }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     DisposableEffect(content, lifecycle) {
@@ -161,6 +166,20 @@ private class GuestProfileContent(context: Context, manifest: JSONObject,
                     }
                     "/native/close" -> onClose()
                     "/native/contact" -> current?.let { onContact(it.id) }
+                    "/native/collaboration", "/native/profile" -> current?.let { person ->
+                        val real = runCatching { UUID.fromString(person.id) }.isSuccess
+                        val profile = uri.path == "/native/profile"
+                        val route = if (profile) Uri.Builder().path("/profile/view/${person.id}")
+                            .appendQueryParameter("name", person.name).build().toString()
+                        else Uri.Builder().path("/messages").appendQueryParameter("space", "collabs")
+                            .appendQueryParameter("intent", "collaboration").appendQueryParameter("source", "rooms")
+                            .appendQueryParameter("mode", if (real) "real" else "demo")
+                            .appendQueryParameter(if (real) "profileId" else "mockArtistId", person.id)
+                            .appendQueryParameter("mockArtistName", person.name).build().toString()
+                        context.startActivity(Intent(context, if (profile) ProfileActivity::class.java else MessagingActivity::class.java)
+                            .putExtra("route", route).putExtra("preview", !real))
+                        onClose()
+                    }
                     "/native/gift" -> current?.let(onOffer)
                 }
                 return true

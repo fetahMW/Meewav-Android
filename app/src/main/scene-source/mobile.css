@@ -253,3 +253,41 @@ body:has(.mobile-scene) .scene-card-menu { max-width: calc(100vw - 24px); backgr
 
 /* Acoustic background approved for the main feature, independent of live rooms. */
 #root .mobile-scene .shorts-page__background {background:#08090b url("/scene/images/acoustic-black-background-trial.png") center center / cover no-repeat!important;opacity:1!important;}
+
+/* Keep the mobile fullscreen action reachable even with a long time label. */
+#root .mobile-scene .shorts-player-controls__left { min-width: 0; flex: 1; }
+#root .mobile-scene .shorts-player-controls__right { flex: 0 0 auto; }
+#root .mobile-scene .shorts-player-controls__right > button[aria-label*="plein écran"],
+#root .mobile-scene .shorts-player-controls__right > button[aria-label^="Plein écran"] { display: grid; flex-shrink: 0; width: 44px; height: 44px; }
+#root .mobile-scene .scene-tv-player { width: 100%; max-width: none; margin-inline: 0; border-radius: 0; aspect-ratio: 16 / 9; }
+#root .mobile-scene .scene-tv-player:fullscreen { width: 100vw; height: 100dvh; max-height: none; aspect-ratio: auto; }
+#root .mobile-scene .scene-tv-player:fullscreen video { width: 100%; height: 100%; object-fit: contain; }
+#root .mobile-scene .scene-tv-player__controls > button[aria-label*="image dans l’image"] { display: none; }
+
+#root .mobile-scene .scene-tv__masthead { display: none; }
+#root .mobile-scene .scene-tv__broadcast { width: 100%; margin: 0; padding: 0; }
+/* TV mobile: full-width video immediately below the fixed 54px toolbar.
+   Reset the web sticky offset, which left a gap and covered the programme. */
+#root .mobile-scene .scene-page:has(.scene-tv-page) .shorts-home { padding-top: 54px; }
+#root .mobile-scene .shorts-home__content:has(.scene-tv-page) { padding-inline: 0; }
+#root .mobile-scene .scene-tv-page .scene-tv { gap: 16px; }
+#root .mobile-scene .scene-tv-page .scene-tv__broadcast { display: grid; grid-template-columns: minmax(0,1fr); gap: 16px; align-items: start; }
+#root .mobile-scene .scene-tv-page .scene-tv-player { position: relative; top: auto; inset-inline: auto; z-index: 1; width: 100%; height: auto; min-height: 0; aspect-ratio: 16 / 9; border: 0; border-radius: 0; box-shadow: none; }
+#root .mobile-scene .scene-tv-page .scene-tv-player:fullscreen { height: 100dvh; aspect-ratio: auto; }
+#root .mobile-scene .scene-tv-page .scene-tv__broadcast::before { display: none; }
+#root .mobile-scene .scene-tv-page :is(.scene-tv-now,.scene-tv-guide) { margin-inline: 12px; padding: 16px; min-width: 0; border: 1px solid #ffffff1c; border-radius: 18px; background: linear-gradient(145deg,#222329,#101116); box-shadow: inset 0 1px #ffffff08; }
+
+/* Compact video category rail: neutral chips, bright selected chip, swipe only. */
+#root .mobile-scene .scene-browse-chips-shell { background: #101114; border: 0; box-shadow: none; }
+#root .mobile-scene .scene-browse-chips-shell > .meewav-rail-edges { display: none; }
+#root .mobile-scene .scene-browse-chips { display: flex; flex-wrap: nowrap; align-items: center; overflow-x: auto; height: 44px; gap: 8px; padding: 6px 12px; background: transparent; border: 0; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; mask-image: none; }
+#root .mobile-scene :is(.scene-browse-chips,.shorts-contentbar.is-explore .scene-browse-chips) button { flex: 0 0 auto; height: 32px; min-height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: #2b2c30; color: #f1f1f3; font-size: 13px; font-weight: 600; white-space: nowrap; box-shadow: none; }
+#root .mobile-scene :is(.scene-browse-chips,.shorts-contentbar.is-explore .scene-browse-chips) button[aria-pressed=true] { background: #f1f1f1; color: #111214; }
+#root .mobile-scene .scene-page.has-browse-nav .shorts-home { padding-top: 100px; }
+/* Explorer uses the same compact rail, without the purple glass strip. */
+#root .mobile-scene .shorts-contentbar.is-explore { height: 44px; min-height: 0; padding: 6px 12px; background: #101114; background-image: none; border: 0; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+#root .mobile-scene .shorts-contentbar.is-explore::before,
+#root .mobile-scene .shorts-contentbar.is-explore::after { display: none; }
+#root .mobile-scene .shorts-contentbar.is-explore :is(.scene-explore__media-tabs,.scene-explore__editorial-tabs) { display: flex; gap: 8px; background: none; border: 0; padding: 0; box-shadow: none; }
+#root .mobile-scene .shorts-contentbar.is-explore button { min-height: 32px; height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: #2b2c30; color: #f1f1f3; box-shadow: none; font-size: 13px; white-space: nowrap; }
+#root .mobile-scene .shorts-contentbar.is-explore button:is([aria-pressed=true],[aria-selected=true],.is-active) { background: #f1f1f1; color: #111214; }

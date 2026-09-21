@@ -167,7 +167,7 @@ internal val sceneAccent = WaveMixerTheme.capsuleAccentSoft
 
 @Composable internal fun SceneArtist(state: SceneToolsState,id: String, size: Dp=42.dp) {
     val person=state.guests.guests.find { it.id==id }
-    if(person!=null) Image(painterResource(person.portrait),"Pré-profil de "+person.name,Modifier.size(size).clip(CircleShape).clickable { state.guests.previewId=null;state.guests.profilePreviewId=id },contentScale=ContentScale.Crop)
+    if(person!=null) WaveGuestPortrait(person,"Pré-profil de "+person.name,Modifier.size(size).clip(CircleShape).clickable { state.guests.previewId=null;state.guests.profilePreviewId=id },contentScale=ContentScale.Crop)
     else Icon(WaveIcons.Group,null,tint=sceneMuted,modifier=Modifier.size(size))
 }
 @Composable private fun SceneGrade(level: Int) {
