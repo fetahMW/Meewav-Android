@@ -31,7 +31,7 @@ function compactValue(value: number, divisor: number, suffix: string) {
   const displayed = Number.isInteger(truncated)
     ? String(truncated)
     : truncated.toFixed(1).replace(".", ",");
-  return `${displayed} ${suffix}`;
+  return `${displayed}${suffix}`;
 }
 
 // Exported alongside the component so its abbreviated output can be unit-tested.
@@ -45,7 +45,7 @@ export function formatShortsCount(value: number) {
     return compactValue(normalized, 1_000_000, "M");
   }
   if (normalized >= 1_000) {
-    return compactValue(normalized, 1_000, "k");
+    return compactValue(normalized, 1_000, "K");
   }
   return String(normalized);
 }

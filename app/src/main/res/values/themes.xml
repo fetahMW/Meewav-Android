@@ -10,4 +10,7 @@
         <item name="android:statusBarColor">#09080E</item>
         <item name="android:navigationBarColor">#09080E</item>
     </style>
+    <style name="Theme.Meewav.Launch" parent="Theme.Meewav">
+        <item name="android:windowBackground">@drawable/launch_background</item>
+    </style>
 </resources>

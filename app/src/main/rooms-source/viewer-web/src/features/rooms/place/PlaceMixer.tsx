@@ -1,3 +1,4 @@
+import {viewerNativeReply} from "../../../../../NativeViewerSurfaces";
 import { useViewerMixer } from "./ViewerMixerContext";
 import type { ViewerFader, ViewerInput } from "./viewerSendAudio";
 import "./viewer-mixer-routing.css";
@@ -911,7 +912,7 @@ export default function PlaceMixer({
   };
 
   const toggleAutotune = async () => {
-    if (autotunePendingRef.current) return;
+    if (autotunePendingRef.current) return false;
     const next = !autotuneEnabled;
     setAutotuneStartError(null);
     if (!next) {
@@ -922,7 +923,7 @@ export default function PlaceMixer({
           || room.personalVocal.delayEnabled
           || room.personalVocal.eqEnabled,
       });
-      return;
+      return true;
     }
 
     const correctionNeedsRestart = !correctionOperational
@@ -934,14 +935,16 @@ export default function PlaceMixer({
       setAutotunePending(true);
       try {
         const started = await requestPitchProvider(providerToStart);
-        if (requestId !== autotuneRequestRef.current) return;
+        if (requestId !== autotuneRequestRef.current) return false;
         if (!started) {
           setAutotuneStartError("Moteur indisponible");
-          return;
+          return false;
         }
         onVocal({ tuneEnabled: true, enabled: true });
+        return true;
       } catch {
         if (requestId === autotuneRequestRef.current) setAutotuneStartError("Moteur indisponible");
+        return false;
       } finally {
         if (requestId === autotuneRequestRef.current) {
           autotunePendingRef.current = false;
@@ -952,6 +955,7 @@ export default function PlaceMixer({
     }
 
     onVocal({ tuneEnabled: true, enabled: true });
+    return true;
   };
   const [previewMusicLevel, setPreviewMusicLevel] = useState(0);
   const listening = useWaveViewerListening();
@@ -1016,6 +1020,32 @@ export default function PlaceMixer({
     room.personalVocal.compEnabled,
     room.personalVocal.eqEnabled,
   ].filter(Boolean).length;
+
+  useEffect(()=>{
+    if(mode==="host")return;
+    const receive=async(event:Event)=>{
+      const {action,data}=(event as CustomEvent).detail??{};
+      if(action!=="mixer" || !personalMix)return;
+      const key=data?.key,value=data?.value;
+      try {
+        if(key==="voiceGain" && typeof value==="number")personalMix.setGain("voice",Math.min(1,Math.max(0,value)));
+        else if(key==="voiceMuted" && typeof value==="boolean") {
+          if(!value && !(await personalMix.prepareVoice()))throw new Error("Autorise le microphone pour préparer ta voix.");
+          if(personalMix.levels.voice.muted!==value)personalMix.toggleMute("voice");
+        }
+        else if(key==="tune" && typeof value==="boolean") {
+          if(room.personalVocal.tuneEnabled!==value && !(await toggleAutotune()))throw new Error("Moteur Autotune indisponible.");
+        }
+        else if(key==="reverb" && typeof value==="boolean")onVocal({reverbEnabled:value,enabled:value||room.personalVocal.tuneEnabled});
+        else if(key==="reverbAmount" && typeof value==="number")onVocal({reverbAmount:Math.min(1,Math.max(0,value))});
+        else if(key==="monitoring" && typeof value==="boolean")onVocal({monitoring:value});
+        else if(key==="tuneKey" && typeof value==="string")onVocal({tuneKey:value});
+        else if(key==="tuneScale")onVocal({tuneScale:value==="Majeur"?"Majeure":value==="Chromatique"?"Chromatique":"Mineure"});
+      } catch(error) { viewerNativeReply({action:"mixer",key,ok:false,error:error instanceof Error?error.message:"Effet indisponible"}); }
+    };
+    window.addEventListener("meewav:native-viewer-action",receive);
+    return()=>window.removeEventListener("meewav:native-viewer-action",receive);
+  },[mode,personalMix,onVocal,room.personalVocal]);
 
   const permissionsFor = (channel: PlaceMixerChannel) => {
     if (ownMix) return { canEditGain: true, canEditMute: true };

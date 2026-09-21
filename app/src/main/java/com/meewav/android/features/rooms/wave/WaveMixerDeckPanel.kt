@@ -47,7 +47,7 @@ internal fun WaveMixerDeckPanel(state: WaveMixerDeckState, expanded: Boolean, on
     Column(modifier.hifiBlackSurface(14.dp).padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (!expanded || page == 0 || page == 2) Row(Modifier.fillMaxWidth().height(44.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
             Text(if (state.public) "Public" else "Privé", color = Color(0xFFCBC7D5), fontSize = 11.sp,
-                modifier = Modifier.hardwareSurface(6.dp, true, .085f).clickable { state.route() }.padding(8.dp))
+                modifier = Modifier.hardwareSurface(6.dp, true, .085f).clickable(enabled = state.allowPublic) { state.route() }.padding(8.dp))
             WaveControl(Icons.Default.FileDownload, "Importer la piste principale") { target = state.lanes.first().id; importer.launch(arrayOf("audio/*")) }
             WaveControl(Icons.Default.SkipPrevious, "Précédent", enabled = false) {}
             WaveRoundPlay(state.snapshot.running || state.tools.pendingStart, state.lanes.any { it.loading }, 0f, "Lecture du mixeur", onClick = onPlay)

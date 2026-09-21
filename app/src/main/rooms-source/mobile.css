@@ -834,3 +834,84 @@ body:has(.wv-room) .feature-dock-host { display: none !important; }
 .android-room-viewer-open .class-student-pre-profile .mw-preprofile__portrait-shell { width:76px;height:76px; }
 .android-room-viewer-open .class-student-pre-profile .mw-preprofile__name { font-size:20px; }
 .android-room-viewer-open .class-student-pre-profile .mw-preprofile__footer { flex-shrink:0; }
+
+/* Android reuses the exact Compose host mixer and composer; keep the web models mounted. */
+.android-native-viewer-controls .android-room-viewer .place-mixer { visibility:hidden;pointer-events:none; }
+.android-native-viewer-controls #root .android-room-viewer .place-chat__composer { opacity:0;pointer-events:none;min-height:52px!important;flex-shrink:0; }
+
+/* Same open studio layout as the native Host: no legacy modal chassis. */
+#root .android-room-viewer__header { flex-basis:44px; }
+#root .android-room-viewer .place-room-workspace { gap:0!important;padding:0!important;margin:0!important; }
+#root .android-room-viewer .place-room-live-column { margin:0!important;padding:0!important; }
+#root .android-room-viewer .place-stage { margin:0!important;border:0!important;border-radius:0!important;height:56.25vw!important; }
+#root .android-room-viewer .place-stage :is(.place-stage-layout__canvas,.place-stage-layout__tile,.place-camera__media-frame,.place-camera__media,video) { border-radius:0!important; }
+#root .android-room-viewer .place-stage-layout__tile { border:0!important;box-shadow:none!important; }
+#root .android-room-viewer .place-studio-panel {
+ margin:0!important;padding:8px 12px 0!important;border-radius:0!important;box-shadow:none!important;
+ background:linear-gradient(135deg,#1f2126 0%,#181a1f 28%,#101216 68%,#08090c 100%)!important;
+}
+#root .android-room-viewer .place-studio-panel::before,
+#root .android-room-viewer .place-studio-panel::after,
+#root .android-room-viewer .place-studio-panel__content::before,
+#root .android-room-viewer .place-studio-panel__content::after { display:none!important; }
+#root .android-room-viewer .place-studio-panel__bar { flex-basis:49px!important; }
+#root .android-room-viewer .place-studio-panel__content { margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important; }
+#root .android-room-viewer .place-studio-panel.is-mixer .place-studio-panel__surface { padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important; }
+/* Scene surfaces use the same dark raised material as the native mixer FX/deck. */
+#root .android-room-viewer .room-audience-interactions.is-scene {background:transparent!important;}
+#root .android-room-viewer .room-audience-interactions.is-scene > .room-audience-interactions__body {padding:12px 0!important;}
+#root .android-room-viewer .is-scene :is(.scene-queue-action,.scene-program-card,.scene-program-next,.scene-audience-campaign,.scene-console-dialog,.scene-program-description) {
+ background:linear-gradient(180deg,#1b1c20 0%,#111215 15%,#070809 52%,#010203 100%)!important;
+ border:1px solid #ffffff16!important;border-top-color:#a5a2b42e!important;border-radius:16px!important;
+ box-shadow:inset 0 1px 1px #ffffff0a,inset 0 -2px 3px #0009,0 3px 7px #0003!important;
+}
+#root .android-room-viewer .is-scene :is(.scene-queue-action,.scene-audience-campaign,.scene-console-dialog) button:not(.scene-program-portrait):not(.scene-program-detail-portrait) {
+ background:linear-gradient(180deg,#24212d,#100d17 40%,#050507)!important;
+ border-color:#9d87c42e!important;box-shadow:inset 0 1px #ffffff09!important;color:#c4afe7!important;
+}
+#root .android-room-viewer .is-scene .scene-program-card-copy {background:none!important;border:0!important;box-shadow:none!important;}
+.android-room-viewer-open .class-student-pre-profile-viewport {top:calc(44px + 56.25vw + 7px)!important;}
+#root .android-room-viewer button.place-chat__portrait { padding:0;border:0;background:none;cursor:pointer; }
+/* Host chat metrics: 28dp portrait, 8dp gutter, 1dp name/text gap, 5dp row padding. */
+#root .android-room-viewer :is(.place-chat-workspace,.place-chat-workspace__panel,.place-chat,.place-chat__stream,.place-chat__messages) {background:transparent!important;border:0!important;box-shadow:none!important;}
+#root .android-room-viewer :is(.place-chat-workspace,.place-chat-workspace__panel,.place-chat,.place-chat__stream,.place-chat__messages)::before,
+#root .android-room-viewer :is(.place-chat-workspace,.place-chat-workspace__panel,.place-chat,.place-chat__stream,.place-chat__messages)::after {display:none!important;}
+#root .android-room-viewer .place-chat__messages {gap:0!important;padding:0!important;justify-content:flex-start!important;}
+#root .android-room-viewer .place-chat__message {position:relative;flex-shrink:0;padding:5px 4px!important;min-height:38px;}
+#root .android-room-viewer .place-chat__message header {padding:0 0 0 36px!important;margin:0!important;min-height:14px!important;line-height:14px;gap:5px;}
+#root .android-room-viewer .place-chat__message .place-chat__author {display:contents!important;}
+#root .android-room-viewer .place-chat__message .place-chat__portrait {position:absolute!important;left:4px;top:5px;width:28px!important;height:28px!important;min-width:28px;}
+#root .android-room-viewer .place-chat__message .place-chat__author strong {font-size:11px!important;line-height:14px!important;font-weight:500;}
+#root .android-room-viewer .place-chat__message p {margin:1px 0 0 36px!important;padding:0!important;font-size:12px!important;line-height:17px!important;color:#f4f1f9e6!important;}
+#root .android-room-viewer .place-chat__message.is-host strong {color:#92cdb0!important;}
+#root .android-room-viewer .place-chat__message .place-chat__author strong {color:#9aa1b4;}
+#root .android-room-viewer .place-studio-panel.is-chat .place-studio-panel__surface {background:transparent!important;}
+
+/* Viewer video anchors: host, live clock and room identity stay out of the picture centre. */
+#root .android-room-viewer .android-stage-heading {position:absolute;inset:8px 10px auto;z-index:21;display:flex;align-items:flex-start;justify-content:space-between;pointer-events:none;--room-ink:#d1c4ef;}
+#root .android-room-viewer .android-stage-heading[data-theme="violet"] {--room-ink:#b38aeb;}
+#root .android-room-viewer .android-stage-heading[data-theme="red"] {--room-ink:#d77e88;}
+#root .android-room-viewer .android-stage-heading[data-theme="cyan"] {--room-ink:#7bc4cc;}
+#root .android-room-viewer .android-stage-heading[data-theme="blue"] {--room-ink:#8aafe0;}
+#root .android-room-viewer .android-stage-heading[data-theme="gold"] {--room-ink:#d6bb80;}
+#root .android-room-viewer .android-stage-heading[data-theme="white"] {--room-ink:#d4d4db;}
+#root .android-room-viewer .android-stage-host {width:34px;height:34px;min-height:34px;padding:2px;border:1px solid #d7d0ed38;border-radius:50%;background:#0b0c10c9;pointer-events:auto;overflow:hidden;}
+#root .android-room-viewer .android-stage-host img {display:block;width:100%;height:100%;object-fit:cover;border-radius:50%;}
+#root .android-room-viewer .android-stage-clock {position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:6px;padding:4px 9px;border:1px solid #d5d1e323;border-radius:20px;background:#101116a8;backdrop-filter:blur(12px);color:#dfdce8;font-size:10px;line-height:14px;font-variant-numeric:tabular-nums;}
+#root .android-room-viewer .android-stage-clock i {width:5px;height:5px;border-radius:50%;background:#d77489;}
+#root .android-room-viewer .android-stage-room {padding:4px 8px;border:1px solid color-mix(in srgb,var(--room-ink) 35%,transparent);border-radius:20px;background:#0b0d13b8;color:var(--room-ink);font-size:9px;line-height:14px;letter-spacing:1px;backdrop-filter:blur(12px);}
+#root .android-room-viewer .place-stage-layout__profile {display:none!important;}
+#root .android-room-viewer .place-stage-layout__director {top:auto!important;right:auto!important;bottom:8px!important;left:8px!important;z-index:24;}
+#root .android-room-viewer .place-stage-layout__mode-trigger {width:44px;height:44px;min-height:44px;padding:0;justify-content:center;border-radius:12px;background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none;color:#e3daef;}
+#root .android-room-viewer .place-stage-layout__mode-trigger > span,#root .android-room-viewer .place-stage-layout__mode-trigger > svg:last-child {display:none;}
+#root .android-room-viewer .place-stage-layout__mode-trigger > svg:first-child {display:block;width:20px;height:20px;}
+#root .android-room-viewer .place-stage-layout__menu {top:auto;bottom:calc(100% + 6px);max-height:calc(100dvh - 180px);}
+#root .android-room-viewer[data-room-type="scene"] :is(.room-audience-interactions,.room-audience-interactions__body,.scene-viewer-program,.place-studio-panel__content) {background:transparent!important;box-shadow:none!important;}
+#root .android-room-viewer .place-room-shell .place-stage > .place-stage__controls.live-action-bar {left:50%!important;right:auto!important;transform:translateX(-50%)!important;--control-gap:7px;--metric-width:53px;}
+#root .android-room-viewer .place-room-shell .place-stage:not(.is-controls-visible) > .place-stage__controls.live-action-bar {transform:translate(-50%,8px)!important;}
+
+#root .android-room-viewer[data-room-type="scene"] .android-stage-room {background:linear-gradient(180deg,#38264edb,#20152fd9);border-color:#aa7edc70;color:#c9a6f5;}
+/* Remove the legacy tools canvas; cards sit directly on the shared grey studio. */
+#root .android-room-viewer[data-room-type="scene"] .place-studio-panel__surface {background:transparent!important;border:0!important;box-shadow:none!important;}
+#root .android-room-viewer[data-room-type="scene"] .place-studio-panel__surface::before,
+#root .android-room-viewer[data-room-type="scene"] .place-studio-panel__surface::after {display:none!important;}

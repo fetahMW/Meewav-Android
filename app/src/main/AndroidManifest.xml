@@ -54,6 +54,7 @@
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".app.MainActivity"
+            android:theme="@style/Theme.Meewav.Launch"
             android:exported="true"
             android:launchMode="singleTop"
             android:configChanges="orientation|screenSize|smallestScreenSize|keyboardHidden"

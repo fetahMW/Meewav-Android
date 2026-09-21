@@ -119,7 +119,6 @@ lucide-react/dist/esm/icons/image.mjs:
 lucide-react/dist/esm/icons/images.mjs:
 lucide-react/dist/esm/icons/inbox.mjs:
 lucide-react/dist/esm/icons/info.mjs:
-lucide-react/dist/esm/icons/layout-panel-top.mjs:
 lucide-react/dist/esm/icons/library.mjs:
 lucide-react/dist/esm/icons/list-checks.mjs:
 lucide-react/dist/esm/icons/list-music.mjs:

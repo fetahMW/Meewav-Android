@@ -39,6 +39,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var authViewModel: AuthViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // The system launch window uses the shared vinyl; normal content keeps its usual theme.
+        setTheme(com.meewav.android.R.style.Theme_Meewav)
         super.onCreate(savedInstanceState)
         if (openFeatureWorkshopIfRequested(intent)) return
         enableEdgeToEdge(

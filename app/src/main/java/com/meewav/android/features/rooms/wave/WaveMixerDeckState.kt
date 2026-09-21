@@ -13,7 +13,7 @@ internal data class WaveDeckLane(val id: String = UUID.randomUUID().toString(), 
     val musical: String = "")
 
 /** Separate engine and gain from the Wave Vote/Composition player. IDs survive reordering. */
-internal class WaveMixerDeckState(private val context: Context) : AutoCloseable {
+internal class WaveMixerDeckState(private val context: Context, val allowPublic: Boolean = true) : AutoCloseable {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val lock = Mutex()
     val audio = WaveCompositionAudio()
@@ -36,7 +36,7 @@ internal class WaveMixerDeckState(private val context: Context) : AutoCloseable 
     fun volume(value: Float) = audio.masterGain(value)
     fun pause() { tools.pauseTimer(); if (audio.snapshot.running) audio.toggleClock() }
     fun suspendAudio() { pause(); tools.stopAllPads() }
-    fun route() { pause(); public = !public }
+    fun route() { if (!allowPublic) return; pause(); public = !public }
     fun toggleLoop() { repeat = !repeat; syncLoop() }
     private fun syncLoop() { audio.loop(0, if (repeat) duration.toLong() else 0) }
     fun toggle() {

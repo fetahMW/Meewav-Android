@@ -586,7 +586,7 @@ private fun WaveChatRow(
 
 /* Mur d'emoji maison — grille des 50 emoticons customs (mw-emoticon-wall web). */
 @Composable
-private fun MwEmojiWall(height: Dp, onSelect: (String) -> Unit, onClose: () -> Unit) {
+internal fun MwEmojiWall(height: Dp, onSelect: (String) -> Unit, onClose: () -> Unit) {
     Column(
         Modifier
             .fillMaxWidth()
@@ -730,7 +730,7 @@ private fun ChatRailItem(
 
 /* Composer liquid-glass : input-well (champ + bouton emoji -> mur) + send. */
 @Composable
-private fun WaveChatComposer(
+internal fun WaveChatComposer(
     draft: String,
     emojiInput: WaveEmojiInputController,
     emojiOpen: Boolean,

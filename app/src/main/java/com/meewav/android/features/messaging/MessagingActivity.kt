@@ -53,8 +53,8 @@ open class MessagingActivity : ComponentActivity() {
     protected open val assetSurface = "messaging"
     protected open val defaultRoute = "/messages?space=messages"
     private val PAGE get() = "$ORIGIN/$assetSurface/index.html"
-    private lateinit var web: WebView
-    private lateinit var container: FrameLayout
+    protected lateinit var web: WebView
+    protected lateinit var container: FrameLayout
     private var fullscreenView: View? = null
     private var fullscreenCallback: WebChromeClient.CustomViewCallback? = null
     private var orientationBeforeVideo = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
@@ -132,6 +132,8 @@ open class MessagingActivity : ComponentActivity() {
         }
     }
 
+    protected open fun onNativeRoomControl(uri: Uri): Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(Color.rgb(8, 8, 16)),
@@ -166,11 +168,12 @@ open class MessagingActivity : ComponentActivity() {
         container.addView(web, FrameLayout.LayoutParams(-1, -1))
         web.webChromeClient = object : WebChromeClient() {
             override fun onShowCustomView(view: View, callback: CustomViewCallback) {
-                if (assetSurface != "scene" || fullscreenView != null) { callback.onCustomViewHidden(); return }
+                if (assetSurface !in setOf("scene", "rooms") || fullscreenView != null) { callback.onCustomViewHidden(); return }
                 fullscreenView = view
                 fullscreenCallback = callback
                 orientationBeforeVideo = requestedOrientation
-                requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                requestedOrientation = if (assetSurface == "rooms") ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
+                    else ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
                 web.visibility = View.GONE
                 container.addView(view, FrameLayout.LayoutParams(-1, -1))
                 WindowCompat.getInsetsController(window, container).apply {
@@ -222,6 +225,8 @@ open class MessagingActivity : ComponentActivity() {
                     return true
                 }
                 if (!request.isForMainFrame) return true
+                if (assetSurface == "rooms" && view.url == PAGE && request.url.scheme == "https"
+                    && request.url.host == "appassets.androidplatform.net" && onNativeRoomControl(request.url)) return true
                 if (assetSurface == "messaging" && web.url == PAGE && request.url.scheme == "https"
                     && request.url.host == "appassets.androidplatform.net" && request.url.path.orEmpty().startsWith("/native/voice-")) {
                     val id = request.url.getQueryParameter("id").orEmpty()

@@ -13,7 +13,7 @@ import {
   ChevronDown,
   Expand,
   Eye,
-  LayoutPanelTop,
+  MoreHorizontal,
   Mic,
   MicOff,
   MonitorUp,
@@ -262,6 +262,7 @@ export default function PlaceStage({
   const layoutMenuRef = useRef<HTMLDivElement | null>(null);
   const programMutationPendingRef = useRef(false);
   const controlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const controlsPressedRef = useRef(false);
   const autoDirectorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastAutoSwitchRef = useRef(Date.now());
 
@@ -583,7 +584,7 @@ export default function PlaceStage({
       startViewTransition?: (callback: () => void) => unknown;
     };
     const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
-    if (transition !== "dissolve" || reduceMotion || !documentWithTransitions.startViewTransition) {
+    if (stageRef.current?.closest(".android-room-viewer") || transition !== "dissolve" || reduceMotion || !documentWithTransitions.startViewTransition) {
       guardedCommit();
       return;
     }
@@ -754,10 +755,22 @@ export default function PlaceStage({
   }, [onStage, programLayout.selectedSourceByParticipant]);
 
   useEffect(() => {
+    const releaseOutside = () => {
+      if (!controlsPressedRef.current) return;
+      controlsPressedRef.current = false;
+      if (controlsTimerRef.current) window.clearTimeout(controlsTimerRef.current);
+      controlsTimerRef.current = window.setTimeout(() => {
+        if (!stageRef.current?.querySelector(":focus-visible")) setControlsVisible(false);
+      }, 3_000);
+    };
+    window.addEventListener("pointerup", releaseOutside);
+    window.addEventListener("pointercancel", releaseOutside);
     controlsTimerRef.current = window.setTimeout(() => {
-      if (!stageRef.current?.querySelector(":focus-visible")) setControlsVisible(false);
-    }, 2_800);
+      if (!controlsPressedRef.current && !stageRef.current?.querySelector(":focus-visible")) setControlsVisible(false);
+    }, 3_000);
     return () => {
+      window.removeEventListener("pointerup", releaseOutside);
+      window.removeEventListener("pointercancel", releaseOutside);
       if (controlsTimerRef.current) window.clearTimeout(controlsTimerRef.current);
     };
   }, []);
@@ -874,8 +887,8 @@ export default function PlaceStage({
     setControlsVisible(true);
     if (controlsTimerRef.current) window.clearTimeout(controlsTimerRef.current);
     controlsTimerRef.current = window.setTimeout(() => {
-      if (!stageRef.current?.querySelector(":focus-visible")) setControlsVisible(false);
-    }, 2_800);
+      if (!controlsPressedRef.current && !stageRef.current?.querySelector(":focus-visible")) setControlsVisible(false);
+    }, 3_000);
   }, []);
 
   // Reveal viewer controls only near the control bar, not across the video.
@@ -890,10 +903,7 @@ export default function PlaceStage({
     const near = event.clientX >= bounds.left - 24 && event.clientX <= bounds.right + 24
       && event.clientY >= bounds.top - 40 && event.clientY <= bounds.bottom + 24;
     if (near) revealControls();
-    else if (!bar.querySelector(":focus-visible")) {
-      if (controlsTimerRef.current) window.clearTimeout(controlsTimerRef.current);
-      setControlsVisible(false);
-    }
+    // Leaving the bar never bypasses the inactivity deadline.
   };
 
   useEffect(() => {
@@ -905,6 +915,11 @@ export default function PlaceStage({
   }, [layoutMenuOpen]);
 
   const selectParticipant = useCallback((participantId: string) => {
+    // A mobile viewer tap reveals controls; layout changes belong to the director menu.
+    if (!isHost && stageRef.current?.closest(".android-room-viewer")) {
+      revealControls();
+      return;
+    }
     setSelectedParticipantId(participantId);
     if (isHost) return;
     patchViewerLayout({
@@ -913,7 +928,7 @@ export default function PlaceStage({
       soloParticipantId: undefined,
       gridEnabled: false,
     });
-  }, [isHost, patchViewerLayout]);
+  }, [isHost, patchViewerLayout, revealControls]);
 
   const openSolo = useCallback((participantId: string) => {
     setSelectedParticipantId(isHost ? "" : participantId);
@@ -1127,8 +1142,10 @@ export default function PlaceStage({
       aria-label="Scène en direct"
       onPointerMove={handleControlsProximity}
       onPointerEnter={handleControlsProximity}
-      onPointerDown={(event) => { if (event.pointerType === "touch") revealControls(); }}
-      onPointerLeave={() => { if (!stageRef.current?.querySelector(":focus-visible")) setControlsVisible(false); }}
+      onPointerDown={() => { controlsPressedRef.current = true; revealControls(); }}
+      onPointerUp={() => { controlsPressedRef.current = false; revealControls(); }}
+      onPointerCancel={() => { controlsPressedRef.current = false; revealControls(); }}
+      onPointerLeave={(event) => { if (!event.buttons) { controlsPressedRef.current = false; revealControls(); } }}
       onFocusCapture={(event) => { if (!isCageStage || isHost || isGuest || (event.target as HTMLElement).matches(":focus-visible")) revealControls(); }}
       onCanPlayCapture={markHlsProgrammeReady}
       onPlayingCapture={markHlsProgrammeReady}
@@ -1137,7 +1154,9 @@ export default function PlaceStage({
       onWaitingCapture={markHlsProgrammeUnavailable}
       onEndedCapture={markHlsProgrammeUnavailable}
       onBlurCapture={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setControlsVisible(false);
+        // Tapping the video blurs the previously focused control before pointerup.
+        // Reset the deadline instead of hiding between those two touch events.
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) revealControls();
       }}
       data-layout-recipe={isCageStage ? "cage-faceoff" : recipe}
       data-stage-variant={isCageStage ? "cage-faceoff" : "standard"}
@@ -1164,6 +1183,11 @@ export default function PlaceStage({
       </div> : null}
 
 
+      {!isHost && !isGuest ? <div className="android-stage-heading" data-theme={roomPresentation.theme}>
+        <button className="android-stage-host" type="button" onClick={() => onOpenProfile(room.host.id)} aria-label={`Voir le profil de ${room.host.displayName}`}><img src={room.host.avatarUrl} alt="" /></button>
+        <span className="android-stage-clock"><i /><time>{elapsedLabel}</time></span>
+        <span className="android-stage-room">{roomPresentation.uppercaseLabel}</span>
+      </div> : null}
       {!isCageStage ? <div className="place-stage-layout__director" aria-label="Réalisation vidéo">
         <div className="place-stage-layout__mode-control">
           <button
@@ -1171,10 +1195,11 @@ export default function PlaceStage({
             ref={layoutTriggerRef}
             className="place-stage-layout__mode-trigger"
             onClick={() => setLayoutMenuOpen((open) => !open)}
+            aria-label="Régie vidéo"
             aria-expanded={layoutMenuOpen}
             aria-haspopup="menu"
           >
-            <LayoutPanelTop aria-hidden="true" />
+            <MoreHorizontal aria-hidden="true" />
             <span>{displayedComposition === "ensemble" ? "Ensemble" : displayedComposition === "focus" ? "Mise en avant" : "Solo"}</span>
             <ChevronDown aria-hidden="true" />
           </button>
@@ -1259,12 +1284,6 @@ export default function PlaceStage({
           </div>
         ) : null}
 
-        {hasPersonalView ? (
-          <div className="place-stage-layout__personal-view">
-            <Eye aria-hidden="true" /><span><small>VUE PERSONNELLE</small><strong>{primary?.profile.displayName}</strong></span>
-            <button type="button" onClick={returnToProgram}>Revenir à la réalisation</button>
-          </div>
-        ) : null}
 
         {SHOW_ADVANCED_DIRECTOR_CONTROLS && isHost && suggestedParticipantId && suggestedParticipantId !== resolvedProgramPrimaryId ? (() => {
           const suggested = orderedParticipants.find((participant) => participant.id === suggestedParticipantId);
@@ -1423,7 +1442,7 @@ export default function PlaceStage({
             onBurstChange={isCageStage ? setGoldenBurstVisible : undefined}
             variant="compact"
             artistName={room.host.displayName}
-            exactLikeCount
+            exactLikeCount={false}
             likeCount={room.likesCount}
             goldenLikeCount={room.goldenLikesCount}
             liked={room.currentUserHasLiked}

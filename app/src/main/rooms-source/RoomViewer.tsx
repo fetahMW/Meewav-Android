@@ -1,4 +1,8 @@
-import {useEffect,useMemo} from 'react';
+import "./viewer-video-controls.css";
+import NativeViewerSurfaces from './NativeViewerSurfaces';
+import {useEffect,useMemo,useState} from 'react';
+import AndroidViewerPreProfile from './AndroidViewerPreProfile';
+import type {RoomPerson} from './viewer-web/src/features/rooms/tools/roomTools.types';
 import {ArrowLeft,X} from 'lucide-react';
 import {useNavigate} from 'react-router-dom';
 import PlaceRoomExperience from './viewer-web/src/features/rooms/place/PlaceRoomExperience.tsx';
@@ -34,6 +38,14 @@ import "./viewer-web/src/features/rooms/place/place-guest-reference.css";
 export default function RoomViewer({room,onLeave}:{room:RoomsHomeRoom;onLeave:()=>void}) {
  const navigate=useNavigate();
  const demo=useMemo(()=>createRoomsHomeDemoState(room,PLACE_DEMO_PROFILES.viewerA.id),[room]);
+ const [preProfile,setPreProfile]=useState<{person:RoomPerson;trigger:HTMLElement|null}|null>(null);
+ const openPreProfile=(id:string)=>{
+  const profiles=[demo.host,demo.currentUserProfile,...demo.participants.map(p=>p.profile),...demo.queue.map(p=>p.profile),...Object.values(PLACE_DEMO_PROFILES)];
+  const profile=profiles.find(p=>p?.id===id);
+  if(!profile)return;
+  const show=()=>setPreProfile({person:{id:profile.id,name:profile.displayName,role:profile.role,avatarUrl:profile.avatarUrl,gradeLevel:profile.gradeLevel,microphone:"off",camera:"off"},trigger:document.activeElement as HTMLElement|null});
+  if(document.fullscreenElement)void document.exitFullscreen().then(show);else show();
+ };
  const openMessaging=(profileId:string,intent:'message'|'collaboration',requestId?:string|null)=>{
   const real=isMessagingUuid(profileId);
   navigate(buildMessagingRoute({space:intent==='message'?'messages':'collabs',intent,source:'rooms',mode:real?'real':'demo',profileId:real?profileId:null,mockArtistId:real?null:profileId,requestId}));
@@ -45,12 +57,14 @@ export default function RoomViewer({room,onLeave}:{room:RoomsHomeRoom;onLeave:()
   return()=>{document.documentElement.classList.remove('android-room-viewer-open');window.removeEventListener('meewav:feature-back',back);};
  },[onLeave]);
  return <main className="android-room-viewer" data-room-type={room.roomType}>
+  <NativeViewerSurfaces room={room.id} name={demo.currentUserProfile?.displayName ?? "Moi"}/>
   <header className="android-room-viewer__header"><button type="button" aria-label="Retour aux rooms" onClick={onLeave}><ArrowLeft/></button><h1>{room.title}</h1><button type="button" aria-label="Quitter le live" onClick={onLeave}><X/></button></header>
   <AudioEngineProvider><RoomPresentationProvider presentation={LIVE_ROOM_PRESENTATIONS[room.roomType]}>
    <PlaceRoomExperience initialPanelCollapsed={false} demoRole="viewer" demoRoom={demo} currentUserId={PLACE_DEMO_PROFILES.viewerA.id}
-    onLeaveRoom={onLeave} onOpenProfile={id=>navigate('/profile/view/'+encodeURIComponent(id))}
+    onLeaveRoom={onLeave} onOpenProfile={openPreProfile}
     onMessageProfile={id=>openMessaging(id,'message')}
     onCollaborateProfile={(id,requestId)=>openMessaging(id,'collaboration',requestId)}/>
   </RoomPresentationProvider></AudioEngineProvider>
+  {preProfile?<AndroidViewerPreProfile person={preProfile.person} source="demo" onClose={()=>setPreProfile(null)} returnFocusTo={preProfile.trigger} boundsElement={document.querySelector('.android-room-viewer')} topBoundaryElement={document.querySelector('.place-stage')}/>:null}
  </main>;
 }

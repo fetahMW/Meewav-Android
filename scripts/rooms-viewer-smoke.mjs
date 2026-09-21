@@ -18,7 +18,40 @@ await page.getByRole('button',{name:/Ouvrir .*spectateurs/}).first().waitFor();
 for(const [id,label] of [['cage','La Cage'],['wave','La Wave'],['classe','La Classe'],['scene','La Scène'],['loge','La Loge'],['place','La Place']]) {
  await page.getByRole('button',{name:new RegExp('Ouvrir .*'+label+'.*spectateurs')}).first().click();
  await page.locator('.place-studio-panel__tabs').waitFor();await page.waitForTimeout(600);
+ await page.locator('.place-stage').dispatchEvent('pointermove',{pointerType:'touch'});
+ const videoBar=page.locator('.place-stage__controls');
+ assert.equal(Math.round((await videoBar.boundingBox()).height),52,'Host-sized video toolbar');
+ assert.equal(await page.locator('.place-stage').evaluate(el=>getComputedStyle(el).borderTopLeftRadius),'0px','Video has no rounded outer corners');
+ assert.equal(await page.locator('.place-stage-layout__tile').first().evaluate(el=>getComputedStyle(el).borderTopLeftRadius),'0px','Video tiles have no rounded corners');
+ const likes=await videoBar.locator('.shorts-reaction--like .shorts-reaction__count').textContent();
+ assert.match(likes,/^\d+(?:,\d+)?K$/,'Likes use compact uppercase K');
+ await page.screenshot({path:path.join(process.env.TEMP,`viewer-${id}-video-controls.png`)});
+ await page.waitForTimeout(3400);
+ assert.equal(await videoBar.evaluate(el=>getComputedStyle(el).opacity),'0','Video toolbar hides after inactivity');
+ if(id==='wave') {
+  const stage=page.locator('.place-stage');
+  await stage.dispatchEvent('pointerdown',{pointerType:'touch',buttons:1});
+  await videoBar.locator('button').first().focus();
+  await videoBar.locator('button').first().evaluate(el=>el.blur());
+  assert.ok(await stage.evaluate(el=>el.classList.contains('is-controls-visible')),'Blur during a touch must never hide the bar');
+  await page.waitForTimeout(3200);
+  assert.equal(await videoBar.evaluate(el=>getComputedStyle(el).opacity),'1','Toolbar stays visible while touching');
+  await stage.dispatchEvent('pointerup',{pointerType:'touch',buttons:0});
+  await stage.dispatchEvent('pointerleave',{pointerType:'touch',buttons:0});
+  await page.waitForTimeout(500);
+  assert.equal(await videoBar.evaluate(el=>getComputedStyle(el).opacity),'1','Touch release must not hide the toolbar');
+  await page.waitForTimeout(2900);
+  assert.equal(await videoBar.evaluate(el=>getComputedStyle(el).opacity),'0','Release restarts the three-second deadline');
+  assert.equal(await page.getByRole('button',{name:'Revenir à la réalisation',exact:true}).count(),0);
+ }
 
+ if(await page.locator('.place-stage').getByRole('button',{name:/Voir le profil de/}).count()) {
+ await page.locator('.place-stage').dispatchEvent('pointermove',{pointerType:'touch'});
+ await page.locator('.place-stage').getByRole('button',{name:/Voir le profil de/}).first().click();
+ await page.getByRole('dialog',{name:/Pré-profil/}).waitFor();
+ await page.getByRole('button',{name:'Fermer le pré-profil',exact:true}).click();
+ await page.getByRole('dialog',{name:/Pré-profil/}).waitFor({state:'detached'});
+ }
  await page.locator('.place-studio-panel__tabs button[data-surface="tools"]').click();await page.waitForTimeout(700);
  const tools=page.locator('.place-studio-panel__surface:not([hidden])');
  assert.equal(await page.getByRole('button',{name:'Terminer le live',exact:true}).count(),0,'No host end-live control');
@@ -93,6 +126,10 @@ for(const [id,label] of [['cage','La Cage'],['wave','La Wave'],['classe','La Cla
  await page.getByRole('button',{name:'Envoyer',exact:true}).click();
  await page.getByText('Bravo pour ce live '+id,{exact:true}).waitFor();
  assert.ok(await page.locator('.place-chat__portrait img').evaluateAll(es=>es.every(e=>e.clientWidth<=40)),'Compact chat portraits');
+ await page.locator('button.place-chat__portrait').last().click();
+ await page.getByRole('dialog',{name:/Pré-profil/}).waitFor();
+ await page.getByRole('button',{name:'Fermer le pré-profil',exact:true}).click();
+ await page.getByRole('dialog',{name:/Pré-profil/}).waitFor({state:'detached'});
  await page.screenshot({path:'C:/Users/linkw/AppData/Local/Temp/viewer-'+id+'-chat.png'});
  await page.locator('.place-studio-panel__tabs button[data-surface="mixer"]').click();
  await page.screenshot({path:'C:/Users/linkw/AppData/Local/Temp/viewer-'+id+'-mixer.png'});

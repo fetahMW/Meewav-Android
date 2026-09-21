@@ -634,7 +634,7 @@ private fun WaveTabBar(
 /* ------------------------------------------------------------------------- */
 
 @Composable
-private fun MixerBody(
+internal fun MixerBody(
     guest: WaveGuest?,
     deck: WaveMixerDeckState, onDeckPlay: () -> Unit,
     micGain: Float, audioGain: Float, micMuted: Boolean, audioMuted: Boolean,

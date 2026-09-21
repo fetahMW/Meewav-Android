@@ -1,3 +1,4 @@
+import {viewerNativeReply} from "../../../../../NativeViewerSurfaces";
 import RoomJuryControl from "../voting/RoomJuryControl";
 import { useRoomVotingPolicy } from "../voting/useRoomVotingPolicy";
 import { saveVotingPolicy } from "../voting/roomVoting.service";
@@ -583,6 +584,7 @@ export function ParticipantRow({ participant, variant, profileSource = "live", a
 }
 
 function PlaceChat({ room, canEngage, isHost, active, onSend, onPinMessage, onDeleteMessage }: { room: PlaceRoomState; canEngage: boolean; isHost: boolean; active: boolean; onSend: (content: string) => Promise<void>; onPinMessage: (messageId: string, durationSeconds?: 10 | 20 | 30) => Promise<void>; onDeleteMessage: (messageId: string) => Promise<void> }) {
+  const [chatProfile,setChatProfile]=useState<{person:RoomPerson;trigger:HTMLElement}|null>(null);
   const chatPresentation = useRoomPresentation();
   const compactChat = false;
   const [draft, setDraft] = useState("");
@@ -689,6 +691,22 @@ function PlaceChat({ room, canEngage, isHost, active, onSend, onPinMessage, onDe
     if (programmaticScrollTimer.current !== null) window.clearTimeout(programmaticScrollTimer.current);
   }, []);
 
+  useEffect(() => {
+    const receive = (event: Event) => {
+      const {action,data}=(event as CustomEvent).detail??{};
+      if(action!=="chat" || !active || isHost)return;
+      if(!canEngage || sending || typeof data?.text!=="string" || data.text.length>4000) {
+        viewerNativeReply({id:data?.id,ok:false,error:"Le message ne peut pas être envoyé maintenant."});return;
+      }
+      setSending(true);followLiveChat.current=true;setFollowingLive(true);setUnreadLiveMessages(0);
+      void onSend(data.text.trim()).then(()=>viewerNativeReply({id:data.id,ok:true}))
+        .catch(()=>viewerNativeReply({id:data.id,ok:false,error:"Message non envoyé. Réessaie."}))
+        .finally(()=>setSending(false));
+    };
+    window.addEventListener("meewav:native-viewer-action",receive);
+    return()=>window.removeEventListener("meewav:native-viewer-action",receive);
+  },[active,isHost,canEngage,sending,onSend]);
+
   const submit = (event: FormEvent) => {
     event.preventDefault();
     const value = draft.trim();
@@ -717,7 +735,7 @@ function PlaceChat({ room, canEngage, isHost, active, onSend, onPinMessage, onDe
 
   return (
     <div className="place-chat">
-      {pinned ? <div className="place-chat__pinned"><Pin aria-hidden="true" /><span><small>Épinglé par le host</small><strong><MeeWavRichText>{pinned.content}</MeeWavRichText></strong></span></div> : null}
+      {pinned && isHost ? <div className="place-chat__pinned"><Pin aria-hidden="true" /><span><small>Épinglé par le host</small><strong><MeeWavRichText>{pinned.content}</MeeWavRichText></strong></span></div> : null}
       <div className="place-chat__stream">
         <div
           ref={messagesViewport}
@@ -750,10 +768,13 @@ function PlaceChat({ room, canEngage, isHost, active, onSend, onPinMessage, onDe
               >
                 <header>
                   <span className="place-chat__author">
-                    <span className="place-chat__portrait" aria-hidden="true">
+                    <button type="button" className="place-chat__portrait" aria-label={`Voir le pré-profil de ${authorName}`} disabled={!message.author} onClick={event=>{
+                      const author=message.author;if(!author)return;
+                      setChatProfile({person:{id:author.id,name:author.displayName,avatarUrl:author.avatarUrl,role:author.role,gradeLevel:author.gradeLevel as GradeLevel,microphone:"off",camera:"off"},trigger:event.currentTarget});
+                    }}>
                       {authorName.slice(0, 1)}
                       {message.author?.avatarUrl ? <img src={message.author.avatarUrl} alt="" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} /> : null}
-                    </span>
+                    </button>
                     <strong>{`@${authorName.replace(/^@+/, "")}`}</strong>{message.id.startsWith("local-") ? <small className="wave-chat-own-badge">Vous</small> : null}
                   </span>
                   {compactChat ? <span className="wave-chat-inline-text"> <MeeWavRichText emoticonSize={34}>{message.content}</MeeWavRichText></span> : null}
@@ -803,6 +824,7 @@ function PlaceChat({ room, canEngage, isHost, active, onSend, onPinMessage, onDe
         </div>
         <button className="place-chat__send" type="submit" disabled={!canEngage || sending || !draft.trim()} aria-label="Envoyer"><Send aria-hidden="true" /></button>
       </form>
+      {chatProfile?<Suspense fallback={null}><GuestPreProfile person={chatProfile.person} source={room.source} returnFocusTo={chatProfile.trigger} {...getRoomPreProfileBounds(chatProfile.trigger)} onClose={()=>setChatProfile(null)}/></Suspense>:null}
     </div>
   );
 }
