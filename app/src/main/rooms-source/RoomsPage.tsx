@@ -1,5 +1,5 @@
 import type { CageProgram } from '../shared-ui/cagePrograms';
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { DoorOpen, GraduationCap, Home, MapPin, Mic, Play, Plus, Waves, X } from 'lucide-react';
@@ -19,10 +19,13 @@ const ROOMS = [
   { id: 'loge', name: 'La Loge', Icon: DoorOpen, accent: '#f6d381' },
 ] as const;
 
+const RoomViewer=lazy(()=>import('./RoomViewer'));
+
 type RoomTab = 'home' | (typeof ROOMS)[number]['id'];
 
 export default function RoomsPage() {
   const location = useLocation();
+  const [viewing,setViewing]=useState<RoomsHomeRoom|null>(null);
   const [tab, setTab] = useState<RoomTab>('home');
   const [sequencerOpen, setSequencerOpen] = useState(new URLSearchParams(location.search).get('launch') === 'cage');
   const [roomNotice, setRoomNotice] = useState('');
@@ -41,8 +44,9 @@ export default function RoomsPage() {
     const params = new URLSearchParams({ type: roomType, title, ...(id ? { id } : {}), ...(program ? { program: JSON.stringify(program) } : {}) });
     window.location.assign(`/native/room-session?${params}`);
   };
-  const openRoom = (room: RoomsHomeRoom) => openSession(room.roomType, room.title, room.id);
-  return <div className="rooms-page">
+  const openRoom = (room: RoomsHomeRoom) => setViewing(room);
+  const viewer=viewing ? <Suspense fallback={<div className="android-room-opening" role="status">Ouverture du live…</div>}><RoomViewer room={viewing} onLeave={()=>setViewing(null)} /></Suspense> : null;
+  return <>{viewer}<div className="rooms-page" hidden={!!viewing}>
     <div className="rooms-page__background" aria-hidden="true"
       style={{ backgroundImage: `url('/images/meewav-acoustic-violet-background.png')` }} />
     <header className="rooms-topbar">
@@ -83,5 +87,5 @@ export default function RoomsPage() {
       </div>
     ), document.body) : null}
     {roomNotice ? <aside className="rooms-page__notice" role="status"><span>{roomNotice}</span><button aria-label="Fermer" onClick={() => setRoomNotice('')}><X size={16} /></button></aside> : null}
-  </div>;
+  </div></>;
 }

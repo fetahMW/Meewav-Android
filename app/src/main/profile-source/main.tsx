@@ -1,11 +1,12 @@
-import React, { Component, useEffect, useState } from 'react';
+import React, { Component, lazy, Suspense, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { configure, updateToken, type MobileConfig } from './runtime';
 import FeatureDock, { featureItems } from '../shared-ui/FeatureDock';
 
 const native = (destination: string, route?: string) => location.assign(`https://appassets.androidplatform.net/native/${destination}${route ? `?route=${encodeURIComponent(route)}` : ""}`);
+const ProfileViewer=lazy(()=>import('./vendor/src/features/profile/ProfileViewerPage'));
 function Shell({ Page }: { Page: React.ComponentType }) {
   const route = useLocation();
   const navigate = useNavigate();
@@ -26,7 +27,10 @@ function Shell({ Page }: { Page: React.ComponentType }) {
     };
   }, [route, navigate]);
   return <div className="mobile-profile">
-    <Page />
+    <Routes>
+      <Route path="/profile/view/:profileId" element={<Suspense fallback={<p role="status">Ouverture du profil…</p>}><ProfileViewer /></Suspense>} />
+      <Route path="*" element={<Page />} />
+    </Routes>
     <FeatureDock active="profile" onSelect={id => {
       if (id === 'profile') navigate('/profile');
       else if (['messages','tremplin','market','scene','rooms','globe'].includes(id)) native(id);

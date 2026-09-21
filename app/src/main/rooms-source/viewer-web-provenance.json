@@ -1,0 +1,1530 @@
+{
+  "source": "Meewav-Web",
+  "commit": "fd426f599bda416db74e908bceaecc42766ea227",
+  "files": [
+    {
+      "path": "src/features/rooms/place/viewerSendAudio.ts",
+      "sha256": "be7caec1597ae6d7dc0413f212de3a9965c4bd62ca6cd2f9301bdde01c512476"
+    },
+    {
+      "path": "src/features/rooms/place/viewerSystemCapture.ts",
+      "sha256": "54e2a413e730918e17f3b876619157dd68e558d9d469e3781b4812200c2ec145"
+    },
+    {
+      "path": "src/features/rooms/place/ViewerMixerContext.tsx",
+      "sha256": "5c3038a15893a50a9d5d472141d87c9f06d1a1331bb0c7bf263a711b6713e530"
+    },
+    {
+      "path": "src/features/rooms/place/place.fixtures.ts",
+      "sha256": "803c7e2b4373ce4d83554321ce5ced054a4e12843fde56531f5d5060cfcf0423"
+    },
+    {
+      "path": "src/features/rooms/tools/roomTools.fixtures.ts",
+      "sha256": "5880c8a1d0a15d81bafb9d369ddcb1e446074a6e43ed9dbcbc6ec6261c6898a9"
+    },
+    {
+      "path": "src/features/rooms/tools/audience/waveAudienceUpload.service.ts",
+      "sha256": "158e85aa73300a470c72cbdf4cef6068ba21cc47f95215fabeb06ccf222e69f3"
+    },
+    {
+      "path": "src/features/rooms/launch/roomLaunchAudio.ts",
+      "sha256": "e9e0d6c006afd072fdc37f48039234fe3552dbb30b78c24914df1f985bc7f9ac"
+    },
+    {
+      "path": "src/features/rooms/launch/roomLaunch.ts",
+      "sha256": "9a1d888963238462c3246d1e949a09de20787183fa7e2d960276f64adf3d553d"
+    },
+    {
+      "path": "src/features/rooms/voting/roomVoting.ts",
+      "sha256": "5955ac62e453c7c760bc959284f6c8627e31f268ae1702ea6c58ed9d0aebcc50"
+    },
+    {
+      "path": "src/features/rooms/launch/cageLaunch.ts",
+      "sha256": "2d4a4cde23df14918e1699e4beedb6bb8c493a6af3c9b20145be68d83b100f08"
+    },
+    {
+      "path": "src/features/rooms/tools/cageCompetition.openMic.ts",
+      "sha256": "090140466790fe52d05e9580795c31c4f24590bf4ee6ecdba0f443c06e68f503"
+    },
+    {
+      "path": "src/features/rooms/tools/cageCompetition.ts",
+      "sha256": "c01dd1f54473e79ac22dfb474db366765f2130a86009382e9ea1c2c614ca8531"
+    },
+    {
+      "path": "src/features/rooms/tools/waveTools.domain.ts",
+      "sha256": "b13b449caef6c245cbe06a75308b62e0904204aa5ae8ccc236165f3a7ee5db40"
+    },
+    {
+      "path": "src/features/rooms/switch-room/switchRoom.domain.ts",
+      "sha256": "83b02f8906282de1f6b66a7dd84618aea6c67d1e2259c43a130f8513867c85d9"
+    },
+    {
+      "path": "src/features/rooms/switch-room/switchRoom.preparation.ts",
+      "sha256": "7e31c5d1411a5d07ed0e51a11e6cb248264bc8ab57ea95a51ee6d0bf20cee14d"
+    },
+    {
+      "path": "src/features/rooms/voting/roomVoting.service.ts",
+      "sha256": "c2a4a76ade2dd42ecccaf6a0b92e0b266cb0d1f1c5034128f57f7d473b6648be"
+    },
+    {
+      "path": "src/features/rooms/voting/roomVotingCommands.ts",
+      "sha256": "6c97f6f7a1ea9cbd6b9d4243c6c4ec2e29e02404d38b592d482d26a97ee1f079"
+    },
+    {
+      "path": "src/features/shorts/sceneArtistPortraits.ts",
+      "sha256": "2042307629d1e4229c13224a77a6922db730c4b751e48f7072192861bd503a89"
+    },
+    {
+      "path": "src/features/rooms/home/roomsHome.fixtures.ts",
+      "sha256": "3b0c0e3e36357258815e36aefa1ffc7b22a4bcb03fd671b8a944b5f30b25cb5d"
+    },
+    {
+      "path": "src/features/rooms/tools/cageCompetition.demo.ts",
+      "sha256": "dbadb34190ffb05f7bdef62dae9e7260971e883cfb0c8c879b3111b05805c0b3"
+    },
+    {
+      "path": "src/features/rooms/tools/cageShowcase.demo.ts",
+      "sha256": "4403de9b5d997fb2e5b07f44e53d2c0ce6740c6824a4e12ec333bb4efcac5ed6"
+    },
+    {
+      "path": "src/features/rooms/tools/waveTestPacks.ts",
+      "sha256": "5b50761423e763223e82004e021793981cad0f0c6b81bc61be0abfd950a54b39"
+    },
+    {
+      "path": "src/features/rooms/tools/waveLoopCategories.ts",
+      "sha256": "af41cc92fce02050473c5483194f95a1ea4c04adf72f6a4ee86ce61b7e63f541"
+    },
+    {
+      "path": "src/features/rooms/tools/cageTools.domain.ts",
+      "sha256": "9d4ac9cf8fcb90a34669c8ddc5e665170fdf99109f25d75d3042185c5adc2d18"
+    },
+    {
+      "path": "src/features/rooms/tools/roomTools.service.ts",
+      "sha256": "4cc5a1ec1e91b312e1296464ef6bf636d095db211f7a25f40f6c989d53073f9c"
+    },
+    {
+      "path": "src/features/rooms/wave-infra/errors.ts",
+      "sha256": "d1da8a3c1544fc2013344c661e36d6665d052ac57ee0bc44cce7d14c2b77cbf7"
+    },
+    {
+      "path": "src/features/rooms/wave-infra/localWaveInfra.ts",
+      "sha256": "2ee51d4955deac46cc176d8d6973fcafecea87536f4f3c6b42c32e055bbdc926"
+    },
+    {
+      "path": "src/features/rooms/wave-infra/eventSequencer.ts",
+      "sha256": "4439f3fff1782e8387df8475f7cdf728f6336e0bdc3dfa592e6e838e0c34d40d"
+    },
+    {
+      "path": "src/features/rooms/wave-infra/validators.ts",
+      "sha256": "044ef8120735bedbbb0f9a1005a9ea35d4e42a83b2d071cd58511d7d02b0b1e6"
+    },
+    {
+      "path": "src/features/rooms/wave-infra/supabaseWaveInfra.ts",
+      "sha256": "172b3e0fc7a782d83b306dcc3afeec3251b3672196f42a70880e24239c802608"
+    },
+    {
+      "path": "src/features/rooms/wave-infra/contracts.ts",
+      "sha256": "7b04afcce38ef6ceff603fd2b399c06092715c471bde70f6904fb87b8e759323"
+    },
+    {
+      "path": "src/features/rooms/wave-infra/assetPipeline.ts",
+      "sha256": "767c5f947945837e2a0398ad36c8edf5354a38800f48fa1caee511daa4481e6b"
+    },
+    {
+      "path": "src/features/rooms/wave-infra/index.ts",
+      "sha256": "77600dc212d7a9cefc67a1df97029d6e5c831655f64077786dd3aeaf4cf4b9db"
+    },
+    {
+      "path": "src/features/rooms/switch-room/switchRoom.wave.ts",
+      "sha256": "b287cf3a37e668890b287b9a5c611e11f9a5eb0441396f7b6c1a6c0e9ef2e33a"
+    },
+    {
+      "path": "src/features/rooms/switch-room/switchRoom.service.ts",
+      "sha256": "921fc732847d6bb14c3e7b99e2a0f449738acc520a12aedb0f73c0456c863ee4"
+    },
+    {
+      "path": "src/features/rooms/switch-room/useSwitchRoom.ts",
+      "sha256": "8caa03852a4867068d44c7ba0253440b04692c6e7f5734428b500d54fd1cd983"
+    },
+    {
+      "path": "src/features/rooms/tools/waveImportGrid.ts",
+      "sha256": "12b50adc58e72df01fc5e47fc4607187417b300b61b49fc9af1f1a61ba508305"
+    },
+    {
+      "path": "src/features/rooms/tools/waveAudioRules.ts",
+      "sha256": "8935af083773d36afe98df1ee43e22294923edef4a29f55abbab2d052af98269"
+    },
+    {
+      "path": "src/features/rooms/launch/WaveLaunchBaseInput.tsx",
+      "sha256": "4d55c007d6bbadb33472e2e27c59577a811c80d8fb508dd89b7997d383ba12d1"
+    },
+    {
+      "path": "src/features/rooms/switch-room/SwitchRoomPreparation.tsx",
+      "sha256": "8535307a7bcc585e10dcafc7c04089a5dde2be6092b4286cd953e174ecd0cce6"
+    },
+    {
+      "path": "src/features/rooms/switch-room/switch-room.css",
+      "sha256": "055be15937fe646eb3be35afa3aaad4dc3cba84564f757936e65c199466238e3"
+    },
+    {
+      "path": "src/features/rooms/switch-room/SwitchRoom.tsx",
+      "sha256": "92a04bafdb323ede69a1f112bab142305e01235e0218a424218962a52f398e7d"
+    },
+    {
+      "path": "src/features/grades/gradeBadges.ts",
+      "sha256": "8fb6ec73e48d73f5f2e651e305df57e28f3a0049225cb6fb5bb0130638057ffb"
+    },
+    {
+      "path": "src/features/grades/MeewavGradeBadge.css",
+      "sha256": "7bbbaf3913b61e03eee625c8645e54bdf7aaf46d17d804041b6f8cab586bd687"
+    },
+    {
+      "path": "src/features/grades/MeewavGradeBadge.tsx",
+      "sha256": "ff527c4d2e3cfb423a812d9b43c5c6540307bd8a089d3dcf972accb5f9066704"
+    },
+    {
+      "path": "src/features/rooms/voting/useRoomVotingPolicy.ts",
+      "sha256": "7bca4d2c2e35fda5fd01e56b2c6ee058a03826c5c2250558d40a5aeb36b72a52"
+    },
+    {
+      "path": "src/features/rooms/tools/roomTools.supabase.ts",
+      "sha256": "ed2143afe308a01480bc18db74ffe2de3f9407e455efab07302a7490b794d999"
+    },
+    {
+      "path": "src/features/rooms/tools/useRoomTools.ts",
+      "sha256": "3d023c131b286deb5c6af8e9d86bda3aee8399aff7f627c1f459973a263d66a9"
+    },
+    {
+      "path": "src/features/rooms/place/cageStageClock.ts",
+      "sha256": "99576b2e351a90d7112ae3a4b1bbb1a55df718f68eaab1f2253113b4effd0e5b"
+    },
+    {
+      "path": "src/features/rooms/place/cage-ring-display.css",
+      "sha256": "51544205e22bbcfcb2f09c59b2c6dcd4919a132dca62bcccdbfb19f3c1fa0690"
+    },
+    {
+      "path": "src/features/rooms/place/placeMixerStart.ts",
+      "sha256": "33d2c16a7451dae98fb41bdff68b491eb87e00a46a2d6eaade7ad3a142fcb723"
+    },
+    {
+      "path": "src/features/rooms/place/placeRoomTime.ts",
+      "sha256": "b9e700cc217b228a603cc13fc0c3827f6de32d85c4911588be2655fd80b51659"
+    },
+    {
+      "path": "src/features/rooms/place/CageRingDisplay.tsx",
+      "sha256": "6861d05e8e8f1eb51f6b3352c9be2d82894f003acc9081cb5385d5328ac856ca"
+    },
+    {
+      "path": "src/features/rooms/place/CageShellMatchup.tsx",
+      "sha256": "356d13bbfae6ce1fd5798c8c2c7193210633fb1c6a9a959f1323e42149ca57e3"
+    },
+    {
+      "path": "src/features/emoticons/meewav-emoticons.manifest.json",
+      "sha256": "bb59ad3d263f62f8e944c750c5aaeb5019f0f65b7be5ae78d4a2954e5ab84ea7"
+    },
+    {
+      "path": "src/features/emoticons/meewav-emoticons-v2.manifest.json",
+      "sha256": "521bacaafbb5728a91c6a67bf9aa4967fe3e2542de13f1c4b6e5603673710d40"
+    },
+    {
+      "path": "src/features/emoticons/meewav-emoticons-v3.manifest.json",
+      "sha256": "75550dd4542882d21f10015d17b40366dfea63f0045605603b6de457e84cb443"
+    },
+    {
+      "path": "src/features/emoticons/meewav-emoticons-v4.manifest.json",
+      "sha256": "1b643e098af26b4b98fa32b51e328a37f570bb92e3aa5c6dadb03edda5b4e2d6"
+    },
+    {
+      "path": "src/features/emoticons/meewav-emoticons-v5.manifest.json",
+      "sha256": "b7358ee0f036b4601d9655c3dc35fc798d0157851d37179f4851392161f3fe95"
+    },
+    {
+      "path": "src/features/emoticons/meewav-emoticons-v6.manifest.json",
+      "sha256": "1dfffcfba3e58b9e1743bafe6f306548b2acb77c4e3c1ac3a1cbe024b258c16d"
+    },
+    {
+      "path": "src/features/emoticons/meewav-emoticons.css",
+      "sha256": "ca9cb6f3bf76173d83c7adfd5d65e8a7920b7bcfdf1c9cd0a44672b5a56569c9"
+    },
+    {
+      "path": "src/features/emoticons/MeewavEmoticons.tsx",
+      "sha256": "7ec152079fecbbdea4cde784eb2dd03308cba385a1c99f9c7362c12eb0a0375c"
+    },
+    {
+      "path": "src/features/globe/components/preProfile/CollaborationComposer.tsx",
+      "sha256": "90568f5473734ccfc537a4283c2643f1ed9dc78bb1fa26e2a20a0df0ed3d4529"
+    },
+    {
+      "path": "src/features/globe/api/preProfile.api.ts",
+      "sha256": "28b2bc4dd679411ab770cf45b5a179562785177794968eb556cabf294af39bb4"
+    },
+    {
+      "path": "src/features/messaging/collaborationRequestBridge.ts",
+      "sha256": "2740880be6b3aacaca9df4508e2aca1684cc25a43feeead336fb08232effeab5"
+    },
+    {
+      "path": "src/features/messaging/messaging.attachments.errors.ts",
+      "sha256": "cbff8c1df5f8133438ba4a772e9a3ef2a3b3ea34a5d328c2430dc81e3c9e757c"
+    },
+    {
+      "path": "src/features/messaging/messaging.attachments.adapters.ts",
+      "sha256": "657e9c374752b3cf513b86b767297d2cd786237ddacea7cc7bc4da65f4553b76"
+    },
+    {
+      "path": "src/features/messaging/messaging.attachments.service.ts",
+      "sha256": "9d64c8a5e8b7c870178e1d748996cabbf6f47afedb7dd3e261d95a30b0142063"
+    },
+    {
+      "path": "src/features/messaging/messaging.collaboration-attachments.service.ts",
+      "sha256": "c5ff08e4fd1af0740b530c52212e67eb039bbf9cb500ca922e7b3eb3db6168bf"
+    },
+    {
+      "path": "src/features/messaging/messaging.collaboration.errors.ts",
+      "sha256": "049e4892d435ccea118d8fa81a84119d8e27a531e680734fd4350d460161e587"
+    },
+    {
+      "path": "src/features/messaging/messaging.collaboration.service.ts",
+      "sha256": "b9d315ddf0a797b53a67f8d03e91f87e1e4da3d631940a2d44c3f02f291e4b1d"
+    },
+    {
+      "path": "src/features/messaging/messaging.route.ts",
+      "sha256": "97995de026815aae95defba80e6a94b8a139ba5f6dbf71d3e53eb33b63cec222"
+    },
+    {
+      "path": "src/features/shorts/shortsArtistIdentity.ts",
+      "sha256": "d7b2b888511050c2e88d171fb49410d39ccfffbd98c0d3b7e56f43b8e88c10a6"
+    },
+    {
+      "path": "src/features/shorts/useShortsDialog.ts",
+      "sha256": "dea5760ac441d6ed3b3964914a4d464350ff538f552e590b1a9782faa95da7d2"
+    },
+    {
+      "path": "src/features/shorts/shorts-collaboration-dialog.css",
+      "sha256": "c3ab669aa8cc67f6a0297d78081d510927e199e34842d2902815bcc807a85dd7"
+    },
+    {
+      "path": "src/features/shorts/ShortsCollaborationDialog.tsx",
+      "sha256": "cf94846167734eb912b226f45b7a1905c89d27338a462ba621120503686726ea"
+    },
+    {
+      "path": "src/features/rooms/audio-engine/audioEngine.types.ts",
+      "sha256": "0a39845443e37d5e8b1f7d5ecd798013631b44167da302224ab70ce147fde084"
+    },
+    {
+      "path": "src/features/rooms/audio-engine/audioEngine.validators.ts",
+      "sha256": "de3c819fcb3337c980c33a0229b8cb5ee38366423c17ee14c4ee4f9b367aeed5"
+    },
+    {
+      "path": "src/features/rooms/audio-engine/audioEngine.client.ts",
+      "sha256": "e1d9e58b21fe95eeb97018c2661d1537cc559b85cbe6248110ee63ced8936779"
+    },
+    {
+      "path": "src/features/rooms/audio-engine/AudioEngineContext.ts",
+      "sha256": "714cc5ae494ff45649e6623c4ab81eb463cef81becf05f1cc989e2abb6b4f2e9"
+    },
+    {
+      "path": "src/features/rooms/audio-engine/audioEngine.meters.ts",
+      "sha256": "7a2035c65cfd81c1b8572a77a04bf74ce19f1b67978ffd1dbc98a23ad3a7ab03"
+    },
+    {
+      "path": "src/features/rooms/audio-engine/audioEngine.version.ts",
+      "sha256": "76c6891503a4dc25b35cd7ab4957a422e030e20e30c50cd9f54bbe6f8629b9a2"
+    },
+    {
+      "path": "src/features/rooms/audio-engine/AudioEngineProvider.tsx",
+      "sha256": "97925645d61d8dfecb914e4e249ab26854c682a8d8979cafcae61684ca6bf480"
+    },
+    {
+      "path": "src/features/rooms/audio-engine/voice-fx-engine-panel.css",
+      "sha256": "2347026a2ea86450560eda6732bc77898540ff2e2bf18d6051a2445b50c1fd77"
+    },
+    {
+      "path": "src/features/rooms/audio-engine/VoiceFxEnginePanel.tsx",
+      "sha256": "62969ff71351d94003ffb54a4c56c890778173d1aea6a2ffc02da27e843d60ea"
+    },
+    {
+      "path": "src/features/rooms/audio-engine/audioEngine.pairing.ts",
+      "sha256": "b31e44a4e56b73002d97c6be8ad65b570526a7d6fe83ebf5a8ce1e4b7b501127"
+    },
+    {
+      "path": "src/features/rooms/audio-engine/index.ts",
+      "sha256": "3a40ef9a83e9c4f5255b23f062974b111a54646c9d01d5e5d38ba77de493b522"
+    },
+    {
+      "path": "src/features/rooms/roomPresentation.tsx",
+      "sha256": "bbfa6c2e1e57b8310199cb6eb1e2b50941073183082d650c3ef270342e86462b"
+    },
+    {
+      "path": "src/features/rooms/place/placeLiveCallMedia.service.ts",
+      "sha256": "5821f8493ec7343f7fbd81e9284fc4f64231bbf4832ec6880db2b3010970dca7"
+    },
+    {
+      "path": "src/features/rooms/place/usePlaceLiveCallMedia.ts",
+      "sha256": "0900a8ec0ad0ffab66311272811eb8315d624ef5f346f2288ac5d95e503c5709"
+    },
+    {
+      "path": "src/features/rooms/live-call/room-live-call.css",
+      "sha256": "2250d537154c4e6231445736deccd257ed0edb187b748adc8c11250fbb1e8b88"
+    },
+    {
+      "path": "src/features/rooms/live-call/RoomLiveCallIncoming.tsx",
+      "sha256": "3db5d2afd06b9627d9267b7bee0788a2e79abad826533c9228f5a065f4221b0e"
+    },
+    {
+      "path": "src/features/rooms/live-call/regieTalkbackStorage.ts",
+      "sha256": "33b8ebf7d7a0ee8e576d30977708c0eaf60c8a894401e88b73901702b74b5e80"
+    },
+    {
+      "path": "src/features/rooms/live-call/roomLiveCall.service.ts",
+      "sha256": "299ce7605851aeeb3a251bfa52e2c008e7fed323aabc73fef322c643c905b819"
+    },
+    {
+      "path": "src/features/rooms/live-call/RoomLiveCallProvider.tsx",
+      "sha256": "f81fa8d068b8066461e256043f2f86a275727e7cd6a5fcffeaa29940461042ac"
+    },
+    {
+      "path": "src/features/rooms/voice-correction/voiceCorrection.flags.ts",
+      "sha256": "2c3daf4af97013c52be629ba95540126b113d8b28f2364e9472e4813dbd1b81f"
+    },
+    {
+      "path": "src/features/rooms/voice-correction/nativeVst3LabMonitor.ts",
+      "sha256": "4cee12b27087e05e7ed6ecc8b7e912634cc89d1244560840732a293d8b7a0d69"
+    },
+    {
+      "path": "src/features/rooms/voice-correction/voiceCorrection.types.ts",
+      "sha256": "6caf6fd01c017d122beafdcbffe89331660eb9dccc50bc51a0b17924ed493f75"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/roomPreProfileBounds.ts",
+      "sha256": "51b1fe369029058380309667ba33c472236a6316c94320474b74d061fe999599"
+    },
+    {
+      "path": "src/assets/preprofile/demo/short-live-pulse.webp",
+      "sha256": "a3e550c5c40ba8d1084cf556d79839aee60fc12135c7cefba34827938713103e"
+    },
+    {
+      "path": "src/assets/preprofile/demo/short-studio-session.webp",
+      "sha256": "b283bc0afba6fe50b42b448bcfc42e32ebeee040878a65f0f7a78934e503748c"
+    },
+    {
+      "path": "src/features/globe/components/preProfile/demoPreProfileArtist.ts",
+      "sha256": "3c491c0c2c1edb7f2c73348bd545cc0c29bee31ec61955152e228e3743f91a6b"
+    },
+    {
+      "path": "src/features/globe/components/preProfile/demoFollowState.ts",
+      "sha256": "f1ebae9473b472fed399548bd05de5d738c15c2c7fbcd33e6e9d76849c5b8949"
+    },
+    {
+      "path": "src/features/rooms/place/room-viewer-host.css",
+      "sha256": "b614ce47b311c7bef46badeb2d546fa77faae5439bbd0d114f451db3bf70a846"
+    },
+    {
+      "path": "src/features/globe/components/HoverPreProfileBubble.css",
+      "sha256": "511471cccffb38d2fe05bad845f3eb9595185863812e578d6f4e2c46e9262d57"
+    },
+    {
+      "path": "src/features/globe/components/PreProfileFrame.tsx",
+      "sha256": "3d0b8212875058f7d92275b61073e9787faffd88aa98cc7af8988cc3652aafe9"
+    },
+    {
+      "path": "src/features/goldenLikes/goldenLikeApi.ts",
+      "sha256": "b4f3ca5910d0a67091e31e740aed229c7a92dc8406e8edc5669635730b4cb35a"
+    },
+    {
+      "path": "src/features/goldenLikes/GoldenLikeCounter.css",
+      "sha256": "03aaee91a59234ab4dac8ff3b664799bd0a027048f7720fbc510508fa18ec417"
+    },
+    {
+      "path": "src/features/goldenLikes/GoldenLikeCounter.tsx",
+      "sha256": "182b20b591db463e6608fe5a87461c840452117b186242008a7ee18ec02362de"
+    },
+    {
+      "path": "src/features/globe/messagingNavigation.ts",
+      "sha256": "859913405d2f1fd4309fc72213a91ff3bb76af0d26b827da527338c47a9f8d61"
+    },
+    {
+      "path": "src/features/globe/components/preProfile/HoverPreProfileContent.css",
+      "sha256": "31303089f4069e6af79f6d45c1f4f778d6524a6bdc89ab81dfb1e68d13257e99"
+    },
+    {
+      "path": "src/features/globe/components/preProfile/HoverPreProfileVisitor.css",
+      "sha256": "57deb20a252a615f3c63aa168bc8b6ea2be158a8c560291b70a587b5dff34f37"
+    },
+    {
+      "path": "src/features/globe/components/preProfile/pre-profile-black-glass.css",
+      "sha256": "ea5cfd170e54c8080c274b0127fcf06d2a82603f693fdfa2fe74a79d084d1653"
+    },
+    {
+      "path": "src/features/globe/components/preProfile/HoverPreProfileContent.tsx",
+      "sha256": "391c30522144965f0321e60d656639ce703657b245ab25ee556537f11c1f70e4"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/class-student-pre-profile.css",
+      "sha256": "b699f62b4aa0e23a2cdfa25f04ccd23b762b1cb4a78932467f8608e4a984d44f"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/ClassStudentPreProfile.tsx",
+      "sha256": "2c5b7140d4d2f3e348cd28194ff2cd3fe3a39bd0c696275cdb87fe5008865909"
+    },
+    {
+      "path": "src/features/rooms/place/RoomViewerHost.tsx",
+      "sha256": "70b5b5fc9ecf5e7c46a718ec341d65976ee92af42a33664fab16a6c5ef3ddc76"
+    },
+    {
+      "path": "src/components/navigation/meewav-chrome-brand.css",
+      "sha256": "1e262b4b9f9bc04c516c24be00780ca94293d8bef4d8ca290b04f90c9c7c5120"
+    },
+    {
+      "path": "src/components/navigation/meewav-pillar-brand.css",
+      "sha256": "95e852016fdbdd94230ed991d0c63addb5a66e7f8e75b9624ece1843f92061ef"
+    },
+    {
+      "path": "src/components/navigation/MeewavPillarBrand.tsx",
+      "sha256": "ab45b0d1b401b195a57448276f3ee69dc75ca8191a6c95329a20513a5a162005"
+    },
+    {
+      "path": "src/features/rooms/place/PlaceLiveCallPicker.tsx",
+      "sha256": "99992b849c6b530fcceb6200549ab2d6837c936f7ca9ba2b64715fbad93a10cc"
+    },
+    {
+      "path": "src/features/rooms/tools/audio/previewWaveform.ts",
+      "sha256": "0ed0359fe347fce4abac56d374d5e986a1855b8c7947a38b1bd216b74eeef43c"
+    },
+    {
+      "path": "src/features/rooms/wave-transport/waveMusicalGrid.ts",
+      "sha256": "b9b51c697ae26ea3ba30d334c5dd166c5dd57aae350e398bb9bc52c494204f02"
+    },
+    {
+      "path": "src/features/rooms/wave-transport/WaveAudioTransport.ts",
+      "sha256": "722751b6066bf794b4a0f30f24c9b4c49ae8e128af554d213853587ded2b261e"
+    },
+    {
+      "path": "src/features/rooms/wave-transport/wave-transport.css",
+      "sha256": "e9379600ac33774a5be5c98a9a54007211783fb3f23274e2c11d0f47bf539ba6"
+    },
+    {
+      "path": "src/features/rooms/wave-transport/WaveTransportProvider.tsx",
+      "sha256": "5fc1678d7e597387dd553ac195d137570db16d60d276a6cf034b03825ee7aeed"
+    },
+    {
+      "path": "src/features/rooms/tools/wave-simulation.css",
+      "sha256": "8b0ac598d0e3f87abd3fe0a8cb2e72f4ed5de86535dd5a75ed044443e36dc1b0"
+    },
+    {
+      "path": "src/features/rooms/tools/WaveSimulationPicker.tsx",
+      "sha256": "03ec7fca8094340c29635978d1eaefbcac96a0e59691a3e5b51a5e4959b148c1"
+    },
+    {
+      "path": "src/features/rooms/place/PlaceRoomShellHeader.tsx",
+      "sha256": "5a64ad199fea4e11f56630cd2546c8385c1d0893695fad05fd604aaaf886ab95"
+    },
+    {
+      "path": "src/features/rooms/place/LiveMonetizationIcon.tsx",
+      "sha256": "864b8e6595783a995445038d6801019ee6859e570a14f9fd8b3599b249e7cd90"
+    },
+    {
+      "path": "src/features/rooms/place/placeClientId.ts",
+      "sha256": "dca92157add37147b4f5431a910684d7d18ec3d4cf877c55094869c785abd26c"
+    },
+    {
+      "path": "src/features/rooms/place/roomSupport.ts",
+      "sha256": "181550cbbeb67874b92c11c7149e48731fdeb29a5853e9ab688787ebd3e816bb"
+    },
+    {
+      "path": "src/features/rooms/place/live-glass-material.css",
+      "sha256": "8beba661ca2946d539e727ffb53ac735869d13a75d8d963fbc85a0e81ce9eeea"
+    },
+    {
+      "path": "src/features/rooms/place/room-support-panel.css",
+      "sha256": "11fa63d4cc46f88be2468cbd6ee83a9c9d95f002b8199448ae5666c3956c9aa5"
+    },
+    {
+      "path": "src/features/rooms/place/RoomSupportPanel.tsx",
+      "sha256": "f928bfa3b09d9e8c4c9a9203054c71a2d083c999b6d67a03bb31ff697085dacc"
+    },
+    {
+      "path": "src/features/rooms/place/live-action-popover.css",
+      "sha256": "856930810f1a07782455f1dce74d2e3031e991940b25643977340004edf56b0a"
+    },
+    {
+      "path": "src/features/rooms/place/LiveActionPopover.tsx",
+      "sha256": "2369638c2d0e0664ebf72d88b7f8ad56c405b8f4808b99fdbd921c9731dc08fe"
+    },
+    {
+      "path": "src/features/rooms/place/useRoomSupportThrows.ts",
+      "sha256": "3e5eee1abbe36654fef418627cdca0e6f8060b72bd85262368ba1343a99f10c6"
+    },
+    {
+      "path": "src/features/rooms/tools/roomTools.config.ts",
+      "sha256": "1abbd7b457647bcc62012e846cfadf9496ba941f6841a45aa647281a989a1c1f"
+    },
+    {
+      "path": "src/features/rooms/place/placeStageLayoutEngine.ts",
+      "sha256": "48d14ada8ed87b1d8327fcc309bdeb0480b6cb6126b1db23a0985f96e65a0faa"
+    },
+    {
+      "path": "src/features/scene/mediaSession/mediaSessionCoordinator.ts",
+      "sha256": "1ffa1931f8d65af047fb4a602dca713c8879557382088b55023b81365bf483de"
+    },
+    {
+      "path": "src/features/rooms/place/placeStageLayoutTile.tsx",
+      "sha256": "0adb9799ba02b338c7b9952ccea2c83ee43dfc87d92545c188511d04239227e2"
+    },
+    {
+      "path": "src/features/rooms/place/cageDuelMediaLayout.ts",
+      "sha256": "bd22a0839103f88887097f8a29d2084b3b72774e03d6f40628c280775242f0a1"
+    },
+    {
+      "path": "src/features/rooms/place/cage-portrait-duel.css",
+      "sha256": "fd91ad29e9a82437f72953cffd406cd74db057f35e9c67e8b8ceaff58201bfbc"
+    },
+    {
+      "path": "src/features/rooms/place/cageDemoMedia.ts",
+      "sha256": "c6af355f5060fbf7490053e6f7d4115cb8a48e140c2e27598e944ae9c25a1984"
+    },
+    {
+      "path": "src/features/rooms/place/CageStageProgram.tsx",
+      "sha256": "f2c4eb1eb8e67478bc94cdfe961e78e42d8bc6dbbfede5c862f02e066ce9e1a5"
+    },
+    {
+      "path": "src/features/rooms/place/live-action-burst.css",
+      "sha256": "b5f3263e5f07bd7364a8885ffa5647532c6ee3eb4b1bb46c089909132c0afe90"
+    },
+    {
+      "path": "src/features/rooms/place/LiveActionBurst.tsx",
+      "sha256": "33ba9145867497e666bb6be89c918cd36ab14f2cb57f83d37b7a01d807210f1b"
+    },
+    {
+      "path": "src/features/rooms/place/room-golden-like.css",
+      "sha256": "22f481240b1db8558e400baa05e5285f080865714da7906fb925911e3ddfc11b"
+    },
+    {
+      "path": "src/features/goldenLikes/GoldenLikeConfirmationDialog.tsx",
+      "sha256": "f6bb4be7af84c10473f0456f2e54c0e4d44facac58e68485e85373739ca45d92"
+    },
+    {
+      "path": "src/features/shorts/ShortsReactionButtons.css",
+      "sha256": "cfd92d421444e73a494d982652e28ab0c289320b17061a285ece48c8d243f154"
+    },
+    {
+      "path": "src/features/shorts/ShortsReactionButtons.tsx",
+      "sha256": "b6915ef9931926957f9e15b244b9781edc798d38599f9c9d9d76a8623e9a699a"
+    },
+    {
+      "path": "src/features/rooms/place/RoomGoldenLikeReactions.tsx",
+      "sha256": "4b2082bf5f62d39c3dd4c3cb1e216f335292179ed0702a6266829d94a2932d18"
+    },
+    {
+      "path": "src/features/rooms/place/place-gift-draw-overlay.css",
+      "sha256": "108d039b1336a4530befc4f168bc327a820cc586567807e8978957248e003ed6"
+    },
+    {
+      "path": "src/features/rooms/place/PlaceGiftDrawOverlay.tsx",
+      "sha256": "820d16e994e49054da2da9d8076bf21c0f4e5bdc2e026b9a73b60655cc3a560a"
+    },
+    {
+      "path": "src/features/rooms/place/live-action-bar.css",
+      "sha256": "8666968fc87a9e5da9b9a161caa95a71cc886095e4cf2185eb387b388154d651"
+    },
+    {
+      "path": "src/features/rooms/place/LiveActionBar.tsx",
+      "sha256": "6600f609a5eef8f48fba89422bef1b4887f473b5a6524895faec74033cab7b05"
+    },
+    {
+      "path": "src/features/rooms/place/PlaceRemoteAudioRenderer.tsx",
+      "sha256": "59cb92fdac26f8eafb43d925c94297a5bda6d77ad29b308d87bb34c9c521e519"
+    },
+    {
+      "path": "src/features/rooms/place/placeStageLayout.css",
+      "sha256": "c9c6eeeb0f5c00c86a1545245a6f7062c5331bfbf90b73a457cdc43730406eb3"
+    },
+    {
+      "path": "src/features/rooms/wave-viewer/WaveViewerAudio.ts",
+      "sha256": "20a5d260f3e067a3501cd1ea93a6e3818aea3162ac4a472930d4aba9291e5a60"
+    },
+    {
+      "path": "src/features/rooms/wave-viewer/wave-viewer.css",
+      "sha256": "5b84e9f6cf98815be85a00993ded35605aaf4b59234b2bb446177694452ab536"
+    },
+    {
+      "path": "src/features/rooms/wave-viewer/WaveViewerListening.tsx",
+      "sha256": "12323e1fea01c828258128ff8f76d6cb38cf636da0b9d6b926ef19b1cf151c28"
+    },
+    {
+      "path": "src/features/rooms/place/PlaceStage.tsx",
+      "sha256": "4193658a22d303c524c2476c9a3e389f1962f89a421bbd7b91133674dd67e643"
+    },
+    {
+      "path": "src/features/rooms/voting/room-voting.css",
+      "sha256": "85dc3e289f7d2eb417419d426717638d9b36218ba0f15d85aeb75a8cf4d5c72b"
+    },
+    {
+      "path": "src/features/rooms/voting/RoomJuryControl.tsx",
+      "sha256": "8c8ed82b56c79dc9ebf674cf5ed924a3fadf2878efabda1cc2041ace2b49949c"
+    },
+    {
+      "path": "src/features/rooms/place/viewer-green-house-audio.css",
+      "sha256": "43b45295d7ff83d87378d8cf513207f10a8b2eea418aac977c77d7346af5ea58"
+    },
+    {
+      "path": "src/features/rooms/place/ViewerGreenHouseAudioCheck.tsx",
+      "sha256": "82e30e05c64cc7b687182e08ddc23b5484d567b20a08488b32f1ff230fc9c4b7"
+    },
+    {
+      "path": "src/features/rooms/home/rooms-home-filter-lacquer.css",
+      "sha256": "933a2fc7d16a017982c0c123d2ef0c09dd7504107a94f0982a76d798aa6eafdd"
+    },
+    {
+      "path": "src/features/rooms/switch-room/RoomExperienceBoundary.tsx",
+      "sha256": "8e4d5bcd821300534b4e9f9381b25565ccea610eb1b86c0754b04ca8610cbf7a"
+    },
+    {
+      "path": "src/features/rooms/place/place-chat-poll.css",
+      "sha256": "7dab5ea95400c387835ba8e6b9dbe0246acbb11a2713562f73722516cf0d1495"
+    },
+    {
+      "path": "src/features/rooms/place/place-chat-message-actions.css",
+      "sha256": "c500bac43c7740bff3f7c5c94295c6858c031364121d63065805bad96f03a436"
+    },
+    {
+      "path": "src/features/rooms/place/PlaceChatMessageActions.tsx",
+      "sha256": "d5d1a0a6ae64309dc9d9f0cb2f0b295a9e2ba6501fa1eadc963e94609cc68c58"
+    },
+    {
+      "path": "src/features/rooms/place/roomDevicePreferences.ts",
+      "sha256": "8a4722ea1f0326d118b40c841c57e92d539166af5059af8674624b236d527832"
+    },
+    {
+      "path": "src/features/rooms/place/green-house.css",
+      "sha256": "6c1db44f4947c44a658f6232ab61e2333a032414650b7d7f57bee2beb2cee40a"
+    },
+    {
+      "path": "src/features/rooms/place/GreenHouse.tsx",
+      "sha256": "786f5a4cc154f4715c55da9f68a6fce59e0b04ee965ce3215a1ef437f53b4e0a"
+    },
+    {
+      "path": "src/features/rooms/launch/cageLaunch.service.ts",
+      "sha256": "7ba34e2fa0c442b7996e76c58da09ad8bd41421daf747de08b6e261026cdf3d4"
+    },
+    {
+      "path": "src/features/rooms/launch/cage-launch.css",
+      "sha256": "f15bb3689bad6585e36f222f3535837b3b7fd2bdea4b464fd65907b5c25bb06f"
+    },
+    {
+      "path": "src/features/rooms/launch/CageLaunchDialog.tsx",
+      "sha256": "ed5ed3a243cd345e4fd8e51f792b944e1ada8223c31c0f6f63a789f8bddf49aa"
+    },
+    {
+      "path": "src/features/rooms/place/CagePreparedCompetitions.tsx",
+      "sha256": "7bbf4124a5492a18f2bc7d96ef0242b001da14d4163521bdee7e068f03783ecb"
+    },
+    {
+      "path": "src/features/globe/styles/globe-v2.css",
+      "sha256": "90963843430b0e810b692b4558c03b826c536b4d2a8e68519b5c12bfb52e4693"
+    },
+    {
+      "path": "src/components/shared/search-filter/meewav-search-filter.css",
+      "sha256": "aaafc938f8ccfdacd78cfd74021620e3eb0b32d9dc7f81fde87d700f23fe91b7"
+    },
+    {
+      "path": "src/components/shared/search-filter/MeewavSearchFilter.tsx",
+      "sha256": "f4a93423add33a89517199afbaa90fb999cbaa1aff484ade0890dd4e13500d76"
+    },
+    {
+      "path": "src/features/rooms/place/cage-guests.css",
+      "sha256": "c95fed68dc8f5b4f3cbcdb98e35cfe25fb2f6f897f9d98357767e122a72d8db1"
+    },
+    {
+      "path": "src/components/shared/avatar/profileIconAssets.ts",
+      "sha256": "30c903e464405728cd58e89776e6d5c50383bd19caadb0e489af257747e9f151"
+    },
+    {
+      "path": "src/components/shared/avatar/profileIconCatalog.ts",
+      "sha256": "e3f31cbb99a89d9165b66b22665fe072a18ded85e9f35ffd2039871486fede75"
+    },
+    {
+      "path": "src/features/messaging/messagingDemoData.ts",
+      "sha256": "75925c5508aae6ab491634893ac0b87542a573594602f57f651237ed173d473a"
+    },
+    {
+      "path": "src/features/messaging/messaging.errors.ts",
+      "sha256": "c4f5ddf36488b3d88430ecef0880d114d645c2b0883387e68b1ffa399b313965"
+    },
+    {
+      "path": "src/features/messaging/messaging.service.ts",
+      "sha256": "7786e9f800f503d4eecdde79c6ac4de9dcca4cf45c69437dca1c349cd97a9ca6"
+    },
+    {
+      "path": "src/features/rooms/voting/RoomVotePolicyLabel.tsx",
+      "sha256": "e39af6c9a75504ba9a71fda06d15ea365b8da8965b34461e6640ff2a29c5e05e"
+    },
+    {
+      "path": "src/features/rooms/tools/cageResults.ts",
+      "sha256": "14767b1e77f6a238979d2ec6484f1eb375d2f9c72ccf17a393758d4f438dc782"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/cage-results.css",
+      "sha256": "cf33a5f02c45aae33b09dd0e513409a170679687dd570ae41ff42606e58c77bd"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/CageResults.tsx",
+      "sha256": "8b8778ecbdef02c770773d62b37acfd6092ce09bdd61bda3dc716b72404418e1"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/CageOpenMicWorkspace.tsx",
+      "sha256": "3b32c4295294ad351db7b6a981f386983dea4af1cfa7b1f904d93c81792a044f"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/cage-competition-workspace.css",
+      "sha256": "113f8c25a51861cf03a7842f73fd7cbd8e058faa220529faaa73900a62283513"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/CageCompetitionWorkspace.tsx",
+      "sha256": "f03f0f0f2e24d8e2a8af336cae12a0d3a4da188886fb82f1cd70ae051665d46f"
+    },
+    {
+      "path": "src/features/rooms/tools/audience/CageOpenMicAudience.tsx",
+      "sha256": "9cfcff26f764d80f5fef495a3d7ec85a3a5baa88cad70861199b66f99ce9e6eb"
+    },
+    {
+      "path": "src/features/rooms/tools/audience/loge-viewer.css",
+      "sha256": "e793b7c5285ec7a2023654234eb215034dd67e9d878ce79387d1bf989a6ba233"
+    },
+    {
+      "path": "src/features/rooms/tools/audience/loge-requests.css",
+      "sha256": "14f3b9f9db7b7bc1f93688e76a7b7d28539c4d0ad6429839d8e831d2484bf2a7"
+    },
+    {
+      "path": "src/features/rooms/tools/audience/LogeRequests.tsx",
+      "sha256": "caef1f97d3bc884c03c43460efbb5059784c8fe44d2d34dc8327d0a531edfb0d"
+    },
+    {
+      "path": "src/features/rooms/tools/audience/LogeViewer.tsx",
+      "sha256": "fc78fb1a8bfa6cdfc9427c410b24dd88e16ba3f551d135cc453e5e1ab0cabb32"
+    },
+    {
+      "path": "src/features/rooms/tools/audience/scene-viewer-program.css",
+      "sha256": "a4ec58a99bf785d511a174be0e0af63b848bf072d3cca00484a5b3b0f53b557d"
+    },
+    {
+      "path": "src/features/rooms/tools/audience/SceneViewerProgram.tsx",
+      "sha256": "8aa003c9a5ef2788fc630908d039780e48794145e7d9965a240b593f051587c9"
+    },
+    {
+      "path": "src/features/rooms/tools/audience/SceneAudienceFundraiser.tsx",
+      "sha256": "f01f7f2e340efdd4cb01a2e299979bbcf80eefaaac0d732abf6f1aeabd6c9c82"
+    },
+    {
+      "path": "src/features/messaging/useMessagingRealtime.ts",
+      "sha256": "4e5e4142f7e41b8962c5a7230ba1331e38a8b722d337c7cfb1d671aebd87fa5a"
+    },
+    {
+      "path": "src/features/rooms/tools/classroom/classroomDemoMessages.ts",
+      "sha256": "5958d5a35480dbbfc3732121c4f13967b850ffe067091ad4097c41e8158b88e6"
+    },
+    {
+      "path": "src/features/rooms/tools/classroom/ClassroomMessageBubble.tsx",
+      "sha256": "3fa444d60facda7c47e25f5903c4f5569a39782695240d4af11c181cf8940afb"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/ClassSeatPrice.tsx",
+      "sha256": "36c8a195f008ee7fb8c6c1f99b2381bd5c329cab52750ed142ab2087eff5fd0f"
+    },
+    {
+      "path": "src/features/rooms/tools/classroom/classroomResourceMedia.service.ts",
+      "sha256": "7ff9ed364bbbcd393cc95a3656779ea4ce4696292a3fee53b79c285a0edc64af"
+    },
+    {
+      "path": "src/features/rooms/tools/classroom/classroomPrivateMessage.service.ts",
+      "sha256": "bfbc30c571c37e92cad5fb51646b5cc17d961eecc56ce27979c4878be597cdf5"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/classroom-tools.css",
+      "sha256": "9140c8ee49f431ce778c1760996f68d4eacc6f8e33ab56bf70c834f05ff6de07"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/classroom-refinement.css",
+      "sha256": "20955d54ff94d40fa6cc9046c9a4a9b0a55e1f51d5fff958af9262f3b68a0aa7"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/ClassroomPanel.tsx",
+      "sha256": "291e1829a06c81222662b3a1fb16266991646ae13cdd0e9cd9eda26db545269d"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/WaveProfileButton.tsx",
+      "sha256": "888199118d29062239988bff1386faa1bd89e0136999cd3f83782b931a8fe8f3"
+    },
+    {
+      "path": "src/features/rooms/tools/audience/cage-broadcast.css",
+      "sha256": "04c7651f779be000b5aea14b7b59eb31d86371bdfbaf84d79be14ea4e287dba0"
+    },
+    {
+      "path": "src/features/rooms/tools/audience/CageBroadcast.tsx",
+      "sha256": "2eb7b5a302d2cce898006d6f988edf14b9b00ebbd830c72bd7bb3f08548277c4"
+    },
+    {
+      "path": "src/features/rooms/tools/cageViewerSimulation.ts",
+      "sha256": "0d8944b280080a0e6af6546a54b9bcd04d696444afbc68f972b00886ed632789"
+    },
+    {
+      "path": "src/features/rooms/tools/audience/cage-viewer-showcase.css",
+      "sha256": "11d91b7ffe09a949dc6692ece36060396b20b42786b049dc7914b478dbfd7db2"
+    },
+    {
+      "path": "src/features/rooms/tools/audience/CageViewerShowcase.tsx",
+      "sha256": "0a42842105bdb9873747f2aceff273acf845b262d6ee23061c53366135f47cf7"
+    },
+    {
+      "path": "src/features/rooms/tools/audio/logePreviewMedia.service.ts",
+      "sha256": "926f6ac5301c077a3799fa9d26f6155d7d2e942309bc375228e234e546469763"
+    },
+    {
+      "path": "src/features/rooms/tools/audience/roomAudience.types.ts",
+      "sha256": "bd7c3448ff273013b805a4b3dfbcb0a6173e5972531af29c5f131545b2df3eb1"
+    },
+    {
+      "path": "src/features/rooms/tools/audience/room-audience-interactions.css",
+      "sha256": "c5c4db833fe3a07f34cc264756f686a0309ed65a073b51ae792d1371fe5a4173"
+    },
+    {
+      "path": "src/features/rooms/tools/audience/classe-audience.css",
+      "sha256": "f0ded7aaa3873c3e2dab429e1b84c4af4d426068e0e34f3d846aeb37448e50f1"
+    },
+    {
+      "path": "src/features/rooms/tools/audience/RoomAudienceInteractions.tsx",
+      "sha256": "8221e80cb96f709207cd4ae83e1884d0b5e852a0ac757bcd04c1bde6f34c66b7"
+    },
+    {
+      "path": "src/features/rooms/wave-viewer/waveViewerModel.ts",
+      "sha256": "d362cca6bf4d0d7b1008a30a069e397e0a6e316bb2ffe68b3eed63db26e2b91f"
+    },
+    {
+      "path": "src/features/rooms/wave-production/errors.ts",
+      "sha256": "4cbaab7fef4225f0416068542f0ae3887037b665dc42f070fee51f0f084758ae"
+    },
+    {
+      "path": "src/features/rooms/wave-production/parsers.ts",
+      "sha256": "618abd925775675d48e20bc369877143188edf50710fd0869d2fd4bebdb1755a"
+    },
+    {
+      "path": "src/features/rooms/wave-production/supabaseWaveProductionRepository.ts",
+      "sha256": "cb1e23951b9672229342838a9a60ffc1d63498a0ae263d4442401a3eac9fbf74"
+    },
+    {
+      "path": "src/features/rooms/wave-viewer/waveViewer.service.ts",
+      "sha256": "aeac62527c5d4ae3e3f8c042ca42d2ac50d9f1b5577ec3b7f08c98e2f02e8af2"
+    },
+    {
+      "path": "src/features/rooms/wave-viewer/WaveViewerPanel.tsx",
+      "sha256": "b01e5de03b9c9435106c7793c42e700f58b6d575cd357066a444143239b5bb2c"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/PlacePollToolPanel.tsx",
+      "sha256": "a11f20a7d2fbe089e565551a82cb662a515d19e2ff0a14d52f495e4c1185b989"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/CagePresentationControls.tsx",
+      "sha256": "d74ac8213c749201530b56d884ee31a5a5e5c265c39587523c4b44781f84f26e"
+    },
+    {
+      "path": "src/features/rooms/place/PlaceToolsSwitch.tsx",
+      "sha256": "21b3901d6afdbb543dc44fff1680e5c7b313b9001c77f9257a1b6430bbd6ba1b"
+    },
+    {
+      "path": "src/features/rooms/place/StudioToolsLayoutProvider.tsx",
+      "sha256": "4b15726f37573c70cc3b6d563e6d06b6da5c9e650754f44ad23f239604a0cbb1"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/RoomToolPanelPrimitives.tsx",
+      "sha256": "43c6944b93834909897f8092d40ac947914491a523cba61a81c12202600ec377"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/ClassQuestionsPanel.tsx",
+      "sha256": "c8e3a2b48786e6e8136829a26319ed28bee2a0549c75d26fb64de9bad06da69c"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/moment-vip.css",
+      "sha256": "295e890352636096a59b2df9b55777ad25232d49c4b5a6756d35428e8871917f"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/LogeDedicationPanel.tsx",
+      "sha256": "1cdaa4e10427c9852efc99cbb21f22fc5cee81e5436421f13e282af95f4c5150"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/LogeFaceToFacePanel.tsx",
+      "sha256": "9578380543eeaa3c1c28db1606e9e523c8269e5dca76158d4bf5df60dcc783ac"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/loge-preview-live.css",
+      "sha256": "a0ade6cd6fb9550ca04610597dbc8d72b9d2fcd80dfda5460d75a250416cd212"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/LogePreviewPanel.tsx",
+      "sha256": "edfe2ac8e75277bfc062f32db3ad784f0665491f2268cdf6813b3201022926c4"
+    },
+    {
+      "path": "src/features/rooms/place/place-guest-quick-message.css",
+      "sha256": "a1ddef4c3aca2d1e01006e08c6a9bd5f89087f072c7868411ae396e3eb78d7dc"
+    },
+    {
+      "path": "src/features/rooms/place/RoomQuickPrivateMessage.tsx",
+      "sha256": "1c3aed266cb7ee0f3a7ccefde4ed38d62e9fe7af437ef7cb9ab9b717efb8aa76"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/LogeQuestionsPanel.tsx",
+      "sha256": "8f51bd99206058cfe4f46faf109e4556a1c23f93014c066195565d816492b304"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/SceneEvaluationPanel.tsx",
+      "sha256": "decc9bf0b4b1e36e41199e916dc6e63624f3756914f64bfeb082da9457902fe8"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/SceneFundraiserPanel.tsx",
+      "sha256": "d069986e46c59a2c10a66aba6ac3d5e2f5fb764f050b76c6311030c527134121"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/SceneProgramPanel.tsx",
+      "sha256": "5e0024865d692a4c0c34e75024f731832e4d1a8e90119849bc3467f798a5822e"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/ScenePrompterPanel.tsx",
+      "sha256": "c97276ed6f3f66c6942e0796f7cadd9dd473d60d6ea3ef7e549dd4c6cf56865c"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/WaveFlutterPrimitives.tsx",
+      "sha256": "0cb9c720e5342170c85dd52b58452458a6e672b5668a9107613aa09c506c2202"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/wave-category-chip.css",
+      "sha256": "3abfa3eee896888c606c4a5aaed7633c6d4b57e89a0f17a0b657a2fb5132716f"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/WaveCategoryChip.tsx",
+      "sha256": "2692ea57ffdbb48aeb8f581e3fc4181416fc22063580cf6b4d0266fbc50ef5cc"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/WaveLoopCard.tsx",
+      "sha256": "ddcd4c0f2ca7a691bf4e41b656782c506b63dcfdc53b79cd807e88b1772ba126"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/wave-gate-intake.css",
+      "sha256": "1393cd9b2aaa03f30272cd4ccc5ae117999e788fea2b8330f49726ba8ad35b32"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/WaveGateIntakeControl.tsx",
+      "sha256": "4963511e808e7320b59d0aaf80051e10972cf616248e6cc694431017af9756d4"
+    },
+    {
+      "path": "src/features/rooms/place/place-mixer-play-finish.css",
+      "sha256": "110261dcdc2c45086d76fc74e28def630240b233d6a1f8f1e44c00080c904b17"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/WaveGatePanel.tsx",
+      "sha256": "02cba946d136949994042101209c5f5b0377ae32fb4e7376341e4ddfe2a95714"
+    },
+    {
+      "path": "src/features/rooms/tools/waveLayerMix.ts",
+      "sha256": "e68df94a8f5cfa77eec41df293f30b128566be586711660cd05f5521d2e737b0"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/wave-replacement-dialog.css",
+      "sha256": "a53a06584860808ea2cd5ea6ae88a6c863b97916f798ea581a6357934d0178a7"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/WaveReplacementDialog.tsx",
+      "sha256": "710259700e90b5ddb8c85ed679fdbacee06a6754ccfe675da27794f2f2efc3af"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/WaveEmptyPanel.tsx",
+      "sha256": "57fca9ce422e9ac9536048a9017b30ef613718e3f5646bebaf86fcee27ba4ea5"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/WaveVoteQueuePanel.tsx",
+      "sha256": "5688447d09510a4cb0e7cbe303a69ab2fa7800a927e20948191d48e8c07694b9"
+    },
+    {
+      "path": "src/features/rooms/tools/useClassroomAudioBridge.ts",
+      "sha256": "8aeabb7bcf6d736711a3650fdac25c67669d2518f505149c70ce95ae8ce395da"
+    },
+    {
+      "path": "src/features/rooms/tools/room-tools.css",
+      "sha256": "7558c343dfaebe3379f62fa687309130d03a961eaf55fd1076045c7362d11140"
+    },
+    {
+      "path": "src/features/rooms/tools/scene-tools.css",
+      "sha256": "24e83ad09af7a8e91b25f77eaeb757c751ff29203384974051fea551e9ffe464"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/scene-program.css",
+      "sha256": "bb8f23e49549990181f5a50eaea6f12866c974f77676f8ebeb095e68daf3c9b1"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/scene-engagement.css",
+      "sha256": "4f32662a92370c4f821c79e4ecf3fba83a1272032aced594c0c4ba4005baaa89"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/scene-prompter.css",
+      "sha256": "4732d877f1d53a208719ebcd5ca9b4ce775c837988abdfe819d3e746478ca327"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/cage-tools.css",
+      "sha256": "e433045cd580c307418181a8f67eb89d05a5022947aba631b24b97e8d8c1ccf3"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/wave-gate-panel.css",
+      "sha256": "539d4ff433a82ea6a1a4fbf0e818d14938df82b58c194a1da54ba806df4af5cc"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/wave-control-panels.css",
+      "sha256": "045792f41a3d854cd57d652ff1b4428c7b75e4f7920cac839f4af749e6361842"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/wave-loop-canonical.css",
+      "sha256": "64c5894ea8004d9aa5931f75b18500d1d2c810ac849e54f19ae5a4904038a492"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/wave-gate-premium.css",
+      "sha256": "bc5853a7192983482639d9590379e6f396ddc6290cd5615213a5ce888ca53511"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/loge-questions.css",
+      "sha256": "b67bfa14488ea98c61a1b29656ade654ff0fbd278da7a23bcb0328fcf45e432a"
+    },
+    {
+      "path": "src/features/rooms/tools/RoomToolsShell.tsx",
+      "sha256": "bdb2e08e7262740e45cad05a045a803381bb4eb3df45e0c3d1c483a7fc5e1fc8"
+    },
+    {
+      "path": "src/features/profile/gifts/profileGiftCatalog.tsx",
+      "sha256": "937b99d52356175a2df3540a3b5bc568701159838db5f790df1a8cebcdd8a792"
+    },
+    {
+      "path": "src/features/profile/gifts/profileGiftInventory.service.ts",
+      "sha256": "4484d1d5352457daf45e84ddbd711ab084158d66afef6588a0774fcd4a03bffc"
+    },
+    {
+      "path": "src/features/rooms/place/placeGiftCatalog.ts",
+      "sha256": "2aa6f907f1130364abe76122c47a192354e5470f5332e126bd80809487e551ca"
+    },
+    {
+      "path": "src/features/rooms/place/place-gift-tool.css",
+      "sha256": "dab77074dc4cfba897b0c01f6ef40db7dba981b37a23ac0da074f288d69d93c5"
+    },
+    {
+      "path": "src/features/rooms/place/PlaceGiftTool.tsx",
+      "sha256": "4c065d9b3720ea7483537f09e62ec4fb42d5a440eed5bc221d2cd365d65d4862"
+    },
+    {
+      "path": "src/features/rooms/place/PlaceGuestInvitePicker.tsx",
+      "sha256": "f88d1267f6ef4a567b243c7c15d72aaa472bf85217534aa6d9f10c18ea68555e"
+    },
+    {
+      "path": "src/features/rooms/place/viewer-mixer-routing.css",
+      "sha256": "8d9f02538f274c52c8abc8004cf1d54ba62d3499915f9a4552426e7b016d26e2"
+    },
+    {
+      "path": "src/components/shared/tooltip/meewav-tooltip.css",
+      "sha256": "ee9b8a815479563bb48c41466f27d555bc6208be789d0052232efa16f0a08d6b"
+    },
+    {
+      "path": "src/components/shared/tooltip/MeewavTooltip.tsx",
+      "sha256": "21c4af522a4d954718ed0978c4b9f6b52c0b5c1e5678c2958d31fa8c0f3c9830"
+    },
+    {
+      "path": "src/features/rooms/place/placeTwistAudio.ts",
+      "sha256": "04d4f2ed6fde00739bbc9dbe45e6006a9010e7e8ec30b1d704888f7e41fcabd9"
+    },
+    {
+      "path": "src/features/rooms/place/PlaceTwists.tsx",
+      "sha256": "3ef572ababeb507d031a94270254f25d9b1672d6d949220f283e399dc18a545d"
+    },
+    {
+      "path": "src/features/profile/profile.media.service.ts",
+      "sha256": "28085e019b39e91a842b5d5a0a393b41058f29eb7beb7ed3960a2bb1158d7f98"
+    },
+    {
+      "path": "src/features/rooms/place/assets/fallback-covers/place-fallback-cover-01.webp",
+      "sha256": "ab3d6f18ea6d1a647b868e8b6cc05e832dc2fef3b99e289b777ce8aabbe46129"
+    },
+    {
+      "path": "src/features/rooms/place/assets/fallback-covers/place-fallback-cover-02.webp",
+      "sha256": "7edf6bd300d7169fc25724bb2c5034d14b6d7e3971446f6231d285f3f42e477f"
+    },
+    {
+      "path": "src/features/rooms/place/assets/fallback-covers/place-fallback-cover-03.webp",
+      "sha256": "b04a3dc0f980467dc48753f15fb7c249e152adaf4379d409a3ff6ebfdd8a4321"
+    },
+    {
+      "path": "src/features/rooms/place/assets/fallback-covers/place-fallback-cover-04.webp",
+      "sha256": "b47a38237800b04e66b78f5f2f240ab617f3eb43581f81bde1329b18132ce820"
+    },
+    {
+      "path": "src/features/rooms/place/assets/fallback-covers/place-fallback-cover-05.webp",
+      "sha256": "acfec32cd84e772c33e0142a9d35390ad2728cad91027640f764434f985dbbb8"
+    },
+    {
+      "path": "src/features/rooms/place/assets/fallback-covers/place-fallback-cover-06.webp",
+      "sha256": "d6edfb76d20e8718b5d487c0633d9f20fbf5d41c0d0124bfabaa4f159f999d25"
+    },
+    {
+      "path": "src/features/rooms/place/assets/fallback-covers/place-fallback-cover-07.webp",
+      "sha256": "1d55d080292d10eedae3ff9b54a79fdddf077bcef70c70c49bd7d9daa4073f0d"
+    },
+    {
+      "path": "src/features/rooms/place/assets/fallback-covers/place-fallback-cover-08.webp",
+      "sha256": "bec60b9f2d3aa5f8cec73ae406bcc352b4b89bf84ec0cf223efaa2aeb566ca10"
+    },
+    {
+      "path": "src/features/rooms/place/assets/fallback-covers/place-fallback-cover-09.webp",
+      "sha256": "c9781d970d2c51a2cf816072e9c925a02c4241858c02fe441350540406ab204b"
+    },
+    {
+      "path": "src/features/rooms/place/assets/fallback-covers/place-fallback-cover-10.webp",
+      "sha256": "bd3239cf4ac86e7ff9e96caf4ebcccb5c1e797a4152c5761cd9123c1393a97ed"
+    },
+    {
+      "path": "src/features/rooms/place/assets/fallback-covers/place-fallback-cover-11.webp",
+      "sha256": "8997d67b0ad1ddb3b30ed87b66359a1bad75e07cedff1e6b560ddbe2be1ddd43"
+    },
+    {
+      "path": "src/features/rooms/place/assets/fallback-covers/place-fallback-cover-12.webp",
+      "sha256": "ca16d4594f332e4e5dd3e4e9ad2285226690c74a3302667106044f44cd0258f3"
+    },
+    {
+      "path": "src/features/rooms/place/placeMixerCoverCatalog.ts",
+      "sha256": "6f3a2024ff33cfb0d006f9768cde0d6160971e399d00e70a68cd5126a9e69722"
+    },
+    {
+      "path": "src/features/rooms/wave-transport/wave-listening-selector.css",
+      "sha256": "b0b7b4cebb6d38076c535b10c0432a7fdbc7691ed4a9c31d33c0631bfe5b6139"
+    },
+    {
+      "path": "src/features/rooms/wave-transport/WaveListeningSelector.tsx",
+      "sha256": "6c29af470b89cd75277437ba6d12f593445431539ce399e3b42552a0ca49b28d"
+    },
+    {
+      "path": "src/features/rooms/place/place-mixer-loop.css",
+      "sha256": "beede27e9445de7c2bbc9679ae2992315e1c41c3a344566c8b026500bc22cfda"
+    },
+    {
+      "path": "src/features/rooms/wave-transport/WaveMusicalLoopRange.tsx",
+      "sha256": "e0044e045d929d88547c31260556a95230114043c0eb867df838280de0e1a9e1"
+    },
+    {
+      "path": "src/features/rooms/place/PlaceMixerLoopControls.tsx",
+      "sha256": "3e6ac5241fba6bf064e7e8c4510b0da7036a60cdcee6282cf10c9a4d9b307099"
+    },
+    {
+      "path": "src/features/rooms/place/place-mixer-playback-menu.css",
+      "sha256": "2129338e894f46e36f255e94031b3da654deeef1eb342fe796631073750d9da3"
+    },
+    {
+      "path": "src/features/rooms/place/PlaceMixerPlaybackMenu.tsx",
+      "sha256": "88e603be3db347a11b982e231467d523d5a847530b5a168865f391d4f104f534"
+    },
+    {
+      "path": "src/features/rooms/place/placeMixerLoop.ts",
+      "sha256": "8d8d6defe99bb10de00d07c49ef2a2c23fd85f8a02018ff18aaa4e133c82d7ad"
+    },
+    {
+      "path": "src/features/rooms/place/placeLiveCall.ts",
+      "sha256": "4abba90f0bcafa2a6e24d9a6bbac462da79b6eae05da027fb543d9fdb7e0153f"
+    },
+    {
+      "path": "src/features/rooms/place/place-mixer-regie.css",
+      "sha256": "8612eef8da93cfa9cb361939d7d9e014243f6b8ab21a6887781c564de6468e2f"
+    },
+    {
+      "path": "src/features/rooms/place/PlaceMixerRegie.tsx",
+      "sha256": "877e2f78a841194168ce7967eef6e6a7b43e0971973e33d2a2d2b7d1eca64cf4"
+    },
+    {
+      "path": "src/features/rooms/place/place-mixer-classroom-collapse.css",
+      "sha256": "3798799e0a90f680ec8df59e0e4b010fd2c42474fb39f9adde54c21dad39f3fa"
+    },
+    {
+      "path": "src/features/rooms/place/PlaceMixerAudioPlayer.tsx",
+      "sha256": "d21e956b1aab6f42f72fb8b5b74c7a00c8b5d7dd549f5bf88470fed2a97f63b5"
+    },
+    {
+      "path": "src/features/rooms/place/PlaceTime.tsx",
+      "sha256": "da29bb93443cc6e0e0270db67ea5e501a7f6292d6c9fc1a37220c883823de052"
+    },
+    {
+      "path": "src/features/rooms/place/place-plugin-manager.css",
+      "sha256": "8024a1369d4444af62dd458b61e5245a1d9ce898b879b7dbc0fd75b27b03ed7a"
+    },
+    {
+      "path": "src/features/rooms/place/PlacePluginManager.tsx",
+      "sha256": "cfb4eca423cf34a5e4e58631077e3512929a620d28f94adaadab711fa45f8263"
+    },
+    {
+      "path": "src/features/rooms/place/placeAudioRouting.ts",
+      "sha256": "6696d2325fd7629dba26a20104113c8adf604f0d505991f853041544921c979c"
+    },
+    {
+      "path": "src/features/rooms/place/PlaceMixer.tsx",
+      "sha256": "14bf13fb04288900ec193282a41699a75482da14c1bbce10f1923e9a7e42fd90"
+    },
+    {
+      "path": "src/features/rooms/place/placeConversationTools.domain.ts",
+      "sha256": "f00c7df7ebf4e7d2e4ea7c37d496baff1ec5db20324a6b1ca383fcaa4972bc3a"
+    },
+    {
+      "path": "src/features/rooms/place/placeConversationTools.store.ts",
+      "sha256": "eea74bfbcc9fca8574ed35111e311cf325ed10fe223ef3f1c90b3993d486893a"
+    },
+    {
+      "path": "src/features/rooms/place/place-conversation-tools.css",
+      "sha256": "9a1deae1e521d0aa1dc5ff42fcb5583bbf933113d06d24dad0aecf4b17c8c135"
+    },
+    {
+      "path": "src/features/rooms/place/PlaceConversationTools.tsx",
+      "sha256": "f5689120d4f03da26868c7b43e2fd5b6023e6d345ac6ff7e3e20c7543c5e2a0f"
+    },
+    {
+      "path": "src/features/rooms/place/place-tools-chrome.css",
+      "sha256": "c2ab893a6c78ffe3c47958035f3c19c410b58f10db7ed7a4fb036ce0ece83aae"
+    },
+    {
+      "path": "src/features/rooms/place/place-chat-workspace.css",
+      "sha256": "4295aac95a94f925ea65c05655331dc3a6ce1ed20f9413238517facd64aa4cef"
+    },
+    {
+      "path": "src/features/rooms/place/place-social-tabs-chrome.css",
+      "sha256": "5d3620646a39e1a4d67281657cdf209f83ba6b316bac9853c1c2b0c1d8d8356e"
+    },
+    {
+      "path": "src/features/rooms/place/place-guest-cards-chrome.css",
+      "sha256": "c56334c1038dc172054da97ec15d01f06f70f5dce3817df1c53bfc6f121efabf"
+    },
+    {
+      "path": "src/features/rooms/place/place-guest-cards-polish.css",
+      "sha256": "4f6dd76b5ce09b7dfd0caf2f8a04ef952a9f163f727e45974335d70838111ded"
+    },
+    {
+      "path": "src/features/rooms/place/place-guests-chrome.css",
+      "sha256": "ed2015975119baf54d70f3c4d01747dfcba36f2596f3fb1b4965ac3445be53e3"
+    },
+    {
+      "path": "src/features/rooms/place/place-studio-portraits.css",
+      "sha256": "3d2e5a8a4ba78e390c28b5113b263a5b76005f98532d781eb3738b92365c1776"
+    },
+    {
+      "path": "src/features/rooms/tools/WaveRoomTransportController.tsx",
+      "sha256": "42c79b6585de2ea5b33c61b0ed9800403bb29be8dc8e978d47760fa9c5e421d9"
+    },
+    {
+      "path": "src/features/rooms/place/place-guest-media-controls.css",
+      "sha256": "0f128a218a4581c64f5fd7cbe0e35b6efe1a753c57e2bfbd13b0eb659be42f30"
+    },
+    {
+      "path": "src/features/rooms/place/PlaceGuestQuickMessage.tsx",
+      "sha256": "c00985e1db691d6d4e6fbaf2294a01ac0cb972f0864ffb8bf3e2b80f5f17b677"
+    },
+    {
+      "path": "src/features/rooms/place/PlaceGuestMediaControls.tsx",
+      "sha256": "948e880168fc395cc36c000b9e218f2a036a8b97e0313243543ad2faf1998895"
+    },
+    {
+      "path": "src/features/rooms/place/PlaceBackstageControls.tsx",
+      "sha256": "9274451b05497cf10d510ef7053b3ca63c7b53454a04dcd0f2ed7828f7127871"
+    },
+    {
+      "path": "src/features/rooms/place/PlaceStudioPanel.tsx",
+      "sha256": "abbd731edbf2837be40ab6e4935cfe5c71e094c636562d881e077e29fc948682"
+    },
+    {
+      "path": "src/features/rooms/place/meewavPitchCorrectionProfile.ts",
+      "sha256": "f731107885054104b4f6d5afd97719ff2836fe6eb5d5582fa7aaec8bafb36556"
+    },
+    {
+      "path": "src/features/rooms/place/placeMeeWavPitchAdapter.ts",
+      "sha256": "b10ce18393f7fd2042857a46f74aba3ac319a160894f1814614d0a5e54ae758f"
+    },
+    {
+      "path": "src/features/rooms/place/placeLocalAudioEngine.ts",
+      "sha256": "3483e63bf8b01dde4141e1fad996e8571afae212c64ad9236efb0c7b57313c97"
+    },
+    {
+      "path": "src/features/rooms/place/usePlaceLocalAudio.ts",
+      "sha256": "4a82878553cfdfdfff83679f43466698d9fd97b7dd74f9c254d30ec3a8cb5d2e"
+    },
+    {
+      "path": "src/features/rooms/place/usePlaceNativeVst3Monitor.ts",
+      "sha256": "2e82c22da78bb936f9f3525469f0beb17fcc6f69c3a6fd53602e66345bc208ba"
+    },
+    {
+      "path": "src/features/rooms/place/placeProgramLayout.repository.ts",
+      "sha256": "d75bfc2cccae84106e351054d9b68e8c71df977f51bc03df017b8179c23fcc41"
+    },
+    {
+      "path": "src/features/rooms/place/placeProgramLayout.service.ts",
+      "sha256": "5baffbdfaaaa2b57d33d7f3b755b2b2eb8fd50c1a7da66ded71abb1fb3af46ae"
+    },
+    {
+      "path": "src/features/rooms/place/usePlaceProgramLayout.ts",
+      "sha256": "7ad29ad1cc111fda3005128a820629ac664bc7a2ea0fbeafc961bb435e316b8a"
+    },
+    {
+      "path": "src/features/rooms/voting/demoPollVoting.ts",
+      "sha256": "c51d680ec2572e8a7da525a4b4332f7121b1fb05cb6987f0d521d20887267aaf"
+    },
+    {
+      "path": "src/features/rooms/tools/stageCageOpenMicGuest.ts",
+      "sha256": "98ce0728bce5f8eadb48db954c7d296887137d66f9ec71c0eba1e86fbf88bb64"
+    },
+    {
+      "path": "src/features/rooms/tools/cageGuestProjection.ts",
+      "sha256": "e8c60b6ca71941e2237d586e0924ec7b52485569fe7bc2f7a29d53a08bb9935c"
+    },
+    {
+      "path": "src/features/rooms/place/place.service.ts",
+      "sha256": "70c85ad9b113e626fa0eab5343bf9e753a909536d641dba112ab3a6d5e329928"
+    },
+    {
+      "path": "src/features/rooms/place/usePlaceRoom.ts",
+      "sha256": "456a973d9112da034197d53587122319d793f5a5372eb2b1f0a286ddbe955bbb"
+    },
+    {
+      "path": "src/features/rooms/place/usePlaceScreenShare.ts",
+      "sha256": "63c96821733959ca07446581dfb08e52b4ca3a0872aefaffbc1a0d2369d6af1a"
+    },
+    {
+      "path": "src/features/rooms/place/placeLiveKit.service.ts",
+      "sha256": "70a1cd0d9aad295715b14d97d5088b77229ab0aedf8c24779f95abcecd4b3b45"
+    },
+    {
+      "path": "src/features/rooms/place/usePlaceLiveKitRoom.ts",
+      "sha256": "86a44a7d142b0247dc6c2e726bff3fc28063dd0c5524a6ca6ce6b1ec04906b27"
+    },
+    {
+      "path": "src/features/rooms/place/usePlaceLiveCallProgramMix.ts",
+      "sha256": "e6c832e42dbc20479818e2cdefb34cbfb11d90ea3d88fd794b4519c185369a37"
+    },
+    {
+      "path": "src/features/rooms/place/usePlaceLiveCallRoomCleanup.ts",
+      "sha256": "ba45e389bb6a3ca69926549df2e79c84917e8353a2e21890fbef164938fc6678"
+    },
+    {
+      "path": "src/features/rooms/voice-correction/voiceCorrectionHeadphoneOutput.ts",
+      "sha256": "6cb13900b564a181d098374b468a9c535f1f17839922491d8499ac7ff796e121"
+    },
+    {
+      "path": "src/features/rooms/voice-correction/voiceCorrection.presets.ts",
+      "sha256": "4d11d2665c58b8a64c71ac876889c9ea126b6d03b2d355bc87f5cf0805d54721"
+    },
+    {
+      "path": "src/features/rooms/voice-correction/openDawVoiceCorrectionEngine.ts",
+      "sha256": "da0dd150a641008d4dad9da09f7427261baaa5a4a235229123133efe46494084"
+    },
+    {
+      "path": "src/features/rooms/place/placeOpenDawPitchAdapter.ts",
+      "sha256": "b7957bd69179be7f868be34d864ba6cca982379dbb8773f6bc7d957eec36018f"
+    },
+    {
+      "path": "src/features/rooms/place/PlaceRoomExperience.tsx",
+      "sha256": "2cffb91fda0ab0170be6363eb9ab4ed3ebbb442439d29981dddaff34ec6ad4fc"
+    },
+    {
+      "path": "src/features/rooms/home/roomsHome.selectors.ts",
+      "sha256": "9c7c38ed249f38a011f8d3c2a9c948c9f3a761d4f641579879e9142fc01c19e7"
+    },
+    {
+      "path": "src/features/rooms/home/roomsHome.fixtureAdapter.ts",
+      "sha256": "a5c60ad0b3898b720fdd9d0a4a3863074ec9bab1ffc3e01158bf8b3c5b203a37"
+    },
+    {
+      "path": "src/features/rooms/rooms-page.css",
+      "sha256": "8e9a437957e6e70a1707cbb34524c8f7093d2aa9bc7ee0da5f2a6e9e7746e045"
+    },
+    {
+      "path": "src/features/rooms/place/place-room.css",
+      "sha256": "a891b09f2f6eae2b1d6b5afb9dafc653c52eb656a97d77eaae1252342aed0daa"
+    },
+    {
+      "path": "src/features/rooms/place/place-room-premium.css",
+      "sha256": "09a5c2ae3c1f9ac95415292e71f093f6e8eb01f7e9280b594f8e0807153d84b4"
+    },
+    {
+      "path": "src/features/rooms/place/place-room-shell.css",
+      "sha256": "6ddd392023aca686dba9477531d1dc30225dd8e26b26231a3eb9fe54bce3dad5"
+    },
+    {
+      "path": "src/features/rooms/live-themes/place-live-theme.css",
+      "sha256": "6bb2216768bfe3580eef70e2c9b1ac96ee0eb1c90b1cb74764b4eff060ea9ede"
+    },
+    {
+      "path": "src/features/rooms/live-themes/loge-live-theme.css",
+      "sha256": "8050b92f6a5e050ba802ae0a0e247d261058712872ca988b0ab6136b0ab8c36c"
+    },
+    {
+      "path": "src/features/rooms/live-themes/wave-live-theme.css",
+      "sha256": "8df020cc3e2b219e8a2d16028012723229e3551b56eb495e3bd9d666f3a2d4e5"
+    },
+    {
+      "path": "src/features/rooms/live-themes/cage-live-theme.css",
+      "sha256": "538181c76e8a7f5d8c3ed2a25b7ea4ce8ef00b1300ae06c2b627e0aad56e2b81"
+    },
+    {
+      "path": "src/features/rooms/live-themes/classe-hifi.css",
+      "sha256": "9dbc83c189adc1591ca72e8f490c3cff4b36de778c2e0be1ccc39865a8a07f7f"
+    },
+    {
+      "path": "src/features/rooms/live-themes/classe-live-theme.css",
+      "sha256": "ed59abe200b91f8cb682c975c17c46aee3d796314ca3728d422ccfbc767864ff"
+    },
+    {
+      "path": "src/features/rooms/live-themes/scene-live-theme.css",
+      "sha256": "4b78eb1480c5ac9ad5f4e9528cd50bcabef0074329f7cb51cbd3f1d6e7ac3b43"
+    },
+    {
+      "path": "src/features/rooms/place/place-tools-wave-skin.css",
+      "sha256": "1e8d4f8af0abba9ae593f50af972857ccee83b3c298cc13062162f07e87913f3"
+    },
+    {
+      "path": "src/features/rooms/tools/panels/loge-premium-tools.css",
+      "sha256": "2df5b20e47c212ca8f498b09fa8326ab24d2ea1e3d98209ab4448c1e820adc3d"
+    },
+    {
+      "path": "src/features/rooms/place/place-studio-chassis.css",
+      "sha256": "84bd151f108decf8b2f2b40112d2406ab66adf3844cbd82bcb6e20977ec605e1"
+    },
+    {
+      "path": "src/features/rooms/place/place-studio-black-lacquer.css",
+      "sha256": "ddbfceb195263321e264a12ef93171d435b02e432496ae800cbf9a867b233d6d"
+    },
+    {
+      "path": "src/features/rooms/live-themes/classe-chat-finish.css",
+      "sha256": "194216b6fe919d30e18ae87548d8f0a84d6984e73d4ef486c26ba76fc9daeea3"
+    },
+    {
+      "path": "src/features/rooms/place/place-mixer-reference.css",
+      "sha256": "f1203380436a4ad1d9f0a0b426480f67df06c31c172326a8b36761312151c409"
+    },
+    {
+      "path": "src/features/rooms/place/place-mixer-depth.css",
+      "sha256": "8d39a598c83c76413bef5dc6c51ff8cfad4a9a8b9e60ff38740578f55c94a0e5"
+    },
+    {
+      "path": "src/features/rooms/place/place-studio-navigation.css",
+      "sha256": "4e3e40b32ff9aef0e2ad1b50c12cc7ace7a7971f2493b06ce7491f777796e9b7"
+    },
+    {
+      "path": "src/features/rooms/place/place-chat-composer-glass.css",
+      "sha256": "72f4b2fc3dcb652f2838283f09db9fb42b03b108df67cd7ad99a848a2b4a68ac"
+    },
+    {
+      "path": "src/features/rooms/place/place-chat-typography.css",
+      "sha256": "c17b40e9033f11c84ce008a21bdd582e41af9ed0d22b1460397e01c83f73dcda"
+    },
+    {
+      "path": "src/features/rooms/place/place-chat-smoked-glass.css",
+      "sha256": "f723a1dad17be6109c0e8e06397b23a8acf0b9a1679cca1212837e6bd5505c4e"
+    },
+    {
+      "path": "src/features/rooms/place/place-guest-reference.css",
+      "sha256": "14c70a0efd1e6789c64e1a3c6a0d7d4fe4718c73dd5b22e5a07da4e6fb4daf76"
+    }
+  ]
+}

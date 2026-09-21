@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module';
 import { dirname, join, resolve, relative, extname, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readFile, writeFile, mkdir, readdir, copyFile, stat } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, readdir, copyFile, stat, unlink } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { featureLoadingHtml } from './feature-loading.mjs';
@@ -16,8 +16,9 @@ const source = join(root, `app/src/main/${surface}-source`);
 const vendor = join(source, 'vendor');
 const output = join(root, `app/src/main/assets/${surface}`);
 const importing = process.argv.includes('--import-web');
+const importingViewer = surface==='rooms' && process.argv.includes('--import-viewer');
 const syncMediaOnly = process.argv.includes('--sync-media') && !importing && !process.argv.includes('--sync-assets');
-const syncAssets = importing || process.argv.includes('--sync-assets') || syncMediaOnly;
+const syncAssets = importingViewer || importing || process.argv.includes('--sync-assets') || syncMediaOnly;
 const require = createRequire(join(web, 'vendor/globe-vinyle/package.json'));
 const { build } = require('esbuild');
 const within = (base, path) => { const rel = relative(base, path); return !rel.startsWith('..') && !isAbsolute(rel); };
@@ -28,17 +29,27 @@ const result = await build({
   outdir: join(output, 'assets'), publicPath: `/${surface}/assets`, entryNames: 'main', chunkNames: '[name]-[hash]',
   nodePaths: [join(web, 'node_modules'), join(web, 'vendor/globe-vinyle/node_modules')], bundle: true, splitting: true, format: 'esm',
   target: ['chrome110'], jsx: 'automatic', minify: true, metafile: true, legalComments: 'linked',
-  define: { 'import.meta.env': JSON.stringify({ DEV: false, BASE_URL: '/', VITE_MESSAGING_DEMO_FALLBACK: false }), 'process.env.NODE_ENV': '"production"' },
+  define: { 'import.meta.env.MODE':'"production"', 'import.meta.env.VITE_OPENDAW_VOICE_CORRECTION_LAB':'"false"', 'import.meta.env': JSON.stringify({ DEV: false, BASE_URL: '/', VITE_MESSAGING_DEMO_FALLBACK: false }), 'process.env.NODE_ENV': '"production"' },
   loader: { '.png': 'file', '.svg': 'file', '.jpg': 'file', '.webp': 'file', '.mp3': 'file', '.wav': 'file' },
   plugins: [{ name: 'native-profile-adapters', setup(context) {
-    context.onResolve({ filter: /(?:AuthContext|supabaseClient|MeewavPrimaryNav)$/ }, () => ({ path: join(source, 'runtime.ts') }));
-    context.onResolve({ filter: /(?:^|\/)auth$/ }, () => ({ path: join(source, 'runtime.ts') }));
-    context.onResolve({ filter: /localAuthPreview$/ }, () => ({ path: join(source, 'localPreview.ts') }));
-    context.onResolve({ filter: /\/lib\/sessionIdentity$/ }, () => ({ path: join(source, 'runtime.ts') }));
+    if(surface==='rooms') context.onResolve({filter:/(?:^|\/)ClassStudentPreProfile(?:\.tsx)?$/},()=>({path:join(source,'AndroidViewerPreProfile.tsx')}));
+    context.onResolve({ filter: /(?:AuthContext|supabaseClient|MeewavPrimaryNav)$/ }, () => ({ path: join(root, 'app/src/main/profile-source/runtime.ts') }));
+    context.onResolve({ filter: /(?:^|\/)auth$/ }, () => ({ path: join(root, 'app/src/main/profile-source/runtime.ts') }));
+    context.onResolve({ filter: /localAuthPreview$/ }, () => ({ path: join(root, 'app/src/main/profile-source/localPreview.ts') }));
+    context.onResolve({ filter: /\/lib\/sessionIdentity$/ }, () => ({ path: join(root, 'app/src/main/profile-source/runtime.ts') }));
     context.onResolve({ filter: /^\// }, args => ({ path: args.path, external: true }));
+    if(importingViewer) context.onResolve({filter:/^\.\/viewer-web\//},args=>({path:join(web,args.path.slice('./viewer-web/'.length))}));
     if (importing) context.onResolve({ filter: /^\.\/vendor\/src\// }, args => ({ path: join(web, args.path.slice('./vendor/'.length) + '.tsx') }));
   } }],
 });
+
+// Remove obsolete generated chunks; never touch public media or source assets.
+const generatedDir=join(output,'assets');
+const emitted=new Set(Object.keys(result.metafile.outputs).map(file=>resolve(root,file)));
+for(const name of await readdir(generatedDir)) {
+ const file=resolve(generatedDir,name);
+ if(within(generatedDir,file) && /^(?:chunk-|main\.|[A-Za-z][A-Za-z0-9]*-[A-Z0-9]{8}\.(?:js|css))/.test(name) && /\.(?:js|css|txt)$/.test(name) && !emitted.has(file) && !(name.endsWith('.LEGAL.txt')&&emitted.has(file.slice(0,-10))))await unlink(file);
+}
 
 // Keep the copied Web source intact; Android layout and CTA overrides load last.
 
@@ -46,16 +57,17 @@ const result = await build({
 
 // Explicit one-time import freezes only the profile dependency graph. Future
 // builds read these copied sources, so Web changes cannot silently replace it.
-if (importing) {
+if (importing || importingViewer) {
+  const importTarget=importingViewer?join(source,"viewer-web"):vendor;
   const files = [];
   for (const input of Object.keys(result.metafile.inputs)) {
     const path = resolve(root, input);
     if ((!within(join(web, 'src'), path) && !within(join(web, 'vendor'), path)) || path.replaceAll('\\', '/').includes('/node_modules/')) continue;
-    const target = join(vendor, relative(web, path));
+    const target = join(importTarget, relative(web, path));
     await mkdir(dirname(target), { recursive: true }); await copyFile(path, target);
     files.push({ path: relative(web, path).replaceAll('\\', '/'), sha256: createHash('sha256').update(await readFile(path)).digest('hex') });
   }
-  await writeFile(join(source, 'web-provenance.json'), JSON.stringify({
+  await writeFile(join(source, importingViewer?'viewer-web-provenance.json':'web-provenance.json'), JSON.stringify({
     source: 'Meewav-Web', commit: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: web, encoding: 'utf8' }).trim(), files,
   }, null, 2) + '\n');
 }

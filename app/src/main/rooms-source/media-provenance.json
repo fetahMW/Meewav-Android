@@ -14,12 +14,212 @@
       "sha256": "bd732b1bd4d73c4b7192ebc46ffe4c20d29d56edbe7175a2a9bd8e1319900843"
     },
     {
+      "path": "audio/meewav-pitch-correction.worklet.js",
+      "sha256": "20c0caaaf33c741547bde47b6a99a81afd97158f62f8033e13f18ee55631eebe"
+    },
+    {
+      "path": "audio/pads/air-horn-trimmed.wav",
+      "sha256": "ccb1c462d6050aa2e9d93d8eb06b20192373b4b84649b145f337dac5db35ed9b"
+    },
+    {
+      "path": "audio/pads/applaudissements.m4a",
+      "sha256": "2d0a1f875ae5fc4a57e66e4d58b800d6950ffc36078f0740b7403d7aeba78cae"
+    },
+    {
+      "path": "audio/pads/countdown-10-seconds.wav",
+      "sha256": "03633dcffcac92c26dbd869a4ccf0b71fa78d200201856b3db38748ef1e1a288"
+    },
+    {
+      "path": "audio/pads/heartbeat.wav",
+      "sha256": "dab8b693084e62c8009f74e140210d7ce309115ea3bb4cece95cf137dc9c3457"
+    },
+    {
+      "path": "audio/pads/huees-du-public.mp3",
+      "sha256": "3fcc256f4a0018b872120e91e94fb64251379e0fe8b4b78a9da25de89fc8a4b4"
+    },
+    {
+      "path": "audio/pads/mixkit-drum-roll-566.wav",
+      "sha256": "906a3296a474d6306c073e9083f92f5bc1d245b0ff18fb828a9ce58aa3624015"
+    },
+    {
+      "path": "audio/pads/THIRD_PARTY_NOTICES.md",
+      "sha256": "ab1edbf2faa42acea11479520636102ac471531d03c0ac071b6b54eb2bd061fe"
+    },
+    {
+      "path": "audio/rooms/twists/air-horn-trimmed.wav",
+      "sha256": "ccb1c462d6050aa2e9d93d8eb06b20192373b4b84649b145f337dac5db35ed9b"
+    },
+    {
+      "path": "audio/rooms/twists/applaudissements.m4a",
+      "sha256": "2d0a1f875ae5fc4a57e66e4d58b800d6950ffc36078f0740b7403d7aeba78cae"
+    },
+    {
+      "path": "audio/rooms/twists/countdown-10-seconds.wav",
+      "sha256": "b0da36fdea16e6ac3e959ff7c07dc13001fae327cba62a843ce7c16287f111ed"
+    },
+    {
+      "path": "audio/rooms/twists/heartbeat.wav",
+      "sha256": "dab8b693084e62c8009f74e140210d7ce309115ea3bb4cece95cf137dc9c3457"
+    },
+    {
+      "path": "audio/rooms/twists/huees-du-public.mp3",
+      "sha256": "3fcc256f4a0018b872120e91e94fb64251379e0fe8b4b78a9da25de89fc8a4b4"
+    },
+    {
+      "path": "audio/rooms/twists/mixkit-drum-roll-566.wav",
+      "sha256": "906a3296a474d6306c073e9083f92f5bc1d245b0ff18fb828a9ce58aa3624015"
+    },
+    {
+      "path": "audio/rooms/wave-demo/acapella-never-let-go.mp3",
+      "sha256": "3f9cc16120634fd82a6f0bfb0375eed7f9ff936e50b8ea35fc53942d7c6367f1"
+    },
+    {
+      "path": "audio/rooms/wave-demo/bass-808-reseau.mp3",
+      "sha256": "80316fc97afc115998ab3e3846ac24e2084cac5a5a7fd888cce1b51b0b93fec5"
+    },
+    {
+      "path": "audio/rooms/wave-demo/bass-deep-movement.mp3",
+      "sha256": "1c4c1838121a31bcfbddfadea7aed43bfecd1226cb5bea65dc80f204c0c69db2"
+    },
+    {
+      "path": "audio/rooms/wave-demo/drums-groove-foundation.mp3",
+      "sha256": "272bd68c098d3d320009d5737fb8a9e1c361f2a03ee75bf3cb3dca65f52531cc"
+    },
+    {
+      "path": "audio/rooms/wave-demo/drums-shaker-loop.mp3",
+      "sha256": "aa3351d93ef58d7405e87ba7ed68cb0dcc8acb5ef72a97dcd0f5ef3043056ccf"
+    },
+    {
+      "path": "audio/rooms/wave-demo/melody-ethereal-keys.mp3",
+      "sha256": "4694f57a5a450380335d9a6de548f2a5f223f6120464590f65c4ca7df4ba8e76"
+    },
+    {
+      "path": "audio/rooms/wave-demo/melody-night-drive.mp3",
+      "sha256": "da9be3c88e8f4356e91743163ef044b720aab4f34b94280e0e8a63dd7fc7cf11"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Afro_100BPM_A_minor/Kit_OneShots/Afro_Clap.wav",
+      "sha256": "e4fca9fb32437cd58ae7ea7ec7cc0b166cb580e0329aa2d4b4911fe87faea825"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Afro_100BPM_A_minor/Kit_OneShots/Afro_Hat.wav",
+      "sha256": "552d0bbd355cbd8e3fb4dac1ce01724ee17803e247dccf141f3d0a12bc412171"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Afro_100BPM_A_minor/Kit_OneShots/Afro_Kick.wav",
+      "sha256": "db1a5d570247e9cb6a8126bbde210906f5057363576aba143bca003d9bd5ac41"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Afro_100BPM_A_minor/Kit_OneShots/Afro_Perc.wav",
+      "sha256": "980dd7df00c04974a36cef6f3fc297459f62ffebfe2c45f11f0e2133b973ac98"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Afro_100BPM_A_minor/Kit_OneShots/Afro_Snare.wav",
+      "sha256": "36dad5acabe2c28eaf9bb8ae1802a5b23f7c7e1284bd1826d7dd4c93597674e1"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Afro_100BPM_A_minor/Loops_8bars/Afro_Acapella_Test_A_100BPM_8bars.wav",
+      "sha256": "942d94ef9385f5eefca8487e0d250dce68c37791f7320176492e364e9c99f5e5"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Afro_100BPM_A_minor/Loops_8bars/Afro_Bass_A_100BPM_8bars.wav",
+      "sha256": "1f1836de35c4aec229c8e6ff443cacddce973f1730e86dcfe4e2ff543f8e42b8"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Afro_100BPM_A_minor/Loops_8bars/Afro_Bass_B_100BPM_8bars.wav",
+      "sha256": "f14400dd2eeffe34cd61dab2dffebfc679a12fa5c312069f9b4ffadddb3891aa"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Afro_100BPM_A_minor/Loops_8bars/Afro_Drums_A_100BPM_8bars.wav",
+      "sha256": "8400e3137f2c573ef8ca40d2ebae1f524d8f07e79f7d30ef243ee0cca7b5f918"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Afro_100BPM_A_minor/Loops_8bars/Afro_Drums_B_100BPM_8bars.wav",
+      "sha256": "3736c09103af40c45549e007a164d2d997600cfa0f6822696f888700dcf6da67"
+    },
+    {
       "path": "audio/rooms/wave-test-pack/Afro_100BPM_A_minor/Loops_8bars/Afro_FullMix_A_100BPM_8bars.wav",
       "sha256": "86bac70c76953bb2c01a035e965296e38e8195fa5de0be6dfa217f40403ba58e"
     },
     {
+      "path": "audio/rooms/wave-test-pack/Afro_100BPM_A_minor/Loops_8bars/Afro_Melody_A_100BPM_8bars.wav",
+      "sha256": "2f8c7b69afe2782c0ae314fb4f5b5223254e6231ad5b0996257244ff2a9f0d99"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Afro_100BPM_A_minor/Loops_8bars/Afro_Melody_B_100BPM_8bars.wav",
+      "sha256": "7ce97e1846115d37d7fa92f8f140a1966dfeb61dd67e4884b2d66e0dbcf3baa2"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Drill_142BPM_F_minor/Kit_OneShots/Drill_Clap.wav",
+      "sha256": "a91a9dd7e5fdba56709fbd420559c64eb6b8b76f213ec5af60d8449d854dd589"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Drill_142BPM_F_minor/Kit_OneShots/Drill_Hat.wav",
+      "sha256": "07d9aa2374c5fe04a368e2e1dca5a5be8d0d2c0e0398fbd27393a95127e87be8"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Drill_142BPM_F_minor/Kit_OneShots/Drill_Kick.wav",
+      "sha256": "61aaee42006a7bb363e52adbadf689aa4341635e4109a1a780e618d3749af2c9"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Drill_142BPM_F_minor/Kit_OneShots/Drill_Perc.wav",
+      "sha256": "980dd7df00c04974a36cef6f3fc297459f62ffebfe2c45f11f0e2133b973ac98"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Drill_142BPM_F_minor/Kit_OneShots/Drill_Snare.wav",
+      "sha256": "8f7e5c610a2113b242ef7e763f0cfeb37db54b0d857071b050f84f441ee1d3af"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Drill_142BPM_F_minor/Loops_8bars/Drill_Acapella_Test_A_142BPM_8bars.wav",
+      "sha256": "61c4f767ca3a0b5b0149d9cd8a0da95dbffebbb7faa22ab11dd29cb80fa3adbc"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Drill_142BPM_F_minor/Loops_8bars/Drill_Bass_A_142BPM_8bars.wav",
+      "sha256": "28cbe1960bcc80a0f7d6ffca34d7dcfaf7f83bf26da2e43105230282cf1e1ba5"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Drill_142BPM_F_minor/Loops_8bars/Drill_Bass_B_142BPM_8bars.wav",
+      "sha256": "5ca01b2d887f29211e9efefc3a69710adb52bbed3a6683105b63abaf19f6fd9d"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Drill_142BPM_F_minor/Loops_8bars/Drill_Drums_A_142BPM_8bars.wav",
+      "sha256": "e5e1aa7ff92335e02bd7790f1f19794afdc03e849e02af8d44b1b8a706964cec"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Drill_142BPM_F_minor/Loops_8bars/Drill_Drums_B_142BPM_8bars.wav",
+      "sha256": "80fec2d62619fb0d5ebffc6c88856916ddb45503a4d4d20e967d898ff99d75ad"
+    },
+    {
       "path": "audio/rooms/wave-test-pack/Drill_142BPM_F_minor/Loops_8bars/Drill_FullMix_A_142BPM_8bars.wav",
       "sha256": "9d9e12d02cf269494fbca88a35e421837185157e074b761e5195d3466746edee"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Drill_142BPM_F_minor/Loops_8bars/Drill_Melody_A_142BPM_8bars.wav",
+      "sha256": "8851f063a2693b4eb5c3c4232300c931add5e24c49738e9e9affe4a4c5144bdc"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Drill_142BPM_F_minor/Loops_8bars/Drill_Melody_B_142BPM_8bars.wav",
+      "sha256": "b64bc295a5b056dcf592c2ad0faa8f6d067307a0313e2c1848e71276aae9a023"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/House_124BPM_A_minor/Kit_OneShots/House_Clap.wav",
+      "sha256": "997bcfc27bdfef91ad0222bd35a5e177253bb0b90945f0f7754da5c3a0b3a7b1"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/House_124BPM_A_minor/Kit_OneShots/House_Hat.wav",
+      "sha256": "69172bd4396a19d0e1883c819d0d753b96858e940e93e382789b11bc2c1e956a"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/House_124BPM_A_minor/Kit_OneShots/House_Kick.wav",
+      "sha256": "0453f9a53e3aa786c28baab5b7e32a38f21df69c52d99334e8b6e97e1ef45f40"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/House_124BPM_A_minor/Kit_OneShots/House_Perc.wav",
+      "sha256": "9a574c73dfb729ce30c16603ccf4d4a47f6adb66e6c64b3e8c814ea0bf01c647"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/House_124BPM_A_minor/Kit_OneShots/House_Snare.wav",
+      "sha256": "6173f0b44bfa88ec18a05ffc4b2565706776abf03164a56136dfcf91dfd2a8ee"
     },
     {
       "path": "audio/rooms/wave-test-pack/House_124BPM_A_minor/Loops_8bars/House_Acapella_Test_A_124BPM_8bars.wav",
@@ -54,12 +254,272 @@
       "sha256": "118a60b3fba458f2ca09300325196658f5faeb99b941358724139bb8d5a0ba73"
     },
     {
+      "path": "audio/rooms/wave-test-pack/Length_Validation/Afro_FullMix_100BPM_16bars.wav",
+      "sha256": "5d2903eef2aa0d1f7838d6a771153b89fc94119d4c793aa129cdd570e588e07b"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Length_Validation/Afro_FullMix_100BPM_4bars.wav",
+      "sha256": "2a5f445f0fde2f7ea804d247a9fe186e1f8201218df51d2c82f1442a631fab8c"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Length_Validation/Afro_FullMix_100BPM_8bars.wav",
+      "sha256": "700f49437bf35fee8d3264c89bbce7ca7e313b144a9ddcf13e1726a43a7d1c53"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/manifest.csv",
+      "sha256": "31351513ae4ba4a5f62d8c915980a5cc9d86fac363cae2841a0780aea2967cd1"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/manifest.json",
+      "sha256": "3431b5a7fda8cbe804cc19f5de5c7a9cd658330b75940a2a6afb25c7b86af5e8"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/README.txt",
+      "sha256": "fdb81be804d591acb910622055c7cbe2edfa3e16c4f2c784deda784941d446db"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Trap_150BPM_C_minor/Kit_OneShots/Trap_Clap.wav",
+      "sha256": "934994cd65eb8bce8f62b6f15b8097c939976d6c8ccfde2fee1917142ed72ff4"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Trap_150BPM_C_minor/Kit_OneShots/Trap_Hat.wav",
+      "sha256": "1489d91af3aac19467cdcf8bda7d184583c06925bd65392c8b615ad4c3d6ca26"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Trap_150BPM_C_minor/Kit_OneShots/Trap_Kick.wav",
+      "sha256": "bb9ad37e67894984261cf2f5eeffdaedf4044f9174939f4cca1761b00c4ae9bb"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Trap_150BPM_C_minor/Kit_OneShots/Trap_Perc.wav",
+      "sha256": "980dd7df00c04974a36cef6f3fc297459f62ffebfe2c45f11f0e2133b973ac98"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Trap_150BPM_C_minor/Kit_OneShots/Trap_Snare.wav",
+      "sha256": "36727a97cecfdaee616f25a5845a6c1e315bbc28d3c6290416252b68fe704d2d"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Trap_150BPM_C_minor/Loops_8bars/Trap_Acapella_Test_A_150BPM_8bars.wav",
+      "sha256": "3812b14af1bbb7e1d02a4ce92d43d9688a1d5958238ad9189b2bf44e71a47dac"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Trap_150BPM_C_minor/Loops_8bars/Trap_Bass_A_150BPM_8bars.wav",
+      "sha256": "2739c0aa768fee2cc76a05735eed65a8d716b54c0db1560cdb0996286a2f82c3"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Trap_150BPM_C_minor/Loops_8bars/Trap_Bass_B_150BPM_8bars.wav",
+      "sha256": "0333db7c7f917f1a6e0c5b1e4ee98fc128edab2a59e5cbbf6d3ed6d20bd15cd3"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Trap_150BPM_C_minor/Loops_8bars/Trap_Drums_A_150BPM_8bars.wav",
+      "sha256": "2c3db4f170fc286da42abe428c3988ce5964f720faf44acaf893dd2f35b171c7"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Trap_150BPM_C_minor/Loops_8bars/Trap_Drums_B_150BPM_8bars.wav",
+      "sha256": "bb3beb950e0c7e103a666b445e64e36c716cd9b90557945ccbf86df572b44323"
+    },
+    {
       "path": "audio/rooms/wave-test-pack/Trap_150BPM_C_minor/Loops_8bars/Trap_FullMix_A_150BPM_8bars.wav",
       "sha256": "c368c0dc2e2422ca21b8f1b6c455560abe015543d303e0e2ca0edcc1f9f01b46"
     },
     {
+      "path": "audio/rooms/wave-test-pack/Trap_150BPM_C_minor/Loops_8bars/Trap_Melody_A_150BPM_8bars.wav",
+      "sha256": "c619d82c5a9a96c5b008014cd229de9160f960abb24d24befa3e300613f64b7c"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Trap_150BPM_C_minor/Loops_8bars/Trap_Melody_B_150BPM_8bars.wav",
+      "sha256": "802df2a0b014c901d33583e52bb3eac8e73a2e0bcaf79d1fd7c32da743dc95e0"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Zouk_92BPM_G_minor/Kit_OneShots/Zouk_Clap.wav",
+      "sha256": "f1df3ff9906ac4b6511b31d60a4725ef0a244472a36fcf0ab5b85018c196f32c"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Zouk_92BPM_G_minor/Kit_OneShots/Zouk_Hat.wav",
+      "sha256": "add36c4a167d67dba01a53c48be53c646e4a6e0868c3e7899c8c0e41067884bc"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Zouk_92BPM_G_minor/Kit_OneShots/Zouk_Kick.wav",
+      "sha256": "91519ea61279d1793f2d4a8c1b07b98e4f7e26685940a03e5595706b6891ad11"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Zouk_92BPM_G_minor/Kit_OneShots/Zouk_Perc.wav",
+      "sha256": "980dd7df00c04974a36cef6f3fc297459f62ffebfe2c45f11f0e2133b973ac98"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Zouk_92BPM_G_minor/Kit_OneShots/Zouk_Snare.wav",
+      "sha256": "086d6de78fd9dbe91db3d3f37315a13e898890d8873d8ce3e769897cd21853c1"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Zouk_92BPM_G_minor/Loops_8bars/Zouk_Acapella_Test_A_92BPM_8bars.wav",
+      "sha256": "70778794ce920f92e808dff95b8c6bf53d4146f00d8737404db41bc8f8e6c9e4"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Zouk_92BPM_G_minor/Loops_8bars/Zouk_Bass_A_92BPM_8bars.wav",
+      "sha256": "b507220fba946621d5841337940637ebaf913b5d11464ac773b52fafa0fa9040"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Zouk_92BPM_G_minor/Loops_8bars/Zouk_Bass_B_92BPM_8bars.wav",
+      "sha256": "a62a7e364dc33e0422eb8175050409b5860ddac4cbbe0e27dc1ee5f3a1ae7aac"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Zouk_92BPM_G_minor/Loops_8bars/Zouk_Drums_A_92BPM_8bars.wav",
+      "sha256": "a0ffa91c807a236b9c649578cf73b7e2d5ed2b6d1d6f0b9159e459be82e88ff7"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Zouk_92BPM_G_minor/Loops_8bars/Zouk_Drums_B_92BPM_8bars.wav",
+      "sha256": "d0d9507a3d6ce5a3b0282bdf1c5a4ed8c078a623c7ea8064cb17fd39821c1b2a"
+    },
+    {
       "path": "audio/rooms/wave-test-pack/Zouk_92BPM_G_minor/Loops_8bars/Zouk_FullMix_A_92BPM_8bars.wav",
       "sha256": "6bf5025c87369b693edc6b52d123f867cd3eab07b587843c91fec296cca6ce09"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Zouk_92BPM_G_minor/Loops_8bars/Zouk_Melody_A_92BPM_8bars.wav",
+      "sha256": "052783c7d6d05c1c33235a03950b03233ac6a65c6afe5e7e6d7861a78fc567c5"
+    },
+    {
+      "path": "audio/rooms/wave-test-pack/Zouk_92BPM_G_minor/Loops_8bars/Zouk_Melody_B_92BPM_8bars.wav",
+      "sha256": "a130a579ea2483f795999d02245ff3b2e00aeb8963b15a78223e2c67e01d15a8"
+    },
+    {
+      "path": "audio/wave/base-full-mix.m4a",
+      "sha256": "e1f715d7dc7c15b4335b48f67d0ac286e6320e05676178eb6893aebcd87aed87"
+    },
+    {
+      "path": "audio/wave/compositions/lueur-nordique-preview.m4a",
+      "sha256": "3341cbc7138b373fa6e998768aa3e0963d8eca022fb738182ff305e801b21dff"
+    },
+    {
+      "path": "audio/wave/compositions/nuit-violette-preview.m4a",
+      "sha256": "d82db9662f8f752d243cae9f169672608ce8d606ef405a1dd51b512f11fca5ef"
+    },
+    {
+      "path": "audio/wave/inbox/celtic-viking.m4a",
+      "sha256": "6e50f79d53cfa285771f72da13e83a053b912612aaf924c88c97157e87ace159"
+    },
+    {
+      "path": "audio/wave/inbox/champion-drums.m4a",
+      "sha256": "64ea2383735e2f96cd24995984a48d1c9098fea33f24947a87ab0d41a7b32918"
+    },
+    {
+      "path": "audio/wave/inbox/chillpop-beat.m4a",
+      "sha256": "9d0ee35bf60635a65e44d7618694d994ef7d5bcb62ef69c827edb04b42ccdba5"
+    },
+    {
+      "path": "audio/wave/inbox/excuse.m4a",
+      "sha256": "91ec9b5fa6e2a83cfc0c590f6e931e615f1de5ffb7c64176639ee302dc556824"
+    },
+    {
+      "path": "audio/wave/inbox/haytr-drums.m4a",
+      "sha256": "5ed8a88bf69de283ca3e202176658a04e9badb4c20399175f940c39b3daa193d"
+    },
+    {
+      "path": "audio/wave/inbox/host-bass-a.m4a",
+      "sha256": "db76f1b4d1baae8d553c58fe95b9e0cf713bee3e2ad678121e9ea6c29a0b1bd1"
+    },
+    {
+      "path": "audio/wave/inbox/i-dont-know.m4a",
+      "sha256": "5f330fbc3515b332567e7ff573284492a8bbfb2ed3734ffeea6d8307ee1c732e"
+    },
+    {
+      "path": "audio/wave/inbox/i-just-do-me.mp3",
+      "sha256": "3f9cc16120634fd82a6f0bfb0375eed7f9ff936e50b8ea35fc53942d7c6367f1"
+    },
+    {
+      "path": "audio/wave/inbox/in-the-game.m4a",
+      "sha256": "e5804bc55cd8d0b53747c49b83e6c6dccf6a8728c2393df83c20db369aeb7109"
+    },
+    {
+      "path": "audio/wave/inbox/monzder-drums.m4a",
+      "sha256": "45b2c4a8eb59e5bc36b2497d60fdafbea2ac1d0461345074f08ae6e410cf9c9e"
+    },
+    {
+      "path": "audio/wave/inbox/pad-et-flute.m4a",
+      "sha256": "60817fd7f238fe23a74348b9bf66c9b003a5ff76ffe582f9d160c9cbdd6099a3"
+    },
+    {
+      "path": "audio/wave/inbox/pad-glitch.m4a",
+      "sha256": "ec9955f5a2f46b83532282f52f469ae26c91f92a3d02058eae59567a1cc95318"
+    },
+    {
+      "path": "audio/wave/inbox/percussion.m4a",
+      "sha256": "42f2515750aa987732a5587d38e01ef3296e2b91518920d8c4378c5886e89c6c"
+    },
+    {
+      "path": "audio/wave/inbox/pulse-cyber.m4a",
+      "sha256": "808159ff3c0bd378b3d99d53f9d04f84b68b8b7d541fb191bbfb3a4dcd97cdd9"
+    },
+    {
+      "path": "audio/wave/inbox/riff-taiga.m4a",
+      "sha256": "d527b2ab653780351d80389fcd3d278ca658b4af8412a219c2358f4bfd3afa16"
+    },
+    {
+      "path": "audio/wave/inbox/sati-drums-808.m4a",
+      "sha256": "c79c208e9c93ec3f7b59562e0f89d1471486f3552c49ed6ef2a1deda33a99e45"
+    },
+    {
+      "path": "audio/wave/inbox/stomper-love.m4a",
+      "sha256": "7a81baaee4bd3dfb30c24486771f23a8ff877c19d7843e281fdb8010289209fa"
+    },
+    {
+      "path": "audio/wave/inbox/top-loops-iii.m4a",
+      "sha256": "0002d6a97317c0896e604c4e59f26b3f411d42579c364e6aab38062680e71175"
+    },
+    {
+      "path": "audio/wave/inbox/trap-hip-hop.m4a",
+      "sha256": "bea80e2857f83d0a3640e36b9e5f211845476347d9f741e513db4a341f35fd34"
+    },
+    {
+      "path": "audio/wave/inbox/valse-romantique.m4a",
+      "sha256": "80879a9f28d2581c6d02dd469dfbede6d0ae926131628169295823e9797f6ae9"
+    },
+    {
+      "path": "audio/wave/loops/accord_piano.m4a",
+      "sha256": "fa72cd8d20bf8ccdc5f508851bfe0eb79f76240ecd8090a39b7de96002d9a54d"
+    },
+    {
+      "path": "audio/wave/loops/bruit_fx.m4a",
+      "sha256": "86de4c14b10936873f9ab7020a356053fc3aff77044b772c8ca94726906f145a"
+    },
+    {
+      "path": "audio/wave/loops/clap_snare.m4a",
+      "sha256": "e76b134d3fd2cd557a1c4ec99c1cfab4b443db1e0eb67d4992140d1628b89755"
+    },
+    {
+      "path": "audio/wave/loops/hihats.m4a",
+      "sha256": "dbdfac9f0431efcf9134886461d38ca74bc81e5ecc0ed118dbffd8e416e04d2c"
+    },
+    {
+      "path": "audio/wave/loops/kick.m4a",
+      "sha256": "2dc1c55e1a169fa827f30d144e39b3c762964cf06fc6183a7a8849f522ce3100"
+    },
+    {
+      "path": "audio/wave/loops/melo_2.m4a",
+      "sha256": "699431d5d019430e8f525c7ddc0837cffced54a88470d506e63d5a840026ff87"
+    },
+    {
+      "path": "audio/wave/loops/melo_arpege.m4a",
+      "sha256": "5dca2fc12faac6be7ae97b8726452e63c2f24aed8f761874eb56d4b83fba015a"
+    },
+    {
+      "path": "audio/wave/loops/sub_bass.m4a",
+      "sha256": "fb87f7a84a194598168eba35dfd8fdf776a540a3720420d0a8b5e39a7eefa1c4"
+    },
+    {
+      "path": "audio/wave/master_final.m4a",
+      "sha256": "4625ee469c3cd0f3a1209f6321e4ae9329dd4d74cdeb77ba2478fb5e78cd1bf5"
+    },
+    {
+      "path": "audio/wave/sfx/airhorn.m4a",
+      "sha256": "a6838322636b70bf330943e359f167ad8799abbd1bfe4f9af30e3aedabaffb6d"
+    },
+    {
+      "path": "audio/wave/sfx/are-you-ready.aac",
+      "sha256": "42b02e1c565521fd35f7456d71360d1ae7fad371a16590c3b948a759370974c3"
+    },
+    {
+      "path": "audio/wave/sfx/pipe.aac",
+      "sha256": "c24cec3e90b93dbc2c949aa29126868aba795e4468b177c42f13e84601d11aba"
     },
     {
       "path": "avatars/accordeoniste.png",
@@ -182,8 +642,80 @@
       "sha256": "8198bcaf55d5106dd279fd47dcbd16356aaeb0b5f036ddd2ed21965ee93468bf"
     },
     {
+      "path": "avatars/wave/Drill_X.png",
+      "sha256": "4981a97db3d239f386a2dc5c7720a50a47664d6ab7ea56b8cc2ef4b063ce1e5f"
+    },
+    {
+      "path": "avatars/wave/Gold_Teeth.png",
+      "sha256": "77e87633bdb84a7890429664a0f4241e7766c0f339ea81caf856a46ec54e1de1"
+    },
+    {
+      "path": "avatars/wave/host.jpg",
+      "sha256": "082272d30c1d3fb0ee4a4f3161fb2051837cb28808c8543aa2f798db8fdc95cd"
+    },
+    {
+      "path": "avatars/wave/JadeR.jpg",
+      "sha256": "85d63fd5a0650386588a37cad76bc50b2a4b010a8be8d95c8a1d7fc07fedfc6a"
+    },
+    {
+      "path": "avatars/wave/JINX.png",
+      "sha256": "f5ee17fbfd7d6bf3f852c75b2ea889ccc7f5ed14c1132bc262f54598fb8d9c34"
+    },
+    {
+      "path": "avatars/wave/Killa_M.png",
+      "sha256": "e0f612774435b3ae7ccfb42c8534f3b7075d65dcee48a7cdbca4a444d8ce8196"
+    },
+    {
+      "path": "avatars/wave/LunaV.jpg",
+      "sha256": "2956135b760cdb6c36e7f77308b16f510412e607c9a8a58f6393a2feaa98b867"
+    },
+    {
+      "path": "avatars/wave/Mama_Soul.png",
+      "sha256": "a64b135bfb290f72b1c7753677fd33af08102ed5ae7a7d79f74e85c5083503f6"
+    },
+    {
+      "path": "avatars/wave/MayaKeys.jpg",
+      "sha256": "aa0432eb5fbc913d8333bbbd90d82715512b07c315351f8f6e64c95fc2d5d958"
+    },
+    {
+      "path": "avatars/wave/NeraMix.jpg",
+      "sha256": "2ed603534f72e546a9166dae1a04b577a5b66167466bd6ce0f2286f75ef7e58a"
+    },
+    {
+      "path": "avatars/wave/NITRO.png",
+      "sha256": "57716caf698d7bc38c971ce86fb1ddf34f02fbbbd76ac7a3bc0a67f95efb18e9"
+    },
+    {
+      "path": "avatars/wave/NoeKit.jpg",
+      "sha256": "f60e806b78b0df60102b6ed2cd8393b7ad1638796f8ca5dc77491c0a84a6301d"
+    },
+    {
+      "path": "avatars/wave/NoxPrime.jpg",
+      "sha256": "7a856f016be9678ad3994863d04b258d75a1097e75fcfd8cba805bb0630886e5"
+    },
+    {
+      "path": "avatars/wave/SamiLow.jpg",
+      "sha256": "8c297e7f4341547b32a1eb9dcf50aef5a974e8b2ae6cd8fd11f7539d5ad8c492"
+    },
+    {
+      "path": "avatars/wave/Solis.jpg",
+      "sha256": "e33e34ccae4ec92771f3aa8b2cf95ea106e39a961902c386c5d9ab697a676103"
+    },
+    {
+      "path": "avatars/wave/TITAN_RAP.png",
+      "sha256": "3d1d94b29f942c22ebf622e78998dbe64208488975cf62abd632df51f7fcbf37"
+    },
+    {
+      "path": "avatars/wave/WOLFE.png",
+      "sha256": "b7c1d2c9a8d944f2b3f629f926f47bee6d842849776c227226fc5b0afd74590a"
+    },
+    {
       "path": "fonts/inter.ttf",
       "sha256": "29160a80ff49ddcab2c97711247e08b1fab27a484a329ce8b813d820dc559031"
+    },
+    {
+      "path": "images/cage/rap-paris-marseille.png",
+      "sha256": "8ec06d3a6bbb455234417e7314a1752f525e1d067bc77259d9805fda084672cf"
     },
     {
       "path": "images/market/adam-a7x-used.jpg",
@@ -806,6 +1338,50 @@
       "sha256": "cb34db5bda57bb92910c4df819dcd0a314362b35628c31b8a73fe6876c57aeee"
     },
     {
+      "path": "images/messaging/avatars/avatar_1.png",
+      "sha256": "b297bd02a6f1d48a0687a0b1fd445600133f08b1e44a38864c77da38cc147442"
+    },
+    {
+      "path": "images/messaging/avatars/avatar_2.png",
+      "sha256": "477e4675131b102d6846d7f69e46602d08561365f60a291dc2899969d9dd66c2"
+    },
+    {
+      "path": "images/messaging/avatars/avatar_3.png",
+      "sha256": "889d7ff011d8d1458751f88faa9985f67c89ee0aa59197e03755840794068e2e"
+    },
+    {
+      "path": "images/messaging/avatars/avatar_4.png",
+      "sha256": "51a65a3b10cbba3686e66cddac171e8872a06b269676adc186c4998ecc82a986"
+    },
+    {
+      "path": "images/messaging/avatars/avatar_5.png",
+      "sha256": "c0198787d6bc28e7a5b55e9402c0144f9ff0bb869bdb5fe445849f882a486137"
+    },
+    {
+      "path": "images/messaging/avatars/avatar_6.png",
+      "sha256": "c0097b6ea622701c75ae48aac59acb1d35b6c38612e80aa9e64fdea06261e0b9"
+    },
+    {
+      "path": "images/messaging/avatars/avatar_7.png",
+      "sha256": "6286ae91508434f626802f2ca0b4f56b38bc4705603680f7b831e2181142b132"
+    },
+    {
+      "path": "images/messaging/groups/group_1.png",
+      "sha256": "0e3a8631cf8743251231c64e3a5f0ba55be56aaa1e4730cb4d542b58fd047fbe"
+    },
+    {
+      "path": "images/messaging/groups/group_2.png",
+      "sha256": "e8fff3860d84a065d2dc634c1bafd0e9802da1a0cac319845a9e0b2fc83689e1"
+    },
+    {
+      "path": "images/messaging/groups/group_3.png",
+      "sha256": "4e02221bd7bd37975b92d9e45a92610bd6bc7fcedaf55f2c11ea7e711de4842b"
+    },
+    {
+      "path": "images/messaging/groups/group_5.png",
+      "sha256": "fdbb949fa1c809ab941e731eaa29903554e02a4f94928642c31df8befbe31c57"
+    },
+    {
       "path": "images/preprofile/portraits/profile-01.webp",
       "sha256": "b805363350fa01239b9e7ad0bdace8bb2f9327de277425e24af7675ac79cd5dd"
     },
@@ -956,6 +1532,22 @@
     {
       "path": "images/preprofile/portraits/profile-38.webp",
       "sha256": "af07c092a5df4a10bfdcf3953e08b5b36c2e30d230bea35c0f4c08733452c09c"
+    },
+    {
+      "path": "images/rooms/place/meewav-music-reactions.png",
+      "sha256": "4aff1fc9659b603668b5d07497f5c827b6bcf71a7d1df823936004ac939fca95"
+    },
+    {
+      "path": "images/rooms/place/money-bag.svg",
+      "sha256": "eb69569d106b0c53cd1125341a09a98627fefabcbdfb17b0dce4e69345cbb7d6"
+    },
+    {
+      "path": "images/rooms/rooms-acoustic-wall-real-v2-8k.webp",
+      "sha256": "9baf36012ea9a6c0dfddeb0c79d583719c5b86679694cdb50608925a145ce375"
+    },
+    {
+      "path": "images/rooms/rooms-acoustic-wall-real-v2-web.webp",
+      "sha256": "f39b98c4cdaf18c4f9bff10f35fd7b9b08efec8d799f59ab2399a8c72588ff59"
     },
     {
       "path": "images/rooms/rooms-home-acoustic-2026-06-08.png",
@@ -2066,8 +2658,24 @@
       "sha256": "ba9bb4ccce8a06e868024d21fa459467c508e5ff83cce3eeabda867401daa499"
     },
     {
+      "path": "images/tremplin/artists/generated/ai-electro-duo-north-static.webp",
+      "sha256": "4b88a7c7e9d28dc1580bc318ea8fc627f26df8dbbf09a3e78bc78c59d037b951"
+    },
+    {
+      "path": "images/tremplin/artists/generated/ai-experimental-voice-solis-miro.webp",
+      "sha256": "d1f096502f31f18384ccc55a3d6893d250761562b1014041808ffbc092d1b520"
+    },
+    {
       "path": "images/tremplin/artists/generated/ai-film-composer-nabil-orsen.webp",
       "sha256": "73b1671be21527acf0e5d8fcf080ee35f77e6f65d382fb0e982200c1df4ba94c"
+    },
+    {
+      "path": "images/tremplin/artists/generated/ai-futuristic-pop-singer-aren-veil.webp",
+      "sha256": "4629a619e739310f5bfebe8c3f649e4a6f2d6a076161ffdbe2cabdaa13e34446"
+    },
+    {
+      "path": "images/tremplin/artists/generated/ai-modern-jazz-artist-elior-saint.webp",
+      "sha256": "b0382034251e40edcd5bb0b82dc74af4027f8650c49ef064f6cd381a91bad771"
     },
     {
       "path": "images/tremplin/artists/generated/ai-rap-artist-samra-flux.webp",
@@ -2078,12 +2686,28 @@
       "sha256": "0447615cb42b0b55c1518167b8f73210f1f98716c983ee97da233921e88af433"
     },
     {
+      "path": "images/tremplin/artists/generated/ai-techno-producer-vesper-k.webp",
+      "sha256": "e82f908f480acaf9a6ed7b7da4e5633b2d59f4c74b48a024417a837c4740ad04"
+    },
+    {
       "path": "images/tremplin/artists/generated/aicha-sol-coach-vocal-gospel-nimes-v1.webp",
       "sha256": "1d5ba27729a01ac6a5b2cee1771e92c0768a09b4b1dd38506f3ec5462d51575a"
     },
     {
       "path": "images/tremplin/artists/generated/aina-sol-dj-productrice-afro-house-bordeaux-v1.webp",
       "sha256": "a44b2df0bf6816be1141527094c09682a511ae5cd3d8f5f79cc0314d5a00c8de"
+    },
+    {
+      "path": "images/tremplin/artists/generated/ana-vela-electronic-tango-bandoneon-pau-v1.webp",
+      "sha256": "387f3e5f7b47a5111753bca0c59c8ca052ac7e807732558835f80fbd9383d8d0"
+    },
+    {
+      "path": "images/tremplin/artists/generated/anais-kor-cello-v1.webp",
+      "sha256": "e788814a8b797481ecd49f51d0ba2256278ab46aa57f4df816bc6d6175d8aab3"
+    },
+    {
+      "path": "images/tremplin/artists/generated/anis-valeur-music-director-paris-v1.webp",
+      "sha256": "d2fb1f0971996575a6b373761ba5b8d42cc063a3a7425a039e09c66aa0027962"
     },
     {
       "path": "images/tremplin/artists/generated/anjali-veyra-danseuse-choregraphe-nice-v1.webp",
@@ -2098,20 +2722,68 @@
       "sha256": "cfe855313a3d229fea8dcc3c6dcc50c4a99468216ecfe11a276cc202028d5df3"
     },
     {
+      "path": "images/tremplin/artists/generated/artist-ambient-producer-aya-miro.webp",
+      "sha256": "06e35a3c6c5c54ac980595aa02ff31e39e504ef2d5c781852a5ec59695a655ec"
+    },
+    {
+      "path": "images/tremplin/artists/generated/artist-contemporary-lyric-singer-celiane-aube.webp",
+      "sha256": "c2932ef6dc9f5f2ccb53031b7dafac049a5966383f1fabc72cbf4e9ec4a93498"
+    },
+    {
+      "path": "images/tremplin/artists/generated/artist-contemporary-marimba-zoe-marimba.webp",
+      "sha256": "0377adc12751723360783bc44a3fb74860dd355a89c9006fedaf12b631c3b4ab"
+    },
+    {
+      "path": "images/tremplin/artists/generated/artist-drag-pop-robin-ciel.webp",
+      "sha256": "f7e454baf71b5c30b51305aa2193cc242e6f506fe77a286750397d16c9111e70"
+    },
+    {
       "path": "images/tremplin/artists/generated/artist-folk-songwriter-alba-roche.webp",
       "sha256": "dbdc37d3bcc96bec4b6156ea854f58e3d12ba11699f95375ecd1602ae9dafbbb"
+    },
+    {
+      "path": "images/tremplin/artists/generated/artist-funk-trombonist-maelle-keran.webp",
+      "sha256": "b54d154759bb8a9c21b825a71e1156786c7c4ec1ae3470a7d82bf24eaab77e20"
+    },
+    {
+      "path": "images/tremplin/artists/generated/artist-game-composer-mara-shin.webp",
+      "sha256": "355d85dd6c1c35a3cababc604464d92690b31db7d57556c12101641ab0ba7453"
+    },
+    {
+      "path": "images/tremplin/artists/generated/artist-krump-dancer-rokh-ndao.webp",
+      "sha256": "25d65f9bd13b225608fbec2e6ddffc56d9b379c0978dc201cc35188caeab0830"
+    },
+    {
+      "path": "images/tremplin/artists/generated/artist-live-coding-electronic-mina-lattice.webp",
+      "sha256": "7269e689813b59e69ce0f849679592c110d7d48323a7aefdb427c4248a5c775d"
+    },
+    {
+      "path": "images/tremplin/artists/generated/artist-luthier-experimental-guitarist-camille-forge.webp",
+      "sha256": "a482dbbfc10eed748d533325638b78465abfa7a79c810f90ea8c1bd6a5fb7854"
     },
     {
       "path": "images/tremplin/artists/generated/artist-modern-rai-singer-nassim-halim.webp",
       "sha256": "bd882b871e5fb1c4a2951ba67e86afa32aca7138054dfd02dbf6a7a541fdb514"
     },
     {
+      "path": "images/tremplin/artists/generated/artist-pop-choir-conductor-cleo-vent.webp",
+      "sha256": "9262897b8b2bba0a49bd04aa589b102d9580377d86499d68898c6f8aba330dfd"
+    },
+    {
       "path": "images/tremplin/artists/generated/artist-reggae-dub-singer-noah-belair.webp",
       "sha256": "8364dac65670cfdaa6503fb03543af8086973775f53c30f6153572ddbfbfe668"
     },
     {
+      "path": "images/tremplin/artists/generated/artist-slam-poet-toma-silex.webp",
+      "sha256": "6cf84f3b957098e67adc618a1f32e1b2ca094ccb9f16dd5557736941c3678a08"
+    },
+    {
       "path": "images/tremplin/artists/generated/artist-tuareg-rock-singer-bilal-dune.webp",
       "sha256": "f01bb5f59c574cc446ced587b368634bb0c0568dc144cd735863abd54fe79628"
+    },
+    {
+      "path": "images/tremplin/artists/generated/awen-electronic-folk-rennes-v1.webp",
+      "sha256": "fbd31d47a7d49b7761565d2c6a116a3ce0c5caa05db20f5a5718a2e3af0fe102"
     },
     {
       "path": "images/tremplin/artists/generated/cassandre-bleu-harp-strasbourg-v1.webp",
@@ -2122,6 +2794,10 @@
       "sha256": "d8ed8540c6733e9b3eb91aeb88cdbede3d14f37e4d73bded238dd16ae43e2d95"
     },
     {
+      "path": "images/tremplin/artists/generated/demba-flow-percussion-v1.webp",
+      "sha256": "bf88ac4fa9750844390546bf8eb4ac27755ed8d147d6f98c2e5183c97b75bbca"
+    },
+    {
       "path": "images/tremplin/artists/generated/elio-serra-ingenieur-son-montpellier-v1.webp",
       "sha256": "9b6710514420add64cc0b63b24dfc11da6d1eb045dc3169bccd787d8b075a102"
     },
@@ -2130,8 +2806,20 @@
       "sha256": "10291f2c1a138f62a39c1013392bbf1cbd899a8075997dcf6c01f031f85dcfb6"
     },
     {
+      "path": "images/tremplin/artists/generated/elise-kemba-dub-producer-le-havre-v1.webp",
+      "sha256": "dd9406aa9ecac1c66971216cb43b79fee75978fd3fad44f84ae2cdbeda79543d"
+    },
+    {
+      "path": "images/tremplin/artists/generated/ewen-tran-contemporary-harpist-angers-v1.webp",
+      "sha256": "d65cfbe1c16842df09dfa7ac086cfadc9fcf8e1bb7fd387381b35a9ca223cbed"
+    },
+    {
       "path": "images/tremplin/artists/generated/gael-ferran-guitariste-flamenco-jazz-perpignan-v1.webp",
       "sha256": "1b558a2ab9223cdc79091d974defe08bc8d054170aa0bf2d6196df521fefc8c8"
+    },
+    {
+      "path": "images/tremplin/artists/generated/group-vocal-quartet-velours-nord.webp",
+      "sha256": "7842d6bd8a23f582c347ea1ea203c8f5ef40cd668629c8a798fbbecdfe44b4a4"
     },
     {
       "path": "images/tremplin/artists/generated/hugo-quartz-chanteur-shoegaze-le-mans-v1.webp",
@@ -2162,6 +2850,18 @@
       "sha256": "65cdab78b3addfc5ed9965b6443b2671d436be320e5f50417313b8cb7d567611"
     },
     {
+      "path": "images/tremplin/artists/generated/jo-varenne-blues-rock-guitar-toulouse-v1.webp",
+      "sha256": "d61b8b1354c6146bf11453bef919bd8e734293972d0d1bf58476616db3f848d6"
+    },
+    {
+      "path": "images/tremplin/artists/generated/jules-ndoye-bassist-bordeaux-v1.webp",
+      "sha256": "43d88732b906628d58a0f6c1c4b0ced7cff6dd9abe818beb265d061bdea2b425"
+    },
+    {
+      "path": "images/tremplin/artists/generated/jules-orion-indie-pop-v1.webp",
+      "sha256": "af41e47f847708f71185d22518ab714fef2a6a85c86fade60c84e6d5a3ec5586"
+    },
+    {
       "path": "images/tremplin/artists/generated/june-kairo-dj-drum-bass-amiens-v1.webp",
       "sha256": "088a666cd870660223da471073293d9110c1471314e2c943a4704a15a5552e91"
     },
@@ -2174,16 +2874,32 @@
       "sha256": "8360dd567ec6775c004192fb27756a61ca3bbb881e7de50746e1ad92db356cc5"
     },
     {
+      "path": "images/tremplin/artists/generated/kima-voss-chanteuse-punk-rock-nantes-v1.webp",
+      "sha256": "abf8034682bfe6bd54897ef200ddbc462efb8e033dc77d6aa4b6133f116debb7"
+    },
+    {
       "path": "images/tremplin/artists/generated/leon-vasseur-music-director-rouen-v1.webp",
       "sha256": "eac629a1d18f0454ffdfabf19c639a07a32817110f8d95740bf7e02929462a43"
+    },
+    {
+      "path": "images/tremplin/artists/generated/lior-benali-guitar-v1.webp",
+      "sha256": "747e964842bc8d1d8e9a69e3a9101856eee829bc197ba22504a35f8abe81e70f"
     },
     {
       "path": "images/tremplin/artists/generated/liora-fado-rappeuse-drill-toulouse-v1.webp",
       "sha256": "840a29c500ce21b4d4448670e0c25a6d0c11f8375760338340ffdd333ac646d9"
     },
     {
+      "path": "images/tremplin/artists/generated/lou-ardent-theremin-composer-tours-v1.webp",
+      "sha256": "2ee0bacf9ab7108856fd6d94d1dfd7a25e02ae15e5931f7545a7520436b528b7"
+    },
+    {
       "path": "images/tremplin/artists/generated/louna-saphir-violoncelliste-neo-classique-metz-v1.webp",
       "sha256": "82505613bc7701d726b5b54fcab083b746becd2e26ee0b3ff51a3c5af08b71bd"
+    },
+    {
+      "path": "images/tremplin/artists/generated/lucien-aoki-senior-mastering-engineer-reims-v1.webp",
+      "sha256": "b475769be63af897760ee3d733dabc52a7b6b41ef2d5eb7166a84f5c5a0424b4"
     },
     {
       "path": "images/tremplin/artists/generated/maia-kuroda-violoniste-neo-classique-nantes-v1.webp",
@@ -2206,12 +2922,28 @@
       "sha256": "d5781c4d8c132c8edd985f527206974286be917b9ab8e2959d5e3743d3412dc5"
     },
     {
+      "path": "images/tremplin/artists/generated/min-jae-lune-flute-electro-jazz-grenoble-v1.webp",
+      "sha256": "da895d263c03e6da3e537a3ed1e9994083be2b09b07ebe217677d7b7148fc3ae"
+    },
+    {
       "path": "images/tremplin/artists/generated/mina-roze-pop-soul-lyon-v1.webp",
       "sha256": "a46fa2ef12e4932d976b7ac1b724df525e23229bbdf8450585660497cf8407e9"
     },
     {
+      "path": "images/tremplin/artists/generated/moussa-elian-blind-jazz-pianist-mulhouse-v1.webp",
+      "sha256": "3b63d99ea4cddccbe52e3a732bfae7d7ccf1f592fef5f9a0aefff5ebcb0a02a8"
+    },
+    {
+      "path": "images/tremplin/artists/generated/moussa-elian-blind-jazz-pianist-mulhouse-v2.webp",
+      "sha256": "0e75030e4bc74884a914b0159a5cdef273efb611d4f0d912a08b3947e8eac76d"
+    },
+    {
       "path": "images/tremplin/artists/generated/naya-oris-boom-bap-rapper-grenoble-v1.webp",
       "sha256": "8002411efc527859ac59fd310e74517dd9b72a817c993498b52c209236f5faf7"
+    },
+    {
+      "path": "images/tremplin/artists/generated/neo-sillage-editorial-v1.webp",
+      "sha256": "1413e9207d9acb247d815bfcde488da8633d92d2d4bff4b2af1b205641e28250"
     },
     {
       "path": "images/tremplin/artists/generated/nils-bensaid-trompettiste-jazz-paris-v1.webp",
@@ -2222,6 +2954,14 @@
       "sha256": "1c630fe0cd399caf83562944623b659b3aa6be47d0a165e4ae7d5abd31c4a5b1"
     },
     {
+      "path": "images/tremplin/artists/generated/nola-mbaye-choriste-gospel-tours-v1.webp",
+      "sha256": "519963c32d0a2b2f202b59d633c9c2255aed47121b11f549931f4fd83e23e7fd"
+    },
+    {
+      "path": "images/tremplin/artists/generated/ophelie-grant-soprano-cinematic-lyon-v1.webp",
+      "sha256": "04c7c7571f600ca5af2bdab9d25575e33929d243a964475715d2bcc773053974"
+    },
+    {
       "path": "images/tremplin/artists/generated/oumar-lines-reggae-bassist-fort-de-france-v1.webp",
       "sha256": "ed6fb44f1d1de5886049b0474d5d63d557d078d64fa9c0b109e8d08d3a7ea98d"
     },
@@ -2230,16 +2970,48 @@
       "sha256": "7a381b6b6c950b8525b3f3ab54fa62a6c90eb00f4818bcf5e00fda240a6cf34b"
     },
     {
+      "path": "images/tremplin/artists/generated/sacha-bloom-clarinettiste-jazz-klezmer-strasbourg-v1.webp",
+      "sha256": "383b230fb2b272198ed1fea2f16abd6aba59a52e4f5a964cc760b66a1be191ce"
+    },
+    {
+      "path": "images/tremplin/artists/generated/salome-kit-math-rock-drummer-caen-v1.webp",
+      "sha256": "0402c4a5a0653f9b0eda0d276b3e3dbd698dbdd92e262873df4ee49bf7f74428"
+    },
+    {
+      "path": "images/tremplin/artists/generated/sama-k-editorial-v1.webp",
+      "sha256": "e4309fd993a2309c1810fbf3523f7592d09d062d52f73b5552fc46325e1667ec"
+    },
+    {
       "path": "images/tremplin/artists/generated/samir-octave-chanteur-funk-orleans-v1.webp",
       "sha256": "73d337f0be85f2674869df71815ded0bcff3d912ae7d872931750704da29cdf1"
+    },
+    {
+      "path": "images/tremplin/artists/generated/sekou-mare-danseur-choregraphe-marseille-v1.webp",
+      "sha256": "1c127cbb0990c8e37ea398e377f68e1d2fa4a559742e11f771523b7a72a7b131"
+    },
+    {
+      "path": "images/tremplin/artists/generated/soraya-bell-sound-engineer-lille-v1.webp",
+      "sha256": "4c5f00977756218648ab9e7dd39d2b3ed6870992cf5ae1f031b003566f2f0f36"
     },
     {
       "path": "images/tremplin/artists/generated/tess-aoki-music-video-director-vj-rennes-v1.webp",
       "sha256": "1b3b732c8db9abd8a3def0b4c98915124c5dfd582fefe667fe94e6d99adf1dcf"
     },
     {
+      "path": "images/tremplin/artists/generated/thea-novak-pianist-nancy-v1.webp",
+      "sha256": "230e379a75a474092b477299d3ea55026ba1b323c014a6c02fa942015e7beb7c"
+    },
+    {
       "path": "images/tremplin/artists/generated/thea-novak-pianist-nancy-v2.webp",
       "sha256": "ec1ddf4fc3e2af959d4996f98754c5474888e96cf5da0e324dc81b29e3f6eeef"
+    },
+    {
+      "path": "images/tremplin/artists/generated/tiago-luz-baile-funk-producer-bayonne-v1.webp",
+      "sha256": "eb98d666b700d18c9145b8735b275903b0e84d5a81cd3b683399be52bc2f5446"
+    },
+    {
+      "path": "images/tremplin/artists/generated/vera-kline-dj-techno-lyon-v1.webp",
+      "sha256": "cd2570e3be9a19128298a0e4a36c008a674361e3614c428e8dfc11825e382e59"
     },
     {
       "path": "images/tremplin/artists/generated/yacine-kermor-accordeoniste-electro-clermont-ferrand-v1.webp",
@@ -2422,12 +3194,52 @@
       "sha256": "1e88f7981d3ad414f79f05957ff1721380beea2713d140b854a680a8cea858c7"
     },
     {
+      "path": "images/wave/agent-sign.png",
+      "sha256": "ec1549d5251d85ccc527ab2c4f87c56aaf85cebe2185bee3dd7f42f6b7d2e02b"
+    },
+    {
+      "path": "images/wave/hat-active.png",
+      "sha256": "db46c16245c4fe5315f95ef86a63d668dff62e6ca63f5b523fed0c721a31087a"
+    },
+    {
+      "path": "images/wave/hat-inactive.png",
+      "sha256": "4363b142dd5f839d839174573781602c45b135656a8c88c8db076d5f92106a70"
+    },
+    {
+      "path": "images/wave/hat-magic.png",
+      "sha256": "db46c16245c4fe5315f95ef86a63d668dff62e6ca63f5b523fed0c721a31087a"
+    },
+    {
+      "path": "images/wave/host-fallback.png",
+      "sha256": "b5ad1b433ff46ae4bc95851c295c34865f02b37d426c9773229917a454cd8d03"
+    },
+    {
+      "path": "images/wave/room-bg.png",
+      "sha256": "84b156d9c2d6d8c5c36b61690d66220ba645ff1e752be191647b43c74882e034"
+    },
+    {
       "path": "media/preprofile-demo/dj-turntable.mp4",
       "sha256": "f260c462b9e079a8cce770f252f9ef5ca7aa465a0c448cb199da8936e8737866"
     },
     {
       "path": "media/preprofile-demo/female-guitarist.mp4",
       "sha256": "299aee6f06028dd88c71594c99bac873bc34e309b06cb6a0f02f84db84d0bc0e"
+    },
+    {
+      "path": "media/preprofile-demo/hazy-after-hours.mp3",
+      "sha256": "5a30d042dc51f517dc64b5d409e1ac0b9dba2a80241f8955f41257585e77890f"
+    },
+    {
+      "path": "media/preprofile-demo/tech-house-vibes.mp3",
+      "sha256": "95972c602ff0686e298792f45b384f0e15477f3cf983f05dd98fd5e5d965eed6"
+    },
+    {
+      "path": "media/profile-demo/guitar-session-audio.mp3",
+      "sha256": "92713302bad4a3471c5802833b3013405b81f93306c6b069f898381da5f6d5ad"
+    },
+    {
+      "path": "media/profile-demo/vocal-session-audio.mp3",
+      "sha256": "60d5fbce449e80813c531cf66271045e9bc55f49072a2ca70c1de4d035d2a86c"
     },
     {
       "path": "media/shorts-demo/landscape-dj.mp4",
@@ -2452,6 +3264,10 @@
     {
       "path": "media/shorts-demo/portrait-vocal-session.mp4",
       "sha256": "30675055e15ec7e481b80a8599203900669ee83e47bd52001f5aa612f9d0c883"
+    },
+    {
+      "path": "media/wave/wave-session.mp4",
+      "sha256": "764c9c52b8d6b5ba1937f32f45dee0723ca14435fe280ba6ceea1eda5fb43c16"
     },
     {
       "path": "meewav-emojis/v2/webp/256/applaudissements.webp",

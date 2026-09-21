@@ -780,3 +780,99 @@ body:has(.wv-room) .feature-dock-host { display: none !important; }
 #root .mobile-rooms .wvm-preset-fx { flex: 1; font-size: 9px; color: rgba(255,255,255,.45); }
 #root .mobile-rooms .wv-panel-keep { display: flex; flex-direction: column; min-height: 0; flex: 1; }
 #root .mobile-rooms .wv-panel-keep[hidden] { display: none; }
+/* Spectateur Android : vidéo en haut, studio dessous, outils web conservés. */
+.android-room-viewer-open .feature-dock-host,
+.android-room-viewer-open .mobile-feature-back { display:none!important; }
+#root .android-room-viewer { position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;background:linear-gradient(125deg,#1b1c20,#07090c);color:#eee;overflow:hidden;--rooms-nav-space:0px;--rooms-topbar-height:0px;--place-studio-width:100%; }
+#root .android-room-viewer__header { flex:0 0 48px;display:flex;align-items:center;background:#08090bd9;backdrop-filter:blur(18px);padding:0 6px; }
+#root .android-room-viewer__header button { width:44px;height:44px;display:grid;place-items:center;border:0;background:none;color:#bba3e7;flex-shrink:0; }
+#root .android-room-viewer__header svg { width:20px;height:20px; }
+#root .android-room-viewer__header h1 { margin:0;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;font-size:14px;font-weight:600; }
+#root .android-room-viewer > .place-room-shellbar { display:none!important; }
+#root .android-room-viewer .place-room-experience.place-room-shell { position:relative!important;inset:auto!important;flex:1;min-height:0;width:100%;padding:0!important;display:flex!important;flex-direction:column;gap:0; }
+#root .android-room-viewer .place-room-workspace { display:flex!important;flex-direction:column!important;flex:1;min-height:0;gap:8px!important; }
+#root .android-room-viewer .place-room-live-column { display:flex!important;flex-direction:column;flex:0 0 auto!important;height:auto!important;min-height:0!important;gap:0; }
+#root .android-room-viewer .place-stage { flex:none!important;width:100%;height:min(30svh,56.25vw)!important;min-height:160px!important;border-radius:8px!important; }
+#root .android-room-viewer .place-stage:fullscreen { width:100vw!important;height:100dvh!important; }
+#root .android-room-viewer .place-stage__title { display:none; }
+#root .android-room-viewer .room-viewer-host { flex:none;min-height:48px;padding:6px 12px;gap:8px; }
+#root .android-room-viewer .room-viewer-host__identity img { width:30px;height:30px; }
+#root .android-room-viewer .room-viewer-host__identity small { font-size:10px; }
+#root .android-room-viewer .room-viewer-host__leave { display:none; }
+#root .android-room-viewer .place-studio-panel { position:relative!important;inset:auto!important;display:flex!important;flex-direction:column!important;width:auto!important;min-width:0!important;flex:1!important;min-height:0!important;max-height:none!important;margin:0 10px 8px;padding:0!important;border:0!important;background:transparent!important;overflow:hidden; }
+#root .android-room-viewer .place-studio-panel__bar { display:flex;flex:0 0 48px!important;padding:2px!important;border:1px solid #ffffff12;border-radius:18px;background:linear-gradient(#242529 0%,#101113 25%,#020304 90%);box-shadow:inset 0 1px #ffffff0c; }
+#root .android-room-viewer .place-studio-panel__tabs { display:flex;flex:1;min-width:0;gap:2px;padding:0; }
+#root .android-room-viewer .place-studio-panel__tabs button { flex:1;min-width:0!important;padding:6px 3px!important;border-radius:14px!important;gap:5px;font-size:11px;display:flex;justify-content:center;align-items:center; }
+#root .android-room-viewer .place-studio-panel__tabs button svg { width:17px;height:17px; }
+#root .android-room-viewer .place-studio-panel__tabs button.is-active { background:linear-gradient(#35254c,#1d1232)!important;color:#f5f1ff;border:1px solid #8063aa44!important; }
+#root .android-room-viewer .place-studio-panel__collapse { display:none; }
+#root .android-room-viewer .place-studio-panel__content { flex:1;min-height:0;height:auto!important;overflow:hidden;padding:0!important; }
+#root .android-room-viewer .place-studio-panel__surface:not([hidden]) { display:flex!important;flex-direction:column;min-width:0;min-height:0;height:100%;overflow:auto;padding:8px 0 0!important;overscroll-behavior:contain; }
+#root .android-room-viewer [hidden] { display:none!important; }
+#root .android-room-viewer .place-studio-panel__surface > * { min-width:0;max-width:100%; }
+#root .android-room-viewer .place-chat-workspace { flex:1;min-height:0;height:100%; }
+#root .android-room-viewer :is(.room-audience-section,.loge-viewer__card,.scene-viewer-program__card) { border-radius:15px;background:linear-gradient(145deg,#1c1d21,#08090b 75%);border-color:#ffffff14; }
+#root .android-room-viewer :is(input,textarea,select) { font-size:16px;max-width:100%; }
+#root .android-room-viewer :is(.room-audience-person img) { width:36px;height:36px; }
+.android-room-viewer-open .wave-viewer-exit { display:none!important; }
+.android-room-opening { position:fixed;inset:0;display:grid;place-items:center;background:#08090b;color:#bba3e7;z-index:70; }
+#root .android-room-viewer .place-chat__portrait { position:relative;display:inline-flex;flex:0 0 30px;width:30px;height:30px;overflow:hidden;border-radius:50%;font-size:0; }
+#root .android-room-viewer .place-chat__portrait img { position:absolute;inset:0;width:100%;height:100%;object-fit:cover; }
+#root .android-room-viewer .place-chat__message { padding:5px 0!important;margin:0!important; }
+#root .android-room-viewer .place-chat__message header { display:flex;align-items:center;gap:5px; }
+#root .android-room-viewer .place-chat__author { display:flex;align-items:center;gap:8px;min-width:0; }
+#root .android-room-viewer .place-chat__author strong { font-size:12px;color:#b2adb9;font-weight:500; }
+#root .android-room-viewer .place-chat__message.is-host strong { color:#83bfc7;text-transform:uppercase; }
+#root .android-room-viewer .place-chat__message time { display:none; }
+#root .android-room-viewer .place-chat__message p { margin:-5px 0 6px 38px!important;font-size:13px;line-height:1.45; }
+#root .android-room-viewer .place-chat__composer { display:flex!important;align-items:center;flex-wrap:nowrap!important;gap:5px;min-height:48px!important;padding:4px 6px 4px 12px!important;border:1px solid #ffffff20!important;border-radius:24px!important;background:linear-gradient(150deg,#26272cc7,#0d0e12de)!important; }
+#root .android-room-viewer .place-chat__input-well { display:flex!important;flex:1;min-width:0;align-items:center;background:none!important;border:0!important;padding:0!important; }
+#root .android-room-viewer .place-chat__input-well label { flex:1;min-width:0; }
+#root .android-room-viewer .place-chat__input-well [contenteditable] { border:0!important;background:none!important;min-height:30px!important;font-size:14px!important; }
+#root .android-room-viewer .place-chat__send { flex:0 0 36px;width:36px!important;height:36px!important;border:0!important;background:transparent!important;color:#ae91e0!important; }
+#root .android-room-viewer .place-chat__send svg { width:23px;height:23px; }
+#root .android-room-viewer .wave-viewer-entry-actions { display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px;padding:0!important;margin-bottom:8px; }
+#root .android-room-viewer .wave-viewer-entry-actions button { width:auto!important;min-width:0!important;min-height:46px;padding:8px!important;font-size:11px!important;white-space:normal;overflow-wrap:normal;word-break:normal; }
+#root .android-room-viewer .wave-viewer-entry-actions button svg { flex:0 0 17px;width:17px;height:17px; }
+#root .android-room-viewer .wave-stage-invitation { height:auto;min-height:44px;flex-wrap:wrap; }
+#root .android-room-viewer .classe-student-content { padding-bottom:80px!important; }
+#root .android-room-viewer .place-stage__controls { bottom:10px!important;top:auto!important;transform:translateX(-50%)!important;left:50%!important;width:max-content!important;max-width:calc(100% - 20px); }
+#root .android-room-viewer .place-stage__controls button { width:36px;min-width:36px;height:36px; }
+/* Les commandes de simulation ne font pas partie des outils spectateur. */
+#root .android-room-viewer .cb-controls { display:none; }
+#root .android-room-viewer .place-chat__message header > .place-chat__author { margin-left:0!important;white-space:normal; }
+#root .android-room-viewer .place-chat__author .place-chat__portrait { margin-left:0!important; }
+#root .android-room-viewer .place-chat__message header { justify-content:flex-start!important; }
+#root .android-room-viewer .place-chat__message { display:block!important;text-align:left; }
+#root .android-room-viewer .place-chat__message > div { width:100%; }
+#root .android-room-viewer .scene-viewer-program__intro h2 { font-size:22px; }
+#root .android-room-viewer .place-studio-panel__surface { scrollbar-width:thin;scrollbar-color:#514364 transparent; }
+/* En plein écran portrait, le face-à-face utilise les deux moitiés du mobile. */
+@media (orientation:portrait) {
+ #root .android-room-viewer .place-stage:fullscreen .cage-stage-program__duel-grid { inset:0!important;display:grid!important;grid-template-columns:1fr!important;grid-template-rows:1fr 1fr!important;gap:2px!important; }
+ #root .android-room-viewer .place-stage:fullscreen .cage-stage-program__duel-grid > .cage-stage-feed { width:100%!important;height:100%!important;max-height:none!important;aspect-ratio:auto!important; }
+ #root .android-room-viewer .place-stage:fullscreen .place-stage-layout__canvas[data-participants="2"]:not(.is-cage-program) { display:grid!important;grid-template-columns:1fr!important;grid-template-rows:1fr 1fr!important; }
+ #root .android-room-viewer .place-stage:fullscreen .place-stage-layout__canvas[data-participants="2"]:not(.is-cage-program) > .place-stage-layout__tile { position:relative!important;inset:auto!important;grid-column:1!important;grid-row:auto!important;width:100%!important;height:100%!important; }
+}
+#root .android-room-viewer .place-volume-list { display:flex!important;flex-direction:column!important;gap:10px; }
+#root .android-room-viewer .place-volume-list > .place-volume-row { width:100%!important;max-width:none!important;min-height:76px;flex-shrink:0; }
+#root .android-room-viewer .place-volume-row__identity strong { font-size:12px; }
+#root .android-room-viewer .place-volume-row__mute { min-width:40px;min-height:40px; }
+#root .android-room-viewer .place-mixer__subnav button { min-height:40px; }
+/* Le pré-profil partagé devient une feuille mobile sous la vidéo. */
+.android-room-viewer-open .class-student-pre-profile-viewport { left:8px!important;right:8px!important;width:auto!important;top:calc(56px + min(30svh,56.25vw))!important;bottom:8px!important;height:auto!important; }
+.android-room-viewer-open .class-student-pre-profile { zoom:1!important;width:100%!important;height:100%!important;overflow:auto;border:1px solid #89849d55;border-radius:22px 22px 14px 14px;background:linear-gradient(#202127,#07080a 30%);animation-name:android-viewer-sheet-in; }
+.android-room-viewer-open .class-student-pre-profile.is-closing { animation-name:android-viewer-sheet-out; }
+.android-room-viewer-open .class-student-pre-profile .mw-hover-preprofile-bubble__shell { border:0!important;border-radius:inherit!important;box-shadow:none!important; }
+.android-room-viewer-open .class-student-pre-profile .mw-hover-preprofile-bubble__shell::before,
+.android-room-viewer-open .class-student-pre-profile .mw-hover-preprofile-bubble__shell::after { display:none; }
+.android-room-viewer-open .class-student-pre-profile__close { width:40px;height:40px;border:0;box-shadow:none;background:transparent;color:#b69adf; }
+@keyframes android-viewer-sheet-in { from { transform:translateY(100%);opacity:.5; } to { transform:translateY(0);opacity:1; } }
+@keyframes android-viewer-sheet-out { to { transform:translateY(100%);opacity:0; } }
+.android-room-viewer-open .class-student-pre-profile .mw-hover-preprofile-bubble__surface { padding:38px 14px 14px!important;overflow:auto; }
+.android-room-viewer-open .class-student-pre-profile .mw-preprofile { height:auto;min-height:100%;gap:10px; }
+.android-room-viewer-open .class-student-pre-profile .mw-preprofile__header { grid-template-columns:78px minmax(0,1fr);gap:10px;min-height:80px; }
+.android-room-viewer-open .class-student-pre-profile .mw-preprofile__portrait-wrap { width:78px;height:78px; }
+.android-room-viewer-open .class-student-pre-profile .mw-preprofile__portrait-shell { width:76px;height:76px; }
+.android-room-viewer-open .class-student-pre-profile .mw-preprofile__name { font-size:20px; }
+.android-room-viewer-open .class-student-pre-profile .mw-preprofile__footer { flex-shrink:0; }
