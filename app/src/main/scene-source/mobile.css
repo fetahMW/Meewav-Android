@@ -250,3 +250,6 @@ body:has(.mobile-scene) .scene-card-menu { max-width: calc(100vw - 24px); backgr
 
 /* === Un seul burger : celui de La Scene === */
 #root .mobile-scene > .mobile-feature-back { display: none; }
+
+/* Acoustic background approved for the main feature, independent of live rooms. */
+#root .mobile-scene .shorts-page__background {background:#08090b url("/scene/images/acoustic-black-background-trial.png") center center / cover no-repeat!important;opacity:1!important;}

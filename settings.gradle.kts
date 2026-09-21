@@ -10,6 +10,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven { url = uri("https://artifact.byteplus.com/repository/public/") }
     }
 }
 rootProject.name = "Meewav Android"

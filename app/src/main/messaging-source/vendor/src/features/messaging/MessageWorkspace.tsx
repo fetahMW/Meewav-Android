@@ -1,6 +1,6 @@
 import { demoTrackPackAudio } from "./demoTrackPackAudio";
 import { saveAttachment } from '../../../../downloads';
-import { openVideoCall } from '../../../../calls/VideoCalls';
+import { openVideoCall, openAudioCall } from '../../../../calls/VideoCalls';
 import { nativeVoiceEnabled } from '../../../../runtime';
 import { startNativeVoice, stopNativeVoice, cancelNativeVoice } from '../../../../nativeVoice';
 import {
@@ -1899,9 +1899,12 @@ export default function MessageWorkspace({
   const [conversations, setConversations] = useState(() => demoConversations.map((conversation) => ({ ...conversation, messages: [...conversation.messages] })));
   const [selectedId, setSelectedId] = useState(demoConversations[0].id);
   const [conversationSearch, setConversationSearch] = useState("");
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [mobileSearchTarget, setMobileSearchTarget] = useState<HTMLElement | null>(null);
+  useEffect(() => { setMobileSearchTarget(document.getElementById("mobile-messaging-search")); }, []);
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [railMenuOpen, setRailMenuOpen] = useState(false);
-  const [showAllConversations, setShowAllConversations] = useState(false);
+  const [showAllConversations, setShowAllConversations] = useState(true);
   const [messageSearch, setMessageSearch] = useState("");
   const [composer, setComposer] = useState("");
   const mobileDrafts = useRef(new Map<string, string>());
@@ -2968,7 +2971,7 @@ export default function MessageWorkspace({
               <span className="mw-chat-header__actions">
                 <button type="button" className="mw-icon-button" data-conversation-drawer-trigger aria-expanded={drawerOpen} aria-controls="mw-conversation-drawer" onClick={() => setDrawerOpen((open) => !open)} aria-label="Rechercher dans la conversation"><Search /></button>
                 <button type="button" className="mw-icon-button mw-video-call-trigger" disabled={Boolean(selectedConversation.readOnlyReason) || Boolean(selectedConversation.collaborationRequestId) || (selectedConversation.conversationKind != null && selectedConversation.conversationKind !== 'direct')} onClick={() => openVideoCall({id:selectedConversation.id,name:selectedConversation.name,avatar:selectedConversation.avatar})} aria-label="Appel vidéo"><Video /></button>
-                <button type="button" className="mw-icon-button" data-conversation-drawer-trigger aria-expanded={drawerOpen} aria-controls="mw-conversation-drawer" onClick={() => setDrawerOpen((open) => !open)} aria-label="Options de la conversation"><Info /></button>
+                <button type="button" className="mw-icon-button mw-audio-call-trigger" disabled={Boolean(selectedConversation.readOnlyReason) || Boolean(selectedConversation.collaborationRequestId) || (selectedConversation.conversationKind != null && selectedConversation.conversationKind !== 'direct')} onClick={() => openAudioCall({id:selectedConversation.id,name:selectedConversation.name,avatar:selectedConversation.avatar})} aria-label="Appel audio"><Phone /></button>
               </span>
             )}
             {contentSpace === "groups" && onCreateGroup && (
@@ -2988,6 +2991,26 @@ export default function MessageWorkspace({
               <><SidebarItemAvatar item={contextHeaderItem} showPresence={false} /><span><span className="mw-chat-header__name-line"><strong>{contextHeaderItem.name}</strong>{contextHeaderItem.gradeLevel !== undefined && <MeewavGradeBadge className="mw-chat-header__grade" level={contextHeaderItem.gradeLevel} size="xs" variant="icon" />}</span><small><i className={contextHeaderItem.online ? "is-online" : ""} /> {contextHeaderItem.status}<b>{contextHeaderItem.role}</b></small></span></>
             </div>
           )}
+          {mobileSearchTarget ? createPortal(
+            <div className={`mobile-header-search${mobileSearchOpen ? " is-open" : ""}`}>
+              <button type="button" aria-label={mobileSearchOpen ? "Fermer la recherche" : "Rechercher"} aria-expanded={mobileSearchOpen} onClick={() => {
+                setMobileSearchOpen(!mobileSearchOpen); setRailMenuOpen(false);
+                if (mobileSearchOpen) setConversationSearch("");
+                else requestAnimationFrame(() => conversationSearchRef.current?.focus({ preventScroll: true }));
+              }}>{mobileSearchOpen ? <X /> : <Search />}</button>
+              <input ref={conversationSearchRef} aria-label="Rechercher dans la liste" placeholder="Rechercher…" value={conversationSearch} tabIndex={mobileSearchOpen ? 0 : -1} onChange={event => setConversationSearch(event.target.value)} onKeyDown={event => {
+                if (event.key === "Escape") { setMobileSearchOpen(false); setRailMenuOpen(false); setConversationSearch(""); }
+              }} />
+              <button type="button" className="mobile-header-search__filter" tabIndex={mobileSearchOpen ? 0 : -1} aria-label="Filtres de la liste" aria-expanded={railMenuOpen} onClick={() => setRailMenuOpen(!railMenuOpen)}><MoreHorizontal /></button>
+              {railMenuOpen && <button className="mobile-search-dismiss" aria-label="Fermer les filtres" onClick={() => setRailMenuOpen(false)} />}
+            {railMenuOpen && (
+              <div className="mw-rail-menu">
+                <button type="button" onClick={() => { setUnreadOnly((value) => !value); setRailMenuOpen(false); }}><SlidersHorizontal /><span>{unreadOnly ? "Afficher toute la liste" : "Afficher les alertes"}</span></button>
+                {activeSpace === "messages" && <button type="button" onClick={() => { setShowNewConversation(true); setRailMenuOpen(false); }}><UserPlus /><span>Nouvelle conversation</span></button>}
+              </div>
+            )}
+            </div>, mobileSearchTarget
+          ) : (
           <div className="mw-rail-search-wrap">
             <button
               type="button"
@@ -2996,7 +3019,7 @@ export default function MessageWorkspace({
               title="Rechercher dans la liste"
               onClick={() => {
                 expandContactRail();
-                window.requestAnimationFrame(() => conversationSearchRef.current?.focus());
+                window.requestAnimationFrame(() => conversationSearchRef.current?.focus({ preventScroll: true }));
               }}
             ><Search /></button>
             <label className="mw-rail-search">
@@ -3015,6 +3038,7 @@ export default function MessageWorkspace({
               </div>
             )}
           </div>
+          )}
 
         </div>
         <div className="mw-conversation-list">

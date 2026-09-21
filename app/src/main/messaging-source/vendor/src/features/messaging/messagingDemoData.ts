@@ -164,6 +164,9 @@ export const demoContacts: DemoContact[] = [
   { id: "user_6", username: "vocal_queen", displayName: "Vocal Queen", avatar: `${avatarsRoot}/avatar_6.png`, online: false, role: "Artiste / Auteur", gradeLevel: 3 },
 ];
 
+// Extra contacts are demo-only and never become real recipients.
+demoContacts.push(...demoContacts.map(contact => ({ ...contact, id: `${contact.id}-encore`, username: `${contact.username}_studio`, displayName: `${contact.displayName} Studio` })));
+
 const baseDemoConversations: DemoConversation[] = [
   {
     id: "echo-flow",
@@ -448,6 +451,12 @@ export const demoConversations: DemoConversation[] = baseDemoConversations.map((
   const premiumContent = premiumConversationContent[conversation.id];
   return premiumContent ? { ...conversation, ...premiumContent } : conversation;
 });
+
+// Double the demonstration inbox to exercise long scrolling lists.
+demoConversations.push(...demoConversations.map(conversation => ({
+  ...conversation, id: `${conversation.id}-encore`, name: `${conversation.name} Studio`,
+  pinned: false, unread: 0, messages: conversation.messages.map(message => ({ ...message })),
+})));
 
 const baseDemoCollabs: DemoCollab[] = [
   {

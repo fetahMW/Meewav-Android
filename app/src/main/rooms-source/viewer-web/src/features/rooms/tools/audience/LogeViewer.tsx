@@ -21,6 +21,9 @@ import type {
 import "./loge-viewer.css";
 import { LogeRequestLists } from "./LogeRequests";
 type Props = {
+  requestsEnabled?: boolean;
+  experiences?: Array<{id:string;type:string;detail:string;status:string}>;
+  onRespondExperience?: (id:string,accept:boolean)=>Promise<unknown>;
   loge: LogeState;
   accountId: string;
   viewer: RoomPerson;
@@ -42,6 +45,7 @@ const statusLabel = {
   cancelled: "Annulé",
 };
 export default function LogeViewer({
+  requestsEnabled = true, experiences = [], onRespondExperience,
   loge,
   accountId,
   viewer,
@@ -60,6 +64,7 @@ export default function LogeViewer({
     [error, setError] = useState(""),
     [sent, setSent] = useState(false);
   const ownQuestions = loge.questions.filter((q) => q.author.id === accountId);
+  const pendingQuestion = ownQuestions.some(q => q.status === "pending" || q.status === "selected");
   const selected = loge.questions.find((q) => q.status === "selected");
   const moments = loge.moments.filter((m) => m.beneficiary.id === accountId);
   const invitation = moments.find(
@@ -69,7 +74,7 @@ export default function LogeViewer({
   );
   const submit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!question.trim() || busy || !canEngage || !loge.questionsOpen) return;
+    if (!question.trim() || busy || !canEngage || !loge.questionsOpen || pendingQuestion) return;
     setError("");
     setSent(false);
     try {
@@ -129,7 +134,7 @@ export default function LogeViewer({
               >
                 <Icon />
                 <span>{label}</span>
-                {id === "personal" && moments.length > 0 ? (
+                {id === "moment" && moments.length > 0 ? (
                   <b>{moments.length}</b>
                 ) : null}
               </button>
@@ -157,7 +162,7 @@ export default function LogeViewer({
         </section>
       ) : (
         <>
-          {invitation ? (
+          {panel === "moment" && invitation ? (
             <section className="loge-viewer__invitation" role="status">
               <UsersRound />
               <div>
@@ -202,8 +207,10 @@ export default function LogeViewer({
             </p>
           ) : null}
           <div className="loge-viewer__content">
+            {panel === "personal" ? <section className="loge-viewer__card"><h3>Les invitations de l’artiste</h3><p>Concert, rencontre, session studio ou scène partagée.</p>{experiences.length ? experiences.map(invite=><article className="loge-viewer__card" key={invite.id}><h4>{invite.type}</h4><p>{invite.detail}</p><small>{{pending:"En attente de votre réponse",accepted:"Acceptée · à organiser",declined:"Déclinée",cancelled:"Annulée",completed:"Expérience réalisée"}[invite.status]}</small>{invite.status==='pending'&&onRespondExperience?<div className="loge-viewer__actions"><button disabled={busy} onClick={()=>void onRespondExperience(invite.id,true).catch(()=>setError("Votre réponse n’a pas été enregistrée."))}>Accepter</button><button disabled={busy} onClick={()=>void onRespondExperience(invite.id,false).catch(()=>setError("Votre réponse n’a pas été enregistrée."))}>Décliner</button></div>:null}</article>):<p>Vos invitations personnelles apparaîtront ici lorsque l’artiste vous en proposera une.</p>}</section>:null}
+
             <div className="loge-viewer__moment" hidden={panel !== "moment"}>
-              <section className="loge-viewer__card loge-viewer__preview">
+              {preview ? <section className="loge-viewer__card loge-viewer__preview">
                 <div className="loge-viewer__section-label">
                   <Headphones />
                   <span>AVANT-PREMIÈRE</span>
@@ -222,14 +229,7 @@ export default function LogeViewer({
                   <p>{loge.preview.description}</p>
                 ) : null}
                 {preview}
-              </section>
-              {selected ? (
-                <section className="loge-viewer__card loge-viewer__selected">
-                  <small>L’ARTISTE VOUS RÉPOND</small>
-                  <blockquote>« {selected.text} »</blockquote>
-                  <span>@{selected.author.name}</span>
-                </section>
-              ) : null}
+              </section> : null}
               <button
                 className="loge-viewer__question-cta"
                 onClick={() => setPanel("questions")}
@@ -252,7 +252,14 @@ export default function LogeViewer({
                 </button>
               ) : null}
             </div>
-            {panel === "personal" ? <LogeRequestLists loge={loge} viewer={{...viewer, id: accountId}} disabled={busy || !canEngage} execute={execute} /> : null}
+            {panel === "moment" && requestsEnabled ? <LogeRequestLists loge={loge} viewer={{...viewer, id: accountId}} disabled={busy || !canEngage} execute={execute} /> : null}
+              {panel === "questions" && selected ? (
+                <section className="loge-viewer__card loge-viewer__selected">
+                  <small>L’ARTISTE VOUS RÉPOND</small>
+                  <blockquote>« {selected.text} »</blockquote>
+                  <span>@{selected.author.name}</span>
+                </section>
+              ) : null}
             {panel === "questions" ? (
               <section className="loge-viewer__card">
                 <div className="loge-viewer__section-label">
@@ -264,7 +271,7 @@ export default function LogeViewer({
                     ? "À vous de demander."
                     : "Les questions sont en pause."}
                 </h3>
-                {canEngage && loge.questionsOpen ? (
+                {canEngage && loge.questionsOpen && !pendingQuestion ? (
                   <form className="loge-viewer__question" onSubmit={submit}>
                     <label htmlFor="loge-viewer-question">
                       Votre question <small>{question.length}/280</small>
@@ -287,7 +294,7 @@ export default function LogeViewer({
                     </button>
                   </form>
                 ) : (
-                  <p>L’artiste choisit le moment d’ouvrir les questions.</p>
+                  <p>{pendingQuestion ? "Votre question attend la réponse de l’artiste. Vous pourrez en poser une nouvelle ensuite." : "L’artiste choisit le moment d’ouvrir les questions."}</p>
                 )}
                 {sent ? (
                   <p className="loge-viewer__success" role="status">
@@ -320,14 +327,14 @@ export default function LogeViewer({
                   )}
                 </div>
               </section>
-            ) : panel === "personal" ? (
+            ) : panel === "moment" ? (
               <section className="loge-viewer__card">
                 <div className="loge-viewer__section-label">
                   <Gift />
-                  <span>VOTRE ESPACE PRIVÉ</span>
+                  <span>MES MOMENTS VIP</span>
                 </div>
-                <h3>Les attentions de l’artiste.</h3>
-                <p>Vos invitations et vos dédicaces, réunies ici.</p>
+                <h3>Vos moments et dédicaces.</h3>
+                <p>Retrouvez ici vos échanges et vos souvenirs personnalisés.</p>
                 {moments.length ? (
                   <div className="loge-viewer__moments">
                     {moments.map((m) => {
@@ -361,7 +368,7 @@ export default function LogeViewer({
                               </a>
                             ) : null}
                             {m.status === "completed" &&
-                            m.privateContent?.startsWith("blob:") ? (
+                            (m.privateContent?.startsWith("blob:") || m.privateContent?.startsWith("/native/loge-media?")) ? (
                               m.format === "video" ? (
                                 <video
                                   src={m.privateContent}

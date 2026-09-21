@@ -1016,6 +1016,7 @@ function PlaceChatWorkspace({
   active,
   giftOnly = false,
   initialGiftRecipientId,
+  extraGiftRecipient,
   onSendMessage,
   onDeleteMessage,
   onVotePoll,
@@ -1029,7 +1030,7 @@ function PlaceChatWorkspace({
   onScheduleGiftDraw,
   onStartGiftDraw,
   onCancelGiftDraw,
-}: Pick<PlaceStudioPanelProps, "room" | "isHost" | "canEngage" | "onSendMessage" | "onDeleteMessage" | "onVotePoll" | "onLaunchPoll" | "onStopPoll" | "onPinMessage" | "onPinHighlight" | "onClearHighlight" | "onSubmitGift" | "onCreateGiftDraw" | "onScheduleGiftDraw" | "onStartGiftDraw" | "onCancelGiftDraw"> & { active: boolean; giftOnly?: boolean; initialGiftRecipientId?: string }) {
+}: Pick<PlaceStudioPanelProps, "room" | "isHost" | "canEngage" | "onSendMessage" | "onDeleteMessage" | "onVotePoll" | "onLaunchPoll" | "onStopPoll" | "onPinMessage" | "onPinHighlight" | "onClearHighlight" | "onSubmitGift" | "onCreateGiftDraw" | "onScheduleGiftDraw" | "onStartGiftDraw" | "onCancelGiftDraw"> & { active: boolean; giftOnly?: boolean; initialGiftRecipientId?: string; extraGiftRecipient?: PlaceGiftRecipientOption }) {
   const [previewPoll, setPreviewPoll] = useState<PlaceRoomState["poll"]>(null);
   useEffect(() => {
     const show = () => {
@@ -1099,8 +1100,8 @@ function PlaceChatWorkspace({
   }, [isHost, room.host, room.participants, room.queue]);
 
   const giftRecipientOptions = useMemo(
-    () => [...roomGiftRecipients, ...messagingGiftRecipients],
-    [messagingGiftRecipients, roomGiftRecipients],
+    () => [...roomGiftRecipients, ...messagingGiftRecipients, ...(extraGiftRecipient && !roomGiftRecipients.some(p=>p.profileId===extraGiftRecipient.profileId) ? [extraGiftRecipient] : [])],
+    [messagingGiftRecipients, roomGiftRecipients, extraGiftRecipient],
   );
 
   useEffect(() => {
@@ -1211,7 +1212,7 @@ function PlaceChatWorkspace({
     if (!delivery) throw new Error("gift-delivery-not-confirmed");
   }, [onSubmitGift]);
 
-  if (!isHost) return (
+  if (!isHost && !giftOnly) return (
     <div className="place-chat-workspace is-viewer-chat">
       {!previewPoll && room.poll && (room.poll.isActive || room.poll.resultsVisible) ? <div className="rooms-chat-poll-slot"><ChatAudiencePoll room={room} canEngage={canEngage} onVotePoll={onVotePoll} /></div> : null}
       {previewPoll ? <div className="wave-chat-poll-preview"><header><small>SONDAGE · SIMULATION</small><button type="button" aria-label="Fermer le sondage simulé" onClick={() => setPreviewPoll(null)}><X aria-hidden="true" /></button></header><ChatAudiencePoll room={{...room,poll:previewPoll}} canEngage={true} onVotePoll={votePreviewPoll} /><small>Réponses du public simulées · aucun vote réel envoyé</small></div> : null}
@@ -1251,7 +1252,7 @@ function PlaceChatWorkspace({
         onBusyChange={(pollBusy) => setToolBusy(pollBusy ? "poll" : null)}
       /> : <ChatAudiencePoll room={room} canEngage={canEngage} onVotePoll={onVotePoll} />}</section> : null}
 
-      {activeTool === "gift" ? <section id="place-chat-panel-gift" role="tabpanel" aria-labelledby="place-chat-action-gift" className="place-chat-workspace__panel">{isHost ? <PlaceGiftTool
+      {activeTool === "gift" ? <section id="place-chat-panel-gift" role="tabpanel" aria-labelledby="place-chat-action-gift" className="place-chat-workspace__panel">{isHost || giftOnly ? <PlaceGiftTool
         initialRecipientProfileId={initialGiftRecipientId}
         senderGradeLevel={room.currentUserProfile?.gradeLevel}
         recipientOptions={giftRecipientOptions}
@@ -1532,6 +1533,13 @@ function PlaceGuests({
 }
 
 export default function PlaceStudioPanel(props: PlaceStudioPanelProps) {
+  const [giftPerson,setGiftPerson]=useState<{id:string;name:string;avatarUrl:string}|null>(null);
+  useEffect(()=>{
+    const offer=(event:Event)=>setGiftPerson((event as CustomEvent).detail);
+    const close=(event:KeyboardEvent)=>{if(event.key==='Escape')setGiftPerson(null);};
+    window.addEventListener('meewav:offer-gift',offer);window.addEventListener('keydown',close);
+    return()=>{window.removeEventListener('meewav:offer-gift',offer);window.removeEventListener('keydown',close);};
+  },[]);
   const presentation = useRoomPresentation();
   const content = presentation.id === "wave" && props.isHost
     ? <WaveTransportProvider toolsVisible={props.surface === "tools"}>
@@ -1539,9 +1547,10 @@ export default function PlaceStudioPanel(props: PlaceStudioPanelProps) {
       <PlaceStudioPanelContent {...props} />
     </WaveTransportProvider>
     : <PlaceStudioPanelContent {...props} />;
-  return props.isHost
+  const panel = props.isHost
     ? <StudioToolsLayoutProvider key={props.room.id} toolsVisible={props.surface === "tools"}>{content}</StudioToolsLayoutProvider>
     : content;
+  return <>{panel}{giftPerson && createPortal(<section className="viewer-gift-sheet" role="dialog" aria-modal="true" aria-label={`Offrir à ${giftPerson.name}`}><header><strong>Offrir à {giftPerson.name}</strong><button type="button" aria-label="Fermer les cadeaux" onClick={()=>setGiftPerson(null)}><X/></button></header><PlaceChatWorkspace {...props} active giftOnly initialGiftRecipientId={giftPerson.id} extraGiftRecipient={{profileId:giftPerson.id,displayName:giftPerson.name,avatarUrl:giftPerson.avatarUrl,source:"room"}} onCreateGiftDraw={undefined} onScheduleGiftDraw={undefined} onStartGiftDraw={undefined} onCancelGiftDraw={undefined}/></section>,document.body)}</>;
 }
 
 function PlaceStudioPanelContent(props: PlaceStudioPanelProps) {

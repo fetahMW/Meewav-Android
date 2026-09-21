@@ -80,6 +80,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.meewav.android.R
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -98,11 +99,11 @@ enum class WaveTab(val label: String, val icon: ImageVector) {
 /* ------------------------------------------------------------------------- */
 
 @Composable
-fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = null, cageProgram: String? = null, programScope: String = "demo",
+fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = null, liveRoomId:String? = null, cageProgram: String? = null, programScope: String = "demo",
                     onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
-    WaveMixerSession(room,roomTitle,cageProgram,programScope,onBack,onClose)
+    WaveMixerSession(room,roomTitle,cageProgram,programScope,onBack,onClose,liveRoomId)
 }
-@Composable private fun WaveMixerSession(initialRoom:RoomModule,initialTitle:String?,cageProgram:String?,programScope:String,onBack:()->Unit,onClose:()->Unit) {
+@Composable private fun WaveMixerSession(initialRoom:RoomModule,initialTitle:String?,cageProgram:String?,programScope:String,onBack:()->Unit,onClose:()->Unit,liveRoomId:String?) {
     var room by remember(initialRoom){mutableStateOf(initialRoom)}
     var roomTitle by remember(initialTitle){mutableStateOf(initialTitle)}
     var switchOpen by remember{mutableStateOf(false)}
@@ -127,10 +128,21 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     val cageCache=remember{mutableMapOf<RoomModule,CageToolsState>()}
     val waveCache=remember{mutableMapOf<RoomModule,WaveCompositionState>()}
     val appliedRooms=remember{mutableSetOf(initialRoom)}
-    val classe = remember(room, guestState, programScope) { if (room == RoomModule.CLASSE) classeCache.getOrPut(room){ClasseToolsState(context.applicationContext, guestState, programScope).also { if (!roomTitle.isNullOrBlank()) it.title = roomTitle.orEmpty() }} else null }
+    val classe = remember(room, guestState, programScope) { if (room == RoomModule.CLASSE) classeCache.getOrPut(room){ClasseToolsState(context.applicationContext, guestState, programScope).also { if (!roomTitle.isNullOrBlank() && !roomTitle.equals(room.label, ignoreCase = true)) it.title = roomTitle.orEmpty() }} else null }
     val scene = remember(room, guestState, programScope) { if (room == RoomModule.SCENE) sceneCache.getOrPut(room){SceneToolsState(context.applicationContext, guestState, programScope + ":" + roomTitle.orEmpty(),room==initialRoom)} else null }
-    val loge = remember(room, guestState, programScope) { if (room == RoomModule.LOGE) logeCache.getOrPut(room){LogeToolsState(context.applicationContext, guestState, programScope + ":" + roomTitle.orEmpty(),room==initialRoom)} else null }
+    val loge = remember(room, guestState, programScope) { if (room == RoomModule.LOGE) logeCache.getOrPut(room){LogeToolsState(context.applicationContext, guestState, if(liveRoomId!=null)"live:"+liveRoomId else programScope + ":" + roomTitle.orEmpty(),liveRoomId==null&&room==initialRoom)} else null }
     val place = remember(room, guestState, programScope) { if (room == RoomModule.PLACE) placeCache.getOrPut(room){PlaceToolsState(context.applicationContext, guestState, programScope + ":" + roomTitle.orEmpty())} else null }
+    val logeNetwork=remember(liveRoomId){liveRoomId?.let{LogeRemoteRepository(context.applicationContext,it)}}
+    LaunchedEffect(loge,logeNetwork) {
+        if(loge!=null && logeNetwork!=null) {
+            loge.remoteMode=true
+            loge.remoteAction={action,payload ->
+                launch { loge.remoteBusy=true;try{loge.acceptRemote(logeNetwork.action(action,payload));loge.notice=null}catch(e:Exception){loge.notice=e.message?:"Enregistrement impossible"}finally{loge.remoteBusy=false} }
+            }
+            try { while(true) {if(!loge.remoteBusy)try{loge.acceptRemote(logeNetwork.read())}catch(e:Exception){loge.notice=e.message?:"Synchronisation impossible"};delay(2000)} }
+            finally {loge.remoteAction=null}
+        }
+    }
     LaunchedEffect(place) { if(place!=null)while(true){place.tick();delay(250)} }
     LaunchedEffect(loge) { if (loge != null) while (true) { loge.tick(); delay(250) } }
     LaunchedEffect(classe, guestState.guests) { classe?.syncStudents() }
@@ -175,8 +187,19 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     var selector by remember { mutableStateOf<String?>(null) } // "key" | "scale"
     var multitrack by remember { mutableStateOf(false) }
     val composition = remember(context, room, roomTitle) {
-        if (room == RoomModule.WAVE) waveCache.getOrPut(room){WaveCompositionState(context.applicationContext, roomTitle ?: "wave-demo")} else null
+        if (room == RoomModule.WAVE) waveCache.getOrPut(room){WaveCompositionState(context.applicationContext, liveRoomId?.let { "live:$it" } ?: (roomTitle ?: "wave-demo"), demo = liveRoomId == null)} else null
     }
+    val liveAudio = remember(room, liveRoomId, composition) {
+        if (room == RoomModule.WAVE && initialRoom == RoomModule.WAVE && liveRoomId != null && composition != null)
+            RoomsAudioSession(context.applicationContext, RoomsAudioRepository(context.applicationContext, liveRoomId), composition.audio, mixerDeck.audio)
+        else null
+    }
+    val controlledGuest = if (liveAudio == null) guestState.mixerGuest else null
+    LaunchedEffect(liveAudio, micGain, micMuted, monitoring, autotuneOn, reverbOn, reverbValue, tuneKey, tuneScale, composition?.publicRoute, composition?.outputGain, mixerDeck.public, audioGain, audioMuted) {
+        liveAudio?.configure(WaveVocalSettings(micMuted, micGain, monitoring, autotuneOn, waveTuneScale(tuneKey, tuneScale), reverbOn, reverbValue),
+            composition?.publicRoute == true, composition?.outputGain ?: 1f, mixerDeck.public, if (audioMuted) 0f else audioGain)
+    }
+    DisposableEffect(liveAudio) { onDispose { liveAudio?.close() } }
     LaunchedEffect(audioGain, audioMuted) { mixerDeck.volume(if (audioMuted) 0f else audioGain) }
     LaunchedEffect(composition?.snapshot?.running, composition?.snapshot?.cue) {
         if (composition?.playing == true) mixerDeck.suspendAudio()
@@ -185,7 +208,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
     DisposableEffect(composition, lifecycle) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
-            if (event == androidx.lifecycle.Lifecycle.Event.ON_STOP) { composition?.suspendAudio(); mixerDeck.suspendAudio(); cage?.pause() }
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_STOP) { liveAudio?.stop(); composition?.suspendAudio(); mixerDeck.suspendAudio(); cage?.pause() }
         }
         lifecycle.addObserver(observer)
         onDispose { lifecycle.removeObserver(observer) }
@@ -252,7 +275,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
             (maxHeight - if (emojiPanelOpen) 405.dp else 305.dp).coerceIn(0.dp, fullVideoHeight) else fullVideoHeight
         val workshopHeight = (maxHeight - 44.dp - videoViewportHeight - 6.dp).coerceAtLeast(0.dp)
         Column(Modifier.fillMaxSize()) {
-            WaveHeader(title = cage?.title ?: classe?.title ?: roomTitle?.takeIf { it.isNotBlank() && it!=room.label } ?: if (room == RoomModule.WAVE) "Freestyle session — Luma invite" else if (room == RoomModule.SCENE) "Scène ouverte — Lumière noire" else if (room == RoomModule.LOGE) "Éclipse — dans la Loge de Naya" else if(room==RoomModule.PLACE)"Autour du micro — avec Luma"else room.label,
+            WaveHeader(title = cage?.title ?: classe?.let { it.title.takeUnless { title -> title.isBlank() || title.equals(room.label, ignoreCase = true) } ?: "Écrire des couplets plus visuels" } ?: roomTitle?.takeIf { it.isNotBlank() && it!=room.label } ?: if (room == RoomModule.WAVE) "Freestyle session — Luma invite" else if (room == RoomModule.SCENE) "Scène ouverte — Lumière noire" else if (room == RoomModule.LOGE) "Éclipse — dans la Loge de Naya" else if(room==RoomModule.PLACE)"Autour du micro — avec Luma"else room.label,
                 onBack = { showLeaveConfirm = true }, onClose = { showLeaveConfirm = true },onSwitch={switchState.notice=null;switchOpen=true})
             Box(Modifier.fillMaxWidth().height(videoViewportHeight).clipToBounds().roomVideoTouches(videoControls)) {
                 if (cage != null) CageVideoStage(cage, interactive = activeTab == WaveTab.INVITES,
@@ -295,6 +318,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                         .padding(top = 8.dp)
                         .height(49.dp)
                 )
+                WaveLiveAudioControl(liveAudio, Modifier.padding(horizontal = 16.dp))
                 Box(
                     Modifier
                         .fillMaxWidth()
@@ -303,11 +327,11 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                 ) {
                 when (activeTab) {
                     WaveTab.MIXEUR -> MixerBody(
-                        guest = guestState.mixerGuest, deck = mixerDeck, onDeckPlay = { composition?.suspendAudio(); mixerDeck.toggle() },
-                        micGain = guestState.mixerGuest?.let { guestState.guestGain(it.id) } ?: micGain, audioGain = audioGain,
-                        micMuted = guestState.mixerGuest?.let { !it.mic } ?: micMuted, audioMuted = audioMuted,
-                        onMicGain = { value -> guestState.mixerGuest?.let { guestState.setGuestGain(it.id, value) } ?: run { micGain = value } }, onAudioGain = { audioGain = it },
-                        onMicMute = { guestState.mixerGuest?.let { guestState.toggleMic(it.id) } ?: run { micMuted = !micMuted } }, onAudioMute = { audioMuted = !audioMuted },
+                        guest = controlledGuest, deck = mixerDeck, onDeckPlay = { composition?.suspendAudio(); mixerDeck.toggle() },
+                        micGain = controlledGuest?.let { guestState.guestGain(it.id) } ?: micGain, audioGain = audioGain,
+                        micMuted = controlledGuest?.let { !it.mic } ?: micMuted, audioMuted = audioMuted,
+                        onMicGain = { value -> controlledGuest?.let { guestState.setGuestGain(it.id, value) } ?: run { micGain = value } }, onAudioGain = { audioGain = it },
+                        onMicMute = { controlledGuest?.let { guestState.toggleMic(it.id) } ?: run { micMuted = !micMuted } }, onAudioMute = { audioMuted = !audioMuted },
                         isPro = isPro, onProChange = { isPro = it },
                         monitoring = monitoring, onMonitoring = { monitoring = !monitoring },
                         autotuneOn = autotuneOn, onAutotune = { autotuneOn = !autotuneOn },

@@ -1,10 +1,9 @@
+import RoomArtistProfileContent from "./RoomArtistProfileContent";
 // Android adapter of the frozen web pre-profile: preserve content, enable native profile navigation.
 import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
-import { PreProfileFrame } from "./viewer-web/src/features/globe/components/PreProfileFrame";
-import HoverPreProfileContent from "./viewer-web/src/features/globe/components/preProfile/HoverPreProfileContent";
 import { getPreProfileArtistForSeed, type PreProfileDemoArtist } from "./viewer-web/src/features/globe/components/preProfile/demoPreProfileArtist";
 import type { RoomPerson } from "./viewer-web/src/features/rooms/tools/roomTools.types";
 import "./viewer-web/src/features/rooms/tools/panels/class-student-pre-profile.css";
@@ -19,6 +18,7 @@ export default function ClassStudentPreProfile({ person, source, onClose, return
   const closeButton = useRef<HTMLButtonElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [closing, setClosing] = useState(false);
+
   const [bounds, setBounds] = useState({ left: 0, top: 0, width: 0, height: 0 });
   // Preserve the profile's original composition while letting its frame stay tall.
   const scale = bounds.width > 0 && bounds.height > 0
@@ -47,12 +47,12 @@ export default function ClassStudentPreProfile({ person, source, onClose, return
   }, [person, source]);
   useEffect(() => {
     const trigger = returnFocusTo;
-    const roster = boundsElement ?? trigger?.closest(".is-classroom")?.querySelector(".classroom-roster");
+    const roster = document.querySelector('.android-room-viewer') ?? boundsElement;
     const resize = () => {
       const rect = roster?.getBoundingClientRect();
       if (!rect) return;
       const bottom = bottomBoundaryElement?.getBoundingClientRect().top;
-      const top = Math.max(rect.top, (topBoundaryElement?.getBoundingClientRect().bottom ?? rect.top) + (topBoundaryElement ? 7 : 0));
+      const top = Math.max(rect.top, (document.querySelector('.place-stage')?.getBoundingClientRect().bottom ?? rect.top) + 7);
       const height = Math.max(0, Math.min(rect.bottom, bottom !== undefined ? bottom - 8 : rect.bottom) - top);
       setBounds({ left: rect.left, top, width: rect.width, height });
     };
@@ -75,12 +75,12 @@ export default function ClassStudentPreProfile({ person, source, onClose, return
   return createPortal(<div className="class-student-pre-profile-viewport" style={bounds}>
     <div role="dialog" aria-modal="false" className={`class-student-pre-profile${closing ? " is-closing" : ""}`}
     aria-label={`Pré-profil de ${person.name}`}
-    style={{ zoom: scale, height: bounds.height > 0 ? bounds.height / scale : 588 }}
+    style={{ zoom: scale, width: bounds.width > 0 ? bounds.width / scale : 413, height: bounds.height > 0 ? bounds.height / scale : 588 }}
     onKeyDown={(event) => { if (event.key === "Escape" && !event.defaultPrevented) { event.preventDefault(); event.stopPropagation(); requestClose(); } }}>
-    <PreProfileFrame><HoverPreProfileContent artist={artist} demoFollow={source === "demo"} showMapPin={false} onOpenProfile={id => {
+    <RoomArtistProfileContent artist={artist} demo={source === "demo"} onOffer={() => { onClose(); window.dispatchEvent(new CustomEvent("meewav:offer-gift", {detail:person})); }} onOpenProfile={id => {
       const details=new URLSearchParams({name:person.name,role:person.role,portrait:person.avatarUrl,grade:String(person.gradeLevel??1)});
       navigate(`/profile/view/${encodeURIComponent(id)}?${details}`);
-    }} /></PreProfileFrame>
+    }} />
     <button ref={closeButton} type="button" className="class-student-pre-profile__close" aria-label="Fermer le pré-profil" onClick={requestClose}><X aria-hidden="true" /></button>
   </div></div>, document.body);
 }

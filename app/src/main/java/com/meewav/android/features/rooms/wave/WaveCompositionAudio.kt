@@ -195,7 +195,9 @@ internal class WaveCompositionAudio : AutoCloseable {
     private data class Voice(val id: String, val pcm: WavePcm, var active: Boolean = false,
         var waitingUntil: Long = -1, var position: Long = 0, var repeats: Int = -1,
         var mute: Boolean = false, var solo: Boolean = false, var gain: Float = .65f, var smoothGain: Float = 0f,
-        var placements: List<Pair<Long, Long>> = emptyList())
+        var placements: List<Pair<Long, Long>> = emptyList(), var publicGain: Float = 0f)
+    @Volatile var liveOutput: WaveLiveOutput? = null
+    @Volatile var programInput: WaveProgramInput? = null
     private val commands = ConcurrentLinkedQueue<() -> Unit>()
     private val voices = linkedMapOf<String, Voice>()
     @Volatile private var alive = true
@@ -304,12 +306,14 @@ internal class WaveCompositionAudio : AutoCloseable {
     }
     private val thread = Thread({
         Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO)
-        val block = FloatArray(512 * 2)
+        val block = FloatArray(480 * 2)
+        val program = FloatArray(480 * 2)
         try {
             while (alive) {
                 while (true) (commands.poll() ?: break).invoke()
                 if (!alive) break
-                if (!running && (cue == null || cuePaused)) { publish(); output?.pause(); Thread.sleep(12); continue }
+                val live = liveOutput?.takeIf { it.active }
+                if (!running && (cue == null || cuePaused) && live == null) { publish(); output?.pause(); Thread.sleep(12); continue }
                 val track = output ?: AudioTrack.Builder()
                     .setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build())
                     .setAudioFormat(AudioFormat.Builder().setSampleRate(WaveCompositionDecoder.RATE).setChannelMask(AudioFormat.CHANNEL_OUT_STEREO).setEncoding(AudioFormat.ENCODING_PCM_FLOAT).build())
@@ -320,8 +324,10 @@ internal class WaveCompositionAudio : AutoCloseable {
                 val hasSolo = voices.values.any { it.solo }
                 val blockVoices = voices.values.toTypedArray()
                 var leftPeak = 0f; var rightPeak = 0f
-                for (i in 0 until 512) {
+                program.fill(0f)
+                for (i in 0 until 480) {
                     var left = 0f; var right = 0f
+                    var publicLeft = 0f; var publicRight = 0f
                     if (running) {
                         if (loopEnd > loopStart && timeline >= loopEnd) {
                             timeline = loopStart
@@ -335,6 +341,9 @@ internal class WaveCompositionAudio : AutoCloseable {
                                 it.smoothGain += (target - it.smoothGain) * .006f
                                 left += it.pcm.samples.get(timeline.toInt() * 2) * it.smoothGain
                                 right += it.pcm.samples.get(timeline.toInt() * 2 + 1) * it.smoothGain
+                                it.publicGain += (it.gain - it.publicGain) * .006f
+                                publicLeft += it.pcm.samples.get(timeline.toInt() * 2) * it.publicGain
+                                publicRight += it.pcm.samples.get(timeline.toInt() * 2 + 1) * it.publicGain
                             } else if (loopEnd == 0L) { running = false; paused = false }
                         }
                         for (voice in blockVoices) {
@@ -350,6 +359,10 @@ internal class WaveCompositionAudio : AutoCloseable {
                             val source = ((placement?.let { timeline - it.first } ?: voice.position) % voice.pcm.frames).toInt() * 2
                             left += voice.pcm.samples.get(source) * voice.smoothGain
                             right += voice.pcm.samples.get(source + 1) * voice.smoothGain
+                            val publicTarget = if (voice.mute || (hasSolo && !voice.solo)) 0f else voice.gain * edgeGain
+                            voice.publicGain += (publicTarget - voice.publicGain) * .006f
+                            publicLeft += voice.pcm.samples.get(source) * voice.publicGain
+                            publicRight += voice.pcm.samples.get(source + 1) * voice.publicGain
                             voice.position++
                         }
                         candidate?.let {
@@ -373,8 +386,12 @@ internal class WaveCompositionAudio : AutoCloseable {
                     }
                     left = (left * master).coerceIn(-.98f, .98f); right = (right * master).coerceIn(-.98f, .98f)
                     block[i * 2] = left; block[i * 2 + 1] = right
+                    // Reference + accepted composition only. Cue/candidate and monitor gain stay private.
+                    program[i * 2] = publicLeft; program[i * 2 + 1] = publicRight
                     leftPeak = max(leftPeak, abs(left)); rightPeak = max(rightPeak, abs(right))
                 }
+                programInput?.offer(program)
+                live?.render(live.microphone.read(), program, block)
                 var offset = 0
                 while (offset < block.size && alive) {
                     val n = track.write(block, offset, block.size - offset, AudioTrack.WRITE_BLOCKING)

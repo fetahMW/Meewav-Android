@@ -1,3 +1,4 @@
+import AndroidLogeViewer from "./AndroidLogeViewer";
 import RoomVotePolicyLabel from "../../voting/RoomVotePolicyLabel";
 import { canCastRoomVote } from "../../voting/roomVoting";
 import CageResults from "../panels/CageResults";
@@ -438,7 +439,7 @@ function ClasseAudience({ classe, role, accountId, roomId, canEngage, busy, exec
     }
   };
   return <div ref={classroomRef} className="room-tools-shell is-classe classe-student-workspace" data-room-tools="classe">
-    <header className="classe-student-heading"><strong>{seat && role === "premium_participant" ? `Élève premium · Place ${seat.number}/24` : "Spectateur · La Classe"}</strong><small>{seat?.person?.name}</small></header>
+
     <div ref={contentRef} className="classe-student-content">
     {privateActive ? <div className="room-audience-callout is-private" role="status"><span><Headphones /></span><span><small>CONVERSATION PRIVÉE</small><strong>Le professeur vous parle en privé.</strong><em>Vous continuez d’entendre le cours. Votre retour n’est pas envoyé à la classe.</em></span></div> : null}
     {active ? <div className="room-audience-callout is-speaking" role="status"><span><Mic /></span><span><small>PRISE DE PAROLE</small><strong>Le professeur vous donne la parole.</strong><em>{interventionError ?? "Votre micro est autorisé pour cette intervention."}</em></span><button type="button" disabled={!canEngage || busy || endingIntervention} onClick={() => {
@@ -744,6 +745,7 @@ export default function RoomAudienceInteractions({ roomType, room, isHost, isGue
   };
   const audienceRole = resolveRoomAudienceRole({ roomType, actorRole: toolsRole, accountId, state });
 
+  if(roomType==="loge" && room.source==="live")return <div className="room-audience-interactions is-loge"><AndroidLogeViewer roomId={room.id} title={room.title} hostName={room.host.displayName} fallback={createRoomToolsFixture("loge",room.id).loge!} onOpenChat={onOpenChat}/></div>;
   if (!state) return <div className="room-audience-interactions is-loading" role="status"><Sparkles /><span><strong>Préparation de l’expérience publique…</strong><small>Les interactions disponibles vont apparaître sans interrompre le live.</small></span></div>;
 
   return <div className={`room-audience-interactions is-${roomType}`} data-audience-role={audienceRole}><RoomVotePolicyLabel roomId={room.id} source={room.source} accountId={accountId}/>
@@ -755,7 +757,7 @@ export default function RoomAudienceInteractions({ roomType, room, isHost, isGue
       {roomType === "classe" && state.classe ? <ClasseAudience visible={active} source={room.source} onOpenChat={onOpenChat} onLeaveRoom={onLeaveRoom} classe={state.classe} role={toolsRole} accountId={accountId} roomId={room.id} canEngage={canEngage} busy={busy} execute={execute} onEndIntervention={() => endClasseAudienceIntervention({ source: room.source, roomId: room.id, accountId, liveCall, execute })} /> : null}
       {roomType === "wave" && state.wave ? <WaveAudience wave={state.wave} source={room.source} roomId={room.id} accountId={accountId} viewer={viewer} canEngage={canEngage} busy={busy} execute={execute} /> : null}
       {roomType === "cage" && state.cage ? state.cage.runtime?.publicResults ? <CageResults runtime={state.cage.runtime} matchId={state.cage.runtime.publicResults.matchId}/> : state.cage.runtime?.config.format === "open-mic" ? <>{cageParticipation}<CageOpenMicAudience state={state} accountId={accountId} canEngage={canEngage && canVote} busy={busy} execute={execute}/></> : <CageViewerShowcase enabled={room.source === "demo"}><CageAudience cage={state.cage} accountId={accountId} canEngage={canEngage && canVote} busy={busy} execute={execute} participation={cageParticipation} /></CageViewerShowcase> : null}
-      {roomType === "loge" && state.loge ? <LogeViewer loge={state.loge} accountId={accountId} viewer={viewer} hostName={room.host.displayName} eligible={Boolean(state.audience?.eligible)} canEngage={canEngage} busy={busy} execute={execute} onOpenChat={onOpenChat} preview={isLogePreviewAvailable(state.loge.preview)?<LogePreviewPlayer roomId={room.id} source={room.source} preview={state.loge.preview} available/>:<div className="loge-viewer__waiting"><Headphones/><strong>L’artiste prépare une avant-première</strong><p>Continuez à profiter du live. Le contenu apparaîtra ici à son lancement.</p></div>}/> : null}
+      {roomType === "loge" && state.loge ? room.source === "demo" && location.hostname === "appassets.androidplatform.net" ? <AndroidLogeViewer title={room.title} hostName={room.host.displayName} fallback={state.loge} onOpenChat={onOpenChat}/> : <LogeViewer loge={state.loge} accountId={accountId} viewer={viewer} hostName={room.host.displayName} eligible={Boolean(state.audience?.eligible)} canEngage={canEngage} busy={busy} execute={execute} onOpenChat={onOpenChat} preview={isLogePreviewAvailable(state.loge.preview)?<LogePreviewPlayer roomId={room.id} source={room.source} preview={state.loge.preview} available/>:<div className="loge-viewer__waiting"><Headphones/><strong>L’artiste prépare une avant-première</strong><p>Continuez à profiter du live. Le contenu apparaîtra ici à son lancement.</p></div>}/> : null}
     </div>
   </div>;
 }

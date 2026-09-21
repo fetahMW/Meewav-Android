@@ -1,5 +1,5 @@
-const shortLivePulseUrl = new URL("ui/preprofile-demo/short-live-pulse.webp", document.baseURI).href;
-const shortStudioSessionUrl = new URL("ui/preprofile-demo/short-studio-session.webp", document.baseURI).href;
+const shortLivePulseUrl = new URL("/globe-vinyle/ui/preprofile-demo/short-live-pulse.webp", document.baseURI).href;
+const shortStudioSessionUrl = new URL("/globe-vinyle/ui/preprofile-demo/short-studio-session.webp", document.baseURI).href;
 
 export type PreProfileDemoArtist = {
   id: string;
@@ -48,14 +48,14 @@ export type PreProfileDemoArtist = {
 export const DEMO_PREPROFILE_SHORTS: PreProfileDemoArtist["shorts"] = [
   {
     id: "dj-turntable",
-    mediaUrl: new URL("ui/preprofile-demo/dj-turntable.mp4", document.baseURI).href,
+    mediaUrl: new URL("/globe-vinyle/ui/preprofile-demo/dj-turntable.mp4", document.baseURI).href,
     thumbnailUrl: shortStudioSessionUrl,
     duration: "0:12",
     title: "DJ turntable",
   },
   {
     id: "female-guitarist",
-    mediaUrl: new URL("ui/preprofile-demo/female-guitarist.mp4", document.baseURI).href,
+    mediaUrl: new URL("/globe-vinyle/ui/preprofile-demo/female-guitarist.mp4", document.baseURI).href,
     thumbnailUrl: shortLivePulseUrl,
     duration: "0:08",
     title: "Session guitare",
@@ -65,7 +65,7 @@ export const DEMO_PREPROFILE_SHORTS: PreProfileDemoArtist["shorts"] = [
 export const DEMO_PREPROFILE_AUDIOS: PreProfileDemoArtist["audios"] = [
   {
     id: "tech-house-vibes",
-    mediaUrl: new URL("ui/preprofile-demo/tech-house-vibes.mp3", document.baseURI).href,
+    mediaUrl: new URL("/globe-vinyle/ui/preprofile-demo/tech-house-vibes.mp3", document.baseURI).href,
     title: "Tech House Vibes",
     subtitle: "Alejandro Magaña",
     duration: "1:42",
@@ -73,7 +73,7 @@ export const DEMO_PREPROFILE_AUDIOS: PreProfileDemoArtist["audios"] = [
   },
   {
     id: "hazy-after-hours",
-    mediaUrl: new URL("ui/preprofile-demo/hazy-after-hours.mp3", document.baseURI).href,
+    mediaUrl: new URL("/globe-vinyle/ui/preprofile-demo/hazy-after-hours.mp3", document.baseURI).href,
     title: "Hazy After Hours",
     subtitle: "Alejandro Magaña",
     duration: "2:07",

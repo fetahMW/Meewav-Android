@@ -1,5 +1,7 @@
+import {getSessionUser} from "../profile-source/runtime";
 import "./viewer-video-controls.css";
 import NativeViewerSurfaces from './NativeViewerSurfaces';
+import WaveLiveAudio from './WaveLiveAudio';
 import {useEffect,useMemo,useState} from 'react';
 import AndroidViewerPreProfile from './AndroidViewerPreProfile';
 import type {RoomPerson} from './viewer-web/src/features/rooms/tools/roomTools.types';
@@ -37,6 +39,8 @@ import "./viewer-web/src/features/rooms/place/place-chat-smoked-glass.css";
 import "./viewer-web/src/features/rooms/place/place-guest-reference.css";
 export default function RoomViewer({room,onLeave}:{room:RoomsHomeRoom;onLeave:()=>void}) {
  const navigate=useNavigate();
+ const [realUserId,setRealUserId]=useState<string|null>(null);
+ useEffect(()=>{void getSessionUser().then(({data})=>setRealUserId(data.user?.id??null));},[]);
  const demo=useMemo(()=>createRoomsHomeDemoState(room,PLACE_DEMO_PROFILES.viewerA.id),[room]);
  const [preProfile,setPreProfile]=useState<{person:RoomPerson;trigger:HTMLElement|null}|null>(null);
  const openPreProfile=(id:string)=>{
@@ -60,7 +64,8 @@ export default function RoomViewer({room,onLeave}:{room:RoomsHomeRoom;onLeave:()
   <NativeViewerSurfaces room={room.id} name={demo.currentUserProfile?.displayName ?? "Moi"}/>
   <header className="android-room-viewer__header"><button type="button" aria-label="Retour aux rooms" onClick={onLeave}><ArrowLeft/></button><h1>{room.title}</h1><button type="button" aria-label="Quitter le live" onClick={onLeave}><X/></button></header>
   <AudioEngineProvider><RoomPresentationProvider presentation={LIVE_ROOM_PRESENTATIONS[room.roomType]}>
-   <PlaceRoomExperience initialPanelCollapsed={false} demoRole="viewer" demoRoom={demo} currentUserId={PLACE_DEMO_PROFILES.viewerA.id}
+   {room.source==='live'&&room.roomType==='wave'?<WaveLiveAudio roomId={room.id}/>:null}
+   <PlaceRoomExperience initialPanelCollapsed={false} demoRole={room.source==='live'&&room.roomType==='wave'?undefined:'viewer'} demoRoom={room.source==="live"?undefined:demo} requestedRoomId={room.source==="live"?room.id:undefined} currentUserId={room.source==="live"?realUserId:PLACE_DEMO_PROFILES.viewerA.id}
     onLeaveRoom={onLeave} onOpenProfile={openPreProfile}
     onMessageProfile={id=>openMessaging(id,'message')}
     onCollaborateProfile={(id,requestId)=>openMessaging(id,'collaboration',requestId)}/>

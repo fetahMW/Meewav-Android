@@ -42,3 +42,5 @@
 #root .mobile-messaging .mw-chat-header__identity { min-width: 0; flex: 1; }
 #root .mobile-messaging .mw-chat-header__identity-text { min-width: 0; }
 @media (max-height: 620px) { .mw-video-call__identity { gap: 5px; } .mw-video-call footer { gap: 10px; padding: 10px 16px; } .mw-video-call__controls button { min-height: 48px; flex-direction: row; } .mw-video-call__controls button span { display: none; } }
+
+.mw-video-call.is-audio .mw-video-call__local { display: none; }

@@ -832,3 +832,8 @@ html { scroll-padding-top: 120px; scroll-padding-bottom: 116px; }
 #root .profile-media-view .profile-gifts-catalog-section > header { margin-bottom: 0; }
 #root .profile-media-view .profile-gift-catalog { margin-top: 0; }
 #root .profile-media-view .profile-gift-catalog-card__copy > p { color: #a7a5b5; }
+
+/* Reversible acoustic background trial: September 21, Rooms home and Profile only. */
+#root .profile-page__background {background:#08090b url("/profile/images/acoustic-black-background-trial.png") center center / cover no-repeat!important;}
+#root .profile-page__background::after {background:none!important;}
+#root .profile-page__background > span {display:none!important;}

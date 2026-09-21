@@ -25,7 +25,7 @@ class WaveMixerActivity : ComponentActivity() {
         setContent {
             WaveMixerScreen(
                 room = RoomModule.fromRoute(intent.getStringExtra("roomType")) ?: RoomModule.WAVE,
-                roomTitle = intent.getStringExtra("roomTitle"),
+                roomTitle = intent.getStringExtra("roomTitle"), liveRoomId = intent.getStringExtra("liveRoomId"),
                 cageProgram = intent.getStringExtra("cageProgram"), programScope = intent.getStringExtra("programScope") ?: "demo",
                 onBack = { finish() }, onClose = { finish() })
         }

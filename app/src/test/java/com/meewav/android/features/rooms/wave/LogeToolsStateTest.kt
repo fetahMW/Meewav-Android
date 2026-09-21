@@ -81,4 +81,19 @@ class LogeToolsStateTest {
         s.experienceStatus(id,"cancelled")
         assertEquals("completed",s.data.experiences.first().status)
     }
+    @Test fun viewerChangesAreReloadedByHostWithoutReopeningRoom() {
+        var saved:String?=null
+        val host=LogeToolsState(WaveGuestState(),{saved},{saved=it})
+        host.offerExperience("loge-a","Concert","Paris")
+        saved=saved!!.replace("\"status\":\"pending\"","\"status\":\"accepted\"")
+        host.tick()
+        assertEquals("accepted",host.data.experiences.first().status)
+        host.experienceStatus(host.data.experiences.first().id,"completed")
+        assertTrue(saved!!.contains("completed"))
+    }
+    @Test fun requestedVipMomentRequiresHostInvitationBeforeAcceptance() {
+        assertFalse(LogeRules.transition("pending","accepted"))
+        assertTrue(LogeRules.transition("pending","scheduled"))
+        assertFalse(LogeRules.transition("pending","live"))
+    }
 }

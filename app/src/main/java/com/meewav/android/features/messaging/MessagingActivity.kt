@@ -253,7 +253,8 @@ open class MessagingActivity : ComponentActivity() {
                         .putExtra("roomTitle", request.url.getQueryParameter("title")?.take(160))
                         .putExtra("cageProgram", request.url.getQueryParameter("program")?.take(80_000))
                         .putExtra("programScope", profileId ?: "demo")
-                        .putExtra("roomId", request.url.getQueryParameter("id")?.take(160)))
+                        .putExtra("roomId", request.url.getQueryParameter("id")?.take(160))
+                        .putExtra("liveRoomId", request.url.getQueryParameter("id")?.takeIf { !preview && request.url.getQueryParameter("source")=="live" && Regex("[a-fA-F0-9-]{36}").matches(it) }))
                     return true
                 }
                 if (request.isForMainFrame && request.method == "GET" && request.url.scheme == "https"
@@ -326,6 +327,25 @@ open class MessagingActivity : ComponentActivity() {
                     val rtcHost = uri.host.orEmpty()
                     val rtc = assetSurface == "messaging" && !preview && (rtcHost == "rtcplus.com" || rtcHost.endsWith(".rtcplus.com")) && (uri.port == -1 || uri.port == 443)
                     return if (rtc || (!preview && service.scheme == "https" && uri.host == service.host && uri.port == service.port)) null else denied()
+                }
+                if(assetSurface=="rooms" && preview && uri.path=="/native/loge-media" && request.method=="GET" && !request.isForMainFrame) {
+                    val file=com.meewav.android.features.rooms.wave.LogeViewerStore.media(this@MessagingActivity,uri.getQueryParameter("title").orEmpty().take(160),uri.getQueryParameter("id").orEmpty())?:return denied()
+                    return WebResourceResponse(if(file.extension=="mp4")"video/mp4"else"audio/mp4",null,200,"OK",mapOf("Cache-Control" to "no-store","Content-Length" to file.length().toString()),java.io.FileInputStream(file))
+                }
+                if (assetSurface == "rooms" && preview && uri.path == "/native/loge-viewer" && !request.isForMainFrame) {
+                    return try {
+                        val title=uri.getQueryParameter("title").orEmpty().take(160)
+                        val command=if(request.method=="POST") {
+                            val raw=request.requestHeaders.entries.firstOrNull{it.key.equals("X-Meewav-Loge",true)}?.value ?: return denied()
+                            require(raw.length<=8000)
+                            JSONObject(String(Base64.decode(raw,Base64.NO_WRAP),Charsets.UTF_8))
+                        } else { require(request.method=="GET");null }
+                        val body=com.meewav.android.features.rooms.wave.LogeViewerStore.request(this@MessagingActivity,title,command).toString()
+                        WebResourceResponse("application/json","utf-8",200,"OK",mapOf("Cache-Control" to "no-store"),ByteArrayInputStream(body.toByteArray()))
+                    } catch(e:Exception) {
+                        val body=JSONObject().put("error",e.message?:"Action impossible").toString()
+                        WebResourceResponse("application/json","utf-8",409,"Conflict",mapOf("Cache-Control" to "no-store"),ByteArrayInputStream(body.toByteArray()))
+                    }
                 }
                 if (assetSurface in setOf("rooms", "profile") && uri.path == "/native/cage-programs" && !request.isForMainFrame) {
                     val libraryScope = profileId ?: if (preview) "demo" else return denied()

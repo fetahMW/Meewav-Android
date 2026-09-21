@@ -76,7 +76,7 @@ internal val logeRed=Color(0xFFD6949A)
                 }
             }
         }
-        val filtered=state.people.filter { when(source){"queue"->it.location==WaveGuestLocation.REQUESTED;"vip"->it.role.contains("VIP",true);else->true} }
+        val filtered=state.people.filter { when(source){"queue"->it.location==WaveGuestLocation.REQUESTED||state.data.moments.any{m->m.personId==it.id&&m.status=="pending"};"vip"->it.role.contains("VIP",true);else->true} }
         LazyColumn(Modifier.weight(1f),contentPadding=PaddingValues(vertical=8.dp),verticalArrangement=Arrangement.spacedBy(7.dp)) {
             if(history) {
                 items(state.data.moments,key={it.id}) { moment ->
@@ -134,6 +134,11 @@ internal val logeRed=Color(0xFFD6949A)
             } else {
                 Text(if(moment.status=="live")sceneClock(((moment.minutes*60_000L-state.now+(moment.startedAt?:state.now))/1000).coerceAtLeast(0))+" restantes" else "Durée prévue · "+moment.minutes+" minutes",color=logeGold,fontSize=13.sp)
                 when(moment.status) {
+                    "pending" -> {
+                        Text("Ce membre demande un moment VIP.",color=sceneMuted,fontSize=12.sp)
+                        SceneButton("Inviter",Modifier.fillMaxWidth(),primary=true){state.moment(moment.id,"scheduled")}
+                        SceneButton("Décliner",Modifier.fillMaxWidth()){state.moment(moment.id,"declined")}
+                    }
                     "scheduled" -> {
                         Text("En attente de la réponse du membre.",color=sceneMuted,fontSize=12.sp)
                         SceneButton("Annuler l’invitation",Modifier.fillMaxWidth()){state.moment(moment.id,"cancelled")}
@@ -231,7 +236,7 @@ internal val logeRed=Color(0xFFD6949A)
 }
 @Composable internal fun LogeEmpty(text:String) { Text(text,color=sceneMuted,fontSize=12.sp,modifier=Modifier.padding(14.dp)) }
 @Composable internal fun logeFieldColors()=OutlinedTextFieldDefaults.colors(focusedTextColor=Color.White,unfocusedTextColor=Color.White,focusedBorderColor=sceneAccent,unfocusedBorderColor=Color(0xFF35313D),focusedLabelColor=sceneAccent,unfocusedLabelColor=sceneMuted,cursorColor=sceneAccent)
-internal fun logeMomentLabel(status:String)=when(status){"scheduled"->"Invitation envoyée";"accepted"->"Invitation acceptée";"live"->"En direct";"completed"->"Terminé";"declined"->"Refusé";"cancelled"->"Annulé";else->status}
+internal fun logeMomentLabel(status:String)=when(status){"pending"->"Demande reçue";"scheduled"->"Invitation envoyée";"accepted"->"Invitation acceptée";"live"->"En direct";"completed"->"Terminé";"declined"->"Refusé";"cancelled"->"Annulé";else->status}
 
 @Composable internal fun LogeVideoSignals(state:LogeToolsState,modifier:Modifier=Modifier) {
     val q=state.displayedQuestion

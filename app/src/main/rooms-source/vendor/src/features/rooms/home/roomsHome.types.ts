@@ -20,6 +20,7 @@ export type RoomsHomeFormatFilter = (typeof ROOMS_HOME_FORMAT_FILTERS)[number];
 export type RoomsHomeAccessType = "public" | "members" | "invitation";
 
 export type RoomsHomeRoom = {
+  source?: "live" | "demo";
   id: string;
   slug: string;
   title: string;

@@ -16,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
@@ -39,14 +40,10 @@ private val classeMuted = Color(0xFFA7A3B2)
 
 @Composable
 internal fun ClasseToolsPanel(state: ClasseToolsState) {
-    var settings by remember { mutableStateOf(false) }
+    var resources by remember { mutableStateOf(false) }
     var questions by remember { mutableStateOf(false) }
     var questionStudent by remember { mutableStateOf<String?>(null) }
     var removeId by remember { mutableStateOf<String?>(null) }
-    var demo by remember { mutableStateOf(false) }
-    val pagerState = rememberPagerState { ((state.capacity + 11) / 12).coerceAtLeast(1) }
-    var tick by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(state.speakerId) { while (state.speakerId != null) { tick = System.currentTimeMillis(); delay(1000) } }
     LaunchedEffect(state.understandingActive) {
         if (state.understandingActive && com.meewav.android.BuildConfig.DEBUG) {
             // Same temporary showcase responses as the iOS classroom, never backend ballots.
@@ -61,16 +58,6 @@ internal fun ClasseToolsPanel(state: ClasseToolsState) {
         }
     }
     Column(Modifier.fillMaxSize()) {
-        Row(Modifier.fillMaxWidth().height(44.dp), verticalAlignment = Alignment.CenterVertically) {
-            listOf("Élèves", "Ressources").forEachIndexed { index, text ->
-                Box(Modifier.weight(1f).height(44.dp).clip(RoundedCornerShape(8.dp)).clickable { state.tab = index; state.selectedStudent = null; questions = false }, contentAlignment = Alignment.Center) {
-                    Text(if (index == 0) "Élèves · ${state.students.size}/24" else text, color = if (state.tab == index && !questions) Color.White else classeMuted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                    if (state.tab == index && !questions) Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 5.dp).width(32.dp).height(2.dp)
-                        .background(Brush.horizontalGradient(listOf(Color.Transparent, WaveMixerTheme.capsuleAccentSoft, Color.Transparent)), RoundedCornerShape(50)))
-                }
-            }
-            IconButton(onClick = { settings = true }, modifier = Modifier.size(44.dp)) { Icon(WaveIcons.Tune, "Réglages de la classe", tint = WaveMixerTheme.capsuleAccentSoft, modifier = Modifier.size(20.dp)) }
-        }
         state.notice?.let { message ->
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(message, color = WaveMixerTheme.capsuleAccentSoft, fontSize = 11.sp, modifier = Modifier.weight(1f))
@@ -79,76 +66,17 @@ internal fun ClasseToolsPanel(state: ClasseToolsState) {
         }
         if (questions) {
             ClasseQuestions(state, questionStudent, Modifier.weight(1f)) { questions = false; questionStudent = null }
-        } else if (state.tab == 1) {
-            ClasseResourcesPanel(state, Modifier.weight(1f))
         } else {
             if (state.understandingActive) Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
                 ClasseUnderstanding.entries.forEach { response -> Text("${state.understanding.values.count { it == response }} ${response.label}", fontSize = 10.sp, color = response.color()) }
             }
-            Box(Modifier.weight(1f).fillMaxWidth()) {
-                VerticalPager(state = pagerState, modifier = Modifier.fillMaxSize(), pageSpacing = 12.dp,
-                    flingBehavior = PagerDefaults.flingBehavior(state = pagerState,
-                        pagerSnapDistance = PagerSnapDistance.atMost(1), snapPositionalThreshold = .12f,
-                        snapAnimationSpec = spring(dampingRatio = .9f, stiffness = Spring.StiffnessMediumLow))) { page ->
-                    Column(Modifier.fillMaxSize().padding(top = 4.dp, bottom = 4.dp, end = 8.dp)) {
-                        repeat(3) { row ->
-                            Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                repeat(4) { column ->
-                                    val student = state.students.getOrNull(page * 12 + row * 4 + column)
-                                    BoxWithConstraints(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.Center) {
-                                        if (student != null) key(student.id) {
-                                            val portraitSize = minOf(64.dp, maxWidth - 4.dp, (maxHeight - 38.dp).coerceAtLeast(24.dp))
-                    val selected = state.selectedStudent == student.id
-                    val speaking = state.speakerId == student.id
-                    val hand = state.hands.any { it.studentId == student.id } && !speaking
-                    val response = state.understanding[student.id]
-                    val size by animateFloatAsState(if (selected) 1.07f else 1f, label = "selected-student")
-                    Column(Modifier.fillMaxSize().clickable { state.selectedStudent = if (selected) null else student.id }.padding(vertical = 3.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                        Box(Modifier.size(portraitSize).scale(size)) {
-                            if (speaking) ClasseSpeakingHalo(Modifier.fillMaxSize())
-                            Image(painterResource(student.portrait), "Sélectionner ${student.name}", Modifier.fillMaxSize().padding(if (speaking) 3.dp else 0.dp).clip(CircleShape).alpha(if (student.connected) 1f else .42f)
-                                .border(if (selected || speaking || response != null) 2.dp else .5.dp, if (speaking) Color(0xFF7ABFA2) else response?.color() ?: if (selected) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .15f), CircleShape), contentScale = ContentScale.Crop)
-                            if (!student.connected) Icon(Icons.Filled.WifiOff, "Connexion perdue",
-                                tint = Color(0xFFE39199), modifier = Modifier.align(Alignment.Center).size(22.dp))
-                            if (hand) Icon(Icons.Filled.BackHand, "Main levée", tint = WaveMixerTheme.capsuleAccentSoft,
-                                modifier = Modifier.align(Alignment.TopStart).size(16.dp))
-                            if (speaking || student.id in state.invitedToSpeak) Icon(if (speaking) WaveIcons.Mic else Icons.Filled.Schedule,
-                                if (speaking) "A la parole" else "Invité à parler", tint = if (speaking) Color(0xFF7ABFA2) else WaveMixerTheme.capsuleAccentSoft,
-                                modifier = Modifier.align(Alignment.BottomEnd).size(23.dp).background(Color(0xFF121017), CircleShape).padding(4.dp))
-                            if (state.rankedQuestions.any { it.studentId == student.id }) {
-                                ClasseQuestionBubble(Modifier.align(Alignment.TopEnd).size(20.dp))
-                            }
+            Column(Modifier.weight(1f).fillMaxWidth().padding(top = 8.dp, bottom = 4.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                repeat(6) { row ->
+                    Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                        repeat(4) { column ->
+                            val index = row * 4 + column
+                            ClasseRosterTile(state, index, Modifier.weight(1f).fillMaxHeight())
                         }
-                        Spacer(Modifier.height(6.dp))
-                        Text(student.name, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        if (speaking) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                            ClasseVoiceBars()
-                            Text("Parole · " + ((tick - state.speakingSince) / 1000).coerceAtLeast(0) + " s", color = Color(0xFF8DD1B2), fontSize = 8.sp, maxLines = 1)
-                        } else {
-                            val status = response?.label
-                            status?.let { Text(it, color = response?.color() ?: classeMuted, fontSize = 9.sp, maxLines = 1) }
-                        }
-                    }
-                                        } else {
-                                            val portraitSize = minOf(64.dp, maxWidth - 4.dp, (maxHeight - 38.dp).coerceAtLeast(24.dp))
-                                            Column(Modifier.fillMaxSize().padding(vertical = 3.dp),
-                                                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                                                Box(Modifier.size(portraitSize).background(Color(0xFF111216), CircleShape)
-                                                    .border(.75.dp, Color(0xFF49434F), CircleShape))
-                                                Spacer(Modifier.height(6.dp))
-                                                Text("Libre", color = classeMuted, fontSize = 10.sp)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                if (pagerState.pageCount > 1) Column(Modifier.align(Alignment.CenterEnd), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                    repeat(pagerState.pageCount) { index ->
-                        Box(Modifier.width(3.dp).height(if (index == pagerState.settledPage) 13.dp else 5.dp)
-                            .background(if (index == pagerState.settledPage) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .2f), CircleShape))
                     }
                 }
             }
@@ -156,7 +84,7 @@ internal fun ClasseToolsPanel(state: ClasseToolsState) {
 
         val selected = state.students.find { it.id == state.selectedStudent }
         Column(Modifier.fillMaxWidth().padding(vertical = 6.dp).hifiBlackSurface(14.dp).padding(6.dp)) {
-            if (selected != null && !questions && state.tab == 0) {
+            if (selected != null && !questions) {
                 val hand = state.hands.firstOrNull { it.studentId == selected.id }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     ClasseTool(if (state.speakerId == selected.id) "Couper" else if (hand != null) "Parole" else if (selected.id in state.invitedToSpeak) "Annuler" else "Inviter", if (state.speakerId == selected.id) WaveIcons.MicOff else WaveIcons.Mic, Modifier.weight(1f)) { if (state.speakerId == selected.id) state.releaseFloor() else state.grantFloor(selected.id) }
@@ -176,6 +104,7 @@ internal fun ClasseToolsPanel(state: ClasseToolsState) {
                 ClasseTool("Questions ${state.rankedQuestions.size}", Icons.Filled.QuestionAnswer, Modifier.weight(1f)) { questions = !questions; questionStudent = null }
                 ClasseTool(if (state.understandingActive) "Terminer" else "Compréhension", Icons.Filled.Psychology, Modifier.weight(1f), active = state.understandingActive) { state.toggleUnderstanding(); if (state.understandingActive) { state.tab = 0; questions = false } }
                 ClasseTool(if (state.handsOpen) "Mains ouvertes" else "Mains fermées", Icons.Filled.BackHand, Modifier.weight(1f), tint = if (state.handsOpen) WaveMixerTheme.capsuleAccentSoft else classeMuted) { state.handsOpen = !state.handsOpen }
+                ClasseTool("Ressources", Icons.Filled.FolderOpen, Modifier.weight(1f), tint = WaveMixerTheme.capsuleAccentSoft) { resources = true }
             }
         }
     }
@@ -186,14 +115,9 @@ internal fun ClasseToolsPanel(state: ClasseToolsState) {
         text = { Text("Vous êtes sur le point de bannir "+ banning.name + " de la classe. Cet élève sera retiré et ne pourra plus être invité dans cette session.", color = classeMuted) },
         confirmButton = { TextButton(onClick = { state.banStudent(banning.id); removeId = null }) { Text("Bannir", color = Color(0xFFE39199)) } },
         dismissButton = { TextButton(onClick = { removeId = null }) { Text("Annuler", color = WaveMixerTheme.capsuleAccentSoft) } })
-    if (settings) ClasseSheet("Réglages de la classe", { settings = false }) {
-        ClasseSetting("Autoriser les mains levées", state.handsOpen) { state.handsOpen = it }
-        ClasseSetting("Autoriser les questions", state.questionsOpen) { state.questionsOpen = it }
-        TextButton(onClick = { state.lowerAllHands() }) { Text("Baisser toutes les mains en attente", color = WaveMixerTheme.capsuleAccentSoft) }
-        if (state.speakerId != null) TextButton(onClick = { state.releaseFloor() }) { Text("Reprendre la parole", color = WaveMixerTheme.capsuleAccentSoft) }
-        if (com.meewav.android.BuildConfig.DEBUG) TextButton(onClick = { settings = false; demo = true }) { Text("Simuler une intervention d’élève", color = classeMuted) }
+    if (resources) ClasseSheet("Ressources", { resources = false }) {
+        ClasseResourcesPanel(state, Modifier.fillMaxWidth().height(440.dp))
     }
-    if (demo) ClasseDemoSheet(state) { demo = false }
 }
 
 @Composable internal fun ClasseToggleChip(label: String, enabled: Boolean, action: () -> Unit) {
@@ -306,5 +230,46 @@ private fun ClasseUnderstanding.color() = when (this) { ClasseUnderstanding.UNDE
     Text("?", color = Color(0xFF79B4FF), fontSize = 10.sp, lineHeight = 11.sp,
         fontWeight = FontWeight.SemiBold,
         modifier = Modifier.align(Alignment.Center).offset(y = (-1).dp))
+    }
+}
+
+/** Same compact four-column roster as Viewer; selection still drives host commands. */
+@Composable private fun ClasseRosterTile(state: ClasseToolsState, index: Int, modifier: Modifier) {
+    val student = state.students.getOrNull(index)
+    val selected = student != null && state.selectedStudent == student.id
+    val speaking = student != null && state.speakerId == student.id
+    val hand = student != null && state.hands.any { it.studentId == student.id } && !speaking
+    BoxWithConstraints(modifier.drawBehind {
+        if (speaking) drawRect(Brush.radialGradient(listOf(Color(0x5553D9A1), Color.Transparent), radius = size.width * .75f),
+            topLeft = androidx.compose.ui.geometry.Offset(-5.dp.toPx(), -5.dp.toPx()),
+            size = androidx.compose.ui.geometry.Size(size.width + 10.dp.toPx(), size.height + 10.dp.toPx()))
+    }) {
+        val portraitSize = minOf(36.dp, (maxHeight - 22.dp).coerceAtLeast(16.dp))
+        Box(Modifier.fillMaxSize().hifiBlackSurface(12.dp)
+            .then(if (selected) Modifier.border(1.dp, WaveMixerTheme.capsuleAccentSoft, RoundedCornerShape(12.dp)) else Modifier)
+            .clickable(enabled = student != null) { state.selectedStudent = if (selected) null else student?.id }) {
+            Text((index + 1).toString().padStart(2, '0'), color = classeMuted, fontSize = 8.sp,
+                modifier = Modifier.align(Alignment.TopStart).padding(start = 6.dp, top = 5.dp))
+            Column(Modifier.fillMaxSize().padding(horizontal = 3.dp, vertical = 3.dp),
+                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                if (student != null) {
+                    Image(painterResource(student.portrait), "Sélectionner ${student.name}",
+                        Modifier.size(portraitSize).clip(CircleShape).alpha(if (student.connected) 1f else .42f), contentScale = ContentScale.Crop)
+                } else Icon(Icons.Filled.EventSeat, "Place libre", tint = classeMuted.copy(alpha = .5f), modifier = Modifier.size(portraitSize).padding(5.dp))
+                Spacer(Modifier.height(2.dp))
+                Text(student?.name ?: "Libre", color = if (student != null) Color.White else classeMuted.copy(alpha = .6f),
+                    fontSize = 10.sp, lineHeight = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            if (student != null) {
+                val icon = when { !student.connected -> Icons.Filled.WifiOff; speaking -> WaveIcons.Mic; hand -> Icons.Filled.BackHand; student.id in state.invitedToSpeak -> Icons.Filled.Schedule; else -> null }
+                icon?.let { Icon(it, if (speaking) "A la parole" else if (hand) "Main levée" else "État de l’élève",
+                    tint = if (speaking) Color(0xFF70E2B5) else if (!student.connected) Color(0xFFE39199) else WaveMixerTheme.capsuleAccentSoft,
+                    modifier = Modifier.align(Alignment.TopEnd).padding(4.dp).size(15.dp)) }
+                if (state.rankedQuestions.any { it.studentId == student.id }) ClasseQuestionBubble(Modifier.align(Alignment.BottomEnd).padding(3.dp).size(14.dp))
+                state.understanding[student.id]?.let { response ->
+                    Box(Modifier.align(Alignment.BottomStart).padding(5.dp).size(5.dp).background(response.color(), CircleShape))
+                }
+            }
+        }
     }
 }

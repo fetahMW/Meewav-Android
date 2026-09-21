@@ -22,7 +22,7 @@ export function LogeRequestLists({ loge, disabled, execute, viewer }: Common & {
   return <section className="loge-requests" aria-label="Les listes de la Loge">
     <header><h3>Votre moment avec l’artiste</h3><p>Choisissez une liste ouverte. L’inscription reste soumise à la disponibilité de l’artiste.</p></header>
     {feedback ? <p role="status">{feedback}</p> : null}
-    {LOGE_REQUESTS.map(({ kind, title, action, description, Icon }) => {
+    {LOGE_REQUESTS.filter(q => q.kind !== "gift-redemption").map(({ kind, title, action, description, Icon }) => {
       const own = loge.moments.find((m) => m.beneficiary.id === viewer.id && m.kind === kind && active(m));
       const open = loge.requestQueues?.[kind] === true;
       return <article key={kind}><Icon aria-hidden="true" /><div><strong>{title}</strong><p>{description}</p>

@@ -34,7 +34,7 @@ internal data class WaveCompositionLayer(val id: String, val submissionId: Strin
 internal data class WaveMixPin(val id: String, val clipId: String, val baseId: String, val startBar: Int, val bars: Int)
 
 /** Local workshop mirrors iOS live-set state. Demo votes are explicitly local, never public ballots. */
-internal class WaveCompositionState(private val context: Context, sessionKey: String) : AutoCloseable {
+internal class WaveCompositionState(private val context: Context, sessionKey: String, private val demo: Boolean = true) : AutoCloseable {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val preferences = context.getSharedPreferences("wave-workshop-${sessionKey.hashCode()}", Context.MODE_PRIVATE)
     val audio = WaveCompositionAudio()
@@ -207,7 +207,7 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
         requestedBars = preferences.getInt("requestedBars", 8)
         editorialDirection = preferences.getString("direction", "") ?: ""
         // Add newly ported demo sources without overwriting user imports or decisions.
-        clips = clips + waveDemoProposals().filter { demo -> clips.none { it.id == demo.id } }
+        if (demo) clips = clips + waveDemoProposals().filter { demo -> clips.none { it.id == demo.id } }
         clips.filter { it.inComposition }.forEach { clip ->
             val round = voteHistory.lastOrNull { it.clipId == clip.id && it.accepted }
                 ?: WaveVoteResult("demo-seed:${clip.id}", clip.id, true, 1, 0).also { voteHistory = voteHistory + it }
@@ -235,6 +235,7 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
         notice = "Une autre application utilise la sortie audio."; return false
     }
     private fun fixture(): List<WaveCompositionClip> {
+        if (!demo) return emptyList()
         val root = "asset:messaging/audio/rooms/wave-test-pack/House_124BPM_A_minor/Loops_8bars/House_"
         return listOf(
             WaveCompositionClip("house-drums-a", "Pulse · drums", "LUMA", "${root}Drums_A_124BPM_8bars.wav", "Drums", status = WaveProposalStatus.ACCEPTED, inComposition = true),
@@ -456,7 +457,7 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
         if (snapshot.cue != null && !snapshot.cuePaused) audio.pausePreview()
         if (snapshot.running) audio.toggleClock()
         publicRoute = !publicRoute
-        notice = if (publicRoute) "Sortie publique sélectionnée · diffusion RTC non raccordée." else "Écoute privée sur ce téléphone."
+        notice = if (publicRoute) "Programme sélectionné · diffusé lorsque l’audio live traité est connecté." else "Écoute privée sur ce téléphone."
     }
     fun activateReference(id: String) {
         if (vote != null || (id == referenceId && referenceReady)) return

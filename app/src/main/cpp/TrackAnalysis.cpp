@@ -4,6 +4,7 @@
 #include <cstdint>
 #include "Superpowered.h"
 #include "SuperpoweredAnalyzer.h"
+#include "SuperpoweredRuntime.h"
 
 // Android adapter of iOS PlaceSuperpoweredTrackAnalyzer.mm. Same offline engine/settings.
 struct TrackAnalysis {
@@ -13,10 +14,9 @@ struct TrackAnalysis {
 };
 extern "C" JNIEXPORT jlong JNICALL
 Java_com_meewav_android_features_rooms_wave_MusicalTrackAnalyzer_create(JNIEnv* env, jobject, jint rate, jint seconds, jstring key) {
-    static std::once_flag initialized;
     const char* license = env->GetStringUTFChars(key, nullptr);
     if (!license) return 0;
-    std::call_once(initialized, [license] { Superpowered::Initialize(license); });
+    initializeSuperpowered(license);
     env->ReleaseStringUTFChars(key, license);
     return reinterpret_cast<jlong>(new TrackAnalysis(rate, seconds));
 }

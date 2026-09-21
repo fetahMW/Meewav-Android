@@ -1052,3 +1052,41 @@ button:disabled { opacity: .4; cursor: default; }
    dock disappears, so Android's keyboard keeps its existing input geometry. */
 #root .mobile-messaging .messaging-page { bottom: var(--feature-dock-inset,104px); }
 #root .mobile-messaging .mobile-download-error { bottom: calc(var(--feature-dock-inset,104px) + 8px); }
+/* Expandable search uses the Marketplace glass finish and the existing list filters. */
+#root .mobile-messaging-header { position: relative; z-index: 30; grid-template-columns: 88px minmax(0,1fr) 88px; }
+#root .mobile-messaging-header > button { width: 40px; }
+#root #mobile-messaging-search { position: absolute; left: 56px; right: 12px; top: 9px; height: 44px; pointer-events: none; }
+#root .mobile-header-search { position: relative; display: flex; align-items: center; width: 44px; height: 44px; border: 1px solid transparent; border-radius: 24px; pointer-events: auto; transition: width .28s cubic-bezier(.22,1,.36,1), background .2s, border-color .2s; }
+#root .mobile-header-search.is-open { width: 100%; background: linear-gradient(125deg,#ffffff15,#ffffff05 48%,#ffffff0b),#17191faa; border-color: #bca5e627; box-shadow: inset 0 1px #ffffff12; backdrop-filter: blur(22px) saturate(1.15); -webkit-backdrop-filter: blur(22px) saturate(1.15); }
+#root .mobile-header-search > button { flex: 0 0 44px; width: 44px; height: 44px; display: grid; place-items: center; border: 0; background: transparent; color: #cbb8ed; padding: 0; border-radius: 50%; }
+#root .mobile-header-search > input { width: 0; min-width: 0; flex: 1; height: 44px; padding: 0; border: 0; outline: none; background: transparent; color: #f5f4f8; font-size: 14px; opacity: 0; visibility: hidden; transition: opacity .18s; }
+#root .mobile-header-search > .mobile-header-search__filter { display: none; }
+#root .mobile-header-search.is-open > input { opacity: 1; visibility: visible; }
+#root .mobile-header-search.is-open > .mobile-header-search__filter { display: grid; }
+#root .mobile-messaging-title, #root .mobile-messaging-header__actions { transition: opacity .16s; }
+#root .mobile-messaging-header:has(.mobile-header-search.is-open) :is(.mobile-messaging-title,.mobile-messaging-header__actions) { opacity: 0; visibility: hidden; pointer-events: none; }
+#root .mobile-header-search > .mobile-search-dismiss { position: fixed; inset: 55px -12px auto auto; width: 100vw; height: 100vh; border-radius: 0; z-index: 1; }
+#root .mobile-header-search .mw-rail-menu { position: absolute; z-index: 2; background: #17151deb; backdrop-filter: blur(22px); }
+#root .mobile-messaging.is-detail #mobile-messaging-search { display: none; }
+#root .mobile-messaging:not(.is-detail) .mw-rail-controls { display: none; }
+#root .mobile-messaging:not(.is-detail) .mw-workspace { display: block; }
+#root .mobile-messaging:not(.is-detail) .mw-chat-header { position: absolute; inset: 0 0 auto; z-index: 12; background: #10101970; backdrop-filter: blur(22px) saturate(1.15); -webkit-backdrop-filter: blur(22px) saturate(1.15); border: 0; }
+#root .mobile-messaging:not(.is-detail) .mw-conversation-list { padding-top: 64px; scroll-padding-top: 64px; mask-image: none; -webkit-mask-image: none; }
+@media (prefers-reduced-motion: reduce) { #root .mobile-header-search, #root .mobile-header-search > input, #root .mobile-messaging-title, #root .mobile-messaging-header__actions { transition: none; } }
+#root .mobile-messaging.is-detail .mobile-messaging-header :is(.mobile-messaging-title,.mobile-messaging-header__actions) { opacity: 1; visibility: visible; pointer-events: auto; }
+
+/* Keep all header anchors fixed: focus and expansion never change their layout. */
+#root .mobile-messaging-header { display: block; height: 62px; min-height: 62px; padding: 0; overflow: visible; }
+#root .mobile-messaging-header > button { position: absolute; left: 12px; top: 9px; height: 44px; margin: 0; }
+#root .mobile-messaging-header > .mobile-messaging-title { position: absolute; left: 104px; right: 100px; top: 0; height: 62px; justify-content: center; align-items: center; }
+#root .mobile-messaging-header__actions { position: absolute; right: 12px; top: 9px; height: 44px; }
+#root .mobile-messaging-header strong { font-size: clamp(16px,4.6vw,19px); white-space: nowrap; }
+#root .mobile-messaging-header small { white-space: nowrap; font-size: 9px; }
+#root .mobile-header-search > input { font-size: 16px; }
+#root .mobile-messaging:not(.is-detail) { background: #08090b url('/images/messaging/acoustic-black-background.png') center / cover no-repeat; }
+#root .mobile-messaging:not(.is-detail) .messaging-page { background: transparent; }
+#root .mobile-messaging:not(.is-detail) .messaging-page__backdrop { display: none; }
+#root .mobile-messaging:not(.is-detail) :is(.messaging-stage,.mw-workspace,.mw-conversation-rail) { backdrop-filter: none; -webkit-backdrop-filter: none; transform: none; }
+#root .mobile-messaging:not(.is-detail) .mw-conversation-list { overscroll-behavior: none; touch-action: pan-y; overflow-x: hidden; overflow-anchor: none; }
+#root .mobile-messaging:not(.is-detail) .mw-chat-header { transform: translateZ(0); isolation: isolate; }
+#root .mobile-messaging:not(.is-detail) .mw-chat-header::after { content: ''; display: block; position: absolute; left: 0; right: 0; bottom: -12px; height: 12px; background: linear-gradient(#10101960,transparent); pointer-events: none; }

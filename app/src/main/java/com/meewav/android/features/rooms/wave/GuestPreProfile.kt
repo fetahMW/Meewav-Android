@@ -195,7 +195,7 @@ private class GuestProfileContent(context: Context, manifest: JSONObject,
     private fun publish() {
         if (!ready || disposed) return
         val payload = current?.let { JSONObject().put("id", it.id).put("name", it.name)
-            .put("grade", it.gradeLevel).put("portrait", "/guest-portrait/${it.portrait}") }?.toString() ?: "null"
+            .put("role", it.role).put("grade", it.gradeLevel).put("portrait", "/guest-portrait/${it.portrait}") }?.toString() ?: "null"
         view.evaluateJavascript("window.dispatchEvent(new CustomEvent('meewav:guest-profile',{detail:$payload}))", null)
     }
     fun attach(host: FrameLayout) {

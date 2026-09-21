@@ -24,6 +24,7 @@ export function createRoomsHomeDemoState(
   room: RoomsHomeRoom,
   currentUserId: string | null = PLACE_DEMO_PROFILES.host.id,
 ): PlaceRoomState {
+  if (room.roomType === "classe") room = {...room, mediaFormat:"horizontal", videoSource:"/media/shorts-demo/landscape-class-producer.mp4"};
   const base = createPlaceDemoState(currentUserId);
   const host = hostProfileFromRoom(room);
   const formerHostId = base.host.id;

@@ -185,3 +185,6 @@
 #root .mobile-tremplin .tremplin-token-artist__protections li { border-color: #8b93d424; background: #ffffff04; }
 @media (max-width: 360px) { #root .mobile-tremplin .tremplin-pillar-tabs button strong { font-size: 9px; } }
 @media (prefers-reduced-motion: reduce) { #root .mobile-tremplin * { scroll-behavior: auto !important; } }
+
+/* Acoustic background approved for the main feature, independent of live rooms. */
+#root .mobile-tremplin .tremplin-page__background {background:#08090b url("/tremplin/images/acoustic-black-background-trial.png") center center / cover no-repeat!important;opacity:1!important;}

@@ -20,6 +20,7 @@ import java.util.UUID
 internal object LogeRules {
     fun mayVote(poll:LogePoll, now:Long, choice:Int) = now<poll.endsAt && choice in poll.choices.indices
     fun transition(from:String,to:String):Boolean = to in when(from) {
+        "pending" -> setOf("scheduled","declined","cancelled")
         "scheduled" -> setOf("accepted","declined","cancelled")
         "accepted" -> setOf("live","cancelled")
         "live" -> setOf("completed")
@@ -47,6 +48,20 @@ internal class LogeToolsState(val guests:WaveGuestState,private val load:()->Str
         {context.getSharedPreferences("loge-tools-v1-"+scope.hashCode(),Context.MODE_PRIVATE).getString("state",null)},
         {context.getSharedPreferences("loge-tools-v1-"+scope.hashCode(),Context.MODE_PRIVATE).edit().putString("state",it).apply()},seedDemoPeople)
     private val json=Json { ignoreUnknownKeys=true;encodeDefaults=true }
+    var remoteAction: ((String,org.json.JSONObject)->Unit)? = null
+    var remoteMode = false
+    var remoteBusy by mutableStateOf(false)
+    fun acceptRemote(snapshot:org.json.JSONObject) {
+        data=json.decodeFromString<LogeArchive>(snapshot.toString())
+        val people=snapshot.optJSONArray("people")?:return
+        guests.addSceneDemoPeople((0 until people.length()).map { i -> val p=people.getJSONObject(i); WaveGuest(p.getString("id"),p.optString("name"),p.optString("role"),R.drawable.loge_artist_0,WaveGuestLocation.REQUESTED) })
+    }
+    private fun remote(action:String,payload:org.json.JSONObject=org.json.JSONObject()):Boolean {
+        if(!remoteMode)return false
+        if(remoteBusy) {notice="Enregistrement en cours…";return true}
+        remoteAction?.invoke(action,payload)?:run{notice="Connexion à la Loge en cours…"}
+        return true
+    }
     var data by mutableStateOf(LogeArchive());private set
     var tab by mutableIntStateOf(0)
     var selectedId by mutableStateOf("loge-a")
@@ -60,7 +75,7 @@ internal class LogeToolsState(val guests:WaveGuestState,private val load:()->Str
     var externalGiftRecipients by mutableStateOf<Map<String,WaveGuest>>(emptyMap())
     val people get()=(guests.guests+externalGiftRecipients.values).distinctBy{it.id}
     val selected get()=people.find { it.id==selectedId }
-    val activeMoment get()=data.moments.firstOrNull { it.personId==selectedId && it.format=="live" && it.status in setOf("scheduled","accepted","live") }
+    val activeMoment get()=data.moments.firstOrNull { it.personId==selectedId && it.format=="live" && it.status in setOf("pending","scheduled","accepted","live") }
     val selectedQuestion get()=data.questions.firstOrNull { it.status=="selected" }
     val displayedQuestion get()=selectedQuestion?.takeIf { now<questionVisibleUntil }
     val activePoll get()=data.poll?.takeIf { now<it.endsAt }
@@ -69,7 +84,7 @@ internal class LogeToolsState(val guests:WaveGuestState,private val load:()->Str
         val images=listOf(R.drawable.loge_artist_0,R.drawable.loge_artist_1,R.drawable.loge_artist_2,R.drawable.loge_artist_3,R.drawable.loge_artist_4,R.drawable.loge_artist_5)
         if(seedDemoPeople)guests.addSceneDemoPeople(names.mapIndexed { i,name -> WaveGuest("loge-"+('a'+i),name,if(i in listOf(0,1,2,5))"Membre VIP" else "Membre de la Loge",images[i],if(i<3)WaveGuestLocation.BACKSTAGE else WaveGuestLocation.REQUESTED,gradeLevel=i%5+1) })
         else selectedId=guests.guests.firstOrNull()?.id.orEmpty()
-        load()?.let { saved -> runCatching { data=json.decodeFromString<LogeArchive>(saved) }.onFailure { notice="Le dernier atelier n’a pas pu être restauré." } }
+        if(!remoteMode)load()?.let { saved -> runCatching { data=json.decodeFromString<LogeArchive>(saved) }.onFailure { notice="Le dernier atelier n’a pas pu être restauré." } }
         // Re-entering a room must never silently put a person back on air.
         if(data.moments.any { it.status=="live" }) save(data.copy(moments=data.moments.map { if(it.status=="live")it.copy(status="accepted",startedAt=null)else it }))
         tick()
@@ -81,15 +96,18 @@ internal class LogeToolsState(val guests:WaveGuestState,private val load:()->Str
     fun offerExperience(personId:String,type:String,detail:String):Boolean {
         if(people.none { it.id==personId } || type !in listOf("Concert","Sur scène","Rencontre","Session studio") || detail.isBlank())return false
         if(data.experiences.any { it.personId==personId && it.type==type && it.detail==detail.trim() && it.status in setOf("pending","accepted") }) { notice="Cette invitation existe déjà.";return false }
+        if(remote("experience.add",org.json.JSONObject().put("id",UUID.randomUUID().toString()).put("personId",personId).put("type",type).put("detail",detail.trim())))return true
         save(data.copy(experiences=listOf(LogeExperience(personId=personId,type=type,detail=detail.trim().take(240)))+data.experiences));notice=null;return true
     }
     fun experienceStatus(id:String,status:String) {
+        if(remote("experience.status",org.json.JSONObject().put("id",id).put("status",status)))return
         val invitation=data.experiences.find { it.id==id }?:return
         val allowed=when(invitation.status){"pending"->setOf("accepted","declined","cancelled");"accepted"->setOf("completed","cancelled");else->emptySet()}
         if(status in allowed)save(data.copy(experiences=data.experiences.map { if(it.id==id)it.copy(status=status)else it }))
     }
-    fun toggleQuestions() { save(data.copy(questionsOpen=!data.questionsOpen)) }
+    fun toggleQuestions() { if(remote("questions.open",org.json.JSONObject().put("open",!data.questionsOpen)))return;save(data.copy(questionsOpen=!data.questionsOpen)) }
     fun question(id:String,status:String) {
+        if(remote("question.status",org.json.JSONObject().put("id",id).put("status",status)))return
         if(status !in setOf("pending","selected","answered","rejected") || data.questions.none { it.id==id })return
         save(data.copy(questions=data.questions.map { when { it.id==id -> it.copy(status=status);status=="selected"&&it.status=="selected"->it.copy(status="pending");else->it } }))
         if(status=="selected")questionVisibleUntil=System.currentTimeMillis()+30_000
@@ -99,9 +117,11 @@ internal class LogeToolsState(val guests:WaveGuestState,private val load:()->Str
     fun invite(minutes:Int) {
         val person=selected?:return
         if(minutes !in listOf(5,10,15)||activeMoment!=null)return
+        if(remote("moment.add",org.json.JSONObject().put("id",UUID.randomUUID().toString()).put("personId",person.id).put("format","live").put("minutes",minutes)))return
         save(data.copy(moments=listOf(LogeMoment(personId=person.id,minutes=minutes))+data.moments))
     }
     fun moment(id:String,status:String) {
+        if(remote("moment.status",org.json.JSONObject().put("id",id).put("status",status)))return
         val moment=data.moments.find { it.id==id }?:return
         if(!LogeRules.transition(moment.status,status))return
         if(status=="live") {
@@ -119,7 +139,7 @@ internal class LogeToolsState(val guests:WaveGuestState,private val load:()->Str
     fun dedicate(personId:String,format:String,path:String,seconds:Int):Boolean {
         if(people.none { it.id==personId } || format !in listOf("audio","video") || !java.io.File(path).isFile || seconds<1)return false
         if(data.moments.any { it.file==path })return true
-        save(data.copy(moments=listOf(LogeMoment(personId=personId,format=format,status="completed",file=path,seconds=seconds))+data.moments))
+        save(data.copy(moments=listOf(LogeMoment(personId=personId,format=format,status="completed",file=path,seconds=seconds))+data.moments.filterNot{it.personId==personId&&it.format==format&&it.status=="pending"}))
         guests.addPrivateDemoMessage(setOf(personId),"Dédicace "+format+" · "+sceneClock(seconds.toLong())+" · disponible dans l’historique VIP")
         return true
     }
@@ -153,8 +173,9 @@ internal class LogeToolsState(val guests:WaveGuestState,private val load:()->Str
         drawHideAt=null
     }
     fun tick() {
+        if(!remoteMode)load()?.let { saved -> runCatching { json.decodeFromString<LogeArchive>(saved) }.getOrNull()?.let { if(it!=data)data=it } }
         now=System.currentTimeMillis()
-        data.moments.filter { it.status=="live" && (now-(it.startedAt?:now)>=it.minutes*60_000L || guests.onStage.none { person -> person.id==it.personId }) }.forEach { moment(it.id,"completed") }
+        if(!remoteMode)data.moments.filter { it.status=="live" && (now-(it.startedAt?:now)>=it.minutes*60_000L || guests.onStage.none { person -> person.id==it.personId }) }.forEach { moment(it.id,"completed") }
         val gifts=data.gifts.map { when {
             it.status=="scheduled" && now>=(it.scheduledAt?:Long.MAX_VALUE) -> it.copy(status=if(it.pool.isEmpty())"sent"else"ready")
             it.status=="spinning" && now-(it.startedAt?:now)>=it.animationSeconds*1000 -> it.copy(status="revealed")
