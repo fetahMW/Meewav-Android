@@ -47,7 +47,7 @@ export default function RoomViewer({room,onLeave}:{room:RoomsHomeRoom;onLeave:()
  return <main className="android-room-viewer" data-room-type={room.roomType}>
   <header className="android-room-viewer__header"><button type="button" aria-label="Retour aux rooms" onClick={onLeave}><ArrowLeft/></button><h1>{room.title}</h1><button type="button" aria-label="Quitter le live" onClick={onLeave}><X/></button></header>
   <AudioEngineProvider><RoomPresentationProvider presentation={LIVE_ROOM_PRESENTATIONS[room.roomType]}>
-   <PlaceRoomExperience demoRole="viewer" demoRoom={demo} currentUserId={PLACE_DEMO_PROFILES.viewerA.id}
+   <PlaceRoomExperience initialPanelCollapsed={false} demoRole="viewer" demoRoom={demo} currentUserId={PLACE_DEMO_PROFILES.viewerA.id}
     onLeaveRoom={onLeave} onOpenProfile={id=>navigate('/profile/view/'+encodeURIComponent(id))}
     onMessageProfile={id=>openMessaging(id,'message')}
     onCollaborateProfile={(id,requestId)=>openMessaging(id,'collaboration',requestId)}/>

@@ -44,6 +44,8 @@ import { usePlaceLiveCallRoomCleanup } from "./usePlaceLiveCallRoomCleanup";
 import { createPlaceClientId } from "./placeClientId";
 
 export type PlaceRoomExperienceProps = {
+  /** Android keeps the mobile studio visible on entry. */
+  initialPanelCollapsed?: boolean;
   requestedRoomId?: string | null;
   currentUserId?: string | null;
   demoRole?: PlaceDemoRole;
@@ -135,7 +137,7 @@ export default function PlaceRoomExperience(props: PlaceRoomExperienceProps) {
   return <WaveViewerListeningProvider key={`${props.requestedRoomId ?? presentation.id}:${props.currentUserId ?? "anonymous"}`}><PlaceRoomExperienceContent {...props} /></WaveViewerListeningProvider>;
 }
 
-function PlaceRoomExperienceContent({ requestedRoomId, currentUserId, demoRole, demoRoom, onOpenProfile, onMessageProfile, onCollaborateProfile, onLeaveRoom, onLiveCallRequest }: PlaceRoomExperienceProps) {
+function PlaceRoomExperienceContent({ initialPanelCollapsed, requestedRoomId, currentUserId, demoRole, demoRoom, onOpenProfile, onMessageProfile, onCollaborateProfile, onLeaveRoom, onLiveCallRequest }: PlaceRoomExperienceProps) {
   const initialPresentation = useRef(useRoomPresentation()).current;
   const place = usePlaceRoom({ requestedRoomId, currentUserId, demoRole, demoRoom, roomType: initialPresentation.id });
   const switching = useSwitchRoom(place.room, initialPresentation.id, place.activeUserId ?? "anonymous", place.isHost, !place.isLoading && (place.room.source === "demo" || place.isHost || place.room.currentUserIsActiveParticipant));
@@ -210,8 +212,8 @@ function PlaceRoomExperienceContent({ requestedRoomId, currentUserId, demoRole, 
     }).catch(() => place.showNotice("L’élève a rejoint la scène, mais le cadrage n’a pas pu être confirmé. Réessayez."));
   }, [spotlightRequest, room.participants, programLayout, place.showNotice]);
   const [panelCollapsed, setPanelCollapsed] = useState(() => (
-    typeof window !== "undefined"
-      && window.matchMedia("(max-width: 820px) and (pointer: coarse)").matches
+    initialPanelCollapsed ?? (typeof window !== "undefined"
+      && window.matchMedia("(max-width: 820px) and (pointer: coarse)").matches)
   ));
   const [mixerView, setMixerView] = useState<PlaceMixerView>("volumes");
   const [pitchProvider, setPitchProvider] = useState<PlacePitchProvider>(storedPitchProvider);

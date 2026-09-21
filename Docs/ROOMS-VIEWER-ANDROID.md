@@ -4,7 +4,7 @@
 
 Les cartes de l’accueil Rooms ouvrent maintenant `RoomViewer` dans la WebView Android. Le séquenceur de création conserve sa destination native `WaveMixerActivity` et le rôle host. Le retour Android ferme d’abord une fenêtre ou le plein écran, puis revient à l’accueil Rooms. La liste reste montée pour conserver sa sélection et son défilement.
 
-Les six expériences proviennent de `Meewav-Web`, commit `fd426f599bda416db74e908bceaecc42766ea227`. Le graphe local et ses empreintes sont conservés dans `app/src/main/rooms-source/viewer-web` et `viewer-web-provenance.json`. Les adaptations Android restent dans `RoomViewer.tsx`, `AndroidViewerPreProfile.tsx` et `mobile.css`. L’adaptateur de pré-profil reprend le composant web et ajoute son callback de navigation vers l’artiste, avec son identité de démonstration. Aucun changement dans les composants Compose host.
+Les six expériences proviennent de `Meewav-Web`, commit `fd426f599bda416db74e908bceaecc42766ea227`. Le graphe local et ses empreintes sont conservés dans `app/src/main/rooms-source/viewer-web` et `viewer-web-provenance.json`. Les adaptations Android restent dans `RoomViewer.tsx`, `AndroidViewerPreProfile.tsx` et `mobile.css`. L’adaptateur de pré-profil reprend le composant web et ajoute son callback de navigation vers l’artiste, avec son identité de démonstration. Aucun changement dans les composants Compose host. Le fichier importé `PlaceRoomExperience.tsx` comporte une adaptation locale explicite : le paramètre optionnel `initialPanelCollapsed` permet à Android de garder le studio ouvert sur les écrans tactiles. Les empreintes de provenance décrivent la source web avant ce correctif.
 
 ## Outils repris
 
@@ -34,4 +34,6 @@ Les captures de recette sont écrites dans le dossier temporaire Windows. Le scr
 
 Les cartes actuelles de l’accueil sont des fixtures de démonstration, comme sur le site. Elles ouvrent donc un état `demo` et conservent les interactions locales du site. Elles ne se synchronisent pas avec une session host Compose native. Les adaptateurs Supabase et chemins live sont importés, mais ceci ne constitue pas une validation de bout en bout d’un véritable direct, d’un paiement ou d’une publication audio/vidéo. Les disponibilités et restrictions serveur du site sont conservées.
 
-Le Samsung était absent d’ADB lors de cette livraison : APK compilé, installation et recette sur téléphone non effectuées. Les captures disponibles proviennent du navigateur mobile de test.
+Le premier APK n’avait pas été installé, le Samsung étant déconnecté. Après reconnexion le 21 septembre, son ancienne version a été remplacée. Le contrôle sur téléphone a révélé le repli par défaut du studio sur écran tactile ; le correctif impose son ouverture initiale sur Android. Le scénario navigateur utilise désormais `isMobile: true` et `hasTouch: true` pour couvrir ce comportement.
+
+Recette Samsung après réinstallation : une carte ouvre `RoomsActivity`, panneau `is-viewer-panel`, sans panneau host et sans état replié. Le chat, le mixeur personnel et l’onglet spécifique sont visibles. Capture : `viewer-device-fixed.png` dans le dossier temporaire.
