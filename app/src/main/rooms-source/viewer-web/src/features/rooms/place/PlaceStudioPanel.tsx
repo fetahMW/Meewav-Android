@@ -969,6 +969,7 @@ export function PlaceAudienceJourney({
       : renderJourney("", "FILE D’ATTENTE", "Ta demande est envoyée", "Tu seras averti si le Host t’invite dans la Green House.", "Quitter", onLeaveQueue);
   }
   if (presentation.id === "cage" && !isGuest) return <div className="cage-audience-apply"><button type="button" onClick={() => void onJoinQueue()}>Participer au battle</button></div>;
+  if (presentation.id === "wave" && !isGuest) return renderJourney("", "PARTICIPER", "Envie de monter sur scène ?", "Votre boucle et votre passage sur scène restent indépendants.", "Rejoindre la file d’attente", onJoinQueue);
   if (!journey && !isGuest) return null;
   return renderJourney("", "PARTICIPER", "Envie de monter sur Scène ?", "Rejoins la file sans interrompre le live.", "Rejoindre", onJoinQueue);
 }
@@ -1625,8 +1626,8 @@ function PlaceStudioPanelContent(props: PlaceStudioPanelProps) {
         if (props.experienceWaiting) return props.experienceWaiting;
         if (showsAudienceInteractions) {
           return <>
-            {specializedRoomId && specializedRoomId !== "cage" && specializedRoomId !== "classe" && specializedRoomId !== "scene" ? audienceJourney : null}
-            {specializedRoomId === "wave" ? <WaveViewerPanel room={room} canEngage={canEngage} /> : specializedRoomId
+            {specializedRoomId && specializedRoomId !== "cage" && specializedRoomId !== "classe" && specializedRoomId !== "scene" && specializedRoomId !== "wave" ? audienceJourney : null}
+            {specializedRoomId === "wave" ? <WaveViewerPanel room={room} canEngage={canEngage} participation={audienceJourney} /> : specializedRoomId
             ? <RoomAudienceInteractions active={visibleSurface === "tools" && !collapsed} onOpenChat={() => onSurface("chat")} onLeaveRoom={props.onLeaveRoom}
               roomType={specializedRoomId}
               sceneParticipation={specializedRoomId === "scene" ? audienceJourney : undefined}

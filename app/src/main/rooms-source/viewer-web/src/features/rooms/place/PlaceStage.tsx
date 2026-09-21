@@ -18,6 +18,7 @@ import {
   MicOff,
   MonitorUp,
   Radio,
+  Play,
   Share2,
   Sparkles,
   Volume2,
@@ -234,6 +235,13 @@ export default function PlaceStage({
   const waveListening = useWaveViewerListening();
   const playbackMuted = !isHost && !isGuest && waveListening ? waveListening.liveMuted : fallbackPlaybackMuted;
   const setPlaybackMuted = !isHost && !isGuest && waveListening ? waveListening.setLiveMuted : setFallbackPlaybackMuted;
+  useEffect(()=>{
+    if(room.source!=="demo" || isHost || isGuest)return;
+    const enable=()=>setPlaybackMuted(false);
+    window.addEventListener("cage-demo-enable-audio",enable);
+    return()=>window.removeEventListener("cage-demo-enable-audio",enable);
+  },[room.source,isHost,isGuest,setPlaybackMuted]);
+
   const privateWaveListening = !isHost && !isGuest && waveListening && waveListening.mode !== "live";
   const waveListeningRef = useRef(waveListening);
   waveListeningRef.current = waveListening;
@@ -1183,6 +1191,7 @@ export default function PlaceStage({
       </div> : null}
 
 
+      {isCageStage && !isHost && !isGuest && room.source === "demo" ? <button className="cage-simulation-play" type="button" aria-label="Simuler La Cage" onClick={()=>window.dispatchEvent(new CustomEvent("cage-viewer-simulation",{detail:{picker:true}}))}><Play/></button>:null}
       {!isHost && !isGuest ? <div className="android-stage-heading" data-theme={roomPresentation.theme}>
         <button className="android-stage-host" type="button" onClick={() => onOpenProfile(room.host.id)} aria-label={`Voir le profil de ${room.host.displayName}`}><img src={room.host.avatarUrl} alt="" /></button>
         <span className="android-stage-clock"><i /><time>{elapsedLabel}</time></span>

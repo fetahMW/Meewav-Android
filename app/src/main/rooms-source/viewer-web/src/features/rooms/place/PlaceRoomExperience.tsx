@@ -162,7 +162,7 @@ function PlaceRoomExperienceContent({ initialPanelCollapsed, requestedRoomId, cu
   }, [place.setSurface]);
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
-    const show = () => { place.setSurface("tools"); setPanelCollapsed(false); timer=setTimeout(()=>window.dispatchEvent(new Event("cage-viewer-simulation-ready")),150); };
+    const show = (event:Event) => { const detail=(event as CustomEvent).detail; place.setSurface("tools"); setPanelCollapsed(false); timer=setTimeout(()=>window.dispatchEvent(new CustomEvent("cage-viewer-simulation-ready",{detail})),150); };
     window.addEventListener("cage-viewer-simulation",show);
     return()=>{window.removeEventListener("cage-viewer-simulation",show);clearTimeout(timer);};
   },[place.setSurface]);

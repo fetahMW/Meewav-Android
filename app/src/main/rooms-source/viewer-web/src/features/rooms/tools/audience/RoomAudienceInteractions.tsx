@@ -677,8 +677,8 @@ function standings(matches: CageMatch[]) {
 }
 
 function CagePosterCountdown() {
-  const [deadline] = useState(() => Date.now() + 5 * 60_000);
-  const [seconds, setSeconds] = useState(300);
+  const [deadline] = useState(() => Date.now() + 5_000);
+  const [seconds, setSeconds] = useState(5);
   useEffect(() => {
     const tick = () => {
       const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));

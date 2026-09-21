@@ -140,6 +140,7 @@ lucide-react/dist/esm/icons/monitor-up.mjs:
 lucide-react/dist/esm/icons/monitor.mjs:
 lucide-react/dist/esm/icons/music-2.mjs:
 lucide-react/dist/esm/icons/music.mjs:
+lucide-react/dist/esm/icons/network.mjs:
 lucide-react/dist/esm/icons/package.mjs:
 lucide-react/dist/esm/icons/panel-right-close.mjs:
 lucide-react/dist/esm/icons/panel-right-open.mjs:

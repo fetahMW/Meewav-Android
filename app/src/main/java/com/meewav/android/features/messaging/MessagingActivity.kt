@@ -161,7 +161,8 @@ open class MessagingActivity : ComponentActivity() {
                 allowFileAccessFromFileURLs = false; allowUniversalAccessFromFileURLs = false
                 javaScriptCanOpenWindowsAutomatically = false; setSupportMultipleWindows(false)
                 setGeolocationEnabled(false); mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
-                mediaPlaybackRequiresUserGesture = true; textZoom = 100
+                // Rooms explicitly control mute/volume; scheduled live turns must keep playing after the initial interaction.
+                mediaPlaybackRequiresUserGesture = assetSurface != "rooms"; textZoom = 100
                 builtInZoomControls = false; displayZoomControls = false
             }
         }

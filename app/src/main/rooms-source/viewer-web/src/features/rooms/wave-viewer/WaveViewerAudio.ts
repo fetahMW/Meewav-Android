@@ -49,6 +49,20 @@ export class WaveViewerAudio {
     });
     return true;
   }
+  positionSeconds() { return this.offset + (this.sources.length && this.context ? Math.max(0, this.context.currentTime - this.startedAt) : 0); }
+  gridCycle(buffer: AudioBuffer, barSeconds: number, bars = 16) {
+    const sourceBars = Math.round(buffer.duration / barSeconds);
+    if (sourceBars < 1 || Math.abs(buffer.duration - sourceBars * barSeconds) > .12)
+      throw new Error("La durée de cette boucle ne correspond pas au tempo de la base. Exportez-la au même BPM pour la synchroniser.");
+    const frames = Math.round(barSeconds * bars * buffer.sampleRate);
+    const period = Math.round(sourceBars * barSeconds * buffer.sampleRate);
+    const result = this.ctx().createBuffer(buffer.numberOfChannels, frames, buffer.sampleRate);
+    for(let channel=0;channel<buffer.numberOfChannels;channel++) {
+      const input=buffer.getChannelData(channel), output=result.getChannelData(channel);
+      for(let start=0;start<frames;start+=period) output.set(input.subarray(0,Math.min(input.length,period,frames-start)),start);
+    }
+    return result;
+  }
   setVolume(index: number, value: number) {
     this.volumes[index] = value;
     const gain = this.gains[index];

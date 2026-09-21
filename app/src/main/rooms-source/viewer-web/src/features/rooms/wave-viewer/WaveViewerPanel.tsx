@@ -2,8 +2,8 @@ import { useRoomVotingPolicy } from "../voting/useRoomVotingPolicy";
 import { canCastRoomVote } from "../voting/roomVoting";
 import RoomVotePolicyLabel from "../voting/RoomVotePolicyLabel";
 import { createPortal } from "react-dom";
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { Check, X, Download, FileAudio, Headphones, Music2, Radio, Upload, Vote } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { Play, Pause, Check, X, Download, FileAudio, Headphones, Music2, Radio, Upload, Vote } from "lucide-react";
 import type { PlaceRoomState } from "../place/place.types";
 import { useRoomTools } from "../tools/useRoomTools";
 import { waveSubmissionBarsForDuration, waveSubmissionMaxBars } from "../tools/waveAudioRules";
@@ -26,16 +26,16 @@ function errorMessage(reason: unknown) {
   return message || "Le fichier ne peut pas être lu. Choisissez un autre fichier.";
 }
 
-export default function WaveViewerPanel(props: { room: PlaceRoomState; canEngage: boolean }) {
+export default function WaveViewerPanel(props: { room: PlaceRoomState; canEngage: boolean; participation?: ReactNode }) {
   return props.room.source === "demo" ? <DemoPanel {...props} /> : <LivePanel {...props} />;
 }
-function DemoPanel({ room, canEngage }: { room: PlaceRoomState; canEngage: boolean }) {
+function DemoPanel({ room, canEngage, participation }: { room: PlaceRoomState; canEngage: boolean; participation?: ReactNode }) {
   const accountId = room.currentUserProfile?.id ?? "anonymous-wave";
   const tools = useRoomTools({ roomType: "wave", roomId: room.id, role: canEngage ? "contributor" : "visitor", accountId, source: "demo" });
   const snapshot = useMemo(() => tools.state?.wave ? demoViewerSnapshot(tools.state.wave, room.id, accountId) : null, [tools.state?.wave, room.id, accountId]);
   const submittedUrls = useRef<string[]>([]);
   useEffect(() => () => submittedUrls.current.forEach(url => URL.revokeObjectURL(url)), []);
-  return <ViewerPanel room={room} canEngage={canEngage} snapshot={snapshot} connected={Boolean(snapshot)} submissionHint={category => tools.state?.wave ? `Envoi : 4, 8 ou 16 mesures, dans la limite de ${waveSubmissionMaxBars(tools.state.wave, category as WaveLoopCategory)} mesures pour cette famille à ${formatWaveBpm(tools.state.wave.baseLoop.bpm)} BPM.` : ""} submissionError={(duration, category) => { try { if (!tools.state?.wave) return "La Wave n’est pas prête."; waveSubmissionBarsForDuration(duration, tools.state.wave, category as WaveLoopCategory); return null; } catch (reason) { return errorMessage(reason); } }} refresh={async () => undefined}
+  return <ViewerPanel participation={participation} room={room} canEngage={canEngage} snapshot={snapshot} connected={Boolean(snapshot)} submissionHint={category => tools.state?.wave ? `Envoi : 4, 8 ou 16 mesures, dans la limite de ${waveSubmissionMaxBars(tools.state.wave, category as WaveLoopCategory)} mesures pour cette famille à ${formatWaveBpm(tools.state.wave.baseLoop.bpm)} BPM.` : ""} submissionError={(duration, category) => { try { if (!tools.state?.wave) return "La Wave n’est pas prête."; waveSubmissionBarsForDuration(duration, tools.state.wave, category as WaveLoopCategory); return null; } catch (reason) { return errorMessage(reason); } }} refresh={async () => undefined}
     onSubmit={async ({ file, title, category, duration, reference, idempotencyKey }) => {
       if (!tools.state?.wave) throw new Error("La Wave n’est pas prête.");
       const rules = snapshot?.rules;
@@ -51,7 +51,7 @@ function DemoPanel({ room, canEngage }: { room: PlaceRoomState; canEngage: boole
       return "Reçue dans la démonstration locale";
     }} onVote={async (vote, choice) => { await tools.execute({ type: "wave.vote.cast", submissionId: vote.id, accountId, choice: choice === "APPROVE" ? "yes" : "no" }); }} />;
 }
-function LivePanel({ room, canEngage }: { room: PlaceRoomState; canEngage: boolean }) {
+function LivePanel({ room, canEngage, participation }: { room: PlaceRoomState; canEngage: boolean; participation?: ReactNode }) {
   const [snapshot, setSnapshot] = useState<WaveViewerSnapshot | null>(null);
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState("");
@@ -83,7 +83,7 @@ function LivePanel({ room, canEngage }: { room: PlaceRoomState; canEngage: boole
     const stream = viewerInfra.subscribe(snapshot.sessionId, { onSnapshot: () => { void refresh(); }, onEvent: () => { void refresh(); }, onError: () => setConnected(false), onStatus: status => { if (["failed", "recovering", "closed"].includes(status)) setConnected(false); } });
     return () => stream.close();
   }, [snapshot?.sessionId, refresh]);
-  return <ViewerPanel room={room} snapshot={snapshot} canEngage={canEngage} connected={connected} error={error} refresh={refresh}
+  return <ViewerPanel participation={participation} room={room} snapshot={snapshot} canEngage={canEngage} connected={connected} error={error} refresh={refresh}
     onSubmit={async (input) => {
       if (!snapshot?.termsVersion) throw new Error("Les conditions de contribution ne sont pas encore disponibles.");
       const result = await submitViewerFile({ ...input, sessionId: snapshot.sessionId, termsVersion: snapshot.termsVersion });
@@ -98,14 +98,15 @@ function LivePanel({ room, canEngage }: { room: PlaceRoomState; canEngage: boole
 }
 
 type SubmitInput = { file: File; title: string; category: string; duration: number; reference: ViewerReference | null; idempotencyKey: string };
-type PanelProps = { submissionHint?: (category: string) => string; submissionError?: (duration: number, category: string) => string | null; room: PlaceRoomState; canEngage: boolean; snapshot: WaveViewerSnapshot | null; connected: boolean; error?: string; refresh: () => Promise<void>; onSubmit: (input: SubmitInput) => Promise<string>; onVote: (vote: NonNullable<WaveViewerSnapshot["vote"]>, choice: "APPROVE" | "CONTINUE", key: string) => Promise<void> };
-export function ViewerPanel({ submissionHint, submissionError, room, snapshot, canEngage, connected, error, refresh, onSubmit, onVote }: PanelProps) {
+type PanelProps = { participation?: ReactNode; submissionHint?: (category: string) => string; submissionError?: (duration: number, category: string) => string | null; room: PlaceRoomState; canEngage: boolean; snapshot: WaveViewerSnapshot | null; connected: boolean; error?: string; refresh: () => Promise<void>; onSubmit: (input: SubmitInput) => Promise<string>; onVote: (vote: NonNullable<WaveViewerSnapshot["vote"]>, choice: "APPROVE" | "CONTINUE", key: string) => Promise<void> };
+export function ViewerPanel({ participation, submissionHint, submissionError, room, snapshot, canEngage, connected, error, refresh, onSubmit, onVote }: PanelProps) {
   const {policy} = useRoomVotingPolicy(room.id, room.source);
   const voterId = room.currentUserProfile?.id ?? "";
   const canVote = canCastRoomVote(policy, voterId);
   const audio = useWaveViewerListening();
   const inputRef = useRef<HTMLInputElement>(null);
   const workshopRef = useRef<HTMLElement>(null);
+  const [tab,setTab]=useState("live");
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [buffer, setBuffer] = useState<AudioBuffer | null>(null);
@@ -115,7 +116,9 @@ export function ViewerPanel({ submissionHint, submissionError, room, snapshot, c
   const [rights, setRights] = useState(false);
   const [referenceVolume, setReferenceVolume] = useState(.7);
   const [loopVolume, setLoopVolume] = useState(.7);
-  const [auditionMode, setAuditionMode] = useState<"solo" | "beat">("solo");
+  const [loopMuted,setLoopMuted]=useState(false);
+  const [loopSolo,setLoopSolo]=useState(false);
+  const [playhead,setPlayhead]=useState(0);
   const [localError, setLocalError] = useState("");
   const [progress, setProgress] = useState("");
   const [busy, setBusy] = useState(false);
@@ -156,24 +159,23 @@ export function ViewerPanel({ submissionHint, submissionError, room, snapshot, c
       setFile(next); setBuffer(decoded); setTitle(next.name.replace(/\.[^.]+$/, "")); setSubmitted(false); setProgress(""); setRights(false);
       if (!reference) setReference(snapshot?.reference ?? null);
       uploadKey.current = crypto.randomUUID();
+      listen("beat",decoded);
     } catch (reason) { if (request === decodeGeneration.current) setLocalError(errorMessage(reason)); }
     finally { if (request === decodeGeneration.current) setDecoding(false); }
   };
-  const listen = (mode: "solo" | "beat") => {
-    if (!audio || !buffer || preparingStage) return;
-    setAuditionMode(mode);
-    void audio.start("workshop", mode === "solo" ? "Ma boucle · Solo" : `Ma boucle avec ${reference?.label}`, async () => {
-      if (mode === "solo") return { buffers: [buffer], volumes: [loopVolume], loop: false };
-      if (!reference || compatibility?.error) throw new Error(compatibility?.error ?? "Référence en préparation.");
+  const barSeconds = reference ? 60 / reference.rules.bpm * Number(reference.rules.signature.split("/")[0]) * 4 / Number(reference.rules.signature.split("/")[1]) : 0;
+  useEffect(()=>{if(!open || !audio?.playing || audio.mode!=="workshop")return;let frame=0;const tick=()=>{setPlayhead(barSeconds ? audio.engine.positionSeconds()%(barSeconds*16)/(barSeconds*16):0);frame=requestAnimationFrame(tick);};tick();return()=>cancelAnimationFrame(frame);},[open,audio?.playing,audio?.mode,barSeconds]);
+  useEffect(()=>{if(audio?.mode!=="workshop")return;audio.engine.setVolume(0,loopSolo?0:referenceVolume);audio.engine.setVolume(1,loopMuted?0:loopVolume);},[loopMuted,loopSolo,referenceVolume,loopVolume,audio?.mode]);
+  const listen = (_mode: "solo" | "beat", candidate = buffer) => {
+    if (!audio || !reference || preparingStage) return;
+    void audio.start("workshop", "Mon essai · 16 mesures", async () => {
       if (referenceCache.current?.id !== reference.id) {
         const url = reference.url ?? await getViewerMedia(snapshot!.sessionId, "reference", reference.id);
-        const decoded = await audio.engine.load(url);
-        const [numerator, denominator] = reference.rules.signature.split("/").map(Number);
-        const cycleSeconds = 60 / reference.rules.bpm * numerator * 4 / denominator * reference.rules.cycleBars;
-        if (Math.abs(decoded.duration - reference.durationSeconds) > .001 || Math.abs(decoded.duration - cycleSeconds) > 1 / 44100) throw new Error("La référence n’a pas une durée exacte de cycle. Essai synchronisé indisponible.");
-        referenceCache.current = { id: reference.id, buffer: decoded };
+        referenceCache.current = {id:reference.id,buffer:await audio.engine.load(url)};
       }
-      return { buffers: [buffer, referenceCache.current.buffer], volumes: [loopVolume, referenceVolume], loop: true };
+      const buffers=[audio.engine.gridCycle(referenceCache.current.buffer,barSeconds)];
+      if(candidate) buffers.push(audio.engine.gridCycle(candidate,barSeconds));
+      return {buffers,volumes:[loopSolo?0:referenceVolume,loopMuted?0:loopVolume],loop:true};
     });
   };
   const send = async () => {
@@ -274,8 +276,11 @@ export function ViewerPanel({ submissionHint, submissionError, room, snapshot, c
     return () => window.removeEventListener("wave-preview-vote-ready", show);
   }, []);
   useEffect(() => { if (simulationOpen) simulationRef.current?.focus({ preventScroll: true }); }, [simulationOpen, simulationFinished]);
-  const openWorkshop = () => { setOpen(true); requestAnimationFrame(() => workshopRef.current?.scrollIntoView({ block: "nearest" })); };
-  return <div className="wave-viewer-panel" ref={panelRootRef}>
+  const openWorkshop = () => { setTab("workshop"); setOpen(true); if(audio?.mode!=="workshop")listen("beat"); requestAnimationFrame(() => workshopRef.current?.scrollIntoView({ block: "nearest" })); };
+  return <div className="wave-viewer-panel" ref={panelRootRef} data-wave-tab={tab}>
+    <nav className="viewer-room-subtabs" aria-label="Explorer la Wave">{[["live","En direct"],["workshop","Mon atelier"],["participation","Ma participation"]].map(([id,label])=><button key={id} type="button" aria-pressed={tab===id} onClick={()=>{setTab(id);if(id==="workshop")setOpen(true);}}>{label}{id==="live" && voteOpen?<i className="viewer-vote-dot"/>:null}</button>)}</nav>
+    {tab!=="live" && voteOpen?<button className="wave-hifi-action" onClick={()=>{audio?.returnLive();setTab("live");}}>Vote ouvert · Donner mon avis</button>:null}
+    {tab==="participation"?<section className="wave-viewer-participation" aria-label="Ma participation"><h3>Mon passage sur scène</h3>{participation}<h3>Ma boucle</h3>{!snapshot?.contributions.length?<><p>Aucune boucle envoyée pour le moment.</p><button className="wave-hifi-action" onClick={openWorkshop}>Préparer ma boucle</button></>:null}</section>:null}
     {simulationOpen && room.source === "demo" && voteHost ? createPortal(<div className="wave-viewer-panel wave-vote-console-overlay" style={{ top: voteTop }}><div className="wave-vote-preview" role="dialog" aria-label="Simulation de vote" aria-modal="false" tabIndex={-1} ref={simulationRef} onKeyDown={event => { if (event.key === "Escape") closeSimulation(); }}>
       <header><span>VOTE COLLECTIF · SIMULATION</span><button aria-label="Fermer le vote" onClick={closeSimulation}>×</button></header>
       <div className="wave-vote-preview__clock" role="timer" aria-label="Temps restant">{simulationFinished ? "Vote terminé" : `00:${String(simulationSeconds).padStart(2, "0")}`}</div><Vote aria-hidden="true" /><h2>On garde cette direction ?</h2><p>Une nouvelle boucle pour faire évoluer le Beat.</p>
@@ -288,12 +293,12 @@ export function ViewerPanel({ submissionHint, submissionError, room, snapshot, c
       <div className="wave-vote-preview__replay"><button style={{ visibility: simulationFinished ? "visible" : "hidden" }} disabled={!simulationFinished} onClick={restartSimulation}>Rejouer · 10 secondes</button></div>
     </div></div>, voteHost) : null}
     <section className="wave-viewer-display" aria-label="La Wave maintenant">
-      <div className="wave-viewer-entry-actions"><button type="button" className="is-primary wave-hifi-action" aria-label="Préparer et soumettre ma boucle" onClick={openWorkshop}><Upload />Soumettre ma boucle</button>{reference?.downloadable ? <button type="button" className="wave-hifi-action" onClick={() => void download()}><Download />Télécharger la référence</button> : null}</div>
-      <div className="wave-viewer-eyebrow"><Radio />{room.source === "demo" ? "DÉMONSTRATION LOCALE" : connected ? "LA WAVE EN DIRECT" : "SYNCHRONISATION"}</div>
-      <h2>{snapshot?.title || room.title}</h2>
-      <p className="wave-viewer-display__state">{room.status === "ended" || ["CLOSED", "ENDED", "CANCELLED"].includes(snapshot?.status ?? "") ? "Wave terminée" : ["PAUSED", "INTERMISSION"].includes(snapshot?.status ?? "") ? "Wave en pause" : snapshot?.pendingActivation ? "Boucle validée — intégration en préparation" : snapshot?.programSource === "HOST_DAW" ? "Production du host en direct" : snapshot?.activeRevision ? `Beat collectif · version ${snapshot.activeRevision}` : "Construction en cours"}</p>
-      <p>{snapshot?.categories.some(item => item.priority) ? `Le maître de la Wave recherche : ${snapshot.categories.filter(item => item.priority).map(item => item.label).join(", ")}.` : "Suivez la création et préparez votre prochaine contribution."}</p>
-      {rules ? <><div className="wave-viewer-rules-line">{formatWaveBpm(rules.bpm)} BPM · {rules.key} · Cycle de {rules.cycleBars} mesures</div><details><summary>Règles</summary><p>Tempo officiel : {formatWaveBpm(rules.bpm)} BPM · Signature {rules.signature}.</p><p>Longueurs autorisées : {rules.acceptedBars.join(", ")} mesures. Répétition : {rules.repeatPolicy === "REPEAT_TO_CYCLE" ? "jusqu’à la fin du cycle" : "non précisée"}.</p><p>Aucun changement automatique de tempo ou de tonalité. Les voix suivent les règles publiées.</p></details></> : <p>Règles musicales en préparation. L’écoute solo reste disponible.</p>}
+      <div className="wave-beat-summary" aria-label="Informations du beat">
+        <header><Music2/><strong>{snapshot?.layers.find(layer=>layer.isBase)?.title || "Beat collectif"}</strong><small>{!connected?"Synchronisation":room.status==="ended"?"Terminé":["PAUSED","INTERMISSION"].includes(snapshot?.status ?? "")?"En pause":"En cours"}</small></header>
+        {rules?<dl><div><dt>BPM</dt><dd>{formatWaveBpm(rules.bpm)}</dd></div><div><dt>Gamme</dt><dd>{rules.key}</dd></div><div><dt>Signature</dt><dd>{rules.signature}</dd></div><div><dt>Mesures</dt><dd>{rules.cycleBars}</dd></div></dl>:<p>Informations musicales en préparation.</p>}
+        {snapshot?.categories.some(item=>item.priority)?<p className="wave-beat-needed">Recherchés : {snapshot.categories.filter(item=>item.priority).map(item=>item.label).join(" · ")}</p>:null}
+      </div>
+      <div className="wave-viewer-entry-actions"><button type="button" className="is-primary wave-hifi-action" aria-label="Préparer et soumettre ma boucle" onClick={openWorkshop}><Upload />Soumettre ma boucle</button>{reference?.downloadable?<button type="button" className="wave-hifi-action" onClick={()=>void download()}><Download/>Télécharger la boucle de base</button>:null}</div>
       {error ? <p role="status">{error} <button type="button" onClick={() => void refresh()}>Réessayer</button></p> : null}
     </section>
     <section className={`wave-viewer-collective${voteOpen ? " is-open" : ""}`} aria-label="Action collective">
@@ -305,21 +310,27 @@ export function ViewerPanel({ submissionHint, submissionError, room, snapshot, c
         <div className="wave-viewer-actions"><button type="button" disabled={!canEngage || !canVote || !connected || !voteOpen || !vote.eligible || !comparisonReady || busy || Boolean(vote.choice) || voteRecorded === vote.id} onClick={() => void cast("APPROVE")}>{vote.kind === "REPLACEMENT" ? "B · Choisir la proposition" : "Valider"}</button><button type="button" disabled={!canEngage || !canVote || !connected || !voteOpen || !vote.eligible || !comparisonReady || busy || Boolean(vote.choice) || voteRecorded === vote.id} onClick={() => void cast("CONTINUE")}>{vote.kind === "REPLACEMENT" ? "A · Conserver la piste" : "Continuer"}</button></div>
         <p>{vote.choice || voteRecorded === vote.id ? "Vote enregistré par le serveur." : !canEngage ? "Connexion nécessaire pour voter." : !canVote ? "Ce vote est réservé au jury." : !vote.eligible ? "Votre éligibilité à cette manche attend la confirmation du serveur après l’audition officielle." : "Une voix par compte · résultat officiel à la clôture."}</p>
         {audio?.mode === "vote" && file ? <button type="button" onClick={() => { audio.returnLive(); openWorkshop(); }}>Revenir à mon atelier</button> : null}
-      </> : <><h3>À vous d’imaginer la suite</h3><p>Testez votre idée en privé avant de la proposer au maître de la Wave.</p><button type="button" className="is-primary wave-hifi-action" onClick={openWorkshop}>Tester ma boucle</button></>}
+      </> : <><button type="button" className="is-primary wave-hifi-action" onClick={openWorkshop}>Tester ma boucle</button></>}
     </section>
     <section className="wave-viewer-workshop" ref={workshopRef} aria-label="Mon atelier privé">
-      <button type="button" className="wave-viewer-workshop__toggle" aria-expanded={open} onClick={() => setOpen(!open)}><Headphones /><span>Mon atelier<small>{file?.name ?? "Votre espace de préécoute privé"}</small></span><b>{open ? "−" : "+"}</b></button>
+      <button type="button" className="wave-viewer-workshop__toggle" aria-expanded={open} onClick={() => { if(open){setOpen(false);if(audio?.mode==="workshop")audio.returnLive();}else openWorkshop(); }}><Headphones /><span>Mon atelier<small>{file?.name ?? "Votre espace de préécoute privé"}</small></span><b>{open ? "−" : "+"}</b></button>
       <div hidden={!open}>
+        <section className="wave-test-deck" aria-label="Séquenceur de 16 mesures">
+          <header><button type="button" aria-label={audio?.playing && audio.mode==="workshop"?"Pause de mon essai":"Lire mon essai"} disabled={!reference || audio?.loading || preparingStage} onClick={()=>audio?.playing && audio.mode==="workshop"?audio.pause():listen("beat")}>{audio?.playing && audio.mode==="workshop"?<Pause/>:<Play/>}</button><strong>16 mesures</strong><small>{rules?`${formatWaveBpm(rules.bpm)} BPM · ${rules.key}`:"Base en préparation"}</small></header>
+          <div className="wave-test-grid" aria-label="Position dans les 16 mesures">{Array.from({length:16},(_,i)=><span key={i} className={Math.floor(playhead*16)===i && audio?.playing && audio.mode==="workshop"?"is-current":""}>{i+1}</span>)}<i style={{left:`${playhead*100}%`}}/></div>
+          <div className="wave-test-track"><Music2/><span>Boucle de base<small>Lecture continue · 16 mesures</small></span></div>
+          {file?<div className="wave-test-track"><FileAudio/><span>{file.name}<small>Ma boucle synchronisée</small></span><button aria-pressed={loopMuted} onClick={()=>{setLoopMuted(!loopMuted);if(!loopMuted)setLoopSolo(false);}}>Mute</button><button aria-pressed={loopSolo} onClick={()=>{setLoopSolo(!loopSolo);if(!loopSolo)setLoopMuted(false);}}>Solo</button></div>:null}
+          {audio?.error?<p role="alert">{audio.error}</p>:null}
+        </section>
         <p>Vos essais restent dans ce navigateur. Le fichier devra être sélectionné à nouveau après rechargement.</p>
         {preparingStage ? <p role="status">Votre brouillon est conservé pendant la préparation sur scène. Utilisez un casque avant d’activer votre micro.</p> : null}
-        <div className="wave-viewer-reference"><Music2 /><span><strong>Référence du Beat</strong><small>{reference?.label ?? "Référence en préparation"}</small></span>{reference?.downloadable ? <button type="button" onClick={() => void download()} title="Télécharger la référence du Beat" aria-label="Télécharger la référence du Beat"><Download />Télécharger</button> : null}</div>
+        <div className="wave-viewer-reference"><Music2 /><span><strong>Référence du Beat</strong><small>{reference?.label ?? "Référence en préparation"}</small></span>{reference?.downloadable ? <button type="button" onClick={() => void download()} title="Télécharger la boucle de base" aria-label="Télécharger la boucle de base"><Download />Télécharger</button> : null}</div>
         {snapshot?.reference && snapshot.reference.id !== reference?.id ? <p className="wave-viewer-notice" role="status">Le Beat a évolué. Votre référence est conservée.<button type="button" disabled={Boolean(frozenSubmission.current)} onClick={chooseReference}>Tester avec la nouvelle version</button></p> : null}
         <button type="button" className="wave-viewer-import" disabled={decoding || busy || Boolean(frozenSubmission.current)} onClick={() => inputRef.current?.click()}><FileAudio /><span><strong>{file ? "Remplacer ma boucle" : "Importer ma boucle"}</strong><small>{decoding ? "Lecture du fichier…" : file?.name ?? "WAV, MP3, AAC, FLAC, M4A · 25 Mo max"}</small></span><Upload /></button>
         <input type="file" ref={inputRef} hidden accept=".wav,.mp3,.aac,.flac,.m4a" onChange={event => { const next = event.target.files?.[0]; event.target.value = ""; if (next) void importFile(next); }} />
         {file && buffer ? <><p>{buffer.duration.toFixed(2)} s · {buffer.numberOfChannels} {buffer.numberOfChannels > 1 ? "canaux" : "canal"} · {Math.round(buffer.sampleRate / 1000)} kHz</p><p>{compatibility?.error ? `Préécoute avec le Beat : ${compatibility.error}` : "Durée compatible avec la grille. Tempo et tonalité non analysés localement."}</p>
-          <div className="wave-viewer-actions"><button type="button" disabled={audio?.loading || preparingStage} onClick={() => listen("solo")}>Solo</button><button type="button" disabled={!reference || Boolean(compatibility?.error) || audio?.loading || preparingStage} onClick={() => listen("beat")}>Avec le Beat</button>{audio?.mode === "workshop" ? <button type="button" onClick={audio.pause}>Pause</button> : null}</div>
-          <label>Volume référence<input aria-label="Volume référence" type="range" min="0" max="1" step=".01" value={referenceVolume} onChange={event => { const value = Number(event.target.value); setReferenceVolume(value); if (audio?.mode === "workshop" && auditionMode === "beat") audio.engine.setVolume(1, value); }} /></label>
-          <label>Volume ma boucle<input aria-label="Volume ma boucle" type="range" min="0" max="1" step=".01" value={loopVolume} onChange={event => { const value = Number(event.target.value); setLoopVolume(value); if (audio?.mode === "workshop") audio.engine.setVolume(0, value); }} /></label>
+          <label>Volume base<input aria-label="Volume base" type="range" min="0" max="1" step=".01" value={referenceVolume} onChange={event=>setReferenceVolume(Number(event.target.value))}/></label>
+          <label>Volume ma boucle<input aria-label="Volume ma boucle" type="range" min="0" max="1" step=".01" value={loopVolume} onChange={event=>setLoopVolume(Number(event.target.value))}/></label>
           {audio?.voiceAvailable ? <label className="wave-viewer-check"><input type="checkbox" checked={audio.keepVoice} onChange={event => audio.setKeepVoice(event.target.checked)} />Garder la voix du host pendant mon essai</label> : <p>Le son du live est coupé pendant votre écoute privée.</p>}
           <label>Titre<input maxLength={80} value={title} disabled={Boolean(frozenSubmission.current)} onChange={event => setTitle(event.target.value)} /></label>
           <label>Famille<select value={category} disabled={Boolean(frozenSubmission.current)} onChange={event => setCategory(event.target.value)}>{WAVE_LOOP_CATEGORIES.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>

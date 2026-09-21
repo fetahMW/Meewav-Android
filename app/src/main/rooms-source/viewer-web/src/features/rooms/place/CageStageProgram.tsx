@@ -1,3 +1,4 @@
+import { meewavMediaSession } from "../../scene/mediaSession/mediaSessionCoordinator";
 import {
   AlertTriangle,
   CameraOff,
@@ -10,7 +11,7 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { cageBattleWinCount } from "../tools/cageCompetition";
 import { resolveRoomActorRole } from "../tools/roomTools.config";
 import {
@@ -126,7 +127,7 @@ export function resolveCageFeed(
     joinedAt: "", status: "onstage", isSpeaking: false, latencyMs: 35,
     isCameraEnabled: person.camera !== "off", isMicrophoneEnabled: person.microphone !== "off",
   };
-  return { participant: virtualParticipant(person, { ...source, videoUrl: media.videoUrl, videoSources: [media], imageUrl: undefined }, true),
+  return { participant: virtualParticipant(person, { ...source, isCameraEnabled: true, videoUrl: media.videoUrl, videoSources: [media], imageUrl: undefined }, true),
     sourceParticipantId: source.id, trackIdentity: person.id, exact: Boolean(exact) };
 }
 
@@ -202,7 +203,7 @@ function FeedTile({
         muted={muted || !live}
         renderAudience="program"
         selectionAudience="program"
-        liveKitVideoTrack={liveKitVideoTrack}
+        liveKitVideoTrack={assignment?.participant.videoUrl?.includes("/media/cage-demo/") ? undefined : liveKitVideoTrack}
         presentationOnly
         onSelect={noOp}
         onPutOnAir={noOp}
@@ -294,7 +295,7 @@ function DuelProgram({ cage, room, onStage, liveKitVideoTracks, useRtcVideo, pro
         ))}
       </nav>
     ) : null}
-    <span className="cage-stage-program__duel-axis" aria-hidden="true"><i /><b>VS</b></span>
+
 
     <footer className="cage-stage-program__footer">
       <span><Radio aria-hidden="true" />PROGRAM · FACE-À-FACE</span>
@@ -361,12 +362,46 @@ function EmptyProgram({ title, detail }: { title: string; detail: string }) {
   return <section className="cage-stage-program is-empty" aria-label="Réalisation vidéo spéciale Cage en attente"><span><Swords aria-hidden="true" /></span><small>CAGE · PROGRAM</small><strong>{title}</strong><p>{detail}</p></section>;
 }
 
+function cageHostParticipant(props:CageStageProgramViewProps):PlaceStageParticipant {
+ const existing=props.onStage.find(p=>p.status==="host") ?? props.room.participants.find(p=>p.profile.id===props.room.host.id);
+ const host={...existing,id:props.room.host.id,profile:props.room.host,status:"host",isCameraEnabled:true,isMicrophoneEnabled:true} as PlaceStageParticipant;
+ if(props.room.source!=="demo")return host;
+ return {...host,videoUrl:"/media/cage-demo/host.mp4",imageUrl:undefined,videoSources:[{id:"cage-demo-host",type:"desktop_composite",aspectRatio:"16:9",transport:"file",videoUrl:"/media/cage-demo/host.mp4"}]};
+}
+function CageHostReturn({props,participant,host=false}:{props:CageStageProgramViewProps;participant:PlaceStageParticipant;host?:boolean}) {
+ const person:RoomPerson={id:participant.profile.id,name:participant.profile.displayName,avatarUrl:participant.profile.avatarUrl,role:participant.profile.role,camera:"ready",microphone:"ready"};
+ return <div className={host?"cage-host-return":"cage-winner-return"}><FeedTile side={host?"A":"B"} person={person} assignment={{participant,sourceParticipantId:participant.id,trackIdentity:person.id,exact:true}} live={host} winner={false} score={null} liveKitVideoTracks={props.liveKitVideoTracks} useRtcVideo={props.useRtcVideo} muted={props.programMuted} playbackVolume={props.playbackVolume} cleanProgram onOpenProfile={props.onOpenProfile}/>{host?<span className="cage-host-label">HOST</span>:null}</div>;
+}
 export function CageStageProgramView(props: CageStageProgramViewProps) {
-  const { cage } = props;
-  if (!cage) return <EmptyProgram title="Synchronisation de la Régie…" detail="Le retour vidéo va se caler sur la rencontre active." />;
-  return normalizedCageFormat(cage.format) === "open-mic"
-    ? <OpenMicProgram {...props} cage={cage} />
-    : <DuelProgram {...props} cage={cage} />;
+ const {cage}=props;
+ useEffect(()=>{
+   if(props.room.source!=="demo" || props.programMuted)return;
+   const lease=meewavMediaSession.claim({source:"room",id:`cage-program-${props.room.id}`,mediaId:`cage-program-${props.room.id}`,label:props.room.title,pause:()=>{document.querySelectorAll<HTMLVideoElement>('.is-cage-stage video').forEach(video=>video.pause());}});
+   return()=>lease.release({pause:false,reason:"route_change"});
+ },[props.room.source,props.room.id,props.programMuted]);
+
+ const [position,setPosition]=useState({x:.92,y:.72});
+ const drag=useRef<{x:number;y:number;px:number;py:number;w:number;h:number}|null>(null);
+ const host=cageHostParticipant(props);
+ const active=cage?.runtime?.matches.find(m=>m.id===cage.runtime?.activeMatchId);
+ const resolved=active && ["RESOLVED","CLOSED"].includes(active.status);
+ const performing=active && ["IN_PROGRESS","PAUSED","READY_FOR_VOTE","VOTING"].includes(active.status);
+ const winner=resolved?cage?.runtime?.participants.find(p=>p.id===active.winnerId)?.person:null;
+ const winnerFeed=winner?resolveCageFeed(winner,"B",[...props.onStage,...props.room.participants],props.room.source==="demo",true)?.participant:null;
+ const guests=cage?props.onStage.filter(p=>p.status!=="host").slice(0,2):[];
+ const intermediate=resolved ? winnerFeed?[winnerFeed]:[] : guests;
+ const inMain=!performing && (!cage || resolved || !active && intermediate.length<2);
+ return <>
+ <section className={`cage-host-layout${intermediate.length?" is-pair":""}`} style={{display:inMain?undefined:"none"}} aria-label={intermediate.length?"Le host échange avec l’artiste":"Le host vous accueille"}>
+ {inMain?intermediate.slice(0,1).map(p=><CageHostReturn key={p.id} props={props} participant={p}/>):null}
+ </section>
+ <div className="cage-program-with-host" style={{display:inMain?"none":undefined}}>{cage && !inMain ? normalizedCageFormat(cage.format)==="open-mic"?<OpenMicProgram {...props} cage={cage}/>:<DuelProgram {...props} cage={cage}/>:null}</div>
+ <div className={inMain?`cage-host-persistent-main${intermediate.length?" is-pair":""}`:"cage-host-pip"} role="group" aria-label={inMain?"Retour du host":"Miniature du host déplaçable"} style={inMain?undefined:{left:`${position.x*100}%`,top:`${position.y*100}%`,transform:`translate(${-position.x*100}%,${-position.y*100}%)`}}
+ onPointerDown={e=>{if(inMain)return;e.stopPropagation();const box=e.currentTarget.getBoundingClientRect(),parent=e.currentTarget.parentElement!.getBoundingClientRect();drag.current={x:e.clientX,y:e.clientY,px:position.x,py:position.y,w:Math.max(1,parent.width-box.width),h:Math.max(1,parent.height-box.height)};e.currentTarget.setPointerCapture(e.pointerId);}}
+ onPointerMove={e=>{if(!drag.current)return;e.stopPropagation();const d=drag.current;setPosition({x:Math.max(0,Math.min(1,d.px+(e.clientX-d.x)/d.w)),y:Math.max(0,Math.min(1,d.py+(e.clientY-d.y)/d.h))});}}
+ onPointerUp={e=>{e.stopPropagation();drag.current=null;}} onPointerCancel={()=>{drag.current=null;}} onClick={e=>e.stopPropagation()}>
+ <CageHostReturn props={props} participant={host} host/>
+ </div></>;
 }
 
 export default function CageStageProgram({ room, isHost, isGuest, onStage, liveKitVideoTracks, useRtcVideo, programMuted, playbackVolume = 1, onOpenProfile, onPortraitDuelChange, composition, focusedParticipantId, feedSelectionDisabled, onSelectFeed }: CageStageProgramProps) {
@@ -382,5 +417,5 @@ export default function CageStageProgram({ room, isHost, isGuest, onStage, liveK
   }, [room.source, isHost]);
   const viewProps = useMemo(() => ({ room, onStage, liveKitVideoTracks, useRtcVideo, programMuted, playbackVolume, onOpenProfile, onPortraitDuelChange, composition, focusedParticipantId, feedSelectionDisabled, onSelectFeed }), [liveKitVideoTracks, onOpenProfile, onStage, programMuted, playbackVolume, room, useRtcVideo, onPortraitDuelChange, composition, focusedParticipantId, feedSelectionDisabled, onSelectFeed]);
   if (error && !state?.cage) return <EmptyProgram title="Régie vidéo indisponible" detail="La Cage n’a pas pu synchroniser la rencontre active. Réessaie dans quelques instants." />;
-  return <CageStageProgramView {...viewProps} isHost={isHost} cage={preview ?? state?.cage ?? null} />;
+  return <CageStageProgramView {...viewProps} isHost={isHost} cage={room.source === "demo" && !isHost ? preview : state?.cage ?? null} />;
 }

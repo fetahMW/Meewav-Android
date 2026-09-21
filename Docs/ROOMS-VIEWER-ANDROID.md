@@ -63,3 +63,40 @@ Les six types utilisent `RoomViewer`, `NativeViewerSurfaces` et les mêmes compo
 Le toucher Viewer ne modifie plus la composition. Les transitions documentaires `startViewTransition` sont désactivées dans le conteneur Android pour ne pas masquer les superpositions vidéo. `rooms-viewer-transition-check.mjs` contrôle ce contrat sans capture. Le splash système utilise un rendu du vinyle existant généré par `build-launch-vinyl.mjs`.
 
 À la demande de l’utilisateur, la validation visuelle finale lui appartient ; seules les compilations et vérifications mécaniques sont exécutées.
+
+## Simulations Cage pour la recette
+
+Audit du host : compétition/direct/participants, cagnotte locale, votes, résultats et programmation s’appuient sur le même état de compétition. Le Viewer conserve ces parcours sans les commandes d’administration.
+
+Le bouton Play provisoire est limité aux rooms de démonstration. Choix : tournoi à 8 (7 matchs), championnat à 8 (28 rencontres), Open Mic face à face (4 duels indépendants), Open Mic Battle (7 duels, gagnant conservé). L’Open Mic de démonstration utilise la première journée du moteur championnat pour respecter le face-à-face Android, sans modifier l’Open Mic individuel du site. Chaque prestation dure 2 s, vote 4 s, résultat 2 s. Le premier bracket s’affiche 3,5 s et reste consultable dans Compétition. Le poster initial passe à 5 s.
+
+Les fenêtres de vote/resultat suivent la phase réelle de la simulation ; un bulletin Viewer est limité à un par match. La cagnotte est explicitement locale et n’effectue aucun paiement. Le classement championnat conserve les ex æquo. Contrôles sans captures : `rooms-cage-film-engine-check.mjs` parcourt les quatre programmes jusqu’à COMPLETED ; `rooms-cage-film-ui-check.mjs` vérifie le démarrage, les votes et le choix des quatre formats.
+
+Correction Cage Viewer : sous-menu texte sans rectangles ; modales portées dans document.fullscreenElement avec suivi des changements plein écran ; retrait du VS superposé à la vidéo ; caméras des huit artistes de simulation explicitement prêtes, y compris lorsqu'un profil de démo avait sa caméra coupée. Contrôle non visuel : vote dans le conteneur plein écran, deux éléments vidéo, aucun état caméra coupée, aucun VS superposé et styles du sous-menu.
+
+Wave Viewer : atelier de préécoute sur 16 mesures, base continue et un seul fichier remplaçable. Les buffers utilisent la même horloge AudioContext et sont répétés sur une grille de 16 mesures ; une durée incompatible avec le BPM est refusée (aucun time-stretch prétendu). Mute/Solo et volumes privés indépendants ; fermer l'atelier rend le son au live. Direction artistique adaptée du WaveMasterPlayer natif. Libellé Télécharger la boucle de base et CTA Rejoindre la file d’attente après retrait. Test rooms-wave-workshop-check.mjs : import WAV au tempo, 16 mesures, curseur piloté par l'audio et états Mute/Solo, sans capture.
+
+### Navigation spectateur — comparaison avec les hosts Android
+
+- Wave : le host sépare Propositions/Vote/Composition. Le spectateur a désormais En direct (beat et vote), Mon atelier (essai privé/import/soumission), Ma participation (suivi et file scène). Les formulaires restent montés afin de préserver le brouillon. Le vote ouvert est signalé sur les autres onglets.
+- Classe : référence ClasseToolsPanel.kt, Élèves/Ressources côté professeur. Le spectateur dispose déjà d'un dock Classe/Questions/Ressources (selon droits), main et sortie. Conservation du dock ; ajouter un second sous-menu dupliquerait les destinations. Navigation vérifiée.
+- Loge : référence LogeToolsPanel.kt, VIP/Questions/Invitations. Navigation spectateur alignée sur ces trois destinations. Demandes de moments et invitations reçues regroupées dans Invitations, sans supprimer leurs commandes existantes. Suppression du CTA de navigation supplémentaire au-dessus des onglets.
+- Place : référence PlaceToolsPanel.kt, Parole/Clash/Défis. Les trois destinations sont déjà présentes et distinctes côté spectateur : conservées. Navigation vérifiée.
+
+Cette passe porte sur l'organisation et la navigation ; elle ne prétend pas valider un échange réseau multi-appareils entre les états de démonstration host et viewer. Contrôles sans captures : rooms-wave-workshop-check.mjs, rooms-viewer-navigation-check.mjs.
+
+Loge Viewer : cartes VIP/questions/invitations unifiées sur la matière noire du mixeur. Correction du dimensionnement flex (min-width:0, border-box, textes et CTA repliables), marges intérieures 14px sur les cartes de l'historique auparavant sans padding horizontal, rayons 14px. Contrôle géométrique des trois onglets à 320/393/430px : aucune carte ni texte ne déborde ; pas de capture visuelle. Script rooms-loge-layout-check.mjs.
+
+Cage simulation : remplacement des vidéos génériques par les clips rap audio/vidéo originaux du host (pool cage-demo, copiés à l'identique par build-feature). Ouverture des modales sans blur. Suppression de l'état preview null transitoire entre les phases, caméra de démo stable pendant le vote, exclusion des pistes RTC pour les clips locaux. Le choix manuel d'un format active le son spectateur ; seul le participant dont c'est le tour est audible. Test : deux vidéos décodées/en lecture pendant la modale plein écran, aucun MediaError, son non muet pendant la prestation.
+
+Wave En direct : remplacement de la présentation longue par un panneau compact (nom réel de la base, BPM, gamme, signature, mesures et catégories recherchées). Suppression du titre de landing page et de la mention démonstration locale dans ce panneau ; téléchargement, soumission et essai conservés.
+
+Diagnostic audio Samsung : clips décodés avec piste audio (webkitAudioDecodedByteCount non nul), volume 0.3268, mais mute général resté actif au démarrage automatique. Activation du son à tout lancement de simulation (sans réinitialiser le mute pendant les matchs), WebView Rooms autorisant les passages audio programmés (autres surfaces inchangées). Contour rouge fixe sur is-live. Test automatique vérifie A audible puis B audible, autre piste muette, et contour rouge correspondant.
+
+Continuité host Cage Viewer : audit du site (CageStageProgram/DuelProgram et retrait du perdant) et du host Android (CageVideoStage). Au repos host seul ; avec un invité host + invité ; pendant le duel host en miniature déplaçable avec coordonnées relatives et limites du retour vidéo ; verdict host + gagnant pendant l'intervalle existant de deux secondes. Clip host original local cage-demo/host.mp4. Contrôles non visuels : arrivée host, drag miniature, alternance A/B avec contour violet et host + gagnant au verdict, plein écran conservé.
+
+### Cage Viewer — retours noirs / host figé (21 septembre)
+- Correction de la hauteur du programme imbriqué : en plein écran les vidéos du duel avaient une hauteur calculée de zéro. Le programme occupe explicitement toute la surface de son conteneur.
+- Les clips locaux sont chargés une fois en Blob pour éviter les erreurs de lecture par plages de WebView sur les assets APK.
+- Le lecteur du host reste monté entre accueil, miniature et intermission. Une seule session média appartient à la Cage : les trois vidéos ne se mettent plus mutuellement en pause.
+- Vérification non visuelle sur Samsung : deux retours de 384 × 397 px en portrait plein écran, readyState 4, images décodées en progression ; host également en lecture. Test de simulation renforcé avec hauteur visible et host non pausé.

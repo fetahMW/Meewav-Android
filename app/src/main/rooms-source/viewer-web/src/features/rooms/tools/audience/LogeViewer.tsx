@@ -53,7 +53,7 @@ export default function LogeViewer({
   onOpenChat,
   execute,
 }: Props) {
-  const [panel, setPanel] = useState<"moment" | "questions" | "personal" | "requests">(
+  const [panel, setPanel] = useState<"moment" | "questions" | "personal">(
       "moment",
     ),
     [question, setQuestion] = useState(""),
@@ -107,8 +107,36 @@ export default function LogeViewer({
     }
   };
   return (
-    <div className={`loge-viewer${panel === "requests" ? " is-request-list" : ""}`}>
-      <header className="loge-viewer__welcome" hidden={panel === "requests"}>
+    <div className={`loge-viewer${panel === "personal" ? " is-request-list" : ""}`}>
+      {eligible ? <>
+          <nav className="loge-viewer__tabs" aria-label="Explorer la Loge">
+            {(
+              [
+                { id: "moment", label: "VIP", Icon: Headphones },
+                {
+                  id: "questions",
+                  label: "Questions",
+                  Icon: MessageCircleQuestion,
+                },
+                { id: "personal", label: "Invitations", Icon: Gift },
+              ] as const
+            ).map(({ id, label, Icon }) => (
+              <button
+                type="button"
+                aria-pressed={panel === id}
+                onClick={() => setPanel(id)}
+                key={id}
+              >
+                <Icon />
+                <span>{label}</span>
+                {id === "personal" && moments.length > 0 ? (
+                  <b>{moments.length}</b>
+                ) : null}
+              </button>
+            ))}
+          </nav>
+      </> : null}
+      <header className="loge-viewer__welcome" hidden={panel !== "moment"}>
         <div className="loge-viewer__eyebrow">
           <span className="loge-viewer__live" />
           LA LOGE<span>{eligible ? "ACCÈS MEMBRE" : "ACCÈS PRIVÉ"}</span>
@@ -166,33 +194,8 @@ export default function LogeViewer({
               ) : null}
             </section>
           ) : null}
-          <button className="loge-viewer__question-cta" onClick={() => setPanel("requests")}><Gift /><span><strong>{panel === "requests" ? "Mes demandes" : "Cadeaux, dédicaces et rencontres"}</strong>{panel !== "requests" ? <small>Demander une attention · Rejoindre une liste</small> : null}</span><ArrowRight /></button>
-          <nav className="loge-viewer__tabs" aria-label="Explorer la Loge">
-            {(
-              [
-                { id: "moment", label: "Le moment", Icon: Headphones },
-                {
-                  id: "questions",
-                  label: "Questions",
-                  Icon: MessageCircleQuestion,
-                },
-                { id: "personal", label: "Pour moi", Icon: Gift },
-              ] as const
-            ).map(({ id, label, Icon }) => (
-              <button
-                type="button"
-                aria-pressed={panel === id}
-                onClick={() => setPanel(id)}
-                key={id}
-              >
-                <Icon />
-                <span>{label}</span>
-                {id === "personal" && moments.length > 0 ? (
-                  <b>{moments.length}</b>
-                ) : null}
-              </button>
-            ))}
-          </nav>
+
+
           {error ? (
             <p className="loge-viewer__error" role="alert">
               {error}
@@ -249,7 +252,8 @@ export default function LogeViewer({
                 </button>
               ) : null}
             </div>
-            {panel === "requests" ? <LogeRequestLists loge={loge} viewer={{...viewer, id: accountId}} disabled={busy || !canEngage} execute={execute} /> : panel === "questions" ? (
+            {panel === "personal" ? <LogeRequestLists loge={loge} viewer={{...viewer, id: accountId}} disabled={busy || !canEngage} execute={execute} /> : null}
+            {panel === "questions" ? (
               <section className="loge-viewer__card">
                 <div className="loge-viewer__section-label">
                   <MessageCircleQuestion />

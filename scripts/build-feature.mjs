@@ -136,6 +136,12 @@ await writeFile(join(output, 'THIRD_PARTY_NOTICES.txt'), notices);
 await writeFile(join(output, 'mobile.css'), await readFile(join(root, 'app/src/main/shared-ui/feature-mobile.css'), 'utf8') + '\n' + await readFile(join(source, 'mobile.css'), 'utf8'));
 await copyFile(join(root, 'app/src/main/profile-source/mobile.css'), join(output, 'profile-chrome.css'));
 await copyAsset(join(root, 'app/src/main/assets/globe-vinyle/ui/images/earth_specular.jpg'), 'ui/images/earth_specular.jpg');
+// Share the host's original battle clips with the local Viewer asset manifest.
+if (surface === 'rooms') {
+  for (const file of await readdir(join(root, 'app/src/main/assets/cage-demo'))) {
+    if (file.endsWith('.mp4')) await copyAsset(join(root, 'app/src/main/assets/cage-demo', file), `media/cage-demo/${file}`);
+  }
+}
 // CSP is completed by the native interceptor with the configured Supabase
 // origin. No service URL, key or session is written into the shipped document.
 await writeFile(join(output, 'index.html'), `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="dark"><title>Meewav — ${title}</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/${surface}/assets/main.css"><link rel="stylesheet" href="/${surface}/profile-chrome.css"><link rel="stylesheet" href="/${surface}/mobile.css"></head><body><div id="root">${featureLoadingHtml(`Ouverture de ${title}…`)}</div><script type="module" src="/${surface}/assets/main.js"></script></body></html>`);

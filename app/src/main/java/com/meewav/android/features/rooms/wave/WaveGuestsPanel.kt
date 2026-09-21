@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -249,12 +250,14 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                 Text(if (participants.isNotEmpty()) "Aucun profil pour ces filtres" else if (page == 2) "Personne sur scène" else "Aucun invité ici", color = Color.White.copy(alpha = .6f), fontSize = 13.sp)
                 if (state.filters.count > 0) TextButton(onClick = { state.filters = WaveGuestFilters() }) { Text("Tout effacer", color = WaveMixerTheme.capsuleAccentSoft) }
             }
-            val cardWidth = ((maxWidth - 16.dp) / 2.5f).coerceAtLeast(1.dp)
-            LazyHorizontalGrid(rows = GridCells.Fixed(2), modifier = Modifier.fillMaxSize(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp),
+            val cardWidth = ((maxWidth - 24.dp) / 3.2f).coerceAtLeast(1.dp)
+            val railGap = 14.dp
+            val railTop = ((maxHeight - cardWidth * 2 - railGap - 8.dp) * .35f).coerceIn(0.dp, 18.dp)
+            LazyHorizontalGrid(rows = GridCells.Fixed(2), modifier = Modifier.padding(top = railTop).fillMaxWidth().height(cardWidth * 2 + railGap + 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(railGap),
                 contentPadding = PaddingValues(bottom = 8.dp)) {
                 items(shown, key = { it.id }) { guest ->
-                    Column(Modifier.width(cardWidth).fillMaxHeight().hifiBlackSurface(12.dp).clip(RoundedCornerShape(12.dp))
+                    Box(Modifier.size(cardWidth).hifiBlackSurface(12.dp).clip(RoundedCornerShape(12.dp))
                         .border(if (guest.id in state.selected) 1.dp else 0.dp, if (guest.id in state.selected) WaveMixerTheme.capsuleAccentSoft else Color.Transparent, RoundedCornerShape(12.dp))
                         .guestDrag(state, guest, guest.location in listOf(WaveGuestLocation.BACKSTAGE, WaveGuestLocation.STAGE))
                         .combinedClickable(
@@ -274,31 +277,25 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                                 if (cage?.selectionMode == true) cage.select(guest.id)
                                 else { multiSelect = true; state.previewId = null; state.selected = state.selected + guest.id }
                             },
-                        ).padding(8.dp).alpha(if (state.dragId == guest.id) .3f else 1f),
-                        horizontalAlignment = Alignment.CenterHorizontally) {
-                        Box(Modifier.weight(1f)) {
-                            Image(painterResource(guest.portrait), guest.name, modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Crop)
-                            CageVictoryBadge(guest.cageVictories, Modifier.align(Alignment.BottomEnd).padding(3.dp))
-                            if (cage != null && guest.id in cage.roster) Text("RETENU", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 8.sp,
-                                modifier = Modifier.align(Alignment.TopStart).background(Color(0xEE141019), RoundedCornerShape(5.dp)).padding(4.dp))
-                            if (guest.location == WaveGuestLocation.JURY) Text("JURY",
-                                modifier = Modifier.align(Alignment.BottomStart).padding(3.dp).background(Color(0xFF211A35), RoundedCornerShape(5.dp)).padding(horizontal = 6.dp, vertical = 3.dp),
-                                color = WaveMixerTheme.capsuleAccentSoft, fontSize = 8.sp, fontWeight = FontWeight.Bold)
-                            if (multiSelect || (state.selected.size > 1)) {
-                                val checked = guest.id in state.selected
-                                Box(Modifier.align(Alignment.TopEnd).padding(4.dp).size(22.dp)
-                                    .clip(RoundedCornerShape(7.dp))
-                                    .background(if (checked) Color(0xFF453677) else Color.Black.copy(alpha = .75f))
-                                    .border(.75.dp, if (checked) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .35f), RoundedCornerShape(7.dp)),
-                                    contentAlignment = Alignment.Center) {
-                                    if (checked) Icon(Icons.Filled.Check, "Sélectionné", tint = Color.White, modifier = Modifier.size(15.dp))
-                                }
+                        ).alpha(if (state.dragId == guest.id) .3f else 1f)) {
+                        Image(painterResource(guest.portrait), guest.name, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = .12f), Color.Black.copy(alpha = .95f)))))
+                        if (guest.location == WaveGuestLocation.BACKSTAGE) Box(Modifier.align(Alignment.TopStart).padding(5.dp).background(Color.Black.copy(alpha = .65f), RoundedCornerShape(5.dp)).padding(3.dp)) { GuestHealth(guest) }
+                        CageVictoryBadge(guest.cageVictories, Modifier.align(Alignment.TopEnd).padding(4.dp))
+                        Column(Modifier.align(Alignment.BottomStart).padding(start = 7.dp, end = 7.dp, bottom = 7.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                            Text(guest.name, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(guest.role, color = WaveMixerTheme.capsuleAccentSoft, fontSize = 9.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(end = 24.dp))
+                        }
+                        Box(Modifier.align(Alignment.BottomEnd).padding(4.dp)) { GuestGrade(guest.gradeLevel, 26) }
+                        if (multiSelect || state.selected.size > 1) {
+                            val checked = guest.id in state.selected
+                            Box(Modifier.align(Alignment.TopEnd).padding(4.dp).size(22.dp).clip(RoundedCornerShape(7.dp))
+                                .background(if (checked) Color(0xFF453677) else Color.Black.copy(alpha = .75f))
+                                .border(.75.dp, WaveMixerTheme.capsuleAccentSoft, RoundedCornerShape(7.dp)), contentAlignment = Alignment.Center) {
+                                if (checked) Icon(Icons.Filled.Check, "Sélectionné", tint = Color.White, modifier = Modifier.size(15.dp))
                             }
                         }
-                        Text(guest.name, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        if (page == 1) Text(guest.originLabel, color = if (guest.origin == GuestOrigin.INVITATION) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .6f), fontSize = 8.sp, maxLines = 1)
-                        if (guest.location == WaveGuestLocation.BACKSTAGE) GuestHealth(guest)
-                        else Text(guest.location.label, color = Color.White.copy(alpha = .45f), fontSize = 8.sp, maxLines = 1)
                     }
                 }
             }
@@ -435,8 +432,8 @@ private fun GuestHealth(guest: WaveGuest) {
 }
 
 @Composable
-private fun GuestGrade(level: Int) {
+private fun GuestGrade(level: Int, size: Int = 42) {
     val badges = listOf(R.drawable.wave_grade_1, R.drawable.wave_grade_2, R.drawable.wave_grade_3,
         R.drawable.wave_grade_4, R.drawable.wave_grade_5, R.drawable.wave_grade_6)
-    Image(painterResource(badges[(level - 1).coerceIn(0, 5)]), "Grade $level", modifier = Modifier.size(42.dp))
+    Image(painterResource(badges[(level - 1).coerceIn(0, 5)]), "Grade $level", modifier = Modifier.size(size.dp))
 }

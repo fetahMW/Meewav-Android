@@ -1,3 +1,4 @@
+import { cageLocalMedia } from "./cageLocalMedia";
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent } from "react";
 import { CameraOff, Ellipsis, Radio, WifiOff } from "lucide-react";
 import { meewavMediaSession } from "../../scene/mediaSession/mediaSessionCoordinator";
@@ -168,7 +169,13 @@ function NativeMedia({
   const [failed, setFailed] = useState(false);
   const [frameDimensions, setFrameDimensions] = useState<MediaDimensions>();
   const [mediaDimensions, setMediaDimensions] = useState<SourceMediaDimensions>();
-  const videoUrl = source.videoUrl;
+  const localCage=source.videoUrl?.startsWith("/media/cage-demo/") === true;
+  const [cachedClip,setCachedClip]=useState<{source:string;url:string}|null>(null);
+  useEffect(()=>{if(!localCage || !source.videoUrl)return;let active=true;const original=source.videoUrl;
+    cageLocalMedia(original).then(url=>{if(active)setCachedClip({source:original,url});}).catch(()=>{if(active)setFailed(true);});
+    return()=>{active=false;};
+  },[localCage,source.videoUrl]);
+  const videoUrl = localCage ? cachedClip?.source===source.videoUrl?cachedClip.url:undefined : source.videoUrl;
   // The profile portrait belongs to the compact profile control, never to the
   // video surface. A missing/failed feed gets a neutral media state instead.
   const poster = source.imageUrl === participant.profile.avatarUrl ? undefined : source.imageUrl;
@@ -280,11 +287,12 @@ function NativeMedia({
     if (!videoRef.current) return;
     videoRef.current.muted = muted;
     videoRef.current.volume = Math.min(1, Math.max(0, playbackVolume));
+    if(videoRef.current.paused) void videoRef.current.play().catch(()=>undefined);
   }, [muted, playbackVolume]);
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || muted || !videoUrl || hasLiveKitVideo) return;
+    if (!video || muted || !videoUrl || hasLiveKitVideo || localCage) return;
     void video.play().catch(() => undefined);
     const lease = meewavMediaSession.claim({
       source: "room",

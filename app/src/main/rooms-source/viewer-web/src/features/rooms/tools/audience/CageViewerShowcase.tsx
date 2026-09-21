@@ -1,4 +1,5 @@
-import CageBroadcast from "./CageBroadcast";
+import CageBroadcast, { Modal } from "./CageBroadcast";
+import type { CageSimulationFormat } from "../cageViewerSimulation";
 import { MeewavGradeBadge } from "../../../grades/MeewavGradeBadge";
 import WaveProfileButton from "../panels/WaveProfileButton";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -8,9 +9,13 @@ import type { RoomToolsState } from "../roomTools.types";
 import "./cage-viewer-showcase.css";
 const rounds = ["Huitièmes", "Quarts", "Demi-finales", "Finale"];
 export default function CageViewerShowcase({children, enabled}:{children:ReactNode; enabled:boolean}) {
+ const [picker,setPicker]=useState(false);
+ const [format,setFormat]=useState<CageSimulationFormat>("tournament");
+ const [run,setRun]=useState(0);
  const [state,setState]=useState<RoomToolsState|null>(null);
  const stateRef=useRef(state);
- useEffect(()=>{window.dispatchEvent(new CustomEvent("cage-viewer-preview-state",{detail:state?.cage ?? null}));return()=>{window.dispatchEvent(new CustomEvent("cage-viewer-preview-state",{detail:null}));};},[state]);
+ useEffect(()=>{window.dispatchEvent(new CustomEvent("cage-viewer-preview-state",{detail:state?.cage ?? null}));},[state]);
+ useEffect(()=>()=>{window.dispatchEvent(new CustomEvent("cage-viewer-preview-state",{detail:null}));},[]);
  stateRef.current=state;
  const [paused,setPaused]=useState(false);
  const [tab,setTab]=useState("live");
@@ -22,19 +27,20 @@ export default function CageViewerShowcase({children, enabled}:{children:ReactNo
  const completed=runtime?.status === "COMPLETED";
  const resolved=match?.status === "RESOLVED" || match?.status === "CLOSED";
  const voting=match?.status === "VOTING";
- const restart=()=>{try {setState(startCageViewerSimulation());setPaused(false);setTab("live");setBracketRound(1);setError("");}catch(e){setError(e instanceof Error?e.message:"Simulation indisponible");}};
- useEffect(()=>{if(!enabled)return;window.addEventListener("cage-viewer-simulation-ready",restart);return()=>window.removeEventListener("cage-viewer-simulation-ready",restart);},[enabled]);
+ const restart=(kind:CageSimulationFormat=format)=>{try {window.dispatchEvent(new Event("cage-demo-enable-audio"));setState(startCageViewerSimulation(kind));setFormat(kind);setRun(v=>v+1);setPaused(true);setPicker(false);setError("");}catch(e){setError(e instanceof Error?e.message:"Simulation indisponible");}};
+ useEffect(()=>{if(!enabled)return;const start=(event?:Event)=>{if((event as CustomEvent)?.detail?.picker){clearTimeout(timer);setPaused(true);setPicker(true);}else if(!stateRef.current)restart("tournament");};const timer=window.setTimeout(()=>start(),5000);window.addEventListener("cage-viewer-simulation-ready",start);return()=>{clearTimeout(timer);window.removeEventListener("cage-viewer-simulation-ready",start);};},[enabled]);
+ const selector=picker?<Modal title="Simuler La Cage" onClose={()=>{setPicker(false);setPaused(false);}}><p className="cvm-note">8 artistes · 2 s par prestation · 4 s pour voter</p><div className="cvm-format-picker">{([["open-mic","Open Mic","Quatre duels, deux nouveaux artistes à chaque fois"],["open-mic-battle","Open Mic Battle","Le gagnant reste face au prochain challenger"],["championship","Championnat","Tout le monde se rencontre, classement cumulé"],["tournament","Tournoi","Quarts, demi-finales et finale"]] as const).map(([id,label,detail])=><button key={id} onClick={()=>{window.dispatchEvent(new Event("cage-demo-enable-audio"));restart(id);}}><strong>{label}</strong><small>{detail}</small></button>)}</div></Modal>:null;
  const next=()=>{if(!stateRef.current)return;try{const copy=structuredClone(stateRef.current);advanceCageViewerSimulation(copy);setState(copy);}catch(e){setError(e instanceof Error?e.message:"Simulation interrompue");setPaused(true);}};
  useEffect(()=>{
   if(!state || paused || completed)return;
-  const duration=resolved?CAGE_DEMO_BREAK_MS:voting?6000:4000;
+  const duration=resolved?CAGE_DEMO_BREAK_MS:voting?4000:2000;
   const deadline=Date.now()+duration;
   setRemaining(Math.ceil(duration/1000));
   const tick=window.setInterval(()=>setRemaining(Math.max(0,Math.ceil((deadline-Date.now())/1000))),250);
   const timer=window.setTimeout(next,duration);
   return()=>{clearInterval(tick);clearTimeout(timer);};
- },[match?.id,match?.status,paused,completed]);
- if(!state || !runtime || !match) return <>{error && <p role="alert">{error}</p>}{children}</>;
+ },[match?.id,match?.status,match?.stepIndex,paused,completed]);
+ if(!state || !runtime || !match) return <>{error && <p role="alert">{error}</p>}{children}{selector}</>;
  const person=(id:string|null)=>runtime.participants.find(p=>p.id===id)?.person;
  const pair=[person(match.participantAId),person(match.participantBId)];
  const winner=person(match.winnerId);
@@ -44,5 +50,5 @@ export default function CageViewerShowcase({children, enabled}:{children:ReactNo
  const choose=(choice:"A"|"B")=>{try{const copy=structuredClone(state);simulationCommand(copy,"vote.cast",{choice},"preview-viewer");setState(copy);}catch(e){setError(e instanceof Error?e.message:"Vote impossible");}};
  const ballots=Object.values(match.vote?.ballots ?? {});
  const scores=[ballots.filter(v=>v==="A").length,ballots.filter(v=>v==="B").length];
- return <CageBroadcast error={error} state={state} paused={paused} remaining={remaining} onPause={()=>setPaused(!paused)} onRestart={restart} onNext={next} onClose={()=>setState(null)} onVote={choose}/>;
+ return <>{selector}<CageBroadcast key={run} format={format} suppressed={picker} error={error} state={state} paused={paused} remaining={remaining} onStart={()=>setPaused(false)} onPause={()=>setPaused(!paused)} onRestart={()=>restart()} onNext={next} onClose={()=>setState(null)} onVote={choose}/></>;
 }
