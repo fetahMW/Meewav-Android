@@ -915,3 +915,65 @@ body:has(.wv-room) .feature-dock-host { display: none !important; }
 #root .android-room-viewer[data-room-type="scene"] .place-studio-panel__surface {background:transparent!important;border:0!important;box-shadow:none!important;}
 #root .android-room-viewer[data-room-type="scene"] .place-studio-panel__surface::before,
 #root .android-room-viewer[data-room-type="scene"] .place-studio-panel__surface::after {display:none!important;}
+/* La Place Viewer: shared studio background, compact host-style subtabs, one scroll owner. */
+#root .android-room-viewer[data-room-type="place"] .place-studio-panel.is-tools .place-studio-panel__surface {background:transparent!important;box-shadow:none!important;border:0!important;overflow:hidden!important;padding-top:0!important;}
+#root .android-room-viewer[data-room-type="place"] .place-studio-panel.is-tools .place-studio-panel__surface::before,
+#root .android-room-viewer[data-room-type="place"] .place-studio-panel.is-tools .place-studio-panel__surface::after {display:none!important;}
+#root .android-room-viewer .place-conversation {display:flex!important;flex-direction:column!important;height:100%!important;min-height:0!important;overflow:hidden!important;background:transparent!important;border:0!important;box-shadow:none!important;}
+#root .android-room-viewer .place-conversation::before,#root .android-room-viewer .place-conversation::after {display:none!important;}
+#root .android-room-viewer .place-conversation > .place-tools-console__switch {display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));flex:0 0 42px;min-height:42px!important;margin:0!important;padding:0!important;gap:0!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;}
+#root .android-room-viewer .place-conversation > .place-tools-console__switch > button {position:relative;display:flex!important;flex-direction:row!important;align-items:center;justify-content:center;gap:5px;min-height:42px!important;margin:0!important;padding:0 6px 5px!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;color:#97939f!important;font-size:12px!important;font-weight:600;}
+#root .android-room-viewer .place-conversation > .place-tools-console__switch > button svg {display:none!important;}
+#root .android-room-viewer .place-conversation > .place-tools-console__switch > button::before {display:none!important;}
+#root .android-room-viewer .place-conversation > .place-tools-console__switch > button::after {content:none!important;}
+#root .android-room-viewer .place-conversation > .place-tools-console__switch > button.is-active {color:#eee9f7!important;}
+#root .android-room-viewer .place-conversation > .place-tools-console__switch > button.is-active::after {content:""!important;position:absolute;bottom:4px;left:50%;right:auto;top:auto;width:34px;height:2px;transform:translateX(-50%);border:0;border-radius:50%;background:linear-gradient(90deg,transparent,#a589d7 35%,#d9c7f5 50%,#a589d7 65%,transparent);box-shadow:0 0 5px #ae88e85c;}
+#root .android-room-viewer .place-conversation > .place-conversation__body {flex:1 1 0!important;min-height:0!important;height:auto!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior-y:contain;touch-action:pan-y;padding:10px 0 24px!important;background:transparent!important;scrollbar-width:thin;scrollbar-color:#635477 transparent;}
+#root .android-room-viewer .place-conversation__panel {background:transparent!important;box-shadow:none!important;}
+/* Shared Viewer tools material: the native mixer is the visual reference. */
+#root .android-room-viewer {
+ --viewer-card:linear-gradient(180deg,#1b1c20 0%,#111215 15%,#070809 52%,#010203 100%);
+ --viewer-card-shadow:inset 0 1px 1px #ffffff0b,inset 0 -2px 3px #0009,0 3px 7px #0003;
+ --viewer-key:linear-gradient(180deg,#24212d,#100d17 40%,#050507);
+}
+#root .android-room-viewer .place-studio-panel.is-tools :is(.place-studio-panel__surface,.room-audience-interactions,.room-audience-interactions__body,.loge-viewer,.cb-board,.cage-viewer-showcase,.wave-viewer-panel,.classe-student-workspace,.classe-student-content,.room-tool-panel.is-classroom) {
+ background:transparent!important;box-shadow:none!important;border:0!important;
+}
+#root .android-room-viewer .place-studio-panel.is-tools .place-studio-panel__surface::before,
+#root .android-room-viewer .place-studio-panel.is-tools .place-studio-panel__surface::after {display:none!important;}
+#root .android-room-viewer .place-studio-panel.is-tools :is(
+ .place-conversation__glass,.place-conversation-queue,.place-conversation__guest-picker,
+ .room-audience-section,.room-audience-callout,.room-audience-wave-vote,.room-audience-disclosure,
+ .loge-viewer__card,.loge-viewer__welcome,.loge-viewer__history article,
+ .room-audience-class-questions article,.room-audience-class-resources a,
+ .scene-program-card,.scene-queue-action,.scene-audience-campaign,
+ .cb-battle,.cb-round,.cb-champion,.cb-match-summary,.cb-results,
+ .cage-viewer-showcase__pair article,.cage-viewer-showcase__bracket article,
+ .wave-viewer-panel section,.wave-viewer-reference
+ ) {background:var(--viewer-card)!important;border:1px solid #a5a2b129!important;border-radius:16px!important;box-shadow:var(--viewer-card-shadow)!important;}
+#root .android-room-viewer .place-studio-panel.is-tools :is(.place-conversation__glass,.room-audience-section,.loge-viewer__card,.wave-viewer-panel section) {padding:14px;}
+#root .android-room-viewer .place-studio-panel.is-tools :is(.place-conversation__body,.loge-viewer,.wave-viewer-panel,.room-audience-interactions) button.is-primary,
+#root .android-room-viewer .place-studio-panel.is-tools :is(.loge-viewer__question-cta,.loge-viewer__chat,.place-conversation-queue button) {background:var(--viewer-key)!important;border-color:#9d87c44d!important;box-shadow:inset 0 1px #ffffff09!important;color:#c4afe7!important;}
+#root .android-room-viewer .wave-viewer-panel {flex:0 0 auto!important;padding:10px 0 24px!important;gap:12px;}
+#root .android-room-viewer .loge-viewer {padding:0!important;gap:10px;}
+#root .android-room-viewer .loge-viewer__content {padding:1px 0 24px!important;overscroll-behavior-y:contain;}
+#root .android-room-viewer .room-audience-interactions.is-loge {height:100%!important;flex:1 1 0!important;}
+#root .android-room-viewer .cb-board {padding:10px 0 24px!important;overscroll-behavior-y:contain;}
+#root .android-room-viewer .classe-student-content {padding-bottom:18px;overscroll-behavior-y:contain;}
+/* Text subtabs share the same small tapered light as the host, not button capsules. */
+#root .android-room-viewer .place-studio-panel.is-tools :is(.loge-viewer__tabs,.cage-viewer-showcase nav,.cb-rounds,.place-tools-console__switch) {display:grid!important;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:0!important;padding:0!important;margin:0!important;min-height:42px;flex-shrink:0;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;}
+#root .android-room-viewer .place-studio-panel.is-tools :is(.loge-viewer__tabs,.cage-viewer-showcase nav,.cb-rounds,.place-tools-console__switch) > button {position:relative;display:flex;align-items:center;justify-content:center;min-height:42px!important;padding:0 5px 5px!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;font-size:12px!important;font-weight:600;color:#97939f!important;}
+#root .android-room-viewer .place-studio-panel.is-tools :is(.loge-viewer__tabs,.cage-viewer-showcase nav,.cb-rounds,.place-tools-console__switch) > button > svg {display:none!important;}
+#root .android-room-viewer .place-studio-panel.is-tools :is(.loge-viewer__tabs,.cage-viewer-showcase nav,.cb-rounds,.place-tools-console__switch) > button::before {display:none!important;}
+#root .android-room-viewer .place-studio-panel.is-tools :is(.loge-viewer__tabs,.cage-viewer-showcase nav,.cb-rounds,.place-tools-console__switch) > button::after {content:none!important;}
+#root .android-room-viewer .place-studio-panel.is-tools :is(.loge-viewer__tabs,.cage-viewer-showcase nav,.cb-rounds,.place-tools-console__switch) > button:is(.is-active,[aria-pressed="true"],[aria-selected="true"]) {color:#eee9f7!important;}
+#root .android-room-viewer .place-studio-panel.is-tools :is(.loge-viewer__tabs,.cage-viewer-showcase nav,.cb-rounds,.place-tools-console__switch) > button:is(.is-active,[aria-pressed="true"],[aria-selected="true"])::after {content:""!important;position:absolute;bottom:4px;left:50%;right:auto;top:auto;width:34px;height:2px;transform:translateX(-50%);border:0;border-radius:50%;background:linear-gradient(90deg,transparent,#a589d7 35%,#d9c7f5 50%,#a589d7 65%,transparent);box-shadow:0 0 5px #ae88e85c;}
+
+#root .android-room-viewer .place-studio-panel.is-tools :is(.loge-viewer__tabs,.cb-rounds,.place-tools-console__switch)::before,
+#root .android-room-viewer .place-studio-panel.is-tools :is(.loge-viewer__tabs,.cb-rounds,.place-tools-console__switch)::after {display:none!important;}
+#root .android-room-viewer .place-studio-panel.is-tools :is(.place-audience-journey,.classroom-seat,.cb-round > article) {background:var(--viewer-card)!important;box-shadow:var(--viewer-card-shadow)!important;border-color:#a5a2b129!important;}
+#root .android-room-viewer .classroom-seat::before {background:none!important;}
+#root .android-room-viewer .classroom-seat.is-selected {border-color:#ad8cde!important;}
+#root .android-room-viewer .classroom-seat.is-speaking {border-color:#79c9a6!important;}
+#root .android-room-viewer .cb-rounds {grid-template-columns:repeat(4,minmax(0,1fr))!important;}
+#root .android-room-viewer .place-audience-journey {flex-shrink:0;margin-bottom:10px;}
