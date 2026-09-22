@@ -452,6 +452,7 @@ internal fun WaveChatPanel(
         }
         if (toolsOpen) {
             WaveChatToolsSheet(
+                live=chatSession.live,
                 giftContent=giftContent,
                 poll = livePoll,
                 onDismiss = { toolsOpen = false },

@@ -1,0 +1,24 @@
+create extension if not exists pgtap with schema extensions;
+select plan(8);
+insert into auth.users(instance_id,id,aud,role,email,encrypted_password,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
+select '00000000-0000-0000-0000-000000000000',('83000000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid,'authenticated','authenticated','invite-recipe-'||n||'@example.test','',now(),'{}','{}',now(),now() from generate_series(1,3)n;
+update public.profiles set show_on_public_profile=true,is_ghost_mode=false where id in ('83000000-0000-0000-0000-000000000001','83000000-0000-0000-0000-000000000002');
+update public.profiles set show_on_public_profile=false where id='83000000-0000-0000-0000-000000000003';
+insert into public.rooms_v2(id,host_id,type,title,status,livekit_room_name) values('83010000-0000-0000-0000-000000000001','83000000-0000-0000-0000-000000000001','wave','Invite test','live','invite-test');
+select set_config('request.jwt.claim.sub','83000000-0000-0000-0000-000000000001',true);
+set local role authenticated;
+select lives_ok($$select public.rooms_invite_profile_v1('83010000-0000-0000-0000-000000000001','83000000-0000-0000-0000-000000000002')$$,'host invites public profile');
+select lives_ok($$select public.rooms_invite_profile_v1('83010000-0000-0000-0000-000000000001','83000000-0000-0000-0000-000000000002')$$,'retry safe');
+select is((select count(*)::int from public.room_invitations_v2 where room_id='83010000-0000-0000-0000-000000000001'),1,'single invitation');
+select is((select count(*)::int from public.room_participants_v2 where room_id='83010000-0000-0000-0000-000000000001' and user_id='83000000-0000-0000-0000-000000000002'),0,'no implicit join');
+select throws_ok($$select public.rooms_invite_profile_v1('83010000-0000-0000-0000-000000000001','83000000-0000-0000-0000-000000000003')$$,'42501','profile_not_invitable','private profile protected');
+select throws_ok($$select public.rooms_invite_profile_v1('83010000-0000-0000-0000-000000000001','83000000-0000-0000-0000-000000000001')$$,'42501','profile_not_invitable','cannot invite self');
+select set_config('request.jwt.claim.sub','83000000-0000-0000-0000-000000000002',true);
+select throws_ok($$select public.rooms_invite_profile_v1('83010000-0000-0000-0000-000000000001','83000000-0000-0000-0000-000000000003')$$,'P0001','Action reservee au host','nonhost rejected');
+reset role;
+update public.room_invitations_v2 set status='declined',ended_at=now() where room_id='83010000-0000-0000-0000-000000000001';
+select set_config('request.jwt.claim.sub','83000000-0000-0000-0000-000000000001',true);
+set local role authenticated;
+select throws_ok($$select public.rooms_invite_profile_v1('83010000-0000-0000-0000-000000000001','83000000-0000-0000-0000-000000000002')$$,'55000','invitation_already_ended','no reinvitation after refusal');
+reset role;
+select * from finish();

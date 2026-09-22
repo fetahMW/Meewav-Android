@@ -48,5 +48,5 @@ private val guestPortraits=LruCache<String,ImageBitmap>(48)
         }
     }
     bitmap?.let{Image(it,contentDescription,modifier,contentScale=contentScale)}
-        ?:WaveGuestPortrait(guest,contentDescription,modifier,contentScale=contentScale)
+        ?:Image(painterResource(guest.portrait),contentDescription,modifier,contentScale=contentScale)
 }

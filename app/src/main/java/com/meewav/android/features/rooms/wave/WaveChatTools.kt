@@ -22,13 +22,14 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 
 /** Local demo state, like the current native Wave chat; no simulated audience votes. */
-internal data class WaveChatPoll(val question: String, val choices: List<String>, val endsAt: Long)
+internal data class WaveChatPoll(val question: String, val choices: List<String>, val endsAt: Long, val voteCounts: List<Int>? = null)
 
 /** Adapted from iOS ClasseHostToolsPalette / ClasseHostPollToolEditor. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun WaveChatToolsSheet(
     giftContent:(@Composable ()->Unit)?=null,
+    live: Boolean = false,
     poll: WaveChatPoll?,
     onDismiss: () -> Unit,
     onLaunch: (String, List<String>, Int) -> Unit,
@@ -41,6 +42,7 @@ internal fun WaveChatToolsSheet(
 ) {
     var gifts by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf(false) }
+    var composingNew by remember { mutableStateOf(false) }
     var highlighting by remember { mutableStateOf(false) }
     var question by remember { mutableStateOf("") }
     var format by remember { mutableIntStateOf(0) }
@@ -118,20 +120,21 @@ internal fun WaveChatToolsSheet(
                         Text("Mise en avant", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                         Text("Épingler un message du host en haut du chat", color = Color.White.copy(alpha = .55f), fontSize = 12.sp)
                     }
-                } else if (poll != null) {
+                } else if (poll != null && !composingNew) {
                     Text(poll.question, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                     val active = now < poll.endsAt
                     Text(if (active) "En cours · ${((poll.endsAt - now + 999) / 1000).coerceAtLeast(0)} s" else "Sondage terminé",
                         color = WaveMixerTheme.capsuleAccentSoft)
-                    poll.choices.forEach { choice ->
+                    poll.choices.forEachIndexed { index, choice ->
                         Row(Modifier.fillMaxWidth().hifiBlackSurface(12.dp).padding(14.dp)) {
                             PollAnswerLabel(choice, Modifier.weight(1f))
-                            Text("0 vote", color = Color.White.copy(alpha = .5f))
+                            val count = poll.voteCounts?.getOrNull(index)
+                            Text(if (count == null) "—" else "$count vote${if (count == 1) "" else "s"}", color = Color.White.copy(alpha = .5f))
                         }
                     }
-                    Text("Aperçu local · aucun vote du public connecté", fontSize = 12.sp, color = Color.White.copy(alpha = .5f))
+                    if (!live) Text("Aperçu local · aucun vote du public connecté", fontSize = 12.sp, color = Color.White.copy(alpha = .5f))
                     ToolPrimaryButton(if (active) "Terminer le sondage" else "Nouveau sondage", true,
-                        if (active) onStop else onNewPoll)
+                        if (active) onStop else { { composingNew = true; onNewPoll() } })
                 } else {
                     ToolTextField("Question", question, "Pose ta question…") { question = it.take(200) }
                     ToolLabel("Format")
@@ -144,8 +147,8 @@ internal fun WaveChatToolsSheet(
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         listOf(30, 60, 120).forEach { value -> ToolChoice("$value s", duration == value, Modifier.weight(1f)) { duration = value } }
                     }
-                    Text("Aperçu local du live", fontSize = 12.sp, color = Color.White.copy(alpha = .5f))
-                    ToolPrimaryButton("Lancer le sondage", valid) { onLaunch(question.trim(), answers, duration) }
+                    if (!live) Text("Aperçu local du live", fontSize = 12.sp, color = Color.White.copy(alpha = .5f))
+                    ToolPrimaryButton("Lancer le sondage", valid) { onLaunch(question.trim(), answers, duration); composingNew = false }
                 }
             }
         }

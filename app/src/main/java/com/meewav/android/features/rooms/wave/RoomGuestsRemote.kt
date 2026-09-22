@@ -42,6 +42,7 @@ internal class RoomGuestsRemote(private val api:LogeRemoteRepository,private val
     }
     suspend fun requests(open:Boolean){api.rpc("rooms_set_queue_open_v3",JSONObject().put("p_room_id",room).put("p_open",open))}
     suspend fun mute(id:String,muted:Boolean){api.rpc("rooms_set_host_mic_forced_muted_v2",JSONObject().put("p_room_id",room).put("p_guest_id",id).put("p_is_forced_muted",muted))}
+    suspend fun invite(id:String){api.rpc("rooms_invite_profile_v1",JSONObject().put("p_room_id",room).put("p_profile_id",id))}
 }
 
 @Composable internal fun BindRoomGuests(state:WaveGuestState,roomId:String?,classe:Boolean){
@@ -60,6 +61,7 @@ internal class RoomGuestsRemote(private val api:LogeRemoteRepository,private val
         }}
         state.remoteRequests={open->mutate{remote.requests(open)}}
         state.remoteMic={id,muted->mutate{remote.mute(id,muted)}}
+        state.remoteInvite={person->mutate{remote.invite(person.id)}}
         state.remoteRefuse={ids->mutate{remote.command(ids,"refuse")}}
         state.remoteRemove={ids->mutate{remote.command(ids,"remove")}}
         state.remoteMove={ids,target->
@@ -69,6 +71,22 @@ internal class RoomGuestsRemote(private val api:LogeRemoteRepository,private val
         try{while(true){
             if(!busy)try{remote.refresh()}catch(e:CancellationException){throw e}catch(e:Exception){state.notice=e.message?:"Invités indisponibles"}
             delay(2500)
-        }}finally{state.remoteRequests=null;state.remoteRefuse=null;state.remoteRemove=null;state.remoteMove=null;state.remoteMic=null}
+        }}finally{state.remoteRequests=null;state.remoteRefuse=null;state.remoteRemove=null;state.remoteMove=null;state.remoteMic=null;state.remoteInvite=null}
+    }
+}
+
+@Composable internal fun BindGuestSearch(state:WaveGuestState,roomId:String?){
+    val context=LocalContext.current
+    LaunchedEffect(state,roomId){
+        if(roomId==null)return@LaunchedEffect
+        val api=LogeRemoteRepository(context.applicationContext,roomId)
+        state.remoteSearch={query->
+            val rows=api.rpc("search_messageable_profiles_v1",JSONObject().put("p_query",query).put("p_limit",30)).optJSONArray("items")?:JSONArray()
+            (0 until rows.length()).map{index->val p=rows.getJSONObject(index)
+                WaveGuest(p.getString("profile_id"),p.optString("display_name","Artiste"),p.optString("primary_role_key","Artiste"),android.R.drawable.ic_menu_myplaces,WaveGuestLocation.INVITED,
+                    demoVideo="",gradeLevel=p.optInt("grade_level",1),avatarUrl=p.optString("avatar_url").takeUnless{it=="null"}.orEmpty())
+            }.filter{candidate->state.guests.none{it.id==candidate.id}}
+        }
+        try{kotlinx.coroutines.awaitCancellation()}finally{state.remoteSearch=null}
     }
 }

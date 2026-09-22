@@ -1,0 +1,6 @@
+[
+  {
+    conname: 'rooms_v2_video_format_check',
+    definition: "CHECK ((video_format = ANY (ARRAY['landscape'::text, 'portrait'::text])))"
+  }
+]

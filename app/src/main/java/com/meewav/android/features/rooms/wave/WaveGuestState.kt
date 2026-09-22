@@ -52,6 +52,7 @@ internal class WaveGuestState(private val cageDemo: Boolean = false, private val
     var remoteRequests: ((Boolean)->Unit)? = null
     var remoteRefuse: ((Set<String>)->Unit)? = null
     var remoteMic: ((String,Boolean)->Unit)? = null
+    var remoteSearch: (suspend (String)->List<WaveGuest>)? = null
     var remoteMove: ((Set<String>,WaveGuestLocation)->Unit)? = null
     var remoteRemove: ((Set<String>)->Unit)? = null
     var remoteInvite: ((WaveGuest)->Unit)? = null
@@ -253,7 +254,7 @@ internal class WaveGuestState(private val cageDemo: Boolean = false, private val
     fun toggleMic(id: String) { remoteMic?.let{it(id,guests.find{p->p.id==id}?.hostMuted!=true);return}; if(remoteMode){notice="Commande micro distante indisponible";return}; guests = guests.map { if (it.id == id) it.copy(mic = !it.mic) else it } }
     fun awardCageVictory(id: String) { guests = guests.map { if (it.id == id) it.copy(cageVictories = it.cageVictories + 1) else it } }
     fun clearCageVictories() { guests = guests.map { it.copy(cageVictories = 0) } }
-    fun demoReconnect(id: String) { guests = guests.map { if (it.id == id && it.canParticipate) it.copy(connected = true, latencyMs = 45) else it } }
+    fun demoReconnect(id: String) { if (remoteMode) return; guests = guests.map { if (it.id == id && it.canParticipate) it.copy(connected = true, latencyMs = 45) else it } }
     var privateDemoMessages by mutableStateOf<Map<String, List<String>>>(emptyMap())
         private set
     fun addPrivateDemoMessage(ids: Set<String>, text: String) {
@@ -296,6 +297,7 @@ internal class WaveGuestState(private val cageDemo: Boolean = false, private val
         if (guests.none { it.id == id }) invite(WaveGuest(id, name, "Artiste", R.drawable.wave_chat_artist_0, WaveGuestLocation.INVITED))
     }
     fun demoInvitationResponse(id: String, accepted: Boolean) {
+        if(remoteMode)return
         guests = guests.map { if (it.id == id && it.invitation == GuestInvitation.PENDING)
             it.copy(invitation = if (accepted) GuestInvitation.ACCEPTED else GuestInvitation.DECLINED, connected = accepted) else it }
     }

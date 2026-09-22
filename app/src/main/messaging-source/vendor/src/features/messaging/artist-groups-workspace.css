@@ -135,6 +135,11 @@
   box-shadow: 0 12px 32px rgba(73, 49, 147, 0.27), inset 0 1px rgba(255, 255, 255, 0.24);
 }
 
+.agw[data-group-theme="blue"] { --agw-violet: #82bafa; --agw-violet-strong: #497cca; }
+.agw[data-group-theme="emerald"] { --agw-violet: #73cfb7; --agw-violet-strong: #398e7b; }
+.agw[data-group-theme="blue"] .agw-primary-button { background: linear-gradient(135deg,#304b78,#223653); border-color: #82bafa66; }
+.agw[data-group-theme="emerald"] .agw-primary-button { background: linear-gradient(135deg,#29564d,#203e38); border-color: #73cfb766; }
+
 .agw-create-button:hover,
 .agw-primary-button:hover,
 .agw-secondary-button:hover {

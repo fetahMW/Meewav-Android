@@ -121,6 +121,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     var waveNotificationsRead by remember { mutableStateOf(false) }
     val guestState = remember(initialRoom,liveRoomId) { WaveGuestState(cageDemo = initialRoom == RoomModule.CAGE, classeDemo = initialRoom == RoomModule.CLASSE,live=liveRoomId!=null) }
     BindRoomGuests(guestState,liveRoomId,room==RoomModule.CLASSE)
+    BindGuestSearch(guestState,liveRoomId)
     var giftRecipient by remember { mutableStateOf<WaveGuest?>(null) }
     val roomGifts=remember(guestState,programScope){LogeToolsState(context.applicationContext,guestState,"gifts:"+programScope,false)}
     LaunchedEffect(roomGifts){while(true){roomGifts.tick();delay(250)}}

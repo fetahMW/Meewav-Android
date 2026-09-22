@@ -46,7 +46,7 @@ Contraintes permanentes : préserver la démo investisseur, séparer démo et do
 | MSG-03 | V | Collaborations : envoyer, recevoir, répondre, annuler et suivre l'état. | Tous les points d'entrée utilisent la même demande durable ; autorisations et changements d'état cohérents. |
 | MSG-04 | P | Planning des groupes : création/consultation/annulation existantes, modification raccordée et testée. | Recette utilisateur ; vérifier pagination et annulation dans le parcours complet. La suppression est une annulation durable avec historique. Voir journal ci-dessous. |
 | MSG-05 | V | Décisions/votes des groupes : panneau réel retrouvé, contrats testés. | Choix modifiable compté une seule fois, clôture et droits validés en SQL ; recette du parcours utilisateur restante. |
-| MSG-06 | M | Lier/délier un groupe et un projet ; enregistrer le thème du groupe. | Liens et réglages restaurés après réouverture ; contrôle propriétaire/admin. |
+| MSG-06 | V | Liens groupe/projet et thème raccordés ; recette utilisateur restante. | Liens et réglages restaurés après réouverture ; contrôle propriétaire/admin. |
 | MSG-07 | M | Pièces jointes, audio et vocaux dans les projets. | Réutiliser le pipeline média avec les droits du projet ; téléchargement privé et reprise après erreur. |
 | MSG-08 | M | Studio projets : stems, takes, versions, mix et retours. | Upload privé, versions durables, écoute, commentaires/retours, suppression et accès membres ; aucune sauvegarde fictive. |
 | MSG-09 | V | Contacts, invitations/membres/admins de groupes et projets, blocage et départ. | Toutes les mutations visibles ont un service et une relecture ; utilisateur retiré sans accès résiduel. |
@@ -249,3 +249,14 @@ Tous exigent une session authentifiée ; aucun secret client privilégié. Les c
 - [Livraison Scène/profil](CABLAGE_SCENE_PROFIL_IDENTITE_2026-09-21.md) : correctifs et limites du lot, certains manques depuis résolus.
 - [Livraisons rooms/market/cadeaux](CONTRATS_PARTAGES_ROOMS_MARKET_2026-09-21.md) : contrats et validations les plus récents.
 - Code recoupé pour cette liste : `WaveMixerScreen.kt`, `WaveGuestState.kt`, `ClasseToolsState.kt`, `LogeToolsState.kt`, `RoomGiftRemote.kt`, `liveRooms.ts`, `classroomIosAdapter.ts`, `roomTools.supabase.ts`, `ArtistGroupsWorkspace.tsx`, `ProjectsWorkspace.tsx` et services Scène/profil des lots documentés.
+
+### Reprise après le checkpoint e544dc4
+
+- **MSG-06** : `GroupConnectionsLive.tsx` et migration `20260923130000_group_project_links.sql` raccordés et déployés. Liens/déliens et thème persistants, réservés aux administrateurs. Aucun octroi implicite de droits au projet, aucun titre privé exposé aux membres non autorisés. 12 tests SQL réussis avant/après déploiement ; bundle Messagerie reconstruit. Les copies `.pending` restent historiques.
+- **ROM-07** : recherche native `search_messageable_profiles_v1` et invitations hors file `rooms_invite_profile_v1`, migration `20260923140000` déployée. 8 tests SQL réussis avant/après : droits host, profil privé, reprise sans doublon, absence d'entrée implicite, refus conservé. Classe conserve son contrat. Simulation masquée et neutralisée en mode réel. Réception/acceptation et notifications restent à vérifier ; ligne non close.
+- **ROM-06** : compteurs natifs lus depuis `rooms_poll_state_v1`, aucun zéro factice ; textes démo réservés à la démo. L'éditeur de nouveau sondage résiste au rafraîchissement du précédent.
+- Aucun contrôle visuel, aucun envoi à des utilisateurs réels. Les 95 points ne sont pas tous clos : moteurs Wave/Cage, RTC hors Wave, médias des projets et dépendances externes restent notamment ouverts.
+
+Contrats réutilisables par iOS/Web :
+- `artist_group_connections_v1(p_group_id,p_action='read',p_project_id=null,p_theme=null)` : `read/link/unlink/theme`, réponse `projects/candidates/canManage/theme`, thèmes `violet/blue/emerald`. Membre actif en lecture, owner/admin en mutation ; lier exige également d'administrer le projet.
+- `rooms_invite_profile_v1(p_room_id,p_profile_id)` : host hors Classe, profil public non fantôme/non bloqué/non banni ; invitation pending persistante, retry renvoie l'invitation active. `55000/invitation_already_ended` après refus/retrait. Acceptation canonique `rooms_accept_invitation_v2`, sans présence ou montée forcée. Limite de 100 invitations/h.

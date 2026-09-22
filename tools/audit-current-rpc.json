@@ -1,0 +1,716 @@
+{
+  "messaging": {
+    "literalRpcCount": 50,
+    "missing": {
+      "rooms_get_or_create_classe_direct_conversation_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.service.ts:125"
+      ]
+    },
+    "present": {
+      "messaging_video_call_v1": [
+        "app\\src\\main\\messaging-source\\calls\\VideoCalls.tsx:13"
+      ],
+      "list_artist_group_tools_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\GroupToolsLive.tsx:38"
+      ],
+      "mutate_artist_group_tool_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\GroupToolsLive.tsx:73"
+      ],
+      "prepare_messaging_upload_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.attachments.service.ts:230"
+      ],
+      "finalize_messaging_upload_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.attachments.service.ts:262"
+      ],
+      "discard_messaging_upload_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.attachments.service.ts:273"
+      ],
+      "send_message_v2": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.attachments.service.ts:292"
+      ],
+      "attach_collaboration_uploads_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.attachments.service.ts:317"
+      ],
+      "get_conversation_messages_v2": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.attachments.service.ts:337"
+      ],
+      "list_my_collaboration_requests_v2": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.attachments.service.ts:364",
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.collaboration.service.ts:95"
+      ],
+      "mark_collaboration_request_viewed_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.collaboration.service.ts:108"
+      ],
+      "respond_to_collaboration_request_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.collaboration.service.ts:125"
+      ],
+      "cancel_collaboration_request_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.collaboration.service.ts:137"
+      ],
+      "list_my_creative_projects_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.projects.service.ts:112"
+      ],
+      "get_creative_project_workspace_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.projects.service.ts:124"
+      ],
+      "list_my_creative_project_invitations_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.projects.service.ts:145"
+      ],
+      "create_creative_project_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.projects.service.ts:158"
+      ],
+      "update_creative_project_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.projects.service.ts:177"
+      ],
+      "invite_creative_project_member_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.projects.service.ts:204"
+      ],
+      "respond_to_creative_project_invitation_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.projects.service.ts:224"
+      ],
+      "cancel_creative_project_invitation_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.projects.service.ts:235"
+      ],
+      "update_creative_project_member_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.projects.service.ts:252"
+      ],
+      "transfer_creative_project_ownership_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.projects.service.ts:270"
+      ],
+      "remove_or_leave_creative_project_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.projects.service.ts:281"
+      ],
+      "upsert_creative_project_task_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.projects.service.ts:299"
+      ],
+      "delete_creative_project_task_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.projects.service.ts:316"
+      ],
+      "set_creative_project_status_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.projects.service.ts:328"
+      ],
+      "delete_creative_project_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.projects.service.ts:339"
+      ],
+      "get_conversation_messages_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.projects.service.ts:353"
+      ],
+      "send_message_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.projects.service.ts:367",
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.service.ts:195"
+      ],
+      "list_my_conversations_v2": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.service.ts:81"
+      ],
+      "search_messageable_profiles_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.service.ts:95"
+      ],
+      "get_or_create_collaboration_conversation_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.service.ts:105"
+      ],
+      "get_or_create_direct_conversation_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.service.ts:113"
+      ],
+      "create_group_conversation_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.service.ts:141"
+      ],
+      "list_my_conversation_invitations_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.service.ts:151"
+      ],
+      "respond_to_conversation_invitation_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.service.ts:160"
+      ],
+      "get_conversation_messages_v3": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.service.ts:170"
+      ],
+      "get_conversation_members_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.service.ts:182"
+      ],
+      "mark_conversation_read_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.service.ts:209"
+      ],
+      "set_conversation_preferences_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.service.ts:219"
+      ],
+      "set_conversation_hidden_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.service.ts:232"
+      ],
+      "leave_group_conversation_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.service.ts:242"
+      ],
+      "set_message_reaction_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.service.ts:252"
+      ],
+      "set_message_pinned_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.service.ts:263"
+      ],
+      "delete_message_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.service.ts:273"
+      ],
+      "forward_message_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.service.ts:284"
+      ],
+      "set_user_block_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.service.ts:295"
+      ],
+      "report_content_v1": [
+        "app\\src\\main\\messaging-source\\vendor\\src\\features\\messaging\\messaging.service.ts:313"
+      ]
+    }
+  },
+  "profile": {
+    "literalRpcCount": 21,
+    "missing": {
+      "get_profile_certif_summary_v1": [
+        "app\\src\\main\\profile-source\\vendor\\src\\features\\profile\\gifts\\profileCertifEndorsements.service.ts:144"
+      ],
+      "profile_set_my_certif_state_v1": [
+        "app\\src\\main\\profile-source\\vendor\\src\\features\\profile\\gifts\\profileCertifEndorsements.service.ts:226"
+      ],
+      "profile_list_my_gift_inventory_v1": [
+        "app\\src\\main\\profile-source\\vendor\\src\\features\\profile\\gifts\\profileGiftInventory.service.ts:146"
+      ]
+    },
+    "present": {
+      "prepare_messaging_upload_v1": [
+        "app\\src\\main\\profile-source\\vendor\\src\\features\\messaging\\messaging.attachments.service.ts:228"
+      ],
+      "finalize_messaging_upload_v1": [
+        "app\\src\\main\\profile-source\\vendor\\src\\features\\messaging\\messaging.attachments.service.ts:260"
+      ],
+      "discard_messaging_upload_v1": [
+        "app\\src\\main\\profile-source\\vendor\\src\\features\\messaging\\messaging.attachments.service.ts:271"
+      ],
+      "send_message_v2": [
+        "app\\src\\main\\profile-source\\vendor\\src\\features\\messaging\\messaging.attachments.service.ts:290"
+      ],
+      "attach_collaboration_uploads_v1": [
+        "app\\src\\main\\profile-source\\vendor\\src\\features\\messaging\\messaging.attachments.service.ts:315"
+      ],
+      "get_conversation_messages_v2": [
+        "app\\src\\main\\profile-source\\vendor\\src\\features\\messaging\\messaging.attachments.service.ts:335"
+      ],
+      "list_my_collaboration_requests_v2": [
+        "app\\src\\main\\profile-source\\vendor\\src\\features\\messaging\\messaging.attachments.service.ts:362",
+        "app\\src\\main\\profile-source\\vendor\\src\\features\\messaging\\messaging.collaboration.service.ts:95"
+      ],
+      "mark_collaboration_request_viewed_v1": [
+        "app\\src\\main\\profile-source\\vendor\\src\\features\\messaging\\messaging.collaboration.service.ts:108"
+      ],
+      "respond_to_collaboration_request_v1": [
+        "app\\src\\main\\profile-source\\vendor\\src\\features\\messaging\\messaging.collaboration.service.ts:125"
+      ],
+      "cancel_collaboration_request_v1": [
+        "app\\src\\main\\profile-source\\vendor\\src\\features\\messaging\\messaging.collaboration.service.ts:137"
+      ],
+      "get_my_profile_metrics": [
+        "app\\src\\main\\profile-source\\vendor\\src\\features\\profile\\profile.analytics.service.ts:476"
+      ],
+      "archive_media_file": [
+        "app\\src\\main\\profile-source\\vendor\\src\\features\\profile\\profile.media.service.ts:583"
+      ],
+      "get_my_profile_rankings_v1": [
+        "app\\src\\main\\profile-source\\vendor\\src\\features\\profile\\profile.ranking.service.ts:176"
+      ],
+      "track_analytics_event": [
+        "app\\src\\main\\profile-source\\vendor\\src\\features\\globe\\api\\preProfile.api.ts:188"
+      ],
+      "get_my_private_profile": [
+        "app\\src\\main\\profile-source\\vendor\\src\\features\\globe\\api\\preProfile.api.ts:215"
+      ],
+      "get_golden_like_state": [
+        "app\\src\\main\\profile-source\\vendor\\src\\features\\globe\\api\\preProfile.api.ts:362"
+      ],
+      "give_golden_like": [
+        "app\\src\\main\\profile-source\\vendor\\src\\features\\globe\\api\\preProfile.api.ts:390"
+      ],
+      "request_profile_collaboration": [
+        "app\\src\\main\\profile-source\\vendor\\src\\features\\globe\\api\\preProfile.api.ts:404"
+      ]
+    }
+  },
+  "scene": {
+    "literalRpcCount": 20,
+    "missing": {},
+    "present": {
+      "prepare_messaging_upload_v1": [
+        "app\\src\\main\\scene-source\\vendor\\src\\features\\messaging\\messaging.attachments.service.ts:228"
+      ],
+      "finalize_messaging_upload_v1": [
+        "app\\src\\main\\scene-source\\vendor\\src\\features\\messaging\\messaging.attachments.service.ts:260"
+      ],
+      "discard_messaging_upload_v1": [
+        "app\\src\\main\\scene-source\\vendor\\src\\features\\messaging\\messaging.attachments.service.ts:271"
+      ],
+      "send_message_v2": [
+        "app\\src\\main\\scene-source\\vendor\\src\\features\\messaging\\messaging.attachments.service.ts:290"
+      ],
+      "attach_collaboration_uploads_v1": [
+        "app\\src\\main\\scene-source\\vendor\\src\\features\\messaging\\messaging.attachments.service.ts:315"
+      ],
+      "get_conversation_messages_v2": [
+        "app\\src\\main\\scene-source\\vendor\\src\\features\\messaging\\messaging.attachments.service.ts:335"
+      ],
+      "list_my_collaboration_requests_v2": [
+        "app\\src\\main\\scene-source\\vendor\\src\\features\\messaging\\messaging.attachments.service.ts:362",
+        "app\\src\\main\\scene-source\\vendor\\src\\features\\messaging\\messaging.collaboration.service.ts:95"
+      ],
+      "mark_collaboration_request_viewed_v1": [
+        "app\\src\\main\\scene-source\\vendor\\src\\features\\messaging\\messaging.collaboration.service.ts:108"
+      ],
+      "respond_to_collaboration_request_v1": [
+        "app\\src\\main\\scene-source\\vendor\\src\\features\\messaging\\messaging.collaboration.service.ts:125"
+      ],
+      "cancel_collaboration_request_v1": [
+        "app\\src\\main\\scene-source\\vendor\\src\\features\\messaging\\messaging.collaboration.service.ts:137"
+      ],
+      "archive_media_file": [
+        "app\\src\\main\\scene-source\\vendor\\src\\features\\profile\\profile.media.service.ts:563"
+      ],
+      "track_analytics_event": [
+        "app\\src\\main\\scene-source\\vendor\\src\\features\\scene\\sceneAnalytics.ts:58",
+        "app\\src\\main\\scene-source\\vendor\\src\\features\\globe\\api\\preProfile.api.ts:187"
+      ],
+      "get_scene_media_like_states": [
+        "app\\src\\main\\scene-source\\vendor\\src\\features\\scene\\sceneLikesApi.ts:12"
+      ],
+      "toggle_scene_media_like": [
+        "app\\src\\main\\scene-source\\vendor\\src\\features\\scene\\sceneLikesApi.ts:22"
+      ],
+      "get_my_private_profile": [
+        "app\\src\\main\\scene-source\\vendor\\src\\features\\globe\\api\\preProfile.api.ts:214"
+      ],
+      "get_golden_like_state": [
+        "app\\src\\main\\scene-source\\vendor\\src\\features\\globe\\api\\preProfile.api.ts:361"
+      ],
+      "give_golden_like": [
+        "app\\src\\main\\scene-source\\vendor\\src\\features\\globe\\api\\preProfile.api.ts:389"
+      ],
+      "request_profile_collaboration": [
+        "app\\src\\main\\scene-source\\vendor\\src\\features\\globe\\api\\preProfile.api.ts:403"
+      ],
+      "scene_interaction_v1": [
+        "app\\src\\main\\scene-source\\vendor\\src\\features\\scene\\comments\\sceneCommentsLive.ts:4"
+      ],
+      "scene_owner_stats_v1": [
+        "app\\src\\main\\scene-source\\vendor\\src\\features\\scene\\studio\\SceneCreatorStudio.tsx:297"
+      ]
+    }
+  },
+  "market": {
+    "literalRpcCount": 19,
+    "missing": {
+      "set_my_marketplace_seller_kind_v1": [
+        "app\\src\\main\\market-source\\vendor\\src\\features\\market\\market.service.ts:1006"
+      ],
+      "list_marketplace_catalog_v2": [
+        "app\\src\\main\\market-source\\vendor\\src\\features\\market\\market.service.ts:1023"
+      ],
+      "get_marketplace_catalog_capabilities_v1": [
+        "app\\src\\main\\market-source\\vendor\\src\\features\\market\\market.service.ts:1036"
+      ],
+      "get_my_marketplace_state_v1": [
+        "app\\src\\main\\market-source\\vendor\\src\\features\\market\\market.service.ts:1048"
+      ],
+      "get_my_marketplace_seller_kind_v1": [
+        "app\\src\\main\\market-source\\vendor\\src\\features\\market\\market.service.ts:1054"
+      ],
+      "set_marketplace_favorite_v1": [
+        "app\\src\\main\\market-source\\vendor\\src\\features\\market\\market.service.ts:1066"
+      ],
+      "set_marketplace_cart_item_v1": [
+        "app\\src\\main\\market-source\\vendor\\src\\features\\market\\market.service.ts:1079"
+      ],
+      "create_marketplace_listing_draft_v2": [
+        "app\\src\\main\\market-source\\vendor\\src\\features\\market\\market.service.ts:1094"
+      ],
+      "create_marketplace_listing_draft_v1": [
+        "app\\src\\main\\market-source\\vendor\\src\\features\\market\\market.service.ts:1099"
+      ],
+      "list_my_marketplace_listing_drafts_v1": [
+        "app\\src\\main\\market-source\\vendor\\src\\features\\market\\market.service.ts:1111"
+      ],
+      "update_marketplace_listing_draft_v2": [
+        "app\\src\\main\\market-source\\vendor\\src\\features\\market\\market.service.ts:1130"
+      ],
+      "update_marketplace_listing_draft_v1": [
+        "app\\src\\main\\market-source\\vendor\\src\\features\\market\\market.service.ts:1137"
+      ],
+      "create_marketplace_rental_request_v1": [
+        "app\\src\\main\\market-source\\vendor\\src\\features\\market\\market.service.ts:1156"
+      ],
+      "create_marketplace_service_booking_v1": [
+        "app\\src\\main\\market-source\\vendor\\src\\features\\market\\market.service.ts:1173"
+      ],
+      "join_marketplace_collective_v1": [
+        "app\\src\\main\\market-source\\vendor\\src\\features\\market\\market.service.ts:1187"
+      ],
+      "list_my_marketplace_intents_v1": [
+        "app\\src\\main\\market-source\\vendor\\src\\features\\market\\market.service.ts:1203"
+      ],
+      "update_marketplace_intent_status_v1": [
+        "app\\src\\main\\market-source\\vendor\\src\\features\\market\\market.service.ts:1220"
+      ],
+      "cancel_marketplace_intent_v1": [
+        "app\\src\\main\\market-source\\vendor\\src\\features\\market\\market.service.ts:1232"
+      ]
+    },
+    "present": {
+      "archive_media_file": [
+        "app\\src\\main\\market-source\\vendor\\src\\features\\profile\\profile.media.service.ts:555"
+      ]
+    }
+  },
+  "tremplin": {
+    "literalRpcCount": 5,
+    "missing": {},
+    "present": {
+      "track_analytics_event": [
+        "app\\src\\main\\tremplin-source\\vendor\\src\\features\\globe\\api\\preProfile.api.ts:187"
+      ],
+      "get_my_private_profile": [
+        "app\\src\\main\\tremplin-source\\vendor\\src\\features\\globe\\api\\preProfile.api.ts:214"
+      ],
+      "get_golden_like_state": [
+        "app\\src\\main\\tremplin-source\\vendor\\src\\features\\globe\\api\\preProfile.api.ts:361"
+      ],
+      "give_golden_like": [
+        "app\\src\\main\\tremplin-source\\vendor\\src\\features\\globe\\api\\preProfile.api.ts:389"
+      ],
+      "request_profile_collaboration": [
+        "app\\src\\main\\tremplin-source\\vendor\\src\\features\\globe\\api\\preProfile.api.ts:403"
+      ]
+    }
+  },
+  "rooms": {
+    "literalRpcCount": 105,
+    "missing": {
+      "rooms_get_or_create_classe_direct_conversation_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.service.ts:125"
+      ],
+      "profile_list_my_gift_inventory_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\profile\\gifts\\profileGiftInventory.service.ts:145"
+      ],
+      "rooms_cage_launch_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\launch\\cageLaunch.service.ts:8"
+      ],
+      "rooms_list_live_call_contacts_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\live-call\\roomLiveCall.service.ts:405"
+      ],
+      "rooms_list_my_live_call_invitations_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\live-call\\roomLiveCall.service.ts:417"
+      ],
+      "rooms_invite_live_call_contact_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\live-call\\roomLiveCall.service.ts:432"
+      ],
+      "rooms_respond_live_call_invitation_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\live-call\\roomLiveCall.service.ts:444"
+      ],
+      "rooms_set_live_call_route_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\live-call\\roomLiveCall.service.ts:460"
+      ],
+      "rooms_set_live_call_on_air_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\live-call\\roomLiveCall.service.ts:474"
+      ],
+      "rooms_end_live_call_invitation_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\live-call\\roomLiveCall.service.ts:485"
+      ],
+      "rooms_public_stage_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:782"
+      ],
+      "rooms_public_audio_channels_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:783"
+      ],
+      "rooms_poll_state_v3": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:840"
+      ],
+      "rooms_enter_room_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:936"
+      ],
+      "rooms_leave_room_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:941"
+      ],
+      "rooms_set_own_music_muted_v3": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:956"
+      ],
+      "rooms_set_own_camera_enabled_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:966"
+      ],
+      "rooms_set_host_camera_forced_off_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:974"
+      ],
+      "rooms_set_host_guest_mic_gain_v3": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:992"
+      ],
+      "rooms_set_host_guest_music_gain_v3": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1001"
+      ],
+      "rooms_commit_host_audio_state_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1039"
+      ],
+      "rooms_create_gift_draw_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1140"
+      ],
+      "rooms_submit_gift_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1155"
+      ],
+      "rooms_start_gift_draw_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1170"
+      ],
+      "rooms_reveal_gift_draw_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1176"
+      ],
+      "rooms_cancel_gift_draw_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1182"
+      ],
+      "rooms_end_place_v3": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1216"
+      ],
+      "rooms_set_queue_open_v3": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1221"
+      ],
+      "rooms_invite_profile_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1241"
+      ],
+      "rooms_end_guest_passage_v3": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1264"
+      ],
+      "rooms_get_place_tools_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\placeConversationTools.store.ts:37"
+      ],
+      "rooms_apply_place_tools_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\placeConversationTools.store.ts:84"
+      ],
+      "rooms_set_program_layout_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\placeProgramLayout.repository.ts:166"
+      ],
+      "rooms_get_experience_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\switch-room\\switchRoom.service.ts:15"
+      ],
+      "rooms_switch_experience_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\switch-room\\switchRoom.service.ts:52"
+      ],
+      "rooms_accept_experience_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\switch-room\\switchRoom.service.ts:56"
+      ],
+      "rooms_prepare_wave_switch_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\switch-room\\switchRoom.wave.ts:10"
+      ],
+      "rooms_complete_wave_switch_base_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\switch-room\\switchRoom.wave.ts:28"
+      ],
+      "rooms_get_cage_state_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\tools\\roomTools.supabase.ts:66"
+      ],
+      "rooms_get_specialized_state_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\tools\\roomTools.supabase.ts:71"
+      ],
+      "rooms_initialize_specialized_state_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\tools\\roomTools.supabase.ts:145"
+      ],
+      "rooms_commit_specialized_state_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\tools\\roomTools.supabase.ts:211"
+      ],
+      "rooms_get_voting_policy_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\voting\\roomVoting.service.ts:26"
+      ],
+      "rooms_set_voting_policy_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\voting\\roomVoting.service.ts:37"
+      ],
+      "rooms_wave_viewer_snapshot_v6": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\wave-viewer\\waveViewer.service.ts:32"
+      ]
+    },
+    "present": {
+      "prepare_messaging_upload_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.attachments.service.ts:228"
+      ],
+      "finalize_messaging_upload_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.attachments.service.ts:260"
+      ],
+      "discard_messaging_upload_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.attachments.service.ts:271"
+      ],
+      "send_message_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.attachments.service.ts:290"
+      ],
+      "attach_collaboration_uploads_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.attachments.service.ts:315"
+      ],
+      "get_conversation_messages_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.attachments.service.ts:335"
+      ],
+      "list_my_collaboration_requests_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.attachments.service.ts:362",
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.collaboration.service.ts:95"
+      ],
+      "mark_collaboration_request_viewed_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.collaboration.service.ts:108"
+      ],
+      "respond_to_collaboration_request_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.collaboration.service.ts:125"
+      ],
+      "cancel_collaboration_request_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.collaboration.service.ts:137"
+      ],
+      "list_my_conversations_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.service.ts:81"
+      ],
+      "search_messageable_profiles_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.service.ts:95"
+      ],
+      "get_or_create_collaboration_conversation_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.service.ts:105"
+      ],
+      "get_or_create_direct_conversation_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.service.ts:113"
+      ],
+      "create_group_conversation_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.service.ts:141"
+      ],
+      "list_my_conversation_invitations_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.service.ts:151"
+      ],
+      "respond_to_conversation_invitation_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.service.ts:160"
+      ],
+      "get_conversation_messages_v3": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.service.ts:170"
+      ],
+      "get_conversation_members_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.service.ts:182"
+      ],
+      "send_message_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.service.ts:195"
+      ],
+      "mark_conversation_read_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.service.ts:209"
+      ],
+      "set_conversation_preferences_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.service.ts:219"
+      ],
+      "set_conversation_hidden_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.service.ts:232"
+      ],
+      "leave_group_conversation_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.service.ts:242"
+      ],
+      "set_message_reaction_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.service.ts:252"
+      ],
+      "set_message_pinned_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.service.ts:263"
+      ],
+      "delete_message_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.service.ts:273"
+      ],
+      "forward_message_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.service.ts:284"
+      ],
+      "set_user_block_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.service.ts:295"
+      ],
+      "report_content_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\messaging\\messaging.service.ts:313"
+      ],
+      "archive_media_file": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\profile\\profile.media.service.ts:555"
+      ],
+      "track_analytics_event": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\globe\\api\\preProfile.api.ts:187"
+      ],
+      "get_my_private_profile": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\globe\\api\\preProfile.api.ts:214"
+      ],
+      "get_golden_like_state": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\globe\\api\\preProfile.api.ts:361"
+      ],
+      "give_golden_like": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\globe\\api\\preProfile.api.ts:389"
+      ],
+      "request_profile_collaboration": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\globe\\api\\preProfile.api.ts:403"
+      ],
+      "rooms_engagement_state_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:789"
+      ],
+      "rooms_send_message_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:931"
+      ],
+      "rooms_set_own_mic_gain_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:946"
+      ],
+      "rooms_set_own_music_gain_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:951"
+      ],
+      "rooms_set_own_mic_muted_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:961"
+      ],
+      "rooms_set_host_mic_forced_muted_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:983"
+      ],
+      "rooms_set_own_audio_preview_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1010",
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1075"
+      ],
+      "rooms_set_audio_live_enabled_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1021",
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1064"
+      ],
+      "rooms_set_own_audio_playback_state_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1030",
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1057"
+      ],
+      "rooms_give_golden_like_v1": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1100"
+      ],
+      "rooms_create_poll_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1106"
+      ],
+      "rooms_stop_poll_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1118"
+      ],
+      "rooms_vote_poll_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1123"
+      ],
+      "rooms_pin_custom_item_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1188"
+      ],
+      "rooms_pin_message_item_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1197"
+      ],
+      "rooms_clear_pinned_item_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1206"
+      ],
+      "rooms_delete_message_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1211"
+      ],
+      "rooms_join_queue_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1226"
+      ],
+      "rooms_leave_queue_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1231"
+      ],
+      "rooms_invite_from_queue_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1236"
+      ],
+      "rooms_accept_invitation_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1249"
+      ],
+      "rooms_decline_invitation_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1254"
+      ],
+      "rooms_cancel_invitation_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1259"
+      ],
+      "rooms_mark_invitation_ready_v2": [
+        "app\\src\\main\\rooms-source\\viewer-web\\src\\features\\rooms\\place\\place.service.ts:1269"
+      ]
+    }
+  },
+  "globe": {
+    "literalRpcCount": 0,
+    "missing": {},
+    "present": {}
+  }
+}

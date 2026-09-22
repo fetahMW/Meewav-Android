@@ -1,0 +1,46 @@
+import {useEffect,useRef,useState} from 'react';
+import {Link2,Unlink,FolderKanban} from 'lucide-react';
+import {supabase} from '../../lib/supabaseClient';
+import {useAuth} from '../auth/AuthContext';
+type Connections={theme:string;canManage:boolean;projects:{id:string;name:string;status:string}[];candidates:{id:string;name:string}[]};
+export function useGroupConnections(groupId:string|null){
+ const {user}=useAuth();const accountId=user?.id;
+ const [data,setData]=useState<Connections|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false);
+ const [loadedIdentity,setLoadedIdentity]=useState('');
+ const identity=`${accountId??''}:${groupId??''}`;
+ const active=useRef(identity),mutation=useRef(false),generation=useRef(0);active.current=identity;
+ const request=async(action='read',project:string|null=null,theme:string|null=null)=>{
+  if(!groupId || !accountId || mutation.current)return;
+  const current=identity,sequence=++generation.current;
+  if(action!=='read'){mutation.current=true;setBusy(true);}
+  try{
+   const {data:result,error:failure}=await supabase.rpc('artist_group_connections_v1',{p_group_id:groupId,p_action:action,p_project_id:project,p_theme:theme});
+   if(failure)throw failure;
+   if(active.current===current&&sequence===generation.current){setData(result);setLoadedIdentity(current);setError('');}
+  }catch{if(active.current===current&&sequence===generation.current){setData(null);setError('Impossible de synchroniser les réglages du groupe. Réessaie.');}}
+  finally{if(action!=='read'){mutation.current=false;setBusy(false);}}
+ };
+ useEffect(()=>{setData(null);setError('');void request();const timer=setInterval(()=>{if(!document.hidden&&!mutation.current)void request();},20000);return()=>{++generation.current;clearInterval(timer);};},[groupId,accountId]);
+ return {data:loadedIdentity===identity?data:null,error,busy,request};
+}
+export function GroupConnectionsLive({connection,onOpenProject}:{connection:ReturnType<typeof useGroupConnections>;onOpenProject?:(id:string)=>void}){
+ const {data,error,busy,request}=connection;
+ const [selection,setSelection]=useState('');
+ return <div className='agw-subview'>
+  <h2>Projets liés</h2>
+  {error&&<p role='alert'>{error}<button onClick={()=>void request()}>Réessayer</button></p>}
+  {!data&&!error&&<p role='status'>Chargement…</p>}
+  {data&&<>
+   <div className='agw-project-list'>{data.projects.map(project=><article key={project.id} className='agw-list-tile'>
+    <FolderKanban size={22}/><button className='agw-secondary-button' onClick={()=>onOpenProject?.(project.id)} disabled={!onOpenProject}>{project.name}</button>
+    {data.canManage&&<button className='agw-icon-button' aria-label={`Délier ${project.name}`} disabled={busy} onClick={()=>void request('unlink',project.id)}><Unlink size={18}/></button>}
+   </article>)}</div>
+   {!data.projects.length&&<p>Aucun projet lié accessible à ton compte.</p>}
+   {data.canManage&&<form className='agw-inline-form' onSubmit={e=>{e.preventDefault();if(selection)void request('link',selection);}}>
+    <label><span>Projet existant</span><select value={selection} onChange={e=>setSelection(e.target.value)} disabled={busy}><option value=''>Choisir un projet</option>{data.candidates.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
+    <p>Le lien conserve les accès actuels du projet. Invite les autres membres depuis le projet si nécessaire.</p>
+    <button className='agw-primary-button' disabled={busy||!data.candidates.some(p=>p.id===selection)}><Link2 size={17}/> Lier le projet</button>
+   </form>}
+  </>}
+ </div>;
+}

@@ -320,14 +320,31 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
     }
     if (filtersOpen) WaveGuestFilterSheet(state, originParticipants, isRequests = page == 1 && cage == null, onDismiss = { filtersOpen = false })
     if (inviteOpen) {
+        var query by remember{mutableStateOf("")}
+        var results by remember{mutableStateOf<List<WaveGuest>>(emptyList())}
+        var searchError by remember{mutableStateOf<String?>(null)}
+        var searching by remember{mutableStateOf(false)}
+        LaunchedEffect(query,state.remoteMode){
+            results=emptyList();searchError=null;searching=false
+            if(state.remoteMode&&query.trim().length>=2){
+                searching=true
+                try{kotlinx.coroutines.delay(300);results=state.remoteSearch?.invoke(query.trim())?:error("Connexion en cours")}
+                catch(e:kotlinx.coroutines.CancellationException){throw e}
+                catch(e:Exception){searchError="Recherche indisponible. Réessaie."}
+                finally{searching=false}
+            }
+        }
         ModalBottomSheet(onDismissRequest = { inviteOpen = false }, containerColor = Color(0xFF101114), contentColor = Color.White) {
             Column(Modifier.fillMaxWidth().heightIn(max = 500.dp).verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Inviter un artiste", modifier = Modifier.weight(1f), fontSize = 18.sp)
                     IconButton(onClick = { inviteOpen = false }) { Icon(WaveIcons.Close, "Fermer") }
                 }
-                val catalog = state.availableInvites
-                if (catalog.isEmpty()) Text("Tous les artistes de cette démo sont déjà invités.")
+                if(state.remoteMode)OutlinedTextField(value=query,onValueChange={query=it.take(80)},singleLine=true,label={Text("Nom ou pseudo")},modifier=Modifier.fillMaxWidth())
+                val catalog = if(state.remoteMode)results else state.availableInvites
+                if(searching)Text("Recherche…")
+                searchError?.let{Text(it)}
+                if (catalog.isEmpty()&&!searching&&searchError==null) Text(if(state.remoteMode)if(query.trim().length<2)"Saisis au moins deux caractères." else "Aucun artiste disponible." else "Tous les artistes de cette démo sont déjà invités.")
                 catalog.forEach { guest ->
                     Row(Modifier.fillMaxWidth().hifiBlackSurface(14.dp).clickable { state.invite(guest); page = 1; inviteOpen = false }.padding(14.dp),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -348,10 +365,10 @@ internal fun GuestPreviewContent(state: WaveGuestState, guest: WaveGuest) {
         Column(Modifier.fillMaxSize().padding(start = 16.dp, end = 16.dp, bottom = 10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             if (guest.invitation == GuestInvitation.PENDING) {
                 Text("Invitation en attente", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 12.sp)
-                Row { TextButton(onClick = { state.demoInvitationResponse(guest.id, true) }) { Text("Simuler l’acceptation", fontSize = 11.sp) }
+                if(!state.remoteMode)Row { TextButton(onClick = { state.demoInvitationResponse(guest.id, true) }) { Text("Simuler l’acceptation", fontSize = 11.sp) }
                     TextButton(onClick = { state.demoInvitationResponse(guest.id, false) }) { Text("Simuler le refus", fontSize = 11.sp) } }
             }
-            if (!guest.connected && guest.canParticipate) TextButton(onClick = { state.demoReconnect(guest.id) }) {
+            if (!state.remoteMode && !guest.connected && guest.canParticipate) TextButton(onClick = { state.demoReconnect(guest.id) }) {
                 Text("Simuler la reconnexion", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 12.sp)
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {

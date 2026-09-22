@@ -1051,6 +1051,8 @@ button:disabled { opacity: .4; cursor: default; }
 /* The composer stays inside the page above the shared dock. While typing the
    dock disappears, so Android's keyboard keeps its existing input geometry. */
 #root .mobile-messaging .messaging-page { bottom: var(--feature-dock-inset,104px); }
+/* In list mode the rail slides under the translucent dock instead of stopping above it. */
+#root .mobile-messaging:not(.is-detail) .messaging-page { bottom: 0; }
 #root .mobile-messaging .mobile-download-error { bottom: calc(var(--feature-dock-inset,104px) + 8px); }
 /* Expandable search uses the Marketplace glass finish and the existing list filters. */
 #root .mobile-messaging-header { position: relative; z-index: 30; grid-template-columns: 88px minmax(0,1fr) 88px; }
@@ -1101,5 +1103,7 @@ button:disabled { opacity: .4; cursor: default; }
 #root .mobile-messaging:not(.is-detail) :is(.messaging-page,.messaging-stage,.mw-workspace,.mw-conversation-rail)::after { display: none !important; }
 #root .mobile-messaging:not(.is-detail) .mw-workspace { position: absolute; inset: 0; height: 100%; min-height: 0; overflow: hidden; }
 #root .mobile-messaging:not(.is-detail) .mw-conversation-rail { position: absolute; inset: 0; height: 100%; min-height: 0; overflow: hidden; }
-#root .mobile-messaging:not(.is-detail) .mw-conversation-list { position: absolute; inset: 0; height: auto; max-height: none; min-height: 0; padding: 64px 10px 24px; overflow-y: auto !important; overflow-x: hidden; touch-action: pan-y; }
+#root .mobile-messaging:not(.is-detail) .mw-conversation-list { position: absolute; inset: 0; height: auto; max-height: none; min-height: 0; padding: 64px 10px calc(var(--feature-dock-inset,104px) + 16px); overflow-y: auto !important; overflow-x: hidden; touch-action: pan-y; }
+/* Solid strip behind the dock: the acoustic image stays out of the nav-bar zone while rows scroll under its glass. */
+#root .mobile-messaging:not(.is-detail) .mw-conversation-list { background: linear-gradient(#08090b00, #08090b00 calc(100% - var(--feature-dock-inset,104px)), #08090b calc(100% - var(--feature-dock-inset,104px))) !important; }
 #root .mobile-messaging:not(.is-detail) .mw-context-pane { display: none; }

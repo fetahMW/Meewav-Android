@@ -37,8 +37,9 @@ internal class RoomChatRemote(private val api:LogeRemoteRepository,private val s
                 Instant.parse(p.getString("created_at")).toEpochMilli(),isHost=p.optString("source_user_id")==host,serverId=id.takeUnless{it=="null"||it.isBlank()})}
         val poll=rows(api.table("room_polls_v2?room_id=eq.$room&select=id,question,options,duration_seconds,is_active,created_at&order=created_at.desc&limit=1")).firstOrNull()
         pollId=poll?.getString("id")
+        val counts=pollId?.let { api.rpc("rooms_poll_state_v1",JSONObject().put("p_poll_id",it)).optJSONArray("vote_counts") }
         state.poll.value=poll?.let{p->val options=p.getJSONArray("options");val expires=Instant.parse(p.getString("created_at")).toEpochMilli()+p.getInt("duration_seconds")*1000L
-            WaveChatPoll(p.getString("question"),(0 until options.length()).map{index->val option=options.get(index);if(option is JSONObject)option.optString("label")else option.toString()},if(p.optBoolean("is_active"))expires else minOf(expires,System.currentTimeMillis()))}
+            WaveChatPoll(p.getString("question"),(0 until options.length()).map{index->val option=options.get(index);if(option is JSONObject)option.optString("label")else option.toString()},if(p.optBoolean("is_active"))expires else minOf(expires,System.currentTimeMillis()), counts?.let { values -> (0 until values.length()).map { values.getInt(it) } })}
         state.messages.value=projected
         state.pinned=pinned
     }

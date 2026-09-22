@@ -11,3 +11,6 @@ meewav.local.properties
 .DS_Store
 tools/messaging-media/node_modules/
 supabase/.temp/
+
+# Devin local MCP config (contains API keys)
+.devin/mcp_config.local.json

@@ -2227,7 +2227,9 @@ export default function MessageWorkspace({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [Boolean(liveController)]);
 
+  const spaceMounted = useRef(false);
   useEffect(() => {
+    if (!spaceMounted.current) { spaceMounted.current = true; return; }
     setConversationSearch("");
     setUnreadOnly(false);
     setRailMenuOpen(false);
@@ -3089,11 +3091,6 @@ export default function MessageWorkspace({
             </article>
           ))}
           {(usesConversationRail ? visibleConversations : visibleRailItems).length === 0 && <div className="mw-list-empty"><Search /><strong>Aucun résultat</strong><span>Essaie un autre filtre.</span></div>}
-          {(usesConversationRail
-            ? !liveController && visibleConversations.length > 0
-            : filteredRailItems.length > 9 || showAllConversations) && (
-            <button type="button" className="mw-conversation-more" onClick={() => { setUnreadOnly(false); setConversationSearch(""); setShowAllConversations((value) => !value); }}>{showAllConversations ? "Voir moins" : "Voir plus"}</button>
-          )}
         </div>
         <div
           className={`mw-contact-rail-resizer${isContactRailResizing ? " is-active" : ""}`}

@@ -64,6 +64,7 @@ import type {
 } from "./messaging.groups.types";
 import { playMessageSound } from "./messagingSounds";
 import GroupToolsLive from "./GroupToolsLive";
+import {GroupConnectionsLive,useGroupConnections} from "./GroupConnectionsLive";
 import "./artist-groups-workspace.css";
 
 type GroupPanel = "chat" | "planning" | "members" | "decisions" | "projects" | "settings";
@@ -906,6 +907,7 @@ export default function ArtistGroupsWorkspace({
   }, [liveMode]);
 
   const activeGroup = panel ? groups.find((group) => group.id === panel.groupId) ?? null : null;
+  const groupConnections=useGroupConnections(liveMode ? activeGroup?.id ?? null : null);
 
   const notify = (message: string) => {
     setToast(message);
@@ -1389,7 +1391,7 @@ export default function ArtistGroupsWorkspace({
         <button type="button" className="agw-setting-row" onClick={toggleNotifications}><Bell size={19} /><span><strong>Notifications</strong><small>{notificationsOn ? "Activées" : "Désactivées"}</small></span><i className={notificationsOn ? "is-on" : ""}><b /></i></button>
         <button type="button" className="agw-setting-row" onClick={togglePrivacy}><LockKeyhole size={19} /><span><strong>Confidentialité</strong><small>{isPrivate ? "Privé" : "Découvrable"}</small></span><i className={isPrivate ? "is-on" : ""}><b /></i></button>
         {liveController && <button type="button" className="agw-setting-row" onClick={() => void liveController.setPreferences({ groupId: group.id, rosterVisibility: rosterVisible ? "hidden" : "visible" }).catch(() => undefined)}><Users size={19} /><span><strong>Visibilité de la liste des membres</strong><small>{rosterVisible ? "Visible" : "Masquée"}</small></span><i className={rosterVisible ? "is-on" : ""}><b /></i></button>}
-        <button type="button" className="agw-setting-row" onClick={() => liveMode ? notify("Le thème personnalisé n’est pas encore enregistré sur le serveur.") : setSettingsDetail("theme")}><Palette size={19} /><span><strong>Thème du groupe</strong><small>{liveMode ? "Bientôt disponible" : "Par défaut"}</small></span><ChevronRight size={17} /></button>
+        {liveMode ? <div className="agw-inline-form"><label><span>Thème du groupe</span><select aria-label="Thème du groupe" value={groupConnections.data?.theme??'violet'} disabled={!groupConnections.data?.canManage||groupConnections.busy} onChange={e=>void groupConnections.request('theme',null,e.target.value)}><option value="violet">Violet</option><option value="blue">Bleu</option><option value="emerald">Émeraude</option></select></label>{groupConnections.error&&<p role="alert">{groupConnections.error}<button onClick={()=>void groupConnections.request()}>Réessayer</button></p>}</div> : <button type="button" className="agw-setting-row" onClick={()=>setSettingsDetail("theme")}><Palette size={19}/><span><strong>Thème du groupe</strong><small>Par défaut</small></span><ChevronRight size={17}/></button>}
         <div className="agw-section-title"><span>ADMINISTRATION</span></div>
         <button type="button" className="agw-setting-row" onClick={() => setSettingsDetail("admins")}><ShieldCheck size={19} /><span><strong>Gérer les admins</strong><small>Accès et permissions</small></span><ChevronRight size={17} /></button>
         <button type="button" className="agw-setting-row" onClick={() => setSettingsDetail("history")}><History size={19} /><span><strong>Historique des actions</strong><small>Dernières modifications</small></span><ChevronRight size={17} /></button>
@@ -1433,7 +1435,7 @@ export default function ArtistGroupsWorkspace({
           kind={panel.view === "planning" ? "session" : "decision"} revision={activeGroup} readOnly={activeGroup.server?.lifecycle !== "active"} />
       </PanelShell>
     );
-    if (liveMode && panel.view === "projects") return renderUnavailablePanel(activeGroup, "projects", "Projets liés", "Les liens avec les projets nécessitent leur contrat serveur dédié.");
+    if (liveMode && panel.view === "projects") return <PanelShell className="agw-panel--projects" title={activeGroup.name} eyebrow="PROJETS LIÉS" onBack={()=>openPanel(activeGroup.id,"chat")} groupIdentity={activeGroup} toolbar={renderGroupToolbar(activeGroup,"projects")} hideClose><GroupConnectionsLive key={activeGroup.id} connection={groupConnections} onOpenProject={onOpenProject}/></PanelShell>;
     if (panel.view === "planning") return renderPlanning(activeGroup);
     if (panel.view === "members") return renderMembers(activeGroup);
     if (panel.view === "decisions") return renderDecisions(activeGroup);
@@ -1442,7 +1444,7 @@ export default function ArtistGroupsWorkspace({
   };
 
   return (
-    <main className={`agw${panel || createOpen ? " has-panel" : ""}`}>
+    <main className={`agw${panel || createOpen ? " has-panel" : ""}`} data-group-theme={liveMode ? groupConnections.data?.theme : undefined}>
       {toast && <div className="agw-toast" role="status"><CheckCircle2 size={17} /> {toast}<button type="button" onClick={() => { setToast(""); liveController?.clearActionError(); }} aria-label="Fermer"><X size={15} /></button></div>}
       {renderLiveInvitations()}
       {liveController && !groups.length && <section className="agw-live-state" role="status"><Users size={28} /><strong>{liveController.status === "loading" ? "Chargement des groupes…" : "Aucun groupe actif"}</strong><span>{liveController.error?.message ?? "Crée un groupe depuis le bandeau supérieur ou accepte une invitation reçue."}</span></section>}

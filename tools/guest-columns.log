@@ -1,0 +1,173 @@
+[
+  {
+    table_name: 'room_invitations_v2',
+    column_name: 'id',
+    data_type: 'uuid'
+  },
+  {
+    table_name: 'room_invitations_v2',
+    column_name: 'room_id',
+    data_type: 'uuid'
+  },
+  {
+    table_name: 'room_invitations_v2',
+    column_name: 'host_id',
+    data_type: 'uuid'
+  },
+  {
+    table_name: 'room_invitations_v2',
+    column_name: 'guest_id',
+    data_type: 'uuid'
+  },
+  {
+    table_name: 'room_invitations_v2',
+    column_name: 'status',
+    data_type: 'text'
+  },
+  {
+    table_name: 'room_invitations_v2',
+    column_name: 'created_at',
+    data_type: 'timestamp with time zone'
+  },
+  {
+    table_name: 'room_invitations_v2',
+    column_name: 'accepted_at',
+    data_type: 'timestamp with time zone'
+  },
+  {
+    table_name: 'room_invitations_v2',
+    column_name: 'ready_at',
+    data_type: 'timestamp with time zone'
+  },
+  {
+    table_name: 'room_invitations_v2',
+    column_name: 'backstage_at',
+    data_type: 'timestamp with time zone'
+  },
+  {
+    table_name: 'room_invitations_v2',
+    column_name: 'onstage_at',
+    data_type: 'timestamp with time zone'
+  },
+  {
+    table_name: 'room_invitations_v2',
+    column_name: 'ended_at',
+    data_type: 'timestamp with time zone'
+  },
+  {
+    table_name: 'room_mixer_state_v2',
+    column_name: 'room_id',
+    data_type: 'uuid'
+  },
+  {
+    table_name: 'room_mixer_state_v2',
+    column_name: 'guest_id',
+    data_type: 'uuid'
+  },
+  {
+    table_name: 'room_mixer_state_v2',
+    column_name: 'is_mic_muted',
+    data_type: 'boolean'
+  },
+  {
+    table_name: 'room_mixer_state_v2',
+    column_name: 'is_video_off',
+    data_type: 'boolean'
+  },
+  {
+    table_name: 'room_mixer_state_v2',
+    column_name: 'updated_at',
+    data_type: 'timestamp with time zone'
+  },
+  {
+    table_name: 'room_mixer_state_v2',
+    column_name: 'is_music_muted',
+    data_type: 'boolean'
+  },
+  {
+    table_name: 'room_mixer_state_v2',
+    column_name: 'mic_gain',
+    data_type: 'real'
+  },
+  {
+    table_name: 'room_mixer_state_v2',
+    column_name: 'music_gain',
+    data_type: 'real'
+  },
+  {
+    table_name: 'room_mixer_state_v2',
+    column_name: 'self_mic_muted',
+    data_type: 'boolean'
+  },
+  {
+    table_name: 'room_mixer_state_v2',
+    column_name: 'host_mic_forced_muted',
+    data_type: 'boolean'
+  },
+  {
+    table_name: 'room_mixer_state_v2',
+    column_name: 'audio_live_enabled',
+    data_type: 'boolean'
+  },
+  {
+    table_name: 'room_mixer_state_v2',
+    column_name: 'audio_preview_ready',
+    data_type: 'boolean'
+  },
+  {
+    table_name: 'room_mixer_state_v2',
+    column_name: 'audio_playback_state',
+    data_type: 'text'
+  },
+  {
+    table_name: 'room_mixer_state_v2',
+    column_name: 'audio_track_title',
+    data_type: 'text'
+  },
+  {
+    table_name: 'room_mixer_state_v2',
+    column_name: 'audio_track_artist',
+    data_type: 'text'
+  },
+  {
+    table_name: 'room_mixer_state_v2',
+    column_name: 'audio_track_duration_seconds',
+    data_type: 'integer'
+  },
+  {
+    table_name: 'room_mixer_state_v2',
+    column_name: 'audio_updated_at',
+    data_type: 'timestamp with time zone'
+  },
+  {
+    table_name: 'room_mixer_state_v2',
+    column_name: 'local_mic_gain',
+    data_type: 'real'
+  },
+  { table_name: 'room_queue_v2', column_name: 'id', data_type: 'uuid' },
+  {
+    table_name: 'room_queue_v2',
+    column_name: 'room_id',
+    data_type: 'uuid'
+  },
+  {
+    table_name: 'room_queue_v2',
+    column_name: 'user_id',
+    data_type: 'uuid'
+  },
+  {
+    table_name: 'room_queue_v2',
+    column_name: 'preview_url',
+    data_type: 'text'
+  },
+  {
+    table_name: 'room_queue_v2',
+    column_name: 'joined_queue_at',
+    data_type: 'timestamp with time zone'
+  },
+  {
+    table_name: 'room_queue_v2',
+    column_name: 'removed_at',
+    data_type: 'timestamp with time zone'
+  }
+]

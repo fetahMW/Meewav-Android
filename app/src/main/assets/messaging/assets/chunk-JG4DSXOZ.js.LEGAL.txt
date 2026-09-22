@@ -121,6 +121,7 @@ lucide-react/dist/esm/icons/sparkles.mjs:
 lucide-react/dist/esm/icons/store.mjs:
 lucide-react/dist/esm/icons/switch-camera.mjs:
 lucide-react/dist/esm/icons/trash-2.mjs:
+lucide-react/dist/esm/icons/unlink.mjs:
 lucide-react/dist/esm/icons/upload.mjs:
 lucide-react/dist/esm/icons/user-minus.mjs:
 lucide-react/dist/esm/icons/user-plus.mjs:
