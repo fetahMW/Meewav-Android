@@ -796,7 +796,7 @@ export default function MarketPage() {
   const clearMarketActionError = marketLive.clearActionError;
   const requireMarketAccount = () => {
     if (runtimeMode === "supabase" && !user) {
-      setToast("Connecte-toi pour utiliser les favoris, le panier ou contacter un vendeur.");
+      setToast("Connecte-toi pour utiliser les fonctions privées du Market.");
       return false;
     }
     return true;
@@ -826,6 +826,10 @@ export default function MarketPage() {
       }
       if (action === "favorites") {
         event.preventDefault();
+        if (marketLive.active && !user) {
+          setToast("Connecte-toi pour retrouver tes favoris.");
+          return;
+        }
         setSelectedProduct(null);
         setPopover(null);
         setDrawer(null);
@@ -1635,6 +1639,7 @@ export default function MarketPage() {
               className={`market-icon-button ${showFavoritesOnly ? "is-active" : ""}`}
               aria-label="Afficher mes favoris"
               onClick={() => {
+                if (!requireMarketAccount()) return;
                 setSellerDraftsOpen(false);
                 setShowFavoritesOnly((current) => {
                   const next = !current;
@@ -1744,6 +1749,7 @@ export default function MarketPage() {
               </button>
             </div>
             <button type="button" className="market-contextbar__create" aria-label="Déposer une annonce" onClick={() => {
+              if (!requireMarketAccount()) return;
               setEditingOwnerDraft(null);
               setListingOpen(true);
             }}>
@@ -1936,6 +1942,7 @@ export default function MarketPage() {
             <button key={label} type="button" onClick={() => {
               setPopover(null);
               if (intentRole) {
+                if (!requireMarketAccount()) return;
                 if (marketLive.active) {
                   setSelectedProduct(null);
                   setDrawer(null);
@@ -1946,6 +1953,7 @@ export default function MarketPage() {
                 return;
               }
               if (label === "Mes annonces") {
+                if (!requireMarketAccount()) return;
                 if (marketLive.active) {
                   setSelectedProduct(null);
                   setDrawer(null);
@@ -1960,6 +1968,7 @@ export default function MarketPage() {
                 return;
               }
               if (label === "Mes favoris") {
+                if (!requireMarketAccount()) return;
                 setSellerDraftsOpen(false);
                 setShowFavoritesOnly(true);
                 setMarketFilters((filters) => ({ ...filters, favoritesOnly: true }));
@@ -1970,6 +1979,7 @@ export default function MarketPage() {
             </button>
           ))}
           <button type="button" onClick={() => {
+            if (!requireMarketAccount()) return;
             setPopover(null);
             setEditingOwnerDraft(null);
             setListingOpen(true);
@@ -2278,6 +2288,7 @@ export default function MarketPage() {
           distanceSortAvailable={!marketLive.active || marketLive.catalogCapabilities.sorts.distance.supported}
           onClose={() => setFiltersOpen(false)}
           onApply={(nextFilters, results) => {
+            if (nextFilters.favoritesOnly && !requireMarketAccount()) return;
             setMarketFilters(nextFilters);
             setShowFavoritesOnly(nextFilters.favoritesOnly);
             if (nextFilters.pillarId !== "all") setActivePillar(nextFilters.pillarId);
