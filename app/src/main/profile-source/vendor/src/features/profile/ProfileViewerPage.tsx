@@ -233,6 +233,28 @@ function viewerFromDemo(artist: PreProfileDemoArtist): ViewerProfile {
   };
 }
 
+function viewerUnavailable(profileId: string): ViewerProfile {
+  return {
+    id: profileId,
+    name: "Profil MeeWav",
+    handle: "",
+    role: "Artiste",
+    location: "",
+    bio: "Les informations de ce profil ne sont pas disponibles pour le moment.",
+    portraitUrl: "",
+    portraitFallback: "MW",
+    verified: false,
+    online: false,
+    followersLabel: "—",
+    followingLabel: "—",
+    grade: null,
+    goldenLikesCount: 0,
+    collabAvailable: false,
+    media: [],
+    source: "public",
+  };
+}
+
 function mediaFromPublic(items: PublishedPreProfileMedia[]): ViewerMedia[] {
   return items.flatMap((item) => {
     if (!item.file_url) return [];
@@ -322,8 +344,8 @@ export function ProfileViewerExperience({
     () => artist ?? getPreProfileArtistForSeed({ profileId }),
     [artist, profileId],
   );
-  const seedProfile = useMemo(() => viewerFromDemo(seedArtist), [seedArtist]);
   const canonical = isCanonicalProfileId(profileId);
+  const seedProfile = useMemo(() => canonical ? viewerUnavailable(profileId) : viewerFromDemo(seedArtist), [canonical, profileId, seedArtist]);
   const [profile, setProfile] = useState<ViewerProfile>(seedProfile);
   const [activeSection, setActiveSection] = useState<ProfileHubSection>("overview");
   const [loading, setLoading] = useState(canonical);
@@ -353,13 +375,7 @@ export function ProfileViewerExperience({
     registrationStatus: seedArtist.tremplinRegistered === true ? "registered" : "not_registered",
     statsPublished: seedArtist.publicStatsPublished === true,
   }), [profile.grade, profile.id, profile.location, profile.name, profile.role, seedArtist.publicStatsPublished, seedArtist.tremplinRegistered]);
-  // A canonical profile keeps server data authoritative. When that public
-  // projection is unreachable (the current Paris demo case), the explicitly
-  // labelled fixture keeps the viewer testable without masquerading as live
-  // financial data. Avoid rendering it during the initial canonical request.
-  const publicHub = !canonical || (!loading && profile.source === "globe")
-    ? fixture
-    : null;
+  const publicHub = canonical ? null : fixture;
 
   const displayedMedia = useMemo<ViewerMedia[]>(() => {
     if (!publicHub) return profile.media;
@@ -432,9 +448,9 @@ export function ProfileViewerExperience({
           setNotice("Le profil est disponible, mais ses créations n’ont pas pu être actualisées.");
         }
       } else if (profileResult.status === "rejected") {
-        setNotice("Le serveur public est indisponible. Les données de démonstration restent affichées.");
+        setNotice("Le serveur public est indisponible. Réessaie dans quelques instants.");
       } else {
-        setNotice("Ce profil public n’est pas encore publié. Les données de démonstration restent affichées.");
+        setNotice("Ce profil public n’est pas encore publié.");
       }
 
       if (followResult.status === "fulfilled") {
@@ -538,6 +554,10 @@ export function ProfileViewerExperience({
   };
 
   const shareProfile = async () => {
+    if (window.location.hostname === "appassets.androidplatform.net") {
+      setToast("Le domaine public de partage doit encore être configuré.");
+      return;
+    }
     const shareUrl = new URL(`/profile/view/${encodeURIComponent(profileId)}`, window.location.origin);
     if (!canonical) {
       shareUrl.searchParams.set("name", profile.name);
@@ -659,7 +679,7 @@ export function ProfileViewerExperience({
           <div className="profile-viewer-identity-card">
             <div className="profile-viewer-hero__portrait">
               <span className="profile-viewer-hero__portrait-fallback" aria-hidden="true">{profile.portraitFallback}</span>
-              {!portraitFailed && <img src={profile.portraitUrl} alt={`Portrait de ${profile.name}`} onError={() => setPortraitFailed(true)} />}
+              {profile.portraitUrl && !portraitFailed && <img src={profile.portraitUrl} alt={`Portrait de ${profile.name}`} onError={() => setPortraitFailed(true)} />}
               {profile.online && <span className="profile-viewer-online">En ligne</span>}
             </div>
             <div className="profile-viewer-hero__identity">
