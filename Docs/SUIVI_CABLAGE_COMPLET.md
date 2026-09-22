@@ -292,3 +292,7 @@ Validation de cette passe : bundles Android Market, Scène, Profil et Tremplin r
 ### Profil public — séparation réel / démo
 
 Un profil ouvert avec un identifiant canonique ne conserve plus un portrait, des médias, des chiffres ou un projet fictifs si la requête publique échoue ou si le profil n'est pas publié. Il affiche une identité neutre et l'erreur. Les profils de démonstration restent accessibles pour la présentation investisseur. Depuis Android, le partage du profil ne copie plus une URL locale `appassets.androidplatform.net` comme si elle était publique ; le lien Web/App Link reste dépendant du domaine canonique `E2`.
+
+### Market — visuels temporaires du vendeur
+
+Le test SQL existant de la fondation Market passe (8 assertions, transaction annulée). Lorsqu'un vendeur abandonne un nouveau visuel importé ou le remplace avant l'enregistrement du brouillon, le client archive désormais l'enregistrement et tente aussi de retirer le fichier privé du stockage, en vérifiant son propriétaire et sa provenance Market. Les médias conservés dans une annonce ne sont pas visés. Cette récupération reste best effort : une fermeture du processus pendant l'upload ou une suppression refusée demandent encore une purge serveur des fichiers orphelins. Le brouillon reste le dernier état opérationnel ; la publication publique et les transactions ne sont pas annoncées comme terminées.

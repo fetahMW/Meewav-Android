@@ -557,6 +557,25 @@ export function createProfileMediaRepository(client: SupabaseClient = supabase) 
         throw new ProfileMediaServiceError("media-archive-failed", "Le contenu n’a pas pu être archivé.");
       }
     },
+
+    async discardNewMarketplaceUpload(ownerId: string, mediaId: string) {
+      const { data, error } = await client
+        .from("media_files")
+        .select("user_id,storage_bucket,storage_path,source_pillar,deleted_at")
+        .eq("id", mediaId)
+        .eq("user_id", ownerId)
+        .maybeSingle();
+      if (error || !data || data.source_pillar !== "marketplace") {
+        throw new ProfileMediaServiceError("media-archive-failed", "Le visuel temporaire n’a pas pu être vérifié.");
+      }
+      if (!data.deleted_at) await this.archiveOwnerMedia(mediaId);
+      if (data.storage_bucket === PROFILE_MEDIA_BUCKET && data.storage_path?.startsWith(`${ownerId}/`)) {
+        const removed = await client.storage.from(PROFILE_MEDIA_BUCKET).remove([data.storage_path]);
+        if (removed.error) {
+          throw new ProfileMediaServiceError("media-archive-failed", "Le visuel archivé n’a pas pu être nettoyé du stockage.");
+        }
+      }
+    },
   };
 }
 

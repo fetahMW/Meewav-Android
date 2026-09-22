@@ -758,9 +758,16 @@ export default function MarketPage() {
   const detailTriggerRef = useRef<HTMLElement | null>(null);
   const mediaExpandButtonRef = useRef<HTMLButtonElement | null>(null);
   const listingUploadCacheRef = useRef<Map<string, string>>(new Map());
+  const listingUploadOwnerRef = useRef<string | null>(null);
   const listingIdempotencyKeyRef = useRef<string | null>(null);
   const listingPublishInFlightRef = useRef(false);
   const listingCleanupAfterPublishRef = useRef(false);
+  const discardCachedUpload = (mediaId: string) => {
+    const ownerId = listingUploadOwnerRef.current;
+    return ownerId
+      ? profileMediaRepository.discardNewMarketplaceUpload(ownerId, mediaId)
+      : profileMediaRepository.archiveOwnerMedia(mediaId);
+  };
   const deepLinkHydrationRequestRef = useRef(0);
   const deepLinkHydrationAttemptRef = useRef<string | null>(null);
   const hasSelectedProduct = selectedProduct !== null;
@@ -1068,7 +1075,7 @@ export default function MarketPage() {
     listingUploadCacheRef.current.clear();
     if (orphanedMediaIds.length === 0) return;
     void Promise.allSettled(
-      orphanedMediaIds.map((mediaId) => profileMediaRepository.archiveOwnerMedia(mediaId)),
+      orphanedMediaIds.map(discardCachedUpload),
     );
   }, []);
 
@@ -1483,7 +1490,7 @@ export default function MarketPage() {
     const orphanedMediaIds = [...listingUploadCacheRef.current.values()];
     listingUploadCacheRef.current.clear();
     void Promise.allSettled(
-      orphanedMediaIds.map((mediaId) => profileMediaRepository.archiveOwnerMedia(mediaId)),
+      orphanedMediaIds.map(discardCachedUpload),
     );
   };
 
@@ -1530,6 +1537,7 @@ export default function MarketPage() {
         media.file,
         { sourcePillar: "marketplace" },
       );
+      listingUploadOwnerRef.current = user.id;
       listingUploadCacheRef.current.set(media.id, uploaded.id);
       appendMediaFileId(uploaded.id);
     }
@@ -1553,7 +1561,7 @@ export default function MarketPage() {
     listingIdempotencyKeyRef.current = null;
     if (supersededUploads.length > 0) {
       void Promise.allSettled(
-        supersededUploads.map((mediaId) => profileMediaRepository.archiveOwnerMedia(mediaId)),
+        supersededUploads.map(discardCachedUpload),
       );
     }
     setDraftCenterRevision((current) => current + 1);
@@ -1567,7 +1575,7 @@ export default function MarketPage() {
         listingIdempotencyKeyRef.current = null;
         if (orphanedMediaIds.length > 0) {
           void Promise.allSettled(
-            orphanedMediaIds.map((mediaId) => profileMediaRepository.archiveOwnerMedia(mediaId)),
+            orphanedMediaIds.map(discardCachedUpload),
           );
         }
         setListingOpen(false);
@@ -1585,7 +1593,7 @@ export default function MarketPage() {
         listingUploadCacheRef.current.clear();
         if (orphanedMediaIds.length > 0) {
           void Promise.allSettled(
-            orphanedMediaIds.map((mediaId) => profileMediaRepository.archiveOwnerMedia(mediaId)),
+            orphanedMediaIds.map(discardCachedUpload),
           );
         }
       }
