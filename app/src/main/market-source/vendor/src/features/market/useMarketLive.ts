@@ -35,6 +35,7 @@ export type MarketLiveUserError = {
 
 export type UseMarketLiveOptions = {
   enabled?: boolean;
+  viewerId?: string | null;
   mode?: MarketRuntimeMode;
   repository?: MarketplaceRepository;
   catalog?: MarketplaceCatalogInput;
@@ -77,11 +78,14 @@ function mergeProducts(current: MarketProductView[], incoming: MarketProductView
 
 export function useMarketLive({
   enabled = true,
+  viewerId = null,
   mode = resolveMarketRuntimeMode(),
   repository = marketplaceRepository,
   catalog = {},
 }: UseMarketLiveOptions = {}) {
-  const active = enabled && mode === "supabase";
+  // Public listings remain server-backed even before sign-in. `enabled` only
+  // authorizes loading and mutating the viewer's private Market state.
+  const active = mode === "supabase";
   const limit = catalog.limit ?? 48;
   const pillar = catalog.pillar ?? null;
   const categoryCode = catalog.categoryCode?.trim() || null;
@@ -173,6 +177,32 @@ export function useMarketLive({
     });
   }, []);
 
+  useEffect(() => {
+    if (!active) return;
+    viewerStateRevisionRef.current += 1;
+    favoritesRef.current = new Set();
+    cartRef.current = new Map();
+    joinedRef.current = new Set();
+    setFavorites(new Set());
+    setCart(new Map());
+    setJoinedCollectives(new Set());
+    setSellerKind(null);
+    favoriteQueuesRef.current.forEach((queue) => {
+      queue.cancelled = true;
+      queue.waiters.splice(0).forEach((resolve) => resolve(false));
+    });
+    cartQueuesRef.current.forEach((queue) => {
+      queue.cancelled = true;
+      queue.waiters.splice(0).forEach((resolve) => resolve(false));
+    });
+    favoriteQueuesRef.current.clear();
+    cartQueuesRef.current.clear();
+    mutationTokensRef.current.clear();
+    pendingActionsRef.current = new Set();
+    setPendingActions(new Set());
+    setLastIntent(null);
+  }, [active, viewerId]);
+
   const load = useCallback(async (append = false) => {
     if (!active) return false;
     if (append && !cursorRef.current) return false;
@@ -196,8 +226,8 @@ export function useMarketLive({
           search,
           ...(hasCatalogFilters ? { filters: catalogFilters } : {}),
         }),
-        append ? Promise.resolve(null) : repository.getViewerState(),
-        append ? Promise.resolve(null) : repository.getSellerKind(),
+        append || !enabled ? Promise.resolve(null) : repository.getViewerState(),
+        append || !enabled ? Promise.resolve(null) : repository.getSellerKind(),
       ]);
       if (requestId !== loadRequestRef.current) return false;
 
@@ -207,7 +237,15 @@ export function useMarketLive({
       cursorRef.current = nextCursor;
       setHasMore(Boolean(nextCursor));
       setBaseProducts((current) => append ? mergeProducts(current, mapped) : mapped);
-      if (loadedSellerKind) setSellerKind(loadedSellerKind);
+      if (!enabled && !append) {
+        favoritesRef.current = new Set();
+        cartRef.current = new Map();
+        joinedRef.current = new Set();
+        setFavorites(new Set());
+        setCart(new Map());
+        setJoinedCollectives(new Set());
+        setSellerKind(null);
+      } else if (loadedSellerKind) setSellerKind(loadedSellerKind);
 
       const viewerMutationPending = favoriteQueuesRef.current.size > 0
         || cartQueuesRef.current.size > 0
@@ -235,7 +273,7 @@ export function useMarketLive({
     } finally {
       if (requestId === loadRequestRef.current) setLoadingMore(false);
     }
-  }, [active, cacheProducts, catalogFilters, categoryCode, hasCatalogFilters, limit, pillar, repository, search]);
+  }, [active, enabled, viewerId, cacheProducts, catalogFilters, categoryCode, hasCatalogFilters, limit, pillar, repository, search]);
 
   useEffect(() => {
     if (!active) {
@@ -518,7 +556,7 @@ export function useMarketLive({
   }, [replaceFavorites, replacePendingActions, repository]);
 
   const toggleFavorite = useCallback((listingId: string, nextFavorite?: boolean) => {
-    if (!active) return Promise.resolve(false);
+    if (!active || !enabled) return Promise.resolve(false);
     let queue = favoriteQueuesRef.current.get(listingId);
     if (!queue) {
       const confirmed = favoritesRef.current.has(listingId);
@@ -536,7 +574,7 @@ export function useMarketLive({
     const result = new Promise<boolean>((resolve) => queue?.waiters.push(resolve));
     void runFavoriteQueue(listingId, queue);
     return result;
-  }, [active, replaceFavorites, runFavoriteQueue]);
+  }, [active, enabled, replaceFavorites, runFavoriteQueue]);
 
   const runCartQueue = useCallback(async (
     listingId: string,
@@ -596,7 +634,7 @@ export function useMarketLive({
   }, [replaceCart, replacePendingActions, repository]);
 
   const setCartQuantity = useCallback((listingId: string, quantity: number) => {
-    if (!active || !Number.isInteger(quantity) || quantity < 0 || quantity > 99) {
+    if (!active || !enabled || !Number.isInteger(quantity) || quantity < 0 || quantity > 99) {
       return Promise.resolve(false);
     }
     let queue = cartQueuesRef.current.get(listingId);
@@ -616,10 +654,10 @@ export function useMarketLive({
     const result = new Promise<boolean>((resolve) => queue?.waiters.push(resolve));
     void runCartQueue(listingId, queue);
     return result;
-  }, [active, replaceCart, runCartQueue]);
+  }, [active, enabled, replaceCart, runCartQueue]);
 
   const joinCollective = useCallback(async (listingId: string, quantity = 1) => {
-    if (!active || !Number.isInteger(quantity) || quantity < 1) return false;
+    if (!active || !enabled || !Number.isInteger(quantity) || quantity < 1) return false;
     if (joinedRef.current.has(listingId)) return true;
     const mutationKey = `collective:${listingId}`;
     const token = beginMutation(mutationKey);
@@ -648,7 +686,7 @@ export function useMarketLive({
       viewerStateRevisionRef.current += 1;
       finishMutation(mutationKey, token);
     }
-  }, [active, beginMutation, finishMutation, isLatestMutation, replaceJoinedCollectives, repository]);
+  }, [active, enabled, beginMutation, finishMutation, isLatestMutation, replaceJoinedCollectives, repository]);
 
   const requestRental = useCallback(async (
     listingId: string,
@@ -656,7 +694,7 @@ export function useMarketLive({
     endsOn: string,
     note?: string | null,
   ) => {
-    if (!active) return null;
+    if (!active || !enabled) return null;
     const mutationKey = `rental:${listingId}`;
     const token = beginMutation(mutationKey);
     setLastIntent(null);
@@ -678,14 +716,14 @@ export function useMarketLive({
     } finally {
       finishMutation(mutationKey, token);
     }
-  }, [active, beginMutation, finishMutation, isLatestMutation, repository]);
+  }, [active, enabled, beginMutation, finishMutation, isLatestMutation, repository]);
 
   const bookService = useCallback(async (
     listingId: string,
     requestedFor?: string | null,
     note?: string | null,
   ) => {
-    if (!active) return null;
+    if (!active || !enabled) return null;
     const mutationKey = `service:${listingId}`;
     const token = beginMutation(mutationKey);
     setLastIntent(null);
@@ -706,7 +744,7 @@ export function useMarketLive({
     } finally {
       finishMutation(mutationKey, token);
     }
-  }, [active, beginMutation, finishMutation, isLatestMutation, repository]);
+  }, [active, enabled, beginMutation, finishMutation, isLatestMutation, repository]);
 
   const clearActionError = useCallback(() => {
     setActionError(null);

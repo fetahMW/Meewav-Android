@@ -59,6 +59,7 @@ import {
 } from "../profile.media.service";
 import ProfileMenuSelect from "../components/ProfileMenuSelect";
 import ProfileStudioWorkspace, { type StudioMode } from "./ProfileStudioWorkspace";
+import ProfileCertifEndorsementsPanel from "../gifts/ProfileCertifEndorsementsPanel";
 
 type ProfileMediaViewProps = {
   section: MediaSectionId;
@@ -702,7 +703,28 @@ export default function ProfileMediaView({
         />
       )}
 
-      {activeMediaSection === "badges" && (
+      {activeMediaSection === "badges" && !localAuthPreviewEnabled && (
+        <div id="profile-media-panel-badges" className="profile-badges-dashboard" role="region" aria-label="Badges et validations">
+          <aside className="profile-badges-rail">
+            <article className="profile-grade-overview">
+              <div className="profile-grade-overview__identity">
+                <div className="profile-grade-overview__badge"><MeewavGradeBadge level={gradeLevel} size="xl" variant="icon" /></div>
+                <div><span className="profile-kicker">Grade Meewav actuel</span><h3>{gradeMeta.label}</h3><p>{gradeMeta.description}</p></div>
+              </div>
+              <div className="profile-grade-overview__progress" role="progressbar" aria-label={`Progression vers ${nextGradeMeta.label}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={gradeProgress}>
+                <span><i style={{ width: `${gradeProgress}%` }} /></span>
+                <div><strong>{gradeProgress} % du parcours</strong><small>{gradeLevel === 6 ? "Grade maximal atteint" : `${pointsToNextGrade.toLocaleString("fr-FR")} points avant ${nextGradeMeta.label}`}</small></div>
+              </div>
+            </article>
+          </aside>
+          <section className="profile-recognition-catalog" aria-label="Validations reçues">
+            {user ? <ProfileCertifEndorsementsPanel profileId={user.id} onDone={onToast} />
+              : <div className="profile-empty-state"><BadgeCheck size={32} /><h3>Connecte-toi pour retrouver tes validations</h3></div>}
+          </section>
+        </div>
+      )}
+
+      {activeMediaSection === "badges" && localAuthPreviewEnabled && (
         <div id="profile-media-panel-badges" className="profile-badges-dashboard" role="region" aria-label="Badges">
           <aside className="profile-badges-rail" aria-label="Progression du grade et prochain objectif">
             <article className="profile-grade-overview">

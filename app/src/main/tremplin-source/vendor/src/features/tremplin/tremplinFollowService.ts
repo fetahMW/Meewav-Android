@@ -26,14 +26,10 @@ export async function loadConnectedTremplinFollows(
   }
   const canonicalArtists = artists.filter((artist) => isCanonicalProfileId(getTremplinFollowTargetId(artist)));
   if (canonicalArtists.length === 0) return new Set<string>();
-  try {
-    const state = await getFollowStates(canonicalArtists.map(getTremplinFollowTargetId));
-    return new Set(canonicalArtists
-      .filter((artist) => state.followingProfileIds.has(getTremplinFollowTargetId(artist)))
-      .map(({ id }) => id));
-  } catch {
-    return new Set<string>();
-  }
+  const state = await getFollowStates(canonicalArtists.map(getTremplinFollowTargetId));
+  return new Set(canonicalArtists
+    .filter((artist) => state.followingProfileIds.has(getTremplinFollowTargetId(artist)))
+    .map(({ id }) => id));
 }
 
 export async function persistTremplinFollow({
@@ -52,9 +48,7 @@ export async function persistTremplinFollow({
       persistence: "preview",
     };
   }
-  if (!isCanonicalProfileId(targetId)) {
-    return { following, persistence: "fixture" };
-  }
+  if (!isCanonicalProfileId(targetId)) throw new Error("Profil de démonstration non relié à un compte réel");
   const state = await setFollowState(targetId, following);
   return { following: state.following, persistence: "remote" };
 }

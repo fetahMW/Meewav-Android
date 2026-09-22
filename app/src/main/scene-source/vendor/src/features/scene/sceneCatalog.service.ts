@@ -27,9 +27,9 @@ async function resolveMediaUrl(media: PublishedPreProfileMedia) {
 }
 
 /**
- * Loads the real public La Scène catalogue. Demo fixtures remain the visual
- * fallback, but canonical rows are placed first so Profile, Message, Collab,
- * Follow and Golden Like all receive the UUID expected by their services.
+ * Loads the real public La Scène catalogue. The caller uses demo fixtures
+ * only in local preview, so Profile, Message, Collab, Follow and Golden Like
+ * receive canonical UUIDs in a real session.
  */
 export async function getPublishedSceneCatalog(limit = SCENE_CATALOG_LIMIT, mediaId?:string): Promise<ShortsVideoItem[]> {
   const safeLimit = Math.max(1, Math.min(Math.trunc(limit), SCENE_CATALOG_LIMIT));

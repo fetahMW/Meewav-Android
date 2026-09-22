@@ -38,6 +38,7 @@ import MeewavPillarBrand from "../../components/navigation/MeewavPillarBrand";
 import MeewavPillarTabs from "../../components/navigation/MeewavPillarTabs";
 import { useAuth } from "../auth/AuthContext";
 import { isLocalAuthPreviewEnabled } from "../auth/localAuthPreview";
+import { isCanonicalProfileId } from "../globe/api/preProfile.api";
 import { MeewavGradeBadge } from "../grades/MeewavGradeBadge";
 import { getGradeBadgeMeta } from "../grades/gradeBadges";
 import MeewavPrimaryNav from "../globe/components/MeewavPrimaryNav";
@@ -926,14 +927,14 @@ function MyArtistsView({
   onSessionStateChange: (state: MyArtistsSessionState) => void;
 }) {
   const location = useLocation();
-  const requestedFixture = new URLSearchParams(location.search).has("tremplinFixture");
   const fallbackFixture = TREMPLIN_FEATURE_FLAGS.demoMode
     ? "populated"
     : favorites.size > 0 ? "followingOnly" : "empty";
   const configuredFixture = getMyArtistsFixture(location.search, fallbackFixture);
-  const fixture = !TREMPLIN_FEATURE_FLAGS.demoMode && !requestedFixture
-    ? buildMyArtistsFixtureFromFollows(tremplinArtists.filter(({ id }) => favorites.has(id)))
-    : configuredFixture;
+  const fixture = isLocalAuthPreviewEnabled()
+    ? configuredFixture
+    : buildMyArtistsFixtureFromFollows(tremplinArtists.filter(({ id, profileId }) =>
+        favorites.has(id) && Boolean(profileId && isCanonicalProfileId(profileId))));
   const normalizedInitialTab: MyArtistsTab = initialTab === "now" ? "overview" : initialTab === "mw" ? "tokens" : initialTab;
   const [tab, setTab] = useState<MyArtistsTab>(normalizedInitialTab);
   const [unreadOnly, setUnreadOnly] = useState(false);
@@ -1043,7 +1044,7 @@ function MyArtistsView({
       <div className="tremplin-my-dashboard__lower">{renderActivityFeed()}{renderRooms()}</div>
     </div> : null}
 
-    {tab === "tokens" ? <section className="tremplin-my-dashboard__tokens"><header><span className="tremplin-kicker">Mes jetons</span><h2>Valeurs, opérations et documents</h2><p>Les montants restent estimatifs avant les frais et les conditions de revente.</p></header>{holdings.length > 0 ? renderHoldingCards(true) : <div className="tremplin-empty-state"><MeewavTokenIcon /><h2>Aucun jeton détenu</h2><p>Tu peux suivre les artistes gratuitement sans acheter de jetons.</p></div>}<section className="tremplin-my-dashboard__operations"><header><h2>Dernières opérations</h2><button type="button" onClick={() => onNotify("Exemples de reçus de démonstration.")}>Voir les reçus</button></header>{tremplinMockTransactions.slice(0, 5).map((transaction) => <article key={transaction.id}><time>{transaction.dateLabel}</time><strong>{transaction.artistName}</strong><span>{transaction.operation === "purchase" ? "Achat" : "Revente"}</span><span>{formatCurrency(transaction.amountEur)}</span><em>{transaction.statusLabel}</em></article>)}</section></section> : null}
+    {tab === "tokens" ? <section className="tremplin-my-dashboard__tokens"><header><span className="tremplin-kicker">Mes jetons</span><h2>Valeurs, opérations et documents</h2><p>{isLocalAuthPreviewEnabled() ? "Les montants restent estimatifs avant les frais et les conditions de revente." : "Les opérations seront disponibles après le lancement du portefeuille."}</p></header>{holdings.length > 0 ? renderHoldingCards(true) : <div className="tremplin-empty-state"><MeewavTokenIcon /><h2>Aucun jeton détenu</h2><p>Tu peux suivre les artistes gratuitement sans acheter de jetons.</p></div>}{isLocalAuthPreviewEnabled() ? <section className="tremplin-my-dashboard__operations"><header><h2>Dernières opérations</h2><button type="button" onClick={() => onNotify("Exemples de reçus de démonstration.")}>Voir les reçus</button></header>{tremplinMockTransactions.slice(0, 5).map((transaction) => <article key={transaction.id}><time>{transaction.dateLabel}</time><strong>{transaction.artistName}</strong><span>{transaction.operation === "purchase" ? "Achat" : "Revente"}</span><span>{formatCurrency(transaction.amountEur)}</span><em>{transaction.statusLabel}</em></article>)}</section> : null}</section> : null}
 
     {tab === "followed" ? <section className="tremplin-my-dashboard__followed"><header><span className="tremplin-kicker">Suivi gratuit</span><h2>Artistes que tu suis</h2><p>Suivre un artiste ne signifie pas posséder ses jetons.</p></header><div>{followedArtists.map((artist) => { const status = getTremplinTokenLifecycleStage(artist); const latest = artist.updates[0]; return <article key={artist.id}><img src={artist.portrait} alt="" /><div><h3>{artist.name}</h3><span>{artist.stageLabel}</span><p>{latest?.title ?? "Aucune actualité récente"}</p><small>{TREMPLIN_DISCOVERY_TOKEN_UI[status].label}</small></div><MeewavGradeBadge level={artist.gradeLevel} size="xs" variant="icon" /><button type="button" onClick={() => onOpen(artist)}>Voir le profil</button></article>; })}</div></section> : null}
     {tab === "rooms" ? renderRooms() : null}
@@ -1111,12 +1112,11 @@ export default function TremplinPage() {
     if (authStatus === "loading" && !localPreviewEnabled) return undefined;
     let cancelled = false;
     void loadConnectedTremplinFollows(tremplinArtists, localPreviewEnabled).then((connected) => {
-      if (cancelled || connected.size === 0) return;
-      setFavorites((current) => {
-        const next = new Set([...current, ...connected]);
-        writeTremplinPersistedSet("followed-artists", viewer.storageScope, next);
-        return next;
-      });
+      if (cancelled) return;
+      setFavorites(new Set(connected));
+      writeTremplinPersistedSet("followed-artists", viewer.storageScope, connected);
+    }).catch(() => {
+      if (!cancelled && !localPreviewEnabled) setToast("Impossible de synchroniser tes artistes suivis. Réessaie plus tard.");
     });
     return () => { cancelled = true; };
   }, [authStatus, localPreviewEnabled, viewer.storageScope]);
@@ -1235,6 +1235,10 @@ export default function TremplinPage() {
     const following = !favorites.has(artistId);
     const artist = tremplinArtists.find(({ id }) => id === artistId);
     const artistName = artist?.name ?? "L’artiste";
+    if (!artist || (!localPreviewEnabled && !isCanonicalProfileId(artist.profileId ?? ""))) {
+      setToast("Ce profil de démonstration ne peut pas être suivi avec un compte réel.");
+      return;
+    }
     const previous = new Set(favorites);
     const optimistic = new Set(favorites);
     if (following) optimistic.add(artistId); else optimistic.delete(artistId);
@@ -1242,7 +1246,6 @@ export default function TremplinPage() {
     writeTremplinPersistedSet("followed-artists", viewer.storageScope, optimistic);
     setToast(following ? `${artistName} a été ajouté à Mes artistes.` : `${artistName} a été retiré de Mes artistes.`);
     trackTremplinEvent(following ? "artist_followed" : "artist_unfollowed", { artistId });
-    if (!artist) return;
     void persistTremplinFollow({ artist, following, localPreviewEnabled }).then((result) => {
       if (result.following === following) return;
       setFavorites((current) => {
@@ -1355,6 +1358,10 @@ export default function TremplinPage() {
     });
   }, []);
   const openFlow = (artist: TremplinArtist, mode: TokenOperationMode) => {
+    if (!localPreviewEnabled) {
+      setToast("Les opérations sur les jetons ne sont pas encore ouvertes.");
+      return;
+    }
     const token = getTremplinArtistToken(artist.id);
     if (!token || getTremplinTokenLifecycleStage(artist) !== "active") {
       setToast("Les opérations sur les jetons ne sont disponibles que pour un jeton actif.");
@@ -1498,6 +1505,7 @@ export default function TremplinPage() {
           </div>
         </header>
         <div className={`tremplin-scroll${!selectedArtist && (activeView === "application" || activeView === "dashboard") ? " is-workspace" : ""}${!selectedArtist && activeView === "discover" && homeWallRailId !== null ? " is-home-wall" : ""}${!selectedArtist && activeView === "home" ? " is-understand" : ""}`} ref={scrollRef} onClickCapture={openPreProfileFromPortrait}>
+          {!localPreviewEnabled ? <TremplinDemoBanner compact context="fixtures" /> : null}
           {flow ? <TremplinTokenFlow artist={flow.artist} token={flow.token} initialMode={flow.mode} backLabel={getTremplinReturnLabel(location.state)} onClose={closeFlow} onConfirm={(operation) => { setToast(`${operation.operation === "purchase" ? "Achat" : "Revente"} simulé pour ${flow.artist.name}. Aucune transaction réelle n’a été effectuée.`); }} /> : mainContent}
         </div>
       </div>

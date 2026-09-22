@@ -1,4 +1,5 @@
 import { readCagePrograms, saveCageProgram, removeCageProgram, type CageProgram } from "../../../../../../shared-ui/cagePrograms";
+import { isProfileLocalPreviewEnabled } from "../profile.preview";
 import ProfileMenuSelect from "../components/ProfileMenuSelect";
 import {
   ArrowLeft,
@@ -204,13 +205,13 @@ const initialCages: CageEntry[] = [
   { ...defaultDraft, id: "finale-ouest", title: "Finale Ouest", participants: 8, status: "Terminée", info: "8 participants · gagnant validé", schedule: "Historique disponible", lastStep: 0 },
 ];
 
-function loadCageEntries(storageKey: string | null): CageEntry[] {
-  if (!storageKey || typeof window === "undefined") return initialCages;
+function loadCageEntries(storageKey: string | null, preview: boolean): CageEntry[] {
+  if (!storageKey || typeof window === "undefined") return preview ? initialCages : [];
   try {
     const stored = window.localStorage.getItem(storageKey);
-    if (!stored) return initialCages;
+    if (!stored) return preview ? initialCages : [];
     const parsed = JSON.parse(stored) as unknown;
-    if (!Array.isArray(parsed)) return initialCages;
+    if (!Array.isArray(parsed)) return preview ? initialCages : [];
     const entries = parsed.flatMap((candidate): CageEntry[] => {
       if (!candidate || typeof candidate !== "object") return [];
       const source = candidate as Partial<CageEntry>;
@@ -242,7 +243,7 @@ function loadCageEntries(storageKey: string | null): CageEntry[] {
     });
     return entries;
   } catch {
-    return initialCages;
+    return preview ? initialCages : [];
   }
 }
 
@@ -300,7 +301,7 @@ export default function ProfileCageWorkspace({ storageScope, onBack, onDone }: P
   const navigate = useNavigate();
   const storageKey = storageScope ? `${CAGE_STORAGE_KEY}:${storageScope}` : null;
   const [screen, setScreen] = useState<"overview" | "editor" | "detail" | "launch">("overview");
-  const [entries, setEntries] = useState<CageEntry[]>(() => loadCageEntries(storageKey));
+  const [entries, setEntries] = useState<CageEntry[]>(() => loadCageEntries(storageKey, isProfileLocalPreviewEnabled()));
   const entriesRef = useRef(entries);
   entriesRef.current = entries;
   useEffect(() => {
@@ -325,7 +326,7 @@ export default function ProfileCageWorkspace({ storageScope, onBack, onDone }: P
         } as CageEntry)).concat(entriesRef.current.filter(e => !saved.some(p => p.id === e.id))));
       } catch { if (!disposed) onDone('La bibliothèque des programmes est momentanément indisponible.'); }
     };
-    void refresh(true);
+    void refresh(isProfileLocalPreviewEnabled());
     const onResume = () => { void refresh(); };
     window.addEventListener('meewav:resume', onResume);
     return () => { disposed = true; window.removeEventListener('meewav:resume', onResume); };

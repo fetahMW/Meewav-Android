@@ -930,8 +930,8 @@ function appendScenePreference(storageKey: string, value: string) {
   }
 }
 
-function scenePublishedLabelFromTimestamp(publishedAt: number) {
-  const dayOffset = Math.max(0, Math.floor((SCENE_FIXTURE_NOW - publishedAt) / SCENE_DAY_MS));
+function scenePublishedLabelFromTimestamp(publishedAt: number, now: number) {
+  const dayOffset = Math.max(0, Math.floor((now - publishedAt) / SCENE_DAY_MS));
   if (dayOffset === 0) return "aujourd’hui";
   if (dayOffset === 1) return "hier";
   if (dayOffset < 7) return `il y a ${dayOffset} jours`;
@@ -2012,6 +2012,8 @@ export default function ShortsPage() {
 function SceneWorkspace() {
   const navigate = useNavigate();
   const location = useLocation();
+  const demoScene = isLocalAuthPreviewEnabled();
+  const sceneNow = useMemo(() => demoScene ? SCENE_FIXTURE_NOW : Date.now(), [demoScene]);
   const isCreatorStudioRoute = location.pathname === SCENE_STUDIO_ROUTE
     || location.pathname.startsWith(`${SCENE_STUDIO_ROUTE}/`);
   const isHistoryRoute = location.pathname === SCENE_HISTORY_ROUTE;
@@ -2048,15 +2050,15 @@ function SceneWorkspace() {
     compactViewport.addEventListener("change", collapse);
     return () => compactViewport.removeEventListener("change", collapse);
   }, []);
-  const engagementItems = useMemo(() => [...remoteSceneItems, ...ALL_VIDEOS], [remoteSceneItems]);
+  const engagementItems = useMemo(() => [...remoteSceneItems, ...(demoScene ? ALL_VIDEOS : [])], [remoteSceneItems, demoScene]);
   useEffect(() => {
     if ((isCreatorStudioRoute || isUploadRoute) && !canPublish) navigate(SCENE_ROUTE, { replace: true });
   }, [canPublish, isCreatorStudioRoute, isUploadRoute, navigate]);
   useEffect(() => {
-    if (!SCENE_TV_LAUNCH_READY && getSceneTabFromPathname(location.pathname) === "tv") {
+    if ((!SCENE_TV_LAUNCH_READY || !demoScene) && getSceneTabFromPathname(location.pathname) === "tv") {
       navigate(SCENE_ROUTE, { replace: true });
     }
-  }, [location.pathname, navigate]);
+  }, [location.pathname, navigate, demoScene]);
   const {
     pendingGoldenLike,
     isLiked,
@@ -2085,7 +2087,7 @@ function SceneWorkspace() {
   const [publishedItems, setPublishedItems] = useState<VideoItem[]>([]);
   const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(() => {
     const videoId = searchParams.get("video");
-    return videoId ? ALL_VIDEOS.find((item) => item.id === videoId) ?? null : null;
+    return demoScene && videoId ? ALL_VIDEOS.find((item) => item.id === videoId) ?? null : null;
   });
   const [createOpen, setCreateOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -2116,7 +2118,7 @@ function SceneWorkspace() {
   const [savedIds, setSavedIds] = useState<Set<string>>(readSavedSelection);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<ShortsNotification[]>(INITIAL_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<ShortsNotification[]>(demoScene ? INITIAL_NOTIFICATIONS : []);
   const [showSavedOnly, setShowSavedOnly] = useState(isPlaylistsRoute);
   const [showHistoryOnly, setShowHistoryOnly] = useState(isHistoryRoute);
   const [watchHistory, setWatchHistory] = useState<SceneWatchHistoryEntry[]>(
@@ -2145,7 +2147,7 @@ function SceneWorkspace() {
     () => {
       const read = (key:string):string[] => { try { return JSON.parse(localStorage.getItem(scenePrivateKey(key)) || '[]'); } catch { return []; } };
       const hidden = read('meewav:scene:not-interested'), muted = read('meewav:scene:muted-artists');
-      const rows = [...publishedItems, ...remoteSceneItems, ...(isLocalAuthPreviewEnabled() ? ALL_VIDEOS : [])];
+      const rows = [...publishedItems, ...remoteSceneItems, ...(demoScene ? ALL_VIDEOS : [])];
       const preferences=readSceneRecommendationPreferences();
       const unique=[...new Map(rows.map(item=>[item.id,item])).values()];
       if(watchRoute)return unique;
@@ -2156,7 +2158,7 @@ function SceneWorkspace() {
           return score(b)-score(a);
         });
     },
-    [publishedItems, remoteSceneItems, preferencesVersion, location.key, watchRoute],
+    [publishedItems, remoteSceneItems, preferencesVersion, location.key, watchRoute, demoScene],
   );
 
   useEffect(() => {
@@ -2198,12 +2200,15 @@ function SceneWorkspace() {
     () => [...new Set(allVideos.map((item) => item.city))].sort((left, right) => left.localeCompare(right, "fr")),
     [allVideos],
   );
-  const sceneCountries = ["France", "Belgique", "Sénégal", "Suisse"] as const;
   const sceneCatalog = useMemo(() => allVideos.map((item, index) => sceneVideoFromShortsItem(item, {
-    publishedAt: new Date(SCENE_FIXTURE_NOW - (index % 28) * 24 * 60 * 60 * 1_000).toISOString(),
+    publishedAt: item.publishedAt ?? new Date(sceneNow - (index % 28) * 24 * 60 * 60 * 1_000).toISOString(),
     relevanceScore: Math.max(1, allVideos.length - index),
     personalizationScore: index % 9 === 0 ? 24 : index % 4 === 0 ? 12 : 0,
-  })), [allVideos]);
+  })), [allVideos, sceneNow]);
+  const sceneCountries = useMemo(() => demoScene
+    ? ["France", "Belgique", "Sénégal", "Suisse"]
+    : [...new Set(sceneCatalog.map((item) => item.country).filter(Boolean))].sort((left, right) => left.localeCompare(right, "fr")),
+  [demoScene, sceneCatalog]);
   const sceneArtistRoleFilterOptions = useMemo(() => SCENE_ARTIST_ROLE_OPTIONS.map(({ key, label, imageUrl }) => {
     const count = sceneCatalog.filter((video) => video.artistRoles.includes(key)).length;
     return {
@@ -2219,14 +2224,14 @@ function SceneWorkspace() {
     [allVideos],
   );
   const verticalCollectionIds = useMemo(() => new Set([
-    ...SHORTS_WALLS.vertical.items.map((item) => item.id),
+    ...(demoScene ? SHORTS_WALLS.vertical.items.map((item) => item.id) : []),
     ...publishedItems
       .filter((item) => item.presentationFormat === "vertical" || item.format === "portrait")
       .map((item) => item.id),
     ...remoteSceneItems
       .filter((item) => item.presentationFormat === "vertical" || item.format === "portrait")
       .map((item) => item.id),
-  ]), [publishedItems, remoteSceneItems]);
+  ]), [publishedItems, remoteSceneItems, demoScene]);
   const historyItems = useMemo(
     () => watchHistory
       .map((entry) => videoById.get(entry.videoId))
@@ -2279,31 +2284,34 @@ function SceneWorkspace() {
     sceneCatalog,
     effectiveFilters,
     {
-      followedArtistIds: sceneCatalog.slice(1, 7).map((item) => item.artistId),
-      preferredStyles: ["soul", "rap", "jazz"],
-      preferredCities: ["Paris", "Montreuil"],
-      recentlyViewedArtistIds: sceneCatalog.slice(8, 11).map((item) => item.artistId),
+      followedArtistIds: demoScene ? sceneCatalog.slice(1, 7).map((item) => item.artistId) : [...(serverFollowedArtistIds ?? [])],
+      preferredStyles: demoScene ? ["soul", "rap", "jazz"] : [],
+      preferredCities: demoScene ? ["Paris", "Montreuil"] : [],
+      recentlyViewedArtistIds: demoScene ? sceneCatalog.slice(8, 11).map((item) => item.artistId) : [],
     },
-    new Date(SCENE_FIXTURE_NOW),
+    new Date(sceneNow),
   ).map((record) => videoById.get(record.id)).filter((item): item is VideoItem => Boolean(item)), [
     effectiveFilters,
     sceneCatalog,
     videoById,
+    demoScene,
+    serverFollowedArtistIds,
+    sceneNow,
   ]);
   const followedArtistIds = useMemo(
-    () => serverFollowedArtistIds ?? new Set([
+    () => serverFollowedArtistIds ?? (demoScene ? new Set([
         ...SHORTS_WALLS["for-you"].items.slice(0, 4).map((item) => item.artistId),
         ...SHORTS_WALLS.collaborations.items.slice(0, 2).map((item) => item.artistId),
         ...SHORTS_WALLS.vertical.items.slice(0, 10).map((item) => item.artistId),
-      ]),
-    [serverFollowedArtistIds],
+      ]) : new Set<string>()),
+    [serverFollowedArtistIds, demoScene],
   );
   const draftResultCount = useMemo(() => {
     const records = discoverSceneVideos(
       sceneCatalog,
       { ...draftFilters, query: searchQuery },
       {},
-      new Date(SCENE_FIXTURE_NOW),
+      new Date(sceneNow),
     );
     if (activeTab !== "explore" || exploreMediaMode !== "vertical") return records.length;
     return records.filter((record) => {
@@ -2327,6 +2335,7 @@ function SceneWorkspace() {
     verticalCollectionIds,
     verticalQuickFilter,
     videoById,
+    sceneNow,
   ]);
   const normalizedQuery = normalizeText(searchQuery.trim());
   const searchResults = useMemo(() => {
@@ -2338,8 +2347,8 @@ function SceneWorkspace() {
     [allVideos, savedIds],
   );
   const heroVideoIds = useMemo(
-    () => new Set(SHORTS_WALLS.trending.items.slice(0, 3).map((item) => item.id)),
-    [],
+    () => new Set((demoScene ? SHORTS_WALLS.trending.items : allVideos).slice(0, 3).map((item) => item.id)),
+    [allVideos, demoScene],
   );
   const publishedAtById = useMemo(
     () => new Map(sceneCatalog.map((record) => [
@@ -2374,18 +2383,18 @@ function SceneWorkspace() {
   );
   const filteredFollowingVideos = useMemo(() => followingFeedVideos.filter((item) => {
     const publishedAt = publishedAtById.get(item.id) ?? 0;
-    const age = SCENE_FIXTURE_NOW - publishedAt;
+    const age = sceneNow - publishedAt;
     if (followingFilter === "unseen" && watchHistoryById.has(item.id)) return false;
     if (followingFilter === "today") return age >= 0 && age < SCENE_DAY_MS;
     if (followingFilter === "week") return age >= 0 && age < 7 * SCENE_DAY_MS;
     return true;
-  }), [followingFeedVideos, followingFilter, publishedAtById, watchHistoryById]);
+  }), [followingFeedVideos, followingFilter, publishedAtById, watchHistoryById, sceneNow]);
   const followingGroups = useMemo(() => {
     const today: VideoItem[] = [];
     const week: VideoItem[] = [];
     const earlier: VideoItem[] = [];
     filteredFollowingVideos.forEach((item) => {
-      const age = SCENE_FIXTURE_NOW - (publishedAtById.get(item.id) ?? 0);
+      const age = sceneNow - (publishedAtById.get(item.id) ?? 0);
       if (age >= 0 && age < SCENE_DAY_MS) today.push(item);
       else if (age >= 0 && age < 7 * SCENE_DAY_MS) week.push(item);
       else earlier.push(item);
@@ -2399,7 +2408,7 @@ function SceneWorkspace() {
       shorts: group.items.filter(isShortItem),
       videos: group.items.filter((item) => !isShortItem(item)),
     }));
-  }, [filteredFollowingVideos, publishedAtById]);
+  }, [filteredFollowingVideos, publishedAtById, sceneNow]);
   const unseenFollowingCount = useMemo(
     () => followingFeedVideos.filter((item) => !watchHistoryById.has(item.id)).length,
     [followingFeedVideos, watchHistoryById],
@@ -3541,7 +3550,7 @@ function SceneWorkspace() {
     : selectedPlaylistRouteId === SCENE_WATCH_LATER_PLAYLIST_ID ? "watch-later"
     : isPlaylistsRoute ? "playlists" : isHistoryRoute ? "history"
     : isCreatorStudioRoute ? "studio" : profileArtistReference ?? (exploreMediaMode === "vertical" && activeTab === "explore" ? "shorts" : activeTab);
-  const browseHomeVideos = Array.from(new Map([...publishedItems, ...SHORTS_WALLS["for-you"].items, ...allVideos].filter((item) => item.format !== "portrait" && item.presentationFormat !== "vertical").map((item) => [item.id, item])).values());
+  const browseHomeVideos = Array.from(new Map([...publishedItems, ...(demoScene ? SHORTS_WALLS["for-you"].items : []), ...allVideos].filter((item) => item.format !== "portrait" && item.presentationFormat !== "vertical").map((item) => [item.id, item])).values());
   const browseShorts = allVideos.filter((item) => item.format === "portrait" || item.presentationFormat === "vertical");
   const replayRoomItems = allVideos
     .filter((item) => item.contentTypeLabel === "Replay de Room")
@@ -3552,6 +3561,18 @@ function SceneWorkspace() {
     { id: "room-replays", title: "Replay de Room", to: "/scene/explore?type=room-replay", items: replayRoomItems },
     { id: "freestyles", title: "Freestyles & Coulisses", to: "/scene/explore?type=freestyle", items: freestyleShortItems },
   ];
+  const visibleSceneTabs = demoScene ? SCENE_TABS : SCENE_TABS.filter((tab) => tab.id !== "tv");
+  const activeWallDefinition = activeWall && (demoScene ? SHORTS_WALLS[activeWall] : {
+    ...SHORTS_WALLS[activeWall],
+    items: allVideos.filter((item) => {
+      if (activeWall === "vertical") return isShortItem(item);
+      if (activeWall === "collaborations") return item.collabAvailable === true;
+      if (activeWall === "replays") return item.contentTypeLabel === "Replay de Room";
+      if (activeWall === "showreels") return /showreel/iu.test(`${item.contentTypeLabel ?? ""} ${item.meta}`);
+      if (activeWall === "tv") return false;
+      return true;
+    }),
+  });
 
   return (
     <main className={`shorts-page scene-page has-unified-header${activeTab !== "tv" || watchRoute ? " is-document" : ""}${watchRoute ? " has-watch-page" : ""}${isCreatorStudioRoute ? " is-creator-studio" : ""}${showBrowseNavigation ? ` has-browse-nav${browseMenuOpen ? "" : " is-browse-collapsed"}` : ""}`} aria-label={SCENE_NAME}>
@@ -3581,7 +3602,7 @@ function SceneWorkspace() {
 
           <MeewavPillarTabs
             className="shorts-pillar-tabs is-fine-indicator"
-            items={SCENE_TABS}
+            items={visibleSceneTabs}
             activeId={isCreatorStudioRoute ? "studio" : activeTab}
             ariaLabel={`Navigation ${SCENE_NAME}`}
             onSelect={showTab}
@@ -4093,7 +4114,7 @@ function SceneWorkspace() {
                                   onViewProfile={viewProfile}
                                   actions={cardActions}
                                   progressPercent={historyProgressById.get(item.id)}
-                                  publishedLabel={scenePublishedLabelFromTimestamp(publishedAtById.get(item.id) ?? 0)}
+                                  publishedLabel={scenePublishedLabelFromTimestamp(publishedAtById.get(item.id) ?? 0, sceneNow)}
                                 />
                               ))}
                             </div>
@@ -4122,7 +4143,7 @@ function SceneWorkspace() {
                                 actions={cardActions}
                                 progressPercent={progress}
                                 viewingState={viewingState}
-                                publishedLabel={scenePublishedLabelFromTimestamp(publishedAtById.get(item.id) ?? 0)}
+                                publishedLabel={scenePublishedLabelFromTimestamp(publishedAtById.get(item.id) ?? 0, sceneNow)}
                               />
                             );
                           })}
@@ -4254,9 +4275,9 @@ function SceneWorkspace() {
                   )}
                 </div>
               </section>
-            ) : activeWall ? (
+            ) : activeWallDefinition ? (
               <ShortsWall
-                wall={SHORTS_WALLS[activeWall]}
+                wall={activeWallDefinition}
                 onBack={() => showTab("home")}
                 onSelect={openVideo}
                 savedIds={savedIds}

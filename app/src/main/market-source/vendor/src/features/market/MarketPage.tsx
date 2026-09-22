@@ -694,8 +694,8 @@ export default function MarketPage() {
   const [listingOpen, setListingOpen] = useState(false);
   const [intentCenterRole, setIntentCenterRole] = useState<MarketplaceIntentRole | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const [rentalStart, setRentalStart] = useState("2026-07-20");
-  const [rentalEnd, setRentalEnd] = useState("2026-07-22");
+  const [rentalStart, setRentalStart] = useState(todayIsoDate);
+  const [rentalEnd, setRentalEnd] = useState(() => addIsoDateDays(todayIsoDate(), 1));
   const [viewMode, setViewMode] = useState<"home" | "catalog">("home");
   const marketScrollRef = useRef<HTMLDivElement>(null);
   // The Web catalogue changes React state rather than URL. Retain its actual
@@ -781,6 +781,7 @@ export default function MarketPage() {
 
   const marketLive = useMarketLive({
     enabled: Boolean(user),
+    viewerId: user?.id ?? null,
     mode: runtimeMode,
     catalog: {
       limit: 60,
@@ -793,6 +794,13 @@ export default function MarketPage() {
   const joinedCollectives = marketLive.active ? marketLive.joinedCollectives : demoJoinedCollectives;
   const marketActionError = marketLive.actionError;
   const clearMarketActionError = marketLive.clearActionError;
+  const requireMarketAccount = () => {
+    if (runtimeMode === "supabase" && !user) {
+      setToast("Connecte-toi pour utiliser les favoris, le panier ou contacter un vendeur.");
+      return false;
+    }
+    return true;
+  };
 
   useEffect(() => {
     if (!marketActionError) return;
@@ -829,6 +837,10 @@ export default function MarketPage() {
       }
       if (action === "listings") {
         event.preventDefault();
+        if (marketLive.active && !user) {
+          setToast("Connecte-toi pour retrouver tes annonces.");
+          return;
+        }
         if (!marketLive.active) {
           setToast("Les brouillons du compte sont disponibles avec une session Supabase.");
           return;
@@ -845,7 +857,7 @@ export default function MarketPage() {
     };
     window.addEventListener("meewav:feature-menu", menu);
     return () => window.removeEventListener("meewav:feature-menu", menu);
-  }, [marketLive.active]);
+  }, [marketLive.active, user]);
 
   useEffect(() => {
     const onKeyDown = (event: globalThis.KeyboardEvent) => {
@@ -1087,6 +1099,7 @@ export default function MarketPage() {
 
   const handleFavorite = (productId: string, event?: MouseEvent) => {
     event?.stopPropagation();
+    if (!requireMarketAccount()) return;
     if (marketLive.active) {
       void marketLive.toggleFavorite(productId);
       return;
@@ -1232,6 +1245,7 @@ export default function MarketPage() {
   ]);
 
   const handleAddToCart = async (product: MarketProductView) => {
+    if (!requireMarketAccount()) return;
     if (!product.cart.eligible) {
       setToast("Cette offre se réserve directement depuis sa fiche.");
       return;
@@ -1291,6 +1305,7 @@ export default function MarketPage() {
   };
 
   const handleRentalRequest = async (product: MarketProductView) => {
+    if (!requireMarketAccount()) return;
     if (marketLive.active) {
       if (marketLive.pendingActions.has(`rental:${product.id}`)) return;
       const saved = await marketLive.requestRental(product.id, rentalStart, rentalEnd);
@@ -1301,6 +1316,7 @@ export default function MarketPage() {
   };
 
   const handleCollectiveJoin = async (product: MarketProductView) => {
+    if (!requireMarketAccount()) return;
     if (!product.collective || product.collective.daysRemaining <= 0) {
       setToast("Cette campagne collective est terminée.");
       return;
@@ -1316,6 +1332,7 @@ export default function MarketPage() {
   };
 
   const handleServiceBooking = async (product: MarketProductView) => {
+    if (!requireMarketAccount()) return;
     if (marketLive.active) {
       if (marketLive.pendingActions.has(`service:${product.id}`)) return;
       const saved = await marketLive.bookService(product.id);
@@ -1678,7 +1695,7 @@ export default function MarketPage() {
           {sellerDraftsOpen ? (
             <MarketSellerDraftCenter
               key={draftCenterRevision}
-              enabled={marketLive.active}
+              enabled={marketLive.active && Boolean(user)}
               onResume={(draft) => {
                 listingIdempotencyKeyRef.current = null;
                 listingUploadCacheRef.current.clear();

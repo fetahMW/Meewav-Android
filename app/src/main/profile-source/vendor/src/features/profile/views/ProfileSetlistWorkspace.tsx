@@ -1,4 +1,5 @@
 import ProfileMenuSelect from "../components/ProfileMenuSelect";
+import { isProfileLocalPreviewEnabled } from "../profile.preview";
 import {
   Archive,
   ArrowDown,
@@ -113,8 +114,8 @@ function durationFor(tracks: SetlistTrack[]) {
   return `${minutes}:${String(rest).padStart(2, "0")}`;
 }
 
-function loadSetlists(storageKey: string | null) {
-  if (!storageKey) return initialSetlists;
+function loadSetlists(storageKey: string | null, preview: boolean) {
+  if (!storageKey) return preview ? initialSetlists : [];
   try {
     const stored = window.localStorage.getItem(storageKey);
     if (stored) {
@@ -135,7 +136,7 @@ function loadSetlists(storageKey: string | null) {
   } catch {
     // Le Studio reste utilisable même si le stockage local est indisponible.
   }
-  return initialSetlists;
+  return preview ? initialSetlists : [];
 }
 
 function StatusPill({ status }: { status: SetlistStatus }) {
@@ -148,7 +149,7 @@ function SetlistConfirm({ title, detail, confirmLabel, cancelLabel = "Retour", d
 
 export default function ProfileSetlistWorkspace({ storageScope, onBack, onDone }: ProfileSetlistWorkspaceProps) {
   const storageKey = storageScope ? `${STORAGE_KEY}:${storageScope}` : null;
-  const [entries, setEntries] = useState<SetlistEntry[]>(() => loadSetlists(storageKey));
+  const [entries, setEntries] = useState<SetlistEntry[]>(() => loadSetlists(storageKey, isProfileLocalPreviewEnabled()));
   const [screen, setScreen] = useState<"overview" | "detail" | "editor" | "mixer">("overview");
   const [filter, setFilter] = useState("Toutes");
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
