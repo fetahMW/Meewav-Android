@@ -227,8 +227,8 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
         if (room == RoomModule.WAVE) waveCache.getOrPut(room){WaveCompositionState(context.applicationContext, liveRoomId?.let { "live:$it" } ?: (roomTitle ?: "wave-demo"), demo = liveRoomId == null)} else null
     }
     val liveAudio = remember(room, liveRoomId, composition) {
-        if (room == RoomModule.WAVE && initialRoom == RoomModule.WAVE && liveRoomId != null && composition != null)
-            RoomsAudioSession(context.applicationContext, RoomsAudioRepository(context.applicationContext, liveRoomId), composition.audio, mixerDeck.audio)
+        if (room == initialRoom && room != RoomModule.CLASSE && liveRoomId != null)
+            RoomsAudioSession(context.applicationContext, RoomsAudioRepository(context.applicationContext, liveRoomId), composition?.audio, mixerDeck.audio)
         else null
     }
     val controlledGuest = if (liveAudio == null) guestState.mixerGuest else null

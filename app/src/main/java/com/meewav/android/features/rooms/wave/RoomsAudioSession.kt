@@ -120,14 +120,15 @@ internal class RoomsAudioSession(private val context: Context, private val repos
                     RTCRoomConfig(ChannelProfile.CHANNEL_PROFILE_LIVE, room.identity, false, false, false, false)), "Entrée RTC")
                 withTimeout(20000) { joined!!.await() }
                 if (selected == RoomsAudioMode.EXTERNAL) {
-                    check(audio != null) { "Moteur programme absent" }
                     val mic = WaveMicrophone { message -> scope.launch { if (epoch == generation) fail(message) } }
                     microphone = mic; mic.settings = settings; mic.start()
                     val live = WaveLiveOutput(mic, WavePerformanceBus()).also { it.musicPublic = musicPublic; it.musicGain = musicGain }
                     live.production.enabled = deckPublic; live.production.gain = deckGain
                     productionAudio?.programInput = live.production
-                    output = live; audio.liveOutput = live
-                    startSender(sdk, live.bus, epoch)
+                    output = live; audio?.liveOutput = live
+                    // Other Rooms have no Wave composition engine. Render their processed
+                    // microphone and mixer deck directly into the same public PCM bus.
+                    startSender(sdk, live.bus, epoch, if (audio == null) live else null)
                 } else if (selected == RoomsAudioMode.INTERNAL) {
                     requireOk(sdk.muteAudioCapture(settings.mute), "Mute micro")
                     requireOk(sdk.setCaptureVolume((settings.gain * 100).toInt()), "Gain micro")
@@ -177,22 +178,30 @@ internal class RoomsAudioSession(private val context: Context, private val repos
         } catch (cancel: CancellationException) { throw cancel }
         catch (_: Exception) { if (epoch == generation) fail("Renouvellement audio refusé") }
     } }
-    private fun startSender(sdk: RTCEngine, bus: WavePerformanceBus, epoch: Int) {
+    private fun startSender(sdk: RTCEngine, bus: WavePerformanceBus, epoch: Int,
+                            standalone: WaveLiveOutput? = null) {
         sending = true
         sender = Thread({
             android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_AUDIO)
-            var deadline = System.nanoTime(); var failures = 0; var empty = 0
+            var deadline = System.nanoTime(); var failures = 0
             val silence = ByteArray(1920)
+            val program = if (standalone != null) FloatArray(WavePerformanceBus.SAMPLES) else null
+            val monitor = if (standalone != null) FloatArray(WavePerformanceBus.SAMPLES) else null
             try { while (sending) {
                 val remaining = deadline - System.nanoTime()
                 if (remaining > 0) { LockSupport.parkNanos(remaining); continue }
                 if (!sending) break
+                if (standalone != null) {
+                    program!!.fill(0f); monitor!!.fill(0f)
+                    standalone.render(standalone.microphone.read(), program, monitor)
+                }
                 val packet = bus.poll()
-                empty = if (packet == null) empty + 1 else 0
+                // Silence is normal while the host pauses, is muted or waits for the next pad.
+                // Keep the RTC sender alive; only a rejected SDK frame is a transport failure.
                 val result = sdk.pushExternalAudioFrame(AudioFrame(packet ?: silence, 480,
                     AudioSampleRate.AUDIO_SAMPLE_RATE_48000, AudioChannel.AUDIO_CHANNEL_STEREO))
                 failures = if (result == 0) 0 else failures + 1
-                if (failures >= 10 || empty >= 100) {
+                if (failures >= 10) {
                     scope.launch { if (epoch == generation) fail("Flux audio externe interrompu · reconnecte l’audio") }; break
                 }
                 deadline += 10_000_000L

@@ -1,7 +1,7 @@
 import {useEffect,useState} from 'react';
 import {nativeViewerEnabled} from './NativeViewerSurfaces';
 
-/** Native audio only, same Rooms token contract as iOS; demo never enters this bridge. */
+/** Shared native Rooms listening via the iOS BytePlus token contract; Classe owns a private floor. */
 export default function WaveLiveAudio({roomId}:{roomId:string}) {
  const [state,setState]=useState({active:false,busy:false,text:'Audio live déconnecté'});
  const command=(action:string)=>location.assign('/native/wave-audio?action='+action+'&roomId='+encodeURIComponent(roomId));

@@ -46,6 +46,7 @@ data class AuthUiState(
     val notice: String? = null,
     val connectedName: String = "",
     val localPreview: Boolean = false,
+    val modeSelected: Boolean = true,
     val authenticated: Boolean = false,
     val onboardingComplete: Boolean = false,
     val profile: ProfileDraft = ProfileDraft(),
@@ -53,7 +54,7 @@ data class AuthUiState(
 
 class AuthViewModel(private val repository: MeewavAuthRepository, preview: Boolean = BuildConfig.DEBUG) : ViewModel() {
     private val mutable = MutableStateFlow(AuthUiState(configured = repository.configured,
-        initializing = repository.configured && !preview, localPreview = preview && BuildConfig.DEBUG))
+        initializing = repository.configured && !preview, localPreview = false, modeSelected = !preview))
     val state = mutable.asStateFlow()
     private var recoveryInProgress = false
     private var routedUserId: String? = null
@@ -61,7 +62,7 @@ class AuthViewModel(private val repository: MeewavAuthRepository, preview: Boole
     init {
         if (repository.configured) viewModelScope.launch {
             repository.auth.sessionStatus.collect { status ->
-                if (state.value.localPreview) return@collect
+                if (state.value.localPreview || !state.value.modeSelected) return@collect
                 when (status) {
                     is SessionStatus.Authenticated -> {
                         // Refreshes must not reset the current screen or an OAuth draft.
@@ -119,22 +120,42 @@ class AuthViewModel(private val repository: MeewavAuthRepository, preview: Boole
 
     fun startPreview() {
         if (!BuildConfig.DEBUG || state.value.busy) return
+        routedUserId = null
         mutable.update {
-            it.copy(localPreview = true, initializing = false, error = null, notice = null,
+            it.copy(localPreview = true, modeSelected = true, authenticated = false, onboardingComplete = false,
+                initializing = false, error = null, notice = null,
                 email = "", username = "", password = "", confirmation = "", connectedName = "",
-                page = if (it.page in setOf(AuthPage.Avatar, AuthPage.Register, AuthPage.Location)) it.page else AuthPage.Avatar)
+                page = AuthPage.Login)
+        }
+    }
+
+    fun selectReal() {
+        if (state.value.busy) return
+        routedUserId = null
+        mutable.update { AuthUiState(configured = repository.configured, initializing = repository.configured,
+            modeSelected = true, localPreview = false) }
+        if (!repository.configured) return
+        viewModelScope.launch {
+            try {
+                repository.auth.awaitInitialization()
+                if (state.value.localPreview || !state.value.modeSelected) return@launch
+                if (repository.auth.currentSessionOrNull() != null) routeAuthenticated()
+                else mutable.update { it.copy(initializing = false) }
+            } catch (cancel: CancellationException) { throw cancel }
+            catch (error: Exception) { mutable.update { it.copy(initializing = false,
+                error = MeewavAuthRepository.messageFor(error)) } }
         }
     }
 
     fun exitPreview() {
-        if (!state.value.localPreview) return
-        // Revenir à Bienvenue ne quitte pas le bypass du parcours de fabrication.
+        if (!BuildConfig.DEBUG || state.value.busy || !state.value.modeSelected) return
+        routedUserId = null
         mutable.update { AuthUiState(initializing = false, configured = repository.configured,
-            localPreview = BuildConfig.DEBUG) }
+            modeSelected = false) }
     }
 
     fun navigate(page: AuthPage) {
-        if (state.value.busy) return
+        if (state.value.busy || !state.value.modeSelected) return
         if (page in setOf(AuthPage.Preview, AuthPage.Globe) &&
             !(BuildConfig.DEBUG && state.value.localPreview) && !state.value.onboardingComplete) return
         if (page == AuthPage.Login && state.value.localPreview) { exitPreview(); return }
@@ -160,7 +181,7 @@ class AuthViewModel(private val repository: MeewavAuthRepository, preview: Boole
 
     fun submit() {
         val draft = state.value
-        if (draft.busy || draft.initializing) return
+        if (draft.busy || draft.initializing || !draft.modeSelected) return
         if (draft.localPreview) {
             if (!BuildConfig.DEBUG) return
             val next = when (draft.page) {
@@ -281,7 +302,8 @@ class AuthViewModel(private val repository: MeewavAuthRepository, preview: Boole
         repository.signOut()
         routedUserId = null
         recoveryInProgress = false
-        mutable.update { AuthUiState(initializing = false, configured = repository.configured) }
+        mutable.update { AuthUiState(initializing = false, configured = repository.configured,
+            modeSelected = !BuildConfig.DEBUG) }
     }
 
     private fun execute(action: suspend () -> Unit) {

@@ -61,7 +61,9 @@ internal class RoomsAudioRepository(context: Context, val roomId: String) {
         val rooms = JSONArray(request("/rest/v1/rooms_v2?id=eq.$roomId&select=id,host_id,status,type,livekit_room_name"))
         check(rooms.length() == 1) { "Room introuvable" }
         val room = rooms.getJSONObject(0)
-        check(room.getString("status") != "ended" && room.getString("type") == "wave") { "Cette room Wave n’est pas active" }
+        check(room.getString("status") != "ended") { "Cette room n’est pas active" }
+        // Classe uses its own private floor grant and RTC policy, not the shared stage policy.
+        check(room.getString("type") != "classe") { "Utilise la prise de parole de la Classe" }
         val channel = room.getString("livekit_room_name")
         check(channel.isNotBlank() && channel != "null") { "Canal RTC serveur absent" }
         val host = room.getString("host_id").lowercase()

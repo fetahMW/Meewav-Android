@@ -62,6 +62,7 @@ data class AuthActions(
     val submit: () -> Unit = {},
     val signOut: () -> Unit = {},
     val startPreview: () -> Unit = {},
+    val selectReal: () -> Unit = {},
     val exitPreview: () -> Unit = {},
     val social: (SocialAuthProvider) -> Unit = {},
     val closeApp: () -> Unit = {},
@@ -72,7 +73,7 @@ data class AuthActions(
 fun AuthScreen(state: AuthUiState, viewModel: AuthViewModel, onCloseApp: () -> Unit, onOpenMessages: () -> Unit = {}) {
     AuthContent(state, AuthActions(viewModel::navigate, viewModel::back, viewModel::email,
         viewModel::username, viewModel::password, viewModel::confirmation, viewModel::profile,
-        viewModel::submit, viewModel::signOut, viewModel::startPreview, viewModel::exitPreview, viewModel::signInSocial,
+        viewModel::submit, viewModel::signOut, viewModel::startPreview, viewModel::selectReal, viewModel::exitPreview, viewModel::signInSocial,
         closeApp = onCloseApp, openMessages = onOpenMessages))
 }
 

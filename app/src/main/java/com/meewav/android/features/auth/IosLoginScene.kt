@@ -117,16 +117,17 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
             contentViewportHeight = contentViewportHeight,
             contentBottomPadding = if (typingLayout) 8.dp else null,
             bottomAlignContent = typingLayout,
-            footer = if (state.initializing) null else if (typingLayout) { {
+            footer = if (state.initializing || !state.modeSelected) null else if (typingLayout) { {
                 // Le CTA reste à 12 dp du clavier ; le formulaire utilise
                 // l'espace juste au-dessus, sans remonter inutilement les champs.
                 IosAuthAction(if (state.localPreview) "Suivant" else "Se connecter", state.busy, submit)
             } } else { {
-                IosAuthDivider()
-                Spacer(Modifier.height(6.dp))
-                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Nouveau ici ?", fontSize = 11.sp, lineHeight = 14.sp, color = Muted)
-                    Spacer(Modifier.height(4.dp))
+                if (!state.localPreview) {
+                    IosAuthDivider()
+                    Spacer(Modifier.height(6.dp))
+                    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Nouveau ici ?", fontSize = 11.sp, lineHeight = 14.sp, color = Muted)
+                        Spacer(Modifier.height(4.dp))
                         OutlinedButton(onClick = { actions.navigate(AuthPage.Avatar) }, enabled = !state.busy,
                             modifier = Modifier.widthIn(min = 180.dp).height(48.dp), shape = RoundedCornerShape(50),
                             border = BorderStroke(1.dp, Color(0xFF5137A1)),
@@ -135,6 +136,9 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
                             Text("Créer un compte", fontSize = 12.sp, maxLines = 1,
                                 fontWeight = FontWeight.Bold, color = Color.White)
                         }
+                    }
+                } else TextButton(onClick = actions.exitPreview, modifier = Modifier.fillMaxWidth()) {
+                    Text("Changer de mode", color = Violet)
                 }
                 // La signature libère 20 dp, réaffectés sous la capsule.
                 Spacer(Modifier.height(40.dp))
@@ -148,9 +152,17 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
                 Text("Bienvenue", fontSize = 23.sp, lineHeight = 28.sp, fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().semantics { heading() })
                 Spacer(Modifier.height(4.dp))
-                Text("Entrez dans votre univers sonore.", color = Muted, fontSize = 12.sp, lineHeight = 18.sp,
+                Text(if (!state.modeSelected) "Choisis comment entrer dans Meewav." else if (state.localPreview) "Découvre l’application avec les données de démonstration." else "Entrez dans votre univers sonore.", color = Muted, fontSize = 12.sp, lineHeight = 18.sp,
                     textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                 Spacer(Modifier.height(10.dp))
+                if (!state.modeSelected) {
+                    IosAuthAction("Mode démo", false, actions.startPreview)
+                    Spacer(Modifier.height(10.dp))
+                    OutlinedButton(onClick = actions.selectReal, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                        shape = RoundedCornerShape(16.dp), border = BorderStroke(1.dp, Color(0xFF5137A1))) {
+                        Text("Application réelle", color = Color.White)
+                    }
+                } else {
                 state.error?.let {
                     Text(it, color = Color(0xFFFFBBC4), fontSize = 11.sp,
                         modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
@@ -165,8 +177,15 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
                     modifier = Modifier.align(Alignment.End).height(32.dp), contentPadding = PaddingValues(0.dp)) {
                     Text("Mot de passe oublié ?", color = Muted, fontSize = 10.sp)
                 }
+                if (!typingLayout && state.modeSelected && !state.localPreview) {
+                    TextButton(onClick = actions.exitPreview, enabled = !state.busy,
+                        modifier = Modifier.align(Alignment.CenterHorizontally).height(32.dp)) {
+                        Text("Mode réel · changer", color = Muted, fontSize = 10.sp)
+                    }
+                }
                 }
                 if (!typingLayout) IosAuthAction(if (state.localPreview) "Suivant" else "Se connecter", state.busy, submit)
+                }
             }
         }
         if (decorationAlpha > 0f) Box(Modifier.fillMaxWidth().height(stageHeight + AuthStageOverlap)
