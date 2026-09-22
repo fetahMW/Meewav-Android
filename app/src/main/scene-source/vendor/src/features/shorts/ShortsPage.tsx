@@ -116,7 +116,7 @@ import SceneCreatorStudio from "../scene/studio/SceneCreatorStudio";
 import ScenePlaylistsView from "../scene/playlists/ScenePlaylistsView";
 import SceneRecommendationSettings from "../scene/recommendations/SceneRecommendationSettings";
 import { trackSceneAnalytics } from "../scene/sceneAnalytics";
-import { getPublishedSceneCatalog, getPublishedSceneCatalogPage } from "../scene/sceneCatalog.service";
+import { getPublishedSceneCatalog, getPublishedSceneCatalogPage, searchPublishedSceneCatalogPage } from "../scene/sceneCatalog.service";
 import {
   getProfileArtistDeepLink,
   safeProfileArtistReference,
@@ -2037,6 +2037,9 @@ function SceneWorkspace() {
   const playbackQueue = useScenePlaybackQueue();
   const [autoplayCountdown, setAutoplayCountdown] = useState<number | null>(null);
   const [remoteSceneItems, setRemoteSceneItems] = useState<VideoItem[]>([]);
+  const [remoteSearch, setRemoteSearch] = useState<{
+    query: string; items: VideoItem[]; offset: number; hasMore: boolean; loading: boolean; error: string;
+  }>({ query: "", items: [], offset: 0, hasMore: false, loading: false, error: "" });
   const [catalogOffset, setCatalogOffset] = useState(0);
   const [catalogHasMore, setCatalogHasMore] = useState(false);
   const [catalogLoadingMore, setCatalogLoadingMore] = useState(false);
@@ -2054,7 +2057,7 @@ function SceneWorkspace() {
     compactViewport.addEventListener("change", collapse);
     return () => compactViewport.removeEventListener("change", collapse);
   }, []);
-  const engagementItems = useMemo(() => [...remoteSceneItems, ...(demoScene ? ALL_VIDEOS : [])], [remoteSceneItems, demoScene]);
+  const engagementItems = useMemo(() => [...remoteSearch.items, ...remoteSceneItems, ...(demoScene ? ALL_VIDEOS : [])], [remoteSearch.items, remoteSceneItems, demoScene]);
   useEffect(() => {
     if ((isCreatorStudioRoute || isUploadRoute) && !canPublish) navigate(SCENE_ROUTE, { replace: true });
   }, [canPublish, isCreatorStudioRoute, isUploadRoute, navigate]);
@@ -2151,7 +2154,8 @@ function SceneWorkspace() {
     () => {
       const read = (key:string):string[] => { try { return JSON.parse(localStorage.getItem(scenePrivateKey(key)) || '[]'); } catch { return []; } };
       const hidden = read('meewav:scene:not-interested'), muted = read('meewav:scene:muted-artists');
-      const rows = [...publishedItems, ...remoteSceneItems, ...(demoScene ? ALL_VIDEOS : [])];
+      const searchItems = remoteSearch.query === searchQuery.trim() ? remoteSearch.items : [];
+      const rows = [...publishedItems, ...searchItems, ...remoteSceneItems, ...(demoScene ? ALL_VIDEOS : [])];
       const preferences=readSceneRecommendationPreferences();
       const unique=[...new Map(rows.map(item=>[item.id,item])).values()];
       if(watchRoute)return unique;
@@ -2162,8 +2166,44 @@ function SceneWorkspace() {
           return score(b)-score(a);
         });
     },
-    [publishedItems, remoteSceneItems, preferencesVersion, location.key, watchRoute, demoScene],
+    [publishedItems, remoteSearch, remoteSceneItems, searchQuery, preferencesVersion, location.key, watchRoute, demoScene],
   );
+
+  useEffect(() => {
+    const query = searchQuery.trim();
+    if (demoScene || query.length < 2) {
+      setRemoteSearch({ query: "", items: [], offset: 0, hasMore: false, loading: false, error: "" });
+      return;
+    }
+    let active = true;
+    setRemoteSearch({ query, items: [], offset: 0, hasMore: false, loading: true, error: "" });
+    const timer = window.setTimeout(() => {
+      void searchPublishedSceneCatalogPage(query).then((page) => {
+        if (!active) return;
+        setRemoteSearch({ query, items: page.items, offset: page.nextOffset, hasMore: page.hasMore, loading: false, error: "" });
+      }).catch(() => {
+        if (active) setRemoteSearch({ query, items: [], offset: 0, hasMore: false, loading: false, error: "Recherche indisponible. Les vidéos déjà chargées restent visibles." });
+      });
+    }, 250);
+    return () => { active = false; window.clearTimeout(timer); };
+  }, [demoScene, searchQuery]);
+
+  const loadMoreSceneSearch = useCallback(async () => {
+    const query = searchQuery.trim();
+    if (demoScene || !remoteSearch.hasMore || remoteSearch.loading || remoteSearch.query !== query) return;
+    setRemoteSearch((current) => ({ ...current, loading: true, error: "" }));
+    try {
+      const page = await searchPublishedSceneCatalogPage(query, 48, remoteSearch.offset);
+      setRemoteSearch((current) => current.query === query ? {
+        query, items: [...current.items, ...page.items.filter((item) => !current.items.some((existing) => existing.id === item.id))],
+        offset: page.nextOffset, hasMore: page.hasMore, loading: false, error: "",
+      } : current);
+    } catch {
+      setRemoteSearch((current) => current.query === query
+        ? { ...current, loading: false, error: "La suite des résultats ne peut pas être chargée." }
+        : current);
+    }
+  }, [demoScene, remoteSearch, searchQuery]);
 
   useEffect(() => {
     const requestVersion = ++catalogRequestVersionRef.current;
@@ -2476,8 +2516,9 @@ function SceneWorkspace() {
   );
   const unreadNotificationCount = notifications.filter((notification) => !notification.read).length;
 
+  const searchHasMore = !demoScene && remoteSearch.query === searchQuery.trim() && remoteSearch.hasMore;
   const searchLabel = searchQuery.trim()
-    ? `${visibleSearchResults.length} résultat${visibleSearchResults.length > 1 ? "s" : ""} pour ${searchQuery.trim()}`
+    ? `${visibleSearchResults.length}${searchHasMore ? "+" : ""} résultat${visibleSearchResults.length > 1 ? "s" : ""} pour ${searchQuery.trim()}`
     : "Rechercher une vidéo, un artiste, un morceau ou un style";
 
   const activeFilterCount = countActiveSceneFilters(
@@ -3939,7 +3980,7 @@ function SceneWorkspace() {
                 <SectionHeading
                   eyebrow={activeTab === "explore" && exploreMediaMode === "vertical" ? "Shorts" : "Recherche"}
                   title={activeTab === "explore" && exploreMediaMode === "vertical"
-                    ? `${verticalSearchResults.length} création${verticalSearchResults.length > 1 ? "s" : ""} pour « ${searchQuery.trim()} »`
+                    ? `${verticalSearchResults.length}${searchHasMore ? "+" : ""} création${verticalSearchResults.length > 1 ? "s" : ""} pour « ${searchQuery.trim()} »`
                     : searchLabel}
                   description={activeTab === "explore" && exploreMediaMode === "vertical"
                     ? "Créations pensées pour un écran 9:16."
@@ -3988,11 +4029,19 @@ function SceneWorkspace() {
                 ) : (
                   <div className="shorts-search-results__empty">
                     <Search />
-                    <strong>{activeTab === "following" ? "Aucun résultat parmi tes suivis" : "Aucune vidéo trouvée"}</strong>
+                    <strong>{remoteSearch.loading && !demoScene ? "Recherche en cours…" : activeTab === "following" ? "Aucun résultat parmi tes suivis" : "Aucune vidéo trouvée"}</strong>
                     <span>{activeTab === "following"
                       ? "Essaie un autre titre ou retrouve tout le catalogue dans Explorer."
                       : "Essaie un titre, un artiste, un style ou une ville."}</span>
                   </div>
+                )}
+                {!demoScene && remoteSearch.query === searchQuery.trim() && remoteSearch.error && (
+                  <p role="status">{remoteSearch.error}</p>
+                )}
+                {!demoScene && remoteSearch.query === searchQuery.trim() && remoteSearch.hasMore && (
+                  <button type="button" onClick={() => void loadMoreSceneSearch()} disabled={remoteSearch.loading}>
+                    {remoteSearch.loading ? "Chargement…" : "Voir plus de résultats"}
+                  </button>
                 )}
               </section>
             ) : showHistoryOnly ? (

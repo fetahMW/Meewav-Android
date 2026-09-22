@@ -31,24 +31,14 @@ async function resolveMediaUrl(media: PublishedPreProfileMedia) {
  * only in local preview, so Profile, Message, Collab, Follow and Golden Like
  * receive canonical UUIDs in a real session.
  */
-export async function getPublishedSceneCatalogPage(limit = SCENE_CATALOG_LIMIT, offset = 0, mediaId?: string): Promise<{ items: ShortsVideoItem[]; nextOffset: number; hasMore: boolean }> {
-  const safeLimit = Math.max(1, Math.min(Math.trunc(limit), SCENE_CATALOG_LIMIT));
-  const safeOffset = Math.max(0, Math.trunc(offset));
-  let query = supabase
-    .from("published_media_files")
-    .select("id,owner_profile_id,type,name,format,duration_ms,file_url,cover_url,storage_bucket,storage_path,mime_type,source_pillar,published_at,metadata")
-    .in("type", ["video", "audio"]);
-  if (mediaId) query = query.eq("id", mediaId);
-  const {data:mediaRows,error:mediaError}=await query
-    .order("published_at", { ascending: false, nullsFirst: false })
-    .order("id", { ascending: false })
-    .range(safeOffset, safeOffset + safeLimit - 1);
-  if (mediaError) throw mediaError;
-
-  const media = (mediaRows ?? []) as unknown as PublishedPreProfileMedia[];
-  const page = { nextOffset: safeOffset + media.length, hasMore: media.length === safeLimit };
+async function hydrateScenePage(pageRows: PublishedPreProfileMedia[]): Promise<ShortsVideoItem[]> {
+  // A published secondary camera is accessible to the viewer, but is not a separate performance.
+  const media = pageRows.filter((item) => {
+    const metadata = (item as PublishedPreProfileMedia & {metadata?: Record<string, any>}).metadata ?? {};
+    return typeof metadata.scene_publication?.secondaryOf !== "string";
+  });
   const ownerIds = [...new Set(media.map(({ owner_profile_id: ownerId }) => ownerId).filter(Boolean))];
-  if (ownerIds.length === 0) return { items: [], ...page };
+  if (ownerIds.length === 0) return [];
 
   const { data: profileRows, error: profileError } = await supabase
     .from("public_profiles")
@@ -115,7 +105,43 @@ export async function getPublishedSceneCatalogPage(limit = SCENE_CATALOG_LIMIT, 
       verified: profile.is_verified,
     };
   }));
-  return { items: rows.filter((item): item is ShortsVideoItem => item !== null), ...page };
+  return rows.filter((item): item is ShortsVideoItem => item !== null);
+}
+
+export async function getPublishedSceneCatalogPage(limit = SCENE_CATALOG_LIMIT, offset = 0, mediaId?: string): Promise<{ items: ShortsVideoItem[]; nextOffset: number; hasMore: boolean }> {
+  const safeLimit = Math.max(1, Math.min(Math.trunc(limit), SCENE_CATALOG_LIMIT));
+  const safeOffset = Math.max(0, Math.trunc(offset));
+  let query = supabase
+    .from("published_media_files")
+    .select("id,owner_profile_id,type,name,format,duration_ms,file_url,cover_url,storage_bucket,storage_path,mime_type,source_pillar,published_at,metadata")
+    .in("type", ["video", "audio"]);
+  if (mediaId) query = query.eq("id", mediaId);
+  const {data:mediaRows,error:mediaError}=await query
+    .order("published_at", { ascending: false, nullsFirst: false })
+    .order("id", { ascending: false })
+    .range(safeOffset, safeOffset + safeLimit - 1);
+  if (mediaError) throw mediaError;
+  const pageRows = (mediaRows ?? []) as unknown as PublishedPreProfileMedia[];
+  return {
+    items: await hydrateScenePage(pageRows),
+    nextOffset: safeOffset + pageRows.length,
+    hasMore: pageRows.length === safeLimit,
+  };
+}
+
+export async function searchPublishedSceneCatalogPage(search: string, limit = SCENE_CATALOG_LIMIT, offset = 0): Promise<{ items: ShortsVideoItem[]; nextOffset: number; hasMore: boolean }> {
+  const safeLimit = Math.max(1, Math.min(Math.trunc(limit), SCENE_CATALOG_LIMIT));
+  const safeOffset = Math.max(0, Math.trunc(offset));
+  const { data, error } = await supabase.rpc("scene_search_catalog_v1", {
+    p_query: search.trim().slice(0, 120), p_limit: safeLimit, p_offset: safeOffset,
+  });
+  if (error) throw error;
+  const pageRows = (data ?? []) as unknown as PublishedPreProfileMedia[];
+  return {
+    items: await hydrateScenePage(pageRows),
+    nextOffset: safeOffset + pageRows.length,
+    hasMore: pageRows.length === safeLimit,
+  };
 }
 
 export async function getPublishedSceneCatalog(limit = SCENE_CATALOG_LIMIT, mediaId?: string): Promise<ShortsVideoItem[]> {

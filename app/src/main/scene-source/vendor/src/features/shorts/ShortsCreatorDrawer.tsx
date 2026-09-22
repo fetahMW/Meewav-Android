@@ -128,6 +128,7 @@ export default function ShortsCreatorDrawer({
   const ownedSecondaryObjectUrlRef = useRef<string | null>(null);
   const transferredObjectUrlRef = useRef<string | null>(null);
   const transferredSecondaryUrlRef = useRef<string | null>(null);
+  const publishingRef = useRef(false);
   const [step, setStep] = useState<CreatorStep>(1);
   const [media, setMedia] = useState<CreatorMedia | null>(null);
   const [secondaryMedia, setSecondaryMedia] = useState<CreatorMedia | null>(null);
@@ -423,6 +424,7 @@ export default function ShortsCreatorDrawer({
   };
 
   const publish = async () => {
+    if (publishingRef.current) return;
     if (!media) {
       setStep(1);
       onNotify("Ajoute d’abord un média à ta publication.");
@@ -441,20 +443,33 @@ export default function ShortsCreatorDrawer({
     }
 
     if(user && !media.file) { onNotify("Choisis ton fichier avant de publier sur ton compte."); return; }
+    if(user && multicamEnabled && secondaryMedia && !secondaryMedia.file) {
+      onNotify("Choisis le fichier de la seconde caméra avant de publier sur ton compte.");
+      return;
+    }
+    publishingRef.current = true;
     setPublishing(true);
     let persistedMediaId: string | null = null;
     let persistedSourceUrl = media.url;
+    let persistedSecondaryUrl = secondaryMedia?.url;
     if (media.file && user) {
+      const newUploadIds: string[] = [];
       try {
         const uploaded = await profileMediaRepository.uploadOwnerMedia(user.id, media.file, { sourcePillar: "shorts" });
+        newUploadIds.push(uploaded.id);
         let secondaryMediaId: string | null = null;
         if(multicamEnabled && secondaryMedia?.file) {
           const secondary = await profileMediaRepository.uploadOwnerMedia(user.id, secondaryMedia.file, {sourcePillar:"shorts"});
+          newUploadIds.push(secondary.id);
           secondaryMediaId = secondary.id;
-          if(visibility === "public") await profileMediaRepository.setOwnerMediaVisibility(user.id,secondary.id,true);
+          persistedSecondaryUrl = secondary.sourceUrl ?? secondaryMedia.url;
+          await profileMediaRepository.updateOwnerMediaDetails(user.id, secondary.id, {
+            name: `${title.trim()} · caméra secondaire`, description: "", contentType: contentTypeLabel,
+            city, language: "fr", visibility: "private", sceneMetadata: { secondaryOf: uploaded.id },
+          });
         }
         const persisted = await profileMediaRepository.updateOwnerMediaDetails(user.id, uploaded.id, {
-          name:title.trim(),description,contentType:contentTypeLabel,city,language:"fr",visibility:visibility === "public" ? "public" : "private",
+          name:title.trim(),description,contentType:contentTypeLabel,city,language:"fr",visibility:"private",
           sceneMetadata:{format:outputFormat,sourceFormat:format,secondaryMediaId,multicamLayout:multicamEnabled ? multicamLayout : null,
             publicationLinks:publicationLinks.filter(link=>/^https?:\/\//i.test(link.url)),
             credits:governancePreflight.credits,requestedUses:governancePreflight.requestedUses,
@@ -462,11 +477,22 @@ export default function ShortsCreatorDrawer({
             hashtags:[...new Set(hashtagsText.split(/[\s,;]+/).map(tag=>tag.trim().replace(/^#+/,"")).filter(Boolean))].slice(0,12),
             associatedContent:associatedType !== "none" ? {type:associatedType,label:associatedLabel,url:associatedUrl} : null},
         });
+        if (visibility === "public") {
+          // Publish the primary last: the catalogue must never expose an incomplete multicam pair.
+          if (secondaryMediaId) await profileMediaRepository.setOwnerMediaVisibility(user.id, secondaryMediaId, true);
+          await profileMediaRepository.setOwnerMediaVisibility(user.id, uploaded.id, true);
+        }
         persistedMediaId = persisted.id;
         persistedSourceUrl = persisted.sourceUrl ?? uploaded.sourceUrl ?? media.url;
       } catch (error) {
+        const cleanup = await Promise.allSettled(newUploadIds.reverse().map((id) =>
+          profileMediaRepository.discardNewShortsUpload(user.id, id)));
+        publishingRef.current = false;
         setPublishing(false);
-        onNotify(error instanceof Error ? error.message : "La publication n’a pas pu être enregistrée sur le serveur.");
+        const reason = error instanceof Error ? error.message : "La publication n’a pas pu être enregistrée sur le serveur.";
+        onNotify(cleanup.some((result) => result.status === "rejected")
+          ? `${reason} Un fichier privé reste à nettoyer dans ta médiathèque.`
+          : reason);
         return;
       }
     }
@@ -474,7 +500,7 @@ export default function ShortsCreatorDrawer({
     if (media.isObjectUrl && persistedSourceUrl === media.url) {
       transferredObjectUrlRef.current = media.url;
     }
-    if (secondaryMedia?.isObjectUrl) {
+    if (secondaryMedia?.isObjectUrl && persistedSecondaryUrl === secondaryMedia.url) {
       transferredSecondaryUrlRef.current = secondaryMedia.url;
     }
     try {
@@ -506,7 +532,7 @@ export default function ShortsCreatorDrawer({
       format: outputFormat,
       sourceFormat: format,
       linkedDesktopVersion: desktopVersion,
-      secondaryVideo: multicamEnabled ? secondaryMedia?.url : undefined,
+      secondaryVideo: multicamEnabled ? persistedSecondaryUrl : undefined,
       multicamLayout: multicamEnabled && secondaryMedia ? multicamLayout : undefined,
       alt: `${media.kind === "audio" ? "Création audio" : "Vidéo"} publiée par ${creatorName} : ${title.trim()}`,
       duration: media.durationLabel ?? "0:00",
@@ -544,6 +570,7 @@ export default function ShortsCreatorDrawer({
         },
       },
     });
+    publishingRef.current = false;
     setPublishing(false);
   };
 
