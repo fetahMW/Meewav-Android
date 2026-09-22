@@ -116,7 +116,7 @@ import SceneCreatorStudio from "../scene/studio/SceneCreatorStudio";
 import ScenePlaylistsView from "../scene/playlists/ScenePlaylistsView";
 import SceneRecommendationSettings from "../scene/recommendations/SceneRecommendationSettings";
 import { trackSceneAnalytics } from "../scene/sceneAnalytics";
-import { getPublishedSceneCatalog } from "../scene/sceneCatalog.service";
+import { getPublishedSceneCatalog, getPublishedSceneCatalogPage } from "../scene/sceneCatalog.service";
 import {
   getProfileArtistDeepLink,
   safeProfileArtistReference,
@@ -2037,6 +2037,10 @@ function SceneWorkspace() {
   const playbackQueue = useScenePlaybackQueue();
   const [autoplayCountdown, setAutoplayCountdown] = useState<number | null>(null);
   const [remoteSceneItems, setRemoteSceneItems] = useState<VideoItem[]>([]);
+  const [catalogOffset, setCatalogOffset] = useState(0);
+  const [catalogHasMore, setCatalogHasMore] = useState(false);
+  const [catalogLoadingMore, setCatalogLoadingMore] = useState(false);
+  const catalogRequestVersionRef = useRef(0);
   const [serverFollowedArtistIds, setServerFollowedArtistIds] = useState<Set<string> | null>(null);
   const [browseMenuOpen, setBrowseMenuOpen] = useState(() => typeof window === "undefined" || window.innerWidth > 1100);
   const [watchMenuKey, setWatchMenuKey] = useState<string | null>(null);
@@ -2162,14 +2166,41 @@ function SceneWorkspace() {
   );
 
   useEffect(() => {
-    if(isLocalAuthPreviewEnabled()) { setCatalogLoading(false); return; }
+    const requestVersion = ++catalogRequestVersionRef.current;
+    if (demoScene) { setCatalogLoading(false); return; }
     let active = true; setCatalogLoading(true); setCatalogError("");
+    setCatalogHasMore(false);
+    setCatalogOffset(0);
+    setCatalogLoadingMore(false);
     const timer = window.setTimeout(() => { if (active) { active = false; setCatalogLoading(false); setCatalogError("Le catalogue met trop de temps à répondre. Réessaie."); } }, 12000);
-    void getPublishedSceneCatalog().then((items) => { if (active) setRemoteSceneItems(items); })
+    void getPublishedSceneCatalogPage().then((page) => {
+      if (!active || requestVersion !== catalogRequestVersionRef.current) return;
+      setRemoteSceneItems((current) => [...page.items, ...current.filter((item) => !page.items.some((loaded) => loaded.id === item.id))]);
+      setCatalogOffset(page.nextOffset);
+      setCatalogHasMore(page.hasMore);
+    })
       .catch(() => { if(active) setCatalogError("Le catalogue ne peut pas être chargé. Réessaie."); })
       .finally(() => { window.clearTimeout(timer); if (active) setCatalogLoading(false); });
-    return () => { active = false; window.clearTimeout(timer); };
-  }, [catalogAttempt]);
+    return () => { active = false; ++catalogRequestVersionRef.current; window.clearTimeout(timer); };
+  }, [catalogAttempt, demoScene]);
+
+  const loadMoreSceneCatalog = useCallback(async () => {
+    if (demoScene || !catalogHasMore || catalogLoading || catalogLoadingMore) return;
+    const requestVersion = catalogRequestVersionRef.current;
+    setCatalogLoadingMore(true);
+    setCatalogError("");
+    try {
+      const page = await getPublishedSceneCatalogPage(48, catalogOffset);
+      if (requestVersion !== catalogRequestVersionRef.current) return;
+      setRemoteSceneItems((current) => [...current, ...page.items.filter((item) => !current.some((loaded) => loaded.id === item.id))]);
+      setCatalogOffset(page.nextOffset);
+      setCatalogHasMore(page.hasMore);
+    } catch {
+      if (requestVersion === catalogRequestVersionRef.current) setCatalogError("La suite du catalogue ne peut pas être chargée. Réessaie.");
+    } finally {
+      if (requestVersion === catalogRequestVersionRef.current) setCatalogLoadingMore(false);
+    }
+  }, [catalogHasMore, catalogLoading, catalogLoadingMore, catalogOffset, demoScene]);
 
   useEffect(() => {
     const targetIds = [...new Set(remoteSceneItems.map(({ profileId }) => profileId).filter((id): id is string => Boolean(id)))];
@@ -2532,7 +2563,7 @@ function SceneWorkspace() {
       || exploreMediaMode === "vertical"
       || normalizedQuery
       || activeFilterCount > 0
-      || exploreVisibleCount >= exploreCatalogVideos.length
+      || (!catalogHasMore && exploreVisibleCount >= exploreCatalogVideos.length)
     ) return undefined;
 
     const sentinel = exploreLoadMoreRef.current;
@@ -2542,10 +2573,14 @@ function SceneWorkspace() {
     const observer = new IntersectionObserver((entries) => {
       if (!entries.some((entry) => entry.isIntersecting)) return;
       observer.unobserve(sentinel);
-      setExploreVisibleCount((current) => Math.min(
-        current + SCENE_EXPLORE_BATCH_SIZE,
-        exploreCatalogVideos.length,
-      ));
+      if (exploreVisibleCount < exploreCatalogVideos.length) {
+        setExploreVisibleCount((current) => Math.min(
+          current + SCENE_EXPLORE_BATCH_SIZE,
+          exploreCatalogVideos.length,
+        ));
+      } else {
+        void loadMoreSceneCatalog();
+      }
     }, {
       root: document.querySelector(".scene-page.is-document") ? null : scrollRoot,
       rootMargin: "600px 0px",
@@ -2557,9 +2592,11 @@ function SceneWorkspace() {
     activeFilterCount,
     activeTab,
     activeWall,
+    catalogHasMore,
     exploreCatalogVideos.length,
     exploreMediaMode,
     exploreVisibleCount,
+    loadMoreSceneCatalog,
     normalizedQuery,
   ]);
 
@@ -4258,15 +4295,19 @@ function SceneWorkspace() {
                   <i aria-hidden="true">
                     <b style={{ width: `${Math.min(100, (exploreRenderedCount / Math.max(1, exploreCatalogVideos.length)) * 100)}%` }} />
                   </i>
-                  {exploreMediaMode !== "vertical" && exploreVisibleCount < exploreCatalogVideos.length ? (
+                  {(exploreMediaMode !== "vertical" && exploreVisibleCount < exploreCatalogVideos.length) || catalogHasMore ? (
                     <button
                       type="button"
-                      onClick={() => setExploreVisibleCount((current) => Math.min(
-                        current + SCENE_EXPLORE_BATCH_SIZE,
-                        exploreCatalogVideos.length,
-                      ))}
+                      disabled={catalogLoadingMore}
+                      onClick={() => {
+                        if (exploreMediaMode !== "vertical" && exploreVisibleCount < exploreCatalogVideos.length) {
+                          setExploreVisibleCount((current) => Math.min(current + SCENE_EXPLORE_BATCH_SIZE, exploreCatalogVideos.length));
+                        } else {
+                          void loadMoreSceneCatalog();
+                        }
+                      }}
                     >
-                      Charger la suite <ChevronRight />
+                      {catalogLoadingMore ? "Chargement…" : "Charger la suite"} <ChevronRight />
                     </button>
                   ) : (
                     <small>{exploreMediaMode === "vertical"

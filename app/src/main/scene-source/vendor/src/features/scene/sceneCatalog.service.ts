@@ -31,21 +31,24 @@ async function resolveMediaUrl(media: PublishedPreProfileMedia) {
  * only in local preview, so Profile, Message, Collab, Follow and Golden Like
  * receive canonical UUIDs in a real session.
  */
-export async function getPublishedSceneCatalog(limit = SCENE_CATALOG_LIMIT, mediaId?:string): Promise<ShortsVideoItem[]> {
+export async function getPublishedSceneCatalogPage(limit = SCENE_CATALOG_LIMIT, offset = 0, mediaId?: string): Promise<{ items: ShortsVideoItem[]; nextOffset: number; hasMore: boolean }> {
   const safeLimit = Math.max(1, Math.min(Math.trunc(limit), SCENE_CATALOG_LIMIT));
+  const safeOffset = Math.max(0, Math.trunc(offset));
   let query = supabase
     .from("published_media_files")
     .select("id,owner_profile_id,type,name,format,duration_ms,file_url,cover_url,storage_bucket,storage_path,mime_type,source_pillar,published_at,metadata")
-    .in("type", ["video", "audio"])
+    .in("type", ["video", "audio"]);
+  if (mediaId) query = query.eq("id", mediaId);
+  const {data:mediaRows,error:mediaError}=await query
     .order("published_at", { ascending: false, nullsFirst: false })
-    .limit(safeLimit);
-  if(mediaId) query=query.eq("id",mediaId);
-  const {data:mediaRows,error:mediaError}=await query;
+    .order("id", { ascending: false })
+    .range(safeOffset, safeOffset + safeLimit - 1);
   if (mediaError) throw mediaError;
 
   const media = (mediaRows ?? []) as unknown as PublishedPreProfileMedia[];
+  const page = { nextOffset: safeOffset + media.length, hasMore: media.length === safeLimit };
   const ownerIds = [...new Set(media.map(({ owner_profile_id: ownerId }) => ownerId).filter(Boolean))];
-  if (ownerIds.length === 0) return [];
+  if (ownerIds.length === 0) return { items: [], ...page };
 
   const { data: profileRows, error: profileError } = await supabase
     .from("public_profiles")
@@ -112,5 +115,9 @@ export async function getPublishedSceneCatalog(limit = SCENE_CATALOG_LIMIT, medi
       verified: profile.is_verified,
     };
   }));
-  return rows.filter((item): item is ShortsVideoItem => item !== null);
+  return { items: rows.filter((item): item is ShortsVideoItem => item !== null), ...page };
+}
+
+export async function getPublishedSceneCatalog(limit = SCENE_CATALOG_LIMIT, mediaId?: string): Promise<ShortsVideoItem[]> {
+  return (await getPublishedSceneCatalogPage(limit, 0, mediaId)).items;
 }
