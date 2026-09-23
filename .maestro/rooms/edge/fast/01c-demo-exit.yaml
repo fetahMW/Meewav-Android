@@ -1,0 +1,17 @@
+appId: com.meewav.android.debug
+name: EDGE 01c - leaving DEMO does not relaunch into fixtures
+tags:
+  - edge
+  - fast
+  - demo
+---
+# Precondition: DEMO Rooms home. This explicitly closes the demo task.
+- launchApp:
+    stopApp: false
+- assertVisible: ".*Finale des nouveaux flows.*"
+- tapOn: "Retour au globe"
+- tapOn: "Fermer l’application"
+- launchApp
+- assertVisible: "Application réelle"
+- assertVisible: "Mode démo"
+- assertNotVisible: ".*Finale des nouveaux flows.*"

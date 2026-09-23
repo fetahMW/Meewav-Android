@@ -1,0 +1,26 @@
+appId: com.meewav.android.debug
+name: EDGE 03 - double launch creates one QA room and one native host
+tags:
+  - edge
+  - medium
+  - idempotence
+---
+# Same title/request should produce one rooms_v2 row and one active host.
+- launchApp:
+    stopApp: false
+- assertVisible: "Créer une Room"
+- tapOn: "Créer une Room"
+- tapOn: "Ex: Sunset Vibes"
+- inputText: ${QA_ROOM_TITLE}
+- tapOn: "Continuer"
+- tapOn: "Vérifier"
+- tapOn: "Tester le micro"
+- extendedWaitUntil:
+    visible: "Tout est prêt"
+    timeout: 30000
+- tapOn: "Voir le résumé"
+- assertVisible: ${QA_ROOM_TITLE}
+- doubleTapOn: "Accéder à la room"
+- extendedWaitUntil:
+    visible: ${QA_ROOM_TITLE}
+    timeout: 30000

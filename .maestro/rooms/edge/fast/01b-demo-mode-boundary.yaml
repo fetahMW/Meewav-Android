@@ -1,0 +1,25 @@
+appId: com.meewav.android.debug
+name: EDGE 01b - DEMO stays explicit across Rooms and Marketplace
+tags:
+  - edge
+  - fast
+  - demo
+---
+# This companion to 01 is safe to run without a real account. It never creates
+# a Room or touches Supabase. It asserts the inverse mode boundary.
+- launchApp
+- assertVisible: "Mode démo"
+- tapOn: "Mode démo"
+- tapOn: "Suivant"
+- tapOn: "Suivant"
+- tapOn: "Suivant"
+- tapOn: "Terminer"
+- assertVisible: "Touche le globe pour entrer"
+- tapOn:
+    point: "50%,50%"
+- tapOn: "Rooms"
+- assertVisible: "Créer une Room"
+- assertVisible: ".*Finale des nouveaux flows.*"
+- tapOn: "Marketplace"
+- tapOn: "Rooms"
+- assertVisible: ".*Finale des nouveaux flows.*"

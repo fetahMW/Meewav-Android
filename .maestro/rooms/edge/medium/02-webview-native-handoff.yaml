@@ -1,0 +1,31 @@
+appId: com.meewav.android.debug
+name: EDGE 02 - QA live room crosses WebView to native once
+tags:
+  - edge
+  - medium
+  - handoff
+---
+# Precondition: LIVE Rooms home, authenticated QA account, camera/mic available.
+# QA_ROOM_TITLE is supplied by run-edge.ps1 and checked against rooms_v2.
+- launchApp:
+    stopApp: false
+- assertVisible: "Créer une Room"
+- tapOn: "Créer une Room"
+- assertVisible: "Ouvrir une Room"
+- tapOn: "Ex: Sunset Vibes"
+- inputText: ${QA_ROOM_TITLE}
+- tapOn: "Continuer"
+- assertVisible: "Green House"
+- tapOn: "Vérifier"
+- assertVisible: "Vérifie ton installation"
+- tapOn: "Tester le micro"
+- extendedWaitUntil:
+    visible: "Tout est prêt"
+    timeout: 30000
+- tapOn: "Voir le résumé"
+- assertVisible: ${QA_ROOM_TITLE}
+- tapOn: "Accéder à la room"
+- extendedWaitUntil:
+    visible: ${QA_ROOM_TITLE}
+    timeout: 30000
+- assertNotVisible: "Démo · vérification ignorée"

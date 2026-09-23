@@ -1,0 +1,25 @@
+appId: com.meewav.android.debug
+name: EDGE 01 - LIVE survives a feature and wizard round trip
+tags:
+  - edge
+  - fast
+  - live
+---
+# Precondition: a real account is signed in and the LIVE Rooms home is open.
+# The demo fixture title is deliberately specific; a generic card assertion
+# would not detect a silent preview switch.
+- launchApp:
+    stopApp: false
+- assertVisible: "Créer une Room"
+- assertNotVisible: ".*Finale des nouveaux flows.*"
+- tapOn: "Marketplace"
+- assertVisible: "Marketplace"
+- tapOn: "Rooms"
+- assertVisible: "Créer une Room"
+- assertNotVisible: ".*Finale des nouveaux flows.*"
+- tapOn: "Créer une Room"
+- assertVisible: "Ouvrir une Room"
+- assertNotVisible: "Démo · vérification ignorée"
+- tapOn: "Retour aux Rooms"
+- assertVisible: "Créer une Room"
+- assertNotVisible: ".*Finale des nouveaux flows.*"
