@@ -198,6 +198,15 @@ function secureGiftWinner(candidates: readonly RoomGiftCandidate[]) {
 
 function createUnavailableRoomState(roomId: string): PlaceRoomState {
   const base = createPlaceDemoState(null);
+  const neutralHost = {
+    id: "00000000-0000-0000-0000-000000000000",
+    displayName: "Artiste indisponible",
+    handle: "",
+    role: "",
+    city: "",
+    avatarUrl: "",
+    gradeLevel: 1,
+  };
   return {
     ...base,
     id: roomId,
@@ -205,6 +214,7 @@ function createUnavailableRoomState(roomId: string): PlaceRoomState {
     title: "Room indisponible",
     description: "Cette Room est terminée ou n’est plus accessible.",
     status: "ended",
+    host: neutralHost,
     participantsCount: 0,
     peakViewers: 0,
     likesCount: 0,
@@ -228,6 +238,19 @@ function createUnavailableRoomState(roomId: string): PlaceRoomState {
       isMuted: channel.kind !== "master",
       signalState: "disconnected",
     })),
+    track: {
+      ...base.track,
+      id: `room-audio-${roomId}`,
+      title: "",
+      artist: "",
+      durationSeconds: 0,
+      currentSeconds: 0,
+      bpm: undefined,
+      musicalKey: undefined,
+      isPlaying: false,
+      isLooping: false,
+      waveform: [],
+    },
     poll: null,
     giftDraw: null,
     pinnedMessageId: null,
@@ -251,7 +274,10 @@ export function usePlaceRoom({
         ? PLACE_DEMO_PROFILES.viewerA.id
         : currentUserId;
   const resolvedLiveRoomId = useRef(requestedRoomId);
-  const [room, setRoom] = useState<PlaceRoomState>(() => demoRoom ?? createPlaceDemoState(demoUserId, roomType));
+  const [room, setRoom] = useState<PlaceRoomState>(() => demoRoom
+    ?? (requestedRoomId && !demoRole
+      ? createUnavailableRoomState(requestedRoomId)
+      : createPlaceDemoState(demoUserId, roomType)));
   const [experienceType,setExperienceType]=useState(roomType);
   const [surface, setSurface] = useState<PlaceStudioSurface>((roomType === "scene" || roomType === "loge") && demoRole !== "host" ? "tools" : "chat");
   const [isLoading, setIsLoading] = useState(true);

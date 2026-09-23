@@ -82,6 +82,7 @@ export async function createThree(
   onPick: any,
   onFrame: any,
   quarterIndex: any = { assets: [], labels: [] },
+  liveMarkers: any[] | null = null,
 ) {
   const scene = new T.Scene();
   const globeRoot = new T.Group();
@@ -434,7 +435,7 @@ export async function createThree(
     host.dispatchEvent(new CustomEvent("meewav:city-select", { bubbles: true, detail: { id: city.id } }));
   }, () => { sceneDirty = true; }, territoryFocus, saturnRing.occludesLabel, (city: any) => groundAvatars?.countForCity(city.id) || 0, GLOBE_ALIGN);
   groundAvatars = createGroundAvatars(host, sectors, communes, () => { sceneDirty = true; }, camera, GLOBE_ALIGN,
-    parisLandmarks.depthAt);
+    parisLandmarks.depthAt, liveMarkers);
   let alive = true,
     active = true,
     raf = 0,
@@ -1323,6 +1324,7 @@ export async function createThree(
     sceneDirty = true;
   }
   function enterRing() {
+    if (liveMarkers !== null) return; // the ring's artist ranking is demo-only
     if (ringNavigation.active) return;
     cancelTouch();
     motion.interrupt(); wheelZoom.cancel(); orbit.cancel(); cancelPick();

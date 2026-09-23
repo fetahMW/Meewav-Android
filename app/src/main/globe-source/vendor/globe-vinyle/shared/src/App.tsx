@@ -9,8 +9,10 @@ import { GLOBE_OVERVIEW } from "./saturn-ring.mjs";
 import { notifyHost } from './host-bridge';
 import GlobeLoading from '../../../meewav-vinyl/src/GlobeLoading';
 import { cityArrivalTarget, countryArrivalTarget, quarterArrivalTarget } from "./navigation-presets.mjs";
+import { parseLiveMarkers } from "./live-markers";
 
 const world = GLOBE_OVERVIEW;
+const realMode = new URLSearchParams(location.search).get("mode") === "real";
 const base = () => new URL(".", document.baseURI);
 export default function App() {
   const host = useRef<HTMLDivElement>(null),
@@ -96,6 +98,14 @@ export default function App() {
       }
       if (op !== operation.current) return;
       const d = data.current;
+      // A real entry may never fall back to the investor's generated avatars.
+      // Android supplies the canonical public, coarse marker projection.
+      const liveMarkers = realMode ? await fetch("./live-markers-v1.json", { cache: "no-store" })
+        .then(async response => {
+          if (!response.ok) throw Error("Les profils réels ne sont pas disponibles. Réessaie.");
+          return parseLiveMarkers(await response.json());
+        }) : null;
+      if (op !== operation.current) return;
       const result = await createThree(
         host.current!,
         d.countries,
@@ -117,6 +127,7 @@ export default function App() {
           }
         },
         d.quarterIndex,
+        liveMarkers,
       );
       if (op !== operation.current) {
         result.destroy();
@@ -300,7 +311,7 @@ export default function App() {
       {/* Keep the viewport measurable while preparing the first frame, but
           reveal the scene and its controls together behind the vinyl loader. */}
       <div ref={host} className="globe-stage" style={{ visibility: ready ? 'visible' : 'hidden' }} aria-hidden={!ready} />
-      {ready && <GlobeInterface ready={ready} data={data.current} engine={engine} navigate={navigate} selection={selectedFeature} zoomLimit={zoomLimit} />}
+      {ready && <GlobeInterface ready={ready} data={data.current} engine={engine} navigate={navigate} selection={selectedFeature} zoomLimit={zoomLimit} realMode={realMode} />}
       {!ready && !error && window.parent === window && <GlobeLoading />}
       {error && (
         <section className="error" role="alert">

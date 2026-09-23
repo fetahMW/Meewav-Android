@@ -4,6 +4,8 @@
 
 Ce document est la liste de suivi de référence. Les audits précédents restent des preuves historiques, pas une liste actualisée des manques. Cette consolidation recoupe ces audits, les livraisons ultérieures et des contrôles ciblés du code ; ce n'est pas une nouvelle recette exhaustive de chaque écran ou de chaque compte réel.
 
+Pointage du 23 septembre : **95 lignes**, dont **22 M**, **54 P** et **19 V**. Les 76 lignes M/P représentent du câblage absent ou incomplet ; les 19 lignes V demandent encore leur recette réelle. Les identifiants et critères de fin ci-dessous sont la liste exhaustive suivie dans ce dépôt. Ce pointage n'est pas une déclaration d'achèvement.
+
 ## Règle de clôture
 
 Un bouton visible, un SDK installé, une RPC présente ou une compilation réussie ne suffisent pas. Chaque ligne reste ouverte tant que son critère de fin n'est pas établi. Statuts : **M** = raccordement manquant identifié ; **P** = raccordement partiel ; **V** = raccordement présent ou supposé présent, vérification encore nécessaire. V ne veut pas dire manquant. Aucune ligne ci-dessous n'est déclarée terminée.
@@ -22,7 +24,7 @@ Contraintes permanentes : préserver la démo investisseur, séparer démo et do
 | SOC-04 | M | Notifications système : enregistrement/révocation du token appareil, routage serveur et permissions Android. | Notification reçue et ouverte sur le bon objet, app au premier plan, en arrière-plan et fermée ; refus de permission géré. Dépendance E1. |
 | SOC-05 | M | Appels entrants hors application : notification d'appel, accepter/refuser, expiration et navigation. | Aucun appel fantôme ou double réponse ; le signalement et la session média restent cohérents. Dépend de SOC-04. |
 | SOC-06 | P | Liens publics et App Links pour profils, vidéos et rooms. | Lien partageable hors WebView, ouvrant le bon contenu dans l'app ou le Web ; aucune URL appassets partagée. Dépendance E2. |
-| SOC-07 | V | Modes démo/réel et reprise après échec sur toutes les features. | Une panne réelle affiche erreur/réessai, jamais une fixture présentée comme donnée réelle ; démo toujours accessible. |
+| SOC-07 | P | Modes démo/réel et reprise après échec sur toutes les features. | Une panne réelle affiche erreur/réessai, jamais une fixture présentée comme donnée réelle ; démo toujours accessible. Régression réelle signalée le 23 septembre, reprise de la vérification globale nécessaire. |
 | SOC-08 | P | Contrats communs versionnés, migrations et guide de branchement iOS. | Documenter requêtes/réponses, erreurs, droits, événements et compatibilité ; vérifier les divergences Web/iOS avant chaque adaptation. |
 
 ## 2. Globe et profils
@@ -146,7 +148,7 @@ Chaque ligne doit être contrôlée pour Wave, Cage, Classe, Scène, Loge et Pla
 |---|---|---|---|
 | VID-01 | V | Régression du catalogue, recherche, profil, publication et métadonnées déjà raccordés. | Relecture complète, erreurs/réessai, bon propriétaire, séparation démo/réel. |
 | VID-02 | P | Reprise/nettoyage des uploads interrompus, notamment multicam. | Aucun média incomplet publié ; fichiers abandonnés nettoyés et reprise sûre. |
-| VID-03 | P | Pagination commentaires et recette des interactions/Studio. | Dépasser la limite actuelle de 1000, conserver réponses/ordre, droits auteur/propriétaire et absence de doublons. |
+| VID-03 | V | Pagination commentaires et recette des interactions/Studio. | Dépasser la limite actuelle de 1000, conserver réponses/ordre, droits auteur/propriétaire et absence de doublons. |
 | VID-04 | M | Console/traitement de modération des signalements. | Les dossiers déjà enregistrés sont traitables par les rôles autorisés, avec décision durable. |
 | VID-05 | P | Playlists, À regarder plus tard, historique, reprise et préférences entre appareils. | Repositories locaux actuels synchronisés au compte ; suppression/masquage/recommandations cohérents. |
 | VID-06 | M | Programmation et diffusion TV. | Vraie grille et statut de diffusion, changements/replays/fin partagés ; pas de planning fixture en réel. |
@@ -231,7 +233,7 @@ Ce journal ne clôture pas les 95 lignes : les sous-parcours restants demeurent 
 ### Point de sauvegarde demandé avant épuisement du quota
 
 - **Les 95 points ne sont pas terminés.** Ce commit sauvegarde les raccordements vérifiés et leurs limites ; reprendre les lignes ouvertes, sans les considérer acquises.
-- **VID-03** : migration `20260923120000_scene_comments_pagination.sql` déployée : lecture par curseur `(created_at,id)` au-delà de 1000, envoi idempotent. 9 tests SQL avant/après déploiement, 4 tests client pagination/annulation réussis ; bundle Scène reconstruit. Le client charge encore toutes les pages avant l'affichage complet ; chargement progressif à améliorer.
+- **VID-03** : migrations `20260923120000_scene_comments_pagination.sql` et `20260923160000_scene_comments_recent_page.sql` déployées. La première conserve le contrat iOS v1 ; Android utilise le contrat v2 par curseur, affiche immédiatement le premier lot puis charge la suite. Les tests SQL et client de pagination passent ; réponses et parcours Studio restent à recetter.
 - **MSG-06** : ébauches NON raccordées et NON déployées conservées dans `Docs/drafts/group-connections/*.pending`. Ne pas les appliquer sans tests de droits, intégration UI et vérification. Elles proposent liens groupe/projet sans octroi implicite d'accès et thème persistant.
 - **CAG-01 / WAV-01** : inspection reprise, aucun adaptateur métier complet livré. Référence iOS : `Meewav/Features/Rooms/Services/SupabaseRoomsRepository.swift`, `Models/CageModels.swift`. Cage utilise `rooms_cage_state_v1`, `rooms_cage_start_tournament_v3`, `rooms_cage_advance_combat_v2`, votes/incident/tick canoniques. Wave utilise `wave_acts_v1`, `wave_tracks_v1`, `wave_contributions_v1` et `wave_decide_contribution_v1`. Les RPC normalisées Web v5/v6 ne sont pas ces contrats : ne pas déclarer ces lignes terminées ni déployer un registre concurrent.
 - **Validation supplémentaire** : 4 tests d'isolation réel/démo Rooms réussis ; 5 tests Kotlin invités ajoutés. Aucun test visuel. Pas d'envoi à des utilisateurs réels. Pas de nouvelle installation Samsung de ce point de sauvegarde.
@@ -287,7 +289,7 @@ Validation de cette passe : bundles Android Market, Scène, Profil et Tremplin r
 
 - `scene_search_catalog_v1` a été validée dans une transaction annulée, puis déployée sur le projet Supabase existant ; le test SQL de recherche a réussi (3 assertions, transaction annulée). La démo locale continue d'utiliser ses médias de présentation. La recherche et ses pages suivantes consultent désormais les publications du serveur, y compris celles qui ne figurent pas dans les premières 48 vidéos chargées.
 - La publication multicam garde les deux médias privés pendant la préparation, marque la seconde caméra comme source liée et publie la vidéo principale en dernier. En cas d'erreur avant cette dernière étape, les nouveaux enregistrements sont archivés et leur stockage est supprimé au mieux ; si le nettoyage échoue, l'interface prévient que le fichier privé reste à nettoyer. Un double clic ne déclenche plus deux publications. La reprise après interruption du processus et une tâche serveur de purge des fichiers abandonnés restent à construire pour clore `VID-02`.
-- Les commentaires dépassent déjà l'ancienne limite de 1000 et le test SQL de pagination a réussi (9 assertions, transaction annulée). L'interface charge toutefois tous les lots en amont ; le chargement progressif et le tri global restent ouverts dans `VID-03`.
+- Les commentaires dépassent l'ancienne limite de 1000. Le chargement progressif et le tri récent sont implémentés et testés ; la recette en comptes réels des réponses, du tri final et du Studio reste ouverte dans `VID-03`.
 
 ### Profil public — séparation réel / démo
 
@@ -295,4 +297,22 @@ Un profil ouvert avec un identifiant canonique ne conserve plus un portrait, des
 
 ### Market — visuels temporaires du vendeur
 
-Le test SQL existant de la fondation Market passe (8 assertions, transaction annulée). Lorsqu'un vendeur abandonne un nouveau visuel importé ou le remplace avant l'enregistrement du brouillon, le client archive désormais l'enregistrement et tente aussi de retirer le fichier privé du stockage, en vérifiant son propriétaire et sa provenance Market. Les médias conservés dans une annonce ne sont pas visés. Cette récupération reste best effort : une fermeture du processus pendant l'upload ou une suppression refusée demandent encore une purge serveur des fichiers orphelins. Le brouillon reste le dernier état opérationnel ; la publication publique et les transactions ne sont pas annoncées comme terminées.
+Le test SQL existant de la fondation Market passe (8 assertions, transaction annulée). Lorsqu'un vendeur abandonne un nouveau visuel importé ou le remplace avant l'enregistrement du brouillon, le client archive désormais l'enregistrement et tente aussi de retirer le fichier privé du stockage, en vérifiant son propriétaire et sa provenance Market. Les médias conservés dans une annonce ne sont pas visés. Cette récupération reste best effort : une fermeture du processus pendant l'upload ou une suppression refusée demandent encore une purge serveur des fichiers orphelins. Le cycle de publication non financier a été ajouté ensuite, comme décrit ci-dessous.
+
+### Market — cycle non financier des annonces
+
+`marketplace_set_listing_status_v1` et `list_my_marketplace_listings_v1` ont été déployées. Le vendeur peut désormais publier un brouillon, retirer temporairement l'annonce et la remettre en ligne depuis « Mes annonces ». Le catalogue public reflète ces transitions ; les mutations vérifient la propriété, la version, l'état du vendeur, le prix principal et la couverture, avec clé d'idempotence. Les 19 assertions SQL de `marketplace-listing-lifecycle.sql` ont réussi dans une transaction annulée. Le bundle Market et l'APK ont été reconstruits, puis l'APK installé sur le Samsung ; aucun test visuel ni parcours à deux comptes n'a été réalisé. `MAR-02` reste P : édition après publication, disponibilité et recette vendeur/acheteur demandent encore du travail. Les commandes et paiements `MAR-04/05` restent sous E3.
+
+### La Scène — premier lot de commentaires sans attente globale
+
+Le contrat additif `scene_comments_recent_page_v2` a été déployé sans changer `scene_comments_page_v1`, afin de garder une entrée compatible pour iOS. L'écran Android rend le premier lot immédiatement, poursuit le chargement des pages suivantes et indique que le nombre/tri n'est pas encore complet. Les tests SQL récents couvrent 1 005 commentaires, l'ordre du premier lot, l'absence de doublon, le curseur et les droits (5 assertions) ; quatre tests client couvrent la progression, la reprise sur erreur et l'annulation. Le bundle Scène a été reconstruit. `VID-03` passe en V : les réponses, le tri final et les parcours Studio attendent la recette en comptes réels.
+
+### Entrée réelle — authentification, Globe et rooms
+
+Le test utilisateur a révélé que « Application réelle » reprenait une ancienne session locale et sautait le formulaire. `AuthViewModel.selectReal()` impose désormais une reconnexion explicite et efface localement la session précédente. La démo continue son parcours « Suivant » sans identifiants. `SOC-01` reste V jusqu'à la nouvelle recette de connexion, création de compte et retour de lien.
+
+Le moteur Globe utilisait la population générée de la démo même après une entrée réelle. Le contrat additif `globe_public_markers_v1` joint les marqueurs publics à `public_profiles` sous les règles de visibilité existantes ; seules des coordonnées grossières et les champs publics y figurent. La migration est déployée : 10 marqueurs visibles et 0 profil interdit lors de la vérification serveur. Android récupère cette projection dans le WebView local et n'active le worker de population fictive qu'en mode démo. Le Top 10 éditorial est caché en mode réel ; un marqueur réel ouvre son profil complet par UUID. Le pré-profil commun, les filtres et la pagination au-delà de 5 000 marqueurs restent dans `GLO-01/03`, et le classement réel dans `GLO-02`.
+
+Dans la room viewer connectée, la projection de base mélangeait encore la description et le titre de piste de la démo si le serveur n'en fournissait pas. Ces valeurs de secours sont supprimées. L'état initial d'une room réelle est désormais neutre pendant le chargement, et un échec ne laisse plus le host ni la piste de démonstration. Le lecteur ne démarre plus visuellement sur la seule présence d'un titre ancien : il suit l'état de lecture public. Les deux modes passent déjà par le même composant `RoomViewer`/`PlaceRoomExperience`, mais une session réelle sans flux vidéo disponible ne peut pas montrer la vidéo de démonstration. Le signalement de « l'ancien modèle » demande une nouvelle recette sur l'APK reconstruit et une vérification du flux et de l'état du live. `ROM-01/02` et `SOC-07` restent partiels.
+
+Le chargeur local du Globe accepte strictement `mode=real` ou `mode=demo` sur sa page d'entrée ; les autres paramètres d'assets restent interdits. Sans cette correction, la nouvelle URL du Globe réel pouvait être rejetée avant même la récupération des marqueurs. Les bundles Globe et Rooms ont été reconstruits, les 10 tests ciblés ont réussi et l'APK debug a été installé sur le Samsung. Aucun contrôle visuel ni connexion à un compte réel n'a été effectué.

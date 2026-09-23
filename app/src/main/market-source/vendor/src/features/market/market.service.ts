@@ -375,6 +375,26 @@ function listingDraftResult(data: unknown): MarketplaceListingDraftResult {
   return { listing_id: listingId, status: "draft", version: Number(result.version) };
 }
 
+export type MarketplaceOwnerListingSummary = {
+  id: string;
+  title: string;
+  pillar: MarketplacePillar;
+  status: "draft" | "published" | "paused";
+  version: number;
+  updatedAt: string;
+  publishedAt: string | null;
+};
+
+function listingStatusResult(data: unknown, listingId: string, status: "published" | "paused" | "archived") {
+  const result = object<Record<string, unknown>>(data, "mutation_failed");
+  if (responseUuid(result.listing_id, "mutation_failed") !== listingId
+    || result.status !== status
+    || !Number.isSafeInteger(result.version) || Number(result.version) < 1) {
+    invalidRpcResponse("mutation_failed");
+  }
+  return { listing_id: listingId, status, version: Number(result.version) };
+}
+
 function draftInteger(value: unknown, minimum: number, maximum: number) {
   if (!Number.isSafeInteger(value) || Number(value) < minimum || Number(value) > maximum) {
     invalidRpcResponse("load_failed");
@@ -1146,6 +1166,54 @@ export function createMarketplaceRepository(client: SupabaseClient = supabase) {
         invalidRpcResponse("mutation_failed");
       }
       return result;
+    },
+
+    async setListingStatus(input: {
+      listingId: string;
+      expectedVersion: number;
+      status: "published" | "paused" | "archived";
+      idempotencyKey: string;
+    }) {
+      assertUuid(input.listingId);
+      assertIdempotencyKey(input.idempotencyKey);
+      if (!Number.isSafeInteger(input.expectedVersion) || input.expectedVersion < 1) {
+        throw invalidMarketplaceRequest();
+      }
+      const { data, error } = await client.rpc("marketplace_set_listing_status_v1", {
+        p_listing_id: input.listingId,
+        p_expected_version: input.expectedVersion,
+        p_status: input.status,
+        p_idempotency_key: input.idempotencyKey.trim(),
+      });
+      if (error) throw toMarketplaceServiceError(error, "mutation_failed");
+      return listingStatusResult(data, input.listingId, input.status);
+    },
+
+    async listMyListings(limit = 100): Promise<MarketplaceOwnerListingSummary[]> {
+      if (!Number.isInteger(limit) || limit < 1 || limit > 100) throw invalidMarketplaceRequest();
+      const { data, error } = await client.rpc("list_my_marketplace_listings_v1", { p_limit: limit });
+      if (error) throw toMarketplaceServiceError(error, "load_failed");
+      return rows<unknown>(data).map((value) => {
+        const row = object<Record<string, unknown>>(value, "load_failed");
+        const id = responseUuid(row.id, "load_failed");
+        if (typeof row.title !== "string" || !row.title.trim()
+          || !["new", "used", "rental", "services", "collective"].includes(String(row.pillar))
+          || !["draft", "published", "paused"].includes(String(row.status))
+          || !Number.isSafeInteger(row.version) || Number(row.version) < 1
+          || typeof row.updated_at !== "string" || Number.isNaN(Date.parse(row.updated_at))
+          || row.published_at !== null && (typeof row.published_at !== "string" || Number.isNaN(Date.parse(row.published_at)))) {
+          invalidRpcResponse("load_failed");
+        }
+        return {
+          id,
+          title: row.title as string,
+          pillar: row.pillar as MarketplacePillar,
+          status: row.status as MarketplaceOwnerListingSummary["status"],
+          version: Number(row.version),
+          updatedAt: row.updated_at as string,
+          publishedAt: row.published_at as string | null,
+        };
+      });
     },
 
     async createRentalRequest(input: MarketplaceRentalRequestInput) {

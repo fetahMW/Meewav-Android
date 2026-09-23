@@ -15,8 +15,11 @@ async function setup(pages){
 test('loads subsequent pages with exact cursor and deduplicates records',async()=>{
  const a={id:'a'},b={id:'b'},c={id:'c'};
  const api=await setup([{data:{items:[a,b],next:{time:'2026-09-21',id:'b'}},error:null},{data:{items:[b,c],next:null},error:null}]);
- assert.deepEqual(await api.listSceneComments('media'),[a,b,c]);
- assert.equal(api.calls[1].args.p_after_id,'b');assert.equal(api.calls[1].args.p_after_time,'2026-09-21');
+ const streamed=[];
+ assert.deepEqual(await api.listSceneComments('media',undefined,(rows,hasMore)=>streamed.push({rows,hasMore})),[a,b,c]);
+ assert.deepEqual(streamed,[{rows:[a,b],hasMore:true},{rows:[a,b,c],hasMore:false}]);
+ assert.equal(api.calls[0].name,'scene_comments_recent_page_v2');
+ assert.equal(api.calls[1].args.p_before_id,'b');assert.equal(api.calls[1].args.p_before_time,'2026-09-21');
 });
 test('failed later page never returns an incomplete successful list',async()=>{
  const api=await setup([{data:{items:[{id:'a'}],next:{time:'date',id:'a'}},error:null},{data:null,error:Error('denied')}]);

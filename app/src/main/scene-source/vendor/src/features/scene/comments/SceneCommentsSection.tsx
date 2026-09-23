@@ -34,8 +34,9 @@ export default function SceneCommentsSection({ videoId, demo, onSeek, targetComm
   const readDraft = () => { try { const stored = sessionStorage.getItem(draftKey); if (!stored) return { body: "", parentId: null }; try { const parsed = JSON.parse(stored); return { body: typeof parsed.body === "string" ? parsed.body : "", parentId: typeof parsed.parentId === "string" ? parsed.parentId : null }; } catch { return { body: stored, parentId: null }; } } catch { return { body: "", parentId: null }; } };
   const restoredDraft = useRef(readDraft());
   const [lastReplyParent, setLastReplyParent] = useState<string | null>(null);
-  const [comments, setComments] = useState<SceneComment[]>([]), [loading, setLoading] = useState(true), [sort, setSort] = useState<"top" | "recent">("top");
+  const [comments, setComments] = useState<SceneComment[]>([]), [loading, setLoading] = useState(true), [loadingMore, setLoadingMore] = useState(false), [sort, setSort] = useState<"top" | "recent">("recent");
   const [draft, setDraft] = useState(restoredDraft.current.body), [replyTo, setReplyTo] = useState<SceneComment | null>(null), [pending, setPending] = useState(false), [error, setError] = useState(""), [count, setCount] = useState(12);
+  const [targetMissing, setTargetMissing] = useState(false);
   const sentinel = useRef<HTMLDivElement>(null), composer = useRef<HTMLTextAreaElement>(null);
   const loadSequence=useRef(0), loadAbort=useRef<AbortController|null>(null);
   const sendRequests=useRef(new Map<string,string>());
@@ -43,25 +44,27 @@ export default function SceneCommentsSection({ videoId, demo, onSeek, targetComm
   const refresh = async () => {
     const sequence=++loadSequence.current;
     loadAbort.current?.abort(); const controller=new AbortController();loadAbort.current=controller;
-    try { const rows=demo ? sceneCommentsRepository.list(videoId) : await listSceneComments(videoId,controller.signal);if(sequence===loadSequence.current){setComments(rows);setError("");} }
+    try { const rows=demo ? sceneCommentsRepository.list(videoId) : await listSceneComments(videoId,controller.signal,(partial,hasMore)=>{
+      if(sequence!==loadSequence.current)return;
+      setComments(partial);setLoading(false);setLoadingMore(hasMore);setError("");
+    });if(sequence===loadSequence.current){setComments(rows);setError("");} }
     catch { if(sequence===loadSequence.current&&!controller.signal.aborted)setError("Impossible de charger les commentaires. Réessaie."); }
-    finally { if(sequence===loadSequence.current)setLoading(false); }
+    finally { if(sequence===loadSequence.current){setLoading(false);setLoadingMore(false);} }
   };
-  useEffect(() => { setLoading(true);setComments([]);void refresh();
+  useEffect(() => { setLoading(true);setLoadingMore(false);setComments([]);setSort("recent");setCount(12);setTargetMissing(false);void refresh();
     return ()=>{++loadSequence.current;loadAbort.current?.abort();};
   }, [videoId, demo, viewerId]);
   useEffect(() => {
     if (restoredDraft.current.parentId && comments.length) { setReplyTo(comments.find((comment) => comment.id === restoredDraft.current.parentId) ?? null); restoredDraft.current.parentId = null; }
   }, [comments]);
-  const [targetMissing, setTargetMissing] = useState(false);
   useEffect(() => {
     if (!targetCommentId || loading) return;
     const target = comments.find((comment) => comment.id === targetCommentId);
-    if (!target) { setTargetMissing(true); return; }
+    if (!target) { if(!loadingMore)setTargetMissing(true); return; }
     setTargetMissing(false); setCount(comments.length); if (target.parentId) setLastReplyParent(target.parentId);
     const frame = requestAnimationFrame(() => { const element = document.getElementById(`scene-comment-${targetCommentId}`); element?.scrollIntoView({ block: "center" }); element?.focus({ preventScroll: true }); });
     return () => cancelAnimationFrame(frame);
-  }, [targetCommentId, loading, comments]);
+  }, [targetCommentId, loading, loadingMore, comments]);
   const roots = useMemo(() => sortCommentThreads(comments, sort), [comments, sort]);
   useEffect(() => {
     if (!sentinel.current || !window.IntersectionObserver || !window.matchMedia("(min-width: 1101px)").matches) return;
@@ -87,15 +90,16 @@ export default function SceneCommentsSection({ videoId, demo, onSeek, targetComm
     finally { setPending(false); }
   };
   return <section tabIndex={-1} id="scene-watch-comments" className="scene-inline-comments" aria-label="Commentaires">
-    <header><h2>{comments.length ? `${comments.length} commentaires` : "Commentaires"}</h2><label>Trier par <select value={sort} onChange={(e) => { setSort(e.target.value as "top" | "recent"); setCount(12); }}><option value="top">Les meilleurs</option><option value="recent">Les plus récents</option></select></label></header>
+    <header><h2>{comments.length ? `${comments.length}${loadingMore ? "+" : ""} commentaires` : "Commentaires"}</h2><label>Trier par <select value={sort} onChange={(e) => { setSort(e.target.value as "top" | "recent"); setCount(12); }}><option value="top">Les meilleurs</option><option value="recent">Les plus récents</option></select></label></header>
     {(demo || user) ? <>{demo && <p className="scene-comments-local">Discussion de démonstration · enregistrée sur cet appareil.</p>}<form className="scene-comment-composer" onSubmit={(e) => { e.preventDefault(); void submit(); }}>
       {replyTo && <div>Réponse à {replyTo.authorName} <button type="button" onClick={() => setReplyTo(null)}>Annuler</button></div>}
       <textarea ref={composer} aria-label={replyTo ? "Ta réponse" : "Ajouter un commentaire"} placeholder={replyTo ? "Ta réponse…" : "Ajouter un commentaire…"} maxLength={800} value={draft} onChange={(e) => setDraft(e.target.value)} disabled={pending} />
       <footer><span>{draft.length}/800</span><button type="button" onClick={() => { setDraft(""); setReplyTo(null); }} disabled={pending || !draft}>Annuler</button><button className="is-primary" disabled={pending || !draft.trim()}>{pending ? "Enregistrement…" : error ? "Réessayer" : replyTo ? "Répondre" : "Commenter"}</button></footer>
     </form></> : <p>Connecte-toi pour commenter cette vidéo.</p>}
-    {error && <p role="alert">{error}</p>}
+    {error && <p role="alert">{error} <button type="button" onClick={() => void refresh()}>Réessayer</button></p>}
     {targetMissing && <p role="status">Ce commentaire n’est plus disponible ou n’est pas accessible.</p>}
     {loading && <p role="status">Chargement des commentaires…</p>}
+    {loadingMore && <p role="status">Chargement des autres commentaires…{sort === "top" ? " Le classement se complète." : ""}</p>}
     {!loading && !error && roots.length === 0 && <p>Sois la première personne à commenter.</p>}
     {roots.slice(0, count).map((comment) => <Comment demo={demo} viewerId={viewerId} moderate={moderate} key={comment.id} comment={comment} replies={comments.filter((reply) => reply.parentId === comment.id)} onChange={refresh} onSeek={onSeek} revealReplies={lastReplyParent === comment.id} onReply={(item) => { setReplyTo(item); composer.current?.focus(); composer.current?.scrollIntoView({ behavior: "smooth", block: "center" }); }} />)}
     {count < roots.length && <div ref={sentinel}><button onClick={() => setCount((n) => n + 12)}>Afficher plus de commentaires</button></div>}

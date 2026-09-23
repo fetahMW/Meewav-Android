@@ -10,13 +10,14 @@ export async function sceneInteraction(action: string, mediaId: string, commentI
  if(error) throw error;
  return data;
 }
-export async function listSceneComments(mediaId:string, signal?:AbortSignal): Promise<SceneComment[]> {
+export async function listSceneComments(mediaId:string, signal?:AbortSignal,
+ onPage?: (comments:SceneComment[],hasMore:boolean)=>void): Promise<SceneComment[]> {
  const comments=new Map<string,SceneComment>();
  let cursor:{time:string;id:string}|null=null;
  const visited=new Set<string>();
  do {
   if(signal?.aborted)throw new DOMException('Cancelled','AbortError');
-  let request=supabase.rpc('scene_comments_page_v1',{p_media_id:mediaId,p_after_time:cursor?.time??null,p_after_id:cursor?.id??null,p_limit:200});
+  let request=supabase.rpc('scene_comments_recent_page_v2',{p_media_id:mediaId,p_before_time:cursor?.time??null,p_before_id:cursor?.id??null,p_limit:200});
   if(signal)request=request.abortSignal(signal);
   const {data,error}=await request;
   if(error)throw error;
@@ -24,6 +25,8 @@ export async function listSceneComments(mediaId:string, signal?:AbortSignal): Pr
   for(const comment of data.items)comments.set(comment.id,comment);
   cursor=data.next;
   if(cursor){const key=JSON.stringify(cursor);if(visited.has(key))throw Error('invalid_comments_cursor');visited.add(key);}
+  if(signal?.aborted)throw new DOMException('Cancelled','AbortError');
+  onPage?.([...comments.values()],Boolean(cursor));
  }while(cursor);
  return [...comments.values()];
 }

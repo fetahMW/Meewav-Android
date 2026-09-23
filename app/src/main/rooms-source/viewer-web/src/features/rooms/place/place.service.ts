@@ -584,7 +584,7 @@ function buildLiveState(
     id: room.id,
     source: "live",
     title: room.title,
-    description: room.description || demo.description,
+    description: room.description || "",
     status: room.status,
     startedAt: broadcast?.started_at || room.created_at,
     host,
@@ -653,7 +653,7 @@ function buildLiveState(
         ...demo.channels.find((channel) => channel.kind === "audio")!,
         participantId: host.id,
         label: "Musique",
-        detail: room.now_playing_title || "Source commune",
+        detail: visibleAudioTitle || "Source commune",
         gain: numberValue(hostMixer?.music_gain, 1),
         level: 0,
         isMuted: hostMixer?.is_music_muted === true,
@@ -661,9 +661,7 @@ function buildLiveState(
         isRoutedToPublic: hostMixer?.audio_live_enabled === true,
         signalState: hostMixer?.is_music_muted === true
           ? "muted"
-          : room.now_playing_title || room.now_playing_artist
-            ? "active"
-            : "silent",
+          : visibleAudioPlaybackState === "playing" ? "active" : "silent",
       },
       {
         ...demo.channels.find((channel) => channel.kind === "master")!,
@@ -708,14 +706,14 @@ function buildLiveState(
     },
     track: {
       ...demo.track,
-      title: visibleAudioTitle || room.now_playing_title || demo.track.title,
-      artist: visibleAudioArtist || room.now_playing_artist || host.displayName,
+      id: `room-audio-${room.id}`,
+      title: visibleAudioTitle || "",
+      artist: visibleAudioArtist || host.displayName,
       durationSeconds: numberValue(visibleAudioDuration, 0),
       currentSeconds: 0,
       bpm: undefined,
       musicalKey: undefined,
-      isPlaying: visibleAudioPlaybackState === "playing"
-        || Boolean(room.now_playing_title || room.now_playing_artist),
+      isPlaying: visibleAudioPlaybackState === "playing",
       isLooping: false,
       waveform: [],
       audioRoute: visibleAudioRoute,

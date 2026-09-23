@@ -55,7 +55,12 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import java.io.ByteArrayInputStream
 import java.io.IOException
+import java.net.HttpURLConnection
+import java.net.URL
 import org.json.JSONObject
+import org.json.JSONArray
+import com.meewav.android.BuildConfig
+import com.meewav.android.app.MeewavApplication
 import com.meewav.android.features.messaging.MessagingActivity
 import com.meewav.android.features.profile.ProfileActivity
 
@@ -152,7 +157,7 @@ private val GlobeAssets = mapOf(
 
 private class AuthGlobeController(private val fullScene: Boolean) {
     var previewMessages = false
-    private val page = if (fullScene) "$GlobeOrigin/globe-vinyle/index.html" else GlobePage
+    private val page get() = if (fullScene) "$GlobeOrigin/globe-vinyle/index.html?mode=${if (previewMessages) "demo" else "real"}" else GlobePage
     private val api = if (fullScene) "meewavFullGlobe" else "meewavAuthGlobe"
     private var view: AuthGlobeWebView? = null
     private var resumed = false
@@ -246,6 +251,11 @@ private class AuthGlobeController(private val fullScene: Boolean) {
                 }
 
                 override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse {
+                    if (fullScene && !previewMessages && request.method == "GET"
+                        && request.url.scheme == "https" && request.url.host == "appassets.androidplatform.net"
+                        && request.url.path == "/globe-vinyle/live-markers-v1.json") {
+                        return liveGlobeMarkers(context)
+                    }
                     if (fullAssets != null) return fullGlobeAsset(context, request, fullAssets)
                     val asset = permittedAsset(request.url)
                     if (request.method != "GET" || asset == null) return denied()
@@ -376,11 +386,50 @@ private class AuthGlobeController(private val fullScene: Boolean) {
     }
 }
 
+/** Synchronous only on WebView's request worker, never on the Android UI thread. */
+private fun liveGlobeMarkers(context: Context): WebResourceResponse {
+    fun response(status: Int, body: String): WebResourceResponse = WebResourceResponse(
+        "application/json", "utf-8", status, if (status == 200) "OK" else "Unavailable",
+        mapOf("Cache-Control" to "no-store", "X-Content-Type-Options" to "nosniff"),
+        ByteArrayInputStream(body.toByteArray(Charsets.UTF_8)))
+    val repository = (context.applicationContext as MeewavApplication).authRepository
+    val token = if (repository.configured) repository.auth.currentSessionOrNull()?.accessToken else null
+    if (token.isNullOrBlank()) return response(401, "{\"error\":\"authentication_required\"}")
+    return try {
+        val profiles = JSONArray()
+        var offset = 0
+        do {
+            val endpoint = BuildConfig.SUPABASE_URL.trimEnd('/') +
+                "/rest/v1/globe_public_markers_v1?select=*&order=profile_id.asc&limit=500&offset=$offset"
+            val connection = URL(endpoint).openConnection() as HttpURLConnection
+            val page = try {
+                connection.requestMethod = "GET"
+                connection.connectTimeout = 10000
+                connection.readTimeout = 15000
+                connection.setRequestProperty("apikey", BuildConfig.SUPABASE_PUBLISHABLE_KEY)
+                connection.setRequestProperty("Authorization", "Bearer $token")
+                connection.setRequestProperty("Accept", "application/json")
+                if (connection.responseCode != 200) return response(503, "{\"error\":\"profile_lookup_failed\"}")
+                JSONArray(connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() })
+            } finally { connection.disconnect() }
+            for (index in 0 until page.length()) profiles.put(page.getJSONObject(index))
+            offset += page.length()
+            if (page.length() < 500) break
+        } while (offset < 5000)
+        // Never show an incomplete population as though it were the full real Globe.
+        if (offset >= 5000) return response(503, "{\"error\":\"profile_limit_reached\"}")
+        response(200, profiles.toString())
+    } catch (_: Exception) { response(503, "{\"error\":\"profile_lookup_failed\"}") }
+}
+
 /** Only manifest-listed files in the bundled full scene can be fetched, including workers. */
 internal fun fullGlobeAsset(context: Context, request: WebResourceRequest, manifest: JSONObject): WebResourceResponse {
     val uri = request.url
+    val globeEntryMode = uri.path == "/globe-vinyle/index.html" && request.isForMainFrame &&
+        uri.encodedQuery in setOf("mode=real", "mode=demo")
     if (request.method != "GET" || uri.scheme != "https" || uri.host != "appassets.androidplatform.net" ||
-        uri.port != -1 || uri.userInfo != null || uri.encodedQuery != null || uri.encodedFragment != null) return denied()
+        uri.port != -1 || uri.userInfo != null || (uri.encodedQuery != null && !globeEntryMode) ||
+        uri.encodedFragment != null) return denied()
     val path = uri.path ?: return denied()
     if (!path.startsWith("/globe-vinyle/")) return denied()
     val asset = path.removePrefix("/globe-vinyle/")

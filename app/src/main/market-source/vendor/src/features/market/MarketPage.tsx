@@ -1565,6 +1565,7 @@ export default function MarketPage() {
       );
     }
     setDraftCenterRevision((current) => current + 1);
+    setSellerDraftsOpen(true);
     setSellerKindOverride(draft.sellerKind);
     setToast(`${draft.title} · brouillon ${editingOwnerDraft ? "mis à jour" : "enregistré"}.`);
     return { listingId: listingResult.listing_id, mode: "draft" };
@@ -1707,8 +1708,9 @@ export default function MarketPage() {
           ) : null}
           {sellerDraftsOpen ? (
             <MarketSellerDraftCenter
-              key={draftCenterRevision}
+              key={`${user?.id ?? "signed-out"}:${draftCenterRevision}`}
               enabled={marketLive.active && Boolean(user)}
+              onCatalogChanged={() => { void marketLive.refresh(); }}
               onResume={(draft) => {
                 listingIdempotencyKeyRef.current = null;
                 listingUploadCacheRef.current.clear();

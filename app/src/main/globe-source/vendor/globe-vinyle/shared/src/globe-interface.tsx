@@ -23,7 +23,7 @@ const load = (key: string, fallback: any) => { try { return JSON.parse(localStor
 const persist = (key: string, value: any) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* Optional local preferences. */ } };
 const names: Record<string, string> = { "/messages": "Messagerie", "/rooms/home": "Rooms", "/scene": "La Scène", "/market": "Marketplace", "/tremplin": "Tremplin", "/profile": "Profil" };
 
-export function GlobeInterface({ ready, data, engine, navigate, selection }: any) {
+export function GlobeInterface({ ready, data, engine, navigate, selection, realMode = false }: any) {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -232,10 +232,17 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
     return () => window.removeEventListener('meewav:ring-portrait-select', selectPortrait);
   }, []);
   useEffect(() => {
-    const selectAvatar = (event: Event) => setGroundAvatar((event as CustomEvent).detail || null);
+    const selectAvatar = (event: Event) => {
+      const avatar = (event as CustomEvent).detail;
+      if (realMode && avatar?.live && /^[\da-f-]{36}$/i.test(avatar.id)) {
+        window.location.assign(`/native/profile?route=${encodeURIComponent(`/profile/view/${avatar.id}`)}`);
+        return;
+      }
+      setGroundAvatar(realMode ? null : avatar || null);
+    };
     window.addEventListener('meewav:ground-avatar-select', selectAvatar);
     return () => window.removeEventListener('meewav:ground-avatar-select', selectAvatar);
-  }, []);
+  }, [realMode]);
   const goPosition = () => {
     if (!ready) return;
     const charonne = data.sectors.features.find((feature: any) => feature.id === CHARONNE_ID);
@@ -270,7 +277,7 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
     setTopTenRequested(true);
   };
   return <>
-    {ready && mode === 'globe' && <button className="ring-explore-button ring-key-surface" type="button"
+    {ready && !realMode && mode === 'globe' && <button className="ring-explore-button ring-key-surface" type="button"
       aria-label="Explorer les artistes légendaires" onClick={() => engine.current.enterRing()}>
       <Orbit className="ring-explore-icon" size={18} aria-hidden="true" />
       <span>Explorer les artistes<span className="ring-explore-detail"> légendaires</span></span>
@@ -310,7 +317,7 @@ export function GlobeInterface({ ready, data, engine, navigate, selection }: any
     {ready && mode !== "ring" && groundAvatar && <RingPreProfileBoundary key={groundAvatar.id} onClose={closeGroundAvatar}>
         <GroundArtistPreProfile selection={groundAvatar} onClose={closeGroundAvatar} />
     </RingPreProfileBoundary>}
-    {ready && mode === "globe" && <div className="globe-honors-dock">
+    {ready && !realMode && mode === "globe" && <div className="globe-honors-dock">
       {topTenVisible && <NationalTopTen openRequested={topTenRequested} canOpen={() => !engine.current?.isMoving()} onOpenHandled={() => setTopTenRequested(false)} />}
     </div>}
     <aside className="reference-rail"><GlobeNavigationPole onGlobe={goGlobe} onNavigate={openDestination} /></aside>

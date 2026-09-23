@@ -249,8 +249,11 @@ function createHoverCard(host) {
   };
 }
 
-export function createGroundAvatars(host, sectors, communes, invalidate, camera, align = null, landmarkDepthAt = null) {
-  const population = createParisAvatarPopulation(sectors, communes, { eager: false });
+export function createGroundAvatars(host, sectors, communes, invalidate, camera, align = null, landmarkDepthAt = null, liveMarkers = null) {
+  const realMode = liveMarkers !== null;
+  const population = realMode
+    ? { total: () => liveMarkers.length, quota: () => 0, cityTotal: () => 0, ensureQuartier: () => {} }
+    : createParisAvatarPopulation(sectors, communes, { eager: false });
   const availableIcons = new Set();
   const pinLayer = createPinLayer(host);
   const sprites = createGroundAvatarSprites();
@@ -274,10 +277,10 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
   let disposed = false;
   let paintState = null;
   let contentGeneration = 0;
-  const populationWorker = new Worker(new URL('./avatar-population-worker.js', import.meta.url), { type: 'module' });
+  const populationWorker = realMode ? null : new Worker(new URL('./avatar-population-worker.js', import.meta.url), { type: 'module' });
   const pendingZones = new Set(), failedZones = new Set();
   let searchId = 0, pendingSearch = null, workerFailed = false;
-  populationWorker.onmessage = ({ data }) => {
+  if (populationWorker) populationWorker.onmessage = ({ data }) => {
     if (disposed) return;
     if (data.type === 'search') {
       if (data.id === searchId) { pendingSearch?.(data.hits); pendingSearch = null; }
@@ -296,13 +299,13 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
     rebuildCounts();
     invalidate();
   };
-  populationWorker.onerror = event => {
+  if (populationWorker) populationWorker.onerror = event => {
     workerFailed = true;
     pendingZones.clear();
     pendingSearch?.([]); pendingSearch = null;
     console.warn('Préparation des avatars interrompue :', event.message);
   };
-  populationWorker.postMessage({ type: 'init', sectors, communes });
+  populationWorker?.postMessage({ type: 'init', sectors, communes });
 
   function prepareAvatar(avatar) {
     const metres = (avatar.cityId === PARIS_CITY_ID ? quartierHeight(avatar.zoneId) : 0.18) + LIFT_METRES;
@@ -313,12 +316,18 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
     avatar.pass = true;
   }
 
+  if (realMode) {
+    for (const marker of liveMarkers) prepareAvatar(marker);
+    byZone.set('__live__', liveMarkers);
+  }
+
   function loadZone(zoneId) {
+    if (realMode) return byZone.get('__live__') || [];
     if (!zoneId) return [];
     if (byZone.has(zoneId)) return byZone.get(zoneId);
     if (!pendingZones.has(zoneId) && !failedZones.has(zoneId) && !workerFailed) {
       pendingZones.add(zoneId);
-      populationWorker.postMessage({ type: 'zone', zoneId });
+      populationWorker?.postMessage({ type: 'zone', zoneId });
     }
     return [];
   }
@@ -378,6 +387,7 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
   }
 
   function resolveZone(preferredId) {
+    if (realMode) return '__live__';
     if (preferredId) {
       const list = loadZone(preferredId);
       return list.length ? preferredId : '';
@@ -599,6 +609,7 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
         detail: {
           id: avatar.id, name: avatar.name, role: avatar.role, icon: avatar.icon,
           zoneName: avatar.zoneName, city: avatar.city, grade: avatar.grade, isHost: avatar.isHost,
+          live: avatar.live === true,
           wasConsulted: selectedRestore,
           lon: avatar.lon, lat: avatar.lat, zoneId: avatar.zoneId,
           anchor: {
@@ -636,13 +647,22 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
       pendingSearch = null;
       const id = ++searchId;
       if (disposed || workerFailed) return Promise.resolve([]);
+      if (realMode) {
+        const query = String(needle).trim().toLocaleLowerCase('fr-FR');
+        return Promise.resolve(query ? liveMarkers.filter(avatar => avatar.pass
+          && `${avatar.name} ${avatar.role} ${avatar.city}`.toLocaleLowerCase('fr-FR').includes(query))
+          .slice(0, 8).map(avatar => ({ id: avatar.id, name: avatar.name,
+            subtitle: `${avatar.role} · ${avatar.zoneName || avatar.city}`, avatar: true,
+            zoneId: avatar.zoneId, cityId: avatar.cityId,
+            target: { lon: avatar.lon, lat: avatar.lat, height: 0.03, pitch: 0 } })) : []);
+      }
       if (!String(needle).trim()) {
-        populationWorker.postMessage({ type: 'cancel-search' });
+        populationWorker?.postMessage({ type: 'cancel-search' });
         return Promise.resolve([]);
       }
       return new Promise(resolve => {
         pendingSearch = resolve;
-        populationWorker.postMessage({ type: 'search', id, query: needle,
+        populationWorker?.postMessage({ type: 'search', id, query: needle,
           preferredZones: [...byZone.keys()],
           roles: [...filters.roles], grades: [...filters.grades], hideConsulted: filters.hideConsulted,
           pinned: [...pinned.keys()], consulted: [...consulted], selectedId });
@@ -653,7 +673,7 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
     adoptQuartiers(features) {
       if (!Array.isArray(features) || !features.length) return;
       for (const feature of features) population.ensureQuartier(feature);
-      populationWorker.postMessage({ type: 'quarters', features });
+      populationWorker?.postMessage({ type: 'quarters', features });
       rebuildCounts();
       if (showing) invalidate();
     },
@@ -690,7 +710,7 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
     render(renderer) { sprites.render(renderer); },
     dispose() {
       disposed = true;
-      populationWorker.terminate();
+      populationWorker?.terminate();
       pendingZones.clear();
       pendingSearch?.([]); pendingSearch = null;
       window.removeEventListener('meewav:filters-change', onFilters);

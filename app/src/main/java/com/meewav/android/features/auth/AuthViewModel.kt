@@ -58,11 +58,14 @@ class AuthViewModel(private val repository: MeewavAuthRepository, preview: Boole
     val state = mutable.asStateFlow()
     private var recoveryInProgress = false
     private var routedUserId: String? = null
+    // Choosing the real application is an explicit login boundary. An old
+    // encrypted session must not skip the form or open the Globe by itself.
+    private var explicitLoginRequired = false
 
     init {
         if (repository.configured) viewModelScope.launch {
             repository.auth.sessionStatus.collect { status ->
-                if (state.value.localPreview || !state.value.modeSelected) return@collect
+                if (state.value.localPreview || !state.value.modeSelected || explicitLoginRequired) return@collect
                 when (status) {
                     is SessionStatus.Authenticated -> {
                         // Refreshes must not reset the current screen or an OAuth draft.
@@ -132,6 +135,7 @@ class AuthViewModel(private val repository: MeewavAuthRepository, preview: Boole
     fun selectReal() {
         if (state.value.busy) return
         routedUserId = null
+        explicitLoginRequired = true
         mutable.update { AuthUiState(configured = repository.configured, initializing = repository.configured,
             modeSelected = true, localPreview = false) }
         if (!repository.configured) return
@@ -139,8 +143,11 @@ class AuthViewModel(private val repository: MeewavAuthRepository, preview: Boole
             try {
                 repository.auth.awaitInitialization()
                 if (state.value.localPreview || !state.value.modeSelected) return@launch
-                if (repository.auth.currentSessionOrNull() != null) routeAuthenticated()
-                else mutable.update { it.copy(initializing = false) }
+                // Sign out locally so registration and every feature start
+                // from the account deliberately entered on this device.
+                if (repository.auth.currentSessionOrNull() != null) repository.signOut()
+                mutable.update { it.copy(initializing = false, page = AuthPage.Login,
+                    authenticated = false, onboardingComplete = false) }
             } catch (cancel: CancellationException) { throw cancel }
             catch (error: Exception) { mutable.update { it.copy(initializing = false,
                 error = MeewavAuthRepository.messageFor(error)) } }
@@ -231,7 +238,7 @@ class AuthViewModel(private val repository: MeewavAuthRepository, preview: Boole
         }
         execute {
             when (draft.page) {
-                AuthPage.Login -> { repository.signIn(draft.email, draft.password); routeAuthenticated() }
+                AuthPage.Login -> { repository.signIn(draft.email, draft.password); explicitLoginRequired = false; routeAuthenticated() }
                 AuthPage.Location -> {
                     val avatar = AvatarCatalog.find(draft.profile.avatarIcon)
                     val registration = RegistrationProfile(draft.username, avatar.icon, avatar.name,
@@ -247,6 +254,7 @@ class AuthViewModel(private val repository: MeewavAuthRepository, preview: Boole
                     if (draft.authenticated) repository.completeRegistration(registration)
                     else repository.signUp(registration, draft.email, draft.password)
                     if (repository.auth.currentSessionOrNull() != null) {
+                        explicitLoginRequired = false
                         routeAuthenticated()
                         mutable.update { it.copy(page = AuthPage.Preview) }
                     }
@@ -279,6 +287,7 @@ class AuthViewModel(private val repository: MeewavAuthRepository, preview: Boole
             try {
                 repository.auth.awaitInitialization()
                 repository.exchangeCode(callback.code)
+                explicitLoginRequired = false
                 routeAuthenticated()
             } catch (error: Exception) {
                 recoveryInProgress = false
@@ -301,6 +310,7 @@ class AuthViewModel(private val repository: MeewavAuthRepository, preview: Boole
     fun signOut() = execute {
         repository.signOut()
         routedUserId = null
+        explicitLoginRequired = false
         recoveryInProgress = false
         mutable.update { AuthUiState(initializing = false, configured = repository.configured,
             modeSelected = !BuildConfig.DEBUG) }
