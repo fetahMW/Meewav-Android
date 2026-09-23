@@ -787,7 +787,7 @@ export function useMessagingLive({
   }, [active, repository]);
 
   const searchContacts = useCallback(async (query: string) => {
-    const normalized = query.trim();
+    const normalized = query.trim().replace(/^@/, "");
     const requestId = ++contactRequestRef.current;
     if (!active || normalized.length < 2) {
       setContacts([]);

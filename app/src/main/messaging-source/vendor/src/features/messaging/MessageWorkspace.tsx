@@ -1498,7 +1498,8 @@ function NewConversationDialog({
   > | null;
 }) {
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<string[]>([]);
+  const [selectedContacts, setSelectedContacts] = useState<DemoContact[]>([]);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
   const groupAttemptRef = useRef<{ signature: string; idempotencyKey: string } | null>(null);
@@ -1507,19 +1508,30 @@ function NewConversationDialog({
   const liveMode = Boolean(live);
   const contacts = live ? (live.contacts ?? []) : demoContacts;
   const visible = live
-    ? contacts
+    ? search.trim().replace(/^@/, "").length >= 2 ? contacts : []
     : demoContacts.filter((contact) => `${contact.displayName} ${contact.role} ${contact.username}`.toLowerCase().includes(search.toLowerCase()));
 
   useEffect(() => {
     if (!liveMode || !searchContactsRef.current) return undefined;
+    if (search.trim().replace(/^@/, "").length < 2) {
+      void searchContactsRef.current(search);
+      return undefined;
+    }
+    void searchContactsRef.current("");
     const timer = window.setTimeout(() => { void searchContactsRef.current?.(search); }, 250);
     return () => window.clearTimeout(timer);
   }, [liveMode, search]);
 
-  const toggle = (id: string) => setSelected((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+  const toggle = (contact: DemoContact) => {
+    setSubmitError(null);
+    setSelectedContacts((current) => current.some((item) => item.id === contact.id)
+      ? current.filter((item) => item.id !== contact.id)
+      : [...current, contact]);
+  };
   const create = async () => {
     if (submittingRef.current) return;
-    const contactsSelected = contacts.filter((contact) => selected.includes(contact.id));
+    const contactsSelected = selectedContacts;
+    if (contactsSelected.length === 0) return;
     submittingRef.current = true;
     setSubmitting(true);
     try {
@@ -1527,6 +1539,7 @@ function NewConversationDialog({
         if (contactsSelected.length === 1 && live.createDirectConversation) {
           const conversationId = await live.createDirectConversation(contactsSelected[0].id);
           if (conversationId) { window.dispatchEvent(new Event('meewav:messaging-detail')); onClose(); }
+          else setSubmitError("La discussion n’a pas pu être ouverte. Réessaie.");
           return;
         }
         if (contactsSelected.length > 1 && live.createGroupConversation) {
@@ -1545,6 +1558,7 @@ function NewConversationDialog({
             groupAttemptRef.current.idempotencyKey,
           );
           if (conversationId) { window.dispatchEvent(new Event('meewav:messaging-detail')); onClose(); }
+          else setSubmitError("Le groupe n’a pas pu être créé. Réessaie.");
         }
         return;
       }
@@ -1591,22 +1605,24 @@ function NewConversationDialog({
 
   return (
     <Overlay label="Nouvelle conversation" onClose={onClose}>
-      <header className="mw-dialog__header"><div><span>NOUVELLE CONVERSATION</span><h2>Choisis tes artistes</h2></div><button type="button" className="mw-icon-button" onClick={onClose} aria-label="Fermer"><X /></button></header>
-      <label className="mw-dialog-search"><Search /><input autoFocus value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Rechercher un contact..." /></label>
-      {selected.length > 0 && <div className="mw-selected-contacts">{contacts.filter((contact) => selected.includes(contact.id)).map((contact) => <button type="button" key={contact.id} onClick={() => toggle(contact.id)}><ConversationAvatar conversation={{ avatar: contact.avatar, online: contact.online }} small /><span>{contact.displayName.split(" ")[0]}</span><X /></button>)}</div>}
+      <header className="mw-dialog__header"><div><span>NOUVELLE CONVERSATION</span><h2>Trouver un ami</h2></div><button type="button" className="mw-icon-button" onClick={onClose} aria-label="Fermer"><X /></button></header>
+      <label className="mw-dialog-search"><Search /><input autoFocus value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nom ou @identifiant" aria-label="Rechercher un ami sur Meewav" /></label>
+      {selectedContacts.length > 0 && <div className="mw-selected-contacts">{selectedContacts.map((contact) => <button type="button" key={contact.id} onClick={() => toggle(contact)}><ConversationAvatar conversation={{ avatar: contact.avatar, online: contact.online }} small /><span>{contact.displayName.split(" ")[0]}</span><X /></button>)}</div>}
       <div className="mw-contact-picker">
+        {live && search.trim().replace(/^@/, "").length < 2 && <div className="mw-list-empty"><Search /><strong>Retrouve tes amis sur Meewav</strong><span>Saisis au moins deux lettres de leur nom ou de leur identifiant.</span></div>}
         {live?.contactsStatus === "loading" && <div className="mw-list-empty"><Search /><strong>Recherche en cours…</strong></div>}
         {live?.contactsStatus === "error" && <div className="mw-list-empty"><Info /><strong>Recherche indisponible</strong><span>{live.contactsError}</span></div>}
         {visible.map((contact) => (
-          <button type="button" key={contact.id} className={selected.includes(contact.id) ? "is-selected" : ""} onClick={() => toggle(contact.id)}>
+          <button type="button" key={contact.id} className={selectedContacts.some((item) => item.id === contact.id) ? "is-selected" : ""} onClick={() => toggle(contact)}>
             <ConversationAvatar conversation={{ avatar: contact.avatar, online: contact.online }} />
             <span><strong>{contact.displayName}</strong><small>{contact.username.startsWith("@") ? contact.username : `@${contact.username}`} · {contact.role}</small></span>
-            <i>{selected.includes(contact.id) && <Check />}</i>
+            <i>{selectedContacts.some((item) => item.id === contact.id) && <Check />}</i>
           </button>
         ))}
-        {live && search.trim().length >= 2 && live.contactsStatus === "ready" && visible.length === 0 && <div className="mw-list-empty"><Search /><strong>Aucun artiste trouvé</strong></div>}
+        {live && search.trim().replace(/^@/, "").length >= 2 && live.contactsStatus === "ready" && visible.length === 0 && <div className="mw-list-empty"><Search /><strong>Aucun ami trouvé</strong></div>}
       </div>
-      <footer className="mw-dialog__footer"><button type="button" disabled={submitting} onClick={onClose}>Annuler</button><button type="button" className="is-primary" disabled={selected.length === 0 || submitting} onClick={() => void create()}>{submitting ? "Création…" : selected.length > 1 ? <><Users /> Créer groupe</> : <><Send /> Suivant</>}</button></footer>
+      {submitError && <p className="mw-contact-picker-error" role="alert">{submitError}</p>}
+      <footer className="mw-dialog__footer"><button type="button" disabled={submitting} onClick={onClose}>Annuler</button><button type="button" className="is-primary" disabled={selectedContacts.length === 0 || submitting} onClick={() => void create()}>{submitting ? "Ouverture…" : selectedContacts.length > 1 ? <><Users /> Créer groupe</> : <><Send /> Ouvrir la discussion</>}</button></footer>
     </Overlay>
   );
 }
@@ -2907,7 +2923,7 @@ export default function MessageWorkspace({
     const isLoading = liveController?.inboxStatus === "loading";
     const loadError = liveController?.inboxError;
     return (
-      <section className="mw-workspace">
+      <section className="mw-workspace is-empty">
         <header className="mw-chat-header">
           <span className="mw-chat-header__brand"><MeewavPillarBrand pillar="Messagerie" /></span>
           <MeewavPillarTabs className="messaging-pillar-tabs is-fine-indicator" items={messagingSpaces}
@@ -2916,11 +2932,12 @@ export default function MessageWorkspace({
         <aside className="mw-conversation-rail"><div className="mw-list-empty">Aucune conversation</div></aside>
         <section className="mw-chat-scene mw-empty-workspace">
           <MessageSquareIcon />
-          <h2>{isLoading ? "Chargement de tes conversations…" : loadError ? "Impossible de charger la messagerie" : "Aucune conversation"}</h2>
+          <h2>{isLoading ? "Chargement de tes conversations…" : loadError ? "Impossible de charger la messagerie" : "Aucune conversation pour le moment"}</h2>
+          {!isLoading && !loadError && <p>Retrouve un ami sur Meewav pour commencer à échanger.</p>}
           {loadError && <span role="alert">{loadError}</span>}
           {loadError
             ? <button type="button" onClick={() => void liveController?.retryInbox()}><Search /> Réessayer</button>
-            : !isLoading && <button type="button" onClick={() => setShowNewConversation(true)}><UserPlus /> Nouvelle conversation</button>}
+            : !isLoading && <button type="button" onClick={() => setShowNewConversation(true)}><UserPlus /> Trouver un ami</button>}
         </section>
         {showNewConversation && <NewConversationDialog conversations={workspaceConversations} live={liveController} onClose={() => setShowNewConversation(false)} onCreate={createConversation} />}
         {(notice || liveController?.actionError) && <div className="mw-notice" role="status"><span>{notice ?? liveController?.actionError}</span><button type="button" onClick={() => { setNotice(null); liveController?.clearActionError?.(); }} aria-label="Fermer"><X /></button></div>}

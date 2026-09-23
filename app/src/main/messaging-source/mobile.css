@@ -141,7 +141,12 @@ button:disabled { opacity: .4; cursor: default; }
 #root .mobile-messaging .mwp-project-workspace, #root .mobile-messaging .agw { width: 100%; height: 100%; min-width: 0; }
 #root .mobile-messaging .mwp-project-detail__content { min-width: 0; overflow: auto; padding: 12px; }
 #root .mobile-messaging .mwp-project-floating-controls { position: relative; inset: auto; padding: 8px; width: 100%; }
-#root .mobile-messaging .mw-empty-workspace { display: grid; padding: 24px; text-align: center; }
+#root .mobile-messaging .mw-workspace.is-empty .mw-conversation-rail { display: none; }
+#root .mobile-messaging .mw-empty-workspace { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 12px; padding: 24px 24px 100px; text-align: center; }
+#root .mobile-messaging .mw-empty-workspace > svg { width: 34px; height: 34px; color: #bda3e5; }
+#root .mobile-messaging .mw-empty-workspace h2 { max-width: 290px; font-size: 21px; line-height: 1.2; color: #f3f0f7; }
+#root .mobile-messaging .mw-empty-workspace p { max-width: 280px; margin: 0 0 6px; color: #aaa5b3; font-size: 14px; line-height: 1.45; }
+#root .mobile-messaging .mw-empty-workspace button { min-height: 48px; padding: 0 18px; border: 1px solid #8b69c866; border-radius: 15px; background: linear-gradient(135deg,#5137a1,#6846b1); color: #fff; font-weight: 600; box-shadow: 0 10px 24px #1b0f3c55; }
 .mw-overlay { padding: 10px !important; align-items: flex-end !important; }
 .mw-overlay > :is(section,div), .mw-layer > :is(section,div) { max-width: calc(100vw - 20px); max-height: calc(100dvh - 20px); }
 .mw-overlay :is(input,textarea,select), .mw-layer :is(input,textarea,select) { font-size: 16px; }
@@ -222,6 +227,7 @@ button:disabled { opacity: .4; cursor: default; }
 .mw-dialog[aria-label='Nouvelle conversation'] .mw-contact-picker small { font-size: 11px; }
 .mw-dialog[aria-label='Nouvelle conversation'] .mw-contact-picker > button.is-selected { background: #5137a122; border-color: #7960b2; }
 .mw-dialog[aria-label='Nouvelle conversation'] .mw-contact-picker > button.is-selected > i { background: #5137a1; border-color: #bda3e5; }
+.mw-dialog[aria-label='Nouvelle conversation'] .mw-contact-picker-error { margin: 0; color: #f6b8bf; font-size: 12px; line-height: 1.35; }
 .mw-dialog[aria-label='Nouvelle conversation'] .mw-dialog__footer { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0; padding: 12px 0 0; border-top: 1px solid #ffffff12; }
 .mw-dialog[aria-label='Nouvelle conversation'] .mw-dialog__footer button { height: 46px; padding: 0 12px; border: 1px solid #7960b244; border-radius: 14px; font-size: 14px; background: #15101f; }
 .mw-dialog[aria-label='Nouvelle conversation'] .mw-dialog__footer button.is-primary { background: #5137a1; }
