@@ -35,6 +35,7 @@ internal class RoomsAudioSession(private val context: Context, private val repos
     private var rtc: RTCRoom? = null
     private var microphone: WaveMicrophone? = null
     private var output: WaveLiveOutput? = null
+    private var localMonitor: WaveLocalVocalMonitor? = null
     private var sender: Thread? = null
     @Volatile private var sending = false
     private var job: Job? = null
@@ -102,6 +103,7 @@ internal class RoomsAudioSession(private val context: Context, private val repos
         settings = vocal; musicPublic = publicMusic; musicGain = gain
         deckPublic = publicDeck; deckGain = productionGain
         microphone?.settings = vocal
+        localMonitor?.enabled = vocal.monitoring
         output?.let {
             it.musicPublic = publicMusic; it.musicGain = gain
             it.production.enabled = publicDeck; it.production.gain = productionGain
@@ -186,7 +188,9 @@ internal class RoomsAudioSession(private val context: Context, private val repos
                     output = live; audio?.liveOutput = live
                     // Other Rooms have no Wave composition engine. Render their processed
                     // microphone and mixer deck directly into the same public PCM bus.
-                    startSender(sdk, live.bus, epoch, if (audio == null) live else null)
+                    val standalone = if (audio == null) live else null
+                    if (standalone != null) localMonitor = WaveLocalVocalMonitor(context).also { it.enabled = settings.monitoring }
+                    startSender(sdk, live.bus, epoch, standalone)
                 } else if (selected == RoomsAudioMode.INTERNAL) {
                     requireOk(sdk.muteAudioCapture(settings.mute), "Mute micro")
                     requireOk(sdk.setCaptureVolume((settings.gain * 100).toInt()), "Gain micro")
@@ -257,6 +261,7 @@ internal class RoomsAudioSession(private val context: Context, private val repos
                 if (standalone != null) {
                     program!!.fill(0f); monitor!!.fill(0f)
                     standalone.render(standalone.microphone.read(), program, monitor)
+                    localMonitor?.offer(monitor)
                 }
                 val packet = bus.poll()
                 // Silence is normal while the host pauses, is muted or waits for the next pad.
@@ -289,7 +294,8 @@ internal class RoomsAudioSession(private val context: Context, private val repos
         runCatching { rtc?.publishStreamAudio(false) }
         runCatching { stopCamera() }
         sending = false; sender?.interrupt()
-        withContext(Dispatchers.IO) { sender?.join(); microphone?.close() }
+        withContext(Dispatchers.IO) { sender?.join(); localMonitor?.close(); microphone?.close() }
+        localMonitor = null
         sender = null; microphone = null; output?.bus?.clear(); output = null
         runCatching { engine?.stopAudioCapture() }
         runCatching { rtc?.leaveRoom() }; runCatching { rtc?.destroy() }; rtc = null

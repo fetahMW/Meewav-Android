@@ -47,6 +47,22 @@ class WavePerformanceBusTest {
         output.render(FloatArray(960) { .2f }, FloatArray(960) { .4f }, monitor)
         assertEquals((.2f * 32767).toInt(), ByteBuffer.wrap(bus.poll()!!).order(ByteOrder.LITTLE_ENDIAN).short.toInt())
     }
+    @Test fun `processed vocal enters private monitor when enabled`() {
+        val mic = WaveMicrophone { error(it) }
+        mic.settings = WaveVocalSettings(mute = false, gain = .5f, monitoring = true)
+        val bus = WavePerformanceBus(); val output = WaveLiveOutput(mic, bus)
+        val monitor = FloatArray(960)
+
+        output.render(FloatArray(960) { .2f }, FloatArray(960), monitor)
+
+        assertEquals(.1f, monitor[0], .0001f)
+        assertEquals((.1f * 32767).toInt(), ByteBuffer.wrap(bus.poll()!!)
+            .order(ByteOrder.LITTLE_ENDIAN).short.toInt())
+        mic.settings = mic.settings.copy(monitoring = false)
+        monitor.fill(0f)
+        output.render(FloatArray(960) { .2f }, FloatArray(960), monitor)
+        assertTrue(monitor.all { it == 0f })
+    }
     @Test fun `imported production joins after voice processing only when routed public`() {
         val mic = WaveMicrophone { error(it) }
         val bus = WavePerformanceBus(); val output = WaveLiveOutput(mic, bus)

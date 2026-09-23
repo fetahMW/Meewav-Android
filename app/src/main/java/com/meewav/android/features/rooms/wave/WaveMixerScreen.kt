@@ -225,7 +225,9 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     var audioMuted by remember { mutableStateOf(false) }
     // FX.
     var isPro by remember { mutableStateOf(false) }
-    var monitoring by remember { mutableStateOf(false) }
+    var monitoring by remember(context, liveRoomId) {
+        mutableStateOf(liveRoomId != null && WaveLocalVocalMonitor.hasHeadphones(context))
+    }
     var autotuneOn by remember { mutableStateOf(false) }
     var reverbOn by remember { mutableStateOf(false) }
     var reverbValue by remember { mutableStateOf(0.15f) }
@@ -376,7 +378,6 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                         .padding(top = 8.dp)
                         .height(49.dp)
                 )
-                WaveLiveAudioControl(liveAudio, Modifier.padding(horizontal = 16.dp))
                 Box(
                     Modifier
                         .fillMaxWidth()
