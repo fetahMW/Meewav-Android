@@ -77,7 +77,7 @@ export default function RoomsPage() {
     />
     {roomNotice ? <aside className="rooms-page__notice" role="status"><span>{roomNotice}</span><button aria-label="Fermer" onClick={() => setRoomNotice('')}><X size={16} /></button></aside> : null}
   </div>;
-  return <>{viewer}<div className="rooms-page" hidden={!!viewing}>
+  return <>{viewer}<div className={`rooms-page${demoMode ? ' rooms-page--demo' : ''}`} hidden={!!viewing}>
     <div className="rooms-page__background" aria-hidden="true"
       style={{ backgroundImage: `url('/images/meewav-acoustic-violet-background.png')` }} />
     <header className="rooms-topbar">

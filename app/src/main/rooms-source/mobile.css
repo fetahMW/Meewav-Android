@@ -403,6 +403,129 @@ body:has(.rooms-launch-page) > .feature-dock-host { display:none!important; }
 #root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__audience,
 #root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__duration { font-size: .6rem; padding: .22rem .4rem; }
 
+/* Essai sur la Cage de démonstration : la vidéo occupe toute la carte. */
+#root .rooms-page--demo .rooms-home-card--cage .rooms-home-card__action {
+  display: block;
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 1.3;
+}
+#root .rooms-page--demo .rooms-home-card--cage.rooms-home-card--vertical-media .rooms-home-card__action {
+  aspect-ratio: .65;
+}
+#root .rooms-page--demo .rooms-home-card--cage .rooms-home-card__media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  aspect-ratio: auto;
+  border: 0;
+}
+#root .rooms-page--demo .rooms-home-card--cage .rooms-home-card__vertical-ambient,
+#root .rooms-page--demo .rooms-home-card--cage .rooms-home-card__vertical-stage::before,
+#root .rooms-page--demo .rooms-home-card--cage .rooms-home-card__vertical-stage::after { display: none; }
+#root .rooms-page--demo .rooms-home-card--cage .rooms-home-card__vertical-window {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  border: 0;
+  box-shadow: none;
+}
+#root .rooms-page--demo .rooms-home-card--cage .rooms-home-card__media-shade {
+  background: linear-gradient(180deg,
+    rgba(1, 2, 5, .30) 0%,
+    rgba(1, 2, 5, .04) 30%,
+    rgba(1, 2, 5, .16) 49%,
+    rgba(1, 2, 5, .68) 73%,
+    rgba(1, 2, 5, .94) 100%);
+}
+#root .rooms-page--demo .rooms-home-card--cage .rooms-home-card__body {
+  position: absolute;
+  z-index: 4;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  gap: .25rem;
+  padding: .7rem .76rem .78rem;
+  overflow: hidden;
+  isolation: auto;
+  background: transparent;
+  box-shadow: none;
+}
+#root .rooms-page--demo .rooms-home-card--cage .rooms-home-card__body::before { display: none; }
+#root .rooms-page--demo .rooms-home-card--cage .rooms-home-card__title {
+  block-size: auto;
+  margin: 0;
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, .72);
+}
+#root .rooms-page--demo .rooms-home-card--cage .rooms-home-card__host {
+  margin: 0;
+  color: rgba(244, 240, 249, .9);
+  text-shadow: 0 1px 7px rgba(0, 0, 0, .7);
+}
+#root .rooms-page--demo .rooms-home-card--cage .rooms-home-card__host-name { color: inherit; }
+#root .rooms-page--demo .rooms-home-card--cage .rooms-home-card__room-type,
+#root .rooms-page--demo .rooms-home-card--cage .rooms-home-card__city {
+  position: absolute;
+  z-index: 4;
+  top: .62rem;
+  margin: 0;
+  border-radius: 999px;
+  background: rgba(8, 8, 12, .56);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+}
+#root .rooms-page--demo .rooms-home-card--cage .rooms-home-card__room-type { left: .65rem; }
+#root .rooms-page--demo .rooms-home-card--cage .rooms-home-card__city {
+  right: .65rem;
+  max-width: 42%;
+  padding: .23rem .46rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .18);
+  color: #f5f2f8;
+  font-size: .64rem;
+  text-overflow: ellipsis;
+}
+#root .rooms-page--demo .rooms-home-card--cage .rooms-home-card__audience,
+#root .rooms-page--demo .rooms-home-card--cage .rooms-home-card__duration {
+  bottom: 5.6rem;
+  background: rgba(7, 7, 11, .48);
+}
+@media (max-width: 580px) {
+  #root .rooms-page--demo .rooms-home-card--cage.rooms-home-card--vertical-media {
+    --rooms-home-card-width: calc(min(79vw, 20rem) / 2);
+  }
+  #root .rooms-page--demo .rooms-home-card--featured.rooms-home-card--cage.rooms-home-card--vertical-media {
+    --rooms-home-card-width: calc(min(87vw, 24rem) / 2);
+  }
+  #root .rooms-page--demo .rooms-home-card--cage.rooms-home-card--vertical-media .rooms-home-card__title {
+    display: block;
+    overflow: hidden;
+    font-size: .84rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  #root .rooms-page--demo .rooms-home-card--cage.rooms-home-card--vertical-media .rooms-home-card__body {
+    padding: .55rem .57rem .65rem;
+  }
+  #root .rooms-page--demo .rooms-home-card--cage.rooms-home-card--vertical-media .rooms-home-card__audience,
+  #root .rooms-page--demo .rooms-home-card--cage.rooms-home-card--vertical-media .rooms-home-card__duration {
+    bottom: 4.8rem;
+    padding: .18rem .3rem;
+    font-size: .58rem;
+  }
+}
+
 /* ════════════════════════════════════════════════════════════════════════════
 
 /* ════════════════════════════════════════════════════════════════════════════
