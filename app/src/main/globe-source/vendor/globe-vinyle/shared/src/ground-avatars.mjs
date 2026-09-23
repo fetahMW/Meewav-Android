@@ -610,6 +610,7 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
           id: avatar.id, name: avatar.name, role: avatar.role, icon: avatar.icon,
           zoneName: avatar.zoneName, city: avatar.city, grade: avatar.grade, isHost: avatar.isHost,
           live: avatar.live === true,
+          avatarUrl: avatar.avatarUrl || null,
           wasConsulted: selectedRestore,
           lon: avatar.lon, lat: avatar.lat, zoneId: avatar.zoneId,
           anchor: {

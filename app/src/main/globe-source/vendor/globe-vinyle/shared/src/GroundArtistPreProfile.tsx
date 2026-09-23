@@ -6,6 +6,7 @@ import HoverPreProfileContent from "./reference/features/globe/components/prePro
 import { openArtistMessaging } from '../../../../messaging-navigation';
 import { getPreProfileArtistForSeed } from "./reference/features/globe/components/preProfile/demoPreProfileArtist";
 import { getGradeBadgeMeta } from "./reference/features/grades/gradeBadges";
+import { getProfileIconImageUrl } from "./reference/components/shared/avatar/profileIconAssets";
 import "./ring-artist-preprofile.css";
 import { mobileArtistPanel } from '../../../../mobile-artist-panel';
 
@@ -17,6 +18,8 @@ export type GroundAvatarSelection = {
   zoneName: string;
   city?: string;
   grade: number;
+  live?: boolean;
+  avatarUrl?: string | null;
   isHost?: boolean;
   wasConsulted?: boolean;
   anchor: { x: number; y: number; clearance: number; viewportWidth: number; viewportHeight: number };
@@ -53,15 +56,29 @@ export default function GroundArtistPreProfile({
     selection.wasConsulted && !selection.isHost && !pinnedColor && !restored,
   );
   const grade = getGradeBadgeMeta(selection.grade);
-  const artist = useMemo(() => getPreProfileArtistForSeed({
-    profileId: selection.id,
-    displayName: selection.name,
-    mainRole: selection.role,
-    iconId: selection.icon,
-    zoneName: selection.zoneName || selection.city,
-    gradeLevel: grade.level,
-    gradeColor: grade.mainColor,
-  }), [selection, grade.level, grade.mainColor]);
+  const artist = useMemo(() => {
+    const seed = getPreProfileArtistForSeed({
+      profileId: selection.id,
+      displayName: selection.name,
+      mainRole: selection.role,
+      iconId: selection.icon,
+      zoneName: selection.zoneName || selection.city,
+      gradeLevel: grade.level,
+      gradeColor: grade.mainColor,
+    });
+    if (!selection.live) return seed;
+    // Live markers contain a public identity, not the demonstration artist's
+    // photos, audience counts or media. Keep the same pre-profile presentation.
+    return { ...seed,
+      // The Globe WebView intentionally serves bundled images only. Match the
+      // illustration selected at registration until a portrait proxy exists.
+      portraitUrl: getProfileIconImageUrl(selection.icon),
+      followersLabel: "— abonnés", goldenLikesCount: 0, golden_likes_count: 0,
+      bio: `${selection.role} · ${selection.zoneName || selection.city || "MeeWav"}`,
+      shorts: [], audios: [], stats: { shorts: 0, audios: 0, collabAvailable: true },
+      verified: false, online: false, tremplinRegistered: false, publicStatsPublished: false,
+    };
+  }, [selection, grade.level, grade.mainColor]);
 
   const margin = 16, leftGuard = viewport.width > 760 ? 112 : 88;
   const mobile = mobileArtistPanel(viewport);
@@ -127,7 +144,7 @@ export default function GroundArtistPreProfile({
       "--mw-arrow-y": `${Math.max(40, Math.min(548, (y - popupTop) / scale))}px` } as CSSProperties}
     onPointerDown={event => event.stopPropagation()} onClick={event => event.stopPropagation()}>
     <PreProfileFrame arrow>
-      <HoverPreProfileContent artist={artist} demoFollow showMapPin={!selection.isHost}
+      <HoverPreProfileContent artist={artist} demoFollow={!selection.live} showMapPin={!selection.isHost}
         isOwner={Boolean(selection.isHost)}
         pinnedColor={pinnedColor}
         showRestoreAvatar={showRestoreAvatar}
@@ -139,9 +156,13 @@ export default function GroundArtistPreProfile({
           setPinnedColor(active ? color : null);
           window.dispatchEvent(new CustomEvent("meewav:ground-avatar-pin", { detail: { id, color, active } }));
         }}
-        onOpenProfile={() => setNotice("Le profil complet sera bientôt disponible.")}
-        onContact={() => openArtistMessaging(artist)}
-        onCollabRequest={() => setNotice("Les demandes de collaboration seront bientôt disponibles.")} />
+        onOpenProfile={() => selection.live
+          ? window.location.assign(`/native/profile?route=${encodeURIComponent(`/profile/view/${selection.id}`)}`)
+          : setNotice("Le profil complet sera bientôt disponible.")}
+        onContact={() => openArtistMessaging(artist, "message", Boolean(selection.live))}
+        onCollabRequest={() => selection.live
+          ? openArtistMessaging(artist, "collaboration", true)
+          : setNotice("Les demandes de collaboration seront bientôt disponibles.")} />
     </PreProfileFrame>
     <button ref={closeButton} className="ring-artist-preprofile__close" type="button" onClick={onClose} aria-label="Fermer le pré-profil">
       <X aria-hidden="true" />

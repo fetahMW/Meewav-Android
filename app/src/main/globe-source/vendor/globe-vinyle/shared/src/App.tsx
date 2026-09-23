@@ -21,7 +21,10 @@ export default function App() {
     frame = useRef<any>(null),
     selection = useRef<any>(null),
     operation = useRef(0),
-    previewSnapshot = useRef<any>(null);
+    previewSnapshot = useRef<any>(null),
+    liveMarkersRef = useRef<any[] | null>(null),
+    bootComplete = useRef(false),
+    initialHomeFlight = useRef(false);
   const [ready, setReady] = useState(false),
     [error, setError] = useState(""),
     [zoomLimit, setZoomLimit] = useState("");
@@ -52,8 +55,22 @@ export default function App() {
     else engine.current?.flyTo({ ...arrival, cityFlight: !!destinationFocus?.cityCode,
       quickDeparture: !!destinationFocus?.cityCode && !destinationFocus?.quarterId }, null, destinationFocus);
   }
+  function flyToHomeAvatar(home: any) {
+    if (!realMode || !bootComplete.current || initialHomeFlight.current || !engine.current) return;
+    if (!home || !Number.isFinite(home.lon) || !Number.isFinite(home.lat)) return;
+    const avatar = liveMarkersRef.current?.find(marker => marker.id === home.profileId);
+    const lon = avatar?.lon ?? home.lon, lat = avatar?.lat ?? home.lat;
+    const zoneId = avatar?.zoneId || home.zoneId;
+    const cityCode = avatar?.cityId?.replace('fr-commune-', '') || home.cityCode;
+    const quarter = data.current?.sectors.features.find((feature: any) => feature.id === zoneId);
+    initialHomeFlight.current = true;
+    navigate(quarter || null, { lon, lat, height: .008, pitch: 62, bearing: 0 },
+      { cityCode: cityCode || undefined, quarterId: zoneId || undefined });
+  }
   async function boot() {
     const op = ++operation.current;
+    bootComplete.current = false;
+    initialHomeFlight.current = false;
     setReady(false);
     notifyHost('loading');
     setError("");
@@ -106,6 +123,7 @@ export default function App() {
           if (!response.ok) throw Error("Les profils réels ne sont pas disponibles. Réessaie.");
           return parseLiveMarkers(await response.json());
         }) : null;
+      liveMarkersRef.current = liveMarkers;
       if (op !== operation.current) return;
       const result = await createThree(
         host.current!,
@@ -147,8 +165,13 @@ export default function App() {
       // rendered its first frame, including a restored artist-exploration view.
       await result.firstFrame;
       if (op !== operation.current) return;
+      bootComplete.current = true;
       setReady(true);
       notifyHost('ready');
+      // Android may deliver the account's scene before or after the first
+      // frame. In either order, launch exactly one visible flight to the
+      // actual public marker when it exists.
+      flyToHomeAvatar((window as any).meewavFullGlobe?.getHomeScene?.());
       if (new URLSearchParams(location.search).get("probe") === "1") {
         result.probeCadence().then((report) => {
           const output = document.createElement("script");
@@ -184,10 +207,7 @@ export default function App() {
       const home = (event as CustomEvent).detail;
       if (!home || !Number.isFinite(home.lon) || !Number.isFinite(home.lat)) return;
       setHomeScene(home);
-      if (!engine.current) return;
-      const quarter = data.current?.sectors.features.find((feature: any) => feature.id === home.zoneId);
-      navigate(quarter || null, { lon: home.lon, lat: home.lat, height: .008, pitch: 62, bearing: 0 },
-        { cityCode: home.cityCode || undefined, quarterId: home.zoneId || undefined });
+      flyToHomeAvatar(home);
     };
     document.addEventListener("visibilitychange", activity);
     document.addEventListener("globelab-lifecycle", native);

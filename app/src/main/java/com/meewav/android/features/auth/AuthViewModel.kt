@@ -40,6 +40,7 @@ data class GlobeHomeScene(
     val communeCode: String,
     val zoneId: String,
     val label: String,
+    val profileId: String,
 )
 
 data class AuthUiState(
@@ -120,7 +121,7 @@ class AuthViewModel(private val repository: MeewavAuthRepository, preview: Boole
             GlobeHomeScene(longitude, latitude,
                 identity["commune_code"]?.jsonPrimitive?.contentOrNull.orEmpty(),
                 identity["zone_id"]?.jsonPrimitive?.contentOrNull.orEmpty(),
-                identity["scene_name"]?.jsonPrimitive?.contentOrNull.orEmpty())
+                identity["scene_name"]?.jsonPrimitive?.contentOrNull.orEmpty(), user.id)
         else null
         routedUserId = user.id
         mutable.update { it.copy(initializing = false, authenticated = true, onboardingComplete = completed,

@@ -303,14 +303,16 @@ private class AuthGlobeController(private val fullScene: Boolean, private val ho
                     ready = true
                     webView.alpha = 1f
                     webView.evaluateJavascript("window.$api.setInteractive($interactive);", null)
+                    // setActive cancels an in-progress camera motion. Resume
+                    // the scene before starting the account arrival flight.
+                    refreshActivity()
                     if (fullScene && !previewMessages && homeScene != null) {
                         val scene = JSONObject()
                             .put("lon", homeScene.longitude).put("lat", homeScene.latitude)
                             .put("cityCode", homeScene.communeCode).put("zoneId", homeScene.zoneId)
-                            .put("label", homeScene.label)
+                            .put("label", homeScene.label).put("profileId", homeScene.profileId)
                         webView.evaluateJavascript("window.meewavFullGlobe.setHomeScene($scene);", null)
                     }
-                    refreshActivity()
                 }
                 "\"loading\"" -> if (attempt < if (fullScene) 150 else 40) {
                     readinessHandler.postDelayed({ awaitFirstFrame(webView, generation, attempt + 1) }, 200L)

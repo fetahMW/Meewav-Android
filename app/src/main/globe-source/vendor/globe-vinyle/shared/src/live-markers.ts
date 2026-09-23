@@ -10,7 +10,7 @@ const ROLE_LABELS: Record<string, string> = {
 export type LiveGlobeMarker = {
   id: string; name: string; role: string; icon: string; grade: number;
   city: string; cityId: string; zoneId: string; zoneName: string;
-  lon: number; lat: number; live: true;
+  lon: number; lat: number; live: true; avatarUrl: string | null;
 };
 
 export function parseLiveMarkers(value: unknown): LiveGlobeMarker[] {
@@ -27,6 +27,7 @@ export function parseLiveMarkers(value: unknown): LiveGlobeMarker[] {
     const icon = String(row.avatar_icon_id ?? "");
     const grade = Number(row.grade);
     const communeCode = String(row.commune_code ?? "");
+    const avatarUrl = String(row.avatar_url ?? "").trim();
     unique.set(id, {
       id, name: String(row.display_name ?? "Artiste").slice(0, 120),
       role: ROLE_LABELS[roleKey] ?? roleKey.replaceAll("_", " ").slice(0, 80),
@@ -36,6 +37,7 @@ export function parseLiveMarkers(value: unknown): LiveGlobeMarker[] {
       cityId: /^\d{5}$/.test(communeCode) ? `fr-commune-${communeCode}` : "",
       zoneId: String(row.zone_id ?? ""), zoneName: String(row.zone_name ?? row.scene_name ?? ""),
       lon, lat, live: true,
+      avatarUrl: /^https:\/\//i.test(avatarUrl) || avatarUrl.startsWith("/") ? avatarUrl : null,
     });
   }
   return [...unique.values()];

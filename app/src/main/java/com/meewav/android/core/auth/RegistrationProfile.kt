@@ -32,8 +32,8 @@ data class RegistrationProfile(
         put("primary_role_key", canonical.role)
         put("creator_type", if (realArtist) "REEL" else "IA")
         put("artist_type", if (realArtist) "REEL" else "IA")
-        put("avatar_url", avatarIcon)
-        put("avatar_name", avatarName)
+        // The selected style is the shared iOS/Web/Android identity. An Android
+        // drawable name is not a URL and would mask that style in the profile.
         normalizedBirthDate(birthDate)?.let { put("birth_date", it) }
         put("city", city.trim())
         postalCode.trim().takeIf { it.isNotEmpty() }?.let { put("postal_code", it) }

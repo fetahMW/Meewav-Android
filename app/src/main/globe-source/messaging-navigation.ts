@@ -1,4 +1,9 @@
-export function openArtistMessaging(artist: { id: string; name: string; role: string; portraitUrl: string; gradeLevel?: number | null }, intent: 'message' | 'collaboration' = 'message') {
+export function openArtistMessaging(artist: { id: string; name: string; role: string; portraitUrl: string; gradeLevel?: number | null }, intent: 'message' | 'collaboration' = 'message', live = false) {
+  if (live && /^[\da-f]{8}-[\da-f]{4}-[1-8][\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/i.test(artist.id)) {
+    const params = new URLSearchParams({ space: intent === 'message' ? 'messages' : 'collabs', intent, source: 'globe', mode: 'real', profileId: artist.id });
+    window.dispatchEvent(new CustomEvent('meewav:navigate', { detail: { path: `/messages?${params}` }, cancelable: true }));
+    return;
+  }
   // These portraits belong to the globe's existing demo. Never reinterpret a
   // fixture identifier as the identity of a real Supabase recipient.
   const avatar = new URL(artist.portraitUrl, document.baseURI);

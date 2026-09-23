@@ -91,7 +91,7 @@
 #root .mobile-rooms .rooms-home__discovery { display: none; }
 
 /* FAB « Créer une Room » — bulle violette posée au-dessus du dock. */
-#root .mobile-rooms .rooms-page__launch-fab { position: fixed; z-index: 30; right: 16px; bottom: 118px; width: 56px; height: 56px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 50%; background: linear-gradient(160deg,#b396ee99,#9674d56b); backdrop-filter: blur(18px) saturate(1.15); -webkit-backdrop-filter: blur(18px) saturate(1.15); color: #fff; box-shadow: 0 0 14px #a588df40, 0 2px 6px #0005, inset 0 1px 0 #ffffff40; }
+#root .mobile-rooms .rooms-page__launch-fab { position: fixed; z-index: 30; right: 16px; bottom: 118px; width: 56px; height: 56px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 50%; background: linear-gradient(160deg,#b396ee78,#9674d550); backdrop-filter: blur(18px) saturate(1.15); -webkit-backdrop-filter: blur(18px) saturate(1.15); color: #fff; box-shadow: 0 0 14px #a588df40, 0 2px 6px #0005, inset 0 1px 0 #ffffff40; }
 #root .mobile-rooms .rooms-page__launch-fab svg { width: 28px; height: 28px; }
 #root .mobile-rooms .rooms-page__launch-fab:active { transform: scale(.94); }
 

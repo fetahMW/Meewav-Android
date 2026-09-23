@@ -12,6 +12,7 @@ export type ProfileRecord = {
   bio: string | null;
   avatar_url: string | null;
   avatar_name: string | null;
+  avatar_style_key: string | null;
   artist_type: string | null;
   primary_role_key: string | null;
   city: string | null;
@@ -48,6 +49,7 @@ const PROFILE_SELECT = [
   "bio",
   "avatar_url",
   "avatar_name",
+  "avatar_style_key",
   "artist_type",
   "primary_role_key",
   "city",
@@ -245,6 +247,15 @@ export function canonicalRoleKeyForLabel(label: string, fallback: string | null 
 function avatarFromRecord(record: ProfileRecord) {
   const directUrl = record.profile_image_url?.trim() || record.avatar_url?.trim();
   if (directUrl && (/^https?:\/\//i.test(directUrl) || directUrl.startsWith("/") || directUrl.startsWith("blob:"))) return directUrl;
+
+  // Android's original registration stored identifiers such as BeatmakerIcon
+  // in avatar_url. Resolve the canonical style for those existing accounts.
+  const style = record.avatar_style_key?.trim().replace("_", "-");
+  const selectedAsset = style && AVATAR_ASSET_ALIASES[style];
+  if (selectedAsset) return `/avatars/${selectedAsset}`;
+  if (record.avatar_style_key === "avatar_31") {
+    return "/globe-vinyle/ui/images/V4/Instrumentiste%20%C3%A0%20cordes%20V2.png";
+  }
 
   const filename = record.avatar_name?.trim() || directUrl;
   if (filename) {

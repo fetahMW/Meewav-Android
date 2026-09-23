@@ -4,7 +4,7 @@ let status: 'loading' | 'ready' | 'error' = 'loading';
 let active = true;
 let disposed = false;
 let root: Root | undefined;
-let homeScene: { lon: number; lat: number; cityCode: string; zoneId: string; label: string } | null = null;
+let homeScene: { lon: number; lat: number; cityCode: string; zoneId: string; label: string; profileId: string } | null = null;
 const engine = () => (window as any).__meewavEngine;
 
 function updateActivity() {
@@ -53,7 +53,8 @@ window.addEventListener('meewav:navigate', (event: Event) => {
     homeScene = { lon: scene.lon, lat: scene.lat,
       cityCode: typeof scene.cityCode === 'string' && /^\d{5}$/.test(scene.cityCode) ? scene.cityCode : '',
       zoneId: typeof scene.zoneId === 'string' ? scene.zoneId.slice(0, 100) : '',
-      label: typeof scene.label === 'string' ? scene.label.slice(0, 120) : '' };
+      label: typeof scene.label === 'string' ? scene.label.slice(0, 120) : '',
+      profileId: typeof scene.profileId === 'string' && /^[\da-f-]{36}$/i.test(scene.profileId) ? scene.profileId : '' };
     document.dispatchEvent(new CustomEvent('globelab-home-scene', { detail: homeScene }));
   },
   getHomeScene() { return homeScene; },

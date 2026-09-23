@@ -240,15 +240,11 @@ export function GlobeInterface({ ready, data, engine, navigate, selection, realM
   useEffect(() => {
     const selectAvatar = (event: Event) => {
       const avatar = (event as CustomEvent).detail;
-      if (realMode && avatar?.live && /^[\da-f-]{36}$/i.test(avatar.id)) {
-        window.location.assign(`/native/profile?route=${encodeURIComponent(`/profile/view/${avatar.id}`)}`);
-        return;
-      }
-      setGroundAvatar(realMode ? null : avatar || null);
+      setGroundAvatar(avatar ? { ...avatar, isHost: Boolean(avatar.isHost || (realMode && avatar.id === homeScene?.profileId)) } : null);
     };
     window.addEventListener('meewav:ground-avatar-select', selectAvatar);
     return () => window.removeEventListener('meewav:ground-avatar-select', selectAvatar);
-  }, [realMode]);
+  }, [realMode, homeScene?.profileId]);
   const goPosition = () => {
     if (!ready) return;
     if (realMode) {

@@ -29,3 +29,11 @@ test('malformed projection fails closed instead of inserting demo avatars', () =
   assert.throws(() => parseLiveMarkers({ avatars: [] }), /illisible/);
   assert.deepEqual(parseLiveMarkers([]), []);
 });
+
+test('real marker keeps a public portrait URL but rejects Android drawable names', () => {
+  const id = '33333333-3333-4333-8333-333333333333';
+  const base = { profile_id: id, longitude: 2.35, latitude: 48.86 };
+  assert.equal(parseLiveMarkers([{ ...base, avatar_url: 'https://example.test/portrait.webp' }])[0].avatarUrl,
+    'https://example.test/portrait.webp');
+  assert.equal(parseLiveMarkers([{ ...base, avatar_url: 'BeatmakerIcon' }])[0].avatarUrl, null);
+});
