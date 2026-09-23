@@ -30,8 +30,10 @@ const FEATURE_MENU_ITEMS = {
 export function mountFeature(id: 'market' | 'scene' | 'rooms', title: string, load: () => Promise<{ default: React.ComponentType }>) {
   function Shell({ Page }: { Page: React.ComponentType }) {
     const route = useLocation(), navigate = useNavigate();
+    const roomLaunch = id === 'rooms' && (route.pathname === '/rooms/create' || new URLSearchParams(route.search).get('launch') === 'cage');
     const [notice, setNotice] = useState('');
     const [menuOpen, setMenuOpen] = useState(false);
+    useEffect(() => { if (roomLaunch) setMenuOpen(false); }, [roomLaunch]);
     const back = () => {
       if (document.fullscreenElement) { void document.exitFullscreen(); return; }
       const close = [...document.querySelectorAll<HTMLButtonElement>('[role="dialog"]:not([aria-hidden="true"]) button[aria-label^="Fermer"]')]
@@ -70,8 +72,8 @@ export function mountFeature(id: 'market' | 'scene' | 'rooms', title: string, lo
       return () => window.clearTimeout(timer);
     }, [notice]);
     return <div className={`mobile-profile mobile-feature mobile-${id}`}>
-      <button className="mobile-feature-back" aria-label="Menu" aria-haspopup="menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(open => !open)}><Menu /></button>
-      {menuOpen && <>
+      {!roomLaunch && <button className="mobile-feature-back" aria-label="Menu" aria-haspopup="menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(open => !open)}><Menu /></button>}
+      {menuOpen && !roomLaunch && <>
         <button className="mobile-feature-menu-backdrop" aria-hidden="true" tabIndex={-1} onClick={() => setMenuOpen(false)} />
         <nav className="mobile-feature-menu" aria-label="Menu rapide">
           {FEATURE_MENU_ITEMS[id].map(item => <button key={item.action} type="button" role="menuitem" onClick={() => menuAction(item.action)}><item.icon aria-hidden="true" /><span>{item.label}</span></button>)}
@@ -79,10 +81,10 @@ export function mountFeature(id: 'market' | 'scene' | 'rooms', title: string, lo
         </nav>
       </>}
       <Page />
-      <FeatureDock active={id} onSelect={destination => {
+      {!roomLaunch && <FeatureDock active={id} onSelect={destination => {
         if (destination === id) navigate(`/${id}`);
         else native(destination);
-      }} />
+      }} />}
       {notice && <aside className="mobile-profile-notice" role="status">{notice}<button aria-label="Fermer" onClick={() => setNotice('')}><X size={18} /></button></aside>}
     </div>;
   }

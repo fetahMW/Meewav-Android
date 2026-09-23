@@ -96,7 +96,7 @@ export default function LaunchStudio({ value, onChange }: Props) {
   const selectLayout = (selected: LaunchLayout) => update(value.format === "portrait" ? { portraitLayout: selected } : { landscapeLayout: selected });
 
   return <section className="launch-studio" aria-label="Studio de lancement">
-    <div className="launch-studio__intro"><span>STUDIO · APERÇU PRIVÉ</span><h2>Compose ton écran</h2><p>Prépare le cadrage et la disposition avant le direct.</p></div>
+    <div className="launch-studio__intro"><span>GREEN HOUSE · APERÇU PRIVÉ</span><h2>Configure ton écran</h2><p>Choisis ton cadrage et ta disposition avant le direct.</p></div>
     <div className="launch-studio__formats" role="group" aria-label="Format de l’aperçu">
       <button type="button" className={value.format === "portrait" ? "is-active" : ""} onClick={() => update({ format: "portrait" })}><Smartphone size={17} /> Mobile <small>9:16</small></button>
       <button type="button" className={value.format === "landscape" ? "is-active" : ""} onClick={() => update({ format: "landscape" })}><Monitor size={17} /> Paysage <small>16:9</small></button>

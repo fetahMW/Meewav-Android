@@ -122,8 +122,6 @@ const JURY_CONTACTS: JuryContact[] = [
   { id: "user_6", name: "Vocal Queen", role: "Artiste / Auteur", avatar: "/avatars/chanteuse-rappeuse.png", online: false },
 ];
 
-const CHECKUP_STORAGE_KEY = "meewav-rooms-last-checkup";
-
 type MicState = "idle" | "requesting" | "granted" | "denied";
 
 function FieldLabel({ icon: Icon, children }: { icon: typeof Mic; children: string }) {
@@ -284,9 +282,6 @@ export default function LaunchRoomSheet({ initialType, allowSkipCheckup = false,
     window.addEventListener("offline", sync);
     return () => { window.removeEventListener("online", sync); window.removeEventListener("offline", sync); };
   }, []);
-  const [canQuickPass] = useState(() => {
-    try { return Boolean(window.sessionStorage.getItem(CHECKUP_STORAGE_KEY)); } catch { return false; }
-  });
 
   const micStreamRef = useRef<MediaStream | null>(null);
   const micRafRef = useRef(0);
@@ -345,10 +340,6 @@ export default function LaunchRoomSheet({ initialType, allowSkipCheckup = false,
     }
   }, [micTesting, stopMic, studio.camera]);
 
-  const markCheckupDone = useCallback(() => {
-    try { window.sessionStorage.setItem(CHECKUP_STORAGE_KEY, String(Date.now())); } catch { /* noop */ }
-  }, []);
-
   const selectTab = (index: number) => {
     setSelectedTab(index);
     setStudio(current => ({ ...current, portraitLayout: recommendedLayout(LAUNCH_TABS[index].id), landscapeLayout: recommendedLayout(LAUNCH_TABS[index].id), secondCamera: false, reversed: false }));
@@ -378,7 +369,6 @@ export default function LaunchRoomSheet({ initialType, allowSkipCheckup = false,
 
   const goToStep = (next: number) => {
     if (next > 0 && LAUNCH_TABS[selectedTab].id === "cage" && (!title.trim() || programRoster.length > cageParticipants)) { setProgramNotice(!title.trim() ? "Donne un nom au programme." : "La capacité est inférieure au nombre de participants préparés."); setStep(0); return; }
-    if (next === 3) markCheckupDone();
     if (next !== 2) stopMic();
     setStep(next);
   };
@@ -709,14 +699,6 @@ export default function LaunchRoomSheet({ initialType, allowSkipCheckup = false,
 
   const renderCheckup = () => (
     <>
-      {allowSkipCheckup && canQuickPass ? (
-        <button type="button" className="launch-quick-pass" style={{ borderColor: `${accent}40`, color: accent }} onClick={() => goToStep(3)}>
-          <Zap aria-hidden="true" size={18} />
-          <span>Entrée rapide — config précédente</span>
-          <ChevronRight aria-hidden="true" size={14} />
-        </button>
-      ) : null}
-
       <div className={`launch-checkup-status${isReady ? " is-ready" : ""}`}>
         <CheckCircle2 aria-hidden="true" size={20} />
         <div className="launch-checkup-status__copy">
@@ -753,13 +735,6 @@ export default function LaunchRoomSheet({ initialType, allowSkipCheckup = false,
         <li className={networkOk ? "is-ok" : ""}><CheckCircle2 aria-hidden="true" size={16} /> Réseau : {networkLabel}</li>
       </ul>
 
-      <div className="launch-actions">
-        <button type="button" className="launch-btn launch-btn--ghost" onClick={() => goToStep(1)}>Précédent</button>
-        <button type="button" className="launch-btn launch-btn--accent" disabled={!isReady} style={{ background: isReady ? accent : undefined }} onClick={() => goToStep(3)}>Suivant</button>
-      </div>
-      {allowSkipCheckup && !isReady ? (
-        <button type="button" className="launch-btn--skip" onClick={() => goToStep(3)}>Ignorer et continuer</button>
-      ) : null}
     </>
   );
 
@@ -787,12 +762,15 @@ export default function LaunchRoomSheet({ initialType, allowSkipCheckup = false,
           <div><dt>Monétisation</dt><dd>{monetization ? "Activée" : "Désactivée"}</dd></div>
         </dl>
       </div>
-      <button type="button" className="launch-btn launch-btn--golive" style={{ background: `linear-gradient(135deg, ${accent}, ${accent}cc)` }} onClick={() => { stopMic(); setLaunching(true); }}>
-        Accéder à la room <Rocket aria-hidden="true" size={18} />
-      </button>
-      <button type="button" className="launch-btn--skip" onClick={() => setStep(2)}>← Retour au Check-up</button>
     </div>
   );
+
+  const steps = ["Identité", "Green House", "Vérification", "Revue"];
+  const nextLabel = ["Continuer", "Vérifier", "Voir le résumé", "Accéder à la room"][step];
+  const advance = () => {
+    if (step === 3) { stopMic(); setLaunching(true); }
+    else goToStep(step + 1);
+  };
 
   return (
     <main className="launch-room-sheet" aria-label="Créer une Room" style={{ "--launch-accent": accent } as CSSProperties}>
@@ -818,22 +796,26 @@ export default function LaunchRoomSheet({ initialType, allowSkipCheckup = false,
         ))}
       </nav>
 
-      <div className="launch-steps" aria-label={`Étape ${step + 1} sur 4 : ${["Identité", "Studio", "Vérification", "Revue"][step]}`}>
-        <span className="launch-steps__current">{["Identité", "Studio", "Vérification", "Revue"][step]}</span>
+      <div className="launch-steps" aria-label={`Étape ${step + 1} sur 4 : ${steps[step]}`}>
+        <span className="launch-steps__current">{steps[step]}</span>
         <span className="launch-steps__count">{step + 1} / 4</span>
         <i className="launch-steps__track" aria-hidden="true"><b style={{ width: `${(step + 1) * 25}%` }} /></i>
       </div>
 
       <div className="launch-room-sheet__body">
         {step === 0 ? renderIdentity() : step === 1 ? <LaunchStudio value={studio} onChange={setStudio} /> : step === 2 ? renderCheckup() : renderGoLive()}
-        {step === 0 ? (
-          <div className="launch-actions">
-            <span />
-            <button type="button" className="launch-btn launch-btn--accent" style={{ background: accent }} onClick={() => goToStep(1)}>Configurer l’écran</button>
-          </div>
-        ) : null}
-        {step === 1 ? <div className="launch-actions"><button type="button" className="launch-btn launch-btn--ghost" onClick={() => goToStep(0)}>Précédent</button><button type="button" className="launch-btn launch-btn--accent" style={{ background: accent }} onClick={() => goToStep(2)}>Continuer</button></div> : null}
       </div>
+
+      <nav className="launch-workflow-nav" aria-label="Navigation du séquenceur">
+        <button type="button" className="launch-workflow-nav__back" aria-label={step === 0 ? "Retour aux Rooms" : "Étape précédente"} onClick={() => step === 0 ? onClose() : goToStep(step - 1)}>
+          <ArrowLeft aria-hidden="true" size={19} />
+        </button>
+        <span className="launch-workflow-nav__progress">Étape <small>{step + 1} / 4</small></span>
+        <button type="button" className="launch-workflow-nav__next" disabled={launching || (step === 2 && !isReady && !allowSkipCheckup)} onClick={advance}>
+          <span>{nextLabel}</span>{step === 3 ? <Rocket aria-hidden="true" size={17} /> : <ChevronRight aria-hidden="true" size={18} />}
+        </button>
+        {step === 2 && allowSkipCheckup && !isReady ? <small className="launch-workflow-nav__demo">Démo · vérification ignorée</small> : null}
+      </nav>
 
       {juryOpen ? (
         <div className="launch-jury" role="dialog" aria-modal="true" aria-label="Choisir un jury">

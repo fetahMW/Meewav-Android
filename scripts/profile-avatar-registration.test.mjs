@@ -37,3 +37,12 @@ test('an uploaded portrait still takes precedence over the registration illustra
   });
   assert.equal(profile.avatarUrl, 'https://example.test/portrait.webp');
 });
+
+test('the chosen registration avatar replaces a stale valid default URL', () => {
+  const profile = mapProfileRecord({
+    id: '44444444-4444-4444-8444-444444444444', username: 'beatmaker',
+    avatar_url: '/avatars/utilisateur.png', avatar_name: 'Utilisateur', avatar_style_key: 'avatar_25',
+    profile_image_url: null, grade: 1,
+  });
+  assert.equal(profile.avatarUrl, '/avatars/beatmaker.png');
+});
