@@ -13,6 +13,7 @@ export type ProfileRecord = {
   avatar_url: string | null;
   avatar_name: string | null;
   avatar_style_key: string | null;
+  avatar_icon_id?: string | null;
   artist_type: string | null;
   primary_role_key: string | null;
   city: string | null;
@@ -58,6 +59,7 @@ const PROFILE_SELECT = [
   "avatar_url",
   "avatar_name",
   "avatar_style_key",
+  "avatar_icon_id",
   "artist_type",
   "primary_role_key",
   "city",
@@ -171,6 +173,13 @@ const AVATAR_ASSET_ALIASES: Record<string, string> = {
   "organisation-scenique": "organisateur-evenements.png",
 };
 
+// These keys are the Android registration carousel. The profile must render
+// those exact drawable images, rather than similarly named Web illustrations.
+const ANDROID_REGISTRATION_AVATAR_STYLES = new Set([
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
+  19, 20, 21, 22, 24, 25, 26, 27, 28, 30, 31,
+].map((number) => `avatar_${number}`));
+
 const GRADE_MINIMUM_POINTS = [0, 0, 1_000, 2_000, 3_000, 4_000, 6_000] as const;
 
 export type ProfileServiceErrorCode =
@@ -258,13 +267,13 @@ function avatarFromRecord(record: ProfileRecord) {
 
   // Registration writes the chosen avatar_style_key. avatar_url may still hold
   // an older default image, so it cannot override that explicit choice.
-  const style = record.avatar_style_key?.trim().replace("_", "-");
+  const canonicalStyle = record.avatar_style_key?.trim() || record.avatar_icon_id?.trim();
+  if (canonicalStyle && ANDROID_REGISTRATION_AVATAR_STYLES.has(canonicalStyle)) {
+    return `/native/avatar-style/${canonicalStyle}.png`;
+  }
+  const style = canonicalStyle?.replace("_", "-");
   const selectedAsset = style && AVATAR_ASSET_ALIASES[style];
   if (selectedAsset) return `/avatars/${selectedAsset}`;
-  if (record.avatar_style_key === "avatar_31") {
-    return "/globe-vinyle/ui/images/V4/Instrumentiste%20%C3%A0%20cordes%20V2.png";
-  }
-
   const directUrl = record.avatar_url?.trim();
   if (directUrl && (/^https?:\/\//i.test(directUrl) || directUrl.startsWith("/") || directUrl.startsWith("blob:"))) return directUrl;
 

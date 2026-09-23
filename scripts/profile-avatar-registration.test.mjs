@@ -20,13 +20,13 @@ test('registration avatar style survives an old Android drawable identifier and 
     avatar_url: 'BeatmakerIcon', avatar_name: 'Beatmaker', avatar_style_key: 'avatar_25',
     profile_image_url: null, grade: 1,
   });
-  assert.equal(profile.avatarUrl, '/avatars/beatmaker.png');
+  assert.equal(profile.avatarUrl, '/native/avatar-style/avatar_25.png');
   const user = mapProfileRecord({
     id: '22222222-2222-4222-8222-222222222222', username: 'utilisatrice',
     avatar_url: null, avatar_name: 'Artiste', avatar_style_key: 'avatar_3',
     profile_image_url: null, grade: 1,
   });
-  assert.equal(user.avatarUrl, '/avatars/utilisatrice.png');
+  assert.equal(user.avatarUrl, '/native/avatar-style/avatar_3.png');
 });
 
 test('an uploaded portrait still takes precedence over the registration illustration', () => {
@@ -44,5 +44,14 @@ test('the chosen registration avatar replaces a stale valid default URL', () => 
     avatar_url: '/avatars/utilisateur.png', avatar_name: 'Utilisateur', avatar_style_key: 'avatar_25',
     profile_image_url: null, grade: 1,
   });
-  assert.equal(profile.avatarUrl, '/avatars/beatmaker.png');
+  assert.equal(profile.avatarUrl, '/native/avatar-style/avatar_25.png');
+});
+
+test('a legacy registration keeps its Android avatar through avatar_icon_id', () => {
+  const profile = mapProfileRecord({
+    id: '55555555-5555-4555-8555-555555555555', username: 'beatmaker',
+    avatar_url: '/avatars/utilisateur.png', avatar_name: null, avatar_style_key: null,
+    avatar_icon_id: 'avatar_25', profile_image_url: null, grade: 1,
+  });
+  assert.equal(profile.avatarUrl, '/native/avatar-style/avatar_25.png');
 });

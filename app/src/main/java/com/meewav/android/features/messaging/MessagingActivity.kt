@@ -37,6 +37,8 @@ import androidx.lifecycle.lifecycleScope
 import com.meewav.android.BuildConfig
 import com.meewav.android.app.MeewavApplication
 import com.meewav.android.app.MainActivity
+import com.meewav.android.core.auth.CanonicalAvatar
+import com.meewav.android.features.auth.AvatarCatalog
 import com.meewav.android.features.auth.localMediaAsset
 import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.launch
@@ -369,6 +371,15 @@ open class MessagingActivity : ComponentActivity() {
                     } catch (_: Exception) { denied() }
                 }
                 if (request.method != "GET") return denied()
+                if (assetSurface == "profile" && uri.path.orEmpty().startsWith("/native/avatar-style/")) {
+                    val style = uri.lastPathSegment.orEmpty().removeSuffix(".png")
+                    val icon = CanonicalAvatar.iconForStyle(style) ?: return denied()
+                    return try {
+                        WebResourceResponse("image/png", null, 200, "OK",
+                            mapOf("Cache-Control" to "no-store", "X-Content-Type-Options" to "nosniff"),
+                            resources.openRawResource(AvatarCatalog.find(icon).image))
+                    } catch (_: Exception) { denied() }
+                }
                 if (assetSurface == "messaging" && uri.path.orEmpty().startsWith("/native/voice-file/")) {
                     val id = uri.lastPathSegment.orEmpty().removeSuffix(".m4a")
                     if (!Regex("[a-f0-9-]{36}").matches(id)) return denied()
