@@ -4,7 +4,7 @@
 
 Ce document est la liste de suivi de référence. Les audits précédents restent des preuves historiques, pas une liste actualisée des manques. Cette consolidation recoupe ces audits, les livraisons ultérieures et des contrôles ciblés du code ; ce n'est pas une nouvelle recette exhaustive de chaque écran ou de chaque compte réel.
 
-Pointage du 23 septembre : **95 lignes**, dont **22 M**, **54 P** et **19 V**. Les 76 lignes M/P représentent du câblage absent ou incomplet ; les 19 lignes V demandent encore leur recette réelle. Les identifiants et critères de fin ci-dessous sont la liste exhaustive suivie dans ce dépôt. Ce pointage n'est pas une déclaration d'achèvement.
+Pointage du 23 septembre : **95 lignes**, dont **22 M**, **53 P** et **20 V**. Les 75 lignes M/P représentent du câblage absent ou incomplet ; les 20 lignes V demandent encore leur recette réelle. Les identifiants et critères de fin ci-dessous sont la liste exhaustive suivie dans ce dépôt. Ce pointage n'est pas une déclaration d'achèvement.
 
 ## Règle de clôture
 
