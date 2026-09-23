@@ -24,6 +24,8 @@ export interface RoomCardProps {
   featured?: boolean;
   priority?: boolean;
   onOpen: (room: RoomsHomeRoom) => void;
+  canEnd?: boolean;
+  onEnd?: (room: RoomsHomeRoom) => void;
 }
 
 function initialsFor(name: string) {
@@ -43,7 +45,7 @@ function liveDurationLabel(startedAt: string) {
   return minutes > 0 ? `${hours} h ${minutes}` : `${hours} h`;
 }
 
-export function RoomCard({ room, featured = false, priority = false, onOpen }: RoomCardProps) {
+export function RoomCard({ room, featured = false, priority = false, onOpen, canEnd = false, onEnd }: RoomCardProps) {
   const mediaRef = useRef<HTMLSpanElement | null>(null);
   const [mediaSource, setMediaSource] = useState(room.thumbnail);
   const [mediaUnavailable, setMediaUnavailable] = useState(false);
@@ -192,6 +194,7 @@ export function RoomCard({ room, featured = false, priority = false, onOpen }: R
           </span>
         </span>
       </button>
+      {canEnd && onEnd ? <button type="button" className="rooms-home-card__end" onClick={() => onEnd(room)} aria-label={`Terminer le live ${room.title}`}>Terminer</button> : null}
     </article>
   );
 }

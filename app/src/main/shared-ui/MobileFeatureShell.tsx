@@ -40,9 +40,9 @@ export function mountFeature(id: 'market' | 'scene' | 'rooms', title: string, lo
         .find(button => button.getClientRects().length > 0 && getComputedStyle(button).visibility !== 'hidden');
       if (close) { close.click(); return; }
       if (!window.dispatchEvent(new Event('meewav:feature-back', { cancelable: true }))) return;
-      if (route.key !== 'default') navigate(-1);
+      if ((route.pathname === `/${id}` || (id === 'rooms' && route.pathname === '/rooms/home')) && !route.search) native('back');
+      else if (route.key !== 'default') navigate(-1);
       else if (route.pathname !== `/${id}` || route.search) navigate(`/${id}`, { replace: true });
-      else native('back');
     };
     const menuAction = (action: string) => {
       setMenuOpen(false);

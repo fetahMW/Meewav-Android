@@ -50,6 +50,7 @@ export type PlaceRoomExperienceProps = {
   currentUserId?: string | null;
   demoRole?: PlaceDemoRole;
   demoRoom?: PlaceRoomState | null;
+  forceViewer?: boolean;
   onOpenProfile: (profileId: string) => void;
   onMessageProfile: (profileId: string) => void;
   onCollaborateProfile: (profileId: string, requestId?: string | null) => void;
@@ -137,9 +138,9 @@ export default function PlaceRoomExperience(props: PlaceRoomExperienceProps) {
   return <WaveViewerListeningProvider key={`${props.requestedRoomId ?? presentation.id}:${props.currentUserId ?? "anonymous"}`}><PlaceRoomExperienceContent {...props} /></WaveViewerListeningProvider>;
 }
 
-function PlaceRoomExperienceContent({ initialPanelCollapsed, requestedRoomId, currentUserId, demoRole, demoRoom, onOpenProfile, onMessageProfile, onCollaborateProfile, onLeaveRoom, onLiveCallRequest }: PlaceRoomExperienceProps) {
+function PlaceRoomExperienceContent({ initialPanelCollapsed, requestedRoomId, currentUserId, demoRole, demoRoom, forceViewer, onOpenProfile, onMessageProfile, onCollaborateProfile, onLeaveRoom, onLiveCallRequest }: PlaceRoomExperienceProps) {
   const initialPresentation = useRef(useRoomPresentation()).current;
-  const place = usePlaceRoom({ requestedRoomId, currentUserId, demoRole, demoRoom, roomType: initialPresentation.id });
+  const place = usePlaceRoom({ requestedRoomId, currentUserId, demoRole, demoRoom, forceViewer, roomType: initialPresentation.id });
   const switching = useSwitchRoom(place.room, initialPresentation.id, place.activeUserId ?? "anonymous", place.isHost, !place.isLoading && (place.room.source === "demo" || place.isHost || place.room.currentUserIsActiveParticipant));
   const roomPresentation = LIVE_ROOM_PRESENTATIONS[switching.displayed];
   useEffect(()=>{place.setExperienceType?.(switching.current);},[switching.current,place.setExperienceType]);

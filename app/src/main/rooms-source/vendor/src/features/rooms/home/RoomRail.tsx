@@ -22,6 +22,8 @@ export interface RoomRailProps {
   initialScrollLeft?: number;
   onScrollPosition?: (collection: RoomsHomeCollectionDefinition, scrollLeft: number) => void;
   onOpen: (room: RoomsHomeRoom) => void;
+  currentUserId?: string | null;
+  onEnd?: (room: RoomsHomeRoom) => void;
   onSeeMore: (collection: RoomsHomeCollectionDefinition) => void;
 }
 
@@ -43,6 +45,8 @@ export function RoomRail({
   initialScrollLeft = 0,
   onScrollPosition,
   onOpen,
+  currentUserId,
+  onEnd,
   onSeeMore,
 }: RoomRailProps) {
   const viewportRef = useRef<HTMLDivElement | null>(null);
@@ -188,6 +192,8 @@ export function RoomRail({
                 featured={featured}
                 priority={featured && index < 2}
                 onOpen={onOpen}
+                canEnd={room.source === "live" && room.hostId === currentUserId}
+                onEnd={onEnd}
               />
             ))}
           </div>

@@ -1,0 +1,15 @@
+appId: com.meewav.android.debug
+name: EDGE 07 - Back leaves Rooms after five dock cycles
+tags:
+  - edge
+  - deep
+  - backstack
+---
+# Precondition: EDGE 06 completed; Rooms is top of a LIVE task.
+- launchApp:
+    stopApp: false
+- assertVisible: "Créer une Room"
+- pressKey: back
+- assertNotVisible: "Créer une Room"
+# The ADB companion records actual top Activities after later Back presses;
+# dock labels alone are not reliable assertions for which feature is on top.

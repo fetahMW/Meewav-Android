@@ -274,9 +274,14 @@ open class MessagingActivity : ComponentActivity() {
                         "/native/rooms" -> com.meewav.android.features.rooms.RoomsActivity::class.java
                         else -> MessagingActivity::class.java
                     }
-                    startActivity(Intent(this@MessagingActivity, destination)
+                    val requestedRoute = request.url.getQueryParameter("route")
+                    val featureIntent = Intent(this@MessagingActivity, destination)
                         .putExtra("preview", preview)
-                        .putExtra("route", request.url.getQueryParameter("route")))
+                        .putExtra("route", requestedRoute)
+                    // Dock navigation reuses the existing feature/WebView. A targeted
+                    // route still opens separately so its destination is not lost.
+                    if (requestedRoute == null) featureIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                    startActivity(featureIntent)
                     return true
                 }
                 if (request.isForMainFrame && request.method == "GET" && request.url.toString() == "$ORIGIN/native/back") {

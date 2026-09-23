@@ -24,4 +24,3 @@ for (const target of rooms) {
   result.pages.push(page);
 }
 await new Promise(resolve => process.stdout.write(JSON.stringify(result, null, 2) + '\n', resolve));
-process.exit(0);

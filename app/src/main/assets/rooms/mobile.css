@@ -1231,3 +1231,17 @@ body:has(.wv-room) .feature-dock-host { display: none !important; }
 #root .android-room-viewer .classe-student-workspace :is(.classroom-seat__person,.classroom-seat__empty) {height:100%!important;min-height:0!important;padding:3px!important;gap:2px!important;box-sizing:border-box;justify-content:center;}
 #root .android-room-viewer .classe-student-workspace :is(.classroom-seat__avatar,.classroom-seat__empty>span) {width:32px!important;height:32px!important;min-height:0!important;flex:0 1 32px!important;}
 #root .android-room-viewer .classe-student-workspace .classroom-seat__identity strong {font-size:9px!important;line-height:11px!important;}
+
+/* A host can end an orphaned live from its card without entering the Viewer. */
+#root .mobile-rooms .rooms-home-card {position:relative;}
+#root .mobile-rooms .rooms-home-card__end {position:absolute;z-index:5;top:8px;right:8px;min-height:34px;padding:5px 11px;border:1px solid #e4b2b45c;border-radius:10px;background:linear-gradient(160deg,#3a2429eb,#170f13f2);color:#ffdcdf;font:600 11px/1.2 Inter,sans-serif;box-shadow:0 4px 12px #0008;backdrop-filter:blur(8px);}
+#root .mobile-rooms .rooms-home-card__end:focus-visible {outline:2px solid #ffd0d4;outline-offset:2px;}
+#root .rooms-page__end-backdrop {position:fixed;inset:0;z-index:150;display:flex;align-items:center;justify-content:center;padding:18px;background:#030307b8;backdrop-filter:blur(10px);}
+#root .rooms-page__end-dialog {width:min(100%,380px);padding:22px;border:1px solid #9f91b84d;border-radius:20px;background:linear-gradient(155deg,#24242a,#0a0a0d 75%);box-shadow:0 20px 50px #000b;color:#f5f1f9;}
+#root .rooms-page__end-dialog small {font-size:10px;letter-spacing:.13em;color:#c9addc;}
+#root .rooms-page__end-dialog h2 {margin:10px 0 8px;font-size:18px;line-height:1.3;}
+#root .rooms-page__end-dialog p {margin:0;color:#b9b4bf;font-size:13px;line-height:1.5;}
+#root .rooms-page__end-dialog>div {display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:20px;}
+#root .rooms-page__end-dialog button {min-height:44px;padding:8px;border:1px solid #aaa4b933;border-radius:12px;background:linear-gradient(#29292e,#111115);color:#eeeaf3;font-size:12px;font-weight:600;}
+#root .rooms-page__end-dialog button:last-child {border-color:#b4768066;background:linear-gradient(#55343c,#26171d);color:#ffe2e6;}
+#root .rooms-page__end-dialog button:disabled {opacity:.55;}

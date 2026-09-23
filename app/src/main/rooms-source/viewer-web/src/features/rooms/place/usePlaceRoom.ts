@@ -38,6 +38,7 @@ type UsePlaceRoomOptions = {
   currentUserId?: string | null;
   demoRole?: PlaceDemoRole;
   demoRoom?: PlaceRoomState | null;
+  forceViewer?: boolean;
   repository?: PlaceRepository;
   roomType?: RoomPresentation["id"];
 };
@@ -263,6 +264,7 @@ export function usePlaceRoom({
   currentUserId,
   demoRole,
   demoRoom,
+  forceViewer = false,
   repository = placeRepository,
   roomType = "place",
 }: UsePlaceRoomOptions = {}) {
@@ -309,13 +311,13 @@ export function usePlaceRoom({
   const effectiveUserId = room.source === "demo" ? demoUserId : currentUserId;
   // A requested demo role is authoritative. This keeps the Host production
   // surface available even while React preserves older state during HMR.
-  const isHost = demoRole === "host"
-    || Boolean(effectiveUserId && effectiveUserId === room.host.id);
+  const isHost = !forceViewer && (demoRole === "host"
+    || Boolean(effectiveUserId && effectiveUserId === room.host.id));
   const currentUserParticipant = effectiveUserId
     ? room.participants.find((participant) => participant.profile.id === effectiveUserId)
       ?? room.queue.find((participant) => participant.profile.id === effectiveUserId)
     : undefined;
-  const isGuest = !isHost && Boolean(currentUserParticipant
+  const isGuest = !forceViewer && !isHost && Boolean(currentUserParticipant
     && (currentUserParticipant.status === "ready"
       || currentUserParticipant.status === "backstage"
       || currentUserParticipant.status === "onstage"));
@@ -342,7 +344,7 @@ export function usePlaceRoom({
     }
     if (requestedRoomId && !currentUserId) return;
     try {
-      if (requestedRoomId && currentUserId) {
+      if (requestedRoomId && currentUserId && !forceViewer) {
         const key = `${requestedRoomId}:${currentUserId}`;
         if (admission.current?.key !== key) {
           const promise = repository.enterRoom(requestedRoomId);
@@ -394,7 +396,7 @@ export function usePlaceRoom({
     } finally {
       setIsLoading(false);
     }
-  }, [currentUserId, demoRole, demoRoom, demoUserId, repository, requestedRoomId, roomType]);
+  }, [currentUserId, demoRole, demoRoom, demoUserId, forceViewer, repository, requestedRoomId, roomType]);
 
   useEffect(() => {
     void load();
@@ -463,13 +465,13 @@ export function usePlaceRoom({
   }, [isHost, repository, room.poll?.endsAt, room.poll?.id, room.poll?.isActive, room.source, showNotice]);
 
   useEffect(() => {
-    if (demoRole || demoRoom || !requestedRoomId || !currentUserId) return;
+    if (demoRole || demoRoom || forceViewer || !requestedRoomId || !currentUserId) return;
     return () => {
       const pending = admission.current;
       admission.current = null;
       if (pending) void pending.promise.then(() => repository.leaveRoom(requestedRoomId)).catch(() => undefined);
     };
-  }, [currentUserId, demoRole, demoRoom, repository, requestedRoomId]);
+  }, [currentUserId, demoRole, demoRoom, forceViewer, repository, requestedRoomId]);
 
   useEffect(() => {
     demoMeterProfiles.current.clear();

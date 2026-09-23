@@ -1,0 +1,37 @@
+appId: com.meewav.android.debug
+name: EDGE 06 - five LIVE feature-dock cycles without stack growth
+tags:
+  - edge
+  - deep
+  - navigation
+---
+# Precondition: authenticated LIVE Globe in a launcher-rooted task.
+# No room is created, and each visible return to Rooms rejects demo fixtures.
+- launchApp:
+    stopApp: false
+- tapOn: "Rooms"
+- assertVisible: "Créer une Room"
+- repeat:
+    times: 5
+    commands:
+      - tapOn: "Marketplace"
+      - assertVisible: "Marketplace"
+      - tapOn: "Rooms"
+      - assertVisible: "Créer une Room"
+      - assertNotVisible: ".*Finale des nouveaux flows.*"
+      - tapOn: "Messagerie"
+      - assertVisible: "Messagerie"
+      - assertNotVisible: "Aperçu sans compte"
+      - tapOn: "Rooms"
+      - assertVisible: "Créer une Room"
+      - assertNotVisible: ".*Finale des nouveaux flows.*"
+      - tapOn: "Marketplace"
+      - assertVisible: "Marketplace"
+      - tapOn: "Rooms"
+      - assertVisible: "Créer une Room"
+      - assertNotVisible: ".*Finale des nouveaux flows.*"
+      - tapOn: "Profil"
+      - assertVisible: "Profil"
+      - tapOn: "Rooms"
+      - assertVisible: "Créer une Room"
+      - assertNotVisible: ".*Finale des nouveaux flows.*"

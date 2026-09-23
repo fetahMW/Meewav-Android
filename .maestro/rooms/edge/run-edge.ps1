@@ -1,5 +1,5 @@
 param(
-  [ValidateSet('01','01b','01c','02','03')][string]$Case = '01',
+  [ValidateSet('01','01b','01c','02','03','04','05')][string]$Case = '01',
   [string]$Device = '192.168.1.169:36909'
 )
 $ErrorActionPreference = 'Stop'
@@ -16,6 +16,8 @@ $flows = @{
   '01c' = 'fast\01c-demo-exit.yaml'
   '02' = 'medium\02-webview-native-handoff.yaml'
   '03' = 'medium\03-double-create-idempotence.yaml'
+  '04' = 'deep\04-live-wizard-resume.yaml'
+  '05' = 'deep\05-feature-stack-accumulation.yaml'
 }
 $qaTitle = 'QA_EDGE_' + (Get-Date -Format 'yyyyMMdd_HHmmss') + '_' + $Case
 $artifact = Join-Path $edge ('artifacts\' + (Get-Date -Format 'yyyyMMdd_HHmmss') + '_' + $Case)
@@ -34,7 +36,14 @@ function Capture-Evidence {
   & $adb -s $Device shell screencap -p /sdcard/edge_qa_screen.png | Out-Null
   & $adb -s $Device pull /sdcard/edge_qa_screen.png (Join-Path $artifact 'screen.png') | Out-Null
   & $adb -s $Device shell uiautomator dump /sdcard/edge_qa_ui.xml | Out-Null
-  & $adb -s $Device shell cat /sdcard/edge_qa_ui.xml | Set-Content -LiteralPath (Join-Path $artifact 'ui.xml') -Encoding utf8
+  & $adb -s $Device shell ls /sdcard/edge_qa_ui.xml 2>$null | Out-Null
+  if ($LASTEXITCODE -eq 0) {
+    & $adb -s $Device shell cat /sdcard/edge_qa_ui.xml | Set-Content -LiteralPath (Join-Path $artifact 'ui.xml') -Encoding utf8
+  } else {
+    # Maestro owns Samsung's accessibility automation service during a test.
+    # uiautomator can be refused even though Maestro's own hierarchy still works.
+    & $maestro --device $Device hierarchy | Set-Content -LiteralPath (Join-Path $artifact 'maestro-hierarchy.json') -Encoding utf8
+  }
   & $adb -s $Device shell dumpsys activity activities | Set-Content -LiteralPath (Join-Path $artifact 'activity.txt') -Encoding utf8
   & $adb -s $Device shell dumpsys media.camera | Set-Content -LiteralPath (Join-Path $artifact 'camera.txt') -Encoding utf8
   & $adb -s $Device logcat -d -t 3500 -v time |
@@ -44,18 +53,18 @@ function Capture-Evidence {
     Set-Content -LiteralPath (Join-Path $artifact 'logcat.txt') -Encoding utf8
   try { Get-CdpSnapshot | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $artifact 'cdp-state.json') -Encoding utf8 }
   catch { $_.Exception.Message | Set-Content -LiteralPath (Join-Path $artifact 'cdp-error.txt') }
-  & $adb -s $Device shell rm /sdcard/edge_qa_screen.png /sdcard/edge_qa_ui.xml | Out-Null
+  & $adb -s $Device shell rm -f /sdcard/edge_qa_screen.png /sdcard/edge_qa_ui.xml | Out-Null
 }
 if ((& $adb -s $Device get-state 2>$null) -ne 'device') { throw "S22 unavailable: $Device" }
 $model = (& $adb -s $Device shell getprop ro.product.model).Trim()
 if ($model -ne 'SM-S908B') { throw "Unexpected device: $model" }
 $stack = (& $adb -s $Device shell dumpsys activity activities) -join "`n"
-if ($Case -notin @('01b','01c') -and $stack -notmatch '(?s)(?:topResumedActivity=|ResumedActivity:)\s*ActivityRecord\{.{0,180}RoomsActivity') {
+if ($Case -notin @('01b','01c','04') -and $stack -notmatch '(?s)(?:topResumedActivity=|ResumedActivity:)\s*ActivityRecord\{.{0,180}RoomsActivity') {
   Write-Host 'BLOCKED: open LIVE Rooms with an authenticated QA account before the flow.'
   Write-Host 'No test action or backend write was performed.'
   exit 2
 }
-if ($Case -notin @('01b','01c')) {
+if ($Case -notin @('01b','01c','04')) {
   $beforeCdp = Get-CdpSnapshot
   if ($null -eq $beforeCdp -or $beforeCdp.roomsWebViews -eq 0 -or
       @($beforeCdp.pages | Where-Object { -not $_.visibleFixture -or $_.roomsBackendRequests -gt 0 }).Count -eq 0) {
@@ -64,20 +73,31 @@ if ($Case -notin @('01b','01c')) {
     exit 2
   }
 }
+$beforeRoomsActivities = if ($Case -eq '05') { ([regex]::Matches($stack, '(?s)\* Hist\s+#\d+: ActivityRecord\{[^}]{0,220}RoomsActivity')).Count } else { 0 }
+$beforeRoomsWebViews = if ($Case -eq '05') { $beforeCdp.roomsWebViews } else { 0 }
 $flow = Join-Path $edge $flows[$Case]
 Write-Host "EDGE $Case on $Device — $qaTitle"
-& $maestro --device $Device test --no-ansi --debug-output (Join-Path $artifact 'maestro') -e "QA_ROOM_TITLE=$qaTitle" $flow
+& $maestro --device $Device test --no-ansi --no-reinstall-driver --debug-output (Join-Path $artifact 'maestro') -e "QA_ROOM_TITLE=$qaTitle" $flow
 $maestroCode = $LASTEXITCODE
-if ($maestroCode -eq 0 -and $Case -in @('01','01b')) {
+if ($maestroCode -eq 0 -and $Case -in @('01','01b','04')) {
   $afterCdp = Get-CdpSnapshot
   $afterCdp | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $artifact 'cdp-state.json') -Encoding utf8
   $livePages = @($afterCdp.pages | Where-Object { -not $_.visibleFixture -and $_.roomsBackendRequests -gt 0 })
   $demoPages = @($afterCdp.pages | Where-Object { $_.visibleFixture -and $_.roomsBackendRequests -eq 0 })
-  if (($Case -eq '01' -and $livePages.Count -eq 0) -or ($Case -eq '01b' -and $demoPages.Count -eq 0)) {
+  if (($Case -in @('01','04') -and $livePages.Count -eq 0) -or ($Case -eq '01b' -and $demoPages.Count -eq 0)) {
     $maestroCode = 1
   }
 }
-if ($maestroCode -eq 0 -and $Case -notin @('01','01b','01c')) {
+if ($maestroCode -eq 0 -and $Case -eq '05') {
+  $afterCdp = Get-CdpSnapshot
+  $after = (& $adb -s $Device shell dumpsys activity activities) -join "`n"
+  $afterRoomsActivities = ([regex]::Matches($after, '(?s)\* Hist\s+#\d+: ActivityRecord\{[^}]{0,220}RoomsActivity')).Count
+  $afterRoomsWebViews = if ($null -eq $afterCdp) { -1 } else { $afterCdp.roomsWebViews }
+  "beforeRoomsActivities=$beforeRoomsActivities`nafterRoomsActivities=$afterRoomsActivities`nbeforeRoomsWebViews=$beforeRoomsWebViews`nafterRoomsWebViews=$afterRoomsWebViews" |
+    Set-Content -LiteralPath (Join-Path $artifact 'stack-counts.txt')
+  if ($afterRoomsActivities -gt $beforeRoomsActivities -or $afterRoomsWebViews -gt $beforeRoomsWebViews -or $afterRoomsWebViews -lt 0) { $maestroCode = 1 }
+}
+if ($maestroCode -eq 0 -and $Case -notin @('01','01b','01c','04')) {
   & node (Join-Path $edge 'backend-check.mjs') $qaTitle 1 | Tee-Object -FilePath (Join-Path $artifact 'backend.json')
   $backendCode = $LASTEXITCODE
   $after = (& $adb -s $Device shell dumpsys activity activities) -join "`n"

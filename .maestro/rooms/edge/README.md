@@ -45,6 +45,13 @@ QA account and the LIVE Rooms home open on the phone. Do not provide passwords
 to the runner. Tests 2–3 require camera/micro permission and access to the
 read-only deployment database check in `../Meewav-Web/.env.local`.
 
+`04-live-wizard-resume.yaml` checks a LIVE wizard and a feature hop across
+Android Home/foreground without creating a Room. Start it from an authenticated
+LIVE Globe opened through the normal launcher task. `05-feature-stack-accumulation.yaml`
+compares native `RoomsActivity` and CDP WebView counts before and after two
+Rooms ↔ Marketplace hops. It detects hidden, retained feature instances even
+when the visible catalogue still looks correct. Both are DEEP and read-only.
+
 Run one case at a time (PowerShell, from repository root):
 
 ```powershell
@@ -53,6 +60,8 @@ Run one case at a time (PowerShell, from repository root):
 & .\.maestro\rooms\edge\run-edge.ps1 -Case 01
 & .\.maestro\rooms\edge\run-edge.ps1 -Case 02
 & .\.maestro\rooms\edge\run-edge.ps1 -Case 03
+& .\.maestro\rooms\edge\run-edge.ps1 -Case 04
+& .\.maestro\rooms\edge\run-edge.ps1 -Case 05
 ```
 
 If wireless debugging changes its port, pass `-Device <current-ip:port>`.

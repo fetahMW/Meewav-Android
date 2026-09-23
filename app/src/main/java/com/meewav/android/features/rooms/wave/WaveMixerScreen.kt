@@ -5,6 +5,7 @@ import android.view.HapticFeedbackConstants
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -295,6 +296,11 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     }
     var showLeaveConfirm by remember { mutableStateOf(false) }
     var stageFullscreen by remember { mutableStateOf(false) }
+    // System Back must use the same end-room path as the header. Otherwise the
+    // Activity disappears while rooms_v2 remains live and its dead card returns.
+    BackHandler(enabled = !showLeaveConfirm) {
+        if (stageFullscreen) stageFullscreen = false else showLeaveConfirm = true
+    }
     val videoControls = rememberRoomVideoControls()
     LaunchedEffect(initialFrontCamera) { videoControls.frontCamera = initialFrontCamera }
     LaunchedEffect(liveAudio, videoControls.cameraEnabled) { liveAudio?.setCameraEnabled(videoControls.cameraEnabled) }

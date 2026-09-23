@@ -1,0 +1,34 @@
+appId: com.meewav.android.debug
+name: EDGE 04 - LIVE wizard survives Android background and native feature hops
+tags:
+  - edge
+  - deep
+  - lifecycle
+---
+# Precondition: authenticated LIVE Globe. This never creates a Room.
+# Crosses MainActivity -> Rooms WebView -> wizard, then Android Home and
+# Rooms -> Marketplace -> Rooms; fixtures must never replace live data.
+- launchApp:
+    stopApp: false
+- assertVisible: "Rooms"
+- tapOn: "Rooms"
+- assertVisible: "Créer une Room"
+- assertNotVisible: ".*Finale des nouveaux flows.*"
+- tapOn: "Créer une Room"
+- assertVisible: "Ouvrir une Room"
+- pressKey: home
+- launchApp:
+    stopApp: false
+- assertVisible: "Ouvrir une Room"
+- pressKey: back
+- assertVisible: "Créer une Room"
+- assertNotVisible: ".*Finale des nouveaux flows.*"
+- tapOn: "Marketplace"
+- assertVisible: "Marketplace"
+- pressKey: home
+- launchApp:
+    stopApp: false
+- assertVisible: "Marketplace"
+- tapOn: "Rooms"
+- assertVisible: "Créer une Room"
+- assertNotVisible: ".*Finale des nouveaux flows.*"

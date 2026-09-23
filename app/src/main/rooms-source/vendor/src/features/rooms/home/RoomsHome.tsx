@@ -175,9 +175,11 @@ type RoomsHomeProps = {
   roomType?: RoomsHomeRoomType;
   collectionSlug?: string | null;
   onOpenRoom?: (room: RoomsHomeRoom) => void;
+  currentUserId?: string | null;
+  onEndRoom?: (room: RoomsHomeRoom) => void;
 };
 
-export function RoomsHome({ catalog = ROOMS_HOME_CATALOG, collectionSlug = null, roomType, onOpenRoom }: RoomsHomeProps) {
+export function RoomsHome({ catalog = ROOMS_HOME_CATALOG, collectionSlug = null, roomType, onOpenRoom, currentUserId, onEndRoom }: RoomsHomeProps) {
   const navigate = useNavigate();
   const initialSnapshotRef = useRef(readRoomsHomeSessionSnapshot());
   const scrollSurfaceRef = useRef<HTMLDivElement | null>(null);
@@ -519,6 +521,8 @@ export function RoomsHome({ catalog = ROOMS_HOME_CATALOG, collectionSlug = null,
                     room={room}
                     priority={index < 2}
                     onOpen={openRoom}
+                    canEnd={room.source === "live" && room.hostId === currentUserId}
+                    onEnd={onEndRoom}
                   />
                 ))}
               </div>
@@ -550,6 +554,8 @@ export function RoomsHome({ catalog = ROOMS_HOME_CATALOG, collectionSlug = null,
                 railPositionsRef.current[changedCollection.slug] = scrollLeft;
               }}
               onOpen={openRoom}
+              currentUserId={currentUserId}
+              onEnd={onEndRoom}
               onSeeMore={openCollection}
             />
           ))}

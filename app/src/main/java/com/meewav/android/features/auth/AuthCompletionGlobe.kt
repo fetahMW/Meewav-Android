@@ -235,9 +235,12 @@ private class AuthGlobeController(private val fullScene: Boolean, private val ho
                             else -> MessagingActivity::class.java
                         }
                         val defaultRoute = request.url.path.orEmpty().removePrefix("/native")
-                        context.startActivity(Intent(context, destination)
+                        val requestedRoute = request.url.getQueryParameter("route")
+                        val featureIntent = Intent(context, destination)
                             .putExtra("preview", previewMessages)
-                            .putExtra("route", request.url.getQueryParameter("route") ?: defaultRoute))
+                            .putExtra("route", requestedRoute ?: defaultRoute)
+                        if (requestedRoute == null) featureIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                        context.startActivity(featureIntent)
                         return true
                     }
                     return request.method != "GET" || request.url.toString() != page

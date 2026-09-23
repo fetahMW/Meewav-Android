@@ -1,4 +1,4 @@
-import {previewEnabled} from '../profile-source/runtime';
+import {getSessionUser,previewEnabled,supabase} from '../profile-source/runtime';
 import {listLiveRooms,createLiveRoom} from './liveRooms';
 import type { CageProgram } from '../shared-ui/cagePrograms';
 import { lazy, Suspense, useState, useEffect, useRef } from 'react';
@@ -30,14 +30,21 @@ export default function RoomsPage() {
   const navigate = useNavigate();
   const demoMode = previewEnabled();
   const [catalog,setCatalog]=useState<RoomsHomeRoom[]>([]);
+  const [realUserId,setRealUserId]=useState<string|null>(null);
+  const [roomToEnd,setRoomToEnd]=useState<RoomsHomeRoom|null>(null);
+  const [endingRoom,setEndingRoom]=useState(false);
   const [launching,setLaunching]=useState(false);
   const launchRequest=useRef(crypto.randomUUID());
+  useEffect(()=>{if(demoMode)return;let active=true;void getSessionUser().then(({data})=>{if(active)setRealUserId(data.user?.id??null);});return()=>{active=false;};},[demoMode]);
   useEffect(()=>{
     if(demoMode)return;
     let active=true;
     const refresh=async()=>{try{const rooms=await listLiveRooms();if(active)setCatalog(rooms);}catch{if(active)setRoomNotice('Impossible de charger les rooms. Nouvelle tentative en cours.');}};
     void refresh();const timer=window.setInterval(()=>void refresh(),15000);
-    return()=>{active=false;window.clearInterval(timer);};
+    const onVisible=()=>{if(document.visibilityState==='visible')void refresh();};
+    window.addEventListener('focus',onVisible);
+    document.addEventListener('visibilitychange',onVisible);
+    return()=>{active=false;window.clearInterval(timer);window.removeEventListener('focus',onVisible);document.removeEventListener('visibilitychange',onVisible);};
   },[demoMode]);
   const [viewing,setViewing]=useState<RoomsHomeRoom|null>(null);
   const [tab, setTab] = useState<RoomTab>('home');
@@ -59,6 +66,18 @@ export default function RoomsPage() {
     window.location.assign(`/native/room-session?${params}`);
   };
   const openRoom = (room: RoomsHomeRoom) => setViewing(room);
+  const endOwnRoom = async () => {
+    if (!roomToEnd || endingRoom || roomToEnd.hostId !== realUserId || roomToEnd.source !== 'live') return;
+    setEndingRoom(true);
+    try {
+      const {error}=await supabase.rpc('rooms_end_room_v1',{p_room_id:roomToEnd.id});
+      if(error)throw error;
+      setCatalog(current=>current.filter(room=>room.id!==roomToEnd.id));
+      setRoomToEnd(null);
+      notice('Le live est terminé. Sa carte a été retirée.');
+    } catch { notice('La room n’a pas pu être terminée. Réessaie.'); }
+    finally { setEndingRoom(false); }
+  };
   const viewer=viewing ? <Suspense fallback={<div className="android-room-opening" role="status">Ouverture du live…</div>}><RoomViewer room={viewing} onLeave={()=>setViewing(null)} /></Suspense> : null;
   if (sequencerOpen) return <div className="rooms-home-launch-dialog rooms-launch-page">
     <LaunchRoomSheet
@@ -92,6 +111,8 @@ export default function RoomsPage() {
         roomType={tab === 'home' ? undefined : (tab as RoomsHomeRoomType)}
         collectionSlug={collectionSlug}
         onOpenRoom={openRoom}
+        currentUserId={realUserId}
+        onEndRoom={setRoomToEnd}
       />
     </div>
       <button
@@ -104,5 +125,12 @@ export default function RoomsPage() {
         <Plus aria-hidden="true" />
       </button>
     {roomNotice ? <aside className="rooms-page__notice" role="status"><span>{roomNotice}</span><button aria-label="Fermer" onClick={() => setRoomNotice('')}><X size={16} /></button></aside> : null}
-  </div></>;
+  </div>{roomToEnd ? <div className="rooms-page__end-backdrop" onClick={()=>{if(!endingRoom)setRoomToEnd(null);}}>
+    <section className="rooms-page__end-dialog" role="dialog" aria-modal="true" aria-labelledby="rooms-end-title" onClick={event=>event.stopPropagation()}>
+      <small>ROOM EN DIRECT</small>
+      <h2 id="rooms-end-title">Terminer « {roomToEnd.title} » ?</h2>
+      <p>Le live sera fermé pour tout le monde et sa miniature disparaîtra de l’accueil.</p>
+      <div><button type="button" autoFocus disabled={endingRoom} onClick={()=>setRoomToEnd(null)}>Continuer le live</button><button type="button" disabled={endingRoom} onClick={()=>void endOwnRoom()}>{endingRoom?'Fermeture…':'Terminer le live'}</button></div>
+    </section>
+  </div> : null}</>;
 }

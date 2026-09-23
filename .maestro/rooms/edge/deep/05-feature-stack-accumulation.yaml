@@ -1,0 +1,22 @@
+appId: com.meewav.android.debug
+name: EDGE 05 - repeated feature hops do not retain stale Rooms WebViews
+tags:
+  - edge
+  - deep
+  - backstack
+---
+# Precondition: authenticated LIVE Rooms home. No Room or backend row is created.
+# The runner compares Activity/WebView counts before and after these hops.
+- launchApp:
+    stopApp: false
+- assertVisible: "Créer une Room"
+- assertNotVisible: ".*Finale des nouveaux flows.*"
+- tapOn: "Marketplace"
+- assertVisible: "Marketplace"
+- tapOn: "Rooms"
+- assertVisible: "Créer une Room"
+- tapOn: "Marketplace"
+- assertVisible: "Marketplace"
+- tapOn: "Rooms"
+- assertVisible: "Créer une Room"
+- assertNotVisible: ".*Finale des nouveaux flows.*"
