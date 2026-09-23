@@ -8,6 +8,7 @@
 #include <time.h>
 #include "SuperpoweredRuntime.h"
 #include "WaveNoiseSuppressor.h"
+#include "WaveFreeEffects.h"
 #include "SuperpoweredAutomaticVocalPitchCorrection.h"
 #include "SuperpoweredReverb.h"
 
@@ -29,6 +30,7 @@ public:
     Superpowered::AutomaticVocalPitchCorrection tune;
     Superpowered::Reverb reverb{48000, 48000};
     WaveNoiseSuppressor expander;
+    WaveFreeEffects freeEffects;
     std::atomic<float> capturedPeak{0}, monitorPeak{0};
     std::atomic<int> calibration{0};
 
@@ -100,6 +102,7 @@ public:
             reverb.mix = mix.load();
             reverb.process(voice.data(), voice.data(), count);
         } else reverb.enabled = false;
+        freeEffects.process(voice.data(), count, state);
         const float volume = gain.load(std::memory_order_relaxed);
         float renderedPeak = 0;
         for (int i = 0; i < count * 2; ++i) {
@@ -135,7 +138,9 @@ Java_com_meewav_android_features_rooms_wave_WaveNativeDuplex_configure(JNIEnv*, 
     auto* engine = reinterpret_cast<WaveNativeDuplex*>(h);
     engine->gain.store(std::clamp(gain, 0.f, 1.f));
     engine->scale.store(std::clamp<int>(scale, 0, 12));
-    engine->mix.store(std::clamp(mix, 0.f, 1.f));
+    // More travel for subtle reverb, with the full range still available.
+    const float reverbPosition = std::clamp(mix, 0.f, 1.f);
+    engine->mix.store(reverbPosition * reverbPosition);
     engine->calibration.store(calibration);
     engine->flags.store(flags);
 }

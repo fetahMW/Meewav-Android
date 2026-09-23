@@ -408,6 +408,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                         monitoring = monitoring, onMonitoring = { monitoring = !monitoring },
                         autotuneOn = autotuneOn, onAutotune = { autotuneOn = !autotuneOn },
                         cleanVoice = cleanVoice, onCleanVoice = { cleanVoice = !cleanVoice },
+                        proEffects = proEffects, onProEffects = { proEffects = it },
                         onCalibrateNoise = { cleanVoice = true; noiseCalibration++ },
                         reverbOn = reverbOn, onReverb = { reverbOn = !reverbOn },
                         reverbValue = reverbValue, onReverbValue = { reverbValue = it },

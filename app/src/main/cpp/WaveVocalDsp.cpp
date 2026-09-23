@@ -3,6 +3,7 @@
 #include <algorithm>
 #include "SuperpoweredRuntime.h"
 #include "WaveNoiseSuppressor.h"
+#include "WaveFreeEffects.h"
 #include "SuperpoweredAutomaticVocalPitchCorrection.h"
 #include "SuperpoweredReverb.h"
 
@@ -11,6 +12,7 @@ struct VocalDsp {
     Superpowered::AutomaticVocalPitchCorrection tune;
     Superpowered::Reverb reverb{48000, 48000};
     WaveNoiseSuppressor expander;
+    WaveFreeEffects freeEffects;
     std::array<float, 960> input{}, tuned{};
     VocalDsp() {
         tune.samplerate = 48000;
@@ -41,8 +43,10 @@ Java_com_meewav_android_features_rooms_wave_WaveVocalDsp_process(JNIEnv* env, jo
         for (int i=0; i<960; ++i) dsp->input[i] = dsp->tuned[i] * .98f + dsp->input[i] * .02f;
     }
     dsp->reverb.enabled = reverb;
-    dsp->reverb.mix = std::clamp<float>(amount, 0, 1);
+    const float reverbPosition = std::clamp<float>(amount, 0, 1);
+    dsp->reverb.mix = reverbPosition * reverbPosition;
     dsp->reverb.process(dsp->input.data(), dsp->input.data(), 480);
+    dsp->freeEffects.process(dsp->input.data(), 480, effects);
     env->SetFloatArrayRegion(samples, 0, 960, dsp->input.data());
 }
 extern "C" JNIEXPORT void JNICALL
