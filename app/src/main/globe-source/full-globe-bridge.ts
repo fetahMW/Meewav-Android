@@ -4,6 +4,7 @@ let status: 'loading' | 'ready' | 'error' = 'loading';
 let active = true;
 let disposed = false;
 let root: Root | undefined;
+let homeScene: { lon: number; lat: number; cityCode: string; zoneId: string; label: string } | null = null;
 const engine = () => (window as any).__meewavEngine;
 
 function updateActivity() {
@@ -44,6 +45,18 @@ window.addEventListener('meewav:navigate', (event: Event) => {
   get status() { return status; },
   setActive(value: boolean) { active = value === true; updateActivity(); },
   setInteractive() { /* The full scene always uses the Web gesture handlers. */ },
+  setHomeScene(value: unknown) {
+    if (!value || typeof value !== 'object') return;
+    const scene = value as Record<string, unknown>;
+    if (typeof scene.lon !== 'number' || !Number.isFinite(scene.lon) || Math.abs(scene.lon) > 180 ||
+      typeof scene.lat !== 'number' || !Number.isFinite(scene.lat) || Math.abs(scene.lat) > 90) return;
+    homeScene = { lon: scene.lon, lat: scene.lat,
+      cityCode: typeof scene.cityCode === 'string' && /^\d{5}$/.test(scene.cityCode) ? scene.cityCode : '',
+      zoneId: typeof scene.zoneId === 'string' ? scene.zoneId.slice(0, 100) : '',
+      label: typeof scene.label === 'string' ? scene.label.slice(0, 120) : '' };
+    document.dispatchEvent(new CustomEvent('globelab-home-scene', { detail: homeScene }));
+  },
+  getHomeScene() { return homeScene; },
   zoomIn() { engine()?.zoom(0.55); },
   zoomOut() { engine()?.zoom(1.8); },
   rotateLeft() {

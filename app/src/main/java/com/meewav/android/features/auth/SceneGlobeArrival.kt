@@ -38,7 +38,8 @@ internal fun SceneGlobeArrival(state: AuthUiState, onBack: () -> Unit, onEnter: 
         var globeLoading by remember { mutableStateOf(true) }
         Box(Modifier.fillMaxSize().background(Color(0xFF08090D)).safeDrawingPadding()) {
             AuthCompletionGlobe(Modifier.fillMaxSize(), interactive = true, onClick = onEnter,
-                onLoadingChange = { globeLoading = it }, previewMessages = state.localPreview)
+                onLoadingChange = { globeLoading = it }, previewMessages = state.localPreview,
+                homeScene = state.homeScene)
             // Reserved right strip in mobile.css keeps this outside Web panels.
             if (!globeLoading) IconButton(onClick = onClose, modifier = Modifier.align(Alignment.TopEnd)
                 .padding(end = 6.dp, top = 10.dp).size(44.dp)

@@ -72,8 +72,9 @@ internal fun AuthCompletionGlobe(
     onClick: () -> Unit,
     onLoadingChange: (Boolean) -> Unit = {},
     previewMessages: Boolean = false,
+    homeScene: GlobeHomeScene? = null,
 ) {
-    val controller = remember(interactive) { AuthGlobeController(interactive) }
+    val controller = remember(interactive, homeScene) { AuthGlobeController(interactive, homeScene) }
     controller.previewMessages = previewMessages
     LaunchedEffect(controller.ready, controller.unavailable) {
         onLoadingChange(!controller.ready && !controller.unavailable)
@@ -155,7 +156,7 @@ private val GlobeAssets = mapOf(
     "/earth_specular.jpg" to "image/jpeg",
 )
 
-private class AuthGlobeController(private val fullScene: Boolean) {
+private class AuthGlobeController(private val fullScene: Boolean, private val homeScene: GlobeHomeScene?) {
     var previewMessages = false
     private val page get() = if (fullScene) "$GlobeOrigin/globe-vinyle/index.html?mode=${if (previewMessages) "demo" else "real"}" else GlobePage
     private val api = if (fullScene) "meewavFullGlobe" else "meewavAuthGlobe"
@@ -302,6 +303,13 @@ private class AuthGlobeController(private val fullScene: Boolean) {
                     ready = true
                     webView.alpha = 1f
                     webView.evaluateJavascript("window.$api.setInteractive($interactive);", null)
+                    if (fullScene && !previewMessages && homeScene != null) {
+                        val scene = JSONObject()
+                            .put("lon", homeScene.longitude).put("lat", homeScene.latitude)
+                            .put("cityCode", homeScene.communeCode).put("zoneId", homeScene.zoneId)
+                            .put("label", homeScene.label)
+                        webView.evaluateJavascript("window.meewavFullGlobe.setHomeScene($scene);", null)
+                    }
                     refreshActivity()
                 }
                 "\"loading\"" -> if (attempt < if (fullScene) 150 else 40) {

@@ -170,7 +170,7 @@ export async function createThree(
     quality: orbitOptions.get("orbitQuality") || undefined,
     animated: orbitOptions.has("orbitMotion") ? orbitOptions.get("orbitMotion") !== "off" : undefined,
   });
-  const ringPortraits = createRingPortraits(scene, saturnRing, camera, canvas, () => { sceneDirty = true; }, renderer.getPixelRatio());
+  const ringPortraits = createRingPortraits(scene, saturnRing, camera, canvas, () => { sceneDirty = true; }, renderer.getPixelRatio(), liveMarkers === null);
   const orbitBloom = createOrbitBloom(renderer, saturnRing, earth,
     orbitOptions.has("orbitBloom") ? orbitOptions.get("orbitBloom") !== "off" : undefined, ringPortraits);
   function renderScene(dt: number) {
@@ -1294,7 +1294,7 @@ export async function createThree(
   // Size both the camera and renderer synchronously before exposing navigation.
   resizeViewport();
   raf = requestAnimationFrame(frame);
-  prefetchArrival({ cityCode: PARIS_CITY_CODE, quarterId: CHARONNE_ID });
+  if (liveMarkers === null) prefetchArrival({ cityCode: PARIS_CITY_CODE, quarterId: CHARONNE_ID });
   function notifyRingMode(active: boolean, returning = false) {
     if (host.parentElement) host.parentElement.dataset.navigationMode = active ? 'ring' : 'globe';
     host.dispatchEvent(new CustomEvent('meewav:ring-mode', { bubbles: true, detail: { active, returning } }));

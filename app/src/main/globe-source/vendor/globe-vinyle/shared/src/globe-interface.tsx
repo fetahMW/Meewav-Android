@@ -23,7 +23,7 @@ const load = (key: string, fallback: any) => { try { return JSON.parse(localStor
 const persist = (key: string, value: any) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* Optional local preferences. */ } };
 const names: Record<string, string> = { "/messages": "Messagerie", "/rooms/home": "Rooms", "/scene": "La Scène", "/market": "Marketplace", "/tremplin": "Tremplin", "/profile": "Profil" };
 
-export function GlobeInterface({ ready, data, engine, navigate, selection, realMode = false }: any) {
+export function GlobeInterface({ ready, data, engine, navigate, selection, realMode = false, homeScene = null }: any) {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -43,6 +43,12 @@ export function GlobeInterface({ ready, data, engine, navigate, selection, realM
     return () => window.removeEventListener('meewav:ring-playback', update);
   }, [ready, engine]);
   const activeCityId = useRef("fr-commune-75056");
+  useEffect(() => {
+    if (!realMode || !homeScene) return;
+    if (homeScene.cityCode) activeCityId.current = `fr-commune-${homeScene.cityCode}`;
+    setMode("position");
+    setQuery(homeScene.label || "Ma scène");
+  }, [realMode, homeScene]);
   const overviewPose = useRef<any>(null);
   const [notice, setNotice] = useState("");
   const [destination, setDestination] = useState("");
@@ -245,6 +251,16 @@ export function GlobeInterface({ ready, data, engine, navigate, selection, realM
   }, [realMode]);
   const goPosition = () => {
     if (!ready) return;
+    if (realMode) {
+      if (!homeScene) { setNotice("Ta scène enregistrée est indisponible pour le moment."); return; }
+      const quarter = data.sectors.features.find((feature: any) => feature.id === homeScene.zoneId);
+      overviewPose.current = null;
+      rememberCity(cityLabels.find((city: any) => city.id === `fr-commune-${homeScene.cityCode}`));
+      navigate(quarter || null, { lon: homeScene.lon, lat: homeScene.lat, height: .008, pitch: 62, bearing: 0 },
+        { cityCode: homeScene.cityCode || undefined, quarterId: homeScene.zoneId || undefined });
+      setMode("position"); setQuery(homeScene.label || "Ma scène"); setFocused(false); setNotice("");
+      return;
+    }
     const charonne = data.sectors.features.find((feature: any) => feature.id === CHARONNE_ID);
     if (!charonne) return;
     overviewPose.current = null;
@@ -344,7 +360,7 @@ export function GlobeInterface({ ready, data, engine, navigate, selection, realM
       <nav className="reference-view-switch map-mode-switch" aria-label="Modes de carte">
         <button className={`map-mode-switch__button ${mode === "city" ? "is-active" : ""}`} disabled={!ready} onClick={goCurrentCity} aria-pressed={mode === "city"} aria-label="Recentrer la ville explorée" title="Ville"><Building2 size={19} aria-hidden="true" /><span className="map-mode-switch__label">Ville</span></button>
         <button className={`map-mode-switch__button ${mode === "country" ? "is-active" : ""}`} disabled={!ready} onClick={() => choose(catalogue.find((x: any) => x.id === "france"))} aria-pressed={mode === "country"} aria-label="Vue du pays : France" title="Pays"><span className="map-mode-switch__france-flag" aria-hidden="true" /><span className="map-mode-switch__label">Pays</span></button>
-        <button className={`map-mode-switch__button ${mode === "position" ? "is-active" : ""}`} disabled={!ready} onClick={goPosition} aria-label="Ma position fictive : Charonne, Paris" title="Ma position — quartier Charonne, Paris (démo)" aria-pressed={mode === "position"}><Crosshair size={19} aria-hidden="true" /><span className="map-mode-switch__label">Ma position</span></button>
+        <button className={`map-mode-switch__button ${mode === "position" ? "is-active" : ""}`} disabled={!ready} onClick={goPosition} aria-label={realMode ? "Revenir à ma scène" : "Ma position fictive : Charonne, Paris"} title={realMode ? homeScene?.label || "Ma scène" : "Ma position — quartier Charonne, Paris (démo)"} aria-pressed={mode === "position"}><Crosshair size={19} aria-hidden="true" /><span className="map-mode-switch__label">Ma position</span></button>
       </nav>
     {showResults && <div ref={searchResults} id="reference-search-results" className="reference-search-results france-search-dropdown" role="listbox">
       {results.map((result: any, i: number) => <button type="button" key={result.id} id={`result-${result.id}`} role="option" aria-selected={i === activeIndex} className={i === activeIndex ? "is-active" : ""}

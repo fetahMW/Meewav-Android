@@ -58,7 +58,7 @@ internal class RoomsAudioSession(private val context: Context, private val repos
     /** The RTC engine owns the camera. The preview is only a canvas for that same published stream. */
     fun bindLocalVideo(view: TextureView?) {
         localVideoView = view
-        engine?.setLocalVideoCanvas(view?.let { VideoCanvas(it, VideoCanvas.RENDER_MODE_FILL) } ?: VideoCanvas())
+        engine?.setLocalVideoCanvas(view?.let { VideoCanvas(it, VideoCanvas.RENDER_MODE_HIDDEN) } ?: VideoCanvas())
     }
 
     fun unbindLocalVideo(view: TextureView) {
@@ -79,7 +79,7 @@ internal class RoomsAudioSession(private val context: Context, private val repos
         check(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) { "Autorise la caméra pour diffuser" }
         val sdk = engine ?: return
         val channel = rtc ?: return
-        localVideoView?.let { requireOk(sdk.setLocalVideoCanvas(VideoCanvas(it, VideoCanvas.RENDER_MODE_FILL)), "Aperçu caméra") }
+        localVideoView?.let { requireOk(sdk.setLocalVideoCanvas(VideoCanvas(it, VideoCanvas.RENDER_MODE_HIDDEN)), "Aperçu caméra") }
         requireOk(sdk.startVideoCapture(), "Capture caméra")
         requireOk(channel.publishStreamVideo(true), "Publication vidéo")
         cameraPublished = true

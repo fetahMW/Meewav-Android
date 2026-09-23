@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -31,6 +32,14 @@ data class ProfileDraft(
     val communeCode: String = "",
     val musicScene: MusicScene? = null,
     val visibleOnScene: Boolean = true,
+)
+
+data class GlobeHomeScene(
+    val longitude: Double,
+    val latitude: Double,
+    val communeCode: String,
+    val zoneId: String,
+    val label: String,
 )
 
 data class AuthUiState(
@@ -50,6 +59,7 @@ data class AuthUiState(
     val authenticated: Boolean = false,
     val onboardingComplete: Boolean = false,
     val profile: ProfileDraft = ProfileDraft(),
+    val homeScene: GlobeHomeScene? = null,
 )
 
 class AuthViewModel(private val repository: MeewavAuthRepository, preview: Boolean = BuildConfig.DEBUG) : ViewModel() {
@@ -104,13 +114,22 @@ class AuthViewModel(private val repository: MeewavAuthRepository, preview: Boole
         val saved = repository.avatarChoice()
         val icon = saved?.first ?: CanonicalAvatar.iconForStyle(identity["avatar_style_key"]?.jsonPrimitive?.contentOrNull)
         val username = identity["username"]?.jsonPrimitive?.contentOrNull.orEmpty()
+        val longitude = identity["longitude"]?.jsonPrimitive?.doubleOrNull
+        val latitude = identity["latitude"]?.jsonPrimitive?.doubleOrNull
+        val homeScene = if (longitude != null && latitude != null && longitude in -180.0..180.0 && latitude in -90.0..90.0)
+            GlobeHomeScene(longitude, latitude,
+                identity["commune_code"]?.jsonPrimitive?.contentOrNull.orEmpty(),
+                identity["zone_id"]?.jsonPrimitive?.contentOrNull.orEmpty(),
+                identity["scene_name"]?.jsonPrimitive?.contentOrNull.orEmpty())
+        else null
         routedUserId = user.id
         mutable.update { it.copy(initializing = false, authenticated = true, onboardingComplete = completed,
             page = if (completed) AuthPage.Globe else AuthPage.Register,
             email = user.email.orEmpty(), username = username.ifBlank { it.username }, connectedName = username,
             password = "", confirmation = "", error = null,
             profile = it.profile.copy(avatarIcon = icon ?: it.profile.avatarIcon,
-                realArtist = saved?.second ?: (identity["artist_type"]?.jsonPrimitive?.contentOrNull != "IA"))) }
+                realArtist = saved?.second ?: (identity["artist_type"]?.jsonPrimitive?.contentOrNull != "IA")),
+            homeScene = homeScene) }
     }
 
     fun email(value: String) { mutable.update { it.copy(email = value, error = null) } }

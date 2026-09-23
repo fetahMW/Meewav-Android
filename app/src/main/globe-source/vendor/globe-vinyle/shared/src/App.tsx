@@ -27,6 +27,7 @@ export default function App() {
     [zoomLimit, setZoomLimit] = useState("");
   const zoomLimitRef = useRef("");
   const [selectedFeature, setSelectedFeature] = useState<any>(null);
+  const [homeScene, setHomeScene] = useState<any>(null);
   function navigate(feature: any = null, target: any = world, focus: any = undefined) {
     const betweenRegions = selection.current?.properties.kind === "region" && feature?.properties.kind === "region";
     selection.current = feature;
@@ -178,9 +179,20 @@ export default function App() {
       navigate(null, { lon: scene.center[0], lat: scene.center[1], height: scene.singlePlate ? .07 : .008, pitch: 62 },
         { cityCode: scene.cityCode, quarterId: scene.singlePlate ? undefined : scene.zoneId });
     };
+    const homeArrival = (event: Event) => {
+      if (!realMode) return;
+      const home = (event as CustomEvent).detail;
+      if (!home || !Number.isFinite(home.lon) || !Number.isFinite(home.lat)) return;
+      setHomeScene(home);
+      if (!engine.current) return;
+      const quarter = data.current?.sectors.features.find((feature: any) => feature.id === home.zoneId);
+      navigate(quarter || null, { lon: home.lon, lat: home.lat, height: .008, pitch: 62, bearing: 0 },
+        { cityCode: home.cityCode || undefined, quarterId: home.zoneId || undefined });
+    };
     document.addEventListener("visibilitychange", activity);
     document.addEventListener("globelab-lifecycle", native);
     document.addEventListener('globelab-scene-arrival', sceneArrival);
+    document.addEventListener('globelab-home-scene', homeArrival);
     return () => {
       operation.current++;
       if (import.meta.hot && engine.current) previewSnapshot.current = engine.current.getPreviewSnapshot();
@@ -188,6 +200,7 @@ export default function App() {
       document.removeEventListener("visibilitychange", activity);
       document.removeEventListener("globelab-lifecycle", native);
       document.removeEventListener('globelab-scene-arrival', sceneArrival);
+      document.removeEventListener('globelab-home-scene', homeArrival);
     };
   }, []);
   useEffect(() => {
@@ -311,7 +324,7 @@ export default function App() {
       {/* Keep the viewport measurable while preparing the first frame, but
           reveal the scene and its controls together behind the vinyl loader. */}
       <div ref={host} className="globe-stage" style={{ visibility: ready ? 'visible' : 'hidden' }} aria-hidden={!ready} />
-      {ready && <GlobeInterface ready={ready} data={data.current} engine={engine} navigate={navigate} selection={selectedFeature} zoomLimit={zoomLimit} realMode={realMode} />}
+      {ready && <GlobeInterface ready={ready} data={data.current} engine={engine} navigate={navigate} selection={selectedFeature} zoomLimit={zoomLimit} realMode={realMode} homeScene={homeScene} />}
       {!ready && !error && window.parent === window && <GlobeLoading />}
       {error && (
         <section className="error" role="alert">

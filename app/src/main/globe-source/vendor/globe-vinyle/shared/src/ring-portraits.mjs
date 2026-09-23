@@ -50,7 +50,7 @@ function arrangeArtists() {
 
 // Repeated reference portraits for exploration only, not real legendary accounts.
 // One atlas and one instanced draw; no per-portrait DOM or animation loop.
-export function createRingPortraits(scene, ring, camera, canvas, invalidate, pixelRatio = 1) {
+export function createRingPortraits(scene, ring, camera, canvas, invalidate, pixelRatio = 1, demoPortraits = true) {
   const atlas = document.createElement('canvas'); atlas.width = atlas.height = ATLAS_SIZE;
   const ctx = atlas.getContext('2d');
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
@@ -359,6 +359,11 @@ export function createRingPortraits(scene, ring, camera, canvas, invalidate, pix
     },
     setOverview(height) {
       if (active) return false;
+      if (!demoPortraits) {
+        const changed = mesh.visible;
+        mesh.visible = false;
+        return changed;
+      }
       const opacity = T.MathUtils.smoothstep(height, OVERVIEW_HIDE_HEIGHT, OVERVIEW_FULL_HEIGHT);
       const visible = opacity > 0 && hasVisibleOverviewPortrait();
       const changed = mesh.visible !== visible || material.uniforms.portraitVisibility.value !== opacity;
