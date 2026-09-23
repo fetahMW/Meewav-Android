@@ -62,6 +62,7 @@ export default function RoomsPage() {
   const viewer=viewing ? <Suspense fallback={<div className="android-room-opening" role="status">Ouverture du live…</div>}><RoomViewer room={viewing} onLeave={()=>setViewing(null)} /></Suspense> : null;
   if (sequencerOpen) return <div className="rooms-home-launch-dialog rooms-launch-page">
     <LaunchRoomSheet
+      allowSkipCheckup={demoMode}
       initialProgram={(() => { try { return JSON.parse(new URLSearchParams(location.search).get('program') ?? 'null') ?? undefined; } catch { return undefined; } })()}
       initialType={new URLSearchParams(location.search).get('launch') === 'cage' ? 'cage' : tab === 'home' ? undefined : (tab as RoomsHomeRoomType)}
       onClose={() => navigate('/rooms')}

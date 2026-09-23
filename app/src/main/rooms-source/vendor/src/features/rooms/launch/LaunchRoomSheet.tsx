@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   AudioLines,
   BookOpen,
-  Camera,
   Check,
   CheckCircle2,
   ChevronDown,
@@ -17,9 +16,7 @@ import {
   Lock,
   Mic,
   Music,
-  RefreshCw,
   Rocket,
-  ShieldCheck,
   SlidersHorizontal,
   Swords,
   Timer,
@@ -38,6 +35,7 @@ import LaunchStudio, { type LaunchLayout, type LaunchStudioConfig } from "./Laun
 
 type LaunchRoomSheetProps = {
   initialType?: RoomsHomeRoomType;
+  allowSkipCheckup?: boolean;
   closeRef?: RefObject<HTMLButtonElement | null>;
   onClose: () => void;
   onLaunched?: (roomLabel: string, roomType: RoomsHomeRoomType, program?: CageProgram, studio?: LaunchStudioConfig) => void;
@@ -202,7 +200,7 @@ function LaunchSelect({ label, value, options, onChange }: {
   );
 }
 
-export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaunched, initialProgram }: LaunchRoomSheetProps) {
+export default function LaunchRoomSheet({ initialType, allowSkipCheckup = false, closeRef, onClose, onLaunched, initialProgram }: LaunchRoomSheetProps) {
   const initialIndex = useMemo(() => {
     const index = LAUNCH_TABS.findIndex((tab) => tab.id === initialType);
     return index >= 0 ? index : 0;
@@ -316,7 +314,11 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
     if (micTesting) { stopMic(); return; }
     setMicState("requesting");
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // The single check-up must authorize both tracks before the native room takes over.
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: { facingMode: { ideal: studio.camera === "front" ? "user" : "environment" } },
+      });
       micStreamRef.current = stream;
       const context = new AudioContext();
       micContextRef.current = context;
@@ -341,7 +343,7 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
       setMicState("denied");
       setMicTesting(false);
     }
-  }, [micTesting, stopMic]);
+  }, [micTesting, stopMic, studio.camera]);
 
   const markCheckupDone = useCallback(() => {
     try { window.sessionStorage.setItem(CHECKUP_STORAGE_KEY, String(Date.now())); } catch { /* noop */ }
@@ -707,7 +709,7 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
 
   const renderCheckup = () => (
     <>
-      {canQuickPass ? (
+      {allowSkipCheckup && canQuickPass ? (
         <button type="button" className="launch-quick-pass" style={{ borderColor: `${accent}40`, color: accent }} onClick={() => goToStep(3)}>
           <Zap aria-hidden="true" size={18} />
           <span>Entrée rapide — config précédente</span>
@@ -724,7 +726,7 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
         <span className={`launch-chip${networkOk ? " is-ok" : ""}`}>Réseau</span>
       </div>
 
-      <SectionTitle>TEST MICRO</SectionTitle>
+      <SectionTitle>CAMÉRA ET MICRO</SectionTitle>
       <div className="launch-mic">
         <div className="launch-mic__row">
           <span>Niveau</span>
@@ -736,7 +738,7 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
         <button type="button" className="launch-btn launch-btn--ghost" onClick={() => void startMicTest()}>
           {micTesting ? "Arrêter le test" : micState === "requesting" ? "Autorisation…" : "Tester le micro"}
         </button>
-        {micState === "denied" ? <p className="launch-hint">Autorise le micro dans les réglages du site pour continuer.</p> : null}
+        {micState === "denied" ? <p className="launch-hint">Autorise la caméra et le micro dans les réglages du téléphone pour continuer.</p> : null}
         {micTesting ? <p className="launch-hint">{micLevel > 85 ? "Gain automatiquement réduit" : "Gain automatiquement augmenté"}</p> : null}
       </div>
 
@@ -747,7 +749,7 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
       </div>
 
       <ul className="launch-checklist">
-        <li className="is-ok"><CheckCircle2 aria-hidden="true" size={16} /> Audio : {micState === "granted" ? "Micro détecté" : "Micro non testé"}</li>
+        <li className={micState === "granted" ? "is-ok" : ""}><CheckCircle2 aria-hidden="true" size={16} /> Image et audio : {micState === "granted" ? "Caméra et micro détectés" : "Non testés"}</li>
         <li className={networkOk ? "is-ok" : ""}><CheckCircle2 aria-hidden="true" size={16} /> Réseau : {networkLabel}</li>
       </ul>
 
@@ -755,7 +757,7 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
         <button type="button" className="launch-btn launch-btn--ghost" onClick={() => goToStep(1)}>Précédent</button>
         <button type="button" className="launch-btn launch-btn--accent" disabled={!isReady} style={{ background: isReady ? accent : undefined }} onClick={() => goToStep(3)}>Suivant</button>
       </div>
-      {!isReady ? (
+      {allowSkipCheckup && !isReady ? (
         <button type="button" className="launch-btn--skip" onClick={() => goToStep(3)}>Ignorer et continuer</button>
       ) : null}
     </>
@@ -785,8 +787,8 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
           <div><dt>Monétisation</dt><dd>{monetization ? "Activée" : "Désactivée"}</dd></div>
         </dl>
       </div>
-      <button type="button" className="launch-btn launch-btn--golive" style={{ background: `linear-gradient(135deg, ${accent}, ${accent}cc)` }} onClick={() => goToStep(4)}>
-        Entrer dans la Green Room <Rocket aria-hidden="true" size={18} />
+      <button type="button" className="launch-btn launch-btn--golive" style={{ background: `linear-gradient(135deg, ${accent}, ${accent}cc)` }} onClick={() => { stopMic(); setLaunching(true); }}>
+        Accéder à la room <Rocket aria-hidden="true" size={18} />
       </button>
       <button type="button" className="launch-btn--skip" onClick={() => setStep(2)}>← Retour au Check-up</button>
     </div>
@@ -816,16 +818,14 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
         ))}
       </nav>
 
-      <div className="launch-steps" aria-label={`Étape ${step + 1} sur 5 : ${["Identité", "Studio", "Vérification", "Revue", "Green Room"][step]}`}>
-        <span className="launch-steps__current">{["Identité", "Studio", "Vérification", "Revue", "Green Room"][step]}</span>
-        <span className="launch-steps__count">{step + 1} / 5</span>
-        <i className="launch-steps__track" aria-hidden="true"><b style={{ width: `${(step + 1) * 20}%` }} /></i>
+      <div className="launch-steps" aria-label={`Étape ${step + 1} sur 4 : ${["Identité", "Studio", "Vérification", "Revue"][step]}`}>
+        <span className="launch-steps__current">{["Identité", "Studio", "Vérification", "Revue"][step]}</span>
+        <span className="launch-steps__count">{step + 1} / 4</span>
+        <i className="launch-steps__track" aria-hidden="true"><b style={{ width: `${(step + 1) * 25}%` }} /></i>
       </div>
 
       <div className="launch-room-sheet__body">
-        {step === 0 ? renderIdentity() : step === 1 ? <LaunchStudio value={studio} onChange={setStudio} /> : step === 2 ? renderCheckup() : step === 3 ? renderGoLive() : (
-          <GreenHouse roomLabel={roomLabel} accent={accent} studio={studio} onBack={() => setStep(3)} onReady={() => setLaunching(true)} />
-        )}
+        {step === 0 ? renderIdentity() : step === 1 ? <LaunchStudio value={studio} onChange={setStudio} /> : step === 2 ? renderCheckup() : renderGoLive()}
         {step === 0 ? (
           <div className="launch-actions">
             <span />
@@ -915,225 +915,6 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
 }
 
 const LAUNCH_TRANSITION_MS = 2200;
-
-/* Green Room privée — réglages finaux avant le direct (port de place/GreenHouse.tsx du web). */
-function GreenHouse({ roomLabel, accent, studio, onBack, onReady }: { roomLabel: string; accent: string; studio: LaunchStudioConfig; onBack: () => void; onReady: () => void }) {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const contextRef = useRef<AudioContext | null>(null);
-  const meterTimerRef = useRef(0);
-  const mountedRef = useRef(true);
-  const [stream, setStream] = useState<MediaStream | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [level, setLevel] = useState(0);
-  const [heard, setHeard] = useState(false);
-  const [confirmed, setConfirmed] = useState(false);
-  const [latency, setLatency] = useState<number | null>(null);
-  const [online, setOnline] = useState(() => (typeof navigator === "undefined" ? true : navigator.onLine !== false));
-  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
-  const [cameraId, setCameraId] = useState("");
-  const [microphoneId, setMicrophoneId] = useState("");
-  const [devicesChanged, setDevicesChanged] = useState(false);
-  const [tracksValid, setTracksValid] = useState(false);
-
-  const ready = Boolean(stream && tracksValid && !devicesChanged && online && latency !== null && latency < 1500 && heard && confirmed);
-
-  const stopPreview = useCallback(() => {
-    if (meterTimerRef.current) window.clearInterval(meterTimerRef.current);
-    meterTimerRef.current = 0;
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-    streamRef.current = null;
-    void contextRef.current?.close().catch(() => undefined);
-    contextRef.current = null;
-  }, []);
-
-  useEffect(() => {
-    mountedRef.current = true;
-    const syncNetwork = () => { setOnline(navigator.onLine !== false); setLatency(null); };
-    window.addEventListener("offline", syncNetwork);
-    window.addEventListener("online", syncNetwork);
-    const onDeviceChange = () => { setDevicesChanged(true); setConfirmed(false); };
-    navigator.mediaDevices?.addEventListener?.("devicechange", onDeviceChange);
-    return () => {
-      mountedRef.current = false;
-      stopPreview();
-      window.removeEventListener("offline", syncNetwork);
-      window.removeEventListener("online", syncNetwork);
-      navigator.mediaDevices?.removeEventListener?.("devicechange", onDeviceChange);
-    };
-  }, [stopPreview]);
-
-  useEffect(() => {
-    if (!stream || !videoRef.current) return;
-    videoRef.current.srcObject = stream;
-    void videoRef.current.play().catch(() => undefined);
-    const check = () => setTracksValid(stream.getTracks().length >= 2 && stream.getTracks().every((track) => track.readyState === "live" && track.enabled && !track.muted));
-    check();
-    stream.getTracks().forEach((track) => { track.addEventListener("ended", check); track.addEventListener("mute", check); track.addEventListener("unmute", check); });
-    try {
-      const context = new AudioContext();
-      contextRef.current = context;
-      const analyser = context.createAnalyser();
-      analyser.fftSize = 256;
-      context.createMediaStreamSource(stream).connect(analyser);
-      const samples = new Uint8Array(analyser.fftSize);
-      meterTimerRef.current = window.setInterval(() => {
-        analyser.getByteTimeDomainData(samples);
-        const rms = Math.sqrt(samples.reduce((sum, value) => sum + ((value - 128) / 128) ** 2, 0) / samples.length);
-        setLevel(Math.min(100, Math.round(rms * 400)));
-      }, 80);
-    } catch { /* vumètre indisponible */ }
-    return () => {
-      stream.getTracks().forEach((track) => { track.removeEventListener("ended", check); track.removeEventListener("mute", check); track.removeEventListener("unmute", check); });
-    };
-  }, [stream]);
-
-  const testConnection = useCallback(async () => {
-    setLatency(null);
-    setError("");
-    try {
-      const start = performance.now();
-      const response = await fetch("index.html", { cache: "no-store", signal: AbortSignal.timeout(5000) });
-      if (!response.ok || navigator.onLine === false) throw new Error();
-      if (mountedRef.current) setLatency(Math.round(performance.now() - start));
-    } catch {
-      if (mountedRef.current) setError("Connexion non validée. Vérifie ton réseau et relance le test.");
-    }
-  }, []);
-
-  const start = useCallback(async () => {
-    if (busy) return;
-    setBusy(true);
-    setError("");
-    setConfirmed(false);
-    setHeard(false);
-    stopPreview();
-    setStream(null);
-    setTracksValid(false);
-    try {
-      const next = await navigator.mediaDevices.getUserMedia({
-        video: cameraId ? { deviceId: { ideal: cameraId } } : { facingMode: { ideal: studio.camera === "front" ? "user" : "environment" }, aspectRatio: { ideal: studio.format === "portrait" ? 9 / 16 : 16 / 9 } },
-        audio: microphoneId ? { deviceId: { ideal: microphoneId } } : true,
-      });
-      if (!mountedRef.current) { next.getTracks().forEach((track) => track.stop()); return; }
-      streamRef.current = next;
-      setStream(next);
-      setDevicesChanged(false);
-      const available = await navigator.mediaDevices.enumerateDevices();
-      if (!mountedRef.current) return;
-      setDevices(available);
-      void testConnection();
-    } catch {
-      if (mountedRef.current) setError("Caméra ou micro inaccessible. Autorise leur accès, vérifie qu'ils sont disponibles, puis réessaie.");
-    } finally {
-      if (mountedRef.current) setBusy(false);
-    }
-  }, [busy, cameraId, microphoneId, stopPreview, testConnection, studio.camera, studio.format]);
-
-  const playTone = useCallback(async () => {
-    const context = new AudioContext();
-    await context.resume();
-    const oscillator = context.createOscillator();
-    const gain = context.createGain();
-    gain.gain.setValueAtTime(0.06, context.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.6);
-    oscillator.frequency.value = 440;
-    oscillator.connect(gain).connect(context.destination);
-    oscillator.start();
-    oscillator.stop(context.currentTime + 0.65);
-    oscillator.onended = () => { void context.close(); };
-  }, []);
-
-  const videoInputs = devices.filter((device) => device.kind === "videoinput");
-  const audioInputs = devices.filter((device) => device.kind === "audioinput");
-
-  return (
-    <section className="green-house" aria-label="Green Room privée">
-      <div className="green-house__head">
-        <span className="green-house__mark" style={{ background: `${accent}1f`, color: accent }}><ShieldCheck aria-hidden="true" size={18} /></span>
-        <div>
-          <small style={{ color: accent }}>GREEN ROOM · PRIVÉ</small>
-          <strong>Tes réglages avant le direct</strong>
-          <p>Ton aperçu reste sur cet appareil.</p>
-        </div>
-      </div>
-
-      <div className={`green-house__preview green-house__preview--${studio.format}`}>
-        {stream ? <video ref={videoRef} autoPlay muted playsInline /> : <div className="green-house__placeholder"><Camera aria-hidden="true" size={26} /><span>Cadre ton image, trouve ton son.</span></div>}
-        <span className="green-house__private">Aperçu privé</span>
-      </div>
-
-      <button type="button" className="green-house__start" style={{ borderColor: `${accent}55`, color: accent }} disabled={busy} onClick={() => void start()}>
-        <RefreshCw aria-hidden="true" size={15} />
-        {busy ? "Vérification…" : stream ? "Relancer les vérifications" : "Activer caméra et micro"}
-      </button>
-
-      {devices.length > 0 ? (
-        <div className="launch-selectors">
-          <LaunchSelect
-            label="Caméra"
-            value={cameraId}
-            options={[{ value: "", label: "Par défaut" }, ...videoInputs.map((device, index) => ({ value: device.deviceId, label: device.label || `Caméra ${index + 1}` }))]}
-            onChange={(value) => { setCameraId(value); setDevicesChanged(true); setConfirmed(false); }}
-          />
-          <LaunchSelect
-            label="Microphone"
-            value={microphoneId}
-            options={[{ value: "", label: "Par défaut" }, ...audioInputs.map((device, index) => ({ value: device.deviceId, label: device.label || `Microphone ${index + 1}` }))]}
-            onChange={(value) => { setMicrophoneId(value); setDevicesChanged(true); setConfirmed(false); }}
-          />
-        </div>
-      ) : null}
-      {devices.length > 0 ? <p className="launch-hint">Relance les vérifications après un changement de périphérique.</p> : null}
-
-      <div className="green-house__checks">
-        <article>
-          <Mic aria-hidden="true" size={16} style={{ color: accent }} />
-          <strong>Ton micro</strong>
-          <div className="green-house__meter"><span style={{ width: `${level}%`, background: level > 85 ? "#ff6d6d" : accent }} /></div>
-          <span className="green-house__note">Parle : le niveau doit bouger.</span>
-        </article>
-        <article>
-          <Wifi aria-hidden="true" size={16} style={{ color: online ? accent : "#ff6d6d" }} />
-          <strong>Ta connexion</strong>
-          <b>{!online ? "Hors ligne" : latency === null ? "À tester" : `${latency} ms`}</b>
-          <span className="green-house__note">Réseau {latency !== null && latency < 1500 ? "disponible" : "à vérifier"}</span>
-          <button type="button" onClick={() => void testConnection()}>Retester</button>
-        </article>
-      </div>
-
-      <button type="button" className="green-house__sound" onClick={() => void playTone().catch(() => setError("La sortie audio est indisponible."))}>
-        <Headphones aria-hidden="true" size={16} />
-        Tester le son du casque
-      </button>
-
-      <label className="green-house__confirm">
-        <input type="checkbox" checked={heard} onChange={(event) => setHeard(event.target.checked)} />
-        <span>J'entends le son et mon micro réagit.</span>
-      </label>
-      <label className="green-house__confirm">
-        <input type="checkbox" checked={confirmed} disabled={!stream || devicesChanged} onChange={(event) => setConfirmed(event.target.checked)} />
-        <span>Mon cadrage et mon niveau sonore sont prêts.</span>
-      </label>
-
-      {error ? <p role="alert" className="green-house__error">{error}</p> : null}
-
-      <div className="launch-actions">
-        <button type="button" className="launch-btn launch-btn--ghost" onClick={onBack}>Précédent</button>
-        <button
-          type="button"
-          className="launch-btn launch-btn--golive"
-          disabled={!ready || busy}
-          style={ready ? { background: `linear-gradient(135deg, ${accent}, ${accent}cc)` } : undefined}
-          onClick={() => { stopPreview(); onReady(); }}
-        >
-          Ouvrir {roomLabel} <Rocket aria-hidden="true" size={18} />
-        </button>
-      </div>
-    </section>
-  );
-}
 
 function LaunchVinylTransition({ roomLabel, onCancel, onComplete }: { roomLabel: string; onCancel: () => void; onComplete: () => void }) {
   const cancelledRef = useRef(false);

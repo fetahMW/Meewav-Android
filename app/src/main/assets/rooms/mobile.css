@@ -198,34 +198,6 @@
 .rooms-home__scope button { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 7px; border: 1px solid #ffffff22; background: transparent; color: #ffffff90; flex: 0 0 auto; }
 .rooms-home__scope button svg { color: inherit; }
 
-/* Green Room — salle privée de réglages avant le direct. */
-.rooms-home-launch-dialog .green-house { display: flex; flex-direction: column; gap: 12px; }
-.rooms-home-launch-dialog .green-house__head { display: flex; align-items: center; gap: 12px; }
-.rooms-home-launch-dialog .green-house__mark { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; flex: 0 0 auto; }
-.rooms-home-launch-dialog .green-house__head small { display: block; font-size: 10px; font-weight: 700; letter-spacing: .12em; }
-.rooms-home-launch-dialog .green-house__head strong { display: block; color: #fff; font-size: 16px; }
-.rooms-home-launch-dialog .green-house__head p { margin: 1px 0 0; color: #ffffff70; font-size: 11.5px; }
-.rooms-home-launch-dialog .green-house__preview { position: relative; aspect-ratio: 16/9; border-radius: 16px; overflow: hidden; border: 1px solid #ffffff1c; background: #050308; }
-.rooms-home-launch-dialog .green-house__preview video { width: 100%; height: 100%; object-fit: cover; }
-.rooms-home-launch-dialog .green-house__placeholder { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 8px; color: #ffffff4d; }
-.rooms-home-launch-dialog .green-house__placeholder span { font-size: 12px; }
-.rooms-home-launch-dialog .green-house__private { position: absolute; top: 10px; left: 10px; padding: 4px 10px; border-radius: 999px; background: #00000099; backdrop-filter: blur(8px); color: #ffffffb3; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-.rooms-home-launch-dialog .green-house__start { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 12px; border: 1px solid; background: #ffffff08; font-size: 13px; font-weight: 700; font-family: inherit; transition: all .2s; }
-.rooms-home-launch-dialog .green-house__start:disabled { opacity: .5; }
-.rooms-home-launch-dialog .green-house__checks { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.rooms-home-launch-dialog .green-house__checks article { display: flex; flex-direction: column; gap: 5px; padding: 12px; border-radius: 12px; border: 1px solid #ffffff14; background: #ffffff08; }
-.rooms-home-launch-dialog .green-house__checks strong { color: #fff; font-size: 12.5px; }
-.rooms-home-launch-dialog .green-house__checks b { color: #fff; font-size: 14px; }
-.rooms-home-launch-dialog .green-house__checks button { align-self: flex-start; padding: 3px 10px; border-radius: 8px; border: 1px solid #ffffff26; background: transparent; color: #ffffffa0; font-size: 11px; font-family: inherit; }
-.rooms-home-launch-dialog .green-house__meter { height: 6px; border-radius: 999px; background: #ffffff14; overflow: hidden; }
-.rooms-home-launch-dialog .green-house__meter span { display: block; height: 100%; border-radius: 999px; transition: width .12s; }
-.rooms-home-launch-dialog .green-house__note { color: #ffffff5c; font-size: 10.5px; }
-.rooms-home-launch-dialog .green-house__sound { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 11px; border-radius: 12px; border: 1px solid #ffffff1c; background: #ffffff08; color: #ffffffb3; font-size: 12.5px; font-weight: 600; font-family: inherit; transition: all .2s; }
-.rooms-home-launch-dialog .green-house__confirm { display: flex; align-items: flex-start; gap: 10px; color: #ffffffcc; font-size: 13px; cursor: pointer; }
-.rooms-home-launch-dialog .green-house__confirm input { margin-top: 2px; accent-color: var(--launch-accent, #b79cff); }
-.rooms-home-launch-dialog .green-house__error { margin: 0; padding: 10px 12px; border-radius: 10px; border: 1px solid #ff6d6d55; background: #ff6d6d14; color: #ff9d9d; font-size: 12px; }
-.rooms-home-launch-dialog .green-house .launch-actions { margin-top: 4px; }
-
 /* Interrupteur monétisation / monitoring. */
 .rooms-home-launch-dialog .launch-toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 12px 0; }
 .rooms-home-launch-dialog .launch-toggle-row__copy { display: flex; flex-direction: column; gap: 2px; }
@@ -331,7 +303,7 @@
 .rooms-launch-page .launch-steps__track b {display:block;height:100%;border-radius:20px;background:linear-gradient(90deg,#634684,#bd9fea);box-shadow:0 0 9px #ab82d8a6;transition:width .24s ease;}
 .rooms-launch-page .launch-room-sheet__body {padding:13px 18px max(28px,env(safe-area-inset-bottom));overscroll-behavior:contain;}
 .rooms-launch-page .launch-room-sheet__body > .launch-actions {position:sticky;bottom:-1px;z-index:5;margin:14px -18px -28px;padding:10px 18px 15px;background:linear-gradient(180deg,#1b1c1fee,#151619);border-top:1px solid #ffffff12;backdrop-filter:blur(14px);}
-.rooms-launch-page :is(.launch-input,.launch-select--picker,.launch-module,.launch-mode,.launch-format,.launch-summary,.green-house__checks article) {background:linear-gradient(165deg,#242528,#121315)!important;border-color:#ffffff20!important;box-shadow:inset 0 1px #ffffff12,0 7px 17px #0000002b;}
+.rooms-launch-page :is(.launch-input,.launch-select--picker,.launch-module,.launch-mode,.launch-format,.launch-summary) {background:linear-gradient(165deg,#242528,#121315)!important;border-color:#ffffff20!important;box-shadow:inset 0 1px #ffffff12,0 7px 17px #0000002b;}
 .rooms-launch-page .launch-input:focus {border-color:var(--launch-accent)!important;box-shadow:0 0 0 2px color-mix(in srgb,var(--launch-accent) 18%,transparent)!important;}
 .rooms-launch-page .launch-separator {border-top:1px solid #ffffff13;margin:20px 0 5px;}
 .rooms-launch-page .launch-section-title {color:#b8a3d8;font-size:10px;}
@@ -341,8 +313,6 @@
 .rooms-launch-page .launch-btn--accent:disabled {background:#28252e!important;color:#ffffff62;box-shadow:none;}
 .rooms-launch-page .launch-golive {padding-top:8px;}
 .rooms-launch-page .launch-golive__hero {margin-bottom:17px;}
-.rooms-launch-page .green-house__preview {border-color:#ffffff2b;background:#090a0c;}
-.rooms-launch-page .green-house__start,.rooms-launch-page .green-house__sound {background:linear-gradient(#292a2e,#121315);border-color:#ffffff27;}
 
 .rooms-launch-page .launch-studio {display:flex;flex-direction:column;gap:12px;color:#f2f1f5;}
 .rooms-launch-page .launch-studio__intro > span {font-size:10px;letter-spacing:.14em;font-weight:700;color:#b9a0df;}
