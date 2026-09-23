@@ -36,6 +36,17 @@ try {
       join public.profiles profile on profile.id = globe.profile_id`);
     if (check.rows[0].forbidden !== 0) throw Error('Hidden profile leaked into Globe projection');
     console.log(`Globe public projection verified (${check.rows[0].total} visible markers, 0 forbidden).`);
+    // A privileged migration connection can read through grants and RLS even
+    // when an Android account cannot. Verify the actual PostgREST role too.
+    await client.query('begin');
+    try {
+      await client.query('set local role authenticated');
+      const authenticated = await client.query('select count(*)::int as total from public.globe_public_markers_v1');
+      if (authenticated.rows[0].total !== check.rows[0].total) {
+        throw Error('Authenticated Globe marker count differs from the public projection');
+      }
+      console.log(`Authenticated Globe access verified (${authenticated.rows[0].total} markers).`);
+    } finally { await client.query('rollback'); }
   }
 } catch (error) {
   console.error(error.code || 'migration_failed', error.position, error.message?.replace(/postgres(?:ql)?:\/\/\S+/g, '[redacted]'));
