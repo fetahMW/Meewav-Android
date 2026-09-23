@@ -2,6 +2,9 @@ package com.meewav.android.features.rooms.wave
 
 import androidx.compose.material.icons.filled.SwapHoriz
 import android.view.HapticFeedbackConstants
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -277,6 +280,16 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     var showLeaveConfirm by remember { mutableStateOf(false) }
     var stageFullscreen by remember { mutableStateOf(false) }
     val videoControls = rememberRoomVideoControls()
+    LaunchedEffect(liveAudio, videoControls.cameraEnabled) { liveAudio?.setCameraEnabled(videoControls.cameraEnabled) }
+    LaunchedEffect(liveAudio) {
+        if (liveAudio != null &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            // Green Room releases its Web camera during the launch transition.
+            delay(500)
+            liveAudio.start(RoomsAudioMode.EXTERNAL)
+        }
+    }
     @Composable fun StageControls(fullscreen: Boolean, director: () -> Unit) {
         RoomVideoControlBar(videoControls,
             fullscreen = fullscreen, onFullscreen = { stageFullscreen = !stageFullscreen; videoControls.reveal() }, onDirector = director)
@@ -290,10 +303,10 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
             if (cage != null) CageVideoStage(cage, interactive = false, fullscreen = true,
                 audible = videoControls.returnAudio, hostVolume = if (micMuted) 0f else micGain,
                 controlBar = { StageControls(true, it) },
-                hostContent = { demo -> RoomHostVideo(videoControls, demo = demo) })
+                hostContent = { demo -> RoomHostVideo(videoControls, session = liveAudio, demo = demo) })
             else WaveGuestStage(guestState, interactive = false, audible = videoControls.returnAudio,
                 onFullscreen = { stageFullscreen = false }, controlBar = { StageControls(true, it) }) {
-                RoomHostVideo(videoControls) {
+                RoomHostVideo(videoControls, session = liveAudio) {
                     WaveVideo(cameraOff = false, modifier = Modifier.fillMaxSize(), roomLabel = room.label, roomAccent = roomAccent)
                 }
             }
@@ -319,11 +332,11 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                     audible = !stageFullscreen && videoControls.returnAudio, onFullscreen = { stageFullscreen = true },
                     hostVolume = if (micMuted) 0f else micGain,
                     controlBar = { if (!stageFullscreen) StageControls(false, it) },
-                    hostContent = { demo -> RoomHostVideo(videoControls, active = !stageFullscreen, demo = demo) })
+                    hostContent = { demo -> RoomHostVideo(videoControls, active = !stageFullscreen, session = liveAudio, demo = demo) })
                 else WaveGuestStage(guestState, interactive = activeTab == WaveTab.INVITES,
                     onFullscreen = { stageFullscreen = true }, audible = !stageFullscreen && videoControls.returnAudio,
                     controlBar = { if (!stageFullscreen) StageControls(false, it) }) {
-                    RoomHostVideo(videoControls, active = !stageFullscreen) {
+                    RoomHostVideo(videoControls, active = !stageFullscreen, session = liveAudio) {
                         WaveVideo(cameraOff = false, modifier = Modifier.fillMaxSize(), roomLabel = room.label, roomAccent = roomAccent)
                     }
                 }

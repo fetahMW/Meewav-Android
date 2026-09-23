@@ -35,7 +35,7 @@ function dispose() {
 window.addEventListener('pagehide', dispose);
 window.addEventListener('meewav:navigate', (event: Event) => {
   const path = (event as CustomEvent).detail?.path;
-  if (typeof path !== 'string' || !/^\/(?:messages|profile|tremplin|market|scene|shorts)(?:[/?]|$)/.test(path)) return;
+  if (typeof path !== 'string' || !/^\/(?:messages|profile|tremplin|market|scene|shorts|rooms)(?:[/?]|$)/.test(path)) return;
   event.preventDefault();
   const destination = path.split('/')[1].split('?')[0] === 'shorts' ? 'scene' : path.split('/')[1].split('?')[0];
   location.assign(`https://appassets.androidplatform.net/native/${destination}?route=${encodeURIComponent(path)}`);

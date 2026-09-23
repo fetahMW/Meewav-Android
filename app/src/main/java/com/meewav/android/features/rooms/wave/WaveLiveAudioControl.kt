@@ -1,12 +1,15 @@
 package com.meewav.android.features.rooms.wave
 
 import android.Manifest
+import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -17,9 +20,10 @@ import androidx.compose.ui.unit.sp
     var expanded by remember { mutableStateOf(false) }
     var mode by remember { mutableStateOf(RoomsAudioMode.EXTERNAL) }
     var permissionError by remember { mutableStateOf(false) }
-    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        permissionError = !granted
-        if (granted) session.start(mode)
+    val context = LocalContext.current
+    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
+        permissionError = granted[Manifest.permission.RECORD_AUDIO] != true || granted[Manifest.permission.CAMERA] != true
+        if (!permissionError) session.start(mode)
     }
     Column(modifier.fillMaxWidth().padding(vertical = 4.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -29,10 +33,12 @@ import androidx.compose.ui.unit.sp
             TextButton(onClick = {
                 if (status.active || status.busy) session.stop()
                 else if (mode == RoomsAudioMode.LISTEN) session.start(mode)
-                else permission.launch(Manifest.permission.RECORD_AUDIO)
+                else if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) session.start(mode)
+                else permission.launch(arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA))
             }) { Text(if (status.active || status.busy) "Déconnecter" else "Connecter", color = WaveMixerTheme.violetSoft, fontSize = 11.sp) }
         }
-        Text(if (permissionError) "Autorise le micro pour diffuser" else status.text, color = WaveMixerTheme.secondary, fontSize = 10.sp)
+        Text(if (permissionError) "Autorise la caméra et le micro pour diffuser" else status.text, color = WaveMixerTheme.secondary, fontSize = 10.sp)
         DropdownMenu(expanded, { expanded = false }) {
             RoomsAudioMode.entries.forEach { option -> DropdownMenuItem(text = { Text(option.label) }, onClick = { mode = option; expanded = false }) }
         }

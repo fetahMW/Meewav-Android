@@ -1166,14 +1166,16 @@ function GreenHouse({ roomLabel, accent, onBack, onReady }: { roomLabel: string;
 
 function LaunchVinylTransition({ roomLabel, onCancel, onComplete }: { roomLabel: string; onCancel: () => void; onComplete: () => void }) {
   const cancelledRef = useRef(false);
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
 
   useEffect(() => {
-    const timer = window.setTimeout(() => { if (!cancelledRef.current) onComplete(); }, LAUNCH_TRANSITION_MS);
+    const timer = window.setTimeout(() => { if (!cancelledRef.current) onCompleteRef.current(); }, LAUNCH_TRANSITION_MS);
     return () => {
       cancelledRef.current = true;
       window.clearTimeout(timer);
     };
-  }, [onComplete]);
+  }, []);
 
   return (
     <div className="launch-transition" role="alert" aria-live="assertive">

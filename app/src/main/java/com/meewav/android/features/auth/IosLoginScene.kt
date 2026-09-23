@@ -113,7 +113,7 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
     Box(modifier.height(panelHeight)) {
         AuthWindowPanel(Modifier.fillMaxWidth().padding(top = stageHeight - 14.dp),
             panelHeight = panelHeight - stageHeight + 14.dp,
-            compact = true, iosStageWindow = true, scrollKey = state.page, allowScroll = typingLayout,
+            compact = true, iosStageWindow = true, scrollKey = state.page, allowScroll = true,
             contentViewportHeight = contentViewportHeight,
             contentBottomPadding = if (typingLayout) 8.dp else null,
             bottomAlignContent = typingLayout,
@@ -122,6 +122,8 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
                 // l'espace juste au-dessus, sans remonter inutilement les champs.
                 IosAuthAction(if (state.localPreview) "Suivant" else "Se connecter", state.busy, submit)
             } } else { {
+                IosAuthAction(if (state.localPreview) "Suivant" else "Se connecter", state.busy, submit)
+                Spacer(Modifier.height(10.dp))
                 if (!state.localPreview) {
                     IosAuthDivider()
                     Spacer(Modifier.height(6.dp))
@@ -140,8 +142,7 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
                 } else TextButton(onClick = actions.exitPreview, modifier = Modifier.fillMaxWidth()) {
                     Text("Changer de mode", color = Violet)
                 }
-                // La signature libère 20 dp, réaffectés sous la capsule.
-                Spacer(Modifier.height(40.dp))
+                Spacer(Modifier.height(12.dp))
             } }) {
             if (state.initializing) {
                 CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally).padding(28.dp), color = Violet)
@@ -184,7 +185,6 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
                     }
                 }
                 }
-                if (!typingLayout) IosAuthAction(if (state.localPreview) "Suivant" else "Se connecter", state.busy, submit)
                 }
             }
         }

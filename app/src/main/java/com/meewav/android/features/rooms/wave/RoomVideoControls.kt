@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.media.projection.MediaProjectionManager
 import android.widget.Toast
+import android.view.TextureView
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
@@ -25,6 +26,7 @@ import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.unit.*
+import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.delay
 
 /** Shared by every native room, including the fullscreen presentation. */
@@ -150,9 +152,11 @@ private fun RoomVideoButton(icon: ImageVector, label: String, controls: RoomVide
 }
 
 @Composable
-internal fun RoomHostVideo(controls: RoomVideoControls, active: Boolean = true, demo: @Composable () -> Unit) {
+internal fun RoomHostVideo(controls: RoomVideoControls, active: Boolean = true,
+    session: RoomsAudioSession? = null, demo: @Composable () -> Unit) {
     val sharing by RoomScreenCaptureService.active.collectAsState()
     val frame by RoomScreenCaptureService.frame.collectAsState()
+    val liveStatus by session?.status?.collectAsState() ?: remember { mutableStateOf(RoomsAudioStatus()) }
     Box(Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
         when {
             sharing -> {
@@ -161,6 +165,18 @@ internal fun RoomHostVideo(controls: RoomVideoControls, active: Boolean = true, 
                     modifier = Modifier.align(Alignment.TopCenter).background(Color.Black.copy(alpha = .8f)).padding(5.dp))
             }
             !controls.cameraEnabled -> Icon(WaveIcons.CameraOff, "Caméra coupée", tint = Color.Gray, modifier = Modifier.size(28.dp))
+            session != null && active -> {
+                val context = LocalContext.current
+                val view = remember(session) { TextureView(context) }
+                AndroidView(factory = { view }, modifier = Modifier.fillMaxSize())
+                DisposableEffect(session, view) {
+                    session.bindLocalVideo(view)
+                    onDispose { session.unbindLocalVideo(view) }
+                }
+                if (!liveStatus.active) Text(liveStatus.text, color = Color(0xFFC4C1CC), fontSize = 11.sp,
+                    modifier = Modifier.background(Color.Black.copy(alpha = .7f)).padding(8.dp))
+            }
+            session != null -> Unit
             controls.liveCamera && active -> RoomCameraPreview(front = controls.frontCamera)
             controls.liveCamera -> Unit // Only the visible window owns the physical camera.
             else -> demo()

@@ -1,7 +1,11 @@
 package com.meewav.android.features.rooms.wave
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.util.Log
+import android.view.TextureView
+import androidx.core.content.ContextCompat
+import android.Manifest
 import com.ss.bytertc.engine.*
 import com.ss.bytertc.engine.data.*
 import com.ss.bytertc.engine.handler.IRTCEngineEventHandler
@@ -46,6 +50,48 @@ internal class RoomsAudioSession(private val context: Context, private val repos
     private val published = mutableMapOf<String, String>() // streamId -> canonical userId
     private var joined: CompletableDeferred<Unit>? = null
     private var publication: CompletableDeferred<Unit>? = null
+    private var videoPublication: CompletableDeferred<Unit>? = null
+    private var localVideoView: TextureView? = null
+    private var cameraRequested = true
+    private var cameraPublished = false
+
+    /** The RTC engine owns the camera. The preview is only a canvas for that same published stream. */
+    fun bindLocalVideo(view: TextureView?) {
+        localVideoView = view
+        engine?.setLocalVideoCanvas(view?.let { VideoCanvas(it, VideoCanvas.RENDER_MODE_FILL) } ?: VideoCanvas())
+    }
+
+    fun unbindLocalVideo(view: TextureView) {
+        if (localVideoView === view) bindLocalVideo(null)
+    }
+
+    fun setCameraEnabled(enabled: Boolean) {
+        if (cameraRequested == enabled) return
+        cameraRequested = enabled
+        scope.launch {
+            if (mode == RoomsAudioMode.LISTEN || !mutableStatus.value.active) return@launch
+            runCatching { if (enabled) startCamera() else stopCamera() }
+                .onFailure { mutableStatus.value = mutableStatus.value.copy(text = it.message ?: "Caméra indisponible") }
+        }
+    }
+
+    private fun startCamera() {
+        check(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) { "Autorise la caméra pour diffuser" }
+        val sdk = engine ?: return
+        val channel = rtc ?: return
+        localVideoView?.let { requireOk(sdk.setLocalVideoCanvas(VideoCanvas(it, VideoCanvas.RENDER_MODE_FILL)), "Aperçu caméra") }
+        requireOk(sdk.startVideoCapture(), "Capture caméra")
+        requireOk(channel.publishStreamVideo(true), "Publication vidéo")
+        cameraPublished = true
+        Log.i("WaveRTC", "Camera publication requested")
+    }
+
+    private fun stopCamera() {
+        if (!cameraPublished) return
+        rtc?.let { requireOk(it.publishStreamVideo(false), "Arrêt vidéo") }
+        engine?.let { requireOk(it.stopVideoCapture(), "Arrêt caméra") }
+        cameraPublished = false
+    }
 
     fun configure(vocal: WaveVocalSettings, publicMusic: Boolean, gain: Float, publicDeck: Boolean = false, productionGain: Float = 1f) {
         val justMuted = !settings.mute && vocal.mute
@@ -99,6 +145,16 @@ internal class RoomsAudioSession(private val context: Context, private val repos
                             else if (mutableStatus.value.active && mode != RoomsAudioMode.LISTEN) fail("Publication audio interrompue")
                         } }
                     }
+                    override fun onVideoPublishStateChanged(id: String?, stream: StreamInfo?, state: PublishState?, reason: PublishStateChangeReason?) {
+                        scope.launch { if (epoch == generation) {
+                            if (state == PublishState.PUBLISHED) {
+                                videoPublication?.complete(Unit)
+                                Log.i("WaveRTC", "Camera stream published")
+                            } else if (cameraPublished && state == PublishState.UNPUBLISHED) {
+                                Log.w("WaveRTC", "Camera stream state=$state reason=$reason")
+                            }
+                        } }
+                    }
                     override fun onAudioStreamBanned(uid: String?, banned: Boolean) {
                         scope.launch { if (epoch == generation && uid == room.identity && banned) fail("Micro coupé par la régie") }
                     }
@@ -137,10 +193,15 @@ internal class RoomsAudioSession(private val context: Context, private val repos
                 if (canPublish) {
                     requireOk(channel.publishStreamAudio(true), "Publication audio")
                     withTimeout(15000) { publication!!.await() }
+                    if (cameraRequested) {
+                        videoPublication = CompletableDeferred()
+                        startCamera()
+                        withTimeout(15000) { videoPublication!!.await() }
+                    }
                 }
                 mutableStatus.value = RoomsAudioStatus(active = true, text = when(selected) {
-                    RoomsAudioMode.EXTERNAL -> "Live · voix traitée diffusée"
-                    RoomsAudioMode.INTERNAL -> "Live · micro brut, FX non diffusés"
+                    RoomsAudioMode.EXTERNAL -> if (cameraPublished) "Live · caméra et voix traitée diffusées" else "Live · voix traitée diffusée"
+                    RoomsAudioMode.INTERNAL -> if (cameraPublished) "Live · caméra et micro brut diffusés" else "Live · micro brut, FX non diffusés"
                     RoomsAudioMode.LISTEN -> "Live · écoute seule"
                 })
                 var expires = Instant.parse(token.expiresAt).epochSecond
@@ -224,13 +285,14 @@ internal class RoomsAudioSession(private val context: Context, private val repos
         productionAudio?.programInput = null
         output?.production?.clear()
         runCatching { rtc?.publishStreamAudio(false) }
+        runCatching { stopCamera() }
         sending = false; sender?.interrupt()
         withContext(Dispatchers.IO) { sender?.join(); microphone?.close() }
         sender = null; microphone = null; output?.bus?.clear(); output = null
         runCatching { engine?.stopAudioCapture() }
         runCatching { rtc?.leaveRoom() }; runCatching { rtc?.destroy() }; rtc = null
         if (engine != null) RTCEngine.destroyRTCEngine()
-        engine = null; identity = null; published.clear(); subscribed.clear()
+        engine = null; identity = null; published.clear(); subscribed.clear(); videoPublication = null
         if (owns) { owned.set(false); owns = false }
     }
     override fun close() { stop(); scope.cancel() }

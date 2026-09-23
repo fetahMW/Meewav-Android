@@ -1,4 +1,4 @@
-import {supabase} from '../profile-source/runtime';
+import {getSessionUser,supabase} from '../profile-source/runtime';
 import {ROOMS_HOME_ROOM_TYPES,type RoomsHomeRoom,type RoomsHomeRoomType} from './vendor/src/features/rooms/home/roomsHome.types';
 
 /** Same tables and membership rules as SupabaseRoomsRepository on iOS. */
@@ -18,7 +18,7 @@ async function joinAsHost(id:string,userId:string) {
  return id;
 }
 export async function createLiveRoom(type:RoomsHomeRoomType,title:string,requestId:string):Promise<string> {
- const {data:{user},error}=await supabase.auth.getUser();
+ const {data:{user},error}=await getSessionUser();
  if(error||!user)throw new Error('Connecte-toi pour ouvrir une room.');
  const clean=title.trim();if(!clean||clean.length>160)throw new Error('Le titre doit contenir de 1 à 160 caractères.');
  if(type==='classe') {
