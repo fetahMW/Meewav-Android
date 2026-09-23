@@ -41,6 +41,14 @@ export type NotificationRecord = {
   created_at: string | null;
 };
 
+export type HostedRoomActivity = {
+  id: string;
+  title: string;
+  roomType: string;
+  status: string;
+  createdAt: string;
+};
+
 const PROFILE_SELECT = [
   "id",
   "username",
@@ -480,6 +488,26 @@ export function createProfileRepository(client: SupabaseClient = supabase) {
       }
 
       return (data ?? []).map((record) => mapNotificationRecord(record as unknown as NotificationRecord));
+    },
+
+    async getHostedRoomActivity(userId: string) {
+      const since = new Date();
+      since.setUTCDate(since.getUTCDate() - 365);
+      const { data, error } = await client
+        .from("rooms_v2")
+        .select("id,title,type,status,created_at")
+        .eq("host_id", userId)
+        .gte("created_at", since.toISOString())
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (error) throw new ProfileServiceError("profile-load-failed", "Impossible de charger l’activité des Rooms.");
+      return (data ?? []).map((room): HostedRoomActivity => ({
+        id: room.id,
+        title: room.title,
+        roomType: room.type,
+        status: room.status,
+        createdAt: room.created_at,
+      }));
     },
 
     async markNotificationsRead(userId: string, notificationIds?: string[]) {

@@ -23,6 +23,8 @@ import {
   type ProfileAnalyticsSnapshot,
 } from "../profile.analytics.service";
 import ProfileRankingPanel from "../components/ProfileRankingPanel";
+import { useAuth } from "../../auth";
+import { profileRepository, type HostedRoomActivity } from "../profile.service";
 
 type ProfileHomeViewProps = {
   demo?: boolean;
@@ -191,6 +193,20 @@ export default function ProfileHomeView({
   const currentGradeMeta = getGradeBadgeMeta(profile.grade);
   const nextGradeMeta = getGradeBadgeMeta(nextGradeLevel);
   const localPreviewEnabled = demo;
+  const { user } = useAuth();
+  const [hostedRooms, setHostedRooms] = useState<HostedRoomActivity[]>([]);
+  useEffect(() => {
+    if (localPreviewEnabled || !user) { setHostedRooms([]); return; }
+    let active = true;
+    void profileRepository.getHostedRoomActivity(user.id)
+      .then((rooms) => { if (active) setHostedRooms(rooms); })
+      .catch(() => { if (active) setHostedRooms([]); });
+    return () => { active = false; };
+  }, [localPreviewEnabled, user?.id]);
+  const periodStart = new Date();
+  if (pulsePeriod === "12m") periodStart.setFullYear(periodStart.getFullYear() - 1);
+  else periodStart.setDate(periodStart.getDate() - (pulsePeriod === "7d" ? 7 : 30));
+  const periodRooms = hostedRooms.filter((room) => Date.parse(room.createdAt) >= periodStart.getTime());
   const demoFallbackEnabled = demo;
   const shownActions = localPreviewEnabled ? priorityActions : [
     { label: "Compléter ton profil", detail: "Identité et présentation publique", progress: profile.profileCompletion },
@@ -400,7 +416,7 @@ export default function ProfileHomeView({
             <div className="profile-empty-state" role={analyticsState.status === "error" ? "alert" : "status"}>
               {analyticsState.status === "loading" ? <LoaderCircle size={32} /> : analyticsState.status === "error" ? <AlertTriangle size={32} /> : <BarChart3 size={32} />}
               <h3>{analyticsState.status === "loading" ? "Consolidation de la portée" : analyticsState.status === "error" ? "Portée indisponible" : "Aucune donnée sur cette période"}</h3>
-              <p>{analyticsState.status === "loading" ? "Les signaux de ton profil arrivent…" : analyticsState.message ?? pulse.subtitle}</p>
+              <p>{analyticsState.status === "loading" ? "Les signaux de ton profil arrivent…" : periodRooms.length > 0 ? `${periodRooms.length} Room${periodRooms.length > 1 ? "s" : ""} ouverte${periodRooms.length > 1 ? "s" : ""} sur cette période. La portée s’affichera dès que l’audience sera mesurée.` : analyticsState.message ?? pulse.subtitle}</p>
               {analyticsState.status !== "loading" && <button type="button" onClick={() => setAnalyticsReloadKey((value) => value + 1)}>Réessayer</button>}
             </div>
           )}
@@ -469,14 +485,21 @@ export default function ProfileHomeView({
           <div className="profile-panel__heading is-compact">
             <div>
               <span className="profile-kicker"><Clock3 size={14} /> Activité</span>
-              <h3>Ce qui bouge autour de toi</h3>
+              <h3>Tes Rooms et tes notifications</h3>
             </div>
             <button type="button" className="profile-link-button" onClick={onOpenNotifications}>
-              Voir tout <ArrowRight size={14} />
+              Notifications <ArrowRight size={14} />
             </button>
           </div>
           <div className="profile-activity-list">
-            {shownActivity.length === 0 && <p>Aucune activité pour le moment.</p>}
+            {periodRooms.slice(0, 12).map((room) => (
+              <div key={`room-${room.id}`} className="profile-activity-row profile-activity-row--room">
+                <span className="profile-activity-row__icon is-room"><span /></span>
+                <span><strong>Room ouverte · {room.title}</strong><small>{room.status === "ended" ? "Live terminé" : "Live ouvert"}</small></span>
+                <time>{new Date(room.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}</time>
+              </div>
+            ))}
+            {shownActivity.length === 0 && periodRooms.length === 0 && <p>Aucune activité pour le moment.</p>}
             {shownActivity.map((activity) => (
               <button key={activity.id} type="button" className="profile-activity-row" onClick={onOpenNotifications}>
                 <span className={`profile-activity-row__icon is-${activity.type}`}><span /></span>

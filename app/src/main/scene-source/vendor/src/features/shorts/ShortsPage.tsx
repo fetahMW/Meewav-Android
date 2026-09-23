@@ -2024,7 +2024,7 @@ function SceneWorkspace() {
   const isUploadRoute = location.pathname === SCENE_UPLOAD_ROUTE;
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
-  const canPublish = canDisplayScenePublishing({
+  const canPublish = Boolean(user) || canDisplayScenePublishing({
     userMetadata: user?.user_metadata,
     localArtistPreview: !user && isLocalAuthPreviewEnabled(),
   });
