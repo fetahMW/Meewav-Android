@@ -2,6 +2,7 @@
 #include <array>
 #include <algorithm>
 #include "SuperpoweredRuntime.h"
+#include "WaveNoiseSuppressor.h"
 #include "SuperpoweredAutomaticVocalPitchCorrection.h"
 #include "SuperpoweredReverb.h"
 
@@ -9,6 +10,7 @@
 struct VocalDsp {
     Superpowered::AutomaticVocalPitchCorrection tune;
     Superpowered::Reverb reverb{48000, 48000};
+    WaveNoiseSuppressor expander;
     std::array<float, 960> input{}, tuned{};
     VocalDsp() {
         tune.samplerate = 48000;
@@ -28,10 +30,11 @@ Java_com_meewav_android_features_rooms_wave_WaveVocalDsp_create(JNIEnv* env, job
 }
 extern "C" JNIEXPORT void JNICALL
 Java_com_meewav_android_features_rooms_wave_WaveVocalDsp_process(JNIEnv* env, jobject, jlong handle,
-    jfloatArray samples, jboolean enabled, jint scale, jboolean reverb, jfloat amount) {
+    jfloatArray samples, jboolean enabled, jint scale, jboolean reverb, jfloat amount, jboolean cleanVoice, jint calibration, jint effects) {
     auto* dsp = reinterpret_cast<VocalDsp*>(handle);
     if (!dsp || env->GetArrayLength(samples) != 960) return;
     env->GetFloatArrayRegion(samples, 0, 960, dsp->input.data());
+    dsp->expander.process(dsp->input.data(), 480, cleanVoice, calibration);
     dsp->tune.scale = static_cast<Superpowered::AutomaticVocalPitchCorrection::TunerScale>(std::clamp<int>(scale, 0, 12));
     if (enabled) {
         dsp->tune.process(dsp->input.data(), dsp->tuned.data(), true, 480);

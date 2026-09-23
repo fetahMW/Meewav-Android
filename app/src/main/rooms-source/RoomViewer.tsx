@@ -66,7 +66,7 @@ export default function RoomViewer({room,onLeave}:{room:RoomsHomeRoom;onLeave:()
   window.addEventListener('meewav:feature-back',back);
   return()=>{document.documentElement.classList.remove('android-room-viewer-open');window.removeEventListener('meewav:feature-back',back);};
  },[onLeave]);
- return <main className="android-room-viewer" data-room-type={room.roomType}>
+ return <main className="android-room-viewer" data-room-type={room.roomType} data-room-source={room.source}>
   <NativeViewerSurfaces room={room.id} name={demo.currentUserProfile?.displayName ?? "Moi"}/>
   <header className="android-room-viewer__header"><button type="button" aria-label="Retour aux rooms" onClick={onLeave}><ArrowLeft/></button><h1>{room.title}</h1><button type="button" aria-label="Quitter le live" onClick={onLeave}><X/></button></header>
   <AudioEngineProvider><RoomPresentationProvider presentation={LIVE_ROOM_PRESENTATIONS[room.roomType]}>

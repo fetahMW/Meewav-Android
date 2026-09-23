@@ -69,11 +69,8 @@ internal class RoomsAudioRepository(context: Context, val roomId: String) {
         val host = room.getString("host_id").lowercase()
         val participants = JSONArray(request("/rest/v1/room_participants_v2?room_id=eq.$roomId&left_at=is.null&select=user_id,role"))
         if (joinIfMissing && (0 until participants.length()).none { participants.getJSONObject(it).getString("user_id").equals(me, true) }) {
-            // Never promote a guest from the client. A new entrant joins as viewer; the host comes from rooms_v2.
-            val prior = JSONArray(request("/rest/v1/room_participants_v2?room_id=eq.$roomId&user_id=eq.$me&select=user_id"))
-            val body = JSONObject().put("role", if (host == me) "host" else "viewer").put("left_at", JSONObject.NULL)
-            if (prior.length() > 0) request("/rest/v1/room_participants_v2?room_id=eq.$roomId&user_id=eq.$me", "PATCH", body)
-            else request("/rest/v1/room_participants_v2", "POST", body.put("room_id", roomId).put("user_id", me))
+            // Same admission contract as iOS/Web; never overwrite an invited guest role.
+            request("/rest/v1/rpc/rooms_enter_room_v2", "POST", JSONObject().put("p_room_id", roomId))
             return resolve()
         }
         val invitations = JSONArray(request("/rest/v1/room_invitations_v2?room_id=eq.$roomId&ended_at=is.null&select=guest_id,status&order=created_at.desc"))

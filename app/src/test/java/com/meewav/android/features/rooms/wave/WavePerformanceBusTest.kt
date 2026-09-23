@@ -6,6 +6,41 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 class WavePerformanceBusTest {
+    @Test fun `local voice continues while RTC or composition consumes nothing`() {
+        val heard = mutableListOf<Float>()
+        val mic = WaveMicrophone(onMonitor = { samples, _ -> heard += samples[0] }) { error(it) }
+        val settings = WaveVocalSettings(mute = false, monitoring = true)
+
+        // Simulate a second of capture while the public consumer is stalled.
+        repeat(100) { block -> mic.deliver(FloatArray(960) { block / 100f }, settings) }
+
+        assertEquals(100, heard.size)
+        assertEquals(.99f, heard.last(), .0001f)
+        assertEquals(.96f, mic.read()!![0], .0001f)
+        assertEquals(.97f, mic.read()!![0], .0001f)
+        assertEquals(.98f, mic.read()!![0], .0001f)
+        assertEquals(.99f, mic.read()!![0], .0001f)
+        assertNull(mic.read()) // bounded publication queue; monitoring did not wait
+    }
+
+    @Test fun `direct monitoring is not duplicated in the composition player`() {
+        var delivered = 0
+        val mic = WaveMicrophone(onMonitor = { _, _ -> delivered++ }) { error(it) }
+        mic.settings = WaveVocalSettings(mute = false, gain = .5f, monitoring = true)
+        val bus = WavePerformanceBus()
+        val live = WaveLiveOutput(mic, bus)
+        val privateCue = FloatArray(960) { .3f }
+
+        mic.deliver(FloatArray(960) { .2f }, mic.settings)
+        mic.deliver(FloatArray(960) { .2f }, mic.settings)
+        live.render(mic.read(), FloatArray(960), privateCue)
+
+        assertEquals(2, delivered)
+        assertTrue(privateCue.all { it == .3f })
+        assertEquals((.1f * 32767).toInt(), ByteBuffer.wrap(bus.poll()!!)
+            .order(ByteOrder.LITTLE_ENDIAN).short.toInt())
+    }
+
     @Test fun `10 ms stereo little endian with stereo linked limiter`() {
         val bus = WavePerformanceBus()
         bus.offer(FloatArray(960) { if (it % 2 == 0) 2f else -1f })

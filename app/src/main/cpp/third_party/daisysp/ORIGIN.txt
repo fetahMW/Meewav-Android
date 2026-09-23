@@ -1,0 +1,5 @@
+https://github.com/electro-smith/DaisySP
+Commit: 599511b740f8f3a9b8db72a0642aa45b8a23c3a3
+MIT; selected modules only.
+
+Android patch: portable min/max for ARMv7 (Daisy FPARMv8 instructions are not available).

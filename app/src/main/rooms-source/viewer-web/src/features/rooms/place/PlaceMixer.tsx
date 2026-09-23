@@ -1045,7 +1045,7 @@ export default function PlaceMixer({
     };
     window.addEventListener("meewav:native-viewer-action",receive);
     return()=>window.removeEventListener("meewav:native-viewer-action",receive);
-  },[mode,personalMix,onVocal,room.personalVocal]);
+  },[mode,personalMix,onVocal,room.personalVocal,testPitchSelected,correctionOperational]);
 
   const permissionsFor = (channel: PlaceMixerChannel) => {
     if (ownMix) return { canEditGain: true, canEditMute: true };

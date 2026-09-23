@@ -229,6 +229,9 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
         mutableStateOf(liveRoomId != null && WaveLocalVocalMonitor.hasHeadphones(context))
     }
     var autotuneOn by remember { mutableStateOf(false) }
+    var cleanVoice by remember { mutableStateOf(false) }
+    var proEffects by remember { mutableStateOf(0) }
+    var noiseCalibration by remember { mutableStateOf(0) }
     var reverbOn by remember { mutableStateOf(false) }
     var reverbValue by remember { mutableStateOf(0.15f) }
     var tuneKey by remember { mutableStateOf("A") }
@@ -244,8 +247,8 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
         else null
     }
     val controlledGuest = if (liveAudio == null) guestState.mixerGuest else null
-    LaunchedEffect(liveAudio, micGain, micMuted, monitoring, autotuneOn, reverbOn, reverbValue, tuneKey, tuneScale, composition?.publicRoute, composition?.outputGain, mixerDeck.public, audioGain, audioMuted) {
-        liveAudio?.configure(WaveVocalSettings(micMuted, micGain, monitoring, autotuneOn, waveTuneScale(tuneKey, tuneScale), reverbOn, reverbValue),
+    LaunchedEffect(proEffects, noiseCalibration, cleanVoice, liveAudio, micGain, micMuted, monitoring, autotuneOn, reverbOn, reverbValue, tuneKey, tuneScale, composition?.publicRoute, composition?.outputGain, mixerDeck.public, audioGain, audioMuted) {
+        liveAudio?.configure(WaveVocalSettings(micMuted, micGain, monitoring, autotuneOn, waveTuneScale(tuneKey, tuneScale), reverbOn, reverbValue, cleanVoice, noiseCalibration, proEffects),
             composition?.publicRoute == true, composition?.outputGain ?: 1f, mixerDeck.public, if (audioMuted) 0f else audioGain)
     }
     DisposableEffect(liveAudio) { onDispose { liveAudio?.close() } }
@@ -255,9 +258,13 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     }
     DisposableEffect(mixerDeck) { onDispose { mixerDeck.close() } }
     val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
-    DisposableEffect(composition, lifecycle) {
+    DisposableEffect(composition, lifecycle, liveAudio, mixerDeck, cage) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
-            if (event == androidx.lifecycle.Lifecycle.Event.ON_STOP) { liveAudio?.stop(); composition?.suspendAudio(); mixerDeck.suspendAudio(); cage?.pause() }
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_STOP && liveAudio == null && !mixerDeck.documentPicker.isOpen) {
+                // A real live is owned by RoomsLiveMediaService until explicit exit.
+                // Opening another app or locking the screen must not end publication.
+                composition?.suspendAudio(); mixerDeck.suspendAudio(); cage?.pause()
+            }
         }
         lifecycle.addObserver(observer)
         onDispose { lifecycle.removeObserver(observer) }
@@ -394,6 +401,8 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                         isPro = isPro, onProChange = { isPro = it },
                         monitoring = monitoring, onMonitoring = { monitoring = !monitoring },
                         autotuneOn = autotuneOn, onAutotune = { autotuneOn = !autotuneOn },
+                        cleanVoice = cleanVoice, onCleanVoice = { cleanVoice = !cleanVoice },
+                        onCalibrateNoise = { cleanVoice = true; noiseCalibration++ },
                         reverbOn = reverbOn, onReverb = { reverbOn = !reverbOn },
                         reverbValue = reverbValue, onReverbValue = { reverbValue = it },
                         tuneKey = tuneKey, tuneScale = tuneScale,
@@ -741,6 +750,9 @@ internal fun MixerBody(
     selector: String?, onSelector: (String?) -> Unit,
     onSelectKey: (String) -> Unit, onSelectScale: (String) -> Unit,
     multitrack: Boolean, onMultitrack: () -> Unit,
+    cleanVoice: Boolean = false, onCleanVoice: (() -> Unit)? = null,
+    onCalibrateNoise: (() -> Unit)? = null,
+    proEffects: Int = 0, onProEffects: ((Int) -> Unit)? = null,
 ) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val deckHeight by animateDpAsState(if (multitrack) maxHeight else 168.dp.coerceAtMost(maxHeight),
@@ -794,6 +806,9 @@ internal fun MixerBody(
                 isPro = isPro, onProChange = onProChange,
                 monitoring = monitoring, onMonitoring = onMonitoring,
                 autotuneOn = autotuneOn, onAutotune = onAutotune,
+                cleanVoice = cleanVoice, onCleanVoice = onCleanVoice,
+                onCalibrateNoise = onCalibrateNoise,
+                proEffects = proEffects, onProEffects = onProEffects,
                 reverbOn = reverbOn, onReverb = onReverb,
                 reverbValue = reverbValue, onReverbValue = onReverbValue,
                 tuneKey = tuneKey, tuneScale = tuneScale,
@@ -825,6 +840,9 @@ private fun FxColumn(
     tuneKey: String, tuneScale: String,
     selector: String?, onSelector: (String?) -> Unit,
     onSelectKey: (String) -> Unit, onSelectScale: (String) -> Unit,
+    cleanVoice: Boolean, onCleanVoice: (() -> Unit)?,
+    onCalibrateNoise: (() -> Unit)?,
+    proEffects: Int, onProEffects: ((Int) -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -838,8 +856,8 @@ private fun FxColumn(
             Spacer(Modifier.width(8.dp))
             HeadphoneButton(enabled = monitoring, onToggle = onMonitoring)
         }
-        if (isPro) {
-            ProPluginsPanel(Modifier.fillMaxWidth().weight(1f))
+        if (isPro && onCleanVoice != null) {
+            NoiseReductionPanel( Modifier.fillMaxWidth().weight(1f), cleanVoice, onCleanVoice, onCalibrateNoise, proEffects, onProEffects)
         } else if (selector == null) {
             // Carte Autotune.
             FxCard(
@@ -885,47 +903,6 @@ private fun FxColumn(
 /* ------------------------------------------------------------------------- */
 /* Panneau Pro — Effets voix + ajout de plugin (parité iOS proPanel).          */
 /* ------------------------------------------------------------------------- */
-
-@Composable
-private fun ProPluginsPanel(modifier: Modifier = Modifier) {
-    Column(
-        modifier.verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            "Effets voix",
-            color = white(0.86f),
-            fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
-            fontFamily = WaveMixerTheme.fontFamily
-        )
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .height(40.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .satinControl(10.dp)
-                .clickable { },
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(WaveIcons.Add, null, tint = white(0.88f), modifier = Modifier.size(13.dp))
-            Spacer(Modifier.width(6.dp))
-            Text(
-                "Ajouter un plugin",
-                color = white(0.88f),
-                fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
-                fontFamily = WaveMixerTheme.fontFamily
-            )
-        }
-        Text(
-            "Aucun plugin disponible.",
-            color = white(0.48f),
-            fontSize = 10.sp, fontWeight = FontWeight.Bold,
-            fontFamily = WaveMixerTheme.fontFamily,
-            modifier = Modifier.padding(top = 4.dp)
-        )
-    }
-}
 
 /* ------------------------------------------------------------------------- */
 /* Toggle Simple/Pro — capsule E-bis sur l'option active.                      */

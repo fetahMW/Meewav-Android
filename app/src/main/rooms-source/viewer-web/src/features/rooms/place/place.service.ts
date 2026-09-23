@@ -937,9 +937,8 @@ export function createPlaceRepository(client: SupabaseClient = supabase) {
       if(room.data.type==="classe") {
         const {error}=await client.rpc("rooms_join_classe_v1",{p_room_id:roomId});if(error)throw error;return;
       }
-      const {data:{user},error:authError}=await client.auth.getUser();
-      if(authError||!user)throw new Error("authentication_required");
-      const {error}=await client.from("room_participants_v2").upsert({room_id:roomId,user_id:user.id,role:room.data.host_id===user.id?"host":"viewer",left_at:null},{onConflict:"room_id,user_id"});
+      // The server owns admission, bans and existing guest roles across clients.
+      const {error}=await client.rpc("rooms_enter_room_v2",{p_room_id:roomId});
       if(error)throw error;
     },
 
@@ -947,9 +946,7 @@ export function createPlaceRepository(client: SupabaseClient = supabase) {
       const room=await client.from("rooms_v2").select("type").eq("id",roomId).single();
       if(room.error)throw room.error;
       if(room.data.type==="classe") {const {error}=await client.rpc("rooms_leave_classe_v1",{p_room_id:roomId});if(error)throw error;return;}
-      const {data:{user},error:authError}=await client.auth.getUser();
-      if(authError||!user)throw new Error("authentication_required");
-      const {error}=await client.from("room_participants_v2").update({left_at:new Date().toISOString()}).eq("room_id",roomId).eq("user_id",user.id);
+      const {error}=await client.rpc("rooms_leave_room_v2",{p_room_id:roomId});
       if(error)throw error;
     },
 

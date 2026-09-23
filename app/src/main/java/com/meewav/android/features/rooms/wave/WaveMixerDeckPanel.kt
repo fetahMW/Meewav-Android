@@ -36,11 +36,11 @@ internal fun WaveMixerDeckPanel(state: WaveMixerDeckState, expanded: Boolean, on
     var revealed by remember { mutableStateOf<String?>(null) }
     var packMenu by remember { mutableStateOf(false) }
     var page by androidx.compose.runtime.saveable.rememberSaveable { mutableIntStateOf(0) }
-    val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) {
+    val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> state.documentPicker.complete(); if (uri != null) {
         runCatching { context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }; state.import(if (target == "new") state.add() else target, uri)
     } }
-    val zip = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) state.importPack(uri, false) }
-    val folder = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri -> if (uri != null) {
+    val zip = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> state.documentPicker.complete(); if (uri != null) state.importPack(uri, false) }
+    val folder = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri -> state.documentPicker.complete(); if (uri != null) {
         runCatching { context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }; state.importPack(uri, true)
     } }
     LaunchedEffect(expanded) { revealed = null; if(page !in 0..2)page=0 }
@@ -48,7 +48,7 @@ internal fun WaveMixerDeckPanel(state: WaveMixerDeckState, expanded: Boolean, on
         if (!expanded || page == 0 || page == 2) Row(Modifier.fillMaxWidth().height(44.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
             Text(if (state.public) "Public" else "Privé", color = Color(0xFFCBC7D5), fontSize = 11.sp,
                 modifier = Modifier.hardwareSurface(6.dp, true, .085f).clickable(enabled = state.allowPublic) { state.route() }.padding(8.dp))
-            WaveControl(Icons.Default.FileDownload, "Importer la piste principale") { target = state.lanes.first().id; importer.launch(arrayOf("audio/*")) }
+            WaveControl(Icons.Default.FileDownload, "Importer la piste principale") { target = state.lanes.first().id; state.documentPicker.launch { importer.launch(arrayOf("audio/*")) } }
             WaveControl(Icons.Default.SkipPrevious, "Précédent", enabled = false) {}
             WaveRoundPlay(state.snapshot.running || state.tools.pendingStart, state.lanes.any { it.loading }, 0f, "Lecture du mixeur", onClick = onPlay)
             WaveControl(Icons.Default.SkipNext, "Suivant", enabled = false) {}
@@ -67,23 +67,23 @@ internal fun WaveMixerDeckPanel(state: WaveMixerDeckState, expanded: Boolean, on
                     SwipeAction("Mute", Icons.Default.VolumeOff, lane.muted) { state.mute(lane.id); close() }
                     SwipeAction("Solo", Icons.Default.Headphones, lane.solo) { state.solo(lane.id); close() }
                     SwipeAction("Retirer", Icons.Default.Close) { state.remove(lane.id); close() }
-                }) { WaveDeckLaneView(lane, state, { target = lane.id; importer.launch(arrayOf("audio/*")) }) }
+                }) { WaveDeckLaneView(lane, state, { target = lane.id; state.documentPicker.launch { importer.launch(arrayOf("audio/*")) } }) }
             }
             item(key="add-audio") {
                 Box(Modifier.fillMaxWidth()) {
                     Box(Modifier.fillMaxWidth().height(64.dp).drawBehind {
                         val inset=.6.dp.toPx()
                         drawRoundRect(color=WaveMixerTheme.capsuleAccentSoft.copy(alpha=.42f),topLeft=Offset(inset,inset),size=androidx.compose.ui.geometry.Size(size.width-2*inset,size.height-2*inset),cornerRadius=CornerRadius(10.dp.toPx()),style=Stroke(width=1.dp.toPx(),pathEffect=PathEffect.dashPathEffect(floatArrayOf(5.dp.toPx(),5.dp.toPx()))))
-                    }.combinedClickable(onClickLabel="Importer un son",onLongClickLabel="Importer un dossier ou une archive",onClick={target="new";importer.launch(arrayOf("audio/*"))},onLongClick={packMenu=true}),contentAlignment=Alignment.Center) {
+                    }.combinedClickable(onClickLabel="Importer un son",onLongClickLabel="Importer un dossier ou une archive",onClick={target="new";state.documentPicker.launch { importer.launch(arrayOf("audio/*")) }},onLongClick={packMenu=true}),contentAlignment=Alignment.Center) {
                         Icon(Icons.Default.Add,"Importer un son",tint=WaveMixerTheme.capsuleAccentSoft,modifier=Modifier.size(22.dp))
                     }
                     DropdownMenu(packMenu,{packMenu=false},containerColor=Color(0xFF101114),tonalElevation=0.dp){
-                        DropdownMenuItem(text={Text("Dossier",color=Color.White)},onClick={packMenu=false;folder.launch(null)})
-                        DropdownMenuItem(text={Text("Archive ZIP",color=Color.White)},onClick={packMenu=false;zip.launch(arrayOf("application/zip"))})
+                        DropdownMenuItem(text={Text("Dossier",color=Color.White)},onClick={packMenu=false;state.documentPicker.launch { folder.launch(null) }})
+                        DropdownMenuItem(text={Text("Archive ZIP",color=Color.White)},onClick={packMenu=false;state.documentPicker.launch { zip.launch(arrayOf("application/zip")) }})
                     }
                 }
             }
-        } else state.lanes.firstOrNull()?.let { lane -> WaveDeckLaneView(lane, state, { target = lane.id; importer.launch(arrayOf("audio/*")) }) }
+        } else state.lanes.firstOrNull()?.let { lane -> WaveDeckLaneView(lane, state, { target = lane.id; state.documentPicker.launch { importer.launch(arrayOf("audio/*")) } }) }
         if (expanded) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Box(Modifier.weight(1f)) { MixerPageButton("Pads", Icons.Default.Apps, page == 1) { page = 1 } }
             Box(Modifier.weight(1f)) { MixerPageButton("Chronomètre", Icons.Default.Timer, page == 2) { page = 2 } }

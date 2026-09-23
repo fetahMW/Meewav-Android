@@ -274,6 +274,7 @@ export function usePlaceRoom({
         ? PLACE_DEMO_PROFILES.viewerA.id
         : currentUserId;
   const resolvedLiveRoomId = useRef(requestedRoomId);
+  const admission = useRef<{key: string; promise: Promise<void>} | null>(null);
   const [room, setRoom] = useState<PlaceRoomState>(() => demoRoom
     ?? (requestedRoomId && !demoRole
       ? createUnavailableRoomState(requestedRoomId)
@@ -339,7 +340,17 @@ export function usePlaceRoom({
       setIsLoading(false);
       return;
     }
+    if (requestedRoomId && !currentUserId) return;
     try {
+      if (requestedRoomId && currentUserId) {
+        const key = `${requestedRoomId}:${currentUserId}`;
+        if (admission.current?.key !== key) {
+          const promise = repository.enterRoom(requestedRoomId);
+          admission.current = {key, promise};
+          promise.catch(() => { if (admission.current?.promise === promise) admission.current = null; });
+        }
+        await admission.current.promise;
+      }
       const liveRoom = await repository.load(resolvedLiveRoomId.current, currentUserId, roomType);
       if (liveRoom) {
         resolvedLiveRoomId.current = liveRoom.id;
@@ -452,16 +463,13 @@ export function usePlaceRoom({
   }, [isHost, repository, room.poll?.endsAt, room.poll?.id, room.poll?.isActive, room.source, showNotice]);
 
   useEffect(() => {
-    if (room.source !== "live" || room.status !== "live" || !currentUserId || isHost) return;
-    let entered = false;
-    void repository.enterRoom(room.id).then(() => {
-      entered = true;
-      void load();
-    }).catch(() => showNotice("Connexion à la Room limitée : les interactions restent indisponibles."));
+    if (demoRole || demoRoom || !requestedRoomId || !currentUserId) return;
     return () => {
-      if (entered) void repository.leaveRoom(room.id).catch(() => undefined);
+      const pending = admission.current;
+      admission.current = null;
+      if (pending) void pending.promise.then(() => repository.leaveRoom(requestedRoomId)).catch(() => undefined);
     };
-  }, [currentUserId, isHost, load, repository, room.id, room.source, room.status, showNotice]);
+  }, [currentUserId, demoRole, demoRoom, repository, requestedRoomId]);
 
   useEffect(() => {
     demoMeterProfiles.current.clear();

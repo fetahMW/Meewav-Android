@@ -14,6 +14,7 @@ internal data class WaveDeckLane(val id: String = UUID.randomUUID().toString(), 
 
 /** Separate engine and gain from the Wave Vote/Composition player. IDs survive reordering. */
 internal class WaveMixerDeckState(private val context: Context, val allowPublic: Boolean = true) : AutoCloseable {
+    val documentPicker = RoomDocumentPickerState()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val lock = Mutex()
     val audio = WaveCompositionAudio()

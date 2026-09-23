@@ -35,6 +35,8 @@ internal class WavePerformanceBus(private val capacity: Int = 8) {
 internal data class WaveVocalSettings(
     val mute: Boolean = true, val gain: Float = .72f, val monitoring: Boolean = false,
     val tune: Boolean = false, val scale: Int = 0, val reverb: Boolean = false, val reverbMix: Float = .15f,
+    val cleanVoice: Boolean = false, val noiseCalibration: Int = 0,
+    val proEffects: Int = 0,
 )
 
 internal fun waveTuneScale(key: String, mode: String): Int {

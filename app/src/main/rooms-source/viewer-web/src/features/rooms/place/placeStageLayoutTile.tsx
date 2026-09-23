@@ -318,6 +318,8 @@ function NativeMedia({
   return (
     <div
       ref={mediaFrameRef}
+      data-rtc-user={participant.profile.id}
+      data-rtc-volume={muted ? 0 : playbackVolume}
       className={`place-camera__media-frame${smartFramingActive ? " is-smart-framed" : ""}`}
       style={smartFrameStyle}
     >
@@ -398,7 +400,18 @@ export default function PlaceStageLayoutTile({
   const actionTriggerRef = useRef<HTMLButtonElement | null>(null);
   const actionMenuRef = useRef<HTMLDivElement | null>(null);
   const declaredSource = resolveParticipantSource(participant, sourceId, renderAudience);
-  const source = declaredSource ?? (liveKitVideoTrack && !liveKitVideoTrack.muted ? {
+  const nativeRtc = location.hostname === 'appassets.androidplatform.net' && Boolean(document.querySelector('.android-room-viewer[data-room-source="live"]:not([data-room-type="classe"])'));
+  const source = declaredSource ?? (nativeRtc ? {
+    id: `byteplus-camera:${participant.profile.id}`,
+    type: "front_camera" as const,
+    aspectRatio: aspectRatio ?? "16:9",
+    transport: "rtc" as const,
+    active: true,
+    programEligible: true,
+    viewerSelectable: true,
+    authorization: "publication" as const,
+    preferredForDesktop: true,
+  } : undefined) ?? (liveKitVideoTrack && !liveKitVideoTrack.muted ? {
     id: `livekit-camera:${liveKitVideoTrack.publicationSid}`,
     type: "front_camera" as const,
     aspectRatio: aspectRatio ?? "16:9",

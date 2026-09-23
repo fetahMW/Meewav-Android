@@ -391,7 +391,9 @@ internal class WaveCompositionAudio : AutoCloseable {
                     leftPeak = max(leftPeak, abs(left)); rightPeak = max(rightPeak, abs(right))
                 }
                 programInput?.offer(program)
-                live?.render(live.microphone.read(), program, block)
+                // The RTC clock owns vocal rendering. AudioTrack can request music
+                // in bursts; those requests must never consume/discard mic packets.
+                live?.composition?.offer(program)
                 var offset = 0
                 while (offset < block.size && alive) {
                     val n = track.write(block, offset, block.size - offset, AudioTrack.WRITE_BLOCKING)

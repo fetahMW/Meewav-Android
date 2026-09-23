@@ -28,7 +28,9 @@ internal class RoomViewerNativeControls(
     private val audioScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var liveAudio: RoomsAudioSession? = null
     private var liveAudioJob: Job? = null
-    private val audioLifecycle = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_STOP) liveAudio?.stop() }
+    private val videos = RoomViewerVideoSurfaces(web, parent)
+    private var viewerDeck: WaveMixerDeckState? = null
+    private val audioLifecycle = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_STOP && viewerDeck?.documentPicker?.isOpen != true) liveAudio?.stop() }
     private var room by mutableStateOf("")
     private var mode by mutableStateOf("none")
     private var draft by mutableStateOf("")
@@ -49,9 +51,10 @@ internal class RoomViewerNativeControls(
             key(room) {
                 val deck = remember { WaveMixerDeckState(activity.applicationContext, allowPublic = false) }
                 DisposableEffect(deck) {
-                    val observer = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_STOP) deck.suspendAudio() }
+                    viewerDeck = deck
+                    val observer = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_STOP && !deck.documentPicker.isOpen) deck.suspendAudio() }
                     activity.lifecycle.addObserver(observer)
-                    onDispose { activity.lifecycle.removeObserver(observer); deck.close() }
+                    onDispose { if (viewerDeck === deck) viewerDeck = null; activity.lifecycle.removeObserver(observer); deck.close() }
                 }
                 if (mode == "mixer") ViewerMixerControls(deck, name, mixerState, ::emit)
                 if (mode == "composer") {
@@ -82,15 +85,21 @@ internal class RoomViewerNativeControls(
         web.evaluateJavascript("window.dispatchEvent(new CustomEvent('meewav:native-viewer-action',{detail:$payload}));", null)
     }
     fun handle(uri: Uri): Boolean {
+        if (uri.path == "/native/viewer-video") {
+            val raw = uri.getQueryParameter("data") ?: return true
+            if (raw.length <= 12000) runCatching { videos.update(JSONObject(raw)) }
+            return true
+        }
         if (uri.path == "/native/wave-audio") {
             if (uri.getQueryParameter("action") == "stop") {
-                liveAudio?.close(); liveAudio = null; liveAudioJob?.cancel(); liveAudioJob = null
+                videos.attach(null); liveAudio?.close(); liveAudio = null; liveAudioJob?.cancel(); liveAudioJob = null
             } else {
                 val id = uri.getQueryParameter("roomId") ?: return true
                 liveAudio?.close(); liveAudioJob?.cancel()
                 runCatching {
                     val session = RoomsAudioSession(activity.applicationContext, RoomsAudioRepository(activity.applicationContext, id), null)
                     liveAudio = session
+                    videos.attach(session)
                     liveAudioJob = audioScope.launch { session.status.collect { state -> emit("wave-audio", JSONObject().put("text", state.text).put("active", state.active).put("busy", state.busy)) } }
                     session.start(RoomsAudioMode.LISTEN)
                 }.onFailure { emit("wave-audio", JSONObject().put("text", "Room audio invalide").put("active", false)) }
@@ -138,6 +147,7 @@ internal class RoomViewerNativeControls(
         layer.bringToFront()
     }
     override fun close() {
+        videos.close()
         liveAudio?.close(); liveAudioJob?.cancel(); audioScope.cancel()
         activity.lifecycle.removeObserver(audioLifecycle)
         layer.disposeComposition(); parent.removeView(layer)
