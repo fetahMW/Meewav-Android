@@ -104,10 +104,11 @@ enum class WaveTab(val label: String, val icon: ImageVector) {
 
 @Composable
 fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = null, liveRoomId:String? = null, cageProgram: String? = null, programScope: String = "demo",
+                    initialFrontCamera:Boolean = true, launchFormat:String = "landscape", launchLayout:String? = null,
                     onBack: () -> Unit = {}, onClose: () -> Unit = {}) {
-    WaveMixerSession(room,roomTitle,cageProgram,programScope,onBack,onClose,liveRoomId)
+    WaveMixerSession(room,roomTitle,cageProgram,programScope,onBack,onClose,liveRoomId,initialFrontCamera,launchFormat,launchLayout)
 }
-@Composable private fun WaveMixerSession(initialRoom:RoomModule,initialTitle:String?,cageProgram:String?,programScope:String,onBack:()->Unit,onClose:()->Unit,liveRoomId:String?) {
+@Composable private fun WaveMixerSession(initialRoom:RoomModule,initialTitle:String?,cageProgram:String?,programScope:String,onBack:()->Unit,onClose:()->Unit,liveRoomId:String?,initialFrontCamera:Boolean,launchFormat:String,launchLayout:String?) {
     var room by remember(initialRoom){mutableStateOf(initialRoom)}
     var roomTitle by remember(initialTitle){mutableStateOf(initialTitle)}
     var switchOpen by remember{mutableStateOf(false)}
@@ -123,6 +124,12 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     var pinnedChatMessage by remember { mutableStateOf<WaveChatMessage?>(null) }
     var waveNotificationsRead by remember { mutableStateOf(false) }
     val guestState = remember(initialRoom,liveRoomId) { WaveGuestState(cageDemo = initialRoom == RoomModule.CAGE, classeDemo = initialRoom == RoomModule.CLASSE,live=liveRoomId!=null) }
+    LaunchedEffect(guestState, launchLayout) {
+        if (launchLayout != null) guestState.composition = when (launchLayout) {
+            "interview", "presentation", "pip", "immersive", "focus" -> WaveComposition.FOCUS
+            else -> WaveComposition.ENSEMBLE
+        }
+    }
     BindRoomGuests(guestState,liveRoomId,room==RoomModule.CLASSE)
     BindGuestSearch(guestState,liveRoomId)
     var giftRecipient by remember { mutableStateOf<WaveGuest?>(null) }
@@ -231,7 +238,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     }
     val liveAudio = remember(room, liveRoomId, composition) {
         if (room == initialRoom && room != RoomModule.CLASSE && liveRoomId != null)
-            RoomsAudioSession(context.applicationContext, RoomsAudioRepository(context.applicationContext, liveRoomId), composition?.audio, mixerDeck.audio)
+            RoomsAudioSession(context.applicationContext, RoomsAudioRepository(context.applicationContext, liveRoomId), composition?.audio, mixerDeck.audio, initialFrontCamera, launchFormat == "portrait")
         else null
     }
     val controlledGuest = if (liveAudio == null) guestState.mixerGuest else null
@@ -280,6 +287,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     var showLeaveConfirm by remember { mutableStateOf(false) }
     var stageFullscreen by remember { mutableStateOf(false) }
     val videoControls = rememberRoomVideoControls()
+    LaunchedEffect(initialFrontCamera) { videoControls.frontCamera = initialFrontCamera }
     LaunchedEffect(liveAudio, videoControls.cameraEnabled) { liveAudio?.setCameraEnabled(videoControls.cameraEnabled) }
     LaunchedEffect(liveAudio) {
         if (liveAudio != null &&

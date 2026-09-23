@@ -1,6 +1,7 @@
 import { readCagePrograms, saveCageProgram, type CageProgram, type SavedCageProgram } from "../../../../../../shared-ui/cagePrograms";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from "react";
 import {
+  ArrowLeft,
   AudioLines,
   BookOpen,
   Camera,
@@ -33,12 +34,13 @@ import {
 } from "lucide-react";
 import GlobeLoading from "../../../../vendor/meewav-vinyl/src/GlobeLoading";
 import type { RoomsHomeRoomType } from "../home/roomsHome.types";
+import LaunchStudio, { type LaunchLayout, type LaunchStudioConfig } from "./LaunchStudio";
 
 type LaunchRoomSheetProps = {
   initialType?: RoomsHomeRoomType;
   closeRef?: RefObject<HTMLButtonElement | null>;
   onClose: () => void;
-  onLaunched?: (roomLabel: string, roomType: RoomsHomeRoomType, program?: CageProgram) => void;
+  onLaunched?: (roomLabel: string, roomType: RoomsHomeRoomType, program?: CageProgram, studio?: LaunchStudioConfig) => void;
   initialProgram?: CageProgram;
 };
 
@@ -53,6 +55,9 @@ const LAUNCH_TABS: LaunchTab[] = [
   { id: "loge", label: "LA LOGE", accent: "#f6d381" },
   { id: "classe", label: "LA CLASSE", accent: "#5086ff" },
 ];
+const recommendedLayout = (room: RoomsHomeRoomType): LaunchLayout => ({
+  wave: "focus", cage: "duo", scene: "immersive", place: "immersive", loge: "immersive", classe: "presentation",
+}[room]);
 
 const GAMME_OPTIONS = [
   "Do majeur", "Do mineur", "Ré majeur", "Ré mineur", "Mi majeur", "Mi mineur",
@@ -205,6 +210,9 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
   const [selectedTab, setSelectedTab] = useState(initialIndex);
   const [step, setStep] = useState(0);
   const [launching, setLaunching] = useState(false);
+  const [studio, setStudio] = useState<LaunchStudioConfig>({
+    format: "landscape", camera: "front", portraitLayout: recommendedLayout(LAUNCH_TABS[initialIndex].id), landscapeLayout: recommendedLayout(LAUNCH_TABS[initialIndex].id), secondCamera: false, reversed: false,
+  });
 
   /* Paramètres communs */
   const [title, setTitle] = useState("");
@@ -271,11 +279,13 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
   const [micState, setMicState] = useState<MicState>("idle");
   const [micLevel, setMicLevel] = useState(0);
   const [micTesting, setMicTesting] = useState(false);
-  const [audioMode, setAudioMode] = useState<"Voix" | "Musique">("Voix");
-  const [monitoring, setMonitoring] = useState(false);
-  const [cameraSource, setCameraSource] = useState("Auto");
-  const [videoQuality, setVideoQuality] = useState("Auto");
-  const [networkOk] = useState(() => (typeof navigator === "undefined" ? true : navigator.onLine !== false));
+  const [networkOk, setNetworkOk] = useState(() => (typeof navigator === "undefined" ? true : navigator.onLine !== false));
+  useEffect(() => {
+    const sync = () => setNetworkOk(navigator.onLine !== false);
+    window.addEventListener("online", sync);
+    window.addEventListener("offline", sync);
+    return () => { window.removeEventListener("online", sync); window.removeEventListener("offline", sync); };
+  }, []);
   const [canQuickPass] = useState(() => {
     try { return Boolean(window.sessionStorage.getItem(CHECKUP_STORAGE_KEY)); } catch { return false; }
   });
@@ -339,6 +349,7 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
 
   const selectTab = (index: number) => {
     setSelectedTab(index);
+    setStudio(current => ({ ...current, portraitLayout: recommendedLayout(LAUNCH_TABS[index].id), landscapeLayout: recommendedLayout(LAUNCH_TABS[index].id), secondCamera: false, reversed: false }));
     setStep(0);
     stopMic();
   };
@@ -365,8 +376,8 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
 
   const goToStep = (next: number) => {
     if (next > 0 && LAUNCH_TABS[selectedTab].id === "cage" && (!title.trim() || programRoster.length > cageParticipants)) { setProgramNotice(!title.trim() ? "Donne un nom au programme." : "La capacité est inférieure au nombre de participants préparés."); setStep(0); return; }
-    if (next === 2) markCheckupDone();
-    if (next !== 1) stopMic();
+    if (next === 3) markCheckupDone();
+    if (next !== 2) stopMic();
     setStep(next);
   };
 
@@ -697,7 +708,7 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
   const renderCheckup = () => (
     <>
       {canQuickPass ? (
-        <button type="button" className="launch-quick-pass" style={{ borderColor: `${accent}40`, color: accent }} onClick={() => goToStep(2)}>
+        <button type="button" className="launch-quick-pass" style={{ borderColor: `${accent}40`, color: accent }} onClick={() => goToStep(3)}>
           <Zap aria-hidden="true" size={18} />
           <span>Entrée rapide — config précédente</span>
           <ChevronRight aria-hidden="true" size={14} />
@@ -710,39 +721,7 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
           <strong>{isReady ? "Tout est prêt" : "Vérifie ton installation"}</strong>
           <span>{isReady ? "PRÊT" : "À CORRIGER"}</span>
         </div>
-        <span className="launch-chip">Casque</span>
         <span className={`launch-chip${networkOk ? " is-ok" : ""}`}>Réseau</span>
-      </div>
-
-      <div className="launch-module launch-module--static">
-        <span className="launch-module__icon" style={{ color: accent }}><Headphones aria-hidden="true" size={18} /></span>
-        <span className="launch-module__copy">
-          <strong>Casque non détecté</strong>
-          <small>Branche un casque pour éviter le Larsen.</small>
-        </span>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={monitoring}
-          className={`launch-switch${monitoring ? " is-on" : ""}`}
-          style={monitoring ? { background: accent } : undefined}
-          onClick={() => setMonitoring((value) => !value)}
-          aria-label="Monitoring"
-        >
-          <span />
-        </button>
-      </div>
-
-      <SectionTitle>MODE AUDIO</SectionTitle>
-      <div className="launch-mode-grid">
-        <button type="button" className={`launch-mode${audioMode === "Voix" ? " is-selected" : ""}`} style={audioMode === "Voix" ? { borderColor: accent } : undefined} onClick={() => setAudioMode("Voix")}>
-          <strong>Rap / Voix</strong>
-          <small>Filtre passe-haut, compresseur vocal actif</small>
-        </button>
-        <button type="button" className={`launch-mode${audioMode === "Musique" ? " is-selected" : ""}`} style={audioMode === "Musique" ? { borderColor: accent } : undefined} onClick={() => setAudioMode("Musique")}>
-          <strong>Instrument</strong>
-          <small>Spectre complet, DSP transparent</small>
-        </button>
       </div>
 
       <SectionTitle>TEST MICRO</SectionTitle>
@@ -767,24 +746,17 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
         <span className="launch-module__copy"><strong>{networkLabel}</strong><small>{networkOk ? "Connexion stable détectée." : "Reconnecte-toi avant de lancer."}</small></span>
       </div>
 
-      <SectionTitle>VIDÉO</SectionTitle>
-      <div className="launch-selectors">
-        <LaunchSelect label="Caméra" value={cameraSource} options={["Auto", "Avant", "Arrière"].map((option) => ({ value: option, label: option }))} onChange={setCameraSource} />
-        <LaunchSelect label="Qualité" value={videoQuality} options={["Auto", "Économie", "Haute"].map((option) => ({ value: option, label: option }))} onChange={setVideoQuality} />
-      </div>
-
       <ul className="launch-checklist">
         <li className="is-ok"><CheckCircle2 aria-hidden="true" size={16} /> Audio : {micState === "granted" ? "Micro détecté" : "Micro non testé"}</li>
-        <li><CheckCircle2 aria-hidden="true" size={16} /> Casque : Non détecté</li>
         <li className={networkOk ? "is-ok" : ""}><CheckCircle2 aria-hidden="true" size={16} /> Réseau : {networkLabel}</li>
       </ul>
 
       <div className="launch-actions">
-        <button type="button" className="launch-btn launch-btn--ghost" onClick={() => goToStep(0)}>Précédent</button>
-        <button type="button" className="launch-btn launch-btn--accent" disabled={!isReady} style={{ background: isReady ? accent : undefined }} onClick={() => goToStep(2)}>Suivant</button>
+        <button type="button" className="launch-btn launch-btn--ghost" onClick={() => goToStep(1)}>Précédent</button>
+        <button type="button" className="launch-btn launch-btn--accent" disabled={!isReady} style={{ background: isReady ? accent : undefined }} onClick={() => goToStep(3)}>Suivant</button>
       </div>
       {!isReady ? (
-        <button type="button" className="launch-btn--skip" onClick={() => goToStep(2)}>Ignorer et continuer</button>
+        <button type="button" className="launch-btn--skip" onClick={() => goToStep(3)}>Ignorer et continuer</button>
       ) : null}
     </>
   );
@@ -807,24 +779,27 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
             </>
           ) : null}
           <div><dt>Configuration</dt><dd>{isReady ? "Check-up validé" : "Check-up ignoré"}</dd></div>
+          <div><dt>Image</dt><dd>{studio.format === "portrait" ? "Mobile · 9:16" : "Paysage · 16:9"}</dd></div>
+          <div><dt>Caméra</dt><dd>{studio.camera === "front" ? "Avant" : "Arrière"}</dd></div>
+          {studio.secondCamera ? <div><dt>Caméra 2</dt><dd>Aperçu local uniquement</dd></div> : null}
           <div><dt>Monétisation</dt><dd>{monetization ? "Activée" : "Désactivée"}</dd></div>
         </dl>
       </div>
-      <button type="button" className="launch-btn launch-btn--golive" style={{ background: `linear-gradient(135deg, ${accent}, ${accent}cc)` }} onClick={() => goToStep(3)}>
+      <button type="button" className="launch-btn launch-btn--golive" style={{ background: `linear-gradient(135deg, ${accent}, ${accent}cc)` }} onClick={() => goToStep(4)}>
         Entrer dans la Green Room <Rocket aria-hidden="true" size={18} />
       </button>
-      <button type="button" className="launch-btn--skip" onClick={() => setStep(1)}>← Retour au Check-up</button>
+      <button type="button" className="launch-btn--skip" onClick={() => setStep(2)}>← Retour au Check-up</button>
     </div>
   );
 
   return (
-    <div className="launch-room-sheet" role="dialog" aria-modal="true" aria-label="Créer une Room" style={{ "--launch-accent": accent } as CSSProperties}>
+    <main className="launch-room-sheet" aria-label="Créer une Room" style={{ "--launch-accent": accent } as CSSProperties}>
       <header className="launch-room-sheet__header">
-        <span className="launch-room-sheet__badge" style={{ background: accent }} aria-hidden="true" />
-        <strong>Créer une Room</strong>
-        <button type="button" ref={closeRef} aria-label="Fermer" onClick={onClose} style={{ color: accent }}>
-          <X aria-hidden="true" size={20} />
+        <button type="button" ref={closeRef} aria-label="Retour aux Rooms" onClick={onClose}>
+          <ArrowLeft aria-hidden="true" size={21} />
         </button>
+        <strong>Ouvrir une Room</strong>
+        <span className="launch-room-sheet__badge" style={{ background: accent }} aria-hidden="true" />
       </header>
 
       <nav ref={tabsNavRef} className="launch-tabs" aria-label="Type de Room" style={{ scrollbarWidth: "none" }}>
@@ -833,7 +808,7 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
             key={tab.id}
             type="button"
             className={index === selectedTab ? "is-active" : ""}
-            style={index === selectedTab ? { color: tab.accent, borderColor: tab.accent, boxShadow: `0 0 12px ${tab.accent}55, inset 0 0 10px ${tab.accent}22` } : undefined}
+            style={index === selectedTab ? { color: tab.accent, borderColor: `${tab.accent}66` } : undefined}
             onClick={() => selectTab(index)}
           >
             {tab.label}
@@ -841,26 +816,23 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
         ))}
       </nav>
 
-      <div className="launch-steps" aria-hidden="true">
-        <span className={step === 0 ? "is-active" : ""}>1. IDENTITÉ</span>
-        <ChevronRight size={16} />
-        <span className={step === 1 ? "is-active" : ""}>2. CHECK-UP</span>
-        <ChevronRight size={16} />
-        <span className={step === 2 ? "is-active" : ""}>3. ACCÈS</span>
-        <ChevronRight size={16} />
-        <span className={step === 3 ? "is-active" : ""}>4. GREEN ROOM</span>
+      <div className="launch-steps" aria-label={`Étape ${step + 1} sur 5 : ${["Identité", "Studio", "Vérification", "Revue", "Green Room"][step]}`}>
+        <span className="launch-steps__current">{["Identité", "Studio", "Vérification", "Revue", "Green Room"][step]}</span>
+        <span className="launch-steps__count">{step + 1} / 5</span>
+        <i className="launch-steps__track" aria-hidden="true"><b style={{ width: `${(step + 1) * 20}%` }} /></i>
       </div>
 
       <div className="launch-room-sheet__body">
-        {step === 0 ? renderIdentity() : step === 1 ? renderCheckup() : step === 2 ? renderGoLive() : (
-          <GreenHouse roomLabel={roomLabel} accent={accent} onBack={() => setStep(2)} onReady={() => setLaunching(true)} />
+        {step === 0 ? renderIdentity() : step === 1 ? <LaunchStudio value={studio} onChange={setStudio} /> : step === 2 ? renderCheckup() : step === 3 ? renderGoLive() : (
+          <GreenHouse roomLabel={roomLabel} accent={accent} studio={studio} onBack={() => setStep(3)} onReady={() => setLaunching(true)} />
         )}
         {step === 0 ? (
           <div className="launch-actions">
             <span />
-            <button type="button" className="launch-btn launch-btn--accent" style={{ background: accent }} onClick={() => goToStep(1)}>Suivant</button>
+            <button type="button" className="launch-btn launch-btn--accent" style={{ background: accent }} onClick={() => goToStep(1)}>Configurer l’écran</button>
           </div>
         ) : null}
+        {step === 1 ? <div className="launch-actions"><button type="button" className="launch-btn launch-btn--ghost" onClick={() => goToStep(0)}>Précédent</button><button type="button" className="launch-btn launch-btn--accent" style={{ background: accent }} onClick={() => goToStep(2)}>Continuer</button></div> : null}
       </div>
 
       {juryOpen ? (
@@ -934,19 +906,18 @@ export default function LaunchRoomSheet({ initialType, closeRef, onClose, onLaun
           onCancel={() => setLaunching(false)}
           onComplete={() => {
             setLaunching(false);
-            onClose();
-            onLaunched?.(title.trim() || roomLabel, LAUNCH_TABS[selectedTab].id, LAUNCH_TABS[selectedTab].id === "cage" ? configuration() : undefined);
+            onLaunched?.(title.trim() || roomLabel, LAUNCH_TABS[selectedTab].id, LAUNCH_TABS[selectedTab].id === "cage" ? configuration() : undefined, studio);
           }}
         />
       ) : null}
-    </div>
+    </main>
   );
 }
 
 const LAUNCH_TRANSITION_MS = 2200;
 
 /* Green Room privée — réglages finaux avant le direct (port de place/GreenHouse.tsx du web). */
-function GreenHouse({ roomLabel, accent, onBack, onReady }: { roomLabel: string; accent: string; onBack: () => void; onReady: () => void }) {
+function GreenHouse({ roomLabel, accent, studio, onBack, onReady }: { roomLabel: string; accent: string; studio: LaunchStudioConfig; onBack: () => void; onReady: () => void }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const contextRef = useRef<AudioContext | null>(null);
@@ -1042,7 +1013,7 @@ function GreenHouse({ roomLabel, accent, onBack, onReady }: { roomLabel: string;
     setTracksValid(false);
     try {
       const next = await navigator.mediaDevices.getUserMedia({
-        video: cameraId ? { deviceId: { ideal: cameraId } } : true,
+        video: cameraId ? { deviceId: { ideal: cameraId } } : { facingMode: { ideal: studio.camera === "front" ? "user" : "environment" }, aspectRatio: { ideal: studio.format === "portrait" ? 9 / 16 : 16 / 9 } },
         audio: microphoneId ? { deviceId: { ideal: microphoneId } } : true,
       });
       if (!mountedRef.current) { next.getTracks().forEach((track) => track.stop()); return; }
@@ -1058,7 +1029,7 @@ function GreenHouse({ roomLabel, accent, onBack, onReady }: { roomLabel: string;
     } finally {
       if (mountedRef.current) setBusy(false);
     }
-  }, [busy, cameraId, microphoneId, stopPreview, testConnection]);
+  }, [busy, cameraId, microphoneId, stopPreview, testConnection, studio.camera, studio.format]);
 
   const playTone = useCallback(async () => {
     const context = new AudioContext();
@@ -1088,7 +1059,7 @@ function GreenHouse({ roomLabel, accent, onBack, onReady }: { roomLabel: string;
         </div>
       </div>
 
-      <div className="green-house__preview">
+      <div className={`green-house__preview green-house__preview--${studio.format}`}>
         {stream ? <video ref={videoRef} autoPlay muted playsInline /> : <div className="green-house__placeholder"><Camera aria-hidden="true" size={26} /><span>Cadre ton image, trouve ton son.</span></div>}
         <span className="green-house__private">Aperçu privé</span>
       </div>
@@ -1155,7 +1126,7 @@ function GreenHouse({ roomLabel, accent, onBack, onReady }: { roomLabel: string;
           className="launch-btn launch-btn--golive"
           disabled={!ready || busy}
           style={ready ? { background: `linear-gradient(135deg, ${accent}, ${accent}cc)` } : undefined}
-          onClick={onReady}
+          onClick={() => { stopPreview(); onReady(); }}
         >
           Ouvrir {roomLabel} <Rocket aria-hidden="true" size={18} />
         </button>

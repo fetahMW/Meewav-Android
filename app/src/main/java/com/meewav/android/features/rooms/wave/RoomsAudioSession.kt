@@ -25,7 +25,8 @@ internal data class RoomsAudioStatus(val active: Boolean = false, val busy: Bool
 
 /** One lifecycle owner; all SDK mutations on Main, sender stopped before engine destruction. */
 internal class RoomsAudioSession(private val context: Context, private val repository: RoomsAudioRepository,
-    private val audio: WaveCompositionAudio?, private val productionAudio: WaveCompositionAudio? = null) : AutoCloseable {
+    private val audio: WaveCompositionAudio?, private val productionAudio: WaveCompositionAudio? = null,
+    private val initialFrontCamera: Boolean = true, private val portraitPreview: Boolean = false) : AutoCloseable {
     companion object { private val owned = AtomicBoolean(false) }
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val mutableStatus = MutableStateFlow(RoomsAudioStatus())
@@ -58,7 +59,7 @@ internal class RoomsAudioSession(private val context: Context, private val repos
     /** The RTC engine owns the camera. The preview is only a canvas for that same published stream. */
     fun bindLocalVideo(view: TextureView?) {
         localVideoView = view
-        engine?.setLocalVideoCanvas(view?.let { VideoCanvas(it, VideoCanvas.RENDER_MODE_HIDDEN) } ?: VideoCanvas())
+        engine?.setLocalVideoCanvas(view?.let { VideoCanvas(it, if (portraitPreview) VideoCanvas.RENDER_MODE_FIT else VideoCanvas.RENDER_MODE_HIDDEN) } ?: VideoCanvas())
     }
 
     fun unbindLocalVideo(view: TextureView) {
@@ -79,8 +80,9 @@ internal class RoomsAudioSession(private val context: Context, private val repos
         check(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) { "Autorise la caméra pour diffuser" }
         val sdk = engine ?: return
         val channel = rtc ?: return
-        localVideoView?.let { requireOk(sdk.setLocalVideoCanvas(VideoCanvas(it, VideoCanvas.RENDER_MODE_HIDDEN)), "Aperçu caméra") }
+        localVideoView?.let { requireOk(sdk.setLocalVideoCanvas(VideoCanvas(it, if (portraitPreview) VideoCanvas.RENDER_MODE_FIT else VideoCanvas.RENDER_MODE_HIDDEN)), "Aperçu caméra") }
         requireOk(sdk.startVideoCapture(), "Capture caméra")
+        if (!initialFrontCamera) requireOk(sdk.switchCamera(CameraId.CAMERA_ID_BACK), "Caméra arrière")
         requireOk(channel.publishStreamVideo(true), "Publication vidéo")
         cameraPublished = true
         Log.i("WaveRTC", "Camera publication requested")

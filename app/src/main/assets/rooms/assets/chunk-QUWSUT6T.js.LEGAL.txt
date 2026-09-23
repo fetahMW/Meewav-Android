@@ -91,6 +91,7 @@ lucide-react/dist/esm/icons/circle-stop.mjs:
 lucide-react/dist/esm/icons/clapperboard.mjs:
 lucide-react/dist/esm/icons/clipboard-list.mjs:
 lucide-react/dist/esm/icons/clock-3.mjs:
+lucide-react/dist/esm/icons/copy.mjs:
 lucide-react/dist/esm/icons/crown.mjs:
 lucide-react/dist/esm/icons/dices.mjs:
 lucide-react/dist/esm/icons/download.mjs:
@@ -129,6 +130,7 @@ lucide-react/dist/esm/icons/image.mjs:
 lucide-react/dist/esm/icons/images.mjs:
 lucide-react/dist/esm/icons/inbox.mjs:
 lucide-react/dist/esm/icons/info.mjs:
+lucide-react/dist/esm/icons/layout-template.mjs:
 lucide-react/dist/esm/icons/library.mjs:
 lucide-react/dist/esm/icons/list-checks.mjs:
 lucide-react/dist/esm/icons/list-music.mjs:

@@ -17,12 +17,12 @@ async function joinAsHost(id:string,userId:string) {
  if(error)throw error;
  return id;
 }
-export async function createLiveRoom(type:RoomsHomeRoomType,title:string,requestId:string):Promise<string> {
+export async function createLiveRoom(type:RoomsHomeRoomType,title:string,requestId:string,format:'portrait'|'landscape'='landscape'):Promise<string> {
  const {data:{user},error}=await getSessionUser();
  if(error||!user)throw new Error('Connecte-toi pour ouvrir une room.');
  const clean=title.trim();if(!clean||clean.length>160)throw new Error('Le titre doit contenir de 1 à 160 caractères.');
  if(type==='classe') {
-  const result=await supabase.rpc('rooms_create_classe_v1',{p_title:clean,p_description:null,p_cover_url:null,p_video_format:'landscape',p_client_request_id:requestId});
+  const result=await supabase.rpc('rooms_create_classe_v1',{p_title:clean,p_description:null,p_cover_url:null,p_video_format:format,p_client_request_id:requestId});
   if(result.error)throw result.error;
   if(!result.data?.id)throw new Error('Création non confirmée.');
   return result.data.id;
@@ -31,7 +31,7 @@ export async function createLiveRoom(type:RoomsHomeRoomType,title:string,request
  const existing=await supabase.from('rooms_v2').select('id,host_id,type,status').eq('id',requestId).maybeSingle();
  if(existing.error)throw existing.error;
  if(existing.data){if(existing.data.host_id!==user.id||existing.data.type!==type||existing.data.status!=='live')throw new Error('Room indisponible.');return joinAsHost(existing.data.id,user.id);}
- const result=await supabase.from('rooms_v2').insert({id:requestId,host_id:user.id,type,title:clean,status:'live',livekit_room_name:`room-${requestId}`,queue_open:false,video_format:'landscape'}).select('id').single();
+ const result=await supabase.from('rooms_v2').insert({id:requestId,host_id:user.id,type,title:clean,status:'live',livekit_room_name:`room-${requestId}`,queue_open:false,video_format:format}).select('id').single();
  if(result.error)throw result.error;
  return joinAsHost(result.data.id,user.id);
 }

@@ -2,13 +2,13 @@ import {previewEnabled} from '../profile-source/runtime';
 import {listLiveRooms,createLiveRoom} from './liveRooms';
 import type { CageProgram } from '../shared-ui/cagePrograms';
 import { lazy, Suspense, useState, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
-import { createPortal } from 'react-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { DoorOpen, GraduationCap, Home, MapPin, Mic, Play, Plus, Waves, X } from 'lucide-react';
 import MeewavPillarBrand from '../market-source/vendor/src/components/navigation/MeewavPillarBrand';
 import MeewavPillarTabs, { type MeewavPillarTabItem } from '../market-source/vendor/src/components/navigation/MeewavPillarTabs';
 import RoomsHome from './vendor/src/features/rooms/home/RoomsHome';
 import LaunchRoomSheet from './vendor/src/features/rooms/launch/LaunchRoomSheet';
+import type { LaunchStudioConfig } from './vendor/src/features/rooms/launch/LaunchStudio';
 
 import type { RoomsHomeRoom, RoomsHomeRoomType } from './vendor/src/features/rooms/home/roomsHome.types';
 
@@ -27,6 +27,7 @@ type RoomTab = 'home' | (typeof ROOMS)[number]['id'];
 
 export default function RoomsPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const demoMode = previewEnabled();
   const [catalog,setCatalog]=useState<RoomsHomeRoom[]>([]);
   const [launching,setLaunching]=useState(false);
@@ -40,7 +41,7 @@ export default function RoomsPage() {
   },[demoMode]);
   const [viewing,setViewing]=useState<RoomsHomeRoom|null>(null);
   const [tab, setTab] = useState<RoomTab>('home');
-  const [sequencerOpen, setSequencerOpen] = useState(new URLSearchParams(location.search).get('launch') === 'cage');
+  const sequencerOpen = location.pathname === '/rooms/create' || new URLSearchParams(location.search).get('launch') === 'cage';
   const [roomNotice, setRoomNotice] = useState('');
   const collectionSlug = location.pathname.startsWith('/rooms/collections/')
     ? decodeURIComponent(location.pathname.split('/')[3] ?? '')
@@ -53,12 +54,28 @@ export default function RoomsPage() {
     setRoomNotice(message);
     window.setTimeout(() => setRoomNotice(''), 4000);
   };
-  const openSession = (roomType: RoomsHomeRoomType, title: string, id?: string, program?: CageProgram) => {
-    const params = new URLSearchParams({ type: roomType, title, ...(id ? { id, source: "live" } : {}), ...(program ? { program: JSON.stringify(program) } : {}) });
+  const openSession = (roomType: RoomsHomeRoomType, title: string, id?: string, program?: CageProgram, studio?: LaunchStudioConfig) => {
+    const params = new URLSearchParams({ type: roomType, title, ...(id ? { id, source: "live" } : {}), ...(program ? { program: JSON.stringify(program) } : {}), ...(studio ? { format: studio.format, camera: studio.camera, layout: studio.format === 'portrait' ? studio.portraitLayout : studio.landscapeLayout, secondCamera: String(studio.secondCamera), reversed: String(studio.reversed) } : {}) });
     window.location.assign(`/native/room-session?${params}`);
   };
   const openRoom = (room: RoomsHomeRoom) => setViewing(room);
   const viewer=viewing ? <Suspense fallback={<div className="android-room-opening" role="status">Ouverture du live…</div>}><RoomViewer room={viewing} onLeave={()=>setViewing(null)} /></Suspense> : null;
+  if (sequencerOpen) return <div className="rooms-home-launch-dialog rooms-launch-page">
+    <LaunchRoomSheet
+      initialProgram={(() => { try { return JSON.parse(new URLSearchParams(location.search).get('program') ?? 'null') ?? undefined; } catch { return undefined; } })()}
+      initialType={new URLSearchParams(location.search).get('launch') === 'cage' ? 'cage' : tab === 'home' ? undefined : (tab as RoomsHomeRoomType)}
+      onClose={() => navigate('/rooms')}
+      onLaunched={async (label, roomType, program, studio) => {
+        if (launching) return;
+        if (demoMode) { openSession(roomType, label, undefined, program, studio); return; }
+        setLaunching(true);
+        try { const id = await createLiveRoom(roomType, label, launchRequest.current, studio?.format); openSession(roomType, label, id, program, studio); }
+        catch { notice('La room n’a pas été créée. Vérifie ta connexion puis réessaie.'); }
+        finally { setLaunching(false); }
+      }}
+    />
+    {roomNotice ? <aside className="rooms-page__notice" role="status"><span>{roomNotice}</span><button aria-label="Fermer" onClick={() => setRoomNotice('')}><X size={16} /></button></aside> : null}
+  </div>;
   return <>{viewer}<div className="rooms-page" hidden={!!viewing}>
     <div className="rooms-page__background" aria-hidden="true"
       style={{ backgroundImage: `url('/images/meewav-acoustic-violet-background.png')` }} />
@@ -76,35 +93,15 @@ export default function RoomsPage() {
         onOpenRoom={openRoom}
       />
     </div>
-    {!sequencerOpen ? (
       <button
         type="button"
         className="rooms-page__launch-fab"
         aria-label="Créer une Room"
         disabled={launching}
-        onClick={() => {launchRequest.current=crypto.randomUUID();setSequencerOpen(true);}}
+        onClick={() => {launchRequest.current=crypto.randomUUID();navigate('/rooms/create');}}
       >
         <Plus aria-hidden="true" />
       </button>
-    ) : null}
-    {sequencerOpen ? createPortal((
-      <div className="rooms-home-launch-dialog" role="presentation"
-        onMouseDown={(event) => { if (event.target === event.currentTarget) setSequencerOpen(false); }}>
-        <LaunchRoomSheet
-          initialProgram={(() => { try { return JSON.parse(new URLSearchParams(location.search).get("program") ?? "null") ?? undefined; } catch { return undefined; } })()}
-          initialType={new URLSearchParams(location.search).get("launch") === "cage" ? "cage" : tab === 'home' ? undefined : (tab as RoomsHomeRoomType)}
-          onClose={() => setSequencerOpen(false)}
-          onLaunched={async (label, roomType, program) => {
-            if(launching)return;
-            if(demoMode){setSequencerOpen(false);openSession(roomType,label,undefined,program);return;}
-            setLaunching(true);
-            try{const id=await createLiveRoom(roomType,label,launchRequest.current);setSequencerOpen(false);openSession(roomType,label,id,program);}
-            catch{notice('La room n’a pas été créée. Vérifie ta connexion puis réessaie.');}
-            finally{setLaunching(false);}
-          }}
-        />
-      </div>
-    ), document.body) : null}
     {roomNotice ? <aside className="rooms-page__notice" role="status"><span>{roomNotice}</span><button aria-label="Fermer" onClick={() => setRoomNotice('')}><X size={16} /></button></aside> : null}
   </div></>;
 }
