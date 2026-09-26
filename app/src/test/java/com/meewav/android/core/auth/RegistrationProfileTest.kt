@@ -11,8 +11,10 @@ class RegistrationProfileTest {
         val data = RegistrationProfile(" Artiste ", "ViolonIcon", "Violoniste", true,
             "12/05/1998", " Lyon ", "", " France ").metadata()
         assertEquals("Artiste", data["username"]?.jsonPrimitive?.content)
-        assertEquals("ViolonIcon", data["avatar_url"]?.jsonPrimitive?.content)
-        assertEquals("Violoniste", data["avatar_name"]?.jsonPrimitive?.content)
+        // Drawable names are not URLs: the shared canonical style owns the avatar.
+        assertFalse(data.containsKey("avatar_url"))
+        assertFalse(data.containsKey("avatar_name"))
+        assertEquals("avatar_1", data["avatar_icon_id"]?.jsonPrimitive?.content)
         assertEquals("REEL", data["artist_type"]?.jsonPrimitive?.content)
         assertEquals("REEL", data["creator_type"]?.jsonPrimitive?.content)
         assertEquals("avatar_1", data["avatar_style_key"]?.jsonPrimitive?.content)

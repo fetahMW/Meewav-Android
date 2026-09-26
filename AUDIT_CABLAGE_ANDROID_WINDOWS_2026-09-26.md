@@ -172,7 +172,7 @@ Résultat : **82 tests exécutés, 80 réussis, 2 en échec**.
 
 Ces deux échecs ne démontrent pas une panne du transport RTC. Ils empêchent néanmoins de présenter la suite Android comme entièrement verte. Les tests de politique audio et de gamme présents passent ; ils ne sont pas des tests réseau entre appareils.
 
-Les assets Rooms embarqués référencent le chunk attendu et contiennent le marqueur de diagnostic du source actuel. Cette vérification ne démontre pas que l'APK actuellement installé provient de ce build.
+Lors de l'audit initial, les assets Rooms locaux contenaient un marqueur de diagnostic. Pour la publication GitHub, les assets ont été reconstruits à partir des sources corrigées, sans cette instrumentation locale : les marqueurs de diagnostic sont absents et les références du point d'entrée Rooms résolvent vers les chunks publiés. Cette vérification ne démontre pas que l'APK actuellement installé provient de ce build.
 
 ### Windows
 
