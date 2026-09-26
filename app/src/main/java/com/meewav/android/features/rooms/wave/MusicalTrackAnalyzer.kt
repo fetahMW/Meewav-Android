@@ -1,13 +1,12 @@
 package com.meewav.android.features.rooms.wave
 
 import androidx.annotation.Keep
-import com.meewav.android.BuildConfig
 import java.nio.ByteBuffer
 import kotlin.math.roundToInt
 
 @Keep
 internal class MusicalTrackAnalyzer(rate: Int, seconds: Int) : AutoCloseable {
-    private var handle = create(rate, seconds.coerceAtLeast(1), BuildConfig.SUPERPOWERED_LICENSE_KEY)
+    private var handle = create(rate, seconds.coerceAtLeast(1))
     fun consume(pcm: ByteBuffer, offset: Int, bytes: Int, channels: Int, floating: Boolean) {
         if (handle != 0L) process(handle, pcm, offset, bytes, channels, floating)
     }
@@ -21,7 +20,7 @@ internal class MusicalTrackAnalyzer(rate: Int, seconds: Int) : AutoCloseable {
             .joinToString(" · ").ifBlank { "Non détecté" }
     }
     override fun close() { if (handle != 0L) release(handle); handle = 0 }
-    private external fun create(rate: Int, seconds: Int, license: String): Long
+    private external fun create(rate: Int, seconds: Int): Long
     private external fun process(handle: Long, pcm: ByteBuffer, offset: Int, bytes: Int, channels: Int, floating: Boolean)
     private external fun results(handle: Long): FloatArray
     private external fun release(handle: Long)

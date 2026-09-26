@@ -13,6 +13,7 @@ export async function generateBytePlusToken({
   roomId,
   userId,
   canPublish,
+  audioOnly = false,
   expiresAt,
 }: {
   appId: string
@@ -20,17 +21,25 @@ export async function generateBytePlusToken({
   roomId: string
   userId: string
   canPublish: boolean
+  audioOnly?: boolean
   expiresAt: number
 }) {
+  if (!/^[A-Za-z0-9_@.-]{1,128}$/.test(roomId) || !/^[A-Za-z0-9_@.-]{1,128}$/.test(userId)
+    || !/^[A-Za-z0-9_-]{1,128}$/.test(appId) || !appKey
+    || !Number.isInteger(expiresAt) || expiresAt <= Math.floor(Date.now() / 1000)) {
+    throw new Error('invalid_byteplus_token_parameters')
+  }
   const privileges = new Map<number, number>([
     [PRIV_SUBSCRIBE_STREAM, expiresAt],
   ])
 
   if (canPublish) {
-    privileges.set(PRIV_PUBLISH_STREAM, expiresAt)
     privileges.set(PRIV_PUBLISH_AUDIO_STREAM, expiresAt)
-    privileges.set(PRIV_PUBLISH_VIDEO_STREAM, expiresAt)
-    privileges.set(PRIV_PUBLISH_DATA_STREAM, expiresAt)
+    if (!audioOnly) {
+      privileges.set(PRIV_PUBLISH_STREAM, expiresAt)
+      privileges.set(PRIV_PUBLISH_VIDEO_STREAM, expiresAt)
+      privileges.set(PRIV_PUBLISH_DATA_STREAM, expiresAt)
+    }
   }
 
   const message = new BytePlusTokenWriter()
@@ -103,7 +112,7 @@ async function hmacSha256(key: string, message: Uint8Array) {
     false,
     ['sign'],
   )
-  return new Uint8Array(await crypto.subtle.sign('HMAC', cryptoKey, message))
+  return new Uint8Array(await crypto.subtle.sign('HMAC', cryptoKey, new Uint8Array(message)))
 }
 
 function base64(bytes: Uint8Array) {

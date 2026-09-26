@@ -28,6 +28,13 @@ internal class RoomViewerNativeControls(
     private val audioScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var liveAudio: RoomsAudioSession? = null
     private var liveAudioJob: Job? = null
+    private val microphonePermission = activity.activityResultRegistry.register(
+        "room-viewer-microphone-${java.util.UUID.randomUUID()}",
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        if (granted) liveAudio?.setSpeaking(true)
+        else Toast.makeText(activity, "Le micro reste coupé. Autorise-le pour prendre la parole.", Toast.LENGTH_SHORT).show()
+    }
     private val videos = RoomViewerVideoSurfaces(web, parent)
     private var viewerDeck: WaveMixerDeckState? = null
     private val audioLifecycle = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_STOP && viewerDeck?.documentPicker?.isOpen != true) liveAudio?.stop() }
@@ -91,7 +98,12 @@ internal class RoomViewerNativeControls(
             return true
         }
         if (uri.path == "/native/wave-audio") {
-            if (uri.getQueryParameter("action") == "stop") {
+            val action = uri.getQueryParameter("action")
+            if (action == "speak") {
+                microphonePermission.launch(android.Manifest.permission.RECORD_AUDIO)
+            } else if (action == "mute") {
+                liveAudio?.setSpeaking(false)
+            } else if (action == "stop") {
                 videos.attach(null); liveAudio?.close(); liveAudio = null; liveAudioJob?.cancel(); liveAudioJob = null
             } else {
                 val id = uri.getQueryParameter("roomId") ?: return true
@@ -100,7 +112,7 @@ internal class RoomViewerNativeControls(
                     val session = RoomsAudioSession(activity.applicationContext, RoomsAudioRepository(activity.applicationContext, id), null)
                     liveAudio = session
                     videos.attach(session)
-                    liveAudioJob = audioScope.launch { session.status.collect { state -> emit("wave-audio", JSONObject().put("text", state.text).put("active", state.active).put("busy", state.busy)) } }
+                    liveAudioJob = audioScope.launch { session.status.collect { state -> emit("wave-audio", JSONObject().put("text", state.text).put("active", state.active).put("busy", state.busy).put("canSpeak", state.canSpeak).put("speaking", state.speaking)) } }
                     session.start(RoomsAudioMode.LISTEN)
                 }.onFailure { emit("wave-audio", JSONObject().put("text", "Room audio invalide").put("active", false)) }
             }
@@ -147,6 +159,7 @@ internal class RoomViewerNativeControls(
         layer.bringToFront()
     }
     override fun close() {
+        microphonePermission.unregister()
         videos.close()
         liveAudio?.close(); liveAudioJob?.cancel(); audioScope.cancel()
         activity.lifecycle.removeObserver(audioLifecycle)

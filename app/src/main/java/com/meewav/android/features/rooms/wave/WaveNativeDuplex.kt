@@ -4,12 +4,11 @@ import android.content.Context
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.util.Log
-import com.meewav.android.BuildConfig
 import java.util.concurrent.locks.LockSupport
 
 internal object WaveNativeDuplex {
     init { System.loadLibrary("meewav_analysis") }
-    external fun open(license: String, inputDevice: Int, outputDevice: Int, rawInput: Boolean): Long
+    external fun open(inputDevice: Int, outputDevice: Int, rawInput: Boolean): Long
     external fun configure(handle: Long, flags: Int, gain: Float, scale: Int, mix: Float, calibration: Int)
     external fun read(handle: Long, samples: FloatArray): Int
     external fun diagnostics(handle: Long): String
@@ -39,7 +38,7 @@ internal class WaveNativeCapture(
     fun start(): Boolean {
         var selected = route()
         var calibrationBase = settings().noiseCalibration
-        var handle = WaveNativeDuplex.open(BuildConfig.SUPERPOWERED_LICENSE_KEY, selected.input, selected.output, rawInput)
+        var handle = WaveNativeDuplex.open(selected.input, selected.output, rawInput)
         if (handle == 0L) return false
         running = true
         worker = Thread({
@@ -59,7 +58,7 @@ internal class WaveNativeCapture(
                         // A new microphone needs a fresh, deliberate silent measurement.
                         // Do not replay a previous calibration command while someone talks.
                         calibrationBase = settings().noiseCalibration
-                        handle = WaveNativeDuplex.open(BuildConfig.SUPERPOWERED_LICENSE_KEY, selected.input, selected.output, rawInput)
+                        handle = WaveNativeDuplex.open(selected.input, selected.output, rawInput)
                         check(handle != 0L) { "Retour audio natif indisponible après changement de casque" }
                         configured = null
                     } else if (read > 0) publish(samples.copyOf())

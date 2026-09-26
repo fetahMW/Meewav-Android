@@ -242,9 +242,11 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     val composition = remember(context, room, roomTitle) {
         if (room == RoomModule.WAVE) waveCache.getOrPut(room){WaveCompositionState(context.applicationContext, liveRoomId?.let { "live:$it" } ?: (roomTitle ?: "wave-demo"), demo = liveRoomId == null)} else null
     }
-    val liveAudio = remember(room, liveRoomId, composition) {
-        if (room == initialRoom && room != RoomModule.CLASSE && liveRoomId != null)
-            RoomsAudioSession(context.applicationContext, RoomsAudioRepository(context.applicationContext, liveRoomId), composition?.audio, mixerDeck.audio, initialFrontCamera, launchFormat == "portrait")
+    val roomRepository = remember(context, liveRoomId) { liveRoomId?.let { RoomsAudioRepository(context.applicationContext, it) } }
+    var studioIsHost by remember(liveRoomId) { mutableStateOf<Boolean?>(null) }
+    val liveAudio = remember(room, roomRepository, composition) {
+        if (room == initialRoom && liveRoomId != null)
+            RoomsAudioSession(context.applicationContext, roomRepository!!, composition?.audio, mixerDeck.audio, initialFrontCamera, launchFormat == "portrait")
         else null
     }
     val controlledGuest = if (liveAudio == null) guestState.mixerGuest else null
@@ -304,15 +306,6 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     val videoControls = rememberRoomVideoControls()
     LaunchedEffect(initialFrontCamera) { videoControls.frontCamera = initialFrontCamera }
     LaunchedEffect(liveAudio, videoControls.cameraEnabled) { liveAudio?.setCameraEnabled(videoControls.cameraEnabled) }
-    LaunchedEffect(liveAudio) {
-        if (liveAudio != null &&
-            ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED &&
-            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-            // Green Room releases its Web camera during the launch transition.
-            delay(500)
-            liveAudio.start(RoomsAudioMode.EXTERNAL)
-        }
-    }
     @Composable fun StageControls(fullscreen: Boolean, director: () -> Unit) {
         RoomVideoControlBar(videoControls,
             fullscreen = fullscreen, onFullscreen = { stageFullscreen = !stageFullscreen; videoControls.reveal() }, onDirector = director)
@@ -350,6 +343,9 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
         Column(Modifier.fillMaxSize()) {
             WaveHeader(title = cage?.title ?: classe?.let { it.title.takeUnless { title -> title.isBlank() || title.equals(room.label, ignoreCase = true) } ?: "Écrire des couplets plus visuels" } ?: roomTitle?.takeIf { it.isNotBlank() && it!=room.label } ?: if (room == RoomModule.WAVE) "Freestyle session — Luma invite" else if (room == RoomModule.SCENE) "Scène ouverte — Lumière noire" else if (room == RoomModule.LOGE) "Éclipse — dans la Loge de Naya" else if(room==RoomModule.PLACE)"Autour du micro — avec Luma"else room.label,
                 onBack = { showLeaveConfirm = true }, onClose = { showLeaveConfirm = true },onSwitch={switchState.notice=null;switchOpen=true})
+            WaveLiveAudioControl(liveAudio, Modifier.padding(horizontal = 12.dp)) { cameraAllowed ->
+                if (!cameraAllowed) videoControls.cameraEnabled = false
+            }
             Box(Modifier.fillMaxWidth().height(videoViewportHeight).clipToBounds().roomVideoTouches(videoControls)) {
                 if (cage != null) CageVideoStage(cage, interactive = activeTab == WaveTab.INVITES,
                     audible = !stageFullscreen && videoControls.returnAudio, onFullscreen = { stageFullscreen = true },
@@ -450,12 +446,18 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
         }
         WaveGuestDragOverlay(guestState)
         if (showLeaveConfirm) {
+            LaunchedEffect(roomRepository) {
+                studioIsHost = null
+                if (roomRepository != null) runCatching { roomRepository.isHost() }
+                    .onSuccess { studioIsHost = it }
+                    .onFailure { exitFailure = "Impossible de vérifier la room. Réessaie." }
+            }
             AlertDialog(
                 onDismissRequest = { showLeaveConfirm = false },
                 containerColor = Color(0xFF14121C),
                 title = {
                     Text(
-                        "Quitter le live ?",
+                        if (studioIsHost == true) "Terminer le live ?" else "Quitter le live ?",
                         color = WaveMixerTheme.pearl,
                         fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
                         fontFamily = WaveMixerTheme.fontFamily
@@ -463,7 +465,9 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                 },
                 text = {
                     Text(
-                        exitFailure ?: if (liveRoomId != null) "Tu es sur le point de terminer le live pour tous les participants." else "Tu es sur le point de quitter le live.",
+                        exitFailure ?: if (studioIsHost == true) "Le live sera terminé pour tous les participants."
+                        else if (liveRoomId != null && studioIsHost == null) "Vérification de ton rôle…"
+                        else "Tu quitteras la room sans interrompre les autres participants.",
                         color = white(0.72f),
                         fontSize = 13.sp,
                         fontFamily = WaveMixerTheme.fontFamily
@@ -471,7 +475,7 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                 },
                 confirmButton = {
                     Text(
-                        "Quitter",
+                        if (studioIsHost == true) "Terminer" else "Quitter",
                         color = Color(0xFFFF536C),
                         fontSize = 13.sp, fontWeight = FontWeight.Bold,
                         fontFamily = WaveMixerTheme.fontFamily,
@@ -481,9 +485,9 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                                 if (liveRoomId == null) { showLeaveConfirm = false; onClose() }
                                 else { endingLive = true; exitFailure = null; exitScope.launch {
                                     try {
-                                        LogeRemoteRepository(context, liveRoomId).rpc("rooms_end_room_v1", org.json.JSONObject().put("p_room_id", liveRoomId))
+                                        roomRepository!!.finishOrLeave()
                                         showLeaveConfirm = false; onClose()
-                                    } catch (_: Exception) { exitFailure = "Le live n’a pas pu être terminé. Réessaie." }
+                                    } catch (_: Exception) { exitFailure = "La sortie du live a échoué. Réessaie." }
                                     finally { endingLive = false }
                                 } }
                             }

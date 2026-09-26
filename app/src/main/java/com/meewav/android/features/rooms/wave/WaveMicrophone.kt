@@ -9,11 +9,10 @@ import android.media.MediaRecorder
 import android.os.Process
 import android.os.Build
 import android.util.Log
-import com.meewav.android.BuildConfig
 
 internal object WaveVocalDsp {
     init { System.loadLibrary("meewav_analysis") }
-    external fun create(license: String): Long
+    external fun create(): Long
     external fun process(handle: Long, samples: FloatArray, tune: Boolean, scale: Int, reverb: Boolean, amount: Float, cleanVoice: Boolean, calibration: Int, effects: Int)
     external fun release(handle: Long)
 }
@@ -70,7 +69,7 @@ internal class WaveMicrophone(
             Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO)
             var dsp = 0L
             try {
-                dsp = WaveVocalDsp.create(BuildConfig.SUPERPOWERED_LICENSE_KEY)
+                dsp = WaveVocalDsp.create()
                 check(dsp != 0L) { "DSP vocal indisponible" }
                 val mono = ShortArray(480)
                 val timestamp = AudioTimestamp()

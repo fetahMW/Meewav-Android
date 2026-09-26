@@ -3,9 +3,9 @@ import {ROOMS_HOME_ROOM_TYPES,type RoomsHomeRoom,type RoomsHomeRoomType} from '.
 
 /** Same tables and membership rules as SupabaseRoomsRepository on iOS. */
 export async function listLiveRooms():Promise<RoomsHomeRoom[]> {
- const {data,error}=await supabase.from('rooms_v2').select('id,host_id,type,title,cover_url,video_format,participants_count,created_at').eq('status','live').order('created_at',{ascending:false}).limit(200);
+ const {data,error}=await supabase.rpc('rooms_live_catalog_v1');
  if(error)throw error;
- const rows=(data??[]).filter(r=>ROOMS_HOME_ROOM_TYPES.includes(r.type));
+ const rows=(data??[]).filter((r:any)=>ROOMS_HOME_ROOM_TYPES.includes(r.type)) as {id:string;host_id:string;type:RoomsHomeRoomType;title:string;cover_url:string|null;video_format:string;participants_count:number;created_at:string}[];
  if(!rows.length)return [];
  const profiles=await supabase.from('public_profiles').select('id,display_name,username,avatar_url,primary_role_key,city').in('id',[...new Set(rows.map(r=>r.host_id))]);
  if(profiles.error)throw profiles.error;

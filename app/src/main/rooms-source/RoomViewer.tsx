@@ -70,7 +70,7 @@ export default function RoomViewer({room,onLeave}:{room:RoomsHomeRoom;onLeave:()
   <NativeViewerSurfaces room={room.id} name={demo.currentUserProfile?.displayName ?? "Moi"}/>
   <header className="android-room-viewer__header"><button type="button" aria-label="Retour aux rooms" onClick={onLeave}><ArrowLeft/></button><h1>{room.title}</h1><button type="button" aria-label="Quitter le live" onClick={onLeave}><X/></button></header>
   <AudioEngineProvider><RoomPresentationProvider presentation={LIVE_ROOM_PRESENTATIONS[room.roomType]}>
-   {room.source==='live'&&room.roomType!=='classe'?<WaveLiveAudio roomId={room.id}/>:null}
+   {room.source==='live'?<WaveLiveAudio roomId={room.id}/>:null}
    <PlaceRoomExperience initialPanelCollapsed={false} forceViewer={room.source==='live' && !!realUserId && room.hostId===realUserId} demoRole={room.source==='live'?undefined:'viewer'} demoRoom={room.source==="live"?undefined:demo} requestedRoomId={room.source==="live"?room.id:undefined} currentUserId={room.source==="live"?realUserId:PLACE_DEMO_PROFILES.viewerA.id}
     onLeaveRoom={onLeave} onOpenProfile={openPreProfile}
     onMessageProfile={id=>openMessaging(id,'message')}

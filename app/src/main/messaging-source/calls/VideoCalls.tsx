@@ -32,6 +32,7 @@ export default function VideoCalls(){
   const [resumeAudio,setResumeAudio]=useState<(()=>Promise<unknown>)|null>(null);
   const screenRef=useRef(screen);screenRef.current=screen;
   const call=useRef<Call|null>(null);
+  const consented=useRef(new Set<string>());
   const transport=useRef<VideoTransport|null>(null);
   const preview=useRef<MediaStream|null>(null);
   const epoch=useRef(0);
@@ -85,6 +86,10 @@ export default function VideoCalls(){
     setScreen(current=>({contact:current?.contact||{id:value.conversationId,name:value.peerName,kind:value.kind},phase:'connecting'}));
     stopPreview();
     try{
+      // The preceding engine may still be leaving after an async join/capture.
+      // Do not let its eventual destroy overlap the next call's engine.
+      await cleanup.current;
+      if(generation!==epoch.current)return;
       const {VideoTransport}=await import('./byteplus');
       if(generation!==epoch.current || !local.current || !remote.current)return;
       const rtc=new VideoTransport(value.id,local.current,remote.current,
@@ -99,6 +104,10 @@ export default function VideoCalls(){
     // An outgoing call opened on another client belongs to that client. Do not
     // join it here and accidentally end its media session during navigation.
     if(!call.current && !value.incoming)return;
+    if(value.status==='accepted'&&!consented.current.has(value.id)){
+      if(call.current?.id===value.id){call.current=null;stopMedia();setScreen(null);}
+      return;
+    }
     if(call.current && call.current.id!==value.id)return;
     if(value.status==='ended'||value.status==='declined'||value.status==='missed'){
       if(call.current?.id===value.id){call.current=null;stopMedia();setBusy(false);pending.current=false;
@@ -134,7 +143,7 @@ export default function VideoCalls(){
       if(disposed||syncing||document.hidden||pending.current)return;
       syncing=true;
       const previousCallId=call.current?.id;const generation=epoch.current;
-      try{const value=await request('sync',previousCallId);if(!disposed&&generation===epoch.current&&previousCallId===call.current?.id&&!pending.current){failedAt=0;functions.current.consume(value);}}
+      try{const value=await request(previousCallId&&consented.current.has(previousCallId)?'sync':'peek',previousCallId);if(!disposed&&generation===epoch.current&&previousCallId===call.current?.id&&!pending.current){failedAt=0;functions.current.consume(value);}}
       catch{if(call.current){failedAt ||= Date.now();if(Date.now()-failedAt>12000)functions.current.finish('Connexion perdue. L’appel a été arrêté.');}}
       finally{syncing=false;}
     };
@@ -174,7 +183,7 @@ export default function VideoCalls(){
       const value=await request(screen.contact.kind==='audio'?'start_audio':'start',undefined,screen.contact.id);
       if(generation!==epoch.current){if(value)void request('end',value.id).catch(()=>undefined);return;}
       if(!value)throw Error('Cet appel n’a pas pu être lancé.');
-      call.current=value;setScreen({...screen,phase:'ringing'});
+      consented.current.add(value.id);call.current=value;setScreen({...screen,phase:'ringing'});
     }catch(error){if(generation===epoch.current){stopMedia();setScreen({...screen,phase:'error',message:error instanceof Error?error.message:'Appel indisponible'});}}
     finally{pending.current=false;setBusy(false);}
   };
@@ -190,7 +199,7 @@ export default function VideoCalls(){
       if(generation!==epoch.current)return;
       const accepted=await request('accept',value.id);
       if(generation!==epoch.current){if(accepted)void request('end',value.id);return;}
-      if(accepted)consume(accepted);
+      if(accepted){consented.current.add(accepted.id);consume(accepted);}
     }catch{if(generation===epoch.current)problem(value.kind==='audio'?'Micro indisponible. Autorise son accès puis rappelle.':'Caméra ou micro indisponible. Autorise leur accès puis rappelle.');}
     finally{pending.current=false;setBusy(false);}
   };

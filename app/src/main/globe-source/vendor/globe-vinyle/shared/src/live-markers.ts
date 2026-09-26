@@ -22,6 +22,7 @@ export function parseLiveMarkers(value: unknown): LiveGlobeMarker[] {
     const id = String(row.profile_id ?? "");
     const lon = Number(row.longitude), lat = Number(row.latitude);
     if (!/^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i.test(id)
+      || row.longitude == null || row.latitude == null || row.longitude === "" || row.latitude === ""
       || !Number.isFinite(lon) || !Number.isFinite(lat) || Math.abs(lon) > 180 || Math.abs(lat) > 90) continue;
     const roleKey = String(row.primary_role_key ?? "");
     const icon = String(row.avatar_icon_id ?? "");
@@ -34,10 +35,10 @@ export function parseLiveMarkers(value: unknown): LiveGlobeMarker[] {
       icon: /^avatar_([1-9]|[12]\d|3[01])$/.test(icon) ? icon : "avatar_4",
       grade: Number.isInteger(grade) && grade >= 1 && grade <= 6 ? grade : 0,
       city: String(row.city ?? "").slice(0, 80),
-      cityId: /^\d{5}$/.test(communeCode) ? `fr-commune-${communeCode}` : "",
+      cityId: /^[0-9A-Z]{5}$/.test(communeCode) ? `fr-commune-${communeCode}` : "",
       zoneId: String(row.zone_id ?? ""), zoneName: String(row.zone_name ?? row.scene_name ?? ""),
       lon, lat, live: true,
-      avatarUrl: /^https:\/\//i.test(avatarUrl) || avatarUrl.startsWith("/") ? avatarUrl : null,
+      avatarUrl: /^https:\/\//i.test(avatarUrl) || (avatarUrl.startsWith("/") && !avatarUrl.startsWith("//")) ? avatarUrl : null,
     });
   }
   return [...unique.values()];

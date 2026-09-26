@@ -6,11 +6,9 @@
 #include <algorithm>
 #include <sstream>
 #include <time.h>
-#include "SuperpoweredRuntime.h"
+#include "MeeWavVoiceDsp.h"
 #include "WaveNoiseSuppressor.h"
 #include "WaveFreeEffects.h"
-#include "SuperpoweredAutomaticVocalPitchCorrection.h"
-#include "SuperpoweredReverb.h"
 
 // The hardware output clock pulls the input and renders the headphones in the
 // same native callback, like iOS RemoteIO. Java/RTC only consume a separate copy.
@@ -26,21 +24,14 @@ public:
     std::array<std::array<float, packetSamples>, capacity> packets{};
     std::array<float, packetSamples> packet{};
     int packetOffset = 0;
-    std::array<float, frames * 2> voice{}, tuned{};
-    Superpowered::AutomaticVocalPitchCorrection tune;
-    Superpowered::Reverb reverb{48000, 48000};
+    std::array<float, frames * 2> voice{};
+    MeeWavPitchCorrection tune;
+    MeeWavReverb reverb;
     WaveNoiseSuppressor expander;
     WaveFreeEffects freeEffects;
     std::atomic<float> capturedPeak{0}, monitorPeak{0};
     std::atomic<int> calibration{0};
 
-    WaveNativeDuplex() {
-        tune.samplerate = 48000;
-        tune.range = Superpowered::AutomaticVocalPitchCorrection::WIDE;
-        tune.speed = Superpowered::AutomaticVocalPitchCorrection::EXTREME;
-        tune.clamp = Superpowered::AutomaticVocalPitchCorrection::OFF;
-        tune.frequencyOfA = 440;
-    }
     ~WaveNativeDuplex() {
         // close() joins/stops the native callbacks before any DSP or queue is freed.
         if (output) { output->requestStop(); output->close(); }
@@ -92,16 +83,8 @@ public:
         capturedPeak.store(std::max(capturedPeak.load(), inputPeak));
         const int state = flags.load(std::memory_order_relaxed);
         expander.process(voice.data(), count, (state & 32) != 0, calibration.load());
-        if (state & 4) {
-            tune.scale = static_cast<Superpowered::AutomaticVocalPitchCorrection::TunerScale>(scale.load());
-            tune.process(voice.data(), tuned.data(), true, count);
-            for (int i = 0; i < count * 2; ++i) voice[i] = tuned[i] * .98f + voice[i] * .02f;
-        }
-        if (state & 8) {
-            reverb.enabled = true;
-            reverb.mix = mix.load();
-            reverb.process(voice.data(), voice.data(), count);
-        } else reverb.enabled = false;
+        tune.processStereo(voice.data(), count, (state & 4) != 0, scale.load());
+        reverb.processStereo(voice.data(), count, (state & 8) != 0, mix.load());
         freeEffects.process(voice.data(), count, state);
         const float volume = gain.load(std::memory_order_relaxed);
         float renderedPeak = 0;
@@ -124,11 +107,7 @@ public:
 };
 
 extern "C" JNIEXPORT jlong JNICALL
-Java_com_meewav_android_features_rooms_wave_WaveNativeDuplex_open(JNIEnv* env, jobject, jstring key, jint in, jint out, jboolean rawInput) {
-    const char* license = env->GetStringUTFChars(key, nullptr);
-    if (!license) return 0;
-    initializeSuperpowered(license);
-    env->ReleaseStringUTFChars(key, license);
+Java_com_meewav_android_features_rooms_wave_WaveNativeDuplex_open(JNIEnv*, jobject, jint in, jint out, jboolean rawInput) {
     auto engine = std::make_unique<WaveNativeDuplex>();
     if (!engine->open(in, out, rawInput)) return 0;
     return reinterpret_cast<jlong>(engine.release());

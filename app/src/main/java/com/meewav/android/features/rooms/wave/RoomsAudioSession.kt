@@ -17,12 +17,14 @@ import com.ss.bytertc.engine.utils.AudioFrame
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.LockSupport
 
 internal enum class RoomsAudioMode(val label: String) { EXTERNAL("Voix traitée + programme"), INTERNAL("Micro brut · FX non diffusés"), LISTEN("Écoute seule") }
-internal data class RoomsAudioStatus(val active: Boolean = false, val busy: Boolean = false, val text: String = "Audio live déconnecté")
+internal data class RoomsAudioStatus(val active: Boolean = false, val busy: Boolean = false, val text: String = "Audio live déconnecté", val canSpeak: Boolean = false, val speaking: Boolean = false)
 
 /** One lifecycle owner; all SDK mutations on Main, sender stopped before engine destruction. */
 internal class RoomsAudioSession(private val context: Context, private val repository: RoomsAudioRepository,
@@ -44,7 +46,9 @@ internal class RoomsAudioSession(private val context: Context, private val repos
     private var owns = false
     private var foregroundMedia = false
     private var mode = RoomsAudioMode.LISTEN
+    private val speakingMutex = Mutex()
     private var identity: RoomsAudioIdentity? = null
+    private var membershipJoined = false
     private var settings = WaveVocalSettings()
     private var musicPublic = false
     private var musicGain = 1f
@@ -53,6 +57,7 @@ internal class RoomsAudioSession(private val context: Context, private val repos
     private val subscribed = mutableSetOf<String>()
     private val published = mutableMapOf<String, String>() // streamId -> canonical userId
     private val videoStreams = mutableMapOf<String, String>()
+    private val screenStreams = mutableSetOf<String>()
     private val remoteCanvases = mutableMapOf<String, TextureView>()
     private val videoSubscriptions = mutableSetOf<String>()
     private var joined: CompletableDeferred<Unit>? = null
@@ -79,7 +84,9 @@ internal class RoomsAudioSession(private val context: Context, private val repos
         val local = identity ?: return
         val allowed = RoomsAudioPolicy.subscriptions(local, videoStreams)
         videoStreams.forEach { (stream, user) ->
-            val canvas = remoteCanvases[user]?.takeIf { stream in allowed }
+            val preferred = videoStreams.entries.filter { it.value == user && it.key in allowed }
+                .maxByOrNull { if (it.key in screenStreams) 1 else 0 }?.key
+            val canvas = remoteCanvases[user]?.takeIf { stream == preferred }
             sdk.setRemoteVideoCanvas(stream, canvas?.let { VideoCanvas(it, VideoCanvas.RENDER_MODE_FIT) } ?: VideoCanvas())
             if (canvas != null && videoSubscriptions.add(stream)) channel.subscribeStreamVideo(stream, true)
             if (canvas == null && videoSubscriptions.remove(stream)) channel.subscribeStreamVideo(stream, false)
@@ -143,13 +150,16 @@ internal class RoomsAudioSession(private val context: Context, private val repos
     }
     fun start(selected: RoomsAudioMode) {
         if (job?.isActive == true) return
-        mode = selected
-        val epoch = ++generation
-        mutableStatus.value = RoomsAudioStatus(busy = true, text = "Connexion audio Rooms…")
+        val previous = job
         job = scope.launch {
+            // A retry must wait for the previous leave/device teardown to finish.
+            previous?.join()
+            mode = selected
+            val epoch = ++generation
+            mutableStatus.value = RoomsAudioStatus(busy = true, text = "Connexion audio Rooms…")
             try {
                 check(owned.compareAndSet(false, true)) { "Une session Rooms audio est déjà active" }; owns = true
-                val room = repository.resolve(joinIfMissing = true); identity = room
+                val room = repository.resolve(joinIfMissing = true); identity = room; membershipJoined = true
                 val canPublish = selected != RoomsAudioMode.LISTEN
                 check(!canPublish || room.canPublish) { "Ton rôle actuel ne permet pas de diffuser" }
                 val token = repository.token(room, canPublish)
@@ -203,16 +213,22 @@ internal class RoomsAudioSession(private val context: Context, private val repos
                         } }
                     }
                     override fun onAudioStreamBanned(uid: String?, banned: Boolean) {
-                        scope.launch { if (epoch == generation && uid == room.identity && banned) fail("Micro coupé par la régie") }
+                        scope.launch { if (epoch == generation && uid == room.identity && banned) {
+                            mode = RoomsAudioMode.LISTEN
+                            speakingJob?.cancelAndJoin()
+                            stopSpeaking()
+                            mutableStatus.value = mutableStatus.value.copy(canSpeak = false, text = "Micro coupé par la régie · écoute maintenue")
+                        } }
                     }
                     override fun onUserPublishStreamAudio(id: String?, stream: StreamInfo?, publishing: Boolean) {
-                        scope.launch { if (epoch == generation && stream != null && !stream.isScreen) {
+                        scope.launch { if (epoch == generation && stream != null && (!stream.isScreen || stream.userId == identity?.host)) {
                             if (publishing) published[stream.streamId] = stream.userId else { published.remove(stream.streamId); subscribed.remove(stream.streamId) }
                             runCatching { reconcile() }.onFailure { fail("Écoute distante interrompue") }
                         } }
                     }
                     override fun onUserPublishStreamVideo(id: String?, stream: StreamInfo?, publishing: Boolean) {
-                        scope.launch { if (epoch == generation && stream != null && !stream.isScreen) {
+                        scope.launch { if (epoch == generation && stream != null && (!stream.isScreen || stream.userId == identity?.host)) {
+                            if (publishing && stream.isScreen) screenStreams.add(stream.streamId) else screenStreams.remove(stream.streamId)
                             if (publishing) videoStreams[stream.streamId] = stream.userId
                             else {
                                 engine?.setRemoteVideoCanvas(stream.streamId, VideoCanvas())
@@ -227,28 +243,18 @@ internal class RoomsAudioSession(private val context: Context, private val repos
                         left.forEach { published.remove(it); subscribed.remove(it) }
                         videoStreams.filterValues { it == uid }.keys.toList().forEach {
                             engine?.setRemoteVideoCanvas(it, VideoCanvas())
-                            videoStreams.remove(it); videoSubscriptions.remove(it)
+                            videoStreams.remove(it); videoSubscriptions.remove(it); screenStreams.remove(it)
                         }
                     } } }
                     override fun onTokenWillExpire() { renew(epoch) }
                     override fun onPublishPrivilegeTokenWillExpire() { renew(epoch) }
                     override fun onSubscribePrivilegeTokenWillExpire() { renew(epoch) }
                 })
-                requireOk(channel.joinRoom(token.token, UserInfo(room.identity, ""), canPublish,
+                requireOk(channel.joinRoom(token.token, UserInfo(room.identity, ""), true,
                     RTCRoomConfig(ChannelProfile.CHANNEL_PROFILE_LOW_LATENCY, room.identity, false, false, false, false)), "Entrée RTC")
                 withTimeout(20000) { joined!!.await() }
                 if (selected == RoomsAudioMode.EXTERNAL) {
-                    val monitor = WaveLocalVocalMonitor(context).also { it.enabled = settings.monitoring && !settings.mute }
-                    localMonitor = monitor
-                    val mic = WaveMicrophone(context = context, onMonitor = monitor::offer) { message -> scope.launch { if (epoch == generation) fail(message) } }
-                    microphone = mic; mic.settings = settings; mic.start()
-                    val live = WaveLiveOutput(mic, WavePerformanceBus()).also { it.musicPublic = musicPublic; it.musicGain = musicGain }
-                    live.production.enabled = deckPublic; live.production.gain = deckGain
-                    productionAudio?.programInput = live.production
-                    output = live; audio?.liveOutput = live
-                    // Other Rooms have no Wave composition engine. Render their processed
-                    // microphone and mixer deck directly into the same public PCM bus.
-                    startSender(sdk, live.bus, epoch, live)
+                    startExternalCapture(sdk, epoch)
                 } else if (selected == RoomsAudioMode.INTERNAL) {
                     requireOk(sdk.muteAudioCapture(settings.mute), "Mute micro")
                     requireOk(sdk.setCaptureVolume((settings.gain * 100).toInt()), "Gain micro")
@@ -257,7 +263,7 @@ internal class RoomsAudioSession(private val context: Context, private val repos
                 if (canPublish) {
                     requireOk(channel.publishStreamAudio(true), "Publication audio")
                     withTimeout(15000) { publication!!.await() }
-                    if (cameraRequested) {
+                    if (cameraRequested && ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
                         videoPublication = CompletableDeferred()
                         startCamera()
                         if (withTimeoutOrNull(15000) { videoPublication!!.await(); true } != true) {
@@ -268,7 +274,7 @@ internal class RoomsAudioSession(private val context: Context, private val repos
                         }
                     }
                 }
-                mutableStatus.value = RoomsAudioStatus(active = true, text = when(selected) {
+                mutableStatus.value = RoomsAudioStatus(active = true, canSpeak = room.canPublish, speaking = canPublish, text = when(selected) {
                     RoomsAudioMode.EXTERNAL -> if (cameraPublished) "Live · caméra et voix traitée diffusées" else "Live · voix traitée diffusée"
                     RoomsAudioMode.INTERNAL -> if (cameraPublished) "Live · caméra et micro brut diffusés" else "Live · micro brut, FX non diffusés"
                     RoomsAudioMode.LISTEN -> "Live · écoute seule"
@@ -278,10 +284,15 @@ internal class RoomsAudioSession(private val context: Context, private val repos
                     delay(2000)
                     val current = repository.resolve()
                     check(current.identity == room.identity && current.channel == room.channel) { "Session audio modifiée" }
-                    check(!canPublish || current.canPublish) { "Autorisation de diffusion retirée" }
+                    if (!current.canPublish && (mode != RoomsAudioMode.LISTEN || speakingJob?.isActive == true)) {
+                        mode = RoomsAudioMode.LISTEN
+                        speakingJob?.cancelAndJoin()
+                        stopSpeaking()
+                    }
+                    mutableStatus.value = mutableStatus.value.copy(canSpeak = current.canPublish, speaking = mode != RoomsAudioMode.LISTEN)
                     identity = current; reconcile()
-                    if (Instant.now().epochSecond >= expires - 120) {
-                        val refreshed = repository.token(current, canPublish)
+                    if (Instant.now().epochSecond >= expires - 30) {
+                        val refreshed = repository.token(current, mode != RoomsAudioMode.LISTEN)
                         requireOk(channel.updateToken(refreshed.token), "Renouvellement audio")
                         expires = Instant.parse(refreshed.expiresAt).epochSecond
                     }
@@ -295,6 +306,75 @@ internal class RoomsAudioSession(private val context: Context, private val repos
                 mutableStatus.value = RoomsAudioStatus(text = error.message ?: "Audio live interrompu")
             } finally { teardown(); job = null }
         }
+    }
+    private fun startExternalCapture(sdk: RTCEngine, epoch: Int) {
+                    val monitor = WaveLocalVocalMonitor(context).also { it.enabled = settings.monitoring && !settings.mute }
+                    localMonitor = monitor
+                    val mic = WaveMicrophone(context = context, onMonitor = monitor::offer) { message -> scope.launch { if (epoch == generation) fail(message) } }
+                    microphone = mic; mic.settings = settings; mic.start()
+                    val live = WaveLiveOutput(mic, WavePerformanceBus()).also { it.musicPublic = musicPublic; it.musicGain = musicGain }
+                    live.production.enabled = deckPublic; live.production.gain = deckGain
+                    productionAudio?.programInput = live.production
+                    output = live; audio?.liveOutput = live
+                    // Other Rooms have no Wave composition engine. Render their processed
+                    // microphone and mixer deck directly into the same public PCM bus.
+                    startSender(sdk, live.bus, epoch, live)
+    }
+    private var speakingJob: Job? = null
+
+    /** Explicit listener consent; authorization is resolved again before capture. */
+    fun setSpeaking(enabled: Boolean) {
+        if (speakingJob?.isActive == true) return
+        speakingJob = scope.launch {
+          speakingMutex.withLock {
+            val epoch = generation
+            try {
+                if (!enabled) { stopSpeakingLocked(); return@withLock }
+                if (mode != RoomsAudioMode.LISTEN || !mutableStatus.value.active) return@withLock
+                val current = repository.resolve()
+                check(current.canPublish) { "La régie ne t’a pas encore donné la parole" }
+                check(ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) { "Autorise le microphone pour prendre la parole" }
+                val token = repository.token(current, true)
+                if (epoch != generation) return@withLock
+                val sdk = engine ?: return@withLock
+                val channel = rtc ?: return@withLock
+                mutableStatus.value = mutableStatus.value.copy(active = false, busy = true, text = "Activation du microphone…")
+                requireOk(channel.updateToken(token.token), "Autorisation microphone")
+                requireOk(sdk.setAudioSourceType(AudioSourceType.AUDIO_SOURCE_TYPE_EXTERNAL), "Source voix traitée")
+                RoomsLiveMediaService.start(context, false, ::stop)
+                foregroundMedia = true
+                mode = RoomsAudioMode.EXTERNAL
+                identity = current
+                startExternalCapture(sdk, epoch)
+                publication = CompletableDeferred()
+                requireOk(channel.publishStreamAudio(true), "Prise de parole")
+                withTimeout(15000) { publication!!.await() }
+                if (epoch == generation) mutableStatus.value = RoomsAudioStatus(active = true, canSpeak = true, speaking = true, text = "Live · ton micro est diffusé")
+            } catch (cancel: CancellationException) { throw cancel }
+            catch (error: Exception) {
+                if (epoch == generation) {
+                    stopSpeakingLocked()
+                    mutableStatus.value = mutableStatus.value.copy(text = error.message ?: "Microphone indisponible")
+                }
+            }
+          }
+        }
+    }
+
+    private suspend fun stopSpeaking() = speakingMutex.withLock { stopSpeakingLocked() }
+
+    private suspend fun stopSpeakingLocked() {
+        mode = RoomsAudioMode.LISTEN
+        output?.active = false
+        runCatching { rtc?.publishStreamAudio(false) }
+        runCatching { stopCamera() }
+        sending = false; sender?.interrupt()
+        withContext(Dispatchers.IO) { sender?.join(); microphone?.close(); localMonitor?.close() }
+        sender = null; microphone = null; localMonitor = null
+        output?.bus?.clear(); output = null; audio?.liveOutput = null; productionAudio?.programInput = null
+        runCatching { engine?.stopAudioCapture() }
+        if (foregroundMedia) { RoomsLiveMediaService.stop(context); foregroundMedia = false }
+        mutableStatus.value = mutableStatus.value.copy(active = engine != null, busy = false, speaking = false, text = "Live · écoute seule")
     }
     private fun reconcile() {
         val local = identity ?: return
@@ -366,11 +446,12 @@ internal class RoomsAudioSession(private val context: Context, private val repos
     }
     fun stop() {
         Log.i("WaveRTC", "Session stop requested", Throwable("Stop origin"))
-        generation++; job?.cancel()
+        generation++; speakingJob?.cancel(); job?.cancel()
         mutableStatus.value = RoomsAudioStatus()
     }
     private suspend fun teardown() = withContext(NonCancellable) {
         generation++
+        speakingJob?.cancelAndJoin(); speakingJob = null
         output?.active = false
         audio?.liveOutput = null
         productionAudio?.programInput = null
@@ -385,8 +466,14 @@ internal class RoomsAudioSession(private val context: Context, private val repos
         runCatching { rtc?.leaveRoom() }; runCatching { rtc?.destroy() }; rtc = null
         if (engine != null) RTCEngine.destroyRTCEngine()
         engine = null; identity = null; published.clear(); subscribed.clear(); videoPublication = null
-        videoStreams.clear(); videoSubscriptions.clear()
+        videoStreams.clear(); videoSubscriptions.clear(); screenStreams.clear()
         if (foregroundMedia) { RoomsLiveMediaService.stop(context); foregroundMedia = false }
+        if (membershipJoined) {
+            membershipJoined = false
+            // Idempotent, user-scoped leave also cleans up a failed connection.
+            runCatching { withTimeout(4_000) { repository.leave() } }
+                .onFailure { Log.w("WaveRTC", "La participation Rooms n’a pas pu être libérée") }
+        }
         if (owns) { owned.set(false); owns = false }
     }
     override fun close() { stop(); scope.cancel() }

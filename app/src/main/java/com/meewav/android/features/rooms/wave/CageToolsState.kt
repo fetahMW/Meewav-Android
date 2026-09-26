@@ -355,7 +355,6 @@ internal class CageToolsState(val guests: WaveGuestState,
         if (match.b != null) guests.awardCageVictory(id)
         // Keep the result visible until the next call. In Battle only the winner stays.
         if (format == CageFormat.CHALLENGER) guests.move(listOfNotNull(match.a, match.b).filterNot { it == id }.toSet(), WaveGuestLocation.BACKSTAGE)
-        else guests.move(listOfNotNull(match.a, match.b).toSet(), WaveGuestLocation.BACKSTAGE)
         guests.mixerGuestId = null
         phase = "Résultat validé"; log("${person(id)?.name} · vainqueur")
         if (format == CageFormat.TOURNAMENT) {
