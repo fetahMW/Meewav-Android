@@ -20,6 +20,12 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -68,6 +74,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.School
@@ -225,7 +232,9 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     var micMuted by remember { mutableStateOf(false) }
     var audioMuted by remember { mutableStateOf(false) }
     // FX.
-    var isPro by remember { mutableStateOf(false) }
+    var vocalMode by remember { mutableStateOf(WaveVocalMode()) }
+    var pluginsOpen by remember { mutableStateOf(false) }
+    var tuneSettings by remember { mutableStateOf(WaveTuneSettings()) }
     var monitoring by remember(context, liveRoomId) {
         mutableStateOf(liveRoomId != null && WaveLocalVocalMonitor.hasHeadphones(context))
     }
@@ -250,8 +259,8 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
         else null
     }
     val controlledGuest = if (liveAudio == null) guestState.mixerGuest else null
-    LaunchedEffect(proEffects, noiseCalibration, cleanVoice, liveAudio, micGain, micMuted, monitoring, autotuneOn, reverbOn, reverbValue, tuneKey, tuneScale, composition?.publicRoute, composition?.outputGain, mixerDeck.public, audioGain, audioMuted) {
-        liveAudio?.configure(WaveVocalSettings(micMuted, micGain, monitoring, autotuneOn, waveTuneScale(tuneKey, tuneScale), reverbOn, reverbValue, cleanVoice, noiseCalibration, proEffects),
+    LaunchedEffect(vocalMode.pro, proEffects, noiseCalibration, cleanVoice, liveAudio, micGain, micMuted, monitoring, autotuneOn, tuneSettings, reverbOn, reverbValue, tuneKey, tuneScale, composition?.publicRoute, composition?.outputGain, mixerDeck.public, audioGain, audioMuted) {
+        liveAudio?.configure(vocalMode.applyTo(WaveVocalSettings(micMuted, micGain, monitoring, autotuneOn, waveTuneScale(tuneKey, tuneScale), reverbOn, reverbValue, cleanVoice, noiseCalibration, proEffects, tuneSettings)),
             composition?.publicRoute == true, composition?.outputGain ?: 1f, mixerDeck.public, if (audioMuted) 0f else audioGain)
     }
     DisposableEffect(liveAudio) { onDispose { liveAudio?.close() } }
@@ -303,6 +312,27 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     BackHandler(enabled = !showLeaveConfirm) {
         if (stageFullscreen) stageFullscreen = false else showLeaveConfirm = true
     }
+    if (pluginsOpen) WavePluginsSheet(
+        onDismiss = { pluginsOpen = false },
+        tuneOn = autotuneOn, onTune = { autotuneOn = !autotuneOn },
+        reverbOn = reverbOn, onReverb = { reverbOn = !reverbOn },
+        effects = if (vocalMode.pro) proEffects else 0,
+        onEffects = { proEffects = if (vocalMode.pro) it else proEffects or it; vocalMode = vocalMode.activatePro() },
+        cleanVoice = vocalMode.pro && cleanVoice,
+        onCleanVoice = { cleanVoice = !vocalMode.pro || !cleanVoice; vocalMode = vocalMode.activatePro() },
+        onCalibrate = { vocalMode = vocalMode.activatePro(); cleanVoice = true; noiseCalibration++ },
+    )
+    if (vocalMode.sheetOpen) WaveVocalStudioSheet(
+        autotuneOnly = true, onDismiss = { vocalMode = vocalMode.dismissEditor() },
+        tuneOn = autotuneOn, onTune = { autotuneOn = !autotuneOn },
+        tuneKey = tuneKey, scale = tuneScale, onKey = { tuneKey = it }, onScale = { tuneScale = it },
+        correction = tuneSettings, onCorrection = { tuneSettings = it.bounded() },
+        reverbOn = reverbOn, onReverb = { reverbOn = !reverbOn },
+        reverbMix = reverbValue, onReverbMix = { reverbValue = it },
+        cleanVoice = cleanVoice, onCleanVoice = { cleanVoice = !cleanVoice },
+        onCalibrate = { cleanVoice = true; noiseCalibration++ },
+        effects = proEffects, onEffects = { proEffects = it },
+    )
     val videoControls = rememberRoomVideoControls()
     LaunchedEffect(initialFrontCamera) { videoControls.frontCamera = initialFrontCamera }
     LaunchedEffect(liveAudio, videoControls.cameraEnabled) { liveAudio?.setCameraEnabled(videoControls.cameraEnabled) }
@@ -400,7 +430,8 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                         micMuted = controlledGuest?.let { !it.mic } ?: micMuted, audioMuted = audioMuted,
                         onMicGain = { value -> controlledGuest?.let { guestState.setGuestGain(it.id, value) } ?: run { micGain = value } }, onAudioGain = { audioGain = it },
                         onMicMute = { controlledGuest?.let { guestState.toggleMic(it.id) } ?: run { micMuted = !micMuted } }, onAudioMute = { audioMuted = !audioMuted },
-                        isPro = isPro, onProChange = { isPro = it },
+                        isPro = vocalMode.pro, onProChange = { vocalMode = vocalMode.select(it); selector = null },
+                        onPlugins = { pluginsOpen = true; selector = null },
                         monitoring = monitoring, onMonitoring = { monitoring = !monitoring },
                         autotuneOn = autotuneOn, onAutotune = { autotuneOn = !autotuneOn },
                         cleanVoice = cleanVoice, onCleanVoice = { cleanVoice = !cleanVoice },
@@ -671,7 +702,7 @@ private fun WaveVideo(cameraOff: Boolean, modifier: Modifier = Modifier, roomLab
 private fun black44() = Color.Black.copy(alpha = 0.44f)
 
 /* ------------------------------------------------------------------------- */
-/* Tab bar — capsule chrome navigation subdued + capsule active animée.        */
+/* Tab bar — individual polished graphite keys, violet active face.           */
 /* ------------------------------------------------------------------------- */
 
 @Composable
@@ -689,26 +720,22 @@ private fun WaveTabBar(
             .clip(shape)
             .padding(3.dp)
     ) {
-        BoxWithConstraints(Modifier.fillMaxSize()) {
-            val slot = maxWidth / 4f
-            val capsuleX by animateDpAsState(targetValue = slot * active.ordinal, label = "tab")
-            // Capsule active glissante.
-            Box(
-                Modifier
-                    .offset(x = capsuleX)
-                    .width(slot)
-                    .fillMaxHeight()
-                    .activeCapsule(13.dp)
-            )
-            Row(Modifier.fillMaxSize()) {
+            Row(Modifier.fillMaxSize().selectableGroup(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 WaveTab.entries.forEach { tab ->
                     val isActive = tab == active
+                    val interaction = remember { MutableInteractionSource() }
+                    val pressed by interaction.collectIsPressedAsState()
+                    val focused by interaction.collectIsFocusedAsState()
                     Box(
                         Modifier
                             .weight(1f)
                             .fillMaxHeight()
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
+                            .graphicsLayer { scaleX = if (pressed) .975f else 1f; scaleY = if (pressed) .975f else 1f }
+                            .consoleTabSurface(isActive, focused)
+                            .clip(RoundedCornerShape(12.dp))
+                            .selectable(
+                                selected = isActive, role = Role.Tab,
+                                interactionSource = interaction,
                                 indication = null
                             ) {
                                 view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
@@ -722,7 +749,7 @@ private fun WaveTabBar(
                         ) {
                             Icon(
                                 if (tab == WaveTab.WAVE && toolsLabel == "Classe") Icons.Filled.School else if (tab == WaveTab.WAVE && toolsLabel == "Scène") WaveIcons.MusicNote else if (tab == WaveTab.WAVE && toolsLabel == "Loge") Icons.Filled.MeetingRoom else if(tab == WaveTab.WAVE && toolsLabel == "Place") Icons.Filled.People else tab.icon, null,
-                                tint = if (isActive) WaveMixerTheme.violetSoft else WaveMixerTheme.secondary,
+                                tint = if (isActive) WaveMixerTheme.capsuleAccentSoft else WaveMixerTheme.secondary,
                                 modifier = Modifier.size(14.dp)
                             )
                             Spacer(Modifier.width(5.dp))
@@ -737,7 +764,6 @@ private fun WaveTabBar(
                     }
                 }
             }
-        }
     }
 }
 
@@ -764,11 +790,15 @@ internal fun MixerBody(
     cleanVoice: Boolean = false, onCleanVoice: (() -> Unit)? = null,
     onCalibrateNoise: (() -> Unit)? = null,
     proEffects: Int = 0, onProEffects: ((Int) -> Unit)? = null,
+    onPlugins: () -> Unit,
 ) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val deckHeight by animateDpAsState(if (multitrack) maxHeight else 168.dp.coerceAtMost(maxHeight),
+        val deckHeight by animateDpAsState(if (multitrack) maxHeight else 152.dp.coerceAtMost(maxHeight),
             androidx.compose.animation.core.spring(dampingRatio = .9f, stiffness = 320f), label = "Déploiement du deck")
-        val channelHeight = (maxHeight - deckHeight - 8.dp).coerceAtLeast(0.dp)
+        val channelHeight = (maxHeight - deckHeight).coerceAtLeast(0.dp)
+        val stripHeight = (channelHeight - 54.dp).coerceIn(0.dp, 244.dp)
+        // Mute buttons are 24dp high; the 32dp FX actions share their centre line.
+        val fxHeight = (stripHeight + 44.dp).coerceAtMost((channelHeight - 10.dp).coerceAtLeast(0.dp))
         Column(Modifier.fillMaxSize()) {
         // Région haute : strips + diviseur + FX.
         BoxWithConstraints(Modifier.fillMaxWidth().height(channelHeight).then(Modifier.clipToBounds()).padding(top = 10.dp)) {
@@ -794,14 +824,14 @@ internal fun MixerBody(
                 showHeader = false,
                 gain = micGain, muted = micMuted, isMic = true,
                 onGainChange = onMicGain, onToggleMute = onMicMute,
-                modifier = Modifier.offset(x = 3.dp).width(slot).fillMaxHeight().padding(top = 40.dp)
+                modifier = Modifier.offset(x = 3.dp, y = 40.dp).width(slot).height(stripHeight)
             )
             WaveChannelStrip(
                 label = "Audio", icon = WaveIcons.MusicNote,
                 showHeader = false,
                 gain = audioGain, muted = audioMuted, isMic = false,
                 onGainChange = onAudioGain, onToggleMute = onAudioMute,
-                modifier = Modifier.offset(x = 3.dp + slot).width(slot).fillMaxHeight().padding(top = 40.dp)
+                modifier = Modifier.offset(x = 3.dp + slot, y = 40.dp).width(slot).height(stripHeight)
             )
             // Séparateur vertical centré, blanc 0.07, marges v6.
             Box(
@@ -815,6 +845,7 @@ internal fun MixerBody(
             // Colonne FX (moitié droite, inset 16 depuis le diviseur).
             FxColumn(
                 isPro = isPro, onProChange = onProChange,
+                onPlugins = onPlugins,
                 monitoring = monitoring, onMonitoring = onMonitoring,
                 autotuneOn = autotuneOn, onAutotune = onAutotune,
                 cleanVoice = cleanVoice, onCleanVoice = onCleanVoice,
@@ -828,7 +859,7 @@ internal fun MixerBody(
                 modifier = Modifier
                     .offset(x = cw / 2f + 16.dp)
                     .width(cw / 2f - 16.dp)
-                    .fillMaxHeight()
+                    .height(fxHeight)
             )
         }
         WaveMixerDeckPanel(deck, multitrack, onMultitrack, onDeckPlay,
@@ -844,6 +875,7 @@ internal fun MixerBody(
 @Composable
 private fun FxColumn(
     isPro: Boolean, onProChange: (Boolean) -> Unit,
+    onPlugins: () -> Unit,
     monitoring: Boolean, onMonitoring: () -> Unit,
     autotuneOn: Boolean, onAutotune: () -> Unit,
     reverbOn: Boolean, onReverb: () -> Unit,
@@ -856,35 +888,40 @@ private fun FxColumn(
     proEffects: Int, onProEffects: ((Int) -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        // Rangée utilitaire h32, alignée à droite : [Simple|Pro] + casque.
+    BoxWithConstraints(modifier) {
+    val cardHeight = ((maxHeight - 82.dp) / 2f).coerceAtLeast(0.dp)
+    val showLabels = cardHeight >= 102.dp
+    val effectsActive = WaveVocalMode(pro = isPro).hasActiveEffects(autotuneOn, reverbOn, cleanVoice, proEffects)
+    Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        // Deux touches alignées au bord des cartes FX.
         Row(
             Modifier.fillMaxWidth().height(32.dp),
-            horizontalArrangement = Arrangement.End,
+            horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            SimpleProToggle(isPro = isPro, onChange = onProChange)
-            Spacer(Modifier.width(8.dp))
-            HeadphoneButton(enabled = monitoring, onToggle = onMonitoring)
+            SimpleProToggle(
+                simpleActive = !isPro && effectsActive,
+                proActive = isPro && effectsActive,
+                onChange = onProChange, modifier = Modifier.weight(1f))
         }
-        if (isPro && onCleanVoice != null) {
-            NoiseReductionPanel( Modifier.fillMaxWidth().weight(1f), cleanVoice, onCleanVoice, onCalibrateNoise, proEffects, onProEffects)
-        } else if (selector == null) {
+        if (selector == null) {
             // Carte Autotune.
             FxCard(
                 title = "Autotune", icon = WaveIcons.Waveform,
                 on = autotuneOn, onToggle = onAutotune,
-                modifier = Modifier.fillMaxWidth().weight(1f)
+                modifier = Modifier.fillMaxWidth().weight(1f), largePower = cardHeight >= 84.dp,
             ) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     TuneSelectorField(
                         label = "Clé", value = tuneKey,
+                        showLabel = showLabels,
                         enabled = autotuneOn,
                         onClick = { onSelector("key") },
                         modifier = Modifier.weight(0.40f)
                     )
                     TuneSelectorField(
                         label = "Gamme", value = tuneScale,
+                        showLabel = showLabels,
                         enabled = autotuneOn,
                         onClick = { onSelector("scale") },
                         modifier = Modifier.weight(0.60f)
@@ -895,9 +932,9 @@ private fun FxColumn(
             FxCard(
                 title = "Réverb", icon = WaveIcons.Reverb,
                 on = reverbOn, onToggle = onReverb,
-                modifier = Modifier.fillMaxWidth().weight(1f)
+                modifier = Modifier.fillMaxWidth().weight(1f), largePower = cardHeight >= 84.dp,
             ) {
-                ReverbSlider(value = reverbValue, enabled = reverbOn, onChange = onReverbValue)
+                ReverbSlider(value = reverbValue, enabled = reverbOn, onChange = onReverbValue, showLabels = showLabels)
             }
         } else {
             TuneSelectorPanel(
@@ -908,6 +945,11 @@ private fun FxColumn(
                 modifier = Modifier.fillMaxWidth().weight(1f)
             )
         }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            WavePluginEntry(onPlugins, Modifier.weight(1f).height(32.dp))
+            HeadphoneButton(enabled = monitoring, onToggle = onMonitoring, modifier = Modifier.weight(1f).height(32.dp))
+        }
+    }
     }
 }
 
@@ -916,60 +958,66 @@ private fun FxColumn(
 /* ------------------------------------------------------------------------- */
 
 /* ------------------------------------------------------------------------- */
-/* Toggle Simple/Pro — capsule E-bis sur l'option active.                      */
+/* Simple/Pro — même verre violet et même forme que la touche Plugin.         */
 /* ------------------------------------------------------------------------- */
 
 @Composable
-private fun SimpleProToggle(isPro: Boolean, onChange: (Boolean) -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
-        ProOption(label = "Simple", active = !isPro, onClick = { onChange(false) })
-        ProOption(label = "Pro", active = isPro, onClick = { onChange(true) })
+private fun SimpleProToggle(simpleActive: Boolean, proActive: Boolean, onChange: (Boolean) -> Unit, modifier: Modifier = Modifier) {
+    Row(modifier.selectableGroup(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        ProOption(label = "Simple", active = simpleActive, onClick = { onChange(false) }, modifier = Modifier.weight(1f))
+        ProOption(label = "Pro", active = proActive, onClick = { onChange(true) }, modifier = Modifier.weight(1f))
     }
 }
 
 @Composable
-private fun ProOption(label: String, active: Boolean, onClick: () -> Unit) {
+private fun ProOption(label: String, active: Boolean, onClick: () -> Unit, modifier: Modifier) {
+    val interaction = remember { MutableInteractionSource() }
+    val focused by interaction.collectIsFocusedAsState()
     Box(
-        Modifier
-            .height(26.dp)
-            .then(if (active) Modifier.roomsStudioCapsule() else Modifier)
-            .clip(RoundedCornerShape(13.dp))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 10.dp),
+        modifier
+            .height(32.dp)
+            .consoleTabSurface(selected = active, focused = focused)
+            .clip(RoundedCornerShape(12.dp))
+            .selectable(selected = active, role = Role.Tab, interactionSource = interaction,
+                indication = null, onClick = onClick)
+            .padding(horizontal = 6.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             label,
-            color = if (active) Color.White else white(0.46f),
+            color = if (active) WaveMixerTheme.pearl else WaveMixerTheme.secondary,
             fontSize = 12.sp,
-            fontWeight = if (active) FontWeight.SemiBold else FontWeight.Medium,
-            fontFamily = WaveMixerTheme.fontFamily
+            fontWeight = FontWeight.SemiBold,
+            fontFamily = WaveMixerTheme.fontFamily, maxLines = 1
         )
     }
 }
 
 /* ------------------------------------------------------------------------- */
-/* Bouton casque (monitoring) — matériau B regular / capsule E.                */
+/* Retour audio — touche jumelle de Plugin, violet lorsqu'il est actif.       */
 /* ------------------------------------------------------------------------- */
 
 @Composable
-private fun HeadphoneButton(enabled: Boolean, onToggle: () -> Unit) {
-    Box(
-        Modifier
-            .size(26.dp)
-            .clip(CircleShape)
-            .then(
-                if (enabled) Modifier.activeCapsule(13.dp)
-                else Modifier.hardwareSurface(13.dp, raised = true, reflection = 0.085f)
-            )
-            .clickable(onClick = onToggle),
-        contentAlignment = Alignment.Center
+private fun HeadphoneButton(enabled: Boolean, onToggle: () -> Unit, modifier: Modifier) {
+    val interaction = remember { MutableInteractionSource() }
+    val focused by interaction.collectIsFocusedAsState()
+    Row(
+        modifier
+            .consoleTabSurface(selected = enabled, focused = focused)
+            .clip(RoundedCornerShape(12.dp))
+            .toggleable(value = enabled, role = Role.Switch, interactionSource = interaction,
+                indication = null, onValueChange = { onToggle() })
+            .padding(horizontal = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)
     ) {
         Icon(
             WaveIcons.Headphones, null,
-            tint = if (enabled) Color.White else white(0.58f),
-            modifier = Modifier.size(11.dp)
+            tint = if (enabled) WaveMixerTheme.capsuleAccentSoft else WaveMixerTheme.secondary,
+            modifier = Modifier.size(14.dp)
         )
+        Text("Retour", color = WaveMixerTheme.pearl, fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold, maxLines = 1)
     }
 }
 

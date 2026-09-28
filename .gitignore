@@ -11,6 +11,9 @@ meewav.local.properties
 .DS_Store
 tools/messaging-media/node_modules/
 supabase/.temp/
+.local/qa-three-users/
+.local/qa-three-users-private/
+.local/test-accounts/
 
 # Devin local MCP config (contains API keys)
 .devin/mcp_config.local.json

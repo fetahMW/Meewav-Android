@@ -88,6 +88,12 @@ public:
     explicit MeeWavPitchCorrection(float rate = 48000) : sampleRate(rate) {}
     void processStereo(float* samples, int frames, bool enabled, int scale,
                        float amount = 1, float speed = 1, float humanize = 0, float smooth = 0, float shift = 0) {
+        // UI/JNI updates are bounded once per block, outside the sample loop.
+        amount = std::isfinite(amount) ? std::clamp(amount, 0.f, 1.f) : 1.f;
+        speed = std::isfinite(speed) ? std::clamp(speed, 0.f, 1.f) : 1.f;
+        humanize = std::isfinite(humanize) ? std::clamp(humanize, 0.f, 1.f) : 0.f;
+        smooth = std::isfinite(smooth) ? std::clamp(smooth, 0.f, 1.f) : 0.f;
+        shift = std::isfinite(shift) ? std::clamp(shift, -12.f, 12.f) : 0.f;
         if (enabled != wasEnabled) { voiced = false; ratio = 1; wasEnabled = enabled; }
         for (int i = 0; i < frames; ++i) {
             const float dry = std::isfinite(samples[i * 2]) ? samples[i * 2] : 0;

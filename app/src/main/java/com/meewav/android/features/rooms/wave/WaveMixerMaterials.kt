@@ -110,6 +110,36 @@ fun Modifier.hifiBlackSurface(cornerRadius: Dp): Modifier =
             }
         }
 
+/** Individual graphite glass keys, matching the Windows room console tabs. */
+internal fun Modifier.consoleTabSurface(selected: Boolean, focused: Boolean = false): Modifier =
+    shadow(2.dp, RoundedCornerShape(12.dp), clip = false).drawWithCache {
+        val r = 12.dp.toPx().coerceAtMost(minOf(size.width, size.height) / 2f)
+        val face = Brush.verticalGradient(if (selected) listOf(
+            Color(0xFF2B2341), Color(0xFF1D1531), Color(0xFF5137A1)
+        ) else listOf(Color(0xFF29292F), Color(0xFF151519), Color(0xFF09090C)))
+        val reflection = Brush.linearGradient(
+            0f to white(.16f), .26f to white(.03f), .48f to Color.Transparent,
+            start = Offset.Zero, end = Offset(size.width, size.height))
+        val rim = Brush.linearGradient(listOf(
+            if (selected || focused) Color(0xFFD3C7F5).copy(alpha = .50f) else white(.20f),
+            if (selected || focused) Color(0xFF8871C6).copy(alpha = .42f) else white(.06f),
+            Color.Black.copy(alpha = .40f),
+            if (selected || focused) Color(0xFFA98EF0).copy(alpha = .48f) else white(.07f)
+        ), end = Offset(size.width, size.height))
+        val lowerLight = Brush.verticalGradient(
+            0f to Color.Transparent, .76f to Color.Transparent,
+            1f to if (selected) Color(0xFFA98EF0).copy(alpha = .16f) else white(.025f))
+        onDrawBehind {
+            drawRoundRect(face, cornerRadius = CornerRadius(r))
+            drawRoundRect(reflection, cornerRadius = CornerRadius(r))
+            drawRoundRect(lowerLight, cornerRadius = CornerRadius(r))
+            val inset = .5.dp.toPx()
+            if (size.width > inset * 2 && size.height > inset * 2) drawRoundRect(rim,
+                topLeft = Offset(inset, inset), size = Size(size.width - inset * 2, size.height - inset * 2),
+                cornerRadius = CornerRadius((r - inset).coerceAtLeast(0f)), style = Stroke(.7.dp.toPx()))
+        }
+    }
+
 /* ------------------------------------------------------------------------- */
 /* A. Fond d'écran `ClasseWebMixerSurfaceBackground`                          */
 /* ------------------------------------------------------------------------- */

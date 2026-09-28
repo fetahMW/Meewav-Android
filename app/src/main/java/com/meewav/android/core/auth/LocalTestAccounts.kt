@@ -26,12 +26,12 @@ object LocalTestAccounts {
                     data.getValue("id").jsonPrimitive.content,
                     data.getValue("email").jsonPrimitive.content,
                     data.getValue("password").jsonPrimitive.content).also {
-                    require(it.alias in setOf("redmi", "windows"))
+                    require(it.alias in setOf("testeur1", "testeur2", "testeur3"))
                     require(it.id.matches(Regex("[a-fA-F0-9-]{36}")))
                     require('@' in it.email && it.password.length >= 12)
                 }
             }
-            require(accounts.size in 1..2 && accounts.distinctBy { it.alias }.size == accounts.size)
+            require(accounts.size in 1..3 && accounts.distinctBy { it.alias }.size == accounts.size)
             accounts
         }.getOrDefault(emptyList())
     }

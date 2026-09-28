@@ -195,6 +195,8 @@ async function storageReadable(config, token, attachment) {
 }
 
 async function main(args) {
+  const smokeOnly = args.includes('--smoke');
+  const verificationArgs = args.filter((arg) => arg !== '--smoke');
   const report = {
     checkedAt: new Date().toISOString(),
     status: 'pending',
@@ -202,7 +204,7 @@ async function main(args) {
     checks: {},
   };
   try {
-    const options = parseArgs(args);
+    const options = parseArgs(verificationArgs);
     const [contents, savedAccounts] = await Promise.all([
       readFile(resolve(root, 'meewav.local.properties'), 'utf8'),
       readFile(resolve(directory, 'accounts.json'), 'utf8'),
@@ -251,7 +253,9 @@ async function main(args) {
       ]);
       report.checks.dmAtoB = verifyDm(aRows, bRows, accounts[0].id, options['--dm-a'], options['--dm-a-id']);
       report.checks.dmBtoA = verifyDm(aRows, bRows, accounts[1].id, options['--dm-b'], options['--dm-b-id']);
-      report.checks.audio = verifyAudio(aRows, bRows, accounts, options);
+      report.checks.audio = smokeOnly
+        ? { status: 'skipped', reason: 'RUN 1 two-direction DM smoke' }
+        : verifyAudio(aRows, bRows, accounts, options);
       if (report.checks.audio.status === 'pass') {
         const audioRow = aRows.find((row) => row.id === report.checks.audio.messageId);
         const attachment = audioAttachment(audioRow, options['--audio-name']);
@@ -268,9 +272,10 @@ async function main(args) {
         report.checks[name] = { status: 'pending', reason: 'shared_conversation_required' };
       }
     }
-    report.status = Object.values(report.checks).some((check) => check.status === 'fail')
+    const requiredChecks = Object.values(report.checks).filter((check) => check.status !== 'skipped');
+    report.status = requiredChecks.some((check) => check.status === 'fail')
       ? 'fail'
-      : Object.values(report.checks).every((check) => check.status === 'pass') ? 'pass' : 'pending';
+      : requiredChecks.every((check) => check.status === 'pass') ? 'pass' : 'pending';
   } catch (error) {
     // Do not print request bodies, server messages, account data, tokens, or URLs.
     report.status = 'error';

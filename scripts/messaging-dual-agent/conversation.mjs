@@ -17,9 +17,15 @@ const option = (name) => {
   return index < 0 ? null : args[index + 1];
 };
 const serials = [option('--device-a'), option('--device-b')];
+const smokeOnly = args.includes('--smoke');
+const auditRunId = option('--run-id');
 if (serials.some((serial) => !/^emulator-\d+$/.test(serial ?? '')) || serials[0] === serials[1]) {
   console.error('Usage: node scripts/messaging-dual-agent/conversation.mjs --device-a emulator-5554 --device-b emulator-5556');
   process.exit(2);
+}
+if (smokeOnly && (serials[0] !== 'emulator-5570' || serials[1] !== 'emulator-5572'
+  || !/^RUN1_[A-Za-z0-9_]{8,48}$/.test(auditRunId ?? ''))) {
+  throw new Error('RUN 1 smoke requires A=5570, B=5572 and a RUN1_ run ID');
 }
 const ports = [Number(option('--port-a') ?? 9231), Number(option('--port-b') ?? 9232)];
 if (ports.some((port) => !Number.isInteger(port) || port < 1024 || port > 65535) || ports[0] === ports[1]) {
@@ -363,6 +369,7 @@ try {
   await mkdir(runDir, { recursive: true });
   report = {
     runId,
+    ...(smokeOnly ? { auditRunId, scope: 'two-direction DM smoke' } : {}),
     startedAt: new Date().toISOString(),
     devices: serials.map((serial, index) => ({ serial, username: accounts[index].username, profileId: accounts[index].id })),
     results: [],
@@ -410,7 +417,7 @@ try {
   await waitFor(browsers[1], conversationOpen, [accounts[0].displayName], 30_000);
   report.results.push({ step: 'b_opened_same_peer_conversation', passed: true, at: new Date().toISOString() });
 
-  const marker = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const marker = `${smokeOnly ? `${auditRunId}-` : ''}${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const aToB = `QA DM ${marker} A vers B`;
   const bToA = `QA DM ${marker} B vers A`;
   stage = 'a_to_b';
@@ -431,6 +438,7 @@ try {
   await browsers[1].screenshot(join(runDir, 'b-sent-reply.png'));
   report.screenshots.push('b-sent-reply.png');
 
+  if (!smokeOnly) {
   stage = 'audio_a_to_b';
   const audioName = `qa-audio-${marker}.mp3`;
   const audioPath = join(runDir, audioName);
@@ -442,6 +450,7 @@ try {
   report.untested = report.untested.filter((item) => item !== 'fichier audio');
   await browsers[1].screenshot(join(runDir, 'b-received-audio.png'));
   report.screenshots.push('b-received-audio.png');
+  }
   report.status = 'passed';
 } catch (error) {
   if (!report) {

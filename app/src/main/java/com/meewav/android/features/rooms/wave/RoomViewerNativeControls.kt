@@ -123,6 +123,20 @@ internal class RoomViewerNativeControls(
         if (raw.length > 12000) return true
         val data = runCatching { JSONObject(raw) }.getOrNull() ?: return true
         if (uri.path == "/native/viewer-result") {
+            if (data.optBoolean("ok") && data.optString("action") == "mixer" && data.optString("key") == "vocal") {
+                data.optJSONObject("value")?.let { vocal -> with(mixerState) {
+                    tune = vocal.optBoolean("tuneEnabled")
+                    key = vocal.optString("tuneKey", key)
+                    scale = when (vocal.optString("tuneScale")) { "Majeure" -> "Majeur"; "Mineure" -> "Mineur"; else -> "Chromatique" }
+                    if (!correctionLoaded) {
+                        correction = WaveTuneSettings(vocal.optDouble("tuneAmount", 1.0).toFloat(),
+                            vocal.optDouble("tuneSpeed", 1.0).toFloat(), vocal.optDouble("tuneHumanize", 0.0).toFloat()).bounded()
+                        correctionLoaded = true
+                    }
+                    reverb = vocal.optBoolean("reverbEnabled")
+                    reverbValue = vocal.optDouble("reverbAmount", .15).toFloat().coerceIn(0f, 1f)
+                } }
+            }
             if (data.optString("id") == pending) {
                 if (data.optBoolean("ok") && draft.trim() == sentText) draft = ""
                 pending = null
@@ -172,7 +186,13 @@ private class ViewerMixerControlState {
     var audio by mutableStateOf(.62f)
     var voiceMuted by mutableStateOf(true)
     var audioMuted by mutableStateOf(false)
-    var pro by mutableStateOf(false)
+    var vocalMode by mutableStateOf(WaveVocalMode())
+    var plugins by mutableStateOf(false)
+    var correction by mutableStateOf(WaveTuneSettings())
+    var correctionLoaded by mutableStateOf(false)
+    var cleanVoice by mutableStateOf(false)
+    var noiseCalibration by mutableIntStateOf(0)
+    var effects by mutableIntStateOf(0)
     var monitor by mutableStateOf(false)
     var tune by mutableStateOf(false)
     var reverb by mutableStateOf(false)
@@ -186,6 +206,34 @@ private class ViewerMixerControlState {
 @Composable private fun ViewerMixerControls(deck: WaveMixerDeckState, name: String, state: ViewerMixerControlState, action: (String, JSONObject) -> Unit) = with(state) {
     fun command(key: String, value: Any) = action("mixer", JSONObject().put("key", key).put("value", value))
     LaunchedEffect(audio, audioMuted) { deck.volume(if (audioMuted) 0f else audio) }
+    LaunchedEffect(Unit) { if (!correctionLoaded) command("readVocal", true) }
+    LaunchedEffect(vocalMode.pro, correction, correctionLoaded) {
+        if (correctionLoaded) {
+            val effective = vocalMode.correction(correction)
+            command("vocalMode", JSONObject().put("pro", vocalMode.pro).put("amount", effective.amount)
+                .put("speed", effective.speed).put("humanize", effective.humanize))
+        }
+    }
+    if (plugins) WavePluginsSheet(
+        onDismiss = { plugins = false },
+        tuneOn = tune, onTune = { tune = !tune; command("tune", tune) },
+        reverbOn = reverb, onReverb = { reverb = !reverb; command("reverb", reverb) },
+        nativeEffects = false,
+    )
+    if (vocalMode.sheetOpen) WaveVocalStudioSheet(
+        autotuneOnly = true, onDismiss = { vocalMode = vocalMode.dismissEditor() },
+        tuneOn = tune, onTune = { tune = !tune; command("tune", tune) },
+        tuneKey = key, scale = scale,
+        onKey = { key = it; command("tuneKey", it) }, onScale = { scale = it; command("tuneScale", it) },
+        correction = correction, onCorrection = {
+            correction = it.bounded()
+        },
+        reverbOn = reverb, onReverb = { reverb = !reverb; command("reverb", reverb) },
+        reverbMix = reverbValue, onReverbMix = { reverbValue = it; command("reverbAmount", it) },
+        cleanVoice = cleanVoice, onCleanVoice = { cleanVoice = !cleanVoice },
+        onCalibrate = { cleanVoice = true; noiseCalibration++ }, effects = effects, onEffects = { effects = it },
+        nativeEffects = false, fullCorrection = false,
+    )
     Box(Modifier.fillMaxSize()) {
         MixerBody(
             guest = WaveGuest("viewer", name, "", R.drawable.wave_chat_artist_0, WaveGuestLocation.REQUESTED),
@@ -193,7 +241,8 @@ private class ViewerMixerControlState {
             micGain = voice, audioGain = audio, micMuted = voiceMuted, audioMuted = audioMuted,
             onMicGain = { voice = it; command("voiceGain", it) }, onAudioGain = { audio = it },
             onMicMute = { voiceMuted = !voiceMuted; command("voiceMuted", voiceMuted) }, onAudioMute = { audioMuted = !audioMuted },
-            isPro = pro, onProChange = { pro = it }, monitoring = monitor, onMonitoring = { monitor = !monitor; command("monitoring", monitor) },
+            isPro = vocalMode.pro, onProChange = { vocalMode = vocalMode.select(it); selector = null }, monitoring = monitor, onMonitoring = { monitor = !monitor; command("monitoring", monitor) },
+            onPlugins = { plugins = true; selector = null; command("readVocal", true) },
             autotuneOn = tune, onAutotune = { tune = !tune; command("tune", tune) },
             reverbOn = reverb, onReverb = { reverb = !reverb; command("reverb", reverb) },
             reverbValue = reverbValue, onReverbValue = { reverbValue = it; command("reverbAmount", it) },

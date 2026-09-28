@@ -68,7 +68,7 @@ button:disabled { opacity: .4; cursor: default; }
 #root .mobile-messaging.is-detail .mw-workspace { grid-template-rows: auto minmax(0,1fr); }
 #root .mobile-messaging.is-detail .mw-conversation-rail { display: none; }
 #root .mobile-messaging.is-detail .mw-chat-header { height: auto; padding: 4px 12px; flex-direction: column; }
-#root .mobile-messaging.is-detail .messaging-pillar-tabs { display: grid; flex: 0 0 50px; }
+#root .mobile-messaging.is-detail .messaging-pillar-tabs { display: none; }
 #root .mobile-messaging.is-detail .mw-chat-header__utility { display: flex; width: 100%; min-width: 0; justify-content: space-between; align-items: center; }
 #root .mobile-messaging.is-detail .mw-chat-header__utility { min-height: 60px; gap: 8px; }
 #root .mobile-messaging .mw-chat-contact-back { display: grid; place-items: center; flex: 0 0 40px; width: 40px; height: 44px; padding: 0; border: 0; border-radius: 12px; background: transparent; color: #bda3e5; }
@@ -352,62 +352,76 @@ button:disabled { opacity: .4; cursor: default; }
 #root .mobile-messaging .mw-chat-scene.has-conversation-header .mw-chat-timeline { padding: 12px 12px 0; }
 #root .mobile-messaging .mw-conversation-header { width: 100%; max-width: none; min-height: 0; margin: 0 0 18px; padding: 0; }
 #root .mobile-messaging .mw-conversation-header .mw-collab-return { display: none; }
-#root .mobile-messaging .mw-collab-detail-inline .mw-collab-request { box-sizing: border-box; width: 100%; max-width: none; margin: 0; padding: 18px; border-radius: 24px; border: 1px solid #6b639866; background: linear-gradient(150deg,#35373d 0%,#26282d 42%,#191b1f 100%); box-shadow: inset 0 1px 0 #ffffff24,inset 0 -1px 0 #0009,0 10px 26px #0005; }
+/* Compact request, with the same graphite body and violet rim as the console. */
+#root .mobile-messaging .mw-collab-detail-inline .mw-collab-request {
+  box-sizing: border-box; width: 100%; max-width: none; min-height: 0; margin: 0; padding: 12px;
+  border: 1px solid transparent; border-radius: 18px;
+  background: linear-gradient(120deg,#ffffff0c,transparent 40%) padding-box,linear-gradient(155deg,#202126,#0d0e12 65%,#171222) padding-box,linear-gradient(135deg,#83739e,#463754 38%,#302838 70%,#6b529d) border-box;
+  box-shadow: inset 0 1px #ffffff12,inset 0 -1px #0009,0 5px 16px #0005;
+}
 #root .mobile-messaging .mw-collab-request::before,
 #root .mobile-messaging .mw-collab-request::after { display: none; }
 #root .mobile-messaging .mw-collab-request__content { display: block; min-width: 0; padding: 0; }
-#root .mobile-messaging .mw-collab-request__content > header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px 10px; min-height: 24px; margin: 0; padding: 0; }
-#root .mobile-messaging .mw-collab-request__content > header .mw-collab-card__kind { display: inline-flex; align-items: center; gap: 6px; min-height: 24px; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; color: #d9d6e3; font-size: 11px; font-weight: 600; }
-#root .mobile-messaging .mw-collab-card__kind > svg:first-child { width: 15px; height: 15px; color: #7960b2; }
-#root .mobile-messaging .mw-collab-card__meta { display: flex; align-items: center; justify-content: flex-start; flex-wrap: nowrap; gap: 5px; color: #999ba5; font-size: 10px; line-height: 1.4; }
-#root .mobile-messaging .mw-collab-card__meta svg { width: 12px; height: 12px; }
-#root .mobile-messaging .mw-collab-request__profile { display: grid; grid-template-columns: 56px minmax(0,1fr); grid-template-rows: auto; align-items: center; gap: 12px; margin: 16px 0 12px; padding: 0; height: auto; }
-#root .mobile-messaging .mw-collab-request__profile .mw-collab-request__avatar { grid-column: 1; grid-row: 1; align-self: center; width: 56px; height: 56px; margin: 0; padding: 0; }
-#root .mobile-messaging .mw-collab-request__identity { grid-column: 2; grid-row: 1; display: flex; flex-direction: column; min-width: 0; gap: 5px; text-align: left; }
-#root .mobile-messaging .mw-collab-request__heading { display: flex; align-items: center; flex-wrap: nowrap; gap: 8px; width: 100%; }
-#root .mobile-messaging .mw-collab-request__profile h3 { display: block; flex: 1; min-width: 0; margin: 0; font-size: 19px; line-height: 1.2; letter-spacing: -.3px; text-align: left; }
+#root .mobile-messaging .mw-collab-request__content > header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 3px 8px; min-height: 0; margin: 0 0 8px; padding: 0; }
+#root .mobile-messaging .mw-collab-request__content > header .mw-collab-card__kind { display: inline-flex; align-items: center; gap: 5px; min-height: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; color: #c5b2f1; font-size: 10px; font-weight: 600; }
+#root .mobile-messaging .mw-collab-card__kind > svg:first-child { width: 14px; height: 14px; color: #a98ef0; }
+#root .mobile-messaging .mw-collab-card__kind > svg:last-child:not(:first-child) { display: none; }
+#root .mobile-messaging .mw-collab-card__meta { display: flex; align-items: center; justify-content: flex-start; flex-wrap: nowrap; gap: 4px; color: #a5a2b1; font-size: 10px; line-height: 1.3; }
+#root .mobile-messaging .mw-collab-card__meta svg { width: 11px; height: 11px; }
+#root .mobile-messaging .mw-collab-request__profile { display: grid; grid-template-columns: 40px minmax(0,1fr); grid-template-rows: auto; align-items: center; gap: 9px; margin: 0; padding: 0; height: auto; }
+#root .mobile-messaging .mw-collab-request__profile .mw-collab-request__avatar { grid-column: 1; grid-row: 1; align-self: center; width: 40px; height: 40px; margin: 0; padding: 0; border: 1px solid #8470b26b; box-shadow: inset 0 1px #ffffff17; background: #17151f; }
+#root .mobile-messaging .mw-collab-request__identity { grid-column: 2; grid-row: 1; display: flex; flex-direction: column; min-width: 0; gap: 2px; text-align: left; }
+#root .mobile-messaging .mw-collab-request__heading { display: flex; align-items: center; flex-wrap: nowrap; gap: 6px; width: 100%; }
+#root .mobile-messaging .mw-collab-request__profile h3 { display: block; flex: 1; min-width: 0; margin: 0; font-size: 15px; line-height: 1.25; letter-spacing: -.2px; text-align: left; }
 #root .mobile-messaging .mw-collab-request__profile h3 > span { white-space: normal; overflow-wrap: anywhere; }
 #root .mobile-messaging .mw-collab-request__level { flex-shrink: 0; display: inline-flex; align-items: center; gap: 0; }
-#root .mobile-messaging .mw-collab-request__grade { --mw-grade-size: 26px !important; }
+#root .mobile-messaging .mw-collab-request__grade { --mw-grade-size: 25px !important; }
 #root .mobile-messaging .mw-collab-request__level small { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
-#root .mobile-messaging .mw-collab-request__profile p { margin: 0; color: #a6a7b0; font-size: 12px; line-height: 1.4; text-align: left; }
-#root .mobile-messaging .mw-collab-request__profile-details { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 10px; margin: 0 0 12px; padding: 0 0 10px; border-bottom: 1px solid #ffffff10; }
-#root .mobile-messaging .mw-collab-request__profile-details dl { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; border: 0; background: transparent; }
-#root .mobile-messaging .mw-collab-request__profile-details dl > div { display: flex; flex-direction: row; align-items: center; gap: 4px; padding: 0; border: 0; }
-#root .mobile-messaging .mw-collab-request__profile-details dt { display: inline-flex; align-items: center; gap: 4px; }
-#root .mobile-messaging .mw-collab-request__profile-details dt svg { width: 12px; height: 12px; color: #8b8d98; }
-#root .mobile-messaging .mw-collab-request__profile-details dt strong { color: #d5d6dc; font-size: 10px; font-weight: 500; }
-#root .mobile-messaging .mw-collab-request__profile-details dd { margin: 0; color: #92949e; font-size: 10px; }
-#root .mobile-messaging .mw-collab-profile-link { position: static; display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: 36px; margin: 2px 0; padding: 7px 10px; border: 1px solid #6b639877; border-radius: 10px; background: linear-gradient(180deg,#303239,#202227); color: #dedfe5; font-size: 11px; line-height: 1.2; white-space: nowrap; box-shadow: inset 0 1px #ffffff0c; }
-#root .mobile-messaging .mw-collab-request__message { margin: 0; padding: 0; color: #d3d4dc; font-size: 13px; line-height: 1.55; overflow-wrap: anywhere; }
-#root .mobile-messaging .mw-collab-request__content .mw-collab-card__chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 0; padding: 0; }
-#root .mobile-messaging .mw-collab-request__content .mw-collab-card__chips span { display: inline-flex; align-items: center; gap: 5px; min-height: 24px; padding: 4px 8px; border-radius: 8px; border-color: #ffffff16; background: #1b1c22; color: #b7b9c3; font-size: 10px; line-height: 1.2; box-shadow: inset 0 1px #ffffff06; }
-#root .mobile-messaging .mw-collab-card__chips svg { width: 12px; height: 12px; color: #9f97b1; }
-#root .mobile-messaging .mw-collab-request__attachments { display: grid; grid-template-columns: minmax(0,1fr); gap: 8px; margin: 14px 0 0; }
-#root .mobile-messaging .mw-collab-request__attachment.is-audio { display: grid; grid-template-columns: 44px minmax(0,1fr) 64px; grid-template-rows: auto 44px auto; grid-template-areas: 'title title title' 'play wave actions' 'meta meta duration'; align-items: center; gap: 4px 8px; padding: 12px; border-radius: 16px; }
-#root .mobile-messaging .mw-collab-request__attachment-title { font-size: 12px; line-height: 1.4; min-width: 0; }
-#root .mobile-messaging .mw-collab-request__attachment-play { width: 44px; height: 44px; min-width: 44px; min-height: 44px; background: var(--mobile-violet-cta); border-color: #7960b2; }
+#root .mobile-messaging .mw-collab-request__profile p { margin: 0; color: #aba6b9; font-size: 11px; line-height: 1.35; text-align: left; }
+#root .mobile-messaging .mw-collab-request__profile-details { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0 6px; margin: 2px 0 6px; padding: 0; border: 0; }
+#root .mobile-messaging .mw-collab-request__profile-details dl { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; border: 0; background: transparent; }
+#root .mobile-messaging .mw-collab-request__profile-details dl > div { display: flex; flex-direction: row; align-items: center; gap: 3px; padding: 0; border: 0; }
+#root .mobile-messaging .mw-collab-request__profile-details dt { display: inline-flex; align-items: center; gap: 3px; }
+#root .mobile-messaging .mw-collab-request__profile-details dt svg { width: 11px; height: 11px; color: #a98ef0; }
+#root .mobile-messaging .mw-collab-request__profile-details dt strong { color: #cfccd7; font-size: 10px; font-weight: 500; }
+#root .mobile-messaging .mw-collab-request__profile-details dd { margin: 0; color: #aba6b9; font-size: 10px; }
+#root .mobile-messaging .mw-collab-profile-link { position: static; display: inline-flex; align-items: center; justify-content: center; gap: 2px; min-height: 36px; margin: 0; padding: 0 3px 0 8px; border: 0; border-radius: 8px; background: transparent; color: #c1aaef; font-size: 11px; line-height: 1.2; white-space: nowrap; box-shadow: none; }
+#root .mobile-messaging .mw-collab-profile-link:is(:hover,:active,:focus-visible) { background: #5137a126; color: #e1d6fa; }
+#root .mobile-messaging .mw-collab-request__message { margin: 0; padding: 0; color: #e0dee7; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+#root .mobile-messaging .mw-collab-request__message.is-collapsed { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+#root .mobile-messaging .mw-collab-request__read-more { display: inline-flex; align-items: center; min-height: 32px; border: 0; border-radius: 6px; padding: 0; background: none; color: #c1aaef; font-size: 11px; }
+#root .mobile-messaging .mw-collab-request__content .mw-collab-card__chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 7px 0 0; padding: 0; }
+#root .mobile-messaging .mw-collab-request__content .mw-collab-card__chips span { display: inline-flex; align-items: center; gap: 4px; min-height: 20px; padding: 2px 6px; border: 1px solid #81709b44; border-radius: 6px; background: #5137a116; color: #c2b6d6; font-size: 10px; line-height: 1.2; box-shadow: inset 0 1px #ffffff06; }
+#root .mobile-messaging .mw-collab-card__chips svg { width: 11px; height: 11px; color: #a98ef0; }
+#root .mobile-messaging .mw-collab-request__attachments { display: grid; grid-template-columns: minmax(0,1fr); gap: 5px; margin: 9px 0 0; }
+#root .mobile-messaging .mw-collab-request__attachment { min-height: 0; border: 1px solid #72618d54; background: linear-gradient(155deg,#1c1b23,#0c0d10); box-shadow: inset 0 1px #ffffff0b,inset 0 -1px #0007; }
+#root .mobile-messaging .mw-collab-request__attachment.is-audio { display: grid; grid-template-columns: 38px minmax(0,1fr) auto 32px; grid-template-rows: 19px 22px; grid-template-areas: 'play title title actions' 'play wave duration actions'; align-items: center; gap: 0 7px; padding: 7px; border-radius: 11px; }
+#root .mobile-messaging .mw-collab-request__attachment.is-audio .mw-collab-request__attachment-cover,
+#root .mobile-messaging .mw-collab-request__attachment.is-audio .mw-collab-request__attachment-meta { display: none; }
+#root .mobile-messaging .mw-collab-request__attachment-title { font-size: 11px; line-height: 1.3; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#root .mobile-messaging .mw-collab-request__attachment-play { width: 38px; height: 38px; min-width: 38px; min-height: 38px; padding: 0; border-radius: 50%; }
+#root .mobile-messaging .mw-collab-request__attachment-play svg { width: 16px; height: 16px; }
 #root .mobile-messaging .mw-collab-request__attachment-actions { justify-self: end; }
-#root .mobile-messaging .mw-collab-request__attachment-actions button { min-width: 44px; min-height: 44px; padding: 10px; }
-#root .mobile-messaging .mw-collab-request__attachment-meta { font-size: 10px; color: #92949e; }
-#root .mobile-messaging .mw-collab-request__attachment-duration { font-size: 10px; color: #babcc6; }
-#root .mobile-messaging .mw-collab-request__footer { display: flex; flex-direction: column; align-items: stretch; gap: 10px; margin: 14px 0 0; padding: 12px 0 0; border-top: 1px solid #ffffff14; }
-#root .mobile-messaging .mw-collab-request__actions { display: flex; width: 100%; gap: 8px; margin: 0; }
-#root .mobile-messaging .mw-collab-request__actions .mw-button { flex: 1; min-width: 0; min-height: 44px; padding: 10px 12px; font-size: 12px; border-radius: 12px; }
-
-/* The requested graphite card uses neutral reflections and fine violet rims. */
-#root .mobile-messaging .mw-collab-request__attachment { border-color: #6b639844; background: linear-gradient(155deg,#25272c,#101215); box-shadow: inset 0 1px #ffffff10,inset 0 -1px #0007; }
-#root .mobile-messaging .mw-collab-request__profile .mw-collab-request__avatar { border-color: #6b6398; box-shadow: 0 2px 8px #0004; background: #202227; }
-#root .mobile-messaging .mw-collab-request__content .mw-collab-card__chips span { background: #23252b; border-color: #ffffff1c; color: #c4c6ce; }
-#root .mobile-messaging .mw-collab-request__message { color: #e0e1e5; }
-#root .mobile-messaging .mw-collab-profile-link:is(:hover,:active,:focus-visible) { background: #35373e; color: white; border-color: var(--mobile-cta-rim); }
-#root .mobile-messaging .mw-collab-request__actions .mw-button--quiet { background: linear-gradient(180deg,#303239,#202227); color: #dedfe5; border-color: #ffffff24; box-shadow: inset 0 1px #ffffff0c; }
+#root .mobile-messaging .mw-collab-request__attachment-actions button { min-width: 32px; width: 32px; min-height: 40px; padding: 7px; }
+#root .mobile-messaging .mw-collab-request__attachment.is-audio .mw-collab-request__attachment-wave { min-width: 0; height: 22px; min-height: 0; }
+#root .mobile-messaging .mw-collab-request__attachment.is-audio .mw-waveform { height: 22px; min-height: 0; }
+#root .mobile-messaging .mw-collab-request__attachment-duration { white-space: nowrap; font-size: 9px; color: #b6adca; }
+#root .mobile-messaging .mw-collab-request__attachment-meta { font-size: 10px; color: #a5a2b1; }
+#root .mobile-messaging .mw-collab-inline-error { grid-column: 1 / -1; font-size: 11px; color: #f2b7bd; }
+#root .mobile-messaging .mw-collab-request__footer { display: flex; flex-flow: row wrap; align-items: center; gap: 6px 10px; margin: 10px 0 0; padding: 8px 0 0; border-top: 1px solid #8470b22e; }
+#root .mobile-messaging .mw-collab-request__verified,
+#root .mobile-messaging .mw-collab-request__origin { min-width: 0; margin: 0; font-size: 10px; line-height: 1.35; color: #aca5bb; }
+#root .mobile-messaging .mw-collab-request__verified { display: inline-flex; align-items: center; gap: 5px; }
+#root .mobile-messaging .mw-collab-request__verified > svg { width: 14px; height: 14px; color: #a98ef0; }
+#root .mobile-messaging .mw-collab-request__actions { display: flex; flex: 1 0 100%; width: 100%; gap: 7px; margin: 0; }
+#root .mobile-messaging .mw-collab-request__actions .mw-button { flex: 1; min-width: 0; min-height: 40px; padding: 8px 10px; font-size: 12px; border-radius: 10px; }
+#root .mobile-messaging .mw-collab-request__actions .mw-button--quiet { background: linear-gradient(180deg,#24222c,#111015); color: #dedbe6; border-color: #8470b24d; box-shadow: inset 0 1px #ffffff0f; }
 /* Violet urbain Meewav: the Create group CTA, shared with primary actions and send discs. */
-:is(#root,.mw-layer,.mw-overlay) :is(.mw-button--primary,button.mw-chat-header__primary-action,button.agw-panel-create,button.agw-primary-button,button.mw-composer-send,button.mw-audio-capsule__play,button.mw-collab-request__attachment-play,button.is-primary,button.is-send,button.mw-attachment-queue__send) {
+:is(#root,.mw-layer,.mw-overlay) :is(.mw-button--primary,button.mw-chat-header__primary-action,button.agw-panel-create,button.agw-primary-button,button.is-primary,button.is-send,button.mw-attachment-queue__send) {
   background: var(--mobile-violet-cta) !important; border-color: var(--mobile-cta-rim) !important; color: #f5f5f8;
   box-shadow: inset 0 1px 0 #ffffff24,0 8px 24px #39267247 !important; text-shadow: none;
 }
-:is(#root,.mw-layer,.mw-overlay) :is(.mw-button--primary,button.mw-chat-header__primary-action,button.agw-panel-create,button.agw-primary-button,button.mw-composer-send,button.mw-audio-capsule__play,button.mw-collab-request__attachment-play,button.is-primary,button.is-send,button.mw-attachment-queue__send):is(:hover,:active,:focus-visible,:disabled) {
+:is(#root,.mw-layer,.mw-overlay) :is(.mw-button--primary,button.mw-chat-header__primary-action,button.agw-panel-create,button.agw-primary-button,button.is-primary,button.is-send,button.mw-attachment-queue__send):is(:hover,:active,:focus-visible,:disabled) {
   background: var(--mobile-violet-cta) !important; border-color: var(--mobile-cta-rim) !important; color: #f5f5f8;
   box-shadow: inset 0 1px 0 #ffffff24,0 8px 24px #39267247 !important; text-shadow: none;
 }
@@ -791,16 +805,21 @@ button:disabled { opacity: .4; cursor: default; }
 #root .mobile-messaging .mwp-pack-actions > button svg { color: #9c96bd; }
 #root .mobile-messaging .mwp-pack-actions > button:active { background: #ffffff0a; }
 
-/* The contact strip floats below the tabs, over the actual scrolling messages. */
+/* One contact header at the top of the conversation. Tabs belong to the lists. */
+#root .mobile-messaging.is-detail > .mobile-messaging-header { display: none; }
+#root .mobile-messaging.is-detail .messaging-page { inset: 0; }
+#root .mobile-messaging.is-detail .mw-chat-header:not(:has(> .mw-chat-header__utility > .mw-chat-header__identity)) { display: none; }
 #root .mobile-messaging.is-detail .mw-chat-header:has(> .mw-chat-header__utility > .mw-chat-header__identity) {
+  height: 64px;
+  padding: 0;
   z-index: 10;
   overflow: visible;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
 #root .mobile-messaging.is-detail .mw-chat-header__utility:has(> .mw-chat-header__identity) {
-  position: absolute;
-  inset: 100% 0 auto;
+  position: relative;
+  inset: auto;
   width: 100%;
   height: 64px;
   min-height: 64px;
@@ -815,12 +834,12 @@ button:disabled { opacity: .4; cursor: default; }
   box-shadow: 0 4px 12px #0002;
 }
 #root .mobile-messaging.is-detail .mw-workspace:has(> .mw-chat-header .mw-chat-header__identity) > .mw-chat-scene:not(:has(> .mw-marketplace-context)) > .mw-chat-timeline {
-  scroll-padding-top: 78px;
+  scroll-padding-top: 14px;
 }
 #root .mobile-messaging.is-detail .mw-workspace:has(> .mw-chat-header .mw-chat-header__identity) > .mw-chat-scene:not(:has(> .mw-marketplace-context)) > .mw-chat-timeline > .mw-chat-timeline__inner {
-  padding-top: 78px;
+  padding-top: 14px;
 }
-#root .mobile-messaging.is-detail .mw-workspace:has(> .mw-chat-header .mw-chat-header__identity) > .mw-chat-scene > .mw-marketplace-context { margin-top: 64px; }
+#root .mobile-messaging.is-detail .mw-workspace:has(> .mw-chat-header .mw-chat-header__identity) > .mw-chat-scene > .mw-marketplace-context { margin-top: 0; }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   #root .mobile-messaging.is-detail .mw-chat-header__utility:has(> .mw-chat-header__identity) { background: #191c23; }
 }
@@ -1090,6 +1109,86 @@ button:disabled { opacity: .4; cursor: default; }
 #root .mobile-messaging-header__actions { position: absolute; right: 12px; top: 9px; height: 44px; }
 #root .mobile-messaging-header strong { font-size: clamp(16px,4.6vw,19px); white-space: nowrap; }
 #root .mobile-messaging-header small { white-space: nowrap; font-size: 9px; }
+
+/* Contact lists use the same graphite glass as the conversation identity bar. */
+#root .mobile-messaging:not(.is-detail) :is(.mobile-messaging-header,.mw-chat-header) {
+  background: linear-gradient(110deg,#ffffff08,#ffffff02),#12151c99;
+  -webkit-backdrop-filter: blur(22px) saturate(1.12);
+  backdrop-filter: blur(22px) saturate(1.12);
+  border-bottom: 1px solid #d3d9e01f;
+  box-shadow: 0 4px 12px #0002;
+}
+
+/* Denser graphite behind the inbox tabs, with a stronger background blur. */
+#root .mobile-messaging:not(.is-detail) .mw-chat-header {
+  background: linear-gradient(110deg,#ffffff08,#ffffff02),#171a22e6;
+  -webkit-backdrop-filter: blur(28px) saturate(1.12);
+  backdrop-filter: blur(28px) saturate(1.12);
+}
+
+/* Violet from the Web pole's SVG fill, with the polished console reflection. */
+#root .mobile-messaging {
+  --mobile-urban-disc: linear-gradient(135deg,#ffffff19,transparent 46%),linear-gradient(180deg,#4e349f,#5137a1 55%,#372574);
+  --mobile-urban-rim: #8c73bd8c;
+}
+#root .mobile-messaging button.mw-audio-capsule__play,
+#root .mobile-messaging button.mw-collab-request__attachment-play,
+#root .mobile-messaging .mw-composer > button.mw-composer-send,
+#root .mobile-messaging .mw-composer > button.mw-composer-send:is(:hover,:active,:focus-visible,:disabled,.is-ready) {
+  border: 1px solid var(--mobile-urban-rim);
+  border-radius: 50%;
+  background: var(--mobile-urban-disc);
+  box-shadow: inset 0 1px 1px #ffffff24,inset 0 -2px 3px #17102466,0 2px 6px #0005;
+  color: #fff;
+  filter: none;
+}
+#root .mobile-messaging .mw-collab-request__actions .mw-button--primary {
+  background: var(--mobile-urban-disc) !important;
+  border-color: var(--mobile-urban-rim) !important;
+  box-shadow: inset 0 1px #ffffff24,inset 0 -1px #0005,0 2px 6px #0004 !important;
+}
+#root .mobile-messaging .mw-conversation-row > b,
+#root .mobile-messaging .mw-rail-invitations > b {
+  background: var(--mobile-urban-disc);
+  border-color: var(--mobile-urban-rim);
+}
+#root .mobile-messaging .mw-composer > button.mw-composer-send:active:not(:disabled) { transform: scale(.94); }
+
+/* Short audio rows keep the timeline readable, even with several voice notes. */
+#root .mobile-messaging .mw-message .mw-bubble.mw-audio-capsule {
+  display: grid; grid-template-columns: 38px minmax(0,1fr) auto 28px;
+  grid-template-rows: 18px 22px; align-items: center; gap: 0 7px;
+  min-height: 0; padding: 8px 10px; border-radius: 17px;
+}
+#root .mobile-messaging .mw-audio-capsule > .mw-audio-capsule__play {
+  grid-column: 1; grid-row: 1 / 3; width: 38px; height: 38px; min-width: 38px; min-height: 38px; padding: 0;
+}
+#root .mobile-messaging .mw-audio-capsule__play svg { width: 17px; height: 17px; }
+#root .mobile-messaging .mw-audio-capsule__title { grid-column: 2 / 4; grid-row: 1; font-size: 11px; line-height: 1.3; }
+#root .mobile-messaging .mw-audio-capsule__wave { grid-column: 2; grid-row: 2; }
+#root .mobile-messaging .mw-audio-capsule__wave .mw-waveform { height: 22px; }
+#root .mobile-messaging .mw-audio-capsule__duration { grid-column: 3; grid-row: 2; font-size: 10px; white-space: nowrap; }
+#root .mobile-messaging .mw-audio-capsule > .mw-audio-capsule__options { grid-column: 4; grid-row: 1 / 3; width: 28px; height: 36px; border: 0; background: transparent; box-shadow: none; }
+#root .mobile-messaging .mw-audio-capsule .mw-audio-error { grid-column: 1 / -1; grid-row: 3; font-size: 11px; }
+#root .mobile-messaging .mw-voice-hold { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+#root .mobile-messaging .mw-recording-composer {
+  padding: 6px 9px; gap: 8px; border: 1px solid #8470b25c; border-radius: 24px;
+  background: linear-gradient(145deg,#25232c,#111015); box-shadow: inset 0 1px #ffffff18;
+}
+#root .mobile-messaging .mw-recording-composer.is-holding { flex-wrap: nowrap; touch-action: none; user-select: none; -webkit-user-select: none; }
+#root .mobile-messaging .mw-recording-composer .mw-voice-trash { display: grid; place-items: center; flex: 0 0 40px; width: 40px; height: 40px; min-height: 40px; padding: 0; border-radius: 50%; color: #c1aaef; background: #5137a12b; border: 1px solid #8470b23d; }
+#root .mobile-messaging .mw-recording-composer .mw-voice-trash svg { width: 19px; height: 19px; }
+#root .mobile-messaging .mw-recording-composer .mw-voice-timer { flex: 0 0 auto; gap: 5px; font-size: 13px; font-variant-numeric: tabular-nums; }
+#root .mobile-messaging .mw-voice-slide-hint { margin-left: auto; min-width: 0; font-size: 11px; color: #c4b6df; }
+#root .mobile-messaging .mw-recording-composer.is-cancel-armed .mw-voice-trash { color: #ffe4e7; background: #74373f; border-color: #c47580; }
+#root .mobile-messaging .mw-recording-composer.is-cancel-armed .mw-voice-slide-hint { color: #efbdc4; }
+@media (prefers-reduced-transparency: reduce) {
+  #root .mobile-messaging:not(.is-detail) :is(.mobile-messaging-header,.mw-chat-header) {
+    background: #191c23;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
 #root .mobile-header-search > input { font-size: 16px; }
 #root .mobile-messaging:not(.is-detail) { background: #08090b url('/images/messaging/acoustic-black-background.png') center / cover no-repeat; }
 #root .mobile-messaging:not(.is-detail) .messaging-page { background: transparent; }

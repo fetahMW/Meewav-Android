@@ -1,43 +1,57 @@
-# Connexion locale aux comptes de test réels
+# Trois comptes de test réels
 
-Deux profils dédiés : `redmi` et `windows`. Le compte `puf` du S22 reste inchangé.
-Ces raccourcis utilisent une authentification Supabase par mot de passe aléatoire,
-puis la session habituelle. Ils ne modifient ni les permissions, ni les RLS, ni les
-contrats de messagerie, d’appels et de Rooms. Aucun accès ne fonctionne hors ligne.
+Noms publics : **testeur1**, **testeur2**, **testeur3**. Ils utilisent Supabase Auth,
+les profils, les permissions et les services ordinaires. Le compte personnel `puf`
+est préservé. Les anciennes identités QA `s22`, `redmi`, `windows` sont renommées
+avec les mêmes identifiants, pas recréées.
 
-## Préparer les profils
+## Provisionnement reproductible
 
-Depuis ce dépôt : `node scripts/test-accounts/provision.mjs`.
-Le script utilise `meewav.local.properties`, crée uniquement les deux identités
-dédiées, complète leurs profils et vérifie leur recherche mutuelle. Une relance
-reprend les mêmes identifiants. Un nom déjà occupé bloque la création ; aucun
-compte existant n’est récupéré. La confirmation e-mail peut nécessiter un accès
-administrateur au projet. Les comptes ne sont annoncés prêts qu’après validation.
+Depuis Meewav-Android :
 
-Les mots de passe restent dans `app/build/test-accounts/`, ignoré par Git. Ne pas
-partager ces fichiers ni les embarquer dans un APK, des assets Web ou un installateur.
+```powershell
+node scripts/test-accounts/provision.mjs
+```
 
-## Activer sur les appareils de test
+Le script lit `meewav.local.properties`, génère des mots de passe aléatoires,
+conserve son état dans `.local/test-accounts/`, authentifie chaque compte,
+vérifie son identité QA, complète son profil et les six recherches entre testeurs.
+Un compte personnel ou un nom occupé n'est jamais récupéré. La confirmation
+d'e-mail, si activée, peut bloquer une nouvelle création.
 
-- Windows : `node scripts/test-accounts/install-local.mjs windows "<dossier userData Electron>"`.
-  Le dossier habituel est `%APPDATA%/Meewav Studio Dev` en développement,
-  `%APPDATA%/Meewav Studio` pour la version installée.
-- Redmi : `node scripts/test-accounts/install-local.mjs redmi "<numéro de série ADB>"`.
-  Il faut une version debug compatible. Le fichier est écrit dans le stockage
-  privé de l’application ; aucune donnée n’est effacée et aucune app n’est relancée.
+Les accès restent dans `.local/test-accounts/provision-state.json`, ignoré par
+Git. **Ne pas publier ce fichier, le mettre dans des assets ou un rapport.**
+Les tests remplissent le formulaire normal avec ces accès. Pour une connexion
+manuelle, consulter localement l'e-mail et le mot de passe du testeur dans ce
+fichier. Aucun alias sans mot de passe ne fonctionne en production.
 
-Au prochain lancement à froid, la version compatible ouvre l’authentification réelle.
-Saisir le nom configuré puis **Se connecter** ; aucun mot de passe à retaper.
-Le fichier local doit correspondre au même projet Supabase que l’application.
-Sans ce fichier, le parcours normal reste actif. Android Release ignore ces
-raccourcis. La version Web ne dispose pas du pont Electron et reste inchangée.
+## Raccourcis optionnels, exclusivement en développement
 
-Pour désactiver, retirer uniquement `qa-test-accounts.json` du stockage privé de
-l’appareil concerné, puis relancer. Cela ne supprime aucun profil Supabase.
+Les tests privilégient la connexion normale et ne dépendent pas des raccourcis.
 
-## Livraison du 28 septembre 2026
+- Android : uniquement `BuildConfig.DEBUG`, avec un fichier privé explicitement
+  installé. Une version Release l'ignore toujours.
+- Electron : uniquement une exécution **non empaquetée**, avec
+  `MEEWAV_TEST_MODE=1` et un fichier privé. Une version installée refuse le raccourci,
+  même si la variable et le fichier sont présents.
+- Web : aucun raccourci.
 
-Le backend configuré ne répond pas. La création des profils et leur connexion
-réelle restent bloquées. Aucune communication à trois appareils n’est validée
-par les tests unitaires du mécanisme de connexion. Le script d’installation
-locale ne doit être exécuté qu’après provisioning réussi et build compatible.
+Installation facultative :
+
+```powershell
+node scripts/test-accounts/install-local.mjs s22 "<serial Samsung>"
+node scripts/test-accounts/install-local.mjs redmi "<serial Redmi>"
+node scripts/test-accounts/install-local.mjs windows "<dossier userData QA isolé>"
+```
+
+Ces commandes ne relancent, ne réinstallent et n'effacent aucune application.
+Le fichier contient les trois testeurs pour permettre les rotations. Les
+raccourcis échangent de vrais identifiants contre une session Supabase et
+vérifient l'ID. Ils ne fabriquent ni session ni autorisation. Les anciens APK
+peuvent ignorer les nouveaux noms : employer la connexion normale ou construire
+une version debug compatible. Pour désactiver, retirer uniquement
+`qa-test-accounts.json` du stockage privé concerné puis relancer la version de test.
+
+La validation des profils et de leur recherche ne prouve pas la réception de
+messages, les Rooms, les appels ou les effets. Voir `scripts/qa-three-users/`
+et son compte rendu pour les scénarios réellement exécutés.

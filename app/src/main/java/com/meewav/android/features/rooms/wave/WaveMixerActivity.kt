@@ -1,10 +1,12 @@
 package com.meewav.android.features.rooms.wave
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import com.meewav.android.BuildConfig
 
 /**
  * Écran Room « La Wave » — rôle hôte, onglet **Mixeur**.
@@ -14,6 +16,7 @@ import androidx.activity.enableEdgeToEdge
 class WaveMixerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (BuildConfig.DEBUG) Log.d("RoomsCreateUiDiag", "T9.WaveMixerActivity.onCreate roomId=${intent.getStringExtra("roomId")} liveRoomId=${intent.getStringExtra("liveRoomId")}")
         // L'écran de mixage reste visible et interactif par-dessus le keyguard
         // (validation sur appareil sans déverrouillage manuel).
         setShowWhenLocked(true)

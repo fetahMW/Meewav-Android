@@ -2,6 +2,7 @@ package com.meewav.android.features.rooms.wave
 
 import android.content.Intent
 import android.os.SystemClock
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.ui.input.nestedscroll.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -34,6 +36,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.Role
 import kotlin.math.max
 
 private val soft = WaveMixerTheme.capsuleAccentSoft
@@ -54,7 +57,8 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, 
     val proposalList = rememberLazyListState()
     val voteList = rememberLazyListState()
     val compositionList = rememberLazyListState()
-    val activeList = when (section) { 1 -> voteList; 2 -> compositionList; else -> proposalList }
+    val quarantineList = rememberLazyListState()
+    val activeList = when (section) { 1 -> voteList; 2 -> compositionList; 3 -> quarantineList; else -> proposalList }
     val proposalScroll = remember {
         object : NestedScrollConnection {
             override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
@@ -86,8 +90,6 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, 
                 }
             }
     }
-    var revealed by remember { mutableStateOf<String?>(null) }
-    var filter by remember { mutableStateOf(WaveProposalStatus.PENDING) }
     var messageArtist by remember { mutableStateOf<String?>(null) }
     var settings by remember { mutableStateOf(false) }
     var importMenu by remember { mutableStateOf(false) }
@@ -103,10 +105,18 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, 
     var duelId by remember { mutableStateOf<String?>(null) }
     var duelTarget by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
+    // An action failure must not insert a row and move the player or the loops.
+    LaunchedEffect(state.notice) {
+        state.notice?.let { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
+        state.notice = null
+    }
+    LaunchedEffect(state.snapshot.error) {
+        state.snapshot.error?.let { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
+    }
     val folderImporter = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null) {
             runCatching { context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
-            state.importFolder(uri); filter = WaveProposalStatus.PENDING; section = 0
+            state.importFolder(uri); section = 0
         }
     }
     val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
@@ -115,18 +125,18 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, 
         }
         state.importSelection(uris, importDestination)
         if (uris.isNotEmpty() && importDestination != WaveImportDestination.BASE) {
-            filter = WaveProposalStatus.PENDING
             section = if (importDestination == WaveImportDestination.VOTE) 1 else 0
         }
     }
-    LaunchedEffect(section) { state.navigatePage(section); settings = false; revealed = null }
+    LaunchedEffect(section) { state.navigatePage(section); settings = false }
     Column(Modifier.fillMaxSize()) {
-        Row(Modifier.fillMaxWidth().height(42.dp), verticalAlignment = Alignment.CenterVertically) {
-            listOf("Propositions", "Vote", "Composition").forEachIndexed { index, label ->
-                Column(Modifier.weight(1f).fillMaxHeight().clickable {
-                    section = index; revealed = null; state.stopPreview()
-                }, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                    Text(label, color = if (section == index) foreground else muted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+        Row(Modifier.fillMaxWidth().height(44.dp).padding(horizontal = 4.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+            listOf(0 to "Propositions", 3 to "Quarantaine", 1 to "Vote", 2 to "Composition").forEach { (index, label) ->
+                Column(Modifier.fillMaxHeight().selectable(selected = section == index, role = Role.Tab) {
+                    section = index; state.stopPreview()
+                }.padding(horizontal = 2.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                    Text(label, color = if (section == index) foreground else muted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
                     Spacer(Modifier.height(6.dp))
                     Box(Modifier.width(34.dp).height(2.dp).background(if (section == index) Brush.horizontalGradient(listOf(Color.Transparent, soft, Color.Transparent)) else Brush.horizontalGradient(listOf(Color.Transparent, Color.Transparent))))
                 }
@@ -141,13 +151,6 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, 
             importDestination = destination
             importer.launch(arrayOf("audio/*"))
         }, onSettings = { settings = true })
-        state.notice?.let { message ->
-            Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(message, color = soft, fontSize = 11.sp, modifier = Modifier.weight(1f))
-                ToolIcon(Icons.Default.Close, "Fermer le message") { state.notice = null }
-            }
-        }
-        state.snapshot.error?.let { Text(it, color = danger, fontSize = 11.sp) }
         Box(Modifier.weight(1f).fillMaxWidth()) {
         Column(Modifier.fillMaxSize().then(if (settings) Modifier.clearAndSetSemantics { } else Modifier)) {
         when (section) {
@@ -161,12 +164,16 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, 
                     }
                 }
             }
-            0 -> {
-                val proposals = state.proposals(WaveProposalStatus.PENDING).filter { it.category in visibleCategories }
-                LazyColumn(Modifier.weight(1f).nestedScroll(proposalScroll), state = proposalList, verticalArrangement = Arrangement.spacedBy(7.dp), contentPadding = PaddingValues(bottom = 10.dp)) {
+            0, 3 -> {
+                val quarantined = section == 3
+                val proposals = state.proposals(if (quarantined) WaveProposalStatus.QUARANTINED else WaveProposalStatus.PENDING)
+                    .filter { quarantined || it.category in visibleCategories }
+                LazyColumn(Modifier.weight(1f).nestedScroll(proposalScroll), state = if (quarantined) quarantineList else proposalList,
+                    verticalArrangement = Arrangement.spacedBy(7.dp), contentPadding = PaddingValues(bottom = 10.dp)) {
                     item(key = "proposal-toolbar") {
                 Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
-                    WaveIntakeChip(state.intakeOpen, state::toggleIntake)
+                    if (!quarantined) WaveIntakeChip(state.intakeOpen, state::toggleIntake)
+                    else Text("${proposals.size} à réécouter", color = muted, fontSize = 10.sp)
                     Column(Modifier.weight(1f).padding(horizontal = 6.dp), horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(3.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -181,27 +188,32 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, 
                             Icon(Icons.Default.ArrowForward, null, tint = soft, modifier = Modifier.size(12.dp))
                         }
                     }
-                    ToolIcon(Icons.Default.Tune, "Filtrer les boucles") { filterMenu = !filterMenu }
-                    ToolIcon(Icons.Default.Add, "Importer une proposition", enabled = !state.importing) { importMenu = true }
+                    if (!quarantined) {
+                        ToolIcon(Icons.Default.Tune, "Filtrer les boucles") { filterMenu = !filterMenu }
+                        ToolIcon(Icons.Default.Add, "Importer une proposition", enabled = !state.importing) { importMenu = true }
+                    }
                 }
 
                     }
                     if (state.importing) item { LinearProgressIndicator(Modifier.fillMaxWidth(), color = soft, trackColor = Color(0xFF23242B)) }
-                    if (proposals.isEmpty()) item { EmptyWorkspace("Aucune proposition ici", "Aucune boucle ne correspond aux catégories affichées.", Modifier.fillMaxWidth()) }
+                    if (proposals.isEmpty()) item { EmptyWorkspace(
+                        if (quarantined) "La quarantaine est vide" else "Aucune proposition ici",
+                        if (quarantined) "Mets une boucle de côté avec l’icône de quarantaine. Tu pourras l’écouter ici avant de la proposer au vote."
+                        else "Aucune boucle ne correspond aux catégories affichées.", Modifier.fillMaxWidth()) }
                     items(proposals, key = { it.id }) { clip ->
-                        if (clip.packId != null && proposals.firstOrNull { it.packId == clip.packId }?.id == clip.id) {
+                        if (!quarantined && clip.packId != null && proposals.firstOrNull { it.packId == clip.packId }?.id == clip.id) {
                             Row(Modifier.fillMaxWidth().padding(top = 2.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Column(Modifier.weight(1f)) {
                                     Text(clip.packTitle ?: "Composition", color = foreground, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                    Text("${state.clips.count { it.packId == clip.packId }} éléments", color = muted, fontSize = 9.sp)
+                                    Text("${proposals.count { it.packId == clip.packId }} propositions", color = muted, fontSize = 9.sp)
                                 }
                                 ToolIcon(if (state.snapshot.cue == "pack:${clip.packId}") Icons.Default.Stop else Icons.Default.Headphones,
-                                    "Écouter le pack complet", enabled = state.preparingPack != clip.packId) { state.previewPack(clip.packId) }
+                                    "Écouter les propositions du pack", enabled = state.preparingPack != clip.packId) { state.previewPack(clip.packId) }
                                 ToolIcon(Icons.Default.LibraryAdd, "Proposer les pistes au vote", enabled = state.adoptingPack == null) { state.takePack(clip.packId) }
                             }
                         }
-                        WaveProposalSwipe(clip.id, revealed, { revealed = it }, onAccept = { state.queueVote(clip.id) },
-                            onReject = { state.archive(clip.id, it) }) {
+                        WaveProposalSwipe(clip.id, onVote = { state.queueVote(clip.id) },
+                            onDelete = { state.discardProposal(clip.id) }) {
                             WaveLoopCard(clip, state, composition = false, onMessage = { messageArtist = clip.artist }, onProfile = { onProfile(clip.artist) })
                         }
                     }

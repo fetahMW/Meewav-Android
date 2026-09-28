@@ -9,7 +9,8 @@ import java.util.concurrent.locks.LockSupport
 internal object WaveNativeDuplex {
     init { System.loadLibrary("meewav_analysis") }
     external fun open(inputDevice: Int, outputDevice: Int, rawInput: Boolean): Long
-    external fun configure(handle: Long, flags: Int, gain: Float, scale: Int, mix: Float, calibration: Int)
+    external fun configure(handle: Long, flags: Int, gain: Float, scale: Int, mix: Float, calibration: Int,
+        tuneAmount: Float, tuneSpeed: Float, tuneHumanize: Float, tuneSmooth: Float, tuneShift: Float)
     external fun read(handle: Long, samples: FloatArray): Int
     external fun diagnostics(handle: Long): String
     external fun close(handle: Long)
@@ -66,7 +67,9 @@ internal class WaveNativeCapture(
                     if (config != configured) {
                         val flags = (if (config.monitoring) 1 else 0) or (if (config.mute) 2 else 0) or
                             (if (config.tune) 4 else 0) or (if (config.reverb) 8 else 0) or (if (config.cleanVoice) 32 else 0) or (config.proEffects and 448)
-                        WaveNativeDuplex.configure(handle, flags, config.gain, config.scale, config.reverbMix, config.noiseCalibration - calibrationBase)
+                        val correction = config.correction.bounded()
+                        WaveNativeDuplex.configure(handle, flags, config.gain, config.scale, config.reverbMix, config.noiseCalibration - calibrationBase,
+                            correction.amount, correction.speed, correction.humanize, correction.smooth, correction.shift)
                         configured = config
                     }
                     if (now >= reportAt) {

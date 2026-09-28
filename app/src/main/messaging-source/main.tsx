@@ -77,9 +77,9 @@ function MobileShell({ Page }: { Page: React.ComponentType }) {
     };
   }, [detail, current]);
   return <div ref={surfaceRef} className={`mobile-messaging${detail ? ' is-detail' : ''}`}>
-    <header className="mobile-messaging-header">
+    <header className="mobile-messaging-header" aria-hidden={detail || undefined}>
       <button aria-label="Retour à l’écran précédent" onClick={() => (window as any).meewavMessaging.back()}><ChevronLeft /></button>
-      <span id="mobile-messaging-search" /><div className="mobile-messaging-title"><strong>Messagerie</strong>{previewEnabled() && <small>Aperçu sans compte</small>}</div>
+      <span id="mobile-messaging-search" /><div className="mobile-messaging-title"><strong>{space === 'collabs' ? 'Collabs' : space === 'projects' ? 'Projets' : space === 'groups' ? 'Groupes' : 'Tchat'}</strong>{previewEnabled() && <small>Aperçu sans compte</small>}</div>
       <span className="mobile-messaging-header__actions"><button aria-label={space === 'groups' ? 'Créer un groupe' : space === 'projects' ? 'Nouveau projet' : 'Trouver un ami'} onClick={() => {
         if (space === 'groups' || space === 'projects') {
           window.dispatchEvent(new CustomEvent('meewav:messaging-new-space', { detail: space }));

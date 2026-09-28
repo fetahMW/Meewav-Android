@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <vector>
 #include <chrono>
+#include <limits>
 #include "MeeWavVoiceDsp.h"
 #include "MeeWavTrackAnalysis.h"
 static constexpr double pi=3.14159265358979323846;
@@ -11,7 +12,36 @@ static double power(const std::vector<float>& samples,double frequency) {
     for(size_t i=0;i<samples.size();++i){real+=samples[i]*std::cos(2*pi*frequency*i/48000);imaginary+=samples[i]*std::sin(2*pi*frequency*i/48000);}
     return real*real+imaginary*imaginary;
 }
+static std::vector<float> renderTune(float amount, float speed, float humanize, float smooth, float shift, float frequency=228) {
+    MeeWavPitchCorrection tune;
+    std::vector<float> result;
+    float block[192];
+    for(int n=0;n<600;++n) {
+        for(int i=0;i<96;++i) block[2*i]=block[2*i+1]=.2f*std::sin(2*pi*frequency*(n*96+i)/48000);
+        tune.processStereo(block,96,true,1,amount,speed,humanize,smooth,shift);
+        for(int i=0;i<96;++i) result.push_back(block[2*i]);
+    }
+    return result;
+}
+static double difference(const std::vector<float>& a,const std::vector<float>& b) {
+    double result=0;
+    for(size_t i=0;i<a.size();++i) result+=std::abs(a[i]-b[i]);
+    return result/a.size();
+}
 int main(){
+    const auto full=renderTune(1,1,0,0,0);
+    const auto noCorrection=renderTune(0,1,0,0,0);
+    for(size_t i=0;i<noCorrection.size();++i)
+        if(std::abs(noCorrection[i]-.2f*std::sin(2*pi*228*i/48000))>1e-6) return 10;
+    if(difference(full,renderTune(1,0,0,0,0))<1e-4) return 11;
+    if(difference(full,renderTune(1,1,1,0,0))<1e-4) return 12;
+    if(difference(full,renderTune(1,1,0,1,0))<1e-4) return 13;
+    const auto shifted=renderTune(0,1,0,0,12,220);
+    const std::vector<float> settled(shifted.begin()+24000,shifted.end());
+    if(power(settled,440)<power(settled,220)*4) return 14;
+    const float invalid=std::numeric_limits<float>::quiet_NaN();
+    if(difference(full,renderTune(invalid,invalid,invalid,invalid,invalid))>1e-6) return 15;
+    std::puts("PASS: amount, retune, humanize, smoothing, octave shift and invalid control values");
     MeeWavPitchCorrection tune;
     float block[192];std::vector<float> corrected;
     const auto started=std::chrono::steady_clock::now();

@@ -78,7 +78,7 @@ export default function CollabInlineAudio({ attachment, artwork, ownerName, demo
     <audio ref={audioRef} preload="none" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => setPlaying(false)} onTimeUpdate={(event) => setCurrent(event.currentTarget.currentTime)} onLoadedMetadata={(event) => { const value = event.currentTarget.duration; if (Number.isFinite(value)) setDuration(value); }} onError={() => { audioRef.current?.removeAttribute("src"); setPlaying(false); setError("Impossible de lire cet audio. Réessaie."); }} />
     <span className="mw-collab-request__attachment-cover" aria-hidden="true"><img src={artwork} alt="" /><small>{ownerName}</small></span>
     <button type="button" className="mw-collab-request__attachment-play" disabled={loading} aria-busy={loading} onClick={() => void toggle()} aria-label={`${playing ? "Mettre en pause" : "Lire"} ${attachment.fileName}`}>{playing ? <Pause /> : <Play fill="currentColor" />}</button>
-    <strong className="mw-collab-request__attachment-title">{attachment.fileName}</strong>
+    <strong className="mw-collab-request__attachment-title" title={attachment.fileName}>{attachment.fileName}</strong>
     <span className="mw-collab-request__attachment-duration">{clock(current)} / {clock(duration)}</span>
     <span className="mw-collab-request__attachment-wave">
       <Waveform progress={duration > 0 ? current / duration * 100 : 0} animated={playing} variant={attachment.fileName.length} />

@@ -22,7 +22,7 @@ import {
   Send,
   X,
 } from "lucide-react";
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { MeeWavRichText } from "../emoticons/MeewavEmoticons";
 import { MeewavGradeBadge } from "../grades/MeewavGradeBadge";
 import { SCENE_NAME } from "../shorts/sceneContract";
@@ -467,6 +467,16 @@ function AttachmentPreview({
   );
 }
 
+function CollabRequestMessage({ message }: { message: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const id = useId();
+  const longMessage = message.length > 180 || message.split("\n").length > 3;
+  return <>
+    <p id={id} className={`mw-collab-request__message${longMessage && !expanded ? " is-collapsed" : ""}`}><MeeWavRichText>{message}</MeeWavRichText></p>
+    {longMessage && <button type="button" className="mw-collab-request__read-more" aria-expanded={expanded} aria-controls={id} onClick={() => setExpanded((value) => !value)}>{expanded ? "Réduire" : "Lire la suite"}</button>}
+  </>;
+}
+
 function DetailAttachmentList({
   attachments,
   ownerName,
@@ -792,7 +802,7 @@ export function CollabsWorkspace({
                   </dl>
                   <Link className="mw-collab-profile-link" to={profileHref(detailCollab)} state={{ from: "/messages?space=collabs" }}>Voir profil <ChevronRight size={14} /></Link>
                   </div>
-                <p className="mw-collab-request__message"><MeeWavRichText>{detailCollab.message}</MeeWavRichText></p>
+                <CollabRequestMessage key={detailCollab.id} message={detailCollab.message} />
                 {detailMusicalFacts.length > 0 && (
                   <div className="mw-collab-card__chips" aria-label="Informations musicales">
                     {detailMusicalFacts.map((fact) => <span key={fact.id}>{fact.icon}{fact.label}</span>)}

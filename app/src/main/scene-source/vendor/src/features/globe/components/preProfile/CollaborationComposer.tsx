@@ -34,7 +34,7 @@ export type CollaborationComposerProps = {
   onSubmit?: (draft: CollaborationDraft) => void | Promise<void>;
 };
 
-const MESSAGE_MAX_LENGTH = 500;
+const MESSAGE_MAX_LENGTH = 240;
 const ATTACHMENT_MAX_COUNT = 3;
 
 function getAttachmentKind(file: File) {
@@ -179,7 +179,7 @@ export function CollaborationComposer({
             <span className="mw-collaboration-composer__sr-only">Idée de collaboration</span>
             <MeeWavEmoticonComposer
               maxLength={MESSAGE_MAX_LENGTH}
-              placeholder="Présente ton idée, ce que tu recherches et le calendrier envisagé"
+              placeholder="Ton idée de collab en deux phrases maximum…"
               value={message}
               disabled={status === "submitting"}
               onChange={setMessage}

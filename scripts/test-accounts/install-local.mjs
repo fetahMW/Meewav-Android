@@ -2,13 +2,16 @@
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { resolve, isAbsolute } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { testAccountsDirectory } from './local-state.mjs';
 
 const [target, destination] = process.argv.slice(2);
-if (!['redmi', 'windows'].includes(target) || !destination) throw new Error('Usage: node install-local.mjs windows <Electron-userData> | redmi <ADB-serial>');
-const file = resolve(import.meta.dirname, `../../app/build/test-accounts/${target}.json`);
+if (!['redmi', 'windows', 's22'].includes(target) || !destination) throw new Error('Usage: node install-local.mjs windows <Electron-userData> | redmi|s22 <ADB-serial>');
+const alias = { s22: 'testeur1', redmi: 'testeur2', windows: 'testeur3' }[target];
+const file = resolve(testAccountsDirectory, `${alias}.json`);
 const content = await readFile(file, 'utf8');
 const config = JSON.parse(content);
-if (config.enabled !== true || config.accounts?.length !== 1 || config.accounts[0].alias !== target || !config.accounts[0].id) throw new Error('Compte non provisionné.');
+if (config.enabled !== true || !Array.isArray(config.accounts) || !config.accounts.some(a => a.alias === alias && a.id)
+  || config.accounts.some(a => !a.id || !['testeur1', 'testeur2', 'testeur3'].includes(a.alias))) throw new Error('Compte non provisionné.');
 if (target === 'windows') {
   if (!isAbsolute(destination)) throw new Error('Le dossier Electron userData doit être absolu.');
   await mkdir(destination, { recursive: true });

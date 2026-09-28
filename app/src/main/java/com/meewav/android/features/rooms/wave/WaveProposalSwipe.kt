@@ -17,32 +17,33 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
 /** Qualification gesture, deliberately distinct from the mixer's action rail. */
 @Composable
-internal fun WaveProposalSwipe(id: String, reviewId: String?, onReview: (String?) -> Unit,
-    onAccept: () -> Unit, onReject: (String) -> Unit, content: @Composable () -> Unit) {
+internal fun WaveProposalSwipe(id: String, onVote: () -> Unit, onDelete: () -> Unit, content: @Composable () -> Unit) {
     val offset = remember(id) { Animatable(0f) }
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
     val threshold = with(density) { 72.dp.toPx() }
-    val flickMinimum = with(density) { 36.dp.toPx() }
-    val projectedMinimum = with(density) { 144.dp.toPx() }
     val haptic = LocalHapticFeedback.current
     var drag by remember(id) { mutableFloatStateOf(0f) }
     var dragging by remember(id) { mutableStateOf(false) }
     var departing by remember(id) { mutableStateOf(false) }
     var crossed by remember(id) { mutableStateOf(false) }
-    val reviewing = reviewId == id
-    val currentReview by rememberUpdatedState(reviewing)
-    val accept by rememberUpdatedState(onAccept)
-    val review by rememberUpdatedState(onReview)
-    LaunchedEffect(reviewing) { if (!reviewing && !departing) offset.animateTo(0f, spring(dampingRatio = .9f)) }
+    val vote by rememberUpdatedState(onVote)
+    val delete by rememberUpdatedState(onDelete)
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val width = constraints.maxWidth.toFloat()
-        Box(Modifier.fillMaxWidth().pointerInput(id, reviewing, departing) {
+        Box(Modifier.fillMaxWidth().semantics {
+            customActions = listOf(
+                CustomAccessibilityAction("Envoyer au vote") { if (!departing) { vote(); true } else false },
+                CustomAccessibilityAction("Supprimer la boucle") { if (!departing) { delete(); true } else false })
+        }.pointerInput(id, departing) {
             if (departing) return@pointerInput
             val velocity = VelocityTracker()
             detectHorizontalDragGestures(onDragStart = {
@@ -53,33 +54,27 @@ internal fun WaveProposalSwipe(id: String, reviewId: String?, onReview: (String?
             }, onDragCancel = { dragging = false; drag = 0f }, onDragEnd = {
                 val delta = drag; val speed = velocity.calculateVelocity().x
                 dragging = false
-                if (currentReview) { if (delta > threshold * .45f) review(null); return@detectHorizontalDragGestures }
-                val projected = delta + speed * .12f
-                val commit = abs(delta) >= threshold || (abs(delta) >= flickMinimum && abs(projected) >= projectedMinimum && delta * speed > 0)
-                if (commit) {
+                val action = resolveWaveProposalGesture(delta / density.density, speed / density.density)
+                if (action != WaveProposalGesture.NONE) {
                     departing = true
                     scope.launch {
                         offset.snapTo(delta)
                         offset.animateTo(if (delta > 0) width else -width, tween(260, easing = CubicBezierEasing(.3f, 0f, .65f, 1f)))
-                        if (delta > 0) accept() else review(id)
+                        if (action == WaveProposalGesture.VOTE) vote() else delete()
+                        offset.snapTo(0f)
                         departing = false
                     }
                 } else scope.launch { offset.snapTo(delta); offset.animateTo(0f, spring(dampingRatio = .9f)) }
             })
         }) {
-            if (reviewing) Column(Modifier.fillMaxWidth().hifiBlackSurface(13.dp).padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("Motif", color = Color(0xFFB4ABCC), fontSize = 11.sp)
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    listOf("Hors consignes", "Choix artistique", "Autre").forEach { reason ->
-                        Box(Modifier.weight(1f).height(44.dp).hifiBlackSurface(7.dp).clickable { onReject(reason); onReview(null) }, contentAlignment = Alignment.Center) {
-                            Text(reason, color = Color(0xFFEAE8F0), fontSize = 10.sp)
-                        }
-                    }
-                }
-                Text("Annuler", color = WaveMixerTheme.capsuleAccentSoft, modifier = Modifier.clickable { onReview(null) }.padding(5.dp))
-            } else Box(Modifier.fillMaxWidth().graphicsLayer {
+            if (dragging && abs(drag) > threshold * .25f) Box(Modifier.matchParentSize().padding(horizontal = 12.dp),
+                contentAlignment = if (drag > 0f) Alignment.CenterStart else Alignment.CenterEnd) {
+                Text(if (drag > 0f) "Vote →" else "← Supprimer",
+                    color = if (drag > 0f) WaveMixerTheme.violetSoft else Color(0xFFC88B90), fontSize = 11.sp)
+            }
+            Box(Modifier.fillMaxWidth().graphicsLayer {
                 translationX = if (dragging) drag else offset.value
-                rotationZ = ((translationX / width) * 7f).coerceIn(-7f, 7f)
+                rotationZ = ((translationX / width.coerceAtLeast(1f)) * 7f).coerceIn(-7f, 7f)
             }) { content(); if (departing) Box(Modifier.matchParentSize().clickable(enabled = true) {}) }
         }
     }

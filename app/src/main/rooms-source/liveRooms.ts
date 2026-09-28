@@ -1,4 +1,5 @@
 import {getSessionUser,supabase} from '../profile-source/runtime';
+import {createUiDiagnostic,diagnosticError} from './createUiDiagnostic';
 import {ROOMS_HOME_ROOM_TYPES,type RoomsHomeRoom,type RoomsHomeRoomType} from './vendor/src/features/rooms/home/roomsHome.types';
 
 /** Same tables and membership rules as SupabaseRoomsRepository on iOS. */
@@ -13,25 +14,36 @@ export async function listLiveRooms():Promise<RoomsHomeRoom[]> {
  return rows.map(r=>{const p=byId.get(r.host_id);return {source:'live',id:r.id,slug:r.id,title:r.title,roomType:r.type,hostId:r.host_id,hostName:p?.display_name||p?.username||'Artiste',hostAvatar:p?.avatar_url||'',hostRole:p?.primary_role_key||'',musicStyle:'',thumbnail:r.cover_url||p?.avatar_url||'',videoSource:'',mediaFormat:r.video_format==='portrait'?'vertical':'horizontal',viewerCount:r.participants_count??0,buzzScore:0,recommendationScore:0,engagementScore:0,language:'fr',country:'FR',city:p?.city||undefined,tags:[],startedAt:r.created_at,isFollowedHost:false,accessType:'public',isJoinable:true};});
 }
 async function joinAsHost(id:string,userId:string) {
+ createUiDiagnostic('T7.hostUpsert.started',{roomId:id,userId});
  const {error}=await supabase.from('room_participants_v2').upsert({room_id:id,user_id:userId,role:'host',left_at:null},{onConflict:'room_id,user_id'});
+ createUiDiagnostic('T7.hostUpsert.completed',{roomId:id,success:!error,...(error?diagnosticError(error):{})});
  if(error)throw error;
  return id;
 }
 export async function createLiveRoom(type:RoomsHomeRoomType,title:string,requestId:string,format:'portrait'|'landscape'='landscape'):Promise<string> {
+ createUiDiagnostic('T4.createLiveRoom.enter',{requestId,roomType:type,title,format});
  const {data:{user},error}=await getSessionUser();
+ createUiDiagnostic('T4.auth.completed',{requestId,userId:user?.id??null,success:!error&&!!user,...(error?diagnosticError(error):{})});
  if(error||!user)throw new Error('Connecte-toi pour ouvrir une room.');
  const clean=title.trim();if(!clean||clean.length>160)throw new Error('Le titre doit contenir de 1 à 160 caractères.');
+ createUiDiagnostic('T4.titleValidation.passed',{requestId,titleLength:clean.length});
  if(type==='classe') {
+  createUiDiagnostic('T5.classeRpc.started',{requestId});
   const result=await supabase.rpc('rooms_create_classe_v1',{p_title:clean,p_description:null,p_cover_url:null,p_video_format:format,p_client_request_id:requestId});
+  createUiDiagnostic('T6.classeRpc.completed',{requestId,success:!result.error,roomId:result.data?.id??null,...(result.error?diagnosticError(result.error):{})});
   if(result.error)throw result.error;
   if(!result.data?.id)throw new Error('Création non confirmée.');
   return result.data.id;
  }
  // Reuse the request ID on retry; never overwrite an existing room.
+ createUiDiagnostic('T5.roomLookup.started',{requestId});
  const existing=await supabase.from('rooms_v2').select('id,host_id,type,status').eq('id',requestId).maybeSingle();
+ createUiDiagnostic('T6.roomLookup.completed',{requestId,success:!existing.error,found:!!existing.data,...(existing.error?diagnosticError(existing.error):{})});
  if(existing.error)throw existing.error;
  if(existing.data){if(existing.data.host_id!==user.id||existing.data.type!==type||existing.data.status!=='live')throw new Error('Room indisponible.');return joinAsHost(existing.data.id,user.id);}
+ createUiDiagnostic('T5.roomInsert.started',{requestId,userId:user.id});
  const result=await supabase.from('rooms_v2').insert({id:requestId,host_id:user.id,type,title:clean,status:'live',livekit_room_name:`room-${requestId}`,queue_open:false,video_format:format}).select('id').single();
+ createUiDiagnostic('T6.roomInsert.completed',{requestId,success:!result.error,roomId:result.data?.id??null,...(result.error?diagnosticError(result.error):{})});
  if(result.error)throw result.error;
  return joinAsHost(result.data.id,user.id);
 }

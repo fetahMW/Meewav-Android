@@ -1,5 +1,7 @@
 package com.meewav.android.features.rooms.wave
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.*
@@ -30,6 +32,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -165,7 +168,18 @@ internal fun RowScope.SwipeAction(label: String, icon: ImageVector, active: Bool
 @Composable
 internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState, composition: Boolean,
     onMessage: () -> Unit = {}, onProfile: () -> Unit = {}) {
-    val download = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("audio/*")) { uri -> if (uri != null) state.download(clip.id, uri) }
+    val context = LocalContext.current
+    val quarantine = !composition && clip.status == WaveProposalStatus.QUARANTINED
+    val available = clip.id !in state.preparing && state.vote?.clipId != clip.id
+    val replaceAudio = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            runCatching { context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+            state.replaceQuarantinedAudio(clip.id, uri)
+        }
+    }
+    val downloadAudio = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("audio/*")) { uri ->
+        if (uri != null) state.download(clip.id, uri)
+    }
     var confirmRemoval by remember(clip.id) { mutableStateOf(false) }
     val voice = state.snapshot.voices.find { it.id == clip.id }
     val cue = state.snapshot.cue == clip.id
@@ -189,10 +203,12 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
             if (!composition) WaveRoundPlay(playing, clip.id in state.preparing, progress, if (composition) "Lancer ou arrêter ${clip.title}" else "Écouter ${clip.title}", queued, stopIcon = false) {
                 state.preview(clip.id)
             }
-            if (!composition) WaveControl(Icons.Default.ChatBubbleOutline, "Envoyer un message à ${clip.artist}") { onMessage() }
-            if (!composition) WaveControl(Icons.Default.FileDownload, "Télécharger ${clip.title}") {
-                val extension = clip.source.substringAfterLast('.', "wav").substringBefore('?').takeIf { it in listOf("wav", "mp3", "m4a", "aac", "ogg", "flac") } ?: "wav"
-                download.launch("${clip.title.replace('/', '-') }.$extension")
+            if (!composition && !quarantine) WaveControl(Icons.Default.ChatBubbleOutline, "Envoyer un message à ${clip.artist}") { onMessage() }
+            if (!composition) WaveControl(
+                if (clip.status == WaveProposalStatus.QUARANTINED) Icons.Default.Unarchive else Icons.Default.Inventory2,
+                if (clip.status == WaveProposalStatus.QUARANTINED) "Remettre ${clip.title} dans les propositions" else "Placer ${clip.title} en quarantaine",
+                enabled = clip.id !in state.preparing && state.vote?.clipId != clip.id) {
+                if (clip.status == WaveProposalStatus.QUARANTINED) state.pending(clip.id) else state.quarantine(clip.id)
             }
             else {
                 WaveMixHeaderControls(clip, state)
@@ -203,6 +219,25 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
             }
         }
 
+        if (quarantine) {
+            Text(clip.title, color = ink, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 4.dp, bottom = 6.dp))
+            Row(Modifier.fillMaxWidth().padding(bottom = 3.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                QuarantineCommand(Icons.Default.SwapHoriz, "Remplacer", available, Modifier.weight(1f)) {
+                    replaceAudio.launch(arrayOf("audio/*"))
+                }
+                QuarantineCommand(Icons.Default.Download, "Télécharger", available, Modifier.weight(1f)) {
+                    val sourceName = WaveWorkshopImports.name(context, Uri.parse(clip.source))
+                        .takeUnless { it == "Audio importé" } ?: clip.source.substringAfterLast('/')
+                    val extension = sourceName.substringAfterLast('.', "").lowercase()
+                        .takeIf { it in setOf("wav", "mp3", "m4a", "aac", "ogg", "opus", "flac", "aif", "aiff", "webm", "mp4") }
+                    val originalExtension = clip.title.substringAfterLast('.', "").lowercase()
+                    val title = if (originalExtension in setOf("wav", "mp3", "m4a", "aac", "ogg", "opus", "flac", "aif", "aiff", "webm", "mp4")) clip.title.substringBeforeLast('.') else clip.title
+                    downloadAudio.launch(if (extension != null) "$title.$extension" else title)
+                }
+                QuarantineCommand(Icons.Default.HowToVote, "Au vote", available, Modifier.weight(1f)) { state.queueVote(clip.id) }
+            }
+        }
         AnimatedVisibility(selected) { WaveMixControls(clip, state) }
         if (clip.id in state.errors) Text(state.errors[clip.id] ?: "Audio indisponible", color = Color(0xFFC88B90), fontSize = 9.sp)
     }
@@ -212,6 +247,15 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
         text = { Text("Tu es sur le point de supprimer « ${clip.title} » de la composition. Cette boucle a été validée par le public. Elle cessera de jouer et ses épingles seront retirées.", color = secondary) },
         confirmButton = { TextButton(onClick = { state.remove(clip.id); confirmRemoval = false }) { Text("Retirer la boucle", color = Color(0xFFC88B90)) } },
         dismissButton = { TextButton(onClick = { confirmRemoval = false }) { Text("Conserver", color = accent) } })
+}
+
+@Composable
+private fun QuarantineCommand(icon: ImageVector, label: String, enabled: Boolean, modifier: Modifier, onClick: () -> Unit) {
+    Row(modifier.height(38.dp).hifiBlackSurface(8.dp).clickable(enabled = enabled, onClick = onClick).padding(horizontal = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
+        Icon(icon, null, tint = accent.copy(alpha = if (enabled) 1f else .4f), modifier = Modifier.size(15.dp))
+        Text(label, color = ink.copy(alpha = if (enabled) 1f else .4f), fontSize = 10.sp, maxLines = 1)
+    }
 }
 
 @Composable

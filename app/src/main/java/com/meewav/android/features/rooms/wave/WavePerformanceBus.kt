@@ -37,6 +37,7 @@ internal data class WaveVocalSettings(
     val tune: Boolean = false, val scale: Int = 0, val reverb: Boolean = false, val reverbMix: Float = .15f,
     val cleanVoice: Boolean = false, val noiseCalibration: Int = 0,
     val proEffects: Int = 0,
+    val correction: WaveTuneSettings = WaveTuneSettings(),
 )
 
 internal fun waveTuneScale(key: String, mode: String): Int {

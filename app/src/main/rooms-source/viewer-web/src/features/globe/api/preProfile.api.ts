@@ -398,7 +398,7 @@ export async function requestProfileCollaboration(
 ): Promise<CollaborationRequestResult> {
   const message = input.message.trim();
   if (!isCanonicalProfileId(input.recipientProfileId)) throw new Error("invalid_recipient_profile_id");
-  if (!message || message.length > 500) throw new Error("invalid_collaboration_message");
+  if (!message || message.length > 240) throw new Error("invalid_collaboration_message");
 
   const { data, error } = await supabase.rpc("request_profile_collaboration", {
     p_recipient_profile_id: input.recipientProfileId,

@@ -3,7 +3,7 @@ import type { MessagingOriginSource } from "./messaging.route";
 
 const STORAGE_KEY = "meewav:globe-collaboration-requests:v1";
 const REQUEST_EVENT = "meewav:collaboration-requests-changed";
-const MESSAGE_MAX_LENGTH = 500;
+const MESSAGE_MAX_LENGTH = 240;
 const ATTACHMENT_MAX_COUNT = 3;
 
 export type GlobeCollaborationDraft = {
@@ -82,7 +82,7 @@ function collaborationAttachment(file: File, requestId: string, index: number): 
 export function submitGlobeCollaborationRequest(draft: GlobeCollaborationDraft) {
   const message = draft.message.trim();
   if (!message || message.length > MESSAGE_MAX_LENGTH) {
-    throw new Error("La demande doit contenir entre 1 et 500 caractères.");
+    throw new Error("La demande doit contenir entre 1 et 240 caractères.");
   }
   if (draft.attachments.length > ATTACHMENT_MAX_COUNT) {
     throw new Error("Une demande accepte au maximum 3 fichiers.");

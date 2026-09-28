@@ -1,5 +1,6 @@
 import {getSessionUser,previewEnabled,supabase} from '../profile-source/runtime';
 import {listLiveRooms,createLiveRoom} from './liveRooms';
+import {createUiDiagnostic,diagnosticError} from './createUiDiagnostic';
 import type { CageProgram } from '../shared-ui/cagePrograms';
 import { lazy, Suspense, useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -63,6 +64,7 @@ export default function RoomsPage() {
   };
   const openSession = (roomType: RoomsHomeRoomType, title: string, id?: string, program?: CageProgram, studio?: LaunchStudioConfig) => {
     const params = new URLSearchParams({ type: roomType, title, ...(id ? { id, source: "live" } : {}), ...(program ? { program: JSON.stringify(program) } : {}), ...(studio ? { format: studio.format, camera: studio.camera, layout: studio.format === 'portrait' ? studio.portraitLayout : studio.landscapeLayout, secondCamera: String(studio.secondCamera), reversed: String(studio.reversed) } : {}) });
+    createUiDiagnostic('T8.nativeNavigation.requested', { roomType, roomId: id, source: id ? 'live' : 'demo' });
     window.location.assign(`/native/room-session?${params}`);
   };
   const openRoom = (room: RoomsHomeRoom) => setViewing(room);
@@ -86,11 +88,21 @@ export default function RoomsPage() {
       initialType={new URLSearchParams(location.search).get('launch') === 'cage' ? 'cage' : tab === 'home' ? undefined : (tab as RoomsHomeRoomType)}
       onClose={() => navigate('/rooms')}
       onLaunched={async (label, roomType, program, studio) => {
-        if (launching) return;
-        if (demoMode) { openSession(roomType, label, undefined, program, studio); return; }
+        const requestId = launchRequest.current;
+        createUiDiagnostic('T3.parentCallback.enter', { requestId, roomType, title: label, launching, demoMode });
+        if (launching) { createUiDiagnostic('T3.parentCallback.earlyReturn', { requestId, reason: 'launching' }); return; }
+        if (demoMode) { createUiDiagnostic('T3.parentCallback.demo', { requestId }); openSession(roomType, label, undefined, program, studio); return; }
         setLaunching(true);
-        try { const id = await createLiveRoom(roomType, label, launchRequest.current, studio?.format); openSession(roomType, label, id, program, studio); }
-        catch { notice('La room n’a pas été créée. Vérifie ta connexion puis réessaie.'); }
+        try {
+          createUiDiagnostic('T4.createLiveRoom.called', { requestId, roomType, title: label, format: studio?.format });
+          const id = await createLiveRoom(roomType, label, requestId, studio?.format);
+          createUiDiagnostic('T7.createLiveRoom.resolved', { requestId, roomId: id });
+          openSession(roomType, label, id, program, studio);
+        }
+        catch (error) {
+          createUiDiagnostic('createLiveRoom.rejected', { requestId, ...diagnosticError(error) });
+          notice('La room n’a pas été créée. Vérifie ta connexion puis réessaie.');
+        }
         finally { setLaunching(false); }
       }}
     />

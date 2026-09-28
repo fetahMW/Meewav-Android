@@ -13,7 +13,8 @@ import android.util.Log
 internal object WaveVocalDsp {
     init { System.loadLibrary("meewav_analysis") }
     external fun create(): Long
-    external fun process(handle: Long, samples: FloatArray, tune: Boolean, scale: Int, reverb: Boolean, amount: Float, cleanVoice: Boolean, calibration: Int, effects: Int)
+    external fun process(handle: Long, samples: FloatArray, tune: Boolean, scale: Int, reverb: Boolean, amount: Float, cleanVoice: Boolean, calibration: Int, effects: Int,
+        tuneAmount: Float, tuneSpeed: Float, tuneHumanize: Float, tuneSmooth: Float, tuneShift: Float)
     external fun release(handle: Long)
 }
 
@@ -94,7 +95,9 @@ internal class WaveMicrophone(
                     if (config.cleanVoice) cleanTailFrames = 480
                     if (config.proEffects != 0) effectsTailFrames = 24000
                     if (config.tune || config.reverb || config.cleanVoice || effectsTailFrames > 0 || cleanTailFrames > 0) {
-                        WaveVocalDsp.process(dsp, stereo, config.tune, config.scale, config.reverb, config.reverbMix, config.cleanVoice, config.noiseCalibration - calibrationBase, config.proEffects)
+                        val correction = config.correction
+                        WaveVocalDsp.process(dsp, stereo, config.tune, config.scale, config.reverb, config.reverbMix, config.cleanVoice, config.noiseCalibration - calibrationBase, config.proEffects,
+                            correction.amount, correction.speed, correction.humanize, correction.smooth, correction.shift)
                     }
                     if (!config.cleanVoice) cleanTailFrames = 0
                     if (config.proEffects == 0) effectsTailFrames = (effectsTailFrames - 480).coerceAtLeast(0)

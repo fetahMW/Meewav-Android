@@ -1021,6 +1021,11 @@ export default function PlaceMixer({
     room.personalVocal.eqEnabled,
   ].filter(Boolean).length;
 
+  const nativeVocalMode = useRef<{
+    roomId: string;
+    simple: boolean;
+    extras: Pick<PlaceRoomState["personalVocal"], "tuneShift" | "delayEnabled" | "compEnabled" | "eqEnabled"> | null;
+  }>({roomId:room.id,simple:false,extras:null});
   useEffect(()=>{
     if(mode==="host")return;
     const receive=async(event:Event)=>{
@@ -1028,7 +1033,26 @@ export default function PlaceMixer({
       if(action!=="mixer" || !personalMix)return;
       const key=data?.key,value=data?.value;
       try {
-        if(key==="voiceGain" && typeof value==="number")personalMix.setGain("voice",Math.min(1,Math.max(0,value)));
+        if(key==="readVocal")viewerNativeReply({action:"mixer",key:"vocal",ok:true,value:room.personalVocal});
+        else if(key==="vocalMode" && typeof value?.pro==="boolean" && [value.amount,value.speed,value.humanize].every(v=>typeof v==="number" && Number.isFinite(v))) {
+          const unit=(v:number)=>Math.min(1,Math.max(0,v));
+          if(nativeVocalMode.current.roomId!==room.id)nativeVocalMode.current={roomId:room.id,simple:false,extras:null};
+          const state=nativeVocalMode.current;
+          if(!value.pro && !state.simple) {
+            const {tuneShift,delayEnabled,compEnabled,eqEnabled}=room.personalVocal;
+            state.extras={tuneShift,delayEnabled,compEnabled,eqEnabled};
+          }
+          const extras=value.pro
+            ? (state.simple ? state.extras ?? {} : {})
+            : {tuneShift:0,delayEnabled:false,compEnabled:false,eqEnabled:false};
+          state.simple=!value.pro;
+          onVocal({...extras,tuneAmount:unit(value.amount),tuneSpeed:unit(value.speed),tuneHumanize:unit(value.humanize),tuneSmooth:unit(value.humanize)});
+        }
+        else if(key==="correction" && value && [value.amount,value.speed,value.humanize].every(v=>typeof v==="number" && Number.isFinite(v))) {
+          const unit=(v:number)=>Math.min(1,Math.max(0,v));
+          onVocal({tuneAmount:unit(value.amount),tuneSpeed:unit(value.speed),tuneHumanize:unit(value.humanize),tuneSmooth:unit(value.humanize)});
+        }
+        else if(key==="voiceGain" && typeof value==="number")personalMix.setGain("voice",Math.min(1,Math.max(0,value)));
         else if(key==="voiceMuted" && typeof value==="boolean") {
           if(!value && !(await personalMix.prepareVoice()))throw new Error("Autorise le microphone pour préparer ta voix.");
           if(personalMix.levels.voice.muted!==value)personalMix.toggleMute("voice");

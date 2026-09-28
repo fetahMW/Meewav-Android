@@ -14,7 +14,7 @@ import org.json.JSONObject
 import java.util.UUID
 
 internal enum class WaveClipKind(val label: String) { LOOP("Loop"), LONG("Prise longue"), HIT("One-shot") }
-internal enum class WaveProposalStatus(val label: String) { PENDING("À écouter"), ACCEPTED("Prises"), ARCHIVED("Archives"), VOTE("Au vote") }
+internal enum class WaveProposalStatus(val label: String) { PENDING("À écouter"), ACCEPTED("Prises"), ARCHIVED("Archives"), VOTE("Au vote"), QUARANTINED("Quarantaine") }
 internal enum class WaveListeningMode(val label: String) { BASE("BASE"), LOOP("BOUCLE"), MIX("MIX") }
 internal enum class WaveImportDestination { PROPOSALS, BASE, VOTE }
 internal data class WaveCompositionClip(
@@ -74,7 +74,7 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
     fun download(id: String, destination: Uri) {
         val clip = clips.find { it.id == id } ?: return
         scope.launch {
-            try { withContext(Dispatchers.IO) { WaveArrangementExport.copy(context, clip.source, destination) }; notice = "${clip.title} enregistré." }
+            try { withContext(Dispatchers.IO) { WaveArrangementExport.copy(context, clip.source, destination) } }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) { notice = error.message ?: "Enregistrement impossible." }
         }
@@ -98,7 +98,6 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
                         else WaveArrangementExport.render(output, frames, sources, progress)
                     }
                 }
-                notice = if (archive) "Archive DAW et crédits enregistrés." else "Audio enregistré."
                 if (archive) {
                     dawExports = dawExports + WaveDawExport(UUID.randomUUID().toString(), uri.toString(), reference?.title ?: "Arrangement", tempo, musicalKey, selected.map { it.id })
                     save()
@@ -523,7 +522,7 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
     fun previewPack(id: String) {
         if (snapshot.cue == "pack:$id" || preparingPack == id) { stopPreview(); return }
         if (!focus()) return
-        val members = clips.filter { it.packId == id }
+        val members = clips.filter { it.packId == id && !it.inComposition && it.status == WaveProposalStatus.PENDING }
         if (members.isEmpty()) return
         val generation = ++auditionGeneration
         preparingPack = id
@@ -554,8 +553,72 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
     }
     fun remove(id: String) { audio.remove(id); pins = pins.filterNot { it.clipId == id }; selectedPinId = null; update(id) { it.copy(inComposition = false, mute = false, solo = false) } }
     fun archive(id: String, reason: String) { remove(id); update(id) { it.copy(status = WaveProposalStatus.ARCHIVED, note = reason) }; stopPreview() }
-    fun pending(id: String) { update(id) { it.copy(status = WaveProposalStatus.PENDING, note = "") } }
-    fun queueVote(id: String) { stopPreview(); update(id) { it.copy(status = WaveProposalStatus.VOTE) } }
+    private fun canMoveProposal(id: String): Boolean {
+        val clip = clips.find { it.id == id } ?: return false
+        if (id in preparing) { notice = "Attends la fin de la préparation audio."; return false }
+        if (clip.inComposition || referenceId == id || vote?.clipId == id) {
+            notice = "Cette boucle est utilisée dans la composition ou dans le vote en cours."
+            return false
+        }
+        return clip.status != WaveProposalStatus.ARCHIVED
+    }
+    fun discardProposal(id: String) {
+        if (!canMoveProposal(id)) return
+        workflowGeneration++
+        archive(id, "Supprimée")
+    }
+    fun quarantine(id: String) {
+        if (!canMoveProposal(id)) return
+        workflowGeneration++
+        stopPreview()
+        update(id) { it.copy(status = WaveProposalStatus.QUARANTINED, note = "") }
+    }
+    fun pending(id: String) { stopPreview(); update(id) { it.copy(status = WaveProposalStatus.PENDING, note = "") } }
+    fun replaceQuarantinedAudio(id: String, uri: Uri) {
+        val original = clips.find { it.id == id && it.status == WaveProposalStatus.QUARANTINED } ?: return
+        if (!canMoveProposal(id)) return
+        preparing = preparing + id
+        scope.launch {
+            try {
+                // Decode before replacing anything: an invalid import keeps the original playable.
+                val pcm = withContext(Dispatchers.IO) {
+                    decodeLock.withLock { WaveCompositionDecoder.decode(context, uri.toString()) }
+                }
+                require(pcm.frames > 0)
+                val current = clips.find { it.id == id } ?: return@launch
+                if (current.status != WaveProposalStatus.QUARANTINED || current.source != original.source) return@launch
+                stopPreview()
+                workflowGeneration++
+                audio.remove(id)
+                preparedActions.remove(id)
+                prepared = prepared + (id to pcm)
+                errors = errors - id
+                // The new recording keeps its attribution but must earn its own vote.
+                voteHistory = voteHistory.filterNot { it.clipId == id }
+                layers = layers - id
+                update(id) { it.copy(source = uri.toString(), musical = "Analyse…") }
+                try {
+                    withContext(Dispatchers.IO) {
+                        WaveAudioAnalysis.analyze(context, uri, onMusicalResult = { value ->
+                            withContext(Dispatchers.Main) {
+                                if (clips.any { it.id == id && it.source == uri.toString() }) update(id) { it.copy(musical = value) }
+                            }
+                        })
+                    }
+                } catch (cancelled: CancellationException) { throw cancelled }
+                catch (_: Exception) { /* Tempo detection is optional; the decoded recording remains valid. */ }
+                if (clips.any { it.id == id && it.source == uri.toString() && it.musical == "Analyse…" }) {
+                    update(id) { it.copy(musical = "Non détecté") }
+                }
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { notice = "Ce fichier audio ne peut pas remplacer la boucle." }
+            finally { preparing = preparing - id }
+        }
+    }
+    fun queueVote(id: String) {
+        if (!canMoveProposal(id)) return
+        stopPreview(); update(id) { it.copy(status = WaveProposalStatus.VOTE, note = "") }
+    }
     fun mute(id: String) = update(id) { it.copy(mute = !it.mute, solo = if (!it.mute) false else it.solo) }
     fun solo(id: String) {
         val enable = clips.find { it.id == id }?.solo != true
@@ -621,8 +684,9 @@ internal class WaveCompositionState(private val context: Context, sessionKey: St
     }
     fun takePack(id: String) {
         stopPreview()
-        clips = clips.map { if (it.packId == id && !it.inComposition) it.copy(status = WaveProposalStatus.VOTE) else it }
-        notice = "Les éléments du pack sont prêts pour le vote."; save()
+        clips = clips.map { if (it.packId == id && !it.inComposition && it.status == WaveProposalStatus.PENDING)
+            it.copy(status = WaveProposalStatus.VOTE, note = "") else it }
+        save()
     }    private suspend fun importAudio(uri: Uri, packId: String? = null, packTitle: String? = null, importedTitle: String? = null,
         destination: WaveImportDestination = WaveImportDestination.PROPOSALS) {
             val name = withContext(Dispatchers.IO) { runCatching {

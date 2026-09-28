@@ -20,6 +20,7 @@ public:
     std::shared_ptr<oboe::AudioStream> input, output;
     std::atomic<int> failure{0}, flags{0}, scale{0};
     std::atomic<float> gain{0}, mix{.15f};
+    std::atomic<float> tuneAmount{1}, tuneSpeed{1}, tuneHumanize{0}, tuneSmooth{0}, tuneShift{0};
     std::atomic<unsigned> writeIndex{0}, readIndex{0}, shortReads{0}, callbacks{0}, dropped{0};
     std::array<std::array<float, packetSamples>, capacity> packets{};
     std::array<float, packetSamples> packet{};
@@ -83,7 +84,9 @@ public:
         capturedPeak.store(std::max(capturedPeak.load(), inputPeak));
         const int state = flags.load(std::memory_order_relaxed);
         expander.process(voice.data(), count, (state & 32) != 0, calibration.load());
-        tune.processStereo(voice.data(), count, (state & 4) != 0, scale.load());
+        tune.processStereo(voice.data(), count, (state & 4) != 0, scale.load(),
+            tuneAmount.load(std::memory_order_relaxed), tuneSpeed.load(std::memory_order_relaxed),
+            tuneHumanize.load(std::memory_order_relaxed), tuneSmooth.load(std::memory_order_relaxed), tuneShift.load(std::memory_order_relaxed));
         reverb.processStereo(voice.data(), count, (state & 8) != 0, mix.load());
         freeEffects.process(voice.data(), count, state);
         const float volume = gain.load(std::memory_order_relaxed);
@@ -113,14 +116,21 @@ Java_com_meewav_android_features_rooms_wave_WaveNativeDuplex_open(JNIEnv*, jobje
     return reinterpret_cast<jlong>(engine.release());
 }
 extern "C" JNIEXPORT void JNICALL
-Java_com_meewav_android_features_rooms_wave_WaveNativeDuplex_configure(JNIEnv*, jobject, jlong h, jint flags, jfloat gain, jint scale, jfloat mix, jint calibration) {
+Java_com_meewav_android_features_rooms_wave_WaveNativeDuplex_configure(JNIEnv*, jobject, jlong h, jint flags, jfloat gain, jint scale, jfloat mix, jint calibration,
+    jfloat tuneAmount, jfloat tuneSpeed, jfloat tuneHumanize, jfloat tuneSmooth, jfloat tuneShift) {
     auto* engine = reinterpret_cast<WaveNativeDuplex*>(h);
+    if (!engine) return;
     engine->gain.store(std::clamp(gain, 0.f, 1.f));
     engine->scale.store(std::clamp<int>(scale, 0, 12));
     // More travel for subtle reverb, with the full range still available.
     const float reverbPosition = std::clamp(mix, 0.f, 1.f);
     engine->mix.store(reverbPosition * reverbPosition);
     engine->calibration.store(calibration);
+    engine->tuneAmount.store(tuneAmount);
+    engine->tuneSpeed.store(tuneSpeed);
+    engine->tuneHumanize.store(tuneHumanize);
+    engine->tuneSmooth.store(tuneSmooth);
+    engine->tuneShift.store(tuneShift);
     engine->flags.store(flags);
 }
 extern "C" JNIEXPORT jint JNICALL

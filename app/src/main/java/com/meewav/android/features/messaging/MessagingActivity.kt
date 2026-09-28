@@ -23,6 +23,7 @@ import android.widget.TextView
 import android.widget.Button
 import android.widget.Toast
 import android.util.Base64
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
@@ -249,7 +250,9 @@ open class MessagingActivity : ComponentActivity() {
                 if (assetSurface == "rooms" && request.isForMainFrame && request.method == "GET"
                     && request.url.scheme == "https" && request.url.host == "appassets.androidplatform.net"
                     && request.url.path == "/native/room-session") {
+                    if (BuildConfig.DEBUG) Log.d("RoomsCreateUiDiag", "T9.nativeIntercept.enter type=${request.url.getQueryParameter("type")} roomId=${request.url.getQueryParameter("id")} source=${request.url.getQueryParameter("source")}")
                     val room = com.meewav.android.features.rooms.wave.RoomModule.fromRoute(request.url.getQueryParameter("type"))
+                    if (BuildConfig.DEBUG) Log.d("RoomsCreateUiDiag", "T9.nativeIntercept.routeResolved valid=${room != null}")
                     if (room != null) startActivity(Intent(this@MessagingActivity, com.meewav.android.features.rooms.wave.WaveMixerActivity::class.java)
                         .putExtra("roomType", room.route)
                         .putExtra("roomTitle", request.url.getQueryParameter("title")?.take(160))

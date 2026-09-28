@@ -46,6 +46,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -312,10 +315,10 @@ fun HiFiBlackCard(
 /* ------------------------------------------------------------------------- */
 
 @Composable
-fun PowerButton(on: Boolean, onToggle: () -> Unit, modifier: Modifier = Modifier) {
+fun PowerButton(on: Boolean, onToggle: () -> Unit, modifier: Modifier = Modifier, large: Boolean = false) {
     Box(
         modifier
-            .size(28.dp, 24.dp)
+            .size(if (large) 34.dp else 28.dp, if (large) 28.dp else 24.dp)
             .clip(RoundedCornerShape(9.dp))
             .satinControl(8.dp)
             .clickable(onClick = onToggle),
@@ -324,7 +327,7 @@ fun PowerButton(on: Boolean, onToggle: () -> Unit, modifier: Modifier = Modifier
         Icon(
             WaveIcons.Power, null,
             tint = if (on) WaveMixerTheme.fxAccent else white(0.28f),
-            modifier = Modifier.size(10.dp)
+            modifier = Modifier.size(if (large) 14.dp else 10.dp)
         )
     }
 }
@@ -340,6 +343,7 @@ fun FxCard(
     on: Boolean,
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
+    largePower: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     Box(modifier) {
@@ -364,7 +368,7 @@ fun FxCard(
                         fontFamily = WaveMixerTheme.fontFamily, maxLines = 1
                     )
                     Spacer(Modifier.weight(1f))
-                    PowerButton(on = on, onToggle = onToggle)
+                    PowerButton(on = on, onToggle = onToggle, large = largePower)
                 }
                 content()
             }
@@ -383,9 +387,10 @@ fun TuneSelectorField(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    showLabel: Boolean = true,
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(5.dp)) {
-        Text(
+        if (showLabel) Text(
             label, color = white(if (enabled) 0.60f else 0.32f), fontSize = 10.sp,
             fontWeight = FontWeight.Medium, fontFamily = WaveMixerTheme.fontFamily
         )
@@ -395,7 +400,8 @@ fun TuneSelectorField(
                 .height(30.dp)
                 .clip(RoundedCornerShape(6.dp))
                 .hardwareSurface(6.dp, raised = true, reflection = 0.085f)
-                .clickable(onClick = onClick)
+                .semantics { contentDescription = "$label : $value" }
+                .clickable(role = Role.Button, onClick = onClick)
                 .padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -419,11 +425,12 @@ fun ReverbSlider(
     enabled: Boolean,
     onChange: (Float) -> Unit,
     modifier: Modifier = Modifier,
+    showLabels: Boolean = true,
 ) {
     var dragging by remember { mutableStateOf(false) }
     val v = value.coerceIn(0f, 1f)
     Column(modifier) {
-        Row(Modifier.fillMaxWidth()) {
+        if (showLabels) Row(Modifier.fillMaxWidth()) {
             Text(
                 "Douce", color = white(if (enabled) 0.38f + 0.50f * (1f - v) else 0.36f),
                 fontSize = 10.sp, fontWeight = FontWeight.Medium,
@@ -436,7 +443,7 @@ fun ReverbSlider(
                 fontFamily = WaveMixerTheme.fontFamily
             )
         }
-        Spacer(Modifier.height(5.dp))
+        if (showLabels) Spacer(Modifier.height(5.dp))
         BoxWithConstraints(
             Modifier
                 .fillMaxWidth()

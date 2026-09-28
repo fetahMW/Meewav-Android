@@ -32,6 +32,7 @@ import {
 import GlobeLoading from "../../../../vendor/meewav-vinyl/src/GlobeLoading";
 import type { RoomsHomeRoomType } from "../home/roomsHome.types";
 import LaunchStudio, { type LaunchLayout, type LaunchStudioConfig } from "./LaunchStudio";
+import { createUiDiagnostic } from "../../../../../createUiDiagnostic";
 
 type LaunchRoomSheetProps = {
   initialType?: RoomsHomeRoomType;
@@ -768,7 +769,12 @@ export default function LaunchRoomSheet({ initialType, allowSkipCheckup = false,
   const steps = ["Identité", "Green House", "Vérification", "Revue"];
   const nextLabel = ["Continuer", "Vérifier", "Voir le résumé", "Accéder à la room"][step];
   const advance = () => {
-    if (step === 3) { stopMic(); setLaunching(true); }
+    if (step === 3) {
+      createUiDiagnostic('T1.finalHandler.enter', { step, launching, isReady, networkOk, micState,
+        roomType: LAUNCH_TABS[selectedTab].id, title: title.trim() });
+      createUiDiagnostic('T2.finalHandler.passed', { disabled: launching, stepGuard: 'none' });
+      stopMic(); setLaunching(true);
+    }
     else goToStep(step + 1);
   };
 
@@ -887,6 +893,8 @@ export default function LaunchRoomSheet({ initialType, allowSkipCheckup = false,
           roomLabel={roomLabel}
           onCancel={() => setLaunching(false)}
           onComplete={() => {
+            createUiDiagnostic('T3.wizardCallback.enter', { roomType: LAUNCH_TABS[selectedTab].id,
+              title: title.trim() || roomLabel });
             setLaunching(false);
             onLaunched?.(title.trim() || roomLabel, LAUNCH_TABS[selectedTab].id, LAUNCH_TABS[selectedTab].id === "cage" ? configuration() : undefined, studio);
           }}
@@ -904,8 +912,13 @@ function LaunchVinylTransition({ roomLabel, onCancel, onComplete }: { roomLabel:
   onCompleteRef.current = onComplete;
 
   useEffect(() => {
-    const timer = window.setTimeout(() => { if (!cancelledRef.current) onCompleteRef.current(); }, LAUNCH_TRANSITION_MS);
+    createUiDiagnostic('transition.timer.scheduled', { delayMs: LAUNCH_TRANSITION_MS });
+    const timer = window.setTimeout(() => {
+      createUiDiagnostic('transition.timer.fired', { cancelled: cancelledRef.current });
+      if (!cancelledRef.current) onCompleteRef.current();
+    }, LAUNCH_TRANSITION_MS);
     return () => {
+      createUiDiagnostic('transition.cleanup', { cancelledBeforeCleanup: cancelledRef.current });
       cancelledRef.current = true;
       window.clearTimeout(timer);
     };
@@ -914,7 +927,9 @@ function LaunchVinylTransition({ roomLabel, onCancel, onComplete }: { roomLabel:
   return (
     <div className="launch-transition" role="alert" aria-live="assertive">
       <GlobeLoading label={`Ouverture de ${roomLabel}…`} />
-      <button type="button" className="launch-transition__cancel" onClick={() => { cancelledRef.current = true; onCancel(); }}>
+      <button type="button" className="launch-transition__cancel" onClick={() => {
+        createUiDiagnostic('transition.cancel.clicked'); cancelledRef.current = true; onCancel();
+      }}>
         <X aria-hidden="true" size={14} /> ANNULER
       </button>
     </div>

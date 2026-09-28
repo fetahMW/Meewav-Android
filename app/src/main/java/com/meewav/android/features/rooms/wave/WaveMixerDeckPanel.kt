@@ -44,7 +44,7 @@ internal fun WaveMixerDeckPanel(state: WaveMixerDeckState, expanded: Boolean, on
         runCatching { context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }; state.importPack(uri, true)
     } }
     LaunchedEffect(expanded) { revealed = null; if(page !in 0..2)page=0 }
-    Column(modifier.hifiBlackSurface(14.dp).padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(modifier.hifiBlackSurface(14.dp).padding(8.dp), verticalArrangement = Arrangement.spacedBy(if (expanded) 8.dp else 6.dp)) {
         if (!expanded || page == 0 || page == 2) Row(Modifier.fillMaxWidth().height(44.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
             Text(if (state.public) "Public" else "Privé", color = Color(0xFFCBC7D5), fontSize = 11.sp,
                 modifier = Modifier.hardwareSurface(6.dp, true, .085f).clickable(enabled = state.allowPublic) { state.route() }.padding(8.dp))
@@ -83,7 +83,7 @@ internal fun WaveMixerDeckPanel(state: WaveMixerDeckState, expanded: Boolean, on
                     }
                 }
             }
-        } else state.lanes.firstOrNull()?.let { lane -> WaveDeckLaneView(lane, state, { target = lane.id; state.documentPicker.launch { importer.launch(arrayOf("audio/*")) } }) }
+        } else state.lanes.firstOrNull()?.let { lane -> WaveDeckLaneView(lane, state, { target = lane.id; state.documentPicker.launch { importer.launch(arrayOf("audio/*")) } }, compact = true) }
         if (expanded) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Box(Modifier.weight(1f)) { MixerPageButton("Pads", Icons.Default.Apps, page == 1) { page = 1 } }
             Box(Modifier.weight(1f)) { MixerPageButton("Chronomètre", Icons.Default.Timer, page == 2) { page = 2 } }
@@ -104,8 +104,8 @@ private fun MixerPageButton(label: String, icon: androidx.compose.ui.graphics.ve
 }
 
 @Composable
-private fun WaveDeckLaneView(lane: WaveDeckLane, state: WaveMixerDeckState, onImport: () -> Unit) {
-    Column(Modifier.fillMaxWidth().height(82.dp).hifiBlackSurface(10.dp).padding(8.dp)) {
+private fun WaveDeckLaneView(lane: WaveDeckLane, state: WaveMixerDeckState, onImport: () -> Unit, compact: Boolean = false) {
+    Column(Modifier.fillMaxWidth().height(if (compact) 72.dp else 82.dp).hifiBlackSurface(10.dp).padding(8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(lane.name, color = Color(0xFFD4D0DA), fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).clickable(onClick = onImport))
             Text(lane.musical, color = WaveMixerTheme.capsuleAccentSoft, fontSize = 9.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.width(84.dp))
