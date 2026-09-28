@@ -61,17 +61,20 @@ data class AuthUiState(
     val onboardingComplete: Boolean = false,
     val profile: ProfileDraft = ProfileDraft(),
     val homeScene: GlobeHomeScene? = null,
+    val testAliases: List<String> = emptyList(),
 )
 
 class AuthViewModel(private val repository: MeewavAuthRepository, preview: Boolean = BuildConfig.DEBUG) : ViewModel() {
+    private val testAliases = repository.localTestAliases
     private val mutable = MutableStateFlow(AuthUiState(configured = repository.configured,
-        initializing = repository.configured && !preview, localPreview = false, modeSelected = !preview))
+        initializing = repository.configured && !preview, localPreview = false,
+        modeSelected = !preview || testAliases.isNotEmpty(), testAliases = testAliases))
     val state = mutable.asStateFlow()
     private var recoveryInProgress = false
     private var routedUserId: String? = null
     // Choosing the real application is an explicit login boundary. An old
     // encrypted session must not skip the form or open the Globe by itself.
-    private var explicitLoginRequired = false
+    private var explicitLoginRequired = testAliases.isNotEmpty()
 
     init {
         if (repository.configured) viewModelScope.launch {
@@ -101,6 +104,10 @@ class AuthViewModel(private val repository: MeewavAuthRepository, preview: Boole
                 }
             }
         }
+    }
+
+    init {
+        if (testAliases.isNotEmpty()) selectReal()
     }
 
     private suspend fun routeAuthenticated() {
@@ -157,7 +164,7 @@ class AuthViewModel(private val repository: MeewavAuthRepository, preview: Boole
         routedUserId = null
         explicitLoginRequired = true
         mutable.update { AuthUiState(configured = repository.configured, initializing = repository.configured,
-            modeSelected = true, localPreview = false) }
+            modeSelected = true, localPreview = false, testAliases = testAliases) }
         if (!repository.configured) return
         viewModelScope.launch {
             try {
@@ -236,7 +243,7 @@ class AuthViewModel(private val repository: MeewavAuthRepository, preview: Boole
             AuthPage.Login -> when {
                 draft.email.isBlank() -> "Entre ton e-mail ou ton nom d’utilisateur."
                 draft.email.contains('@') && AuthPolicy.emailError(draft.email) != null -> AuthPolicy.emailError(draft.email)
-                draft.password.isEmpty() -> "Entre ton mot de passe."
+                draft.password.isEmpty() && draft.email.trim().lowercase() !in testAliases -> "Entre ton mot de passe."
                 else -> null
             }
             AuthPage.Forgot -> AuthPolicy.emailError(draft.email)
@@ -333,7 +340,7 @@ class AuthViewModel(private val repository: MeewavAuthRepository, preview: Boole
         explicitLoginRequired = false
         recoveryInProgress = false
         mutable.update { AuthUiState(initializing = false, configured = repository.configured,
-            modeSelected = !BuildConfig.DEBUG) }
+            modeSelected = !BuildConfig.DEBUG || testAliases.isNotEmpty(), testAliases = testAliases) }
     }
 
     private fun execute(action: suspend () -> Unit) {

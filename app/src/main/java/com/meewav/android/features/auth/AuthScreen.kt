@@ -211,7 +211,13 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                                         enabled = !state.busy, ime = if (state.page == AuthPage.Forgot) ImeAction.Done else ImeAction.Next, onDone = submit)
                                     Spacer(Modifier.height(12.dp))
                                 }
-                                if (state.page != AuthPage.Forgot) {
+                                val testLogin = state.page == AuthPage.Login && !state.localPreview &&
+                                    state.email.trim().lowercase() in state.testAliases
+                                if (testLogin) {
+                                    Text("Compte test ${state.email.trim().lowercase()} · application réelle",
+                                        color = Muted, fontSize = 12.sp)
+                                }
+                                if (state.page != AuthPage.Forgot && !testLogin) {
                                     AuthField("Mot de passe", state.password, actions.password, Icons.Outlined.Lock,
                                         secret = true, enabled = !state.busy,
                                         ime = if (state.page == AuthPage.Login) ImeAction.Done else ImeAction.Next, onDone = submit)

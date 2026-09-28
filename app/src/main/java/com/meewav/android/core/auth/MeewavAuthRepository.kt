@@ -30,6 +30,9 @@ import java.io.IOException
 import kotlin.time.Duration.Companion.seconds
 
 class MeewavAuthRepository(context: Context) {
+    private val localTestAccounts = LocalTestAccounts.read(
+        context.applicationContext.filesDir.resolve("qa-test-accounts.json"), BuildConfig.DEBUG, BuildConfig.SUPABASE_URL)
+    val localTestAliases: List<String> get() = localTestAccounts.map { it.alias }
     // Only the avatar choice survives an OAuth browser round trip. No password,
     // token, e-mail or private location is stored in this draft.
     private val draft = context.applicationContext.getSharedPreferences("onboarding_choice", Context.MODE_PRIVATE)
@@ -49,6 +52,15 @@ class MeewavAuthRepository(context: Context) {
 
     suspend fun signIn(identifier: String, password: String) {
         val trimmed = identifier.trim()
+        val testAccount = localTestAccounts.firstOrNull { it.alias == trimmed.lowercase() }
+        if (testAccount != null) {
+            auth.signInWith(Email) { this.email = testAccount.email; this.password = testAccount.password }
+            if (auth.currentUserOrNull()?.id != testAccount.id) {
+                signOut()
+                throw UserMessageException("Le compte test ne correspond pas à la configuration locale.")
+            }
+            return
+        }
         if (trimmed.contains('@')) {
             auth.signInWith(Email) { this.email = trimmed; this.password = password }
             return
