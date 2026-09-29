@@ -1,0 +1,17 @@
+appId: com.meewav.android.debug
+name: RUN2 A prepares two ordered Room A messages before late viewer
+---
+- assertVisible: "QA_INT_RUN1_R2_20260924_165332_A"
+- assertVisible: "Chat"
+- tapOn: "Écrire un message"
+- inputText: "RUN2_A_PRE_01_165332"
+- tapOn: "Envoyer"
+- extendedWaitUntil:
+    visible: "RUN2_A_PRE_01_165332"
+    timeout: 20000
+- tapOn: "Écrire un message"
+- inputText: "RUN2_A_PRE_02_165332"
+- tapOn: "Envoyer"
+- extendedWaitUntil:
+    visible: "RUN2_A_PRE_02_165332"
+    timeout: 20000

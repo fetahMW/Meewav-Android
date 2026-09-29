@@ -1,0 +1,8 @@
+appId: com.meewav.android.debug
+name: QA - Ouvrir les Rooms réelles
+---
+- tapOn: "Rooms"
+- extendedWaitUntil:
+    visible: "Créer une Room"
+    timeout: 45000
+- assertNotVisible: ".*Finale des nouveaux flows.*"

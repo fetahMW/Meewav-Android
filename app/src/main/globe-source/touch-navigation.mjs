@@ -2,8 +2,8 @@
 // Coordinates and velocity are CSS pixels and CSS pixels/second.
 const RAD = 180 / Math.PI;
 const angleDelta = value => Math.atan2(Math.sin(value), Math.cos(value));
-const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
 const TAP_MS = 280, TAP_RADIUS = 26, SLOP = 5, MIN_SPAN = 16;
+const TILT_SLOP = 6, TWIST_SLOP = 10;
 
 export function pairTransform(p, q, out = {}) {
   const ax = p[1].x - p[0].x, ay = p[1].y - p[0].y;
@@ -19,13 +19,14 @@ export function pairTransform(p, q, out = {}) {
 export function createTouchNavigation(api, { pointers = new Map(), reducedMotion = false } = {}) {
   let dirty = false, multi = false, moved = 0, quick = false, quickMoved = false;
   let firstX = 0, firstY = 0, downTime = 0, lastTouch = -Infinity;
-  let previousFrame = 0, rotation = 0, rotating = false, tilt = 0, tilting = false;
+  let previousFrame = 0, rotation = 0, rotating = false, pairMode = null;
   let pendingTap = null, zoomAnimation = null, coast = null, settling = false, settleTime = 0;
   let historyCount = 0, historyIndex = 0;
   const history = Array.from({ length: 12 }, () => ({ x: 0, y: 0, t: 0 }));
   const before = [{ x: 0, y: 0 }, { x: 0, y: 0 }], after = [{ x: 0, y: 0 }, { x: 0, y: 0 }];
-  const pair = {}, from = { x: 0, y: 0 }, to = { x: 0, y: 0 }, drag = { anchor: null };
-  const command = { factor: 1, rotation: 0, pitch: 0, from, to, anchor: null };
+  const pair = {}, total = {}, origin = [{ x: 0, y: 0 }, { x: 0, y: 0 }];
+  const from = { x: 0, y: 0 }, to = { x: 0, y: 0 }, drag = { anchor: null };
+  const command = { factor: 1, rotation: 0, pitch: 0, pitchOnly: false, from, to, anchor: null };
   const time = e => Number.isFinite(e.timeStamp) ? e.timeStamp : performance.now();
   const accept = e => e.pointerType === 'touch' || e.pointerType === 'pen';
 
@@ -58,16 +59,17 @@ export function createTouchNavigation(api, { pointers = new Map(), reducedMotion
     if (interruptCamera) api.interrupt();
   }
   function rebase(now) {
-    dirty = false; drag.anchor = null; rotation = tilt = 0; rotating = tilting = false;
+    dirty = false; drag.anchor = null; rotation = 0; rotating = false; pairMode = null;
     historyCount = historyIndex = 0;
-    for (const p of pointers.values()) { p.px = p.x; p.py = p.y; }
+    for (const p of pointers.values()) { p.sx = p.px = p.x; p.sy = p.py = p.y; }
     if (pointers.size === 1) {
       const p = pointers.values().next().value;
       drag.anchor = api.pickPoint(p.x, p.y); sample(p.x, p.y, now);
     }
   }
-  function apply(factor, degrees, pitch, anchor) {
+  function apply(factor, degrees, pitch, anchor, pitchOnly = false) {
     command.factor = factor; command.rotation = degrees; command.pitch = pitch; command.anchor = anchor;
+    command.pitchOnly = pitchOnly;
     api.transform(command);
   }
   function flush() {
@@ -89,36 +91,56 @@ export function createTouchNavigation(api, { pointers = new Map(), reducedMotion
       before[0].x = p.px; before[0].y = p.py; before[1].x = q.px; before[1].y = q.py;
       after[0].x = p.x; after[0].y = p.y; after[1].x = q.x; after[1].y = q.y;
       pairTransform(before, after, pair);
-      from.x = pair.fromX; from.y = pair.fromY; to.x = pair.x; to.y = pair.y;
-      // Reacquire the world point at the previous centroid, never the initial
-      // screen centroid: asymmetric pinches retain their translation component.
-      const anchor = api.pickPoint(from.x, from.y);
       const stable = Math.min(pair.oldDistance, pair.distance) >= MIN_SPAN && Math.abs(pair.angle) < Math.PI / 2;
-      let degrees = 0, pitch = 0;
       if (stable) {
-        const delta = pair.angle * RAD;
-        if (rotating) degrees = delta;
-        else {
-          rotation += delta;
-          if (Math.abs(rotation) > 2.5) { rotating = true; degrees = rotation - Math.sign(rotation) * 2.5; }
-        }
-        const dx1 = p.x - p.px, dy1 = p.y - p.py, dx2 = q.x - q.px, dy2 = q.y - q.py;
-        const dy = (dy1 + dy2) / 2;
-        const vertical = Math.abs(dy1) > Math.abs(dx1) * 1.15 && Math.abs(dy2) > Math.abs(dx2) * 1.15;
-        const parallel = dy1 * dy2 > 0 && Math.abs(dy1 - dy2) < Math.abs(dy) * .65;
-        const littleScale = Math.abs(Math.log(pair.scale)) < (tilting ? .07 : .035);
-        if (vertical && parallel && littleScale && Math.abs(delta) < (tilting ? 5 : 2.5)) {
-          if (tilting) pitch = -dy * .22;
-          else {
-            tilt += dy;
-            if (Math.abs(tilt) > 6) { tilting = true; pitch = -(tilt - Math.sign(tilt) * 6) * .22; }
+        let pitch = 0;
+        if (!pairMode) {
+          // Classify the whole displacement, not individual pointer events:
+          // two thumbs seldom move at exactly the same time or speed.
+          origin[0].x = p.sx; origin[0].y = p.sy;
+          origin[1].x = q.sx; origin[1].y = q.sy;
+          pairTransform(origin, after, total);
+          const dx = total.x - total.fromX, dy = total.y - total.fromY;
+          const dy1 = p.y - p.sy, dy2 = q.y - q.sy;
+          const parallel = dy1 * dy2 > 0 && Math.abs(dy1 - dy2) < Math.abs(dy) * 1.25;
+          const vertical = Math.abs(dy) > TILT_SLOP && Math.abs(dy) > Math.abs(dx) * 1.25;
+          const scaleChange = Math.abs(Math.log(total.scale)), turn = Math.abs(total.angle * RAD);
+          if (vertical && parallel && scaleChange < .10 && turn < TWIST_SLOP) {
+            pairMode = 'tilt';
+            pitch = -(dy - Math.sign(dy) * TILT_SLOP) * .22;
+          } else if (scaleChange > .075 || turn > TWIST_SLOP
+            || (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy) * .8)) {
+            pairMode = 'transform';
+            // Apply the accumulated pinch/pan once the intent is clear.
+            Object.assign(pair, total);
           }
+        } else if (pairMode === 'tilt') {
+          pitch = -(pair.y - pair.fromY) * .22;
         }
-        apply(1 / pair.scale, degrees, pitch, anchor);
+        from.x = pair.fromX; from.y = pair.fromY; to.x = pair.x; to.y = pair.y;
+        if (pairMode === 'tilt') {
+          // Locked until pointer-count changes: no twist, pan or pinch jitter.
+          // The camera orbits its existing target instead of chasing the fingers.
+          apply(1, 0, pitch, null, true);
+        } else if (pairMode === 'transform') {
+          let degrees = 0;
+          const delta = pair.angle * RAD;
+          if (rotating) degrees = delta;
+          else {
+            rotation += delta;
+            if (Math.abs(rotation) > TWIST_SLOP) {
+              rotating = true; degrees = rotation - Math.sign(rotation) * TWIST_SLOP;
+            }
+          }
+          // Moving centroids still anchor asymmetric pinches correctly.
+          apply(1 / pair.scale, degrees, 0, api.pickPoint(from.x, from.y));
+        }
       } else {
         // Near-coincident/crossing fingers cannot define a reliable angle.
-        rotation = tilt = 0; rotating = tilting = false;
-        apply(1, 0, 0, anchor);
+        // Discard this segment without changing the gesture's locked intent.
+        const lockedMode = pairMode;
+        rebase(0);
+        pairMode = lockedMode;
       }
     }
     for (const p of pointers.values()) { p.px = p.x; p.py = p.y; }

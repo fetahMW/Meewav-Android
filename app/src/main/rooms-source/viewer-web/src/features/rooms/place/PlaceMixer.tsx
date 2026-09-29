@@ -1137,7 +1137,7 @@ export default function PlaceMixer({
       {mode !== "guest" ? <PlaceTwists key={`pads-${room.id}`} active={activeView === "twists"} /> : null}
 
       {activeView === "volumes" ? (
-        <section className="place-volume-view">
+        <section className="place-volume-view" data-preprofile-exempt="volumes">
           <div className="place-volume-list">
             {personalMode ? <small className="viewer-mix-section">ÉCOUTE PERSONNELLE</small> : null}
             {mode !== "host" && listening ? <VolumeRow channel={returnChannel} room={room} onGain={(_id,gain) => listening.setReturnVolume(gain)} onMute={() => listening.setReturnMuted(!listening.returnMuted)} onCamera={onCamera} canEditGain canEditMute cameraControl="none" /> : null}

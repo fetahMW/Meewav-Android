@@ -1,0 +1,10 @@
+# Historical locator failure. DO NOT EXECUTE: the placeholder is absent from
+# Maestro accessibility after search opens; use inputText on the focused field.
+appId: com.meewav.android.debug
+name: RUN2 B filters Room B catalogue
+---
+- tapOn: "Rechercher une room…"
+- inputText: "QA_INT_RUN1_R2_20260924_165332_B"
+- extendedWaitUntil:
+    visible: "QA_INT_RUN1_R2_20260924_165332_B"
+    timeout: 20000

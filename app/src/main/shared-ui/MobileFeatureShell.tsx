@@ -1,3 +1,4 @@
+import PortraitPreProfileHost from "./PortraitPreProfileHost";
 import React, { Component, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
@@ -80,7 +81,8 @@ export function mountFeature(id: 'market' | 'scene' | 'rooms', title: string, lo
           <button type="button" role="menuitem" className="mobile-feature-menu__back" onClick={() => menuAction('back')}><Undo2 aria-hidden="true" /><span>Retour</span></button>
         </nav>
       </>}
-      <Page />
+      <PortraitPreProfileHost />
+    <Page />
       {!roomLaunch && <FeatureDock active={id} onSelect={destination => {
         if (destination === id) navigate(`/${id}`);
         else native(destination);

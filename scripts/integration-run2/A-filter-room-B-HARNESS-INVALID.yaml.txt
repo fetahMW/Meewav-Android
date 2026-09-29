@@ -1,0 +1,11 @@
+# Historical aborted locator flow. DO NOT EXECUTE: the placeholder is absent from
+# Maestro accessibility after search opens; focus is already in the field.
+appId: com.meewav.android.debug
+name: RUN2 A filters Room B catalogue
+---
+- tapOn: "Rechercher une Room, un artiste ou un style"
+- tapOn: "Rechercher une room…"
+- inputText: "QA_INT_RUN1_R2_20260924_165332_B"
+- extendedWaitUntil:
+    visible: "QA_INT_RUN1_R2_20260924_165332_B"
+    timeout: 20000

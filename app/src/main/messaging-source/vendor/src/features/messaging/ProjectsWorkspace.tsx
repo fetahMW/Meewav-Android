@@ -1,3 +1,4 @@
+import { portraitProps } from "../../components/shared/portraitPreProfile";
 import MeewavPillarTabs from "../../components/navigation/MeewavPillarTabs";
 import { demoTrackPackAudio } from "./demoTrackPackAudio";
 import {
@@ -1376,7 +1377,7 @@ function ProjectWizard({
                   const selected = draft.memberIds.includes(contact.id);
                   return (
                     <button key={contact.id} type="button" className={selected ? "is-selected" : ""} onClick={() => toggleMember(contact.id)} aria-pressed={selected}>
-                      <span className="mwp-member-avatar-wrap"><img src={contact.avatar} alt="" />{contact.online && <i />}</span>
+                      <span className="mwp-member-avatar-wrap" {...portraitProps({id:contact.id,name:contact.name,avatarUrl:contact.avatar,role:contact.role})}><img {...portraitProps({id:contact.id,name:contact.name,avatarUrl:contact.avatar})} src={contact.avatar} alt="" />{contact.online && <i />}</span>
                       <span><strong>{contact.name}</strong><small>{contact.role}</small></span>
                       <i>{selected ? <Check size={15} /> : <Plus size={15} />}</i>
                     </button>
@@ -1411,7 +1412,7 @@ function ProjectWizard({
                   <div className="mw-permission-list">
                     {selectedContacts.map((contact) => (
                       <article key={contact.id}>
-                        <img src={contact.avatar} alt="" />
+                        <img {...portraitProps({id:contact.id,name:contact.name,avatarUrl:contact.avatar})} src={contact.avatar} alt="" />
                         <span><strong>{contact.name}</strong><small>{contact.role}</small></span>
                         <div>
                           {wizardPermissionLabels.map(([permission, label]) => {
@@ -1441,7 +1442,7 @@ function ProjectWizard({
                   <div><dt>Membres</dt><dd>{selectedContacts.length === 0 ? "Projet solo" : String(selectedContacts.length + 1) + " (vous + " + selectedContacts.length + ")"}</dd></div>
                   {draft.deadline && <div><dt>Deadline</dt><dd>{formatDeadline(draft.deadline)}</dd></div>}
                 </dl>
-                {selectedContacts.length > 0 && <div className="mw-confirmation__members">{selectedContacts.map((contact) => <span key={contact.id}><img src={contact.avatar} alt="" />{contact.name}</span>)}</div>}
+                {selectedContacts.length > 0 && <div className="mw-confirmation__members">{selectedContacts.map((contact) => <span key={contact.id}><img {...portraitProps({id:contact.id,name:contact.name,avatarUrl:contact.avatar})} src={contact.avatar} alt="" />{contact.name}</span>)}</div>}
               </div>
             </div>
           )}
@@ -2587,7 +2588,7 @@ function ProjectInfoPanel({
           </header>
           <ul className="mwp-overview-members">
             {visibleMembers.map(member => <li key={member.memberId}>
-              <span className="mwp-overview-avatar"><img src={member.avatar} alt="" />{member.online && <i aria-label="En ligne" />}</span>
+              <span className="mwp-overview-avatar" {...portraitProps({id:member.id,name:member.name,avatarUrl:member.avatar,role:member.role})}><img src={member.avatar} alt="" />{member.online && <i aria-label="En ligne" />}</span>
               <span className="mwp-overview-member-copy">
                 <strong>{member.name}{member.id === viewerProfileId && <small> · Moi</small>}</strong>
                 <span>{member.role}{(member.creator || member.authorityRole === "owner") ? " · Propriétaire" : member.authorityRole === "admin" ? " · Admin" : ""}</span>
@@ -2655,7 +2656,7 @@ function ProjectInfoPanel({
                     else next.add(contact.id);
                     return next;
                   })}>
-                    <img src={contact.avatar} alt="" />
+                    <img {...portraitProps({id:contact.id,name:contact.name,avatarUrl:contact.avatar})} src={contact.avatar} alt="" />
                     <span><strong>{contact.name}</strong><small>{contact.role}</small></span>
                     <i>{selected && <Check size={14} />}</i>
                   </button>
@@ -2933,7 +2934,7 @@ function ProjectInvitationsButton({ controller }: { controller: ProjectsWorkspac
           <div className="mwp-invite-list">
             {invitations.map((invitation) => (
               <article key={invitation.invitation_id}>
-                <img src={invitation.other_avatar_url || liveProjectCover(invitation.other_profile_id)} alt="" />
+                <img {...portraitProps({id:invitation.other_profile_id,name:invitation.other_display_name,avatarUrl:invitation.other_avatar_url || undefined})} src={invitation.other_avatar_url || liveProjectCover(invitation.other_profile_id)} alt="" />
                 <span>
                   <strong>{invitation.project_name}</strong>
                   <small>{invitation.direction === "received"

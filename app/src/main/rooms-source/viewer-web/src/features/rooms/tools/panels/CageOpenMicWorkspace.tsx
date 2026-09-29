@@ -1,3 +1,4 @@
+import { portraitProps } from "../../../../components/shared/portraitPreProfile";
 import { useEffect, useState } from "react";
 import { ArrowDown, ArrowRight, ArrowUp, Camera, Check, Clock3, Heart, Mic, Pause, Play, RefreshCw, Star, Users, Wifi } from "lucide-react";
 import type { CageOpenMicPassage, TournamentParticipant } from "../cageCompetition.types";
@@ -8,7 +9,7 @@ const time = (seconds: number) => { const value = Math.ceil(Math.max(0, seconds)
 const ready = (person?: TournamentParticipant) => Boolean(person?.present && person.registered && person.eligible && Object.values(person.readiness).every(Boolean));
 
 function Artist({ person, status }: { person?: TournamentParticipant; status?: string }) {
-  return <span className="cage-workspace__person">{person?.person.avatarUrl ? <img src={person.person.avatarUrl} alt="" /> : <span className="cage-workspace__avatar"><Mic /></span>}<span><strong>{person?.person.name ?? "Artiste à confirmer"}</strong><small>{person?.present === false ? "Connexion perdue" : LABEL[status ?? "WAITING"] ?? status}</small></span></span>;
+  return <span className="cage-workspace__person">{person?.person.avatarUrl ? <img {...portraitProps({id:person.person.id,name:person.person.name,avatarUrl:person.person.avatarUrl})} src={person.person.avatarUrl} alt="" /> : <span className="cage-workspace__avatar"><Mic /></span>}<span><strong>{person?.person.name ?? "Artiste à confirmer"}</strong><small>{person?.present === false ? "Connexion perdue" : LABEL[status ?? "WAITING"] ?? status}</small></span></span>;
 }
 
 export default function CageOpenMicWorkspace(props: CageWorkspaceProps) {

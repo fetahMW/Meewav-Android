@@ -66,6 +66,7 @@ function requestFromConversation(conversation: DemoConversation, token: number):
   return {
     token,
     id: conversation.id,
+    profileId: conversation.profileId,
     name: conversation.name,
     role: conversation.role,
     status: conversation.status,
@@ -79,6 +80,7 @@ function selectionRequestFromConversation(conversation: DemoConversation, token:
   return {
     token,
     id: conversation.id,
+    profileId: conversation.profileId,
     name: conversation.name,
     role: conversation.role,
     status: conversation.status,
@@ -90,6 +92,7 @@ function selectionRequestFromConversation(conversation: DemoConversation, token:
 function conversationSidebarItem(conversation: DemoConversation): MessagingSidebarItem {
   return {
     key: `messages:${conversation.id}`,
+    profileId: conversation.profileId,
     id: conversation.id,
     space: "messages",
     name: conversation.name,
@@ -117,6 +120,7 @@ function collabSidebarItem(collab: DemoCollab): MessagingSidebarItem {
     : collab.isReceived ? `Demande reçue depuis ${sourceLabel}` : `Demande envoyée depuis ${sourceLabel}`;
   return {
     key: `collabs:${collab.id}`,
+    profileId: collab.userId,
     id: collab.id,
     space: "collabs",
     name: collab.name,
@@ -448,6 +452,20 @@ export default function MessagingPage() {
     setOpenGroupRequest(null);
   };
 
+  useEffect(() => {
+    const returnToCollabWall = () => {
+      if (contentSpace !== "collabs") return;
+      // Ignore any conversation still being created when returning to the wall.
+      nextRequestToken();
+      setCollabChatId(null);
+      setOpenCollabRequest(null);
+      setOpenRequest(null);
+      setSelectedRailKey(null);
+    };
+    window.addEventListener("meewav:messaging-list", returnToCollabWall);
+    return () => window.removeEventListener("meewav:messaging-list", returnToCollabWall);
+  }, [contentSpace]);
+
   const changeSpace = (space: MessagingSpace) => {
     window.dispatchEvent(new Event('meewav:messaging-list'));
     nextRequestToken();
@@ -569,6 +587,7 @@ export default function MessagingPage() {
     ));
     const conversation: DemoConversation = existing ?? {
       id: `globe-${normalizedTarget || "artist"}`,
+      profileId: targetId,
       name: routeState.mockArtistName ?? "Artiste du Globe",
       handle: routeState.source === "shorts"
         ? `Profil découvert sur ${SCENE_NAME}`
@@ -647,15 +666,6 @@ export default function MessagingPage() {
       return;
     }
     setOpenGroupRequest({ token, groupId: item.id });
-  };
-
-  const openAcceptedCollab = (conversation: DemoConversation, _collab: DemoCollab) => {
-    const token = nextRequestToken();
-    const existing = displayedMessageItems.find((item) => item.id === conversation.id || item.name === conversation.name);
-    setOpenRequest(requestFromConversation(existing ? { ...existing, status: conversation.status } : conversation, token));
-    setActiveSpace("messages");
-    setContentSpace("messages");
-    setSelectedRailKey(null);
   };
 
   const openMemberChat = (member: { id: string; name: string; role: string; avatar: string }) => {
@@ -863,7 +873,6 @@ export default function MessagingPage() {
         const result = await liveCollaborations.acceptRequest(requestId);
         if (result.conversation_id) {
           await refreshMessagingInbox({ silent: true });
-          await selectLiveConversation(result.conversation_id);
         }
         return result;
       },
@@ -877,7 +886,7 @@ export default function MessagingPage() {
       retry: liveCollaborations.refresh,
       resolveAttachmentUrl: (attachment) => messagingAttachmentsRepository.createSignedAttachmentUrl(attachment),
     };
-  }, [liveCollaborations, liveEnabled, refreshMessagingInbox, selectLiveConversation]);
+  }, [liveCollaborations, liveEnabled, refreshMessagingInbox]);
 
   const liveGroupSummaries = liveGroups.groups;
   const openLiveGroupDetail = liveGroups.openGroup;
@@ -981,7 +990,10 @@ export default function MessagingPage() {
     rightPane = (
       <CollabsWorkspace
         collabs={allCollabs}
-        onAcceptedCollab={openAcceptedCollab}
+        onOpenConversation={(collab) => {
+          const contact = collabRailItems.find((item) => item.id === collab.id);
+          if (contact) selectRailItem(contact);
+        }}
         openCollabRequest={openCollabRequest ?? undefined}
         onItemsChange={liveEnabled ? undefined : setCollabItems}
         onActiveCollabChange={(collabId) => setSelectedRailKey(collabId ? `collabs:${collabId}` : null)}
@@ -1057,7 +1069,6 @@ export default function MessagingPage() {
             <CollabsWorkspace
               collabs={allCollabs}
               pinnedCollabId={collabChatId}
-              onAcceptedCollab={openAcceptedCollab}
               onItemsChange={liveEnabled ? undefined : setCollabItems}
               liveController={liveCollabsController}
             />

@@ -431,7 +431,7 @@ export default function WaveGatePanel({ wave, role, roomId, source, accountId, d
         return <WaveLoopCard
           key={submission.id}
           accent={category.color}
-          avatarUrl={submission.contributor.avatarUrl}
+          profileId={submission.contributor.id} avatarUrl={submission.contributor.avatarUrl}
           avatarFallback={submission.contributor.name.charAt(0)}
           title={submission.contributor.name}
           selectionLabel={`Sélectionner ${submission.title} de ${submission.contributor.name}`}
@@ -472,7 +472,7 @@ export default function WaveGatePanel({ wave, role, roomId, source, accountId, d
       {!visibleSubmissions.length ? <p className="wave-sas__empty">Aucune boucle dans cet état.</p> : null}
     </div>
 
-    {selected ? (() => { const category = LOOP_CATEGORIES.find((item) => item.id === categoryFor(selected)) ?? LOOP_CATEGORIES[4]; const tab = gateTabFor(selected); const canPreview = canPreviewSubmission(selected); return <WaveBottomBar accent={category.color} avatarUrl={selected.contributor.avatarUrl} avatarFallback={selected.contributor.name.charAt(0)} title={selected.contributor.name} category={category.badge} label={`Actions pour ${selected.contributor.name}`}>
+    {selected ? (() => { const category = LOOP_CATEGORIES.find((item) => item.id === categoryFor(selected)) ?? LOOP_CATEGORIES[4]; const tab = gateTabFor(selected); const canPreview = canPreviewSubmission(selected); return <WaveBottomBar accent={category.color} profileId={selected.contributor.id} avatarUrl={selected.contributor.avatarUrl} avatarFallback={selected.contributor.name.charAt(0)} title={selected.contributor.name} category={category.badge} label={`Actions pour ${selected.contributor.name}`}>
       <button type="button" aria-label={`Télécharger ${selected.title}`} disabled={disabled || !canPreview} onClick={() => requestDownload(selected)}><Download /></button>
       <button type="button" aria-label={`Envoyer un message à ${selected.contributor.name}`} onClick={() => messageContributor(selected)}><MessageCircleMore /></button>
       <button type="button" className="is-validate" aria-label={`Valider ${selected.title}`} disabled={disabled || tab === "ready" || tab === "rejected" || !selected.rightsConfirmed} onClick={() => void markReady(selected)}><Check /></button>

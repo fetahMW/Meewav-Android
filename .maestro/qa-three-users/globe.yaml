@@ -1,0 +1,7 @@
+appId: com.meewav.android.debug
+name: QA - Retour au Globe
+---
+- back
+- extendedWaitUntil:
+    visible: "Globe Meewav. Glisse pour tourner et pince pour zoomer."
+    timeout: 45000

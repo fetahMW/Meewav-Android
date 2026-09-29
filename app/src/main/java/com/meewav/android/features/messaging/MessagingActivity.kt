@@ -88,6 +88,7 @@ open class MessagingActivity : ComponentActivity() {
     private val service by lazy { Uri.parse(BuildConfig.SUPABASE_URL) }
     private val manifest by lazy { JSONObject(assets.open("$assetSurface/asset-manifest.json").bufferedReader().use { it.readText() }) }
     private val globeManifest by lazy { JSONObject(assets.open("globe-vinyle/asset-manifest.json").bufferedReader().use { it.readText() }) }
+    private val preProfileMediaManifest by lazy { JSONObject(assets.open("rooms/asset-manifest.json").bufferedReader().use { it.readText() }) }
     private val filePicker = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val values = if (result.resultCode == RESULT_OK) result.data?.let { data ->
             data.clipData?.let { clip -> Array(clip.itemCount) { clip.getItemAt(it).uri } }
@@ -400,14 +401,20 @@ open class MessagingActivity : ComponentActivity() {
                     return try { WebResourceResponse(item.getString("mime"), null, assets.open("globe-vinyle/$name")) } catch (_: Exception) { denied() }
                 }
                 val name = uri.path.orEmpty().removePrefix("/").removePrefix("$assetSurface/")
-                if (name.split('/').any { it == ".." || it == "." } || !manifest.has(name)) return denied()
+                if (name.split('/').any { it == ".." || it == "." }) return denied()
+                // Shared pre-profile media is packaged once in Rooms. Serve only
+                // manifest-listed assets in this namespace, with the same Range support.
+                val sharedPreProfileMedia = !manifest.has(name) && name.startsWith("media/preprofile-demo/")
+                val mediaManifest = if (sharedPreProfileMedia) preProfileMediaManifest else manifest
+                val mediaSurface = if (sharedPreProfileMedia) "rooms" else assetSurface
+                if (!mediaManifest.has(name)) return denied()
                 return try {
-                    val item = manifest.getJSONObject(name)
+                    val item = mediaManifest.getJSONObject(name)
                     val mime = item.getString("mime")
                     if (mime.startsWith("audio/") || mime.startsWith("video/"))
-                        localMediaAsset(this@MessagingActivity, "$assetSurface/$name", mime, item.getLong("bytes"), request.requestHeaders.entries.firstOrNull { it.key.equals("Range", ignoreCase = true) }?.value)
+                        localMediaAsset(this@MessagingActivity, "$mediaSurface/$name", mime, item.getLong("bytes"), request.requestHeaders.entries.firstOrNull { it.key.equals("Range", ignoreCase = true) }?.value)
                     else WebResourceResponse(mime, if (mime.startsWith("image/") || mime.startsWith("font/")) null else "utf-8", 200, "OK",
-                        mapOf("Cache-Control" to "no-store", "X-Content-Type-Options" to "nosniff", "Content-Security-Policy" to csp()), assets.open("$assetSurface/$name"))
+                        mapOf("Cache-Control" to "no-store", "X-Content-Type-Options" to "nosniff", "Content-Security-Policy" to csp()), assets.open("$mediaSurface/$name"))
                 } catch (_: Exception) { denied() }
             }
         }

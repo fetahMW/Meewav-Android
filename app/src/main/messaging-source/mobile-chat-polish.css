@@ -1,0 +1,31 @@
+/* Header overlays a stable timeline: hiding it never changes scroll geometry.
+   These attributes exist only while an actual chat timeline is mounted. */
+#root .mobile-messaging.is-detail .mw-workspace[data-auto-chat-header-owner] {
+  position: relative;
+  grid-template-rows: 0 minmax(0, 1fr) !important;
+}
+#root .mobile-messaging.is-detail [data-auto-chat-chrome] {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 15;
+  margin: 0;
+  transform: translateY(0);
+  transition: transform 180ms ease-out;
+}
+#root .mobile-messaging.is-detail [data-auto-chat-chrome][data-chat-header-hidden] {
+  transform: translateY(-100%);
+  pointer-events: none;
+}
+#root .mobile-messaging.is-detail [data-auto-chat-header-content] {
+  padding-top: 0 !important;
+}
+#root .mobile-messaging.is-detail [data-auto-chat-header-scene] > .mw-chat-timeline {
+  padding-top: 0 !important;
+  scroll-padding-top: calc(var(--auto-chat-header-height, 64px) + 14px) !important;
+}
+#root .mobile-messaging.is-detail [data-auto-chat-header-scene] > .mw-chat-timeline > .mw-chat-timeline__inner {
+  padding-top: calc(var(--auto-chat-header-height, 64px) + 14px) !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  #root .mobile-messaging.is-detail [data-auto-chat-chrome] { transition: none; }
+}

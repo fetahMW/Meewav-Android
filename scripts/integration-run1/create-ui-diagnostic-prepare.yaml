@@ -1,0 +1,21 @@
+appId: com.meewav.android.debug
+name: QA A Rooms create UI diagnostic prepare
+---
+# Precondition: QA A is authenticated LIVE on emulator-5570 and Rooms home is visible.
+- assertVisible: "Créer une Room"
+- tapOn: "Créer une Room"
+- assertVisible: "Ouvrir une Room"
+- tapOn:
+    point: "50%,29%"
+- inputText: "QA_CREATE_UI_20260924_163452_QAA"
+- tapOn: "Continuer"
+- assertVisible: "GREEN HOUSE · APERÇU PRIVÉ"
+- tapOn: "Vérifier"
+- assertVisible: "Tester le micro"
+- tapOn: "Tester le micro"
+- extendedWaitUntil:
+    visible: "Tout est prêt"
+    timeout: 30000
+- tapOn: "Voir le résumé"
+- assertVisible: "Prêt à lancer"
+- assertVisible: "Accéder à la room"

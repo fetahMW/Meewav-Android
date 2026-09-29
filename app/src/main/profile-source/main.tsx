@@ -1,3 +1,4 @@
+import PortraitPreProfileHost from "../shared-ui/PortraitPreProfileHost";
 import React, { Component, lazy, Suspense, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
@@ -27,6 +28,7 @@ function Shell({ Page }: { Page: React.ComponentType }) {
     };
   }, [route, navigate]);
   return <div className="mobile-profile">
+    <PortraitPreProfileHost />
     <Routes>
       <Route path="/profile/view/:profileId" element={<Suspense fallback={<p role="status">Ouverture du profil…</p>}><ProfileViewer /></Suspense>} />
       <Route path="*" element={<Page />} />

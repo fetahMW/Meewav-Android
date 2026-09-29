@@ -11,17 +11,18 @@ reste fixe. Aucun moteur ni gestionnaire de gestes tiers n’est ajouté.
 | Interaction | Comportement |
 | --- | --- |
 | Un doigt | Déplacement direct du point sous le doigt, puis inertie selon la vitesse des 80 dernières millisecondes. Une pause avant le relâchement supprime l’inertie. |
-| Deux doigts | Une seule transformation par image : déplacement du centre, rapport des distances et angle des doigts. Le centre peut se déplacer et les doigts peuvent bouger asymétriquement. |
-| Rotation | Seuil initial de 2,5°, puis mouvement continu dans le sens des doigts. |
-| Inclinaison | Déplacement vertical parallèle des deux doigts, avec faible variation de distance et d’angle. Seuil de 6 pixels CSS, puis 0,22° par pixel ; hystérésis pour limiter les mouvements involontaires. |
+| Deux doigts | Intention reconnue depuis la position initiale des deux doigts. Le mode choisi reste verrouillé jusqu’à un changement du nombre de doigts. Les mouvements sont regroupés par image. |
+| Pincement / déplacement | Une fois ce geste reconnu, zoom selon le rapport des distances et déplacement du centre, y compris pour un pincement asymétrique. Pour incliner ensuite, relâcher puis recommencer le geste vertical. |
+| Rotation | Rotation volontaire au-delà de 10°, puis mouvement continu dans le sens des doigts ; les petites différences de vitesse des pouces ne déclenchent plus ce geste. |
+| Inclinaison | Déplacement vertical des deux doigts : seuil de 6 pixels CSS, puis 0,22° par pixel. Verrouillage sur le seul pitch : centre géographique, orientation et hauteur restent fixes, même si les pouces dévient ou se déplacent à des instants différents. Relâcher les doigts permet de choisir un autre geste. |
 | Double toucher | Zoom avant animé de 280 ms au point touché sur la géographie. Le premier toucher attend 280 ms avant de sélectionner un lieu ; les portraits ouvrent directement leur préprofil au relâchement. |
 | Double toucher maintenu | Après le second appui, glissement vertical pour zoomer à une main ; descendre rapproche, monter éloigne. |
 | Ajout/retrait d’un doigt | Application du dernier déplacement puis reconstruction des références depuis la caméra affichée. Le troisième doigt ne pilote pas la caméra ; son arrivée et son départ réinitialisent également les références. |
 | Annulation/interruption | Annule le geste et la sélection différée. Une nouvelle pression arrête l’inertie ou le zoom depuis leur position visible. Perte de capture, changement de taille, arrière-plan et destruction sont pris en charge. |
 
 Les doigts presque confondus (moins de 16 pixels CSS) ou qui échangent brutalement
-leurs positions ne déclenchent pas de rotation de 180°. Leur translation reste
-consommée ; les références d’angle sont reconstruites.
+leurs positions ne déclenchent pas de rotation de 180°. Le déplacement ambigu
+est ignoré ; les références du geste sont reconstruites.
 
 Le nettoyage d’un contrôleur tactile au repos n’annule pas un vol demandé par
 la recherche. Un changement de taille ou de focus lié au clavier supprime les
@@ -54,7 +55,9 @@ Sous `app/src/main/globe-source/` :
   reconnaît les intentions et anime inertie/zoom/retour dans la boucle existante.
 - `touch-camera.mjs` écrit dans `motion.view`, l’état géographique existant.
   Il projette le centre précédent en 3D, transforme la caméra, puis replace ce
-  point sous le nouveau centre. Il délègue au mode anneau quand celui-ci est actif.
+  point sous le nouveau centre pour les pincements/déplacements. En mode
+  `pitchOnly`, il change uniquement l’inclinaison, sans résoudre d’ancrage sous
+  les doigts. Il délègue au mode anneau quand celui-ci est actif.
 - `touch-elastic.mjs` définit résistance et retour amorti.
 
 Les événements de déplacement ne déclenchent pas de `setState`. Les positions
@@ -82,6 +85,23 @@ de l’anneau. Le bouton 3D existant conserve sa fonction avec une transition de
 
 ## Vérifications de ce lot
 
+### Correction du 29 septembre 2026 — inclinaison verrouillée
+
+`node scripts/test-globe-navigation.mjs` : **16 tests réussis**. Les régressions
+couvrent deux pouces en paysage avec événements décalés et vitesses différentes,
+l’absence de rotation/zoom/déplacement pendant l’inclinaison, le maintien du
+pincement et de la rotation volontaire sur un nouveau geste, l’arrêt de l’inertie
+et les transitions 1→2→1. Une vraie caméra Three.js vérifie que seuls les degrés
+d’inclinaison changent à plusieurs altitudes et orientations, même hors centre.
+La sensation du geste sur appareil reste à valider par l’utilisateur.
+
+Le bundle Globe et `:app:assembleDebug` ont réussi. Installation ADB en parallèle
+confirmée par `Success` (code 0) sur le Samsung S22 et le Redmi, sans ouvrir
+l’application. APK final : SHA-256
+`3F7B581BDD169EDA4DD8CB5E21DAADD8F0BD23ACA0016E7FBDD2A34081FA9C25`.
+
+### Historique du checkpoint tactile initial
+
 Les résultats ci-dessous concernent le checkpoint tactile `9b84f06`. Le lot
 suivant sur les préprofils retire l’attente sur les portraits ; les tests ne sont
 pas rejoués automatiquement pour cette retouche. Voir l’[index du globe](README.md).
@@ -108,6 +128,6 @@ ressentie des gestes physiques ni 60 FPS constants. L’audit de performances
 précédent reste distinct et ne devient pas une mesure de cette nouvelle version.
 
 Pour la relecture sur appareil : déplacer et relâcher, retoucher pendant l’inertie,
-faire un pinch asymétrique autour d’une ville, ajouter rotation puis inclinaison,
+faire un pinch asymétrique autour d’une ville, relâcher puis essayer rotation et inclinaison séparément,
 passer plusieurs fois de 1 à 2 puis 1 doigt, essayer double toucher maintenu,
 atteindre les limites, interrompre un vol, puis vérifier l’exploration du vinyle.

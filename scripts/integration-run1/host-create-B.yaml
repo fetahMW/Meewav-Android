@@ -1,0 +1,25 @@
+appId: com.meewav.android.debug
+name: RUN 1 QA A creates LIVE Room B
+---
+# Precondition: QA A is authenticated LIVE and Rooms home is visible.
+- assertVisible: "Créer une Room"
+- tapOn: "Créer une Room"
+- assertVisible: "Ouvrir une Room"
+- tapOn:
+    point: "50%,29%"
+- inputText: "QA_INT_RUN1_20260924_1138_B"
+- tapOn: "Continuer"
+- assertVisible: "GREEN HOUSE · APERÇU PRIVÉ"
+- tapOn: "Vérifier"
+- assertVisible: "Tester le micro"
+- tapOn: "Tester le micro"
+- extendedWaitUntil:
+    visible: "Tout est prêt"
+    timeout: 30000
+- tapOn: "Voir le résumé"
+- assertVisible: "Prêt à lancer"
+- tapOn: "Accéder à la room"
+- extendedWaitUntil:
+    visible: "QA_INT_RUN1_20260924_1138_B"
+    timeout: 30000
+- assertNotVisible: "Démo · vérification ignorée"

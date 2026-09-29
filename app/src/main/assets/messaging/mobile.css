@@ -117,7 +117,7 @@ button:disabled { opacity: .4; cursor: default; }
 /* Hubs keep their real actions and cards; desktop side rails/chrome are removed. */
 #root .mobile-messaging .mw-context-pane { display: none; grid-area: content; position: relative; min-width: 0; min-height: 0; width: 100%; height: 100%; padding: 0; overflow: auto; }
 #root .mobile-messaging.is-detail .mw-context-pane { display: block; }
-/* Collabs follows the same contact list -> conversation journey as Tchat. */
+/* Cards remain reusable inside a contact conversation and in the request wall. */
 #root .mobile-messaging .mw-context-pane > .mw-hub--collabs { display: block; height: auto; min-height: 100%; max-height: none; overflow: visible; }
 #root .mobile-messaging .mw-collab-detail-workspace { display: block; height: auto; max-height: none; overflow: visible; }
 #root .mobile-messaging .mw-collab-detail-inline { height: auto; max-height: none; overflow: visible; padding: 10px 2px 20px; }
@@ -1165,6 +1165,27 @@ button:disabled { opacity: .4; cursor: default; }
 #root .mobile-messaging:not(.is-detail) .mw-conversation-list { background: linear-gradient(#08090b00, #08090b00 calc(100% - var(--feature-dock-inset,104px)), #08090b calc(100% - var(--feature-dock-inset,104px))) !important; }
 #root .mobile-messaging:not(.is-detail) .mw-context-pane { display: none; }
 
+/* Collabs opens on a bounded, single-column request wall beneath the main tabs. */
+#root .mobile-messaging.is-collab-wall .mw-conversation-rail { display: none; }
+#root .mobile-messaging.is-collab-wall .mw-context-pane {
+  display: block; grid-area: content; box-sizing: border-box; overflow-y: auto; overflow-x: hidden;
+  padding: 8px 12px calc(var(--feature-dock-inset,104px) + 20px); touch-action: pan-y; overscroll-behavior-y: contain; background: transparent;
+}
+#root .mobile-messaging.is-collab-wall .mw-hub--collabs { padding: 0; background: transparent; }
+#root .mobile-messaging.is-collab-wall .mw-collab-overview-controls { margin: 0 0 12px; padding: 0; }
+#root .mobile-messaging.is-collab-wall .mw-collab-filter-chips { display: flex; width: 100%; gap: 6px; flex-wrap: nowrap; }
+#root .mobile-messaging.is-collab-wall .mw-collab-filter-chips > button { flex: 1; min-width: 0; min-height: 40px; padding: 6px; font-size: 12px; }
+#root .mobile-messaging.is-collab-wall .mw-collabs-request-wall { width: 100%; padding: 0; gap: 12px; }
+#root .mobile-messaging.is-collab-wall .mw-collabs-request-wall > .is-wall-card { padding: 0; margin: 0; }
+#root .mobile-messaging .mw-collab-request__profile.is-contact { position: relative; min-height: 48px; padding-right: 22px; }
+#root .mobile-messaging .mw-collab-request__open-contact {
+  position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; justify-content: flex-end;
+  width: 100%; height: 100%; min-height: 48px; padding: 0; border: 0; border-radius: 9px;
+  background: transparent; box-shadow: none; color: var(--mw-accent-secondary,#a98ef0); cursor: pointer;
+}
+#root .mobile-messaging .mw-collab-request__open-contact > svg { width: 18px; height: 18px; }
+#root .mobile-messaging .mw-collab-request__open-contact:focus-visible { outline: 2px solid #a98ef0; outline-offset: 3px; }
+
 /* Keep the label and its single measured underline inside the same tab row. */
 #root .mobile-messaging .messaging-pillar-tabs > button {
   box-sizing:border-box; height:50px; padding:0 2px 12px; gap:4px;
@@ -1180,3 +1201,6 @@ button:disabled { opacity: .4; cursor: default; }
 }
 #root .mobile-messaging .mw-mobile-workspace-header.mw-hub-chipbar > .agw-panel__toolbar { height:48px; }
 #root .mobile-messaging .agw-panel:has(> .mw-mobile-workspace-header) .agw-panel__body:not(:has(> .agw-group-chat)) { padding-top:112px; }
+
+/* Portrait stays above the separate contact/conversation hit area. */
+#root .mobile-messaging .mw-collab-request__avatar[data-preprofile-portrait] {position:relative; z-index:2;}

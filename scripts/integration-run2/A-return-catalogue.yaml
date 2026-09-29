@@ -1,0 +1,8 @@
+appId: com.meewav.android.debug
+name: RUN2 A returns from Room A catalogue
+---
+- assertVisible: "QA_INT_RUN1_R2_20260924_165332_A"
+- tapOn: "Retour aux rooms"
+- extendedWaitUntil:
+    visible: "Rechercher une Room, un artiste ou un style"
+    timeout: 20000

@@ -1,0 +1,10 @@
+appId: com.meewav.android.debug
+name: RUN2 B rejoins filtered Room B
+---
+- assertVisible: "Ouvrir QA_INT_RUN1_R2_20260924_165332_B, La Wave, animé par QA Messagerie Alpha, 1 spectateurs"
+- tapOn:
+    point: "50%,40%"
+- extendedWaitUntil:
+    visible: "QA_INT_RUN1_R2_20260924_165332_B"
+    timeout: 30000
+- assertVisible: "RUN2_B_WITNESS_01_165332"

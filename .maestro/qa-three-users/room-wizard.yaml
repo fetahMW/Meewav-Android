@@ -1,0 +1,8 @@
+appId: com.meewav.android.debug
+name: QA - Ouvrir et refermer la préparation de Room
+---
+- tapOn: "Créer une Room"
+- assertVisible: "Ouvrir une Room"
+- assertNotVisible: "Démo · vérification ignorée"
+- tapOn: "Retour aux Rooms"
+- assertVisible: "Créer une Room"

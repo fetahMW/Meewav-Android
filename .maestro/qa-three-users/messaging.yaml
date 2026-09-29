@@ -1,0 +1,7 @@
+appId: com.meewav.android.debug
+name: QA - Ouvrir la messagerie réelle
+---
+- tapOn: "Messagerie"
+- extendedWaitUntil:
+    visible: "Trouver un ami"
+    timeout: 45000

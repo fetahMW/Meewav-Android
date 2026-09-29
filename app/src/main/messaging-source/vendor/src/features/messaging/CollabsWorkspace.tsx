@@ -1,3 +1,4 @@
+import { portraitProps } from "../../components/shared/portraitPreProfile";
 import { Link } from "react-router-dom";
 import CollabInlineAudio from "./CollabInlineAudio";
 import {
@@ -68,10 +69,10 @@ export type CollabsWorkspaceLiveController = {
 
 export type CollabsWorkspaceProps = {
   collabs?: DemoCollab[];
-  onAcceptedCollab: (conversation: DemoConversation, collab: DemoCollab) => void;
   openCollabRequest?: { token: number; id: string };
   onItemsChange?: (collabs: DemoCollab[]) => void;
   onActiveCollabChange?: (collabId: string | null) => void;
+  onOpenConversation?: (collab: DemoCollab) => void;
   liveController?: CollabsWorkspaceLiveController;
   pinnedCollabId?: string;
 };
@@ -266,6 +267,7 @@ export function buildCollabConversation(collab: DemoCollab, accepted = false): D
   return {
       id: accepted ? `conv_friend_collab_${collab.id}` : `conv_collab_${collab.id}`,
       collaborationRequestId: accepted ? null : collab.id,
+      profileId: collab.userId,
     name: collab.name,
     handle: `@${collab.name.toLocaleLowerCase("fr-FR").replace(/ /g, "_")}`,
     role: collab.role,
@@ -565,10 +567,10 @@ function CollabState({ collab }: { collab: DemoCollab }) {
 
 export function CollabsWorkspace({
   collabs: controlledCollabs,
-  onAcceptedCollab,
   openCollabRequest,
   onItemsChange,
   onActiveCollabChange,
+  onOpenConversation,
   liveController,
   pinnedCollabId,
 }: CollabsWorkspaceProps) {
@@ -606,10 +608,14 @@ export function CollabsWorkspace({
   const [previewAttachment, setPreviewAttachment] = useState<DemoCollabAttachment | null>(null);
 
   const openCollab = useCallback((collab: DemoCollab) => {
-    setFilter(collab.status === "accepted" ? "accepted" : collab.status === "sent" && !collab.isReceived ? "sent" : "received");
-    setSelectedCollabId(collab.id);
-    setPreviewAttachment(null);
-    onActiveCollabChangeRef.current?.(collab.id);
+    if (onOpenConversation) {
+      onOpenConversation(collab);
+    } else {
+      setFilter(collab.status === "accepted" ? "accepted" : collab.status === "sent" && !collab.isReceived ? "sent" : "received");
+      setSelectedCollabId(collab.id);
+      setPreviewAttachment(null);
+      onActiveCollabChangeRef.current?.(collab.id);
+    }
     if (liveController && !liveController.isMutating(collab.id)) {
       setLiveActionError(null);
       liveController.clearActionError?.();
@@ -617,7 +623,7 @@ export function CollabsWorkspace({
         setLiveActionError(caughtErrorMessage(error));
       });
     }
-  }, [liveController]);
+  }, [liveController, onOpenConversation]);
 
   const showOverview = () => {
     setSelectedCollabId(null);
@@ -663,7 +669,6 @@ export function CollabsWorkspace({
       try {
         await liveController.acceptRequest(collab.id);
         showOverview();
-        setFilter("accepted");
       } catch (error) {
         setLiveActionError(caughtErrorMessage(error));
       }
@@ -678,8 +683,6 @@ export function CollabsWorkspace({
     };
     setDemoItems((current) => current.map((item) => item.id === collab.id ? accepted : item));
     showOverview();
-    setFilter("accepted");
-    onAcceptedCollab(buildCollabConversation(accepted, true), accepted);
   };
 
   const rejectCollab = async (collab: DemoCollab) => {
@@ -779,14 +782,15 @@ export function CollabsWorkspace({
             <article className={`mw-collab-request${compact ? " compact-card" : ""}`} aria-label={`Demande de collab de ${detailCollab.name}`}>
               <div className="mw-collab-request__content">
                 <header>
-                  {compact && !pinnedCollabId ? <button type="button" className="mw-collab-card__kind" aria-label={`Voir la demande de ${detailCollab.name}`} onClick={() => openCollab(detailCollab)}><Handshake aria-hidden="true" />{requestLabel(detailCollab)}<ChevronRight aria-hidden="true" /></button> : <span className="mw-collab-card__kind"><Handshake aria-hidden="true" />{requestLabel(detailCollab)}<ChevronRight aria-hidden="true" /></span>}
+                  {compact && !pinnedCollabId && !onOpenConversation ? <button type="button" className="mw-collab-card__kind" aria-label={`Voir la demande de ${detailCollab.name}`} onClick={() => openCollab(detailCollab)}><Handshake aria-hidden="true" />{requestLabel(detailCollab)}<ChevronRight aria-hidden="true" /></button> : <span className="mw-collab-card__kind"><Handshake aria-hidden="true" />{requestLabel(detailCollab)}</span>}
                   <span className="mw-collab-card__meta">
                     <span><Clock3 aria-hidden="true" />{formatCollabActivity(detailCollab.meta)}</span>
                     {detailCollab.attachments.length > 0 && <><i aria-hidden="true">•</i><span><Paperclip aria-hidden="true" />{detailCollab.attachments.length} fichier{detailCollab.attachments.length > 1 ? "s" : ""}</span></>}
                   </span>
                 </header>
-                <aside className="mw-collab-request__profile">
-                  <span className="mw-collab-request__avatar"><img src={localCollabAvatar(detailCollab)} alt="" /></span>
+                <aside className={`mw-collab-request__profile${compact && onOpenConversation ? " is-contact" : ""}`}>
+                  {compact && onOpenConversation && <button type="button" className="mw-collab-request__open-contact" aria-label={`Ouvrir la conversation avec ${detailCollab.name}`} onClick={() => openCollab(detailCollab)}><ChevronRight aria-hidden="true" /></button>}
+                  <span className="mw-collab-request__avatar" {...portraitProps({id:detailCollab.userId,name:detailCollab.name,avatarUrl:localCollabAvatar(detailCollab),role:detailCollab.role,gradeLevel:getCollabGradeLevel(detailCollab)})}><img src={localCollabAvatar(detailCollab)} alt="" /></span>
                   <div className="mw-collab-request__identity">
                   <div className="mw-collab-request__heading">
                   <h3 id={`mw-collab-title-${detailCollab.id}`}><span>{detailCollab.name}</span></h3>
@@ -802,7 +806,7 @@ export function CollabsWorkspace({
                   </dl>
                   <Link className="mw-collab-profile-link" to={profileHref(detailCollab)} state={{ from: "/messages?space=collabs" }}>Voir profil <ChevronRight size={14} /></Link>
                   </div>
-                <CollabRequestMessage key={detailCollab.id} message={detailCollab.message} />
+                {(!compact || !onOpenConversation) && <CollabRequestMessage key={detailCollab.id} message={detailCollab.message} />}
                 {detailMusicalFacts.length > 0 && (
                   <div className="mw-collab-card__chips" aria-label="Informations musicales">
                     {detailMusicalFacts.map((fact) => <span key={fact.id}>{fact.icon}{fact.label}</span>)}

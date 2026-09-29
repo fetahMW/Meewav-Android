@@ -1,0 +1,10 @@
+appId: com.meewav.android.debug
+name: RUN2 A host sends live Room A marker
+---
+- assertVisible: "QA_INT_RUN1_R2_20260924_165332_A"
+- tapOn: "Écrire un message"
+- inputText: "RUN2_A_LIVE_01_165332"
+- tapOn: "Envoyer"
+- extendedWaitUntil:
+    visible: "RUN2_A_LIVE_01_165332"
+    timeout: 20000

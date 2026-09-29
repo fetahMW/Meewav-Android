@@ -87,12 +87,13 @@ export function createRingNavigation(camera, ring, reducedMotion) {
       if (anchor) anchorTouch(anchor, to, width, height);
       else { angle += (to.x - from.x) * .001; heading += (to.x - from.x) * .001; updateTouch(); }
     },
-    transformTouch({ factor, rotation, pitch: deltaPitch, from, to, anchor }, width, height) {
+    transformTouch({ factor, rotation, pitch: deltaPitch, pitchOnly = false, from, to, anchor }, width, height) {
       // Elevation follows the same continuous ratio as the geographic camera.
       elevation = elasticDelta(elevation, elevation * (factor - 1), limits.minElevation, limits.maxElevation, .25);
       heading += rotation * Math.PI / 180;
       pitch = elasticDelta(pitch, deltaPitch * Math.PI / 180, limits.minPitch, limits.maxPitch, .025);
-      updateTouch(); anchorTouch(anchor, to, width, height);
+      updateTouch();
+      if (!pitchOnly) anchorTouch(anchor, to, width, height);
     },
     settleTouch(seconds) {
       if (!active) return false;

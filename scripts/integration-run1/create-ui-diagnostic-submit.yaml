@@ -1,0 +1,7 @@
+appId: com.meewav.android.debug
+name: QA A Rooms create UI diagnostic single submit
+---
+# Precondition: separate T0 screenshot/hierarchy and CDP/logcat capture are already active.
+- assertVisible: "Accéder à la room"
+- tapOn: "Accéder à la room"
+- takeScreenshot: "qa-create-ui-after-single-tap"

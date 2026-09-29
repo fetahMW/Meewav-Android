@@ -127,6 +127,11 @@ internal class WaveGuestState(private val cageDemo: Boolean = false, private val
     var profilePreviewId by mutableStateOf<String?>(null)
     var externalProfile by mutableStateOf<WaveGuest?>(null)
         private set
+    fun openProfile(guest: WaveGuest) {
+        externalProfile = guest
+        previewId = null
+        profilePreviewId = guest.id
+    }
     fun openArtistProfile(artist: String) {
         val guest = guests.firstOrNull { it.name.equals(artist, ignoreCase = true) }
             ?: WaveGuest("wave-artist-$artist", artist, "Artiste", when (artist) {

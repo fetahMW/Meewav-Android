@@ -1,9 +1,11 @@
+import PortraitPreProfileHost from "../shared-ui/PortraitPreProfileHost";
 import React, { Component, useEffect, useLayoutEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft, MessageCircle, Plus, X } from 'lucide-react';
 import { configure, previewEnabled, updateToken, type MobileConfig } from './runtime';
 import { useFloatingComposer } from './useFloatingComposer';
+import { useChatHeaderScroll } from './useChatHeaderScroll';
 import VideoCalls from './calls/VideoCalls';
 import FeatureDock from '../shared-ui/FeatureDock';
 
@@ -35,6 +37,7 @@ function MobileShell({ Page }: { Page: React.ComponentType }) {
   });
   const [downloadError, setDownloadError] = useState(false);
   const [navigationNotice, setNavigationNotice] = useState(false);
+  useChatHeaderScroll(surfaceRef, detail, current.key);
   useEffect(() => {
     const failed = () => setDownloadError(true);
     window.addEventListener('meewav:download-error', failed);
@@ -83,7 +86,8 @@ function MobileShell({ Page }: { Page: React.ComponentType }) {
       window.removeEventListener('meewav:messaging-list', close);
     };
   }, [detail, current]);
-  return <div ref={surfaceRef} className={`mobile-messaging${detail ? ' is-detail' : ''}`}>
+  return <div ref={surfaceRef} className={`mobile-messaging${detail ? ' is-detail' : space === 'collabs' ? ' is-collab-wall' : ''}`}>
+    <PortraitPreProfileHost />
     <header className="mobile-messaging-header" aria-hidden={detail || undefined}>
       <button aria-label="Retour à l’écran précédent" onClick={() => (window as any).meewavMessaging.back()}><ChevronLeft /></button>
       <span id="mobile-messaging-search" /><div className="mobile-messaging-title"><strong>{space === 'collabs' ? 'Collabs' : space === 'projects' ? 'Projets' : space === 'groups' ? 'Groupes' : 'Tchat'}</strong>{previewEnabled() && <small>Aperçu sans compte</small>}</div>

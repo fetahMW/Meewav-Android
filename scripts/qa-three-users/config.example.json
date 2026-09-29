@@ -1,0 +1,11 @@
+{
+  "windowsRepo": "../Meewav-Windows",
+  "webRepo": "../Meewav-Web-viewer-parity",
+  "webPort": 5281,
+  "electronPort": 5282,
+  "targets": [
+    { "platform": "web", "account": "testeur1" },
+    { "platform": "web", "account": "testeur2" },
+    { "platform": "web", "account": "testeur3" }
+  ]
+}

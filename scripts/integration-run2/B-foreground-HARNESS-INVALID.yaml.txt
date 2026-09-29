@@ -1,0 +1,12 @@
+# Historical failed flow. DO NOT EXECUTE: Maestro launchApp without stopApp:false
+# force-stops the app and destroys the existing Rooms task; use Recents for lifecycle tests.
+appId: com.meewav.android.debug
+name: RUN2 B foregrounds Room B
+---
+- launchApp
+- extendedWaitUntil:
+    visible: "QA_INT_RUN1_R2_20260924_165332_B"
+    timeout: 30000
+- extendedWaitUntil:
+    visible: "RUN2_B_BG_01_165332"
+    timeout: 30000

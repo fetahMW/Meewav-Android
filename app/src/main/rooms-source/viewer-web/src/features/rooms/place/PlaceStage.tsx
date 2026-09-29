@@ -1,3 +1,4 @@
+import { portraitProps } from "../../../components/shared/portraitPreProfile";
 import CageStageProgram from "./CageStageProgram";
 import LiveActionBurst from "./LiveActionBurst";
 import type { LiveSupportAction } from "./useRoomSupportThrows";
@@ -1193,7 +1194,7 @@ export default function PlaceStage({
 
       {isCageStage && !isHost && !isGuest && room.source === "demo" ? <button className="cage-simulation-play" type="button" aria-label="Simuler La Cage" onClick={()=>window.dispatchEvent(new CustomEvent("cage-viewer-simulation",{detail:{picker:true}}))}><Play/></button>:null}
       {!isHost && !isGuest ? <div className="android-stage-heading" data-theme={roomPresentation.theme}>
-        <button className="android-stage-host" type="button" onClick={() => onOpenProfile(room.host.id)} aria-label={`Voir le profil de ${room.host.displayName}`}><img src={room.host.avatarUrl} alt="" /></button>
+        <button className="android-stage-host" type="button" onClick={() => onOpenProfile(room.host.id)} aria-label={`Voir le profil de ${room.host.displayName}`}><img {...portraitProps({id:room.host.id,name:room.host.displayName,avatarUrl:room.host.avatarUrl})} src={room.host.avatarUrl} alt="" /></button>
         <span className="android-stage-clock"><i /><time>{elapsedLabel}</time></span>
         <span className="android-stage-room">{roomPresentation.uppercaseLabel}</span>
       </div> : null}

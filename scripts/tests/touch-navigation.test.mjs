@@ -41,15 +41,63 @@ test('coalesces events; 1→2→1 and third finger rebase without a transform',(
   nav.move(event(2,224,107,40));nav.tick(45);
   assert.deepEqual(pans[1],{from:{x:220,y:105},to:{x:224,y:107}});
 });
-test('rotation threshold, parallel tilt, crossing fingers and cancel remain finite',()=>{
+test('vertical intent waits for slop, then stays locked through thumb jitter and crossing',()=>{
   const {nav,calls}=harness();nav.down(event(1,100,100,1));nav.down(event(2,200,100,2));
-  nav.move(event(1,100,96,10));nav.move(event(2,200,96,10));nav.tick(12);near(calls.at(-1).pitch,0);
+  nav.move(event(1,100,96,10));nav.move(event(2,200,96,10));nav.tick(12);assert.equal(calls.length,0);
   nav.move(event(1,100,90,20));nav.move(event(2,200,90,20));nav.tick(22);assert.ok(calls.at(-1).pitch>0);
-  nav.move(event(2,210,120,30));nav.tick(32);assert.ok(calls.at(-1).rotation>0);near(calls.at(-1).pitch,0);
+  nav.move(event(2,210,120,30));nav.tick(32);near(calls.at(-1).rotation,0);assert.equal(calls.at(-1).pitchOnly,true);
+  assert.ok(calls.every(c=>c.rotation===0 && c.factor===1 && c.pitchOnly));
   nav.move(event(1,240,120,40));nav.move(event(2,90,100,40));nav.tick(42);
+  nav.move(event(1,260,115,50));nav.move(event(2,110,95,50));nav.tick(52);
+  assert.ok(calls.at(-1).pitch>0);assert.equal(calls.at(-1).pitchOnly,true);
+  assert.ok(calls.every(c=>c.rotation===0 && c.factor===1 && c.pitchOnly));
   assert.ok(calls.every(c=>[c.factor,c.rotation,c.pitch].every(Number.isFinite)));
-  const count=calls.length;nav.up(event(1,240,120,43),true);nav.move(event(2,50,50,44));nav.tick(50);
+  const count=calls.length;nav.up(event(1,260,115,53),true);nav.move(event(2,50,50,54));nav.tick(60);
   assert.equal(calls.length,count);assert.equal(nav.pointers.size,0);
+});
+test('staggered landscape thumbs choose tilt before angular noise can rotate the globe',()=>{
+  const {nav,calls}=harness();nav.down(event(1,100,240,1));nav.down(event(2,700,210,2));
+  nav.move(event(1,102,228,10));nav.tick(12);assert.equal(calls.length,0);
+  nav.move(event(2,698,200,14));nav.tick(16);assert.ok(calls.at(-1).pitch>0);
+  for(let i=1;i<=12;i++){
+    nav.move(event(1,102+i%3,228-i*8,20+i*16));
+    nav.tick(21+i*16);
+    nav.move(event(2,698-i%4,200-i*5,22+i*16));
+    nav.tick(24+i*16);
+  }
+  assert.ok(calls.length>10);
+  assert.ok(calls.every(c=>c.rotation===0 && c.factor===1 && c.pitchOnly));
+  // Horizontal drift after locking neither pans nor changes pitch.
+  nav.move(event(1,140,132,240));nav.move(event(2,730,140,240));nav.tick(242);
+  near(calls.at(-1).pitch,0);
+});
+test('a fresh pinch or deliberate twist remains available without tilting',()=>{
+  for(const gesture of ['pinch','twist']){
+    const {nav,calls}=harness();nav.down(event(1,100,100,1));nav.down(event(2,200,100,2));
+    if(gesture==='pinch'){
+      nav.move(event(1,80,100,10));nav.move(event(2,220,100,10));nav.tick(12);
+      near(calls.at(-1).factor,100/140);near(calls.at(-1).rotation,0);
+    } else {
+      const angle=20*Math.PI/180;
+      nav.move(event(1,150-50*Math.cos(angle),100-50*Math.sin(angle),10));
+      nav.move(event(2,150+50*Math.cos(angle),100+50*Math.sin(angle),10));nav.tick(12);
+      near(calls.at(-1).rotation,10);near(calls.at(-1).factor,1);
+    }
+    assert.ok(calls.every(c=>c.pitch===0 && !c.pitchOnly));
+  }
+});
+test('adding fingers cancels pan inertia and removing a finger rebases without a jump',()=>{
+  const {nav,calls,pans}=harness();nav.down(event(1,100,100,10));
+  for(let i=1;i<=4;i++){nav.move(event(1,100+i*10,100,10+i*16));nav.tick(10+i*16);}
+  nav.up(event(1,140,100,75));nav.tick(91);const count=pans.length;
+  nav.down(event(2,200,200,92));nav.down(event(3,650,220,93));nav.tick(105);
+  assert.equal(pans.length,count);assert.equal(calls.length,0);
+  nav.move(event(2,202,185,110));nav.move(event(3,648,208,110));nav.tick(112);
+  const transformed=calls.length;nav.up(event(3,648,208,113));nav.tick(114);
+  assert.equal(calls.length,transformed);assert.equal(pans.length,count);
+  nav.move(event(2,205,185,120));nav.tick(122);
+  assert.deepEqual(pans.at(-1),{from:{x:202,y:185},to:{x:205,y:185}});
+  nav.up(event(2,205,185,250));nav.tick(266);assert.equal(pans.length,count+1);
 });
 test('recent velocity produces decaying inertia; a stationary release does not',()=>{
   for(const pause of [0,140]){
@@ -90,6 +138,22 @@ function geometry(initial={}) {
   const api=createTouchCamera({view,motion,pickPoint,keepPoint,updateCamera,ring:{active:false,releaseTouch(){}},width:()=>800,height:()=>400});
   return {api,view,motion,camera,pickPoint,project,updateCamera};
 }
+
+test('locked tilt changes only real camera pitch, including off-centre and distant views',()=>{
+  for(const initial of [{},{height:.01,pitch:60,bearing:43},{height:220,pitch:0},{lon:179.9,height:1}]){
+    const g=geometry(initial),pose={...g.view},nav=createTouchNavigation(g.api);
+    nav.down(event(1,120,200,1));nav.down(event(2,650,245,2));
+    for(let i=1;i<=6;i++){
+      nav.move(event(1,120+i%3,200-i*7,10+i*16));
+      nav.move(event(2,650-i%4,245-i*5,10+i*16));nav.tick(12+i*16);
+    }
+    assert.ok(g.view.pitch>pose.pitch);
+    near(g.view.bearing,pose.bearing);near(g.view.lon,pose.lon);near(g.view.lat,pose.lat);near(g.view.height,pose.height);
+    const pitch=g.view.pitch;
+    nav.up(event(1,120,158,120));nav.up(event(2,648,215,121));nav.tick(138);
+    near(g.view.pitch,pitch);near(g.view.lon,pose.lon);near(g.view.lat,pose.lat);near(g.view.bearing,pose.bearing);
+  }
+});
 test('real Three camera retains moving off-centre world anchor across zoom, bearing, pitch',()=>{
   for(const initial of [{},{height:.01,pitch:60},{height:220,pitch:0},{lon:179.9,height:1}]){
     const g=geometry(initial);let from={x:430,y:230};const anchor=g.pickPoint(from.x,from.y);assert.ok(anchor);

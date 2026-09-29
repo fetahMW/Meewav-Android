@@ -1,0 +1,7 @@
+appId: com.meewav.android.debug
+name: RUN2 B inputs Room B search
+---
+- inputText: "QA_INT_RUN1_R2_20260924_165332_B"
+- extendedWaitUntil:
+    visible: "QA_INT_RUN1_R2_20260924_165332_B"
+    timeout: 20000

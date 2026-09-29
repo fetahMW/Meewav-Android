@@ -1,0 +1,1 @@
+import{e as a,f as b}from"/rooms/assets/chunk-KFNC3XEU.js";import"/rooms/assets/chunk-5WBZAOK6.js";import"/rooms/assets/chunk-XS4EY4SI.js";import"/rooms/assets/chunk-WXY6NY4N.js";export{a as CollaborationComposer,b as default};

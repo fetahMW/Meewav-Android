@@ -1,0 +1,23 @@
+appId: com.meewav.android.debug
+name: QA - Connexion normale d'un testeur
+---
+# No clearState, clearKeychain or reinstall. The debug launcher's real-mode choice
+# signs out this device locally before the ordinary password form.
+- launchApp:
+    stopApp: true
+    clearState: false
+- runFlow:
+    when:
+      visible: "Application réelle"
+    commands:
+      - tapOn: "Application réelle"
+- assertVisible: "E-mail ou nom d’utilisateur"
+- tapOn: "E-mail ou nom d’utilisateur"
+- inputText: ${MAESTRO_QA_EMAIL}
+- tapOn: "Mot de passe"
+- inputText: ${MAESTRO_QA_PASSWORD}
+- hideKeyboard
+- tapOn: "Se connecter"
+- extendedWaitUntil:
+    visible: "Globe Meewav. Glisse pour tourner et pince pour zoomer."
+    timeout: 60000

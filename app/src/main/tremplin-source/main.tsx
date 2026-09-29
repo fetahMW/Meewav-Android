@@ -1,3 +1,4 @@
+import PortraitPreProfileHost from "../shared-ui/PortraitPreProfileHost";
 import React, { Component, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
@@ -58,6 +59,7 @@ function Shell({ Page }: { Page: React.ComponentType }) {
         <button onClick={() => native('close-app')}><X size={17} /> Quitter le Tremplin</button>
       </nav>
     </>}
+    <PortraitPreProfileHost />
     <Page />
     <FeatureDock active="tremplin" onSelect={select} />
     {notice && <aside className="mobile-profile-notice" role="status">{notice}<button aria-label="Fermer" onClick={() => setNotice('')}><X size={18} /></button></aside>}

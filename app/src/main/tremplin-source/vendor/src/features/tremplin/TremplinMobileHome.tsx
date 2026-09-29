@@ -1,3 +1,4 @@
+import { portraitProps } from "../../components/shared/portraitPreProfile";
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { ArrowRight, ChevronRight, CirclePlay, Heart, Pause, Play, Search, ShieldCheck, Sparkles, X } from 'lucide-react';
 import type { TremplinPublicHomeProps } from './TremplinPublicHome';
@@ -65,7 +66,7 @@ export default function TremplinMobileHome(props: TremplinPublicHomeProps) {
       <button type="submit" aria-label="Rechercher"><ArrowRight size={19} /></button>
     </form>
     {query.trim().length >= 2 && <div className="tm-results" aria-label="Résultats de recherche">
-      {results.map(artist => <button key={artist.id} onClick={() => openArtist(artist)}><img src={artist.portrait} alt="" /><span><strong>{artist.name}</strong><small>{getTremplinProfessionLabel(artist)} · {artist.city}</small></span><ChevronRight size={18} /></button>)}
+      {results.map(artist => <button key={artist.id} onClick={() => openArtist(artist)}><img {...portraitProps({id:artist.profileId || artist.id,name:artist.name,avatarUrl:artist.portrait,gradeLevel:artist.gradeLevel})} src={artist.portrait} alt="" /><span><strong>{artist.name}</strong><small>{getTremplinProfessionLabel(artist)} · {artist.city}</small></span><ChevronRight size={18} /></button>)}
       {!results.length && <p>Aucun résultat dans cette sélection. <button onClick={() => props.onSearch(query.trim())}>Explorer tous les talents</button></p>}
     </div>}
 
@@ -91,7 +92,7 @@ export default function TremplinMobileHome(props: TremplinPublicHomeProps) {
       <p className="tm-caption">Des projets, pas un classement. Sélection indépendante des achats de jetons.</p>
     </section>
 
-    {followed.length > 0 && <section className="tm-section"><header className="tm-heading"><h2>Tes artistes suivis</h2><button aria-label="Ouvrir Mes artistes" onClick={props.onMyArtists}><ArrowRight size={20} /></button></header><div className="tm-followed">{followed.map(artist => <button key={artist.id} onClick={() => openArtist(artist)}><img src={artist.portrait} alt="" /><span><strong>{artist.name}</strong><small>{getTremplinProjectSnapshot(artist).headline}</small></span><ChevronRight size={18} /></button>)}</div></section>}
+    {followed.length > 0 && <section className="tm-section"><header className="tm-heading"><h2>Tes artistes suivis</h2><button aria-label="Ouvrir Mes artistes" onClick={props.onMyArtists}><ArrowRight size={20} /></button></header><div className="tm-followed">{followed.map(artist => <button key={artist.id} onClick={() => openArtist(artist)}><img {...portraitProps({id:artist.profileId || artist.id,name:artist.name,avatarUrl:artist.portrait,gradeLevel:artist.gradeLevel})} src={artist.portrait} alt="" /><span><strong>{artist.name}</strong><small>{getTremplinProjectSnapshot(artist).headline}</small></span><ChevronRight size={18} /></button>)}</div></section>}
 
     <section className="tm-section tm-path" aria-labelledby="tm-path-title">
       <header className="tm-heading"><div><span className="tm-eyebrow">À TON RYTHME</span><h2 id="tm-path-title">Du talent au soutien</h2></div></header>

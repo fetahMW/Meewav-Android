@@ -350,7 +350,8 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                 catalog.forEach { guest ->
                     Row(Modifier.fillMaxWidth().hifiBlackSurface(14.dp).clickable { state.invite(guest); page = 1; inviteOpen = false }.padding(14.dp),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        WaveGuestPortrait(guest, null, modifier = Modifier.size(40.dp).clip(CircleShape), contentScale = ContentScale.Crop)
+                        WaveGuestPortrait(guest, "Pré-profil de ${guest.name}", modifier = Modifier.size(40.dp).clip(CircleShape)
+                            .clickable { inviteOpen = false; state.openProfile(guest) }, contentScale = ContentScale.Crop)
                         Text(guest.name, modifier = Modifier.weight(1f))
                         Icon(WaveIcons.Add, "Inviter", tint = WaveMixerTheme.capsuleAccentSoft)
                     }
@@ -374,7 +375,8 @@ internal fun GuestPreviewContent(state: WaveGuestState, guest: WaveGuest) {
                 Text("Simuler la reconnexion", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 12.sp)
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                WaveGuestPortrait(guest, null, modifier = Modifier.size(52.dp).clip(CircleShape), contentScale = ContentScale.Crop)
+                WaveGuestPortrait(guest, "Pré-profil de ${guest.name}", modifier = Modifier.size(52.dp).clip(CircleShape)
+                    .clickable { state.profilePreviewId = guest.id }, contentScale = ContentScale.Crop)
                 Column(Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(guest.name, modifier = Modifier.weight(1f, fill = false), maxLines = 1, overflow = TextOverflow.Ellipsis, fontSize = 22.sp, fontWeight = FontWeight.SemiBold)

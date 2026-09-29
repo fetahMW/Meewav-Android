@@ -1,3 +1,4 @@
+import { portraitProps } from "../../components/shared/portraitPreProfile";
 import { ChartNoAxesColumnIncreasing, ChevronRight, MapPin, TrendingDown, TrendingUp, Minus } from "lucide-react";
 import type { TremplinArtist } from "./tremplinArtistData";
 import { getTremplinStatisticsRanking, TREMPLIN_STATISTICS_SORTS, type TremplinStatisticsSort } from "./tremplinStatisticsRanking";
@@ -33,7 +34,7 @@ export default function TremplinStatistics({ sort, onSortChange, onOpen }: {
         return <li key={artist.id}>
           <button type="button" className="tremplin-statistics__row" onClick={() => onOpen(artist)}>
             <span className="tremplin-statistics__rank"><span className="tremplin-visually-hidden">Rang </span>{index + 1}</span>
-            <img src={artist.portrait} alt="" loading="lazy" width={44} height={44} />
+            <img {...portraitProps({id:artist.profileId || artist.id,name:artist.name,avatarUrl:artist.portrait,gradeLevel:artist.gradeLevel})} src={artist.portrait} alt="" loading="lazy" width={44} height={44} />
             <span className="tremplin-statistics__identity"><strong>{artist.name}</strong><small>{token.symbol} · {artist.city}</small></span>
             <ChevronRight className="tremplin-statistics__chevron" aria-hidden="true" />
             <span className="tremplin-statistics__metrics">

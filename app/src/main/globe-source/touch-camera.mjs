@@ -28,9 +28,15 @@ export function createTouchCamera({ view, motion, pickPoint, keepPoint, updateCa
         keepPoint: anchored, updateCamera, maxSteps: 12 });
       lastAnchor = dragState.anchor ? { x: to.x, y: to.y, point: dragState.anchor } : null;
     },
-    transform({ factor, rotation, pitch, from, to, anchor }) {
-      if (ring.active) { const r = rect(); ring.transformTouch({ factor, rotation, pitch,
+    transform({ factor, rotation, pitch, pitchOnly = false, from, to, anchor }) {
+      if (ring.active) { const r = rect(); ring.transformTouch({ factor, rotation, pitch, pitchOnly,
         from: { x: from.x - r.left, y: from.y - r.top }, to: { x: to.x - r.left, y: to.y - r.top }, anchor }, width(), height()); return; }
+      if (pitchOnly) {
+        view.pitch = elasticDelta(view.pitch, pitch, 0, 75, 3);
+        lastAnchor = null;
+        updateCamera();
+        return;
+      }
       const previousLat = view.lat;
       view.height = Math.exp(elasticDelta(Math.log(view.height), Math.log(factor), minLog, maxLog, logExtent));
       view.bearing = wrapLongitude(view.bearing - rotation);
