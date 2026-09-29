@@ -60,15 +60,22 @@ function MobileShell({ Page }: { Page: React.ComponentType }) {
   }, [current.pathname]);
   useEffect(() => {
     const open = () => setDetail(true);
-    const close = () => { setDetail(false); (document.activeElement as HTMLElement)?.blur(); };
+    const close = () => {
+      setDetail(false);
+      (document.activeElement as HTMLElement)?.blur();
+      const params = new URLSearchParams(current.search);
+      const detailKeys = ['mockArtistId', 'conversation', 'request', 'project', 'group'];
+      const hadDetailRoute = detailKeys.some(key => params.has(key));
+      detailKeys.forEach(key => params.delete(key));
+      if (hadDetailRoute) navigate({ pathname: '/messages', search: params.toString() }, { replace: true });
+    };
     window.addEventListener('meewav:messaging-detail', open);
     window.addEventListener('meewav:messaging-list', close);
     (window as any).meewavMessaging.back = () => {
       // Let the existing dialog handlers close their own panels before leaving.
       const closeButton = document.querySelector<HTMLButtonElement>('[role="dialog"] button[aria-label^="Fermer"], .mw-overlay button[aria-label^="Fermer"], .mw-conversation-drawer button[aria-label^="Fermer"]');
       if (closeButton && closeButton.getClientRects().length) { closeButton.click(); return; }
-      if (detail) close();
-      else if (current.key !== 'default') navigate(-1);
+      if (detail) window.dispatchEvent(new Event('meewav:messaging-list'));
       else returnToPreviousFeature();
     };
     return () => {

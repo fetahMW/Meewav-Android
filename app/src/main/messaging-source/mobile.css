@@ -31,10 +31,6 @@ button:disabled { opacity: .4; cursor: default; }
 #root .mobile-messaging .messaging-pillar-tabs button:is(.is-active,[aria-selected=true]) { color: #eee6ff; background: transparent; }
 #root .mobile-messaging .messaging-pillar-tabs button strong { display: block; font-size: 11px; line-height: 14px; font-weight: 550; letter-spacing: 0; text-shadow: none; }
 #root .mobile-messaging .messaging-pillar-tabs .meewav-pillar-tabs__icon { width: 20px; height: 20px; flex: 0 0 20px; border: 0; background: transparent; box-shadow: none; color: inherit; }
-/* Anchor the marker to the actual button, not a second width calculation. */
-#root .mobile-messaging .messaging-pillar-tabs .meewav-pillar-tabs__indicator { display: none; }
-#root .mobile-messaging .messaging-pillar-tabs button::after { content: ''; position: absolute; bottom: 0; left: calc(50% - 12px); width: 24px; height: 2px; border-radius: 2px; background: #bda3e5; opacity: 0; box-shadow: none; }
-#root .mobile-messaging .messaging-pillar-tabs button.is-active::after { opacity: 1; }
 #root .mobile-messaging .mw-chat-header__utility { display: none; }
 #root .mobile-messaging .mw-conversation-rail { grid-area: content; position: relative; inset: auto; display: flex; flex-direction: column; width: 100%; min-width: 0; height: 100%; padding: 0; margin: 0; border: 0; border-radius: 0; background: transparent; overflow: hidden; }
 #root .mobile-messaging .mw-contact-rail-resizer, #root .mobile-messaging .mw-rail-compact-action, #root .mobile-messaging .mw-rail-context-identity { display: none; }
@@ -677,21 +673,7 @@ button:disabled { opacity: .4; cursor: default; }
 }
 #root .mobile-messaging .mw-mobile-workspace-header.mw-hub-chipbar .mw-hub-chips button svg { display: none; }
 #root .mobile-messaging .mw-mobile-workspace-header.mw-hub-chipbar .mw-hub-chips button:is(.is-active,:hover,:active) { background: transparent; border: 0; box-shadow: none; color: #f3f4f6; transform: none; }
-#root .mobile-messaging .mw-mobile-workspace-header.mw-hub-chipbar .mw-hub-chips button::after {
-  content: '';
-  display: block;
-  position: absolute;
-  inset: auto auto 0 50%;
-  width: 24px;
-  height: 2px;
-  border: 0;
-  border-radius: 2px;
-  background: var(--mobile-cta-rim);
-  box-shadow: none;
-  transform: translateX(-50%);
-  opacity: 0;
-}
-#root .mobile-messaging .mw-mobile-workspace-header.mw-hub-chipbar .mw-hub-chips button.is-active::after { opacity: 1; }
+
 #root .mobile-messaging .agw-panel > .mw-mobile-workspace-header.mw-hub-chipbar { --mobile-workspace-tab-count: 4; }
 #root .mobile-messaging .agw-panel > .mw-mobile-workspace-header.mw-hub-chipbar .mw-hub-chips button { font-size: clamp(10px,3.1vw,12px); }
 #root .mobile-messaging .mw-mobile-workspace-header.mw-hub-chipbar .agw-panel__controls > button:is(:hover,:active,.is-active) { background: transparent; border: 0; box-shadow: none; color: #c2bcdf; }
@@ -852,37 +834,6 @@ button:disabled { opacity: .4; cursor: default; }
   }
 }
 
-/* Canonical Web hairline: meewav-pillar-tabs.css, with the Messaging halo opacity. */
-#root .mobile-messaging .messaging-pillar-tabs button::before,
-#root .mobile-messaging .messaging-pillar-tabs button::after,
-#root .mobile-messaging .mw-mobile-workspace-header.mw-hub-chipbar .mw-hub-chips button::before,
-#root .mobile-messaging .mw-mobile-workspace-header.mw-hub-chipbar .mw-hub-chips button::after {
-  content: '';
-  display: block;
-  position: absolute;
-  inset: auto auto 5px 50%;
-  width: 72%;
-  max-width: 56px;
-  height: 1px;
-  border: 0;
-  border-radius: 999px;
-  background: linear-gradient(90deg,transparent,#9274d8 18%,#d7c6ff 50%,#9274d8 82%,transparent);
-  box-shadow: none;
-  transform: translateX(-50%);
-  opacity: 0;
-  pointer-events: none;
-}
-#root .mobile-messaging .messaging-pillar-tabs button::before,
-#root .mobile-messaging .mw-mobile-workspace-header.mw-hub-chipbar .mw-hub-chips button::before {
-  bottom: 3px;
-  height: 5px;
-  background: linear-gradient(90deg,transparent,#8060cc 24%,#b39aef 50%,#8060cc 76%,transparent);
-  filter: blur(3px);
-}
-#root .mobile-messaging .messaging-pillar-tabs button.is-active::after,
-#root .mobile-messaging .mw-mobile-workspace-header.mw-hub-chipbar .mw-hub-chips button.is-active::after { opacity: 1; }
-#root .mobile-messaging .messaging-pillar-tabs button.is-active::before,
-#root .mobile-messaging .mw-mobile-workspace-header.mw-hub-chipbar .mw-hub-chips button.is-active::before { opacity: .4; }
 /* Violet sampled from the active Web pole's fill, not a new accent palette. */
 #root .mobile-messaging .mw-conversation-row > b,
 #root .mobile-messaging .mw-rail-invitations > b {
@@ -1213,3 +1164,19 @@ button:disabled { opacity: .4; cursor: default; }
 /* Solid strip behind the dock: the acoustic image stays out of the nav-bar zone while rows scroll under its glass. */
 #root .mobile-messaging:not(.is-detail) .mw-conversation-list { background: linear-gradient(#08090b00, #08090b00 calc(100% - var(--feature-dock-inset,104px)), #08090b calc(100% - var(--feature-dock-inset,104px))) !important; }
 #root .mobile-messaging:not(.is-detail) .mw-context-pane { display: none; }
+
+/* Keep the label and its single measured underline inside the same tab row. */
+#root .mobile-messaging .messaging-pillar-tabs > button {
+  box-sizing:border-box; height:50px; padding:0 2px 12px; gap:4px;
+}
+#root .mobile-messaging .messaging-pillar-tabs > button strong {
+  padding:0; line-height:14px; flex-shrink:0;
+}
+#root .mobile-messaging .messaging-pillar-tabs .meewav-pillar-tabs__icon {
+  width:20px; height:20px; flex:0 0 20px;
+}
+#root .mobile-messaging .mw-mobile-workspace-header.mw-hub-chipbar {
+  height:112px; min-height:112px; max-height:112px; grid-template-rows:64px 48px;
+}
+#root .mobile-messaging .mw-mobile-workspace-header.mw-hub-chipbar > .agw-panel__toolbar { height:48px; }
+#root .mobile-messaging .agw-panel:has(> .mw-mobile-workspace-header) .agw-panel__body:not(:has(> .agw-group-chat)) { padding-top:112px; }
