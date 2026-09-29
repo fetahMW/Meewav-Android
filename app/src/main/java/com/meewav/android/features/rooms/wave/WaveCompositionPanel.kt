@@ -1,5 +1,10 @@
 package com.meewav.android.features.rooms.wave
 
+import com.meewav.android.core.design.polishedControlSurface
+import com.meewav.android.core.design.NavigationIndicator
+
+import com.meewav.android.core.design.polishedPrimarySurface
+
 import android.content.Intent
 import android.os.SystemClock
 import android.widget.Toast
@@ -137,8 +142,8 @@ internal fun WaveCompositionPanel(state: WaveCompositionState, sheetHeight: Dp, 
                     section = index; state.stopPreview()
                 }.padding(horizontal = 2.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                     Text(label, color = if (section == index) foreground else muted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
-                    Spacer(Modifier.height(6.dp))
-                    Box(Modifier.width(34.dp).height(2.dp).background(if (section == index) Brush.horizontalGradient(listOf(Color.Transparent, soft, Color.Transparent)) else Brush.horizontalGradient(listOf(Color.Transparent, Color.Transparent))))
+                    Spacer(Modifier.height(4.dp))
+                    NavigationIndicator(section == index)
                 }
             }
         }
@@ -444,9 +449,8 @@ private fun ToolIcon(icon: ImageVector, label: String, active: Boolean = false, 
 
 @Composable
 private fun CompactAction(label: String, active: Boolean, onClick: () -> Unit) {
-    Box(Modifier.height(32.dp).clip(RoundedCornerShape(8.dp)).background(if (active) primary.copy(alpha = .38f) else Color(0xFF15161B))
-        .border(.5.dp, if (active) soft.copy(alpha = .5f) else Color(0xFF34343F), RoundedCornerShape(8.dp)).waveTactileClick(onClick).padding(horizontal = 10.dp), contentAlignment = Alignment.Center) {
-        Text(label, color = if (active) soft else foreground, fontSize = 10.sp, fontWeight = FontWeight.Medium)
+    Box(Modifier.height(32.dp).polishedControlSurface(selected=active,cornerRadius=8.dp).clip(RoundedCornerShape(8.dp)).waveTactileClick(onClick).padding(horizontal = 10.dp), contentAlignment = Alignment.Center) {
+        Text(label, color = if (active) Color.White else foreground, fontSize = 10.sp, fontWeight = FontWeight.Medium)
     }
 }
 

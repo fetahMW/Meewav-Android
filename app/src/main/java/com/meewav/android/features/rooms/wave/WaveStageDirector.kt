@@ -1,5 +1,7 @@
 package com.meewav.android.features.rooms.wave
 
+import com.meewav.android.core.design.polishedControlSurface
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -75,7 +77,7 @@ internal fun WaveDirectorSheet(state: WaveGuestState, onDismiss: () -> Unit, onF
             Text("Composition", color = Color.White.copy(alpha = .55f), fontSize = 12.sp)
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 WaveComposition.entries.forEach { mode ->
-                    Box(Modifier.weight(1f).height(48.dp).hifiBlackSurface(12.dp).clip(RoundedCornerShape(12.dp))
+                    Box(Modifier.weight(1f).height(48.dp).polishedControlSurface(selected=state.composition == mode,cornerRadius=12.dp).clip(RoundedCornerShape(12.dp))
                         .clickable { state.composition = mode }, contentAlignment = Alignment.Center) {
                         Text(mode.label, fontSize = 11.sp, color = if (state.composition == mode) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .6f))
                     }

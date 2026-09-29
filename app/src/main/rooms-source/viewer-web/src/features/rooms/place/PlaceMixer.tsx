@@ -811,6 +811,9 @@ export default function PlaceMixer({
   const musicCoverScopeRef = useRef(`${room.id}|${programAudio?.musicGeneration ?? ""}`);
   const autotunePendingRef = useRef(false);
   const autotuneRequestRef = useRef(0);
+  const requestedAutotuneRef = useRef<{ enabled: boolean; patch: Partial<PlaceRoomState["personalVocal"]> }>({ enabled: false, patch: {} });
+  const currentVocalRef = useRef(room.personalVocal);
+  currentVocalRef.current = room.personalVocal;
   const providerSelectionPendingRef = useRef(false);
   const providerSelectionRequestRef = useRef(0);
   const previousPitchProviderRef = useRef(pitchProvider);
@@ -911,18 +914,20 @@ export default function PlaceMixer({
     }
   };
 
-  const toggleAutotune = async () => {
-    if (autotunePendingRef.current) return false;
-    const next = !autotuneEnabled;
+  const setAutotuneEnabled = async (next: boolean, patch: Partial<PlaceRoomState["personalVocal"]> = {}) => {
+    // A second tap or a fader change during engine startup replaces the pending
+    // intent. The engine receives the latest mode and all correction fields together.
+    requestedAutotuneRef.current = { enabled: next, patch };
+    if (autotunePendingRef.current) return true;
+    const applyRequested = () => {
+      const requested = requestedAutotuneRef.current;
+      const current = currentVocalRef.current;
+      onVocal({ ...requested.patch, tuneEnabled: requested.enabled,
+        enabled: requested.enabled || current.reverbEnabled || current.compEnabled || current.delayEnabled || current.eqEnabled });
+    };
     setAutotuneStartError(null);
     if (!next) {
-      onVocal({
-        tuneEnabled: false,
-        enabled: room.personalVocal.reverbEnabled
-          || room.personalVocal.compEnabled
-          || room.personalVocal.delayEnabled
-          || room.personalVocal.eqEnabled,
-      });
+      applyRequested();
       return true;
     }
 
@@ -940,7 +945,7 @@ export default function PlaceMixer({
           setAutotuneStartError("Moteur indisponible");
           return false;
         }
-        onVocal({ tuneEnabled: true, enabled: true });
+        applyRequested();
         return true;
       } catch {
         if (requestId === autotuneRequestRef.current) setAutotuneStartError("Moteur indisponible");
@@ -954,9 +959,10 @@ export default function PlaceMixer({
       return;
     }
 
-    onVocal({ tuneEnabled: true, enabled: true });
+    applyRequested();
     return true;
   };
+  const toggleAutotune = () => setAutotuneEnabled(!autotuneEnabled);
   const [previewMusicLevel, setPreviewMusicLevel] = useState(0);
   const listening = useWaveViewerListening();
   const personalMix = useViewerMixer();
@@ -1021,11 +1027,6 @@ export default function PlaceMixer({
     room.personalVocal.eqEnabled,
   ].filter(Boolean).length;
 
-  const nativeVocalMode = useRef<{
-    roomId: string;
-    simple: boolean;
-    extras: Pick<PlaceRoomState["personalVocal"], "tuneShift" | "delayEnabled" | "compEnabled" | "eqEnabled"> | null;
-  }>({roomId:room.id,simple:false,extras:null});
   useEffect(()=>{
     if(mode==="host")return;
     const receive=async(event:Event)=>{
@@ -1034,19 +1035,17 @@ export default function PlaceMixer({
       const key=data?.key,value=data?.value;
       try {
         if(key==="readVocal")viewerNativeReply({action:"mixer",key:"vocal",ok:true,value:room.personalVocal});
-        else if(key==="vocalMode" && typeof value?.pro==="boolean" && [value.amount,value.speed,value.humanize].every(v=>typeof v==="number" && Number.isFinite(v))) {
-          const unit=(v:number)=>Math.min(1,Math.max(0,v));
-          if(nativeVocalMode.current.roomId!==room.id)nativeVocalMode.current={roomId:room.id,simple:false,extras:null};
-          const state=nativeVocalMode.current;
-          if(!value.pro && !state.simple) {
-            const {tuneShift,delayEnabled,compEnabled,eqEnabled}=room.personalVocal;
-            state.extras={tuneShift,delayEnabled,compEnabled,eqEnabled};
+        else if(key==="autotuneState") {
+          if (!value || typeof value.enabled !== "boolean" ||
+              ![value.amount,value.speed,value.humanize,value.smooth,value.shift].every(v=>typeof v==="number" && Number.isFinite(v))) {
+            throw new Error("Réglages Autotune invalides.");
           }
-          const extras=value.pro
-            ? (state.simple ? state.extras ?? {} : {})
-            : {tuneShift:0,delayEnabled:false,compEnabled:false,eqEnabled:false};
-          state.simple=!value.pro;
-          onVocal({...extras,tuneAmount:unit(value.amount),tuneSpeed:unit(value.speed),tuneHumanize:unit(value.humanize),tuneSmooth:unit(value.humanize)});
+          const unit=(v:number)=>Math.min(1,Math.max(0,v));
+          const applied=await setAutotuneEnabled(value.enabled, {
+            tuneAmount:unit(value.amount), tuneSpeed:unit(value.speed), tuneHumanize:unit(value.humanize),
+            tuneSmooth:unit(value.smooth), tuneShift:Math.min(12,Math.max(-12,value.shift)),
+          });
+          if (!applied) throw new Error("Moteur Autotune indisponible.");
         }
         else if(key==="correction" && value && [value.amount,value.speed,value.humanize].every(v=>typeof v==="number" && Number.isFinite(v))) {
           const unit=(v:number)=>Math.min(1,Math.max(0,v));
@@ -1058,7 +1057,7 @@ export default function PlaceMixer({
           if(personalMix.levels.voice.muted!==value)personalMix.toggleMute("voice");
         }
         else if(key==="tune" && typeof value==="boolean") {
-          if(room.personalVocal.tuneEnabled!==value && !(await toggleAutotune()))throw new Error("Moteur Autotune indisponible.");
+          if(!(await setAutotuneEnabled(value)))throw new Error("Moteur Autotune indisponible.");
         }
         else if(key==="reverb" && typeof value==="boolean")onVocal({reverbEnabled:value,enabled:value||room.personalVocal.tuneEnabled});
         else if(key==="reverbAmount" && typeof value==="number")onVocal({reverbAmount:Math.min(1,Math.max(0,value))});

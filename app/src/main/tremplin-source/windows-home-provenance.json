@@ -1,0 +1,76 @@
+{
+  "source": "Meewav-Windows local working tree",
+  "baseCommit": "10634a55",
+  "integratedOn": "2026-09-29",
+  "files": [
+    {
+      "path": "src/features/tremplin/TremplinPublicHome.tsx",
+      "sha256": "edfeb7fe43eedde5387c430360d702f3648d6a97cf3f6f6032a8260b2215572c"
+    },
+    {
+      "path": "src/features/tremplin/TremplinGradeProgression.tsx",
+      "sha256": "d4409400afde56a1f14c49adc3e14f66be090875124c5588e0061f8b4971da76"
+    },
+    {
+      "path": "src/features/tremplin/tremplin-home-editorial.css",
+      "sha256": "e4cb7346a819b8e260d5a8cd1d75413109562d44f9d080b09f6a0df7395ba13d"
+    },
+    {
+      "path": "src/features/tremplin/tremplin-grades-open.css",
+      "sha256": "dbad55f139a3a94d06c3887081665b92b81644fd941b220b903279d85a344cd6"
+    },
+    {
+      "path": "src/components/shared/mixer-play-button.css",
+      "sha256": "06b5a0da3d23264ed126770069f0b0d74a82be02c648215b6424805c255f994f"
+    },
+    {
+      "path": "vendor/meewav-vinyl/src/components/Vinyl.jsx",
+      "sha256": "03f5f4939f6d40b4119d4ab6a4d547f6e492ccab372411dfd30bac8a5035f39e"
+    },
+    {
+      "path": "vendor/meewav-vinyl/src/components/Vinyl.d.ts",
+      "sha256": "952c59d1f86c34474bc9ee0d50d4fb4150b17fa777e36d652a90783af745d862"
+    },
+    {
+      "path": "vendor/meewav-vinyl/src/components/BrandMark.jsx",
+      "sha256": "4f9de6b8ad66bb4dc84cb5d9d2b739d125780570fbd79d828d0d42903c14687c"
+    },
+    {
+      "path": "vendor/meewav-vinyl/src/components/vinyl.css",
+      "sha256": "7b5e9e77c320ee487888f7d9e915e0235b27077f46c1753145213e7af150e4bc"
+    },
+    {
+      "path": "vendor/meewav-vinyl/src/record-utils.js",
+      "sha256": "be4a31c0142d893f32ae45d6a743a0a4dffd71304a53e19b4206784fc118af2d"
+    },
+    {
+      "path": "images/auth-acoustic-background-trial.png",
+      "sha256": "ab9411a880f30ab4d02ada5aac1ff8e8d4ad67004c5fcafc85aea0a9ec0add83"
+    },
+    {
+      "path": "images/tremplin/artists/generated/kylian-osei-home-studio-v1.png",
+      "sha256": "f24fe23fe1303b6c1d359caf1ade34e0fef601417905ddf124d8aadc4b2e62d2"
+    },
+    {
+      "path": "media/vinyl/003-king.mp3",
+      "sha256": "1f145967285ee462edb60bc884a4b5d89d9f07594866a931d83e8df839d35f6a"
+    },
+    {
+      "path": "media/tremplin/fille-1.mp3",
+      "sha256": "1554a4964a56fd57069aaa53db881df236b4051309da458bef3f7081ced1f2c6"
+    },
+    {
+      "path": "media/tremplin/fille-2.mp3",
+      "sha256": "35aed45acb07572144ef4ec746bc3fd7c3f90055d8c03dd0c276f0d1426a2ddb"
+    },
+    {
+      "path": "media/tremplin/fille-3.mp3",
+      "sha256": "9777844a3efbde779825c85ad8b41156b1b39a91e06ca23dfc36363bb772743d"
+    },
+    {
+      "path": "media/tremplin/rapeur-1.mp3",
+      "sha256": "a47d07722947e388b89abad300cb08da4c067f29f041a90557845ab5cbeb92ee"
+    }
+  ],
+  "note": "Selective landing import. Android routes, native bridge, Supabase follow service and artist/profile IDs retained. Only four audio objects updated from the Windows catalogue."
+}

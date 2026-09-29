@@ -1,5 +1,7 @@
 package com.meewav.android.features.rooms.wave
 
+import com.meewav.android.core.design.polishedControlSurface
+
 import android.content.Intent
 import android.media.MediaMetadataRetriever
 import android.net.Uri
@@ -86,7 +88,7 @@ internal class RoomSwitchState(initial:RoomModule,private val time:()->Long={Sys
                 Text("Où continue-t-on le live ?",color=Color.White,fontSize=16.sp)
                 Text("Même session, même communauté, nouvelle expérience.",color=sceneMuted,fontSize=12.sp)
                 listOf(RoomModule.PLACE,RoomModule.SCENE,RoomModule.CAGE,RoomModule.CLASSE,RoomModule.WAVE,RoomModule.LOGE).forEach{room->
-                    Row(Modifier.fillMaxWidth().hifiBlackSurface(12.dp).clickable(enabled=room!=state.current&&activityBlock==null){target=room;config=state.configs[room]?:RoomSwitchConfig(title="Suite du live · "+room.label);state.notice=null;confirm=state.prepared(room)&&room!=RoomModule.CLASSE}.padding(12.dp),verticalAlignment=Alignment.CenterVertically){
+                    Row(Modifier.fillMaxWidth().polishedControlSurface(selected=room==state.current,cornerRadius=12.dp,enabled=room!=state.current&&activityBlock==null).clickable(enabled=room!=state.current&&activityBlock==null){target=room;config=state.configs[room]?:RoomSwitchConfig(title="Suite du live · "+room.label);state.notice=null;confirm=state.prepared(room)&&room!=RoomModule.CLASSE}.padding(12.dp),verticalAlignment=Alignment.CenterVertically){
                         Icon(when(room){RoomModule.PLACE->Icons.Default.People;RoomModule.SCENE->Icons.Default.Mic;RoomModule.CAGE->Icons.Default.SportsMma;RoomModule.CLASSE->Icons.Default.School;RoomModule.WAVE->Icons.Default.GraphicEq;RoomModule.LOGE->Icons.Default.MeetingRoom},null,tint=if(room==state.current)sceneMuted else sceneAccent,modifier=Modifier.size(22.dp))
                         Spacer(Modifier.width(12.dp));Column(Modifier.weight(1f)){Text(room.label,color=if(room==state.current)sceneMuted else Color.White,fontSize=14.sp);Text(if(room==state.current)"Room actuelle"else when(room){RoomModule.PLACE->"Échanges libres";RoomModule.SCENE->"Performances live";RoomModule.CAGE->"Battles";RoomModule.CLASSE->"Cours et transmission";RoomModule.WAVE->"Création collective";RoomModule.LOGE->"Rencontres VIP"},color=sceneMuted,fontSize=11.sp)}
                     Icon(Icons.Default.ChevronRight,null,tint=sceneAccent,modifier=Modifier.size(18.dp))

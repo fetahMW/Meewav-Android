@@ -1,5 +1,7 @@
 package com.meewav.android.features.auth
 
+import com.meewav.android.core.design.SecondaryAccent
+
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
@@ -128,7 +130,7 @@ internal fun AuthCompletionGlobe(
                 TextButton(onClick = controller::reload) { Text("Réessayer", color = Color.White) }
             }
         } else if (!controller.ready && !interactive) {
-            CircularProgressIndicator(Modifier.size(28.dp), color = Color(0xFF8B5CF6), strokeWidth = 2.dp)
+            CircularProgressIndicator(Modifier.size(28.dp), color = SecondaryAccent, strokeWidth = 2.dp)
         }
         if (!interactive && controller.ready) {
             // Touches and TalkBack trigger Compose directly. The page never

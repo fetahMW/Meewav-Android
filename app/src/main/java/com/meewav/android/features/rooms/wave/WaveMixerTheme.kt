@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import com.meewav.android.core.design.MeewavFont
+import com.meewav.android.core.design.SecondaryAccent
 
 /** Palette « hardware dark » du mixeur Wave — valeurs exactes du code iOS
  *  (`ClasseWebMixerTheme`, `ClasseTheme`, `RoomsStudioTheme`). */
@@ -21,7 +22,7 @@ object WaveMixerTheme {
     /** Violet urbain des CTA principaux, identique au bouton Se connecter. */
     val primaryCta = Color(0xFF5137A1)
     /** Variante claire de `capsuleAccent` pour les liserés lumineux. */
-    val capsuleAccentSoft = Color(0xFFA98EF0)
+    val capsuleAccentSoft = SecondaryAccent
     val red = Color(0xFFFF2E3B)
     val blue = Color(0xFF4F83F4)
     val amber = Color(0xFFFFAB00)
@@ -44,7 +45,7 @@ object WaveMixerTheme {
     // Bleu de la graduation décibel du fader — réutilisé pour les LED d'état.
     val ledBlue = Color(0xFF4F83F4)
     /** Violet « on » des cartes FX (icône + power) — variante claire de capsuleAccent. */
-    val fxAccent = Color(0xFFA98EF0)
+    val fxAccent = SecondaryAccent
 
     // Vu-mètre : bleu au repos (bas) → violet → rose au sommet (volume fort).
     val meterStops = arrayOf(

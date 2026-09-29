@@ -1,5 +1,11 @@
 package com.meewav.android.features.auth
 
+import com.meewav.android.core.design.SecondaryAccent
+
+import com.meewav.android.core.design.polishedPrimaryButtonColors
+
+import com.meewav.android.core.design.polishedControlSurface
+
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -110,13 +116,12 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
                 Spacer(Modifier.height(20.dp))
             }) {
         OutlinedButton(onClick = { showPicker = true }, enabled = !state.busy && !confirming,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-            colors = ButtonDefaults.outlinedButtonColors(containerColor = Color(0xFF09090B)),
-            border = BorderStroke(.5.dp, Color(0xFF29262F)), shape = RoundedCornerShape(14.dp)) {
+            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).polishedControlSurface(cornerRadius = 14.dp, enabled = !state.busy && !confirming),
+            colors = polishedPrimaryButtonColors(), border = null, shape = RoundedCornerShape(14.dp)) {
             Text(avatar.name, color = Color.White, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold,
                 maxLines = 2, lineHeight = 18.sp)
-            Text("${selectedIndex + 1}/${entries.size}", color = Violet, fontSize = 12.sp)
-            Icon(Icons.Outlined.ExpandMore, "Choisir un avatar", Modifier.padding(start = 6.dp).size(20.dp), tint = Violet)
+            Text("${selectedIndex + 1}/${entries.size}", color = SecondaryAccent, fontSize = 12.sp)
+            Icon(Icons.Outlined.ExpandMore, "Choisir un avatar", Modifier.padding(start = 6.dp).size(20.dp), tint = SecondaryAccent)
         }
         Spacer(Modifier.height(10.dp))
         Text(avatar.description.lineSequence().take(2).joinToString("\n"), color = Muted, fontSize = 12.sp, lineHeight = 16.sp,
@@ -145,25 +150,13 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
                     enabled = !state.busy && !confirming, shape = RoundedCornerShape(12.dp),
                     label = { Text(title, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
                         fontSize = 12.sp, fontWeight = FontWeight.Medium) },
-                    modifier = Modifier.fillMaxWidth().height(36.dp).drawBehind {
-                        if (chosen) {
-                            // Halo gradué limité au contour ; le fond du bouton reste opaque et noir.
-                            for (spread in 2 downTo 1) {
-                                val inset = spread.dp.toPx()
-                                drawRoundRect(Violet.copy(alpha = .018f * (3 - spread)),
-                                    topLeft = Offset(-inset, -inset),
-                                    size = Size(size.width + inset * 2, size.height + inset * 2),
-                                    cornerRadius = CornerRadius(12.dp.toPx() + inset),
-                                    style = Stroke(1.dp.toPx()))
-                            }
-                        }
-                    },
-                    border = BorderStroke(if (chosen) .75.dp else .5.dp,
-                        if (chosen) Violet.copy(alpha = .8f) else Color(0xFF373040)),
+                    modifier = Modifier.fillMaxWidth().height(36.dp).polishedControlSurface(
+                        selected = chosen, cornerRadius = 12.dp, enabled = !state.busy && !confirming),
+                    border = null,
                     colors = FilterChipDefaults.filterChipColors(
-                        containerColor = Color(0xFF08080B), labelColor = Muted,
-                        selectedContainerColor = Color(0xFF08080B), selectedLabelColor = Color.White,
-                        disabledContainerColor = Color(0xFF08080B), disabledSelectedContainerColor = Color(0xFF08080B)))
+                        containerColor = Color.Transparent, labelColor = Muted,
+                        selectedContainerColor = Color.Transparent, selectedLabelColor = Color.White,
+                        disabledContainerColor = Color.Transparent, disabledSelectedContainerColor = Color.Transparent))
                 }
             }
         }
@@ -198,9 +191,7 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
                     items(entries, key = { it.icon }) { item ->
                         val isSelected = item.icon == avatar.icon
                         Box(Modifier.clip(RoundedCornerShape(18.dp))
-                            .background(Brush.verticalGradient(listOf(Color(0xFF17121F), Color(0xFF08080B))))
-                            .border(if (isSelected) 1.dp else .5.dp,
-                                if (isSelected) Violet else Color(0xFF302A3C), RoundedCornerShape(18.dp))
+                            .polishedControlSurface(selected = isSelected, cornerRadius = 18.dp)
                             .semantics { selected = isSelected }
                             .clickable(role = Role.RadioButton) {
                                 scope.launch {
@@ -217,7 +208,7 @@ internal fun AvatarSelection(state: AuthUiState, onProfile: (ProfileDraft) -> Un
                                     overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
                             }
                             if (isSelected) Icon(Icons.Outlined.CheckCircle, null,
-                                Modifier.align(Alignment.TopEnd).size(18.dp), tint = Violet)
+                                Modifier.align(Alignment.TopEnd).size(18.dp), tint = SecondaryAccent)
                         }
                     }
                 }
@@ -247,9 +238,8 @@ internal fun AccountSocialOptions(state: AuthUiState, onContinue: (SocialAuthPro
             Box(Modifier.weight(1f).height(48.dp), contentAlignment = Alignment.Center) {
             OutlinedButton(onClick = { onContinue(provider) },
                 enabled = !state.busy && !state.initializing && !state.localPreview,
-                modifier = Modifier.fillMaxWidth().height(40.dp), shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(.75.dp, Violet.copy(alpha = .85f)),
-                colors = ButtonDefaults.outlinedButtonColors(containerColor = Color(0xFF08080B), contentColor = Color.White),
+                modifier = Modifier.fillMaxWidth().height(40.dp).polishedControlSurface(cornerRadius = 12.dp, enabled = !state.busy && !state.initializing && !state.localPreview), shape = RoundedCornerShape(12.dp),
+                border = null, colors = polishedPrimaryButtonColors(),
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)) {
                 Image(painterResource(if (provider == SocialAuthProvider.Apple) R.drawable.auth_apple else R.drawable.auth_google_color),
                     null, Modifier.size(if (provider == SocialAuthProvider.Apple) 22.dp else 18.dp))
@@ -267,7 +257,7 @@ internal fun AccountSocialOptions(state: AuthUiState, onContinue: (SocialAuthPro
             }
         }
     }
-    Row(Modifier.fillMaxWidth().height(12.dp), verticalAlignment = Alignment.CenterVertically,
+    Row(Modifier.fillMaxWidth().padding(vertical = 8.dp).height(12.dp), verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         HorizontalDivider(Modifier.weight(1f), thickness = .5.dp, color = Color(0x665C4B79))
         Text("ou", fontSize = 10.sp, lineHeight = 12.sp, color = Muted)

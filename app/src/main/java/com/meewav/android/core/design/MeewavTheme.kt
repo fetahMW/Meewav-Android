@@ -15,6 +15,8 @@ import androidx.compose.ui.unit.sp
 import com.meewav.android.R
 
 val Violet = Color(0xFF9B6AFF)
+/** Small UI accents share the light violet reflected by the polished primary CTA. */
+val SecondaryAccent = Color(0xFFA98EF0)
 val Muted = Color(0xFFB5B1C2)
 val Ink = Color(0xFF08080D)
 val MeewavFont = FontFamily(

@@ -1,6 +1,8 @@
 package com.meewav.android.features.rooms.wave
 
 import android.content.Intent
+import com.meewav.android.core.design.polishedPrimarySurface
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -678,7 +680,7 @@ private fun WaveChatSocialRail(
             Box(Modifier.height(44.dp), contentAlignment = Alignment.Center) { ChatRailItem(imageRes = R.drawable.money_bag, value = "148") }
             Box(Modifier.height(44.dp), contentAlignment = Alignment.Center) { ChatRailItem(icon = WaveIcons.Star, tint = Color(0xFFF3BF49), value = "86") }
             Box(Modifier.height(44.dp), contentAlignment = Alignment.Center) { ChatRailItem(icon = WaveIcons.Heart, tint = Color(0xFFFF64AA), value = "1,2k") }
-            Box(Modifier.height(44.dp), contentAlignment = Alignment.Center) { ChatRailItem(icon = WaveIcons.Eye, tint = Color(0xFF9A63FF), value = "312") }
+            Box(Modifier.height(44.dp), contentAlignment = Alignment.Center) { ChatRailItem(icon = WaveIcons.Eye, tint = WaveMixerTheme.capsuleAccentSoft, value = "312") }
             RailSeparator()
             RailToolButton(icon = WaveIcons.Share, tint = white(0.8f), label = "Partager le live", onClick = {
                 val intent = Intent(Intent.ACTION_SEND).apply {
@@ -749,7 +751,7 @@ private fun ChatRailItem(
     }
 }
 
-/* Composer liquid-glass : input-well (champ + bouton emoji -> mur) + send. */
+/* Messaging capsule, adapted to live chat: text, emoji and send only. */
 @Composable
 internal fun WaveChatComposer(
     draft: String,
@@ -765,16 +767,17 @@ internal fun WaveChatComposer(
         Modifier
             .fillMaxWidth()
             .padding(horizontal = 3.dp)
-            .height(52.dp)
-            .chatComposerGlass(focused = focused),
+            .height(56.dp)
+            .chatComposerGlass(focused = focused)
+            .padding(6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(0.dp),
     ) {
         Row(
             Modifier
                 .weight(1f)
-                .height(50.dp)
-                .padding(start = 16.dp, end = 2.dp),
+                .height(44.dp)
+                .padding(start = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             WaveEmojiInput(
@@ -785,30 +788,27 @@ internal fun WaveChatComposer(
                 onFocus = { focused = it },
                 modifier = Modifier.weight(1f).height(44.dp),
             )
-            Spacer(Modifier.width(7.dp))
-            Box(Modifier.width(1.dp).height(22.dp).background(
-                Brush.verticalGradient(listOf(Color.Transparent, Color(0x4077759C), Color.Transparent))
-            ))
             Box(
-                Modifier.size(44.dp).clip(CircleShape).clickable(onClick = onToggleEmoji),
+                Modifier.size(44.dp).clip(CircleShape).clickable(role = Role.Button, onClick = onToggleEmoji),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(WaveIcons.Emoji, "Émoticônes Meewav",
-                    tint = if (emojiOpen) chatAccent else Color(0xFFA7A8BB),
-                    modifier = Modifier.size(21.dp))
+                    tint = if (emojiOpen) chatAccent else Color(0xFFD6D9E1),
+                    modifier = Modifier.size(22.dp))
             }
         }
         Box(
             Modifier
                 .size(44.dp)
+                .polishedPrimarySurface(cornerRadius = 22.dp)
                 .clip(CircleShape)
-                .clickable(enabled = canSend, onClick = onSend),
+                .clickable(enabled = canSend, role = Role.Button, onClick = onSend),
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                WaveIcons.Send, "Envoyer",
-                tint = WaveMixerTheme.capsuleAccentSoft.copy(alpha = if (canSend) 1f else .48f),
-                modifier = Modifier.size(23.dp)
+                ChatSendIcon, "Envoyer",
+                tint = Color(0xFFF5F5F8).copy(alpha = if (canSend) 1f else .45f),
+                modifier = Modifier.size(21.dp)
             )
         }
     }

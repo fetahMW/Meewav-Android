@@ -1,5 +1,7 @@
 package com.meewav.android.features.rooms.wave
 
+import com.meewav.android.core.design.polishedControlSurface
+
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.animation.core.animateFloatAsState
@@ -121,7 +123,7 @@ internal fun ClasseToolsPanel(state: ClasseToolsState) {
 }
 
 @Composable internal fun ClasseToggleChip(label: String, enabled: Boolean, action: () -> Unit) {
-    Row(Modifier.height(36.dp).hifiBlackSurface(18.dp).clickable(onClick = action).padding(horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    Row(Modifier.height(36.dp).polishedControlSurface(selected=enabled, cornerRadius=18.dp).clickable(onClick = action).padding(horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Box(Modifier.size(5.dp).background(if (enabled) Color(0xFF79B69A) else Color(0xFFBD7885), CircleShape))
         Text("$label ${if (enabled) "ouvertes" else "fermées"}", color = Color(0xFFCAC5D4), fontSize = 10.sp)
     }

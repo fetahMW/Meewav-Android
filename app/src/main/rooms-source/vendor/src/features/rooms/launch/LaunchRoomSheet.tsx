@@ -289,7 +289,7 @@ export default function LaunchRoomSheet({ initialType, allowSkipCheckup = false,
   const micContextRef = useRef<AudioContext | null>(null);
   const tabsNavRef = useRef<HTMLElement | null>(null);
 
-  const accent = LAUNCH_TABS[selectedTab].accent;
+  const accent = "#a98ef0";
   const roomLabel = LAUNCH_TABS[selectedTab].label;
   const isReady = micState === "granted" && networkOk;
 
@@ -766,7 +766,18 @@ export default function LaunchRoomSheet({ initialType, allowSkipCheckup = false,
     </div>
   );
 
-  const steps = ["Identité", "Green House", "Vérification", "Revue"];
+  const steps = ["Identité", "Studio", "Vérification", "Lancement"];
+  const stepTitles = ["Donne le ton.", "Compose ton écran.", "Fais les derniers réglages.", "Ton direct est prêt."];
+  const stepHints = ["Un nom, un univers et les options de ta session.", "Prépare le cadrage que verront tes invités.", "Vérifie le micro, la caméra et la connexion.", "Retrouve ta configuration avant d’ouvrir la room."];
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const stepTitleRef = useRef<HTMLHeadingElement>(null);
+  const previousStep = useRef(step);
+  useEffect(() => {
+    if (previousStep.current === step) return;
+    previousStep.current = step;
+    bodyRef.current?.scrollTo({ top: 0 });
+    stepTitleRef.current?.focus({ preventScroll: true });
+  }, [step]);
   const nextLabel = ["Continuer", "Vérifier", "Voir le résumé", "Accéder à la room"][step];
   const advance = () => {
     if (step === 3) {
@@ -793,6 +804,7 @@ export default function LaunchRoomSheet({ initialType, allowSkipCheckup = false,
           <button
             key={tab.id}
             type="button"
+            aria-pressed={index === selectedTab}
             className={index === selectedTab ? "is-active" : ""}
             style={index === selectedTab ? { color: tab.accent, borderColor: `${tab.accent}66` } : undefined}
             onClick={() => selectTab(index)}
@@ -802,22 +814,21 @@ export default function LaunchRoomSheet({ initialType, allowSkipCheckup = false,
         ))}
       </nav>
 
-      <div className="launch-steps" aria-label={`Étape ${step + 1} sur 4 : ${steps[step]}`}>
-        <span className="launch-steps__current">{steps[step]}</span>
-        <span className="launch-steps__count">{step + 1} / 4</span>
-        <i className="launch-steps__track" aria-hidden="true"><b style={{ width: `${(step + 1) * 25}%` }} /></i>
-      </div>
-
-      <div className="launch-room-sheet__body">
-        {step === 0 ? renderIdentity() : step === 1 ? <LaunchStudio value={studio} onChange={setStudio} /> : step === 2 ? renderCheckup() : renderGoLive()}
+      <ol className="launch-progress" aria-label="Étapes de lancement">
+        {steps.map((label, index) => <li key={label} aria-current={step === index ? "step" : undefined} className={index < step ? "is-done" : index === step ? "is-current" : ""}>
+          <span>{index < step ? <Check size={14} aria-hidden="true" /> : index + 1}</span><small>{label}</small>
+        </li>)}
+      </ol>
+      <div ref={bodyRef} className="launch-room-sheet__body" data-step={step}>
+        <header className="launch-step-intro"><small>{roomLabel} · {step + 1} / 4</small><h2 ref={stepTitleRef} tabIndex={-1}>{stepTitles[step]}</h2><p>{stepHints[step]}</p></header>
+        {step === 0 ? <section className="launch-identity" aria-label="Identité du direct">{renderIdentity()}</section> : step === 1 ? <LaunchStudio value={studio} onChange={setStudio} /> : step === 2 ? <section className="launch-preflight" aria-label="Vérification du matériel">{renderCheckup()}</section> : renderGoLive()}
       </div>
 
       <nav className="launch-workflow-nav" aria-label="Navigation du séquenceur">
         <button type="button" className="launch-workflow-nav__back" aria-label={step === 0 ? "Retour aux Rooms" : "Étape précédente"} onClick={() => step === 0 ? onClose() : goToStep(step - 1)}>
           <ArrowLeft aria-hidden="true" size={19} />
         </button>
-        <span className="launch-workflow-nav__progress">Étape <small>{step + 1} / 4</small></span>
-        <button type="button" className="launch-workflow-nav__next" disabled={launching || (step === 2 && !isReady && !allowSkipCheckup)} onClick={advance}>
+        <button type="button" className="launch-workflow-nav__next mw-primary-action" disabled={launching || (step === 2 && !isReady && !allowSkipCheckup)} onClick={advance}>
           <span>{nextLabel}</span>{step === 3 ? <Rocket aria-hidden="true" size={17} /> : <ChevronRight aria-hidden="true" size={18} />}
         </button>
         {step === 2 && allowSkipCheckup && !isReady ? <small className="launch-workflow-nav__demo">Démo · vérification ignorée</small> : null}

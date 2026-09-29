@@ -1,5 +1,9 @@
 package com.meewav.android.features.auth
 
+import com.meewav.android.core.design.SecondaryAccent
+
+import com.meewav.android.core.design.polishedPrimaryButtonColors
+
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
@@ -108,10 +112,10 @@ internal fun LocationRegistration(state: AuthUiState, onProfile: (ProfileDraft) 
             if (context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) findNearby()
             else permissions.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION))
         }, enabled = !state.busy && !locating && !loadingCities,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp), shape = RoundedCornerShape(14.dp),
-            border = BorderStroke(.75.dp, Violet), colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)) {
-            if (locating) CircularProgressIndicator(Modifier.size(18.dp), color = Violet, strokeWidth = 2.dp)
-            else Icon(Icons.Outlined.MyLocation, null, Modifier.size(18.dp), tint = Violet)
+            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).authBlackSurface(enabled = !state.busy && !locating && !loadingCities), shape = RoundedCornerShape(14.dp),
+            border = null, colors = polishedPrimaryButtonColors()) {
+            if (locating) CircularProgressIndicator(Modifier.size(18.dp), color = SecondaryAccent, strokeWidth = 2.dp)
+            else Icon(Icons.Outlined.MyLocation, null, Modifier.size(18.dp), tint = SecondaryAccent)
             Spacer(Modifier.width(8.dp))
             Text(if (locating) "Recherche de ta scène…" else "Trouver ma scène autour de moi", fontSize = 12.sp)
         }
@@ -128,7 +132,7 @@ internal fun LocationRegistration(state: AuthUiState, onProfile: (ProfileDraft) 
         Column {
             Text("Visibilité sur la scène", color = Muted, fontSize = 10.sp)
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Outlined.PersonOutline, null, tint = Violet, modifier = Modifier.size(20.dp))
+                Icon(Icons.Outlined.PersonOutline, null, tint = SecondaryAccent, modifier = Modifier.size(20.dp))
                 Column(Modifier.weight(1f).padding(horizontal = 8.dp)) {
                     Text("Afficher mon avatar", color = Color.White, fontSize = 12.sp)
                     Text("Ton adresse reste privée.", color = Muted, fontSize = 10.sp)
@@ -151,9 +155,8 @@ internal fun LocationRegistration(state: AuthUiState, onProfile: (ProfileDraft) 
                         fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                     IconButton(onClick = { picker = null }) { Icon(Icons.Outlined.Close, "Fermer") }
                 }
-                OutlinedTextField(query, { query = it }, singleLine = true, modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text(if (picker == "city") "Nom, code postal ou commune" else "Rechercher un quartier", fontSize = 12.sp) },
-                    leadingIcon = { Icon(Icons.Outlined.Search, null) }, shape = RoundedCornerShape(14.dp))
+                AuthField(if (picker == "city") "Nom, code postal ou commune" else "Rechercher un quartier",
+                    query, { query = it }, Icons.Outlined.Search, singleLineLabel = true)
                 Spacer(Modifier.height(8.dp))
                 LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 24.dp)) {
                     if (picker == "city") {
@@ -179,10 +182,9 @@ internal fun LocationRegistration(state: AuthUiState, onProfile: (ProfileDraft) 
 }
 
 @Composable private fun ScenePickerButton(label: String, icon: ImageVector, enabled: Boolean, onClick: () -> Unit) {
-    OutlinedButton(onClick, enabled = enabled, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
-        shape = RoundedCornerShape(14.dp), border = BorderStroke(.75.dp, Color(0xFF514060)),
-        colors = ButtonDefaults.outlinedButtonColors(containerColor = Color(0xFF0E0D15), contentColor = Color.White)) {
-        Icon(icon, null, Modifier.size(18.dp), tint = Violet)
+    OutlinedButton(onClick, enabled = enabled, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).authBlackSurface(enabled = enabled),
+        shape = RoundedCornerShape(14.dp), border = null, colors = polishedPrimaryButtonColors()) {
+        Icon(icon, null, Modifier.size(18.dp), tint = SecondaryAccent)
         Text(label, Modifier.weight(1f).padding(horizontal = 10.dp), fontSize = 12.sp)
         Icon(Icons.Outlined.ExpandMore, null, Modifier.size(18.dp))
     }

@@ -23,7 +23,7 @@ internal class WaveMixerToolsState(private val context: Context, private val onT
         WavePad("Compte à rebours", "countdown-10-seconds.wav", 0xFF64D98B)
     )
     var pads by mutableStateOf(List<WavePad?>(15) { index ->
-        prefs.getString("pad-$index", null)?.let { WavePad(prefs.getString("name-$index", "Mon son")!!, it, 0xFFA876FF) }
+        prefs.getString("pad-$index", null)?.let { WavePad(prefs.getString("name-$index", "Mon son")!!, it, defaults.getOrNull(index)?.color ?: 0xFFA876FF) }
             ?: defaults.getOrNull(index)
     }); private set
     var activePad by mutableStateOf<Int?>(null); private set
@@ -83,14 +83,14 @@ internal class WaveMixerToolsState(private val context: Context, private val onT
         if (pendingStart) return
         if (fromBeginning && countdownBefore && !timerRunning) {
             pendingStart = true; startAction = action; startMixerTimer = true
-            playSource(5, defaults[5], true)
+            playSource(5, pads[5] ?: defaults[5], true)
         } else { action(); beginTimer() }
     }
     fun requestPassageStart(action: () -> Unit, cancelled: () -> Unit) {
         cancelStart()
         if (!countdownBefore) { action(); return }
         pendingStart = true; startAction = action; cancelAction = cancelled; startMixerTimer = false
-        playSource(5, defaults[5], true)
+        playSource(5, pads[5] ?: defaults[5], true)
     }
     private fun releaseStart() {
         if (!pendingStart) return
@@ -106,8 +106,8 @@ internal class WaveMixerToolsState(private val context: Context, private val onT
         if (stopBeat) onTimerEnd()
         playEndHorn()
     }
-    fun playStartCountdown() { if (countdownBefore) { cancelStart(); playSource(5, defaults[5]) } }
-    fun playEndHorn() { if (hornAfter) { cancelStart(); playSource(1, defaults[1]) } }
+    fun playStartCountdown() { if (countdownBefore) { cancelStart(); playSource(5, pads[5] ?: defaults[5]) } }
+    fun playEndHorn() { if (hornAfter) { cancelStart(); playSource(1, pads[1] ?: defaults[1]) } }
     fun trigger(index: Int) {
         val pad = pads.getOrNull(index) ?: return
         cancelStart(); playSource(index, pad)
@@ -138,7 +138,7 @@ internal class WaveMixerToolsState(private val context: Context, private val onT
     fun stopAllPads() { cancelStart(); stopPad() }
     fun setPad(index: Int, uri: Uri, name: String) {
         if (index == activePad) stopAllPads()
-        pads = pads.toMutableList().also { it[index] = WavePad(name.substringBeforeLast('.', name), uri.toString(), 0xFFA876FF) }
+        pads = pads.toMutableList().also { it[index] = WavePad(name.substringBeforeLast('.', name), uri.toString(), defaults.getOrNull(index)?.color ?: 0xFFA876FF) }
         prefs.edit().putString("pad-$index", uri.toString()).putString("name-$index", name).apply()
     }
     fun restorePad(index: Int) {

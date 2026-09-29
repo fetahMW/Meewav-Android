@@ -137,22 +137,21 @@ private fun renderWebPanel(width: Float, height: Float, margin: Int): Bitmap {
         })
     }
 
-    stroke(color = Color.parseColor("#4C1D95"), width = 18f, opacity = .10f, blur = 12f)
-    stroke(shader = linear(30f, 0f, 383f, 580f,
-        colors("#808B5CF6", "#5C9464F5", "#6B7C4FE0", "#619D78F0", "#618B5CF6", "#3DA78BF0"),
-        0f, .16f, .38f, .64f, .84f, 1f), width = 4.1f, opacity = .30f, blur = 7.2f)
+    // A dark bevel and a crisp silver-violet edge, with only a local reflected light.
+    stroke(color = Color.BLACK, width = 2.6f, opacity = .46f, blur = 1.2f)
+    stroke(color = Color.parseColor("#A98EF0"), width = 2.2f, opacity = .10f, blur = 3f)
     stroke(shader = linear(24f, 8f, 386f, 576f,
-        colors("#A78BF0", "#9464F5", "#8B5CF6", "#7544DF", "#9464F5", "#8B5CF6", "#A78BF0"),
-        0f, .13f, .30f, .52f, .74f, .88f, 1f), width = 1.15f, opacity = .80f, blur = 1.7f)
+        colors("#D3C7F5", "#A98EF0", "#514A62", "#292431", "#807394", "#A98EF0"),
+        0f, .16f, .38f, .64f, .84f, 1f), width = 1f, opacity = .72f)
     stroke(shader = linear(28f, 2f, 384f, 578f,
-        colors("#B6A0F5", "#A78BF0", "#9D78F0", "#B6A0F5", "#A78BF0", "#9D78F0", "#B6A0F5"),
-        0f, .14f, .32f, .52f, .72f, .88f, 1f), width = .46f, opacity = .76f)
+        colors("#B3F4F0FF", "#1AD3C7F5", "#00A98EF0", "#1FA98EF0", "#73DED3FC"),
+        0f, .18f, .42f, .78f, 1f), width = .4f, opacity = .60f)
     stroke(path = bottomArc, shader = linear(4f, 580f, 409f, 580f,
-        colors("#008B5CF6", "#298B5CF6", "#579464F5", "#859D78F0", "#579464F5", "#298B5CF6", "#008B5CF6"),
-        0f, .16f, .35f, .50f, .65f, .84f, 1f), width = 4.5f, opacity = .40f, blur = 7.2f)
+        colors("#00A98EF0", "#29A98EF0", "#57A98EF0", "#85A98EF0", "#57A98EF0", "#29A98EF0", "#00A98EF0"),
+        0f, .16f, .35f, .50f, .65f, .84f, 1f), width = 2f, opacity = .18f, blur = 3f)
     stroke(path = bottomArc, shader = linear(4f, 580f, 409f, 580f,
-        colors("#008B5CF6", "#739D78F0", "#BAB6A0F5", "#BAB6A0F5", "#739D78F0", "#008B5CF6"),
-        0f, .20f, .42f, .58f, .80f, 1f), width = .85f, opacity = .72f)
+        colors("#00A98EF0", "#73A98EF0", "#BAD3C7F5", "#BAD3C7F5", "#73A98EF0", "#00A98EF0"),
+        0f, .20f, .42f, .58f, .80f, 1f), width = .65f, opacity = .45f)
     return bitmap
 }
 

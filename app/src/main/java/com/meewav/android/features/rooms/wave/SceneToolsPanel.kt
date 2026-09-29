@@ -1,5 +1,11 @@
 package com.meewav.android.features.rooms.wave
 
+import com.meewav.android.core.design.polishedControlSurface
+import com.meewav.android.core.design.NavigationTabContent
+
+import com.meewav.android.core.design.polishedPrimarySurface
+import com.meewav.android.core.design.polishedPrimaryButtonColors
+
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import androidx.compose.animation.AnimatedVisibility
@@ -36,9 +42,9 @@ internal val sceneAccent = WaveMixerTheme.capsuleAccentSoft
         Row(Modifier.fillMaxWidth().height(44.dp), verticalAlignment = Alignment.CenterVertically) {
             listOf("Programme", "Prompteur", "Évaluation", "Cagnotte").forEachIndexed { index, label ->
                 Box(Modifier.weight(1f).height(44.dp).clickable { state.tab = index }, contentAlignment = Alignment.Center) {
-                    Text(label, color = if (state.tab == index) Color.White else sceneMuted, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
-                    if (state.tab == index) Box(Modifier.align(Alignment.BottomCenter).padding(bottom=5.dp).width(32.dp).height(2.dp)
-                        .background(Brush.horizontalGradient(listOf(Color.Transparent,sceneAccent,Color.Transparent)),CircleShape))
+                    NavigationTabContent(state.tab == index) {
+                        Text(label, color = if (state.tab == index) Color.White else sceneMuted, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                    }
                 }
             }
         }
@@ -176,9 +182,9 @@ internal val sceneAccent = WaveMixerTheme.capsuleAccentSoft
 }
 @Composable internal fun SceneCard(content: @Composable ColumnScope.()->Unit) { Column(Modifier.fillMaxWidth().hifiBlackSurface(16.dp).padding(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp),content=content) }
 @Composable internal fun SceneButton(label: String,modifier: Modifier=Modifier,primary: Boolean=false,enabled: Boolean=true,icon: ImageVector?=null,onClick: ()->Unit) {
-    Button(onClick,modifier.heightIn(min=44.dp),enabled=enabled,shape=RoundedCornerShape(12.dp),contentPadding=PaddingValues(horizontal=12.dp,vertical=9.dp),
-        colors=ButtonDefaults.buttonColors(containerColor=if(primary)WaveMixerTheme.primaryCta else Color(0xFF16151B),contentColor=Color.White,disabledContainerColor=Color(0xFF17171B),disabledContentColor=Color(0xFF62606A)),
-        border=BorderStroke(.6.dp,if(primary)sceneAccent.copy(alpha=.45f) else Color.White.copy(alpha=.12f))) {
+    Button(onClick,modifier.heightIn(min=44.dp).polishedControlSurface(selected=primary, cornerRadius=12.dp, enabled=enabled),enabled=enabled,shape=RoundedCornerShape(12.dp),contentPadding=PaddingValues(horizontal=12.dp,vertical=9.dp),
+        colors=polishedPrimaryButtonColors(),
+        border=null) {
         if(icon!=null) { Icon(icon,null,Modifier.size(17.dp));Spacer(Modifier.width(6.dp)) }
         Text(label,fontSize=12.sp,maxLines=2)
     }
@@ -189,7 +195,7 @@ internal val sceneAccent = WaveMixerTheme.capsuleAccentSoft
 @Composable internal fun <T> SceneChoice(label: String,choices: List<Pair<T,String>>,modifier: Modifier=Modifier.fillMaxWidth(),onSelect: (T)->Unit) {
     var open by remember { mutableStateOf(false) }
     Box(modifier) {
-        Row(Modifier.fillMaxWidth().heightIn(min=44.dp).clip(RoundedCornerShape(11.dp)).background(Color(0xFF17151D)).border(.6.dp,Color.White.copy(alpha=.12f),RoundedCornerShape(11.dp)).clickable { open=true }.padding(horizontal=11.dp,vertical=8.dp),verticalAlignment=Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().heightIn(min=44.dp).clip(RoundedCornerShape(11.dp)).polishedControlSurface(cornerRadius=11.dp).clickable { open=true }.padding(horizontal=11.dp,vertical=8.dp),verticalAlignment=Alignment.CenterVertically) {
             Text(label,color=Color.White,fontSize=12.sp,maxLines=1,overflow=TextOverflow.Ellipsis,modifier=Modifier.weight(1f));Icon(Icons.Default.ExpandMore,null,tint=sceneAccent,modifier=Modifier.size(18.dp))
         }
         DropdownMenu(open,{open=false},containerColor=Color(0xFF15131B),modifier=Modifier.heightIn(max=300.dp)) { choices.forEach { (value,title) -> DropdownMenuItem(text={Text(title,color=Color.White,fontSize=13.sp)},onClick={open=false;onSelect(value)}) } }

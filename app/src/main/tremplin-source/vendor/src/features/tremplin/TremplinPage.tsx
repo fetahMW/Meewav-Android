@@ -47,6 +47,7 @@ import {
   MON_GLOBE_ROUTE,
 } from "../globe/monGlobeContract";
 import TremplinGradeSystem from "./TremplinGradeSystem";
+import TremplinPublicHome from "./TremplinPublicHome";
 import TremplinDemoBanner from "./TremplinDemoBanner";
 import MeewavTokenIcon from "./MeewavTokenIcon";
 import TremplinHomeExperience, {
@@ -69,6 +70,7 @@ import {
   TREMPLIN_DISCOVERY_TOKEN_UI,
 } from "./tremplinDiscoveryToken";
 import {
+  getTremplinContextAction,
   getTremplinTokenLifecycleStage,
   type TremplinTokenLifecycleStage,
 } from "./tremplinProductModel";
@@ -96,7 +98,7 @@ import TremplinPreProfile from "./TremplinPreProfile";
 import TremplinStatistics from "./TremplinStatistics";
 import type { TremplinStatisticsSort } from "./tremplinStatisticsRanking";
 
-type TremplinView = "home" | "discover" | "myArtists" | "statistics" | "application" | "dashboard";
+type TremplinView = "home" | "understand" | "discover" | "myArtists" | "statistics" | "application" | "dashboard";
 type TokenOperationMode = "buy" | "sell";
 type MyArtistsTab = "overview" | "tokens" | "followed" | "rooms" | "activity" | "now" | "mw";
 type MyArtistsMwTab = "holdings" | "history" | "documents";
@@ -177,6 +179,7 @@ const TREMPLIN_NAV_ITEMS: readonly ViewDefinition[] = [
 
 const TREMPLIN_VIEW_ROUTES: Readonly<Record<TremplinView, string>> = {
   home: "/tremplin",
+  understand: "/tremplin/comprendre",
   discover: "/tremplin/decouvrir",
   myArtists: "/tremplin/mes-artistes",
   statistics: "/tremplin/statistiques",
@@ -1088,6 +1091,7 @@ export default function TremplinPage() {
     return map;
   }, []);
   const [playingArtistId, setPlayingArtistId] = useState<string | null>(null);
+  const [audioSourceOverride, setAudioSourceOverride] = useState<string | null>(null);
   const [audioProgress, setAudioProgress] = useState({ currentTime: 0, duration: 0 });
   const [toast, setToast] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -1205,7 +1209,7 @@ export default function TremplinPage() {
     if (!playingArtistId) return;
     const artist = tremplinArtists.find((item) => item.id === playingArtistId);
     if (!artist) return;
-    const audio = new Audio(artist.audio.audioSrc);
+    const audio = new Audio(audioSourceOverride ?? artist.audio.audioSrc);
     audio.preload = "metadata";
     audio.volume = .35;
     audio.onloadedmetadata = () => setAudioProgress({ currentTime: audio.currentTime, duration: Number.isFinite(audio.duration) ? audio.duration : 0 });
@@ -1221,7 +1225,7 @@ export default function TremplinPage() {
     audio.play().catch(() => { setPlayingArtistId(null); setToast("La préécoute audio n’est pas disponible sur cet appareil."); });
     audioRef.current = audio;
     return () => { audio.pause(); audio.onerror = null; audio.onended = null; audio.onloadedmetadata = null; audio.ontimeupdate = null; };
-  }, [playingArtistId]);
+  }, [playingArtistId, audioSourceOverride]);
 
   useEffect(() => {
     if (activeView === "home" && !selectedArtist && !flow) trackTremplinEvent("tremplin_home_viewed");
@@ -1230,7 +1234,7 @@ export default function TremplinPage() {
   const profileOrigin = selectedArtist ? getTremplinReturnTo(location.state) : null;
   const activeToolbarId = selectedArtist && profileOrigin
     ? getTremplinViewFromPath(profileOrigin.split(/[?#]/)[0])
-    : selectedArtist ? "discover" : activeView;
+    : selectedArtist ? "discover" : activeView === "understand" ? "home" : activeView;
   const toggleFavorite = (artistId: string) => {
     const following = !favorites.has(artistId);
     const artist = tremplinArtists.find(({ id }) => id === artistId);
@@ -1312,7 +1316,7 @@ export default function TremplinPage() {
     setSelectedArtist(null);
     setHomeWallRailId(null);
     setActiveView(view);
-    if (view === "home" || view === "application" || view === "dashboard") setPlayingArtistId(null);
+    if (view === "home" || view === "understand" || view === "application" || view === "dashboard") setPlayingArtistId(null);
     navigate(`${TREMPLIN_VIEW_ROUTES[view]}${anchorId ? `#${anchorId}` : ""}`);
     if (!anchorId) requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" }));
   };
@@ -1411,11 +1415,25 @@ export default function TremplinPage() {
       tremplinSessionSnapshot,
     } });
   };
-  const toggleAudio = (artistId: string) => setPlayingArtistId((current) => {
-    const next = current === artistId ? null : artistId;
-    if (next) trackTremplinEvent("preview_started", { artistId });
-    return next;
-  });
+  const toggleAudio = (artistId: string, source: string | null = null) => {
+    setAudioSourceOverride(source);
+    setPlayingArtistId(current => {
+      const next = current === artistId && source === audioSourceOverride ? null : artistId;
+      if (next) trackTremplinEvent("preview_started", { artistId });
+      return next;
+    });
+  };
+  const focusHomeSearch = (query = "") => {
+    setDiscoveryState(current => ({ ...current, query }));
+    setSelectedArtist(null);
+    setHomeWallRailId(null);
+    setActiveView("discover");
+    const params = new URLSearchParams();
+    if (query.trim()) params.set("q", query.trim());
+    navigate(`${TREMPLIN_VIEW_ROUTES.discover}${params.size ? `?${params.toString()}` : ""}`);
+    requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: 0, behavior: "auto" }));
+  };
+  const contextAction = getTremplinContextAction(viewer.userState);
 
   const mainContent = (() => {
     if (selectedArtist) {
@@ -1427,7 +1445,7 @@ export default function TremplinPage() {
     if (activeView === "statistics") return <TremplinStatistics sort={statisticsSort} onSortChange={setStatisticsSort} onOpen={openArtist} />;
     if (activeView === "application") return <TremplinTokenWorkspace mode="application" onClose={closeWorkspace} onApplicationSubmitted={() => setToast("Simulation terminée : aucune demande réelle n’a été envoyée.")} />;
     if (activeView === "dashboard") return <TremplinTokenWorkspace mode="dashboard" onClose={closeWorkspace} />;
-    if (activeView === "home") {
+    if (activeView === "understand") {
       return (
         <TremplinTokenEducation
           onDiscover={() => changeView("discover")}
@@ -1436,6 +1454,25 @@ export default function TremplinPage() {
         />
       );
     }
+    if (activeView === "home") return (
+      <TremplinPublicHome
+        playingArtistId={playingArtistId}
+        followedArtistIds={favorites}
+        userState={viewer.userState}
+        onToggleArtistAudio={toggleAudio}
+        onOpenArtist={openArtist}
+        onOpenArtistSupport={artist => openArtist(artist, "profile-support")}
+        onMyArtists={() => changeView("myArtists")}
+        onUnderstand={() => changeView("understand")}
+        onUnderstandGrades={() => changeView("understand", "tremplin-grades")}
+        onUnderstandToken={() => changeView("understand", "tremplin-token-mw")}
+        onOpenRoute={route => navigate(route)}
+        onSearch={focusHomeSearch}
+        artistActionLabel={contextAction.label}
+        artistActionDetail={contextAction.detail}
+        onArtistAction={() => changeView(contextAction.destination === "home" ? "understand" : contextAction.destination)}
+      />
+    );
     return (
       <DiscoveryExperience
         playingArtistId={playingArtistId}
@@ -1458,6 +1495,7 @@ export default function TremplinPage() {
     .flatMap(({ updates }) => updates)
     .filter(({ id }) => !myArtistsSessionState.readUpdateIds.has(id)).length;
   const playingArtist = playingArtistId ? tremplinArtists.find(({ id }) => id === playingArtistId) ?? null : null;
+  const playingTitle = audioSourceOverride === "/media/vinyl/003-king.mp3" ? "003 KING" : playingArtist?.audio.title;
   const audioProgressPercent = audioProgress.duration > 0 ? Math.min(100, Math.max(0, audioProgress.currentTime / audioProgress.duration * 100)) : 0;
 
   return (
@@ -1504,12 +1542,12 @@ export default function TremplinPage() {
             <button type="button" className="tremplin-account-button" aria-label={`Ouvrir Mes artistes pour ${viewer.displayName}`} title={viewer.displayName} onClick={() => changeView("myArtists")}><img src={viewer.avatarUrl} alt="" /><span /></button>
           </div>
         </header>
-        <div className={`tremplin-scroll${!selectedArtist && (activeView === "application" || activeView === "dashboard") ? " is-workspace" : ""}${!selectedArtist && activeView === "discover" && homeWallRailId !== null ? " is-home-wall" : ""}${!selectedArtist && activeView === "home" ? " is-understand" : ""}`} ref={scrollRef} onClickCapture={openPreProfileFromPortrait}>
+        <div className={`tremplin-scroll${!selectedArtist && (activeView === "application" || activeView === "dashboard") ? " is-workspace" : ""}${!selectedArtist && activeView === "discover" && homeWallRailId !== null ? " is-home-wall" : ""}${!selectedArtist && activeView === "understand" ? " is-understand" : ""}`} ref={scrollRef} onClickCapture={openPreProfileFromPortrait}>
           {!localPreviewEnabled ? <TremplinDemoBanner compact context="fixtures" /> : null}
           {flow ? <TremplinTokenFlow artist={flow.artist} token={flow.token} initialMode={flow.mode} backLabel={getTremplinReturnLabel(location.state)} onClose={closeFlow} onConfirm={(operation) => { setToast(`${operation.operation === "purchase" ? "Achat" : "Revente"} simulé pour ${flow.artist.name}. Aucune transaction réelle n’a été effectuée.`); }} /> : mainContent}
         </div>
       </div>
-      {playingArtist && !isFocusedFlow ? <aside className="tremplin-now-playing" aria-label={`Lecture en cours : ${playingArtist.audio.title} par ${playingArtist.name}`}><img src={playingArtist.artwork} alt="" /><div><small>En écoute</small><strong>{playingArtist.audio.title}</strong><span>{playingArtist.name} · {playingArtist.styles[0]}</span><i aria-hidden="true"><b style={{ width: `${audioProgressPercent}%` }} /></i></div><button type="button" onClick={() => toggleAudio(playingArtist.id)} aria-label={`Mettre ${playingArtist.audio.title} en pause`}><Pause /></button></aside> : null}
+      {playingArtist && !isFocusedFlow ? <aside className="tremplin-now-playing" aria-label={`Lecture en cours : ${playingTitle} par ${playingArtist.name}`}><img src={playingArtist.artwork} alt="" /><div><small>En écoute</small><strong>{playingTitle}</strong><span>{playingArtist.name} · {playingArtist.styles[0]}</span><i aria-hidden="true"><b style={{ width: `${audioProgressPercent}%` }} /></i></div><button type="button" onClick={() => setPlayingArtistId(null)} aria-label={`Mettre ${playingTitle} en pause`}><Pause /></button></aside> : null}
       {preProfile && <TremplinPreProfile artist={preProfile.artist} anchor={preProfile.anchor} followed={favorites.has(preProfile.artist.id)} onClose={() => setPreProfile(null)} onOpenProfile={() => { const artist = preProfile.artist; setPreProfile(null); openArtist(artist); }} onFollow={toggleFavorite} onContact={() => { setPreProfile(null); navigate("/messages"); }} />}
       {toast && <div className="tremplin-toast" role="status"><CheckCircle2 /> {toast}</div>}
     </main>

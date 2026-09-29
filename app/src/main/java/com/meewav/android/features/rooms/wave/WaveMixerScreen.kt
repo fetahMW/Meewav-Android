@@ -26,6 +26,9 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -232,13 +235,15 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     var micMuted by remember { mutableStateOf(false) }
     var audioMuted by remember { mutableStateOf(false) }
     // FX.
-    var vocalMode by remember { mutableStateOf(WaveVocalMode()) }
+    var proOpen by remember { mutableStateOf(false) }
+    var autotune by remember { mutableStateOf(WaveAutotuneState()) }
+    val proSelected = autotune.proActive
     var pluginsOpen by remember { mutableStateOf(false) }
-    var tuneSettings by remember { mutableStateOf(WaveTuneSettings()) }
+    val tuneSettings = autotune.correction
     var monitoring by remember(context, liveRoomId) {
         mutableStateOf(liveRoomId != null && WaveLocalVocalMonitor.hasHeadphones(context))
     }
-    var autotuneOn by remember { mutableStateOf(false) }
+    val autotuneOn = autotune.enabled
     var cleanVoice by remember { mutableStateOf(false) }
     var proEffects by remember { mutableStateOf(0) }
     var noiseCalibration by remember { mutableStateOf(0) }
@@ -259,8 +264,8 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
         else null
     }
     val controlledGuest = if (liveAudio == null) guestState.mixerGuest else null
-    LaunchedEffect(vocalMode.pro, proEffects, noiseCalibration, cleanVoice, liveAudio, micGain, micMuted, monitoring, autotuneOn, tuneSettings, reverbOn, reverbValue, tuneKey, tuneScale, composition?.publicRoute, composition?.outputGain, mixerDeck.public, audioGain, audioMuted) {
-        liveAudio?.configure(vocalMode.applyTo(WaveVocalSettings(micMuted, micGain, monitoring, autotuneOn, waveTuneScale(tuneKey, tuneScale), reverbOn, reverbValue, cleanVoice, noiseCalibration, proEffects, tuneSettings)),
+    LaunchedEffect(proEffects, noiseCalibration, cleanVoice, liveAudio, micGain, micMuted, monitoring, autotuneOn, tuneSettings, reverbOn, reverbValue, tuneKey, tuneScale, composition?.publicRoute, composition?.outputGain, mixerDeck.public, audioGain, audioMuted) {
+        liveAudio?.configure(WaveVocalSettings(micMuted, micGain, monitoring, autotuneOn, waveTuneScale(tuneKey, tuneScale), reverbOn, reverbValue, cleanVoice, noiseCalibration, proEffects, tuneSettings),
             composition?.publicRoute == true, composition?.outputGain ?: 1f, mixerDeck.public, if (audioMuted) 0f else audioGain)
     }
     DisposableEffect(liveAudio) { onDispose { liveAudio?.close() } }
@@ -314,19 +319,17 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
     }
     if (pluginsOpen) WavePluginsSheet(
         onDismiss = { pluginsOpen = false },
-        tuneOn = autotuneOn, onTune = { autotuneOn = !autotuneOn },
+        tuneOn = autotuneOn, onTune = { autotune = autotune.toggleSimplePower() },
         reverbOn = reverbOn, onReverb = { reverbOn = !reverbOn },
-        effects = if (vocalMode.pro) proEffects else 0,
-        onEffects = { proEffects = if (vocalMode.pro) it else proEffects or it; vocalMode = vocalMode.activatePro() },
-        cleanVoice = vocalMode.pro && cleanVoice,
-        onCleanVoice = { cleanVoice = !vocalMode.pro || !cleanVoice; vocalMode = vocalMode.activatePro() },
-        onCalibrate = { vocalMode = vocalMode.activatePro(); cleanVoice = true; noiseCalibration++ },
+        effects = proEffects, onEffects = { proEffects = it },
+        cleanVoice = cleanVoice, onCleanVoice = { cleanVoice = !cleanVoice },
+        onCalibrate = { cleanVoice = true; noiseCalibration++ },
     )
-    if (vocalMode.sheetOpen) WaveVocalStudioSheet(
-        autotuneOnly = true, onDismiss = { vocalMode = vocalMode.dismissEditor() },
-        tuneOn = autotuneOn, onTune = { autotuneOn = !autotuneOn },
+    if (proOpen) WaveVocalStudioSheet(
+        autotuneOnly = true, onDismiss = { proOpen = false },
+        tuneOn = autotuneOn, onTune = { autotune = autotune.toggleProPower() },
         tuneKey = tuneKey, scale = tuneScale, onKey = { tuneKey = it }, onScale = { tuneScale = it },
-        correction = tuneSettings, onCorrection = { tuneSettings = it.bounded() },
+        correction = autotune.proSettings, onCorrection = { autotune = autotune.editPro(it) },
         reverbOn = reverbOn, onReverb = { reverbOn = !reverbOn },
         reverbMix = reverbValue, onReverbMix = { reverbValue = it },
         cleanVoice = cleanVoice, onCleanVoice = { cleanVoice = !cleanVoice },
@@ -430,10 +433,11 @@ fun WaveMixerScreen(room: RoomModule = RoomModule.WAVE, roomTitle: String? = nul
                         micMuted = controlledGuest?.let { !it.mic } ?: micMuted, audioMuted = audioMuted,
                         onMicGain = { value -> controlledGuest?.let { guestState.setGuestGain(it.id, value) } ?: run { micGain = value } }, onAudioGain = { audioGain = it },
                         onMicMute = { controlledGuest?.let { guestState.toggleMic(it.id) } ?: run { micMuted = !micMuted } }, onAudioMute = { audioMuted = !audioMuted },
-                        isPro = vocalMode.pro, onProChange = { vocalMode = vocalMode.select(it); selector = null },
+                        proActive = proSelected,
+                        onPro = { autotune = autotune.togglePro(); proOpen = autotune.proActive; selector = null },
                         onPlugins = { pluginsOpen = true; selector = null },
                         monitoring = monitoring, onMonitoring = { monitoring = !monitoring },
-                        autotuneOn = autotuneOn, onAutotune = { autotuneOn = !autotuneOn },
+                        autotuneOn = autotuneOn, onAutotune = { autotune = autotune.toggleSimplePower() },
                         cleanVoice = cleanVoice, onCleanVoice = { cleanVoice = !cleanVoice },
                         proEffects = proEffects, onProEffects = { proEffects = it },
                         onCalibrateNoise = { cleanVoice = true; noiseCalibration++ },
@@ -778,7 +782,7 @@ internal fun MixerBody(
     micGain: Float, audioGain: Float, micMuted: Boolean, audioMuted: Boolean,
     onMicGain: (Float) -> Unit, onAudioGain: (Float) -> Unit,
     onMicMute: () -> Unit, onAudioMute: () -> Unit,
-    isPro: Boolean, onProChange: (Boolean) -> Unit,
+    proActive: Boolean, onPro: () -> Unit,
     monitoring: Boolean, onMonitoring: () -> Unit,
     autotuneOn: Boolean, onAutotune: () -> Unit,
     reverbOn: Boolean, onReverb: () -> Unit,
@@ -792,6 +796,8 @@ internal fun MixerBody(
     proEffects: Int = 0, onProEffects: ((Int) -> Unit)? = null,
     onPlugins: () -> Unit,
 ) {
+    var padsOpen by remember { mutableStateOf(false) }
+    if (padsOpen) WaveMixerToolsSheet(deck, onDismiss = { padsOpen = false })
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val deckHeight by animateDpAsState(if (multitrack) maxHeight else 152.dp.coerceAtMost(maxHeight),
             androidx.compose.animation.core.spring(dampingRatio = .9f, stiffness = 320f), label = "Déploiement du deck")
@@ -844,8 +850,9 @@ internal fun MixerBody(
             )
             // Colonne FX (moitié droite, inset 16 depuis le diviseur).
             FxColumn(
-                isPro = isPro, onProChange = onProChange,
+                proActive = proActive, onPro = onPro,
                 onPlugins = onPlugins,
+                onPads = { padsOpen = true },
                 monitoring = monitoring, onMonitoring = onMonitoring,
                 autotuneOn = autotuneOn, onAutotune = onAutotune,
                 cleanVoice = cleanVoice, onCleanVoice = onCleanVoice,
@@ -874,8 +881,9 @@ internal fun MixerBody(
 
 @Composable
 private fun FxColumn(
-    isPro: Boolean, onProChange: (Boolean) -> Unit,
+    proActive: Boolean, onPro: () -> Unit,
     onPlugins: () -> Unit,
+    onPads: () -> Unit,
     monitoring: Boolean, onMonitoring: () -> Unit,
     autotuneOn: Boolean, onAutotune: () -> Unit,
     reverbOn: Boolean, onReverb: () -> Unit,
@@ -889,20 +897,18 @@ private fun FxColumn(
     modifier: Modifier = Modifier,
 ) {
     BoxWithConstraints(modifier) {
-    val cardHeight = ((maxHeight - 82.dp) / 2f).coerceAtLeast(0.dp)
+    val cardHeight = ((maxHeight - 78.dp) / 2f).coerceAtLeast(0.dp)
     val showLabels = cardHeight >= 102.dp
-    val effectsActive = WaveVocalMode(pro = isPro).hasActiveEffects(autotuneOn, reverbOn, cleanVoice, proEffects)
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         // Deux touches alignées au bord des cartes FX.
         Row(
-            Modifier.fillMaxWidth().height(32.dp),
-            horizontalArrangement = Arrangement.Start,
+            Modifier.fillMaxWidth().height(28.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            SimpleProToggle(
-                simpleActive = !isPro && effectsActive,
-                proActive = isPro && effectsActive,
-                onChange = onProChange, modifier = Modifier.weight(1f))
+            ProEntry(active = proActive, onClick = onPro, modifier = Modifier.weight(1f))
+            HeadphoneButton(enabled = monitoring, onToggle = onMonitoring,
+                modifier = Modifier.weight(1f).height(28.dp))
         }
         if (selector == null) {
             // Carte Autotune.
@@ -947,7 +953,7 @@ private fun FxColumn(
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             WavePluginEntry(onPlugins, Modifier.weight(1f).height(32.dp))
-            HeadphoneButton(enabled = monitoring, onToggle = onMonitoring, modifier = Modifier.weight(1f).height(32.dp))
+            WavePadsEntry(onPads, Modifier.weight(1f).height(32.dp))
         }
     }
     }
@@ -958,33 +964,26 @@ private fun FxColumn(
 /* ------------------------------------------------------------------------- */
 
 /* ------------------------------------------------------------------------- */
-/* Simple/Pro — même verre violet et même forme que la touche Plugin.         */
+/* Pro active les réglages avancés ; un second appui retrouve le mode simple. */
 /* ------------------------------------------------------------------------- */
 
 @Composable
-private fun SimpleProToggle(simpleActive: Boolean, proActive: Boolean, onChange: (Boolean) -> Unit, modifier: Modifier = Modifier) {
-    Row(modifier.selectableGroup(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        ProOption(label = "Simple", active = simpleActive, onClick = { onChange(false) }, modifier = Modifier.weight(1f))
-        ProOption(label = "Pro", active = proActive, onClick = { onChange(true) }, modifier = Modifier.weight(1f))
-    }
-}
-
-@Composable
-private fun ProOption(label: String, active: Boolean, onClick: () -> Unit, modifier: Modifier) {
+private fun ProEntry(active: Boolean, onClick: () -> Unit, modifier: Modifier) {
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
     Box(
         modifier
-            .height(32.dp)
-            .consoleTabSurface(selected = active, focused = focused)
-            .clip(RoundedCornerShape(12.dp))
-            .selectable(selected = active, role = Role.Tab, interactionSource = interaction,
+            .height(28.dp)
+            .consoleTabSurface(selected = active, focused = focused, cornerRadius = 14.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .semantics { selected = active; stateDescription = if (active) "Autotune Pro actif" else "Autotune Pro inactif" }
+            .clickable(role = Role.Button, onClickLabel = if (active) "Revenir à l’Autotune simple" else "Activer l’Autotune Pro", interactionSource = interaction,
                 indication = null, onClick = onClick)
             .padding(horizontal = 6.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
-            label,
+            "Pro",
             color = if (active) WaveMixerTheme.pearl else WaveMixerTheme.secondary,
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
@@ -994,7 +993,7 @@ private fun ProOption(label: String, active: Boolean, onClick: () -> Unit, modif
 }
 
 /* ------------------------------------------------------------------------- */
-/* Retour audio — touche jumelle de Plugin, violet lorsqu'il est actif.       */
+/* Retour audio — pastille jumelle de Pro, violette lorsqu'elle est active.   */
 /* ------------------------------------------------------------------------- */
 
 @Composable
@@ -1003,8 +1002,8 @@ private fun HeadphoneButton(enabled: Boolean, onToggle: () -> Unit, modifier: Mo
     val focused by interaction.collectIsFocusedAsState()
     Row(
         modifier
-            .consoleTabSurface(selected = enabled, focused = focused)
-            .clip(RoundedCornerShape(12.dp))
+            .consoleTabSurface(selected = enabled, focused = focused, cornerRadius = 14.dp)
+            .clip(RoundedCornerShape(14.dp))
             .toggleable(value = enabled, role = Role.Switch, interactionSource = interaction,
                 indication = null, onValueChange = { onToggle() })
             .padding(horizontal = 6.dp),

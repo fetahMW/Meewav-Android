@@ -1,5 +1,7 @@
 package com.meewav.android.features.rooms.wave
 
+import com.meewav.android.core.design.polishedControlSurface
+
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -49,7 +51,7 @@ internal fun WaveVoteControls(clip: WaveCompositionClip, state: WaveCompositionS
             }, label = "Commandes du vote") { current ->
                 Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                     if (current == CardRail.DURATION) listOf(30, 60, 90).forEach { seconds ->
-                        Box(Modifier.weight(1f).height(36.dp).hifiBlackSurface(8.dp).clickable(enabled = !locked) { onDuration(seconds); rail = CardRail.NONE }, contentAlignment = Alignment.Center) {
+                        Box(Modifier.weight(1f).height(36.dp).polishedControlSurface(selected=duration == seconds,cornerRadius=8.dp,enabled=!locked).clickable(enabled = !locked) { onDuration(seconds); rail = CardRail.NONE }, contentAlignment = Alignment.Center) {
                             Text("$seconds s", color = if (duration == seconds) accent else text, fontSize = 11.sp)
                         }
                     } else {

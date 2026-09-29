@@ -1,5 +1,8 @@
 package com.meewav.android.features.rooms.wave
 
+import com.meewav.android.core.design.polishedPrimarySurface
+import com.meewav.android.core.design.polishedPrimaryButtonColors
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -39,8 +42,8 @@ internal fun CageResultsSheet(state: CageToolsState) {
             }
             CageResultsCard(state, Modifier.weight(1f, fill = false))
             Button(onClick = { state.resultsOnStage = !state.resultsOnStage; state.resultsOpen = false }, enabled = state.finished,
-                modifier = Modifier.fillMaxWidth().padding(top = 12.dp).heightIn(min = 48.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = WaveMixerTheme.capsuleAccentSoft, contentColor = Color(0xFF101014))) {
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp).heightIn(min = 48.dp).polishedPrimarySurface(enabled = state.finished),
+                colors = polishedPrimaryButtonColors()) {
                 Text(if (state.resultsOnStage) "Retirer de l’affichage public" else "Afficher au public")
             }
             Text(if (state.resultsOnStage) "Podium affiché sur la scène simulée." else "Affichage local sur la scène simulée, sans diffusion réseau.",

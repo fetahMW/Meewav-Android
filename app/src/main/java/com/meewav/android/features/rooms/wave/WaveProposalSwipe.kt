@@ -70,7 +70,7 @@ internal fun WaveProposalSwipe(id: String, onVote: () -> Unit, onDelete: () -> U
             if (dragging && abs(drag) > threshold * .25f) Box(Modifier.matchParentSize().padding(horizontal = 12.dp),
                 contentAlignment = if (drag > 0f) Alignment.CenterStart else Alignment.CenterEnd) {
                 Text(if (drag > 0f) "Vote →" else "← Supprimer",
-                    color = if (drag > 0f) WaveMixerTheme.violetSoft else Color(0xFFC88B90), fontSize = 11.sp)
+                    color = if (drag > 0f) WaveMixerTheme.capsuleAccentSoft else Color(0xFFC88B90), fontSize = 11.sp)
             }
             Box(Modifier.fillMaxWidth().graphicsLayer {
                 translationX = if (dragging) drag else offset.value

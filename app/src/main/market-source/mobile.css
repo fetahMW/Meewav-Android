@@ -240,7 +240,7 @@
 #root .mobile-market .market-seller-drafts__header h2 { font-size: 18px; }
 #root .mobile-market .market-seller-drafts__header p { font-size: 12px; }
 #root .mobile-market .market-seller-drafts__list li { grid-template-columns: 44px minmax(0,1fr); gap: 8px 10px; padding: 10px; min-height: 0; border-radius: 12px; background: #0e0e10; }
-#root .mobile-market .market-seller-drafts__icon { width: 44px; height: 44px; border-radius: 10px; background: #1c1c25; color: #bca5e6; border-color: #bca5e629; }
+#root .mobile-market .market-seller-drafts__icon { width: 44px; height: 44px; border-radius: 10px; background: #1c1c25; color: var(--mw-accent-secondary); border-color: #bca5e629; }
 #root .mobile-market .market-seller-drafts__resume { grid-column: 2; justify-self: start; min-height: 44px; font-size: 12px; }
 #root .mobile-market .market-seller-drafts__copy strong { font-size: 14px; }
 #root .mobile-market .market-intents__content { min-height: 0; flex: 1; }
@@ -249,7 +249,7 @@
 #root .mobile-market .market-intents__roles > button.is-active { border-color: #a58aca70; background: #654ea32b; box-shadow: none; }
 #root .mobile-market .market-intents__summary { width: 100%; margin: 0; padding: 2px 0 0; font-size: 11px; }
 #root .mobile-market .market-intent-card { grid-template-columns: 34px minmax(0,1fr); gap: 10px; min-height: 0; padding: 12px; border-radius: 14px; background: linear-gradient(150deg,#1a1b21,#101115); }
-#root .mobile-market .market-intent-card__icon { width: 34px; height: 34px; background: #654ea31a; color: #bca5e6; border-color: #bca5e629; }
+#root .mobile-market .market-intent-card__icon { width: 34px; height: 34px; background: #654ea31a; color: var(--mw-accent-secondary); border-color: #bca5e629; }
 #root .mobile-market .market-intent-card__eyebrow { flex-wrap: wrap; gap: 5px; font-size: 10px; }
 #root .mobile-market .market-intent-card__main h3 { font-size: 14px; }
 #root .mobile-market .market-intent-card__actions { grid-column: 1 / -1; flex-wrap: wrap; }
@@ -341,7 +341,7 @@
   color: #cfcfe0; font-size: 11.5px; font-weight: 560;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.09);
 }
-#root .mobile-market .market-listing-composer__ghost svg { color: #b39ce8; }
+#root .mobile-market .market-listing-composer__ghost svg { color: var(--mw-accent-secondary); }
 #root .mobile-market .market-listing-composer__close {
   width: 38px; height: 38px; min-height: 38px; border-radius: 50%;
   border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.05);
@@ -529,7 +529,7 @@
   box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 10px 24px rgba(0,0,0,.45);
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
 }
-#root .mobile-market .market-listing-composer__draft-save svg { color: #c9a8ff; }
+#root .mobile-market .market-listing-composer__draft-save svg { color: var(--mw-accent-secondary); }
 #root .mobile-market .market-listing-composer__draft-tab {
   display: grid; place-items: center; align-self: stretch; width: 30px;
   border: 1px solid var(--mobile-cta-rim); border-left: 0; border-radius: 0 99px 99px 0;
@@ -583,7 +583,7 @@
 
 /* Aperçu en direct : carte laquée à liseré d'accent. */
 #root .mobile-market .market-listing-preview__topline { color: #8f94b4; font-size: 9.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
-#root .mobile-market .market-listing-preview__topline svg { color: #b39ce8; }
+#root .mobile-market .market-listing-preview__topline svg { color: var(--mw-accent-secondary); }
 #root .mobile-market .market-listing-preview__live { color: #9be8c0; }
 #root .mobile-market .market-listing-preview__live i { background: #4be29a; box-shadow: 0 0 8px rgba(75,226,154,.7); }
 #root .mobile-market .market-listing-preview__card {
