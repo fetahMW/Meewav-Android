@@ -28,14 +28,14 @@ export function GroupConnectionsLive({connection,onOpenProject}:{connection:Retu
  const [selection,setSelection]=useState('');
  return <div className='agw-subview'>
   <h2>Projets liés</h2>
-  {error&&<p role='alert'>{error}<button onClick={()=>void request()}>Réessayer</button></p>}
-  {!data&&!error&&<p role='status'>Chargement…</p>}
+  {error&&<div className='agw-empty-inline' role='alert'><span>{error}</span><button className='agw-secondary-button' onClick={()=>void request()}>Réessayer</button></div>}
+  {!data&&!error&&<div className='agw-empty-inline' role='status'>Chargement…</div>}
   {data&&<>
    <div className='agw-project-list'>{data.projects.map(project=><article key={project.id} className='agw-list-tile'>
     <FolderKanban size={22}/><button className='agw-secondary-button' onClick={()=>onOpenProject?.(project.id)} disabled={!onOpenProject}>{project.name}</button>
     {data.canManage&&<button className='agw-icon-button' aria-label={`Délier ${project.name}`} disabled={busy} onClick={()=>void request('unlink',project.id)}><Unlink size={18}/></button>}
    </article>)}</div>
-   {!data.projects.length&&<p>Aucun projet lié accessible à ton compte.</p>}
+   {!data.projects.length&&<div className='agw-empty-inline'><FolderKanban size={26} aria-hidden='true'/><strong>Aucun projet lié</strong><span>Aucun projet lié accessible à ton compte.</span></div>}
    {data.canManage&&<form className='agw-inline-form' onSubmit={e=>{e.preventDefault();if(selection)void request('link',selection);}}>
     <label><span>Projet existant</span><select value={selection} onChange={e=>setSelection(e.target.value)} disabled={busy}><option value=''>Choisir un projet</option>{data.candidates.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
     <p>Le lien conserve les accès actuels du projet. Invite les autres membres depuis le projet si nécessaire.</p>

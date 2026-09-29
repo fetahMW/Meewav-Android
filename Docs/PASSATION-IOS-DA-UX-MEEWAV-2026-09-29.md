@@ -384,6 +384,12 @@ Sources Android : `WaveChatPanel.kt:WaveChatComposer`, `WaveChatMaterials.kt`, `
 
 Sources : `MessageWorkspace.tsx`, `messaging-premium.css`, et pour Android `messaging-source/mobile.css`.
 
+### Groupes et Projets : surfaces communes
+
+**Sous-menus supérieurs : aucun rectangle, aucune face de bouton.** Chat, Planning, Membres, Décisions, Tâches, etc. gardent des icônes et libellés nus. Un seul petit trait lumineux glisse sous la sélection, exactement comme Profil / Médias : `MeewavPillarTabs`, hauteur nette 1 px et écart de 6 px sous le libellé. Ces navigations sont exclues du registre des contrôles polis ; les vraies actions restent polies.
+
+Les workspaces portent `mw-polished-hub` et chargent `messaging-hub-polish.css`. Les panneaux et cartes utilisent une face opaque **#19191E → #101014 → #09090C**, un reflet diagonal blanc à 3,5 %, un bord `#D4CCDF29` et une ombre intérieure fine. Les petits boutons reprennent `--mw-control-face`, les actions principales `--mw-primary-face`. Les états vides sont des cartes à hauteur de contenu (maximum 480 px de large), avec icône, titre, texte court et action utile. Les champs du wizard sont noirs, avec focus #A98EF0 ; ses quatre étapes restent compactes et lisibles. Les invitations, rôles, permissions, fichiers, décisions et actions serveur conservent leurs comportements. Ne pas remplacer le fonctionnement Android par celui d’une autre plateforme : les connexions live disponibles diffèrent encore selon les sources.
+
 ### Contact sélectionné : verre translucide
 
 Sélecteur exact : `.messaging-page .mw-workspace .mw-conversation-list > article.is-active`.
@@ -463,7 +469,8 @@ La home Android rend maintenant `TremplinPublicHome` issu du travail Windows. L�
 - La rotation est douce, pendant la lecture ; les reflets doivent suivre le disque. Au repos, l’ensemble est stable.
 - Le gros assemblage de pochettes peut s’ouvrir légèrement pendant la lecture, avec le badge « Les premiers comptent » qui accompagne doucement le mouvement.
 - Les six grades gardent leurs belles cartes noires, cadres métalliques, accents propres et SVG. Le grand panneau englobant avait été retiré.
-- La progression possède un escalier sur grand écran, un éclairage cumulatif et des labels qui restent affichés : 2 secondes par niveau de 1 à 5, puis 5 secondes au niveau 6 avec une pulsation et des ondes mesurées. Sur mobile, les cartes reviennent à une grille lisible à deux colonnes, puis une sous 300 px de largeur utile.
+- **Direction finale : défilement manuel avec inertie et aimantation.** Aucun timer, aucune lecture automatique, aucun lecteur de défilement. Les six cartes conservent une perspective discrète et leur cadre, dans un rail natif à `scroll-snap-type: x mandatory`. L’illustration MW au-dessus des grades est supprimée ; les cadres métalliques qui utilisent cet asset sont conservés.
+- Sur téléphone, les rails artistes et filtres conservent le retrait à gauche mais vont jusqu’au bord droit de l’écran, sans marge extérieure à droite. Les artistes se parcourent sur **un seul rail horizontal**, avec de plus grandes pochettes, un aperçu de la suivante et des commandes précédent / suivant. Recherche noire en relief, filtres graphite polis, sélection violette.
 - La mention fixe « Parcours confirmé » du niveau 3 avait été demandée retirée ; ce niveau ne doit pas sembler sélectionné avant la progression.
 
 Ces comportements sont présents dans les sources Windows et dans le port Android décrit ici. Le rendu sur appareil reste à valider par l’utilisateur ; ce document ne certifie pas la version iOS ni une publication distante.
@@ -476,14 +483,15 @@ Ces comportements sont présents dans les sources Windows et dans le port Androi
 - L’option `rotateReflections` anime la surface entière ; le Tremplin la transmet.
 - La home transmet **`rpm={5}`**, soit une révolution en **12 secondes**, au gros disque et aux quatre vinyles. La vitesse générique par défaut du composant n’est pas la vitesse finale de la home.
 - Le Tremplin prend en compte `prefers-reduced-motion`.
-- Avec réduction des animations, les six notes au-dessus des cartes restent visibles en permanence ; aucun timer n’est nécessaire pour lire leur explication.
-- `TremplinGradeProgression.tsx` attend 700 ms, puis active les niveaux 1 à 5 pendant 2 s chacun, le niveau 6 pendant 5 s, et recommence. `showcaseLevel >= level` maintient les cartes et leurs labels éclairés. La sixième pulse deux fois et produit trois ondes décalées de 350 ms. Les tracés des badges restent intacts. La visibilité du document, de la section et de la surface Android suspend l’animation décorative.
-- Petit disque : largeur 82 % de la zone de pochette, translation X de −5 % au repos à 35,3659 % en lecture, derrière la pochette ; déplacement en 1 800 ms, courbe `cubic-bezier(.22,.61,.36,1)`. La portion visible dépend aussi de la largeur de la pochette : conserver la structure et ses proportions ensemble.
+- Le carrousel commence au niveau 1. Les cartes mesurent 250 px de haut, entre 164 et 204 px de large, dans un rail de 288 px. Le système gère l’inertie et l’aimantation ; aucun geste synthétique ne remplace le scroll natif. L’explication suit la carte la plus proche du centre.
+- Le glissement horizontal, le trackpad et les flèches du clavier permettent de parcourir les six grades. Aucun contrôle Lecture / Pause ni flèche dessinée sous les grades. La réduction des animations supprime les transitions de perspective.
+- Les cartes ne lancent plus d’animation autonome ni de pulsation automatique. Les tracés des badges restent intacts.
+- Petit disque : largeur 92 % de la pochette, position gauche 18 %, translation X de 0 au repos à 43,4783 % en lecture. Son bord atteint donc 150 % de la largeur de la pochette : une moitié apparaît à droite. Déplacement en 1 800 ms, courbe `cubic-bezier(.22,.61,.36,1)`. Retirer les ombres externes cumulées du composant et du wrapper, sans effacer les sillons ni les reflets.
 - Gros disque : sortie en 2 000 ms ; pochettes et badge bougent en 1 800 ms. Ne pas animer un SVG de reflet séparément avec une vitesse différente.
 - Audio : Lunaé → `fille-1.mp3`, Sama K → `rapeur-1.mp3`, Mina Roze → `fille-2.mp3`, Yuna Vox → `fille-3.mp3`. La composition principale utilise `003-king.mp3`. Ce sont des MP3 déjà préparés, pas les WAV lourds.
 - Le lecteur Android arrête et nettoie l’élément audio lorsqu’on quitte la surface. Le bouton pause de la mini-barre arrête aussi la source spéciale du grand vinyle.
 
-Sources du port Android : `tremplin-source/vendor/src/features/tremplin/TremplinPublicHome.tsx`, `TremplinGradeProgression.tsx`, `tremplin-home-editorial.css`, `tremplin-grades-open.css`, et `tremplin-source/mobile.css`. Les fichiers sélectionnés et leurs empreintes d’origine sont consignés dans `windows-home-provenance.json`. Les médias du port vivent dans `editorial-assets` et sont copiés par `scripts/build-tremplin.mjs`. Cette provenance décrit les fichiers importés avant les adaptations Android, pas leur empreinte finale.
+Sources du port Android : `tremplin-source/vendor/src/features/tremplin/TremplinPublicHome.tsx`, `TremplinGradeProgression.tsx`, `tremplin-home-editorial.css`, `tremplin-home-rails.css`, `tremplin-grades-open.css`, et `tremplin-source/mobile.css`. Les fichiers sélectionnés et leurs empreintes d’origine sont consignés dans `windows-home-provenance.json`. Les médias du port vivent dans `editorial-assets` et sont copiés par `scripts/build-tremplin.mjs`. Cette provenance décrit les fichiers importés avant les adaptations Android, pas leur empreinte finale.
 
 ## 11. Portage iOS : points qui changent vraiment le résultat
 
