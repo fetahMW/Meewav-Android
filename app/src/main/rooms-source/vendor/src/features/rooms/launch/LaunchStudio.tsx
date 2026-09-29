@@ -96,14 +96,14 @@ export default function LaunchStudio({ value, onChange }: Props) {
   const selectLayout = (selected: LaunchLayout) => update(value.format === "portrait" ? { portraitLayout: selected } : { landscapeLayout: selected });
 
   return <section className="launch-studio" aria-label="Studio de lancement">
-    <div className="launch-studio__intro"><span>GREEN HOUSE · APERÇU PRIVÉ</span><h2>Configure ton écran</h2><p>Choisis ton cadrage et ta disposition avant le direct.</p></div>
+    <div className="launch-studio__preview">
     <div className="launch-studio__formats" role="group" aria-label="Format de l’aperçu">
-      <button type="button" className={value.format === "portrait" ? "is-active" : ""} onClick={() => update({ format: "portrait" })}><Smartphone size={17} /> Mobile <small>9:16</small></button>
-      <button type="button" className={value.format === "landscape" ? "is-active" : ""} onClick={() => update({ format: "landscape" })}><Monitor size={17} /> Paysage <small>16:9</small></button>
+      <button type="button" aria-pressed={value.format === "portrait"} className={value.format === "portrait" ? "is-active" : ""} onClick={() => update({ format: "portrait" })}><Smartphone size={17} /> Mobile <small>9:16</small></button>
+      <button type="button" aria-pressed={value.format === "landscape"} className={value.format === "landscape" ? "is-active" : ""} onClick={() => update({ format: "landscape" })}><Monitor size={17} /> Paysage <small>16:9</small></button>
     </div>
-    <div className={`launch-studio__canvas launch-studio__canvas--${value.format} launch-studio__canvas--${layout}${value.reversed ? " is-reversed" : ""}`}>
+    <div data-multi-source={value.secondCamera} className={`launch-studio__canvas launch-studio__canvas--${value.format} launch-studio__canvas--${layout}${value.reversed ? " is-reversed" : ""}`}>
       <div className="launch-studio__source launch-studio__source--primary">{preview ? <video ref={primaryRef} autoPlay muted playsInline /> : <Camera size={30} />}<span>CAMÉRA PRINCIPALE</span></div>
-      {layout !== "safe" ? <div className="launch-studio__source launch-studio__source--secondary">{secondReady ? <video ref={secondaryRef} autoPlay muted playsInline /> : <Video size={22} />}<span>{secondReady ? "CAMÉRA 2" : "ZONE LIBRE"}</span></div> : null}
+      {value.secondCamera && layout !== "safe" ? <div className="launch-studio__source launch-studio__source--secondary">{secondReady ? <video ref={secondaryRef} autoPlay muted playsInline /> : <Video size={22} />}<span>{secondReady ? "CAMÉRA 2" : "ZONE LIBRE"}</span></div> : null}
       <span className="launch-studio__private">Aperçu local</span>
     </div>
     <div className="launch-studio__preview-actions">
@@ -111,6 +111,8 @@ export default function LaunchStudio({ value, onChange }: Props) {
       <button type="button" onClick={() => void start()} disabled={!preview || busy} aria-label="Actualiser l’aperçu"><RefreshCw size={16} /></button>
     </div>
     {notice ? <p className="launch-studio__notice" role="status">{notice}</p> : null}
+    </div>
+    <div className="launch-studio__settings">
     <div className="launch-studio__section"><LayoutTemplate size={17} /><strong>Mise en page</strong><span>Indépendante pour chaque format</span></div>
     <div className="launch-studio__presets" role="radiogroup" aria-label="Mise en page">
       {PRESETS.map(preset => <button type="button" key={preset.id} role="radio" aria-checked={layout === preset.id} className={layout === preset.id ? "is-active" : ""} onClick={() => selectLayout(preset.id)}><i className={`launch-studio__diagram launch-studio__diagram--${preset.id}`}><b /><b /></i><span><strong>{preset.title}</strong><small>{preset.detail}</small></span>{layout === preset.id ? <Check size={15} /> : null}</button>)}
@@ -120,8 +122,9 @@ export default function LaunchStudio({ value, onChange }: Props) {
       <button type="button" onClick={() => update(value.format === "portrait" ? { landscapeLayout: value.portraitLayout } : { portraitLayout: value.landscapeLayout })}><Copy size={17} /> Copier vers l’autre format</button>
     </div>
     <div className="launch-studio__section"><Camera size={17} /><strong>Sources</strong></div>
-    <div className="launch-studio__camera"><span>Caméra principale</span><div><button type="button" className={value.camera === "front" ? "is-active" : ""} onClick={() => changeCamera("front")}>Avant</button><button type="button" className={value.camera === "back" ? "is-active" : ""} onClick={() => changeCamera("back")}>Arrière</button></div></div>
+    <div className="launch-studio__camera"><span>Caméra principale</span><div><button type="button" aria-pressed={value.camera === "front"} className={value.camera === "front" ? "is-active" : ""} onClick={() => changeCamera("front")}>Avant</button><button type="button" aria-pressed={value.camera === "back"} className={value.camera === "back" ? "is-active" : ""} onClick={() => changeCamera("back")}>Arrière</button></div></div>
     <button type="button" className={`launch-studio__second${value.secondCamera ? " is-active" : ""}`} aria-pressed={value.secondCamera} onClick={toggleSecond}><span><strong>Deuxième caméra</strong><small>Essai simultané avant le direct</small></span><i aria-hidden="true" /></button>
     {value.secondCamera ? <p className="launch-studio__notice">La deuxième source est prévisualisée ici. Le direct Android diffuse actuellement la caméra principale ; la composition à deux caméras n’est pas encore raccordée au flux RTC.</p> : null}
+    </div>
   </section>;
 }

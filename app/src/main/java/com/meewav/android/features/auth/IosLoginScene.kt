@@ -1,18 +1,22 @@
 package com.meewav.android.features.auth
 
-import androidx.compose.foundation.BorderStroke
+import com.meewav.android.core.design.SecondaryAccent
+
+import com.meewav.android.core.design.polishedPrimaryButtonColors
+
+import com.meewav.android.core.design.polishedControlSurface
+
+import com.meewav.android.core.design.polishedPrimarySurface
+
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,11 +34,7 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -131,21 +131,20 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
                         Text("Nouveau ici ?", fontSize = 11.sp, lineHeight = 14.sp, color = Muted)
                         Spacer(Modifier.height(4.dp))
                         OutlinedButton(onClick = { actions.navigate(AuthPage.Avatar) }, enabled = !state.busy,
-                            modifier = Modifier.widthIn(min = 180.dp).height(48.dp), shape = RoundedCornerShape(50),
-                            border = BorderStroke(1.dp, Color(0xFF5137A1)),
-                            colors = ButtonDefaults.outlinedButtonColors(containerColor = Color(0xFF0C0914)),
+                            modifier = Modifier.widthIn(min = 180.dp).height(48.dp).polishedControlSurface(cornerRadius = 24.dp, enabled = !state.busy), shape = RoundedCornerShape(50),
+                            border = null, colors = polishedPrimaryButtonColors(),
                             contentPadding = PaddingValues(horizontal = 12.dp)) {
                             Text("Créer un compte", fontSize = 12.sp, maxLines = 1,
                                 fontWeight = FontWeight.Bold, color = Color.White)
                         }
                     }
                 } else TextButton(onClick = actions.exitPreview, modifier = Modifier.fillMaxWidth()) {
-                    Text("Changer de mode", color = Violet)
+                    Text("Changer de mode", color = SecondaryAccent)
                 }
                 Spacer(Modifier.height(12.dp))
             } }) {
             if (state.initializing) {
-                CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally).padding(28.dp), color = Violet)
+                CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally).padding(28.dp), color = SecondaryAccent)
             } else {
                 // Mesurer le bloc réel, avec sa police et ses éventuels messages,
                 // indépendamment du CTA et de l'ouverture du clavier.
@@ -159,8 +158,8 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
                 if (!state.modeSelected) {
                     IosAuthAction("Mode démo", false, actions.startPreview)
                     Spacer(Modifier.height(10.dp))
-                    OutlinedButton(onClick = actions.selectReal, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                        shape = RoundedCornerShape(16.dp), border = BorderStroke(1.dp, Color(0xFF5137A1))) {
+                    OutlinedButton(onClick = actions.selectReal, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).polishedControlSurface(cornerRadius = 16.dp),
+                        colors = polishedPrimaryButtonColors(), shape = RoundedCornerShape(16.dp), border = null) {
                         Text("Application réelle", color = Color.White)
                     }
                 } else {
@@ -207,27 +206,9 @@ internal fun IosLoginScene(state: AuthUiState, actions: AuthActions, submit: () 
 @Composable
 private fun IosLoginField(label: String, value: String, onValue: (String) -> Unit,
                           secret: Boolean = false, enabled: Boolean = true, onDone: () -> Unit = {}) {
-    var visible by rememberSaveable { mutableStateOf(false) }
-    TextField(value = value, onValueChange = onValue, singleLine = true, enabled = enabled,
-        modifier = Modifier.fillMaxWidth().then(rememberKeyboardFieldModifier()), shape = RoundedCornerShape(15.dp),
-        placeholder = { Text(label, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-        leadingIcon = { Icon(if (secret) Icons.Outlined.Lock else Icons.Outlined.PersonOutline, null,
-            Modifier.size(21.dp), tint = Muted) },
-        trailingIcon = if (secret) { {
-            IconButton(onClick = { visible = !visible }, enabled = enabled) {
-                Icon(if (visible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
-                    if (visible) "Masquer le mot de passe" else "Afficher le mot de passe", tint = Muted)
-            }
-        } } else null,
-        visualTransformation = if (secret && !visible) PasswordVisualTransformation() else VisualTransformation.None,
-        keyboardOptions = KeyboardOptions(keyboardType = if (secret) KeyboardType.Password else KeyboardType.Text,
-            imeAction = if (secret) ImeAction.Done else ImeAction.Next, autoCorrectEnabled = false),
-        keyboardActions = KeyboardActions(onDone = { onDone() }),
-        colors = TextFieldDefaults.colors(
-            unfocusedContainerColor = Color(0xFF08080A), focusedContainerColor = Color(0xFF0D0B12),
-            unfocusedIndicatorColor = Color.Transparent, focusedIndicatorColor = Color.Transparent,
-            disabledIndicatorColor = Color.Transparent, cursorColor = Violet,
-            unfocusedPlaceholderColor = Muted, focusedPlaceholderColor = Muted))
+    AuthField(label, value, onValue, if (secret) Icons.Outlined.Lock else Icons.Outlined.PersonOutline,
+        secret = secret, enabled = enabled, ime = if (secret) ImeAction.Done else ImeAction.Next,
+        onDone = onDone, singleLineLabel = true, autoCorrect = false)
 }
 
 @Composable
@@ -237,9 +218,7 @@ internal fun IosAuthDivider() = HorizontalDivider(thickness = .5.dp, color = Col
 internal fun IosAuthAction(label: String, busy: Boolean, onClick: () -> Unit) {
     val shape = RoundedCornerShape(15.dp)
     Button(onClick = onClick, enabled = !busy, shape = shape,
-        modifier = Modifier.fillMaxWidth().height(48.dp).clip(shape)
-            .background(Brush.verticalGradient(listOf(Color(0xFF5137A1), Color(0xFF4E349F), Color(0xFF372574)))),
-        border = BorderStroke(.5.dp, Color(0xFF7960B2)),
+        modifier = Modifier.fillMaxWidth().height(48.dp).polishedPrimarySurface(15.dp, !busy).clip(shape),
         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent,
             disabledContainerColor = Color.Transparent, contentColor = Color.White)) {
         if (busy) CircularProgressIndicator(Modifier.size(21.dp), color = Color.White, strokeWidth = 2.dp)

@@ -1,5 +1,7 @@
 package com.meewav.android.features.rooms.wave
 
+import com.meewav.android.core.design.polishedControlSurface
+
 import kotlinx.coroutines.launch
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -73,7 +75,7 @@ internal val logeGiftCatalog=listOf(
             Row(Modifier.weight(1f).hifiBlackSurface(10.dp),verticalAlignment=Alignment.CenterVertically) {
                 listOf("Offrir","Tirage").forEachIndexed { index,label ->
                     val active=!history && drawMode==(index==1)
-                    Box(Modifier.weight(1f).height(40.dp).background(if(active)WaveMixerTheme.capsuleAccent.copy(alpha=.17f)else Color.Transparent,RoundedCornerShape(10.dp)).clickable { drawMode=index==1;history=false;reset() },contentAlignment=Alignment.Center) {
+                    Box(Modifier.weight(1f).height(40.dp).polishedControlSurface(selected=active,cornerRadius=10.dp).clickable { drawMode=index==1;history=false;reset() },contentAlignment=Alignment.Center) {
                         Text(label,color=if(active)WaveMixerTheme.capsuleAccentSoft else sceneMuted,fontSize=12.sp,fontWeight=FontWeight.SemiBold)
                     }
                 }

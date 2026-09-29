@@ -1,11 +1,15 @@
 package com.meewav.android.features.auth
 
+import com.meewav.android.core.design.polishedPrimarySurface
+
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -100,8 +104,8 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
             LoginEntryLayout(state, actions, submit)
             return@Box
         }
-        if (state.page == AuthPage.Register) {
-            AccountEntryLayout(state, actions, submit)
+        if (state.page in setOf(AuthPage.Avatar, AuthPage.Register, AuthPage.Location)) {
+            RegistrationEntryLayout(state, actions, submit)
             return@Box
         }
         if (state.page == AuthPage.Preview || state.page == AuthPage.Globe) {
@@ -165,7 +169,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                         { PrimaryAction("Terminer", state.busy, submit) }
                     } else null) {
                     if (state.initializing) {
-                        CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally).padding(28.dp), color = Violet)
+                        CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally).padding(28.dp), color = SecondaryAccent)
                     } else {
                         WaveMark()
                         Spacer(Modifier.height(4.dp))
@@ -255,12 +259,12 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                                 }
                             }
                             AuthPage.CheckEmail -> {
-                                Icon(Icons.Outlined.MarkEmailRead, null, Modifier.align(Alignment.CenterHorizontally).size(48.dp), tint = Violet)
+                                Icon(Icons.Outlined.MarkEmailRead, null, Modifier.align(Alignment.CenterHorizontally).size(48.dp), tint = SecondaryAccent)
                                 Spacer(Modifier.height(20.dp))
                                 PrimaryAction("Revenir à la connexion", false) { actions.navigate(AuthPage.Login) }
                             }
                             AuthPage.SignedIn -> {
-                                Icon(Icons.Outlined.CheckCircleOutline, null, Modifier.align(Alignment.CenterHorizontally).size(52.dp), tint = Violet)
+                                Icon(Icons.Outlined.CheckCircleOutline, null, Modifier.align(Alignment.CenterHorizontally).size(52.dp), tint = SecondaryAccent)
                                 Spacer(Modifier.height(18.dp))
                                 Text("Retrouve tes conversations dans la messagerie Meewav.",
                                     color = Muted, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
@@ -282,7 +286,7 @@ internal fun AuthContent(state: AuthUiState, actions: AuthActions) {
                                 Spacer(Modifier.height(20.dp))
                                 PrimaryAction("Revoir mon avatar", false) { actions.navigate(AuthPage.Avatar) }
                                 TextButton(onClick = actions.exitPreview, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
-                                    Text("Revenir à la connexion", color = Violet)
+                                    Text("Revenir à la connexion", color = SecondaryAccent)
                                 }
                             }
                         }
@@ -301,9 +305,8 @@ internal fun RegistrationSteps(current: Int) {
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("${index + 1} · $title", color = if (current == index) Color.White else Muted,
                     fontSize = 11.sp, fontWeight = if (current == index) FontWeight.Bold else FontWeight.Normal)
-                Spacer(Modifier.height(8.dp))
-                Box(Modifier.fillMaxWidth().height(3.dp).clip(RoundedCornerShape(3.dp))
-                    .background(if (index <= current) Violet else Color(0xFF342A42)))
+                Spacer(Modifier.height(4.dp))
+                NavigationIndicator(active = index == current)
             }
         }
     }
@@ -325,28 +328,40 @@ internal fun AuthField(
     enabled: Boolean = true, ime: ImeAction = ImeAction.Next, onDone: () -> Unit = {},
     singleLineLabel: Boolean = false,
     modifier: Modifier = Modifier, onNext: (() -> Unit)? = null,
+    autoCorrect: Boolean = !secret && type != KeyboardType.Email,
 ) {
     var visible by rememberSaveable { mutableStateOf(false) }
-    OutlinedTextField(value, onValue, modifier = modifier.fillMaxWidth().then(rememberKeyboardFieldModifier()), enabled = enabled,
-        label = { Text(label, fontSize = 13.sp, maxLines = if (singleLineLabel) 1 else Int.MAX_VALUE,
+    val interaction = remember { MutableInteractionSource() }
+    val focused by interaction.collectIsFocusedAsState()
+    val iconColor = if (!enabled) Muted.copy(alpha = .45f) else if (focused) SecondaryAccent else Muted
+    TextField(value, onValue,
+        modifier = modifier.fillMaxWidth().heightIn(min = 56.dp).authBlackSurface(recessed = true, focused = focused)
+            .then(rememberKeyboardFieldModifier()), enabled = enabled, interactionSource = interaction,
+        textStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp, lineHeight = 18.sp),
+        label = { Text(label, fontSize = 12.sp, maxLines = if (singleLineLabel) 1 else Int.MAX_VALUE,
             softWrap = !singleLineLabel) }, singleLine = true,
-        shape = RoundedCornerShape(15.dp),
-        leadingIcon = { Icon(icon, null, Modifier.size(20.dp), tint = Muted) },
+        shape = RoundedCornerShape(14.dp),
+        leadingIcon = { Icon(icon, null, Modifier.size(19.dp), tint = iconColor) },
         trailingIcon = if (secret) { {
             IconButton(onClick = { visible = !visible }, enabled = enabled) {
                 Icon(if (visible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
-                    if (visible) "Masquer le mot de passe" else "Afficher le mot de passe", Modifier.size(21.dp), tint = Muted)
+                    if (visible) "Masquer le mot de passe" else "Afficher le mot de passe", Modifier.size(20.dp),
+                    tint = if (enabled) Muted else Muted.copy(alpha = .45f))
             }
         } } else null,
         visualTransformation = if (secret && !visible) PasswordVisualTransformation() else VisualTransformation.None,
         keyboardOptions = KeyboardOptions(keyboardType = if (secret) KeyboardType.Password else type,
-            imeAction = ime, autoCorrectEnabled = !secret && type != KeyboardType.Email),
+            imeAction = ime, autoCorrectEnabled = autoCorrect),
         keyboardActions = KeyboardActions(onDone = { onDone() },
             onNext = { if (onNext != null) onNext() else defaultKeyboardAction(ImeAction.Next) }),
-        colors = OutlinedTextFieldDefaults.colors(
-            unfocusedContainerColor = Color(0xFF0E0D15), focusedContainerColor = Color(0xFF100D18),
-            unfocusedBorderColor = Color(0xFF373240), focusedBorderColor = Violet,
-            unfocusedLabelColor = Muted, focusedLabelColor = Violet, cursorColor = Violet),
+        colors = TextFieldDefaults.colors(
+            unfocusedContainerColor = Color.Transparent, focusedContainerColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent, errorContainerColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent, focusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent, errorIndicatorColor = Color.Transparent,
+            unfocusedTextColor = Color(0xFFF0EDF5), focusedTextColor = Color(0xFFF0EDF5),
+            disabledTextColor = Muted.copy(alpha = .5f), disabledLabelColor = Muted.copy(alpha = .45f),
+            unfocusedLabelColor = Muted, focusedLabelColor = SecondaryAccent, cursorColor = SecondaryAccent),
     )
 }
 
@@ -354,9 +369,7 @@ internal fun AuthField(
 internal fun PrimaryAction(label: String, busy: Boolean, onClick: () -> Unit) {
     val shape = RoundedCornerShape(16.dp)
     Button(onClick = onClick, enabled = !busy,
-        modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp).clip(shape)
-            .background(Brush.verticalGradient(listOf(Color(0xFF4C3398), Color(0xFF3F2A7E))))
-            .border(.5.dp, Brush.verticalGradient(listOf(Color(0xFF7763AF), Color(0xFF3F2A7E))), shape),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp).polishedPrimarySurface(16.dp, !busy).clip(shape),
         shape = shape, contentPadding = PaddingValues(horizontal = 16.dp, vertical = 15.dp),
         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, disabledContainerColor = Color.Transparent,
             contentColor = Color.White, disabledContentColor = Color.White)) {
@@ -377,14 +390,14 @@ internal fun Message(text: String, error: Boolean) {
 }
 
 @Composable
-private fun WaveMark() {
+internal fun WaveMark() {
     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
         Image(painterResource(R.drawable.auth_web_signature), null, Modifier.size(34.dp, 22.dp))
     }
 }
 
 @Composable
-private fun SubtitleDivider(compact: Boolean = false) {
+internal fun SubtitleDivider(compact: Boolean = false) {
     Box(Modifier.fillMaxWidth().padding(top = if (compact) 8.dp else 14.dp, bottom = if (compact) 12.dp else 22.dp),
         contentAlignment = Alignment.Center) {
         Box(Modifier.width(132.dp).height(1.dp).background(Brush.horizontalGradient(

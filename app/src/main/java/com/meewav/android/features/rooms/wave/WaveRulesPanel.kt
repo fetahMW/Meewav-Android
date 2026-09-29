@@ -1,5 +1,8 @@
 package com.meewav.android.features.rooms.wave
 
+import com.meewav.android.core.design.polishedPrimarySurface
+import com.meewav.android.core.design.polishedPrimaryButtonColors
+
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -50,11 +53,12 @@ internal fun WaveRulesPanel(state: WaveCompositionState, onClose: () -> Unit) {
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = onClose, modifier = Modifier.weight(1f)) { Text("Annuler", color = foreground) }
+            val canSave = !state.playing && parsed != null && parsed in 40.0..260.0 && (page == 0 || direction.isNotBlank())
             Button(onClick = {
                 state.rules(parsed!!, if (scale == "Chromatique") "Chromatique" else "$root ${if (scale == "Mineur") "MIN" else "MAJ"}")
                 state.submissionRules(categories, bars, direction); onClose()
-            }, enabled = !state.playing && parsed != null && parsed in 40.0..260.0 && (page == 0 || direction.isNotBlank()),
-                colors = ButtonDefaults.buttonColors(containerColor = WaveMixerTheme.primaryCta), modifier = Modifier.weight(1f)) { Text("Enregistrer") }
+            }, enabled = canSave,
+                colors = polishedPrimaryButtonColors(), modifier = Modifier.weight(1f).polishedPrimarySurface(enabled = canSave)) { Text("Enregistrer") }
         }
     }
 }

@@ -1,5 +1,8 @@
 package com.meewav.android.features.rooms.wave
 
+import com.meewav.android.core.design.polishedPrimarySurface
+import com.meewav.android.core.design.polishedPrimaryButtonColors
+
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.launch
 import org.json.JSONObject
@@ -112,8 +115,8 @@ internal fun WaveGuestMessageSheet(state: WaveGuestState, liveRoomId: String? = 
                     }
                 } else if (liveRoomId != null) { failure = "Sélectionne un seul destinataire pour envoyer un message." } else { state.addPrivateDemoMessage(messageRecipients.map { it.id }.toSet(), draft); draft = "" }
             },
-                enabled = draft.isNotBlank() && !busy, modifier = Modifier.align(Alignment.End),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF453677))) {
+                enabled = draft.isNotBlank() && !busy, modifier = Modifier.align(Alignment.End).polishedPrimarySurface(enabled = draft.isNotBlank() && !busy),
+                colors = polishedPrimaryButtonColors()) {
                 Icon(WaveIcons.Send, null, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(8.dp)); Text("Envoyer")
             }
         }

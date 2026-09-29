@@ -822,7 +822,7 @@ function PlaceChat({ room, canEngage, isHost, active, onSend, onPinMessage, onDe
             onSelect={(emoticon) => setDraft((value) => appendMeeWavEmoticon(value, emoticon.name, 1_000))}
           />
         </div>
-        <button className="place-chat__send" type="submit" disabled={!canEngage || sending || !draft.trim()} aria-label="Envoyer"><Send aria-hidden="true" /></button>
+        <button className="place-chat__send mw-primary-action" type="submit" disabled={!canEngage || sending || !draft.trim()} aria-label="Envoyer"><Send aria-hidden="true" /></button>
       </form>
       {chatProfile?<Suspense fallback={null}><GuestPreProfile person={chatProfile.person} source={room.source} returnFocusTo={chatProfile.trigger} {...getRoomPreProfileBounds(chatProfile.trigger)} onClose={()=>setChatProfile(null)}/></Suspense>:null}
     </div>

@@ -385,7 +385,7 @@ body:has(.rooms-launch-page) > .feature-dock-host { display:none!important; }
 #root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__title { font-size: .82rem; }
 #root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__host { margin-top: 0; font-size: .66rem; }
 #root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__avatar { width: 1.15rem; height: 1.15rem; font-size: .44rem; }
-#root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__room-type { font-size: .54rem; padding: .18rem .42rem .16rem; }
+#root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__room-type { min-height: 22px; font-size: .6rem; padding: 3px 7px; }
 /* Bandeau optimisé — le chip room et la ville remontent sur l'image
    (haut-gauche / haut-droite), le titre tient sur une ligne, le corps se
    réduit au portrait + nom. Valable pour miniatures et grandes cartes. */
@@ -909,7 +909,7 @@ body:has(.wv-room) .feature-dock-host { display: none !important; }
 
 /* Android reuses the exact Compose host mixer and composer; keep the web models mounted. */
 .android-native-viewer-controls .android-room-viewer .place-mixer { visibility:hidden;pointer-events:none; }
-.android-native-viewer-controls #root .android-room-viewer .place-chat__composer { opacity:0;pointer-events:none;min-height:52px!important;flex-shrink:0; }
+.android-native-viewer-controls #root .android-room-viewer .place-chat__composer { opacity:0;pointer-events:none;height:56px!important;min-height:56px!important;box-sizing:border-box;flex-shrink:0; }
 
 /* Same open studio layout as the native Host: no legacy modal chassis. */
 #root .android-room-viewer__header { flex-basis:44px; }

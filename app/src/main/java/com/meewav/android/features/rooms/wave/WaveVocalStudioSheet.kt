@@ -26,7 +26,8 @@ private val vocalAccent = WaveMixerTheme.capsuleAccentSoft
 
 @Composable
 internal fun WavePluginEntry(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Row(modifier.consoleTabSurface(selected = true).clip(RoundedCornerShape(12.dp))
+    Row(modifier.consoleTabSurface(selected = false)
+        .clip(RoundedCornerShape(12.dp))
         .clickable(role = Role.Button, onClickLabel = "Ouvrir les plugins", onClick = onClick)
         .padding(horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)) {

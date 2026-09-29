@@ -134,6 +134,7 @@ for (const [name, folder] of [...packages].sort()) {
 }
 await writeFile(join(output, 'THIRD_PARTY_NOTICES.txt'), notices);
 await writeFile(join(output, 'mobile.css'), await readFile(join(root, 'app/src/main/shared-ui/feature-mobile.css'), 'utf8') + '\n' + await readFile(join(source, 'mobile.css'), 'utf8'));
+if (surface === 'rooms') await writeFile(join(output, 'mobile.css'), await readFile(join(output, 'mobile.css'), 'utf8') + '\n' + await readFile(join(source, 'launch-premium.css'), 'utf8'));
 await copyFile(join(root, 'app/src/main/profile-source/mobile.css'), join(output, 'profile-chrome.css'));
 await copyAsset(join(root, 'app/src/main/assets/globe-vinyle/ui/images/earth_specular.jpg'), 'ui/images/earth_specular.jpg');
 // Share the host's original battle clips with the local Viewer asset manifest.
@@ -144,7 +145,10 @@ if (surface === 'rooms') {
 }
 // CSP is completed by the native interceptor with the configured Supabase
 // origin. No service URL, key or session is written into the shipped document.
-await writeFile(join(output, 'index.html'), `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="dark"><title>Meewav — ${title}</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/${surface}/assets/main.css"><link rel="stylesheet" href="/${surface}/profile-chrome.css"><link rel="stylesheet" href="/${surface}/mobile.css"></head><body><div id="root">${featureLoadingHtml(`Ouverture de ${title}…`)}</div><script type="module" src="/${surface}/assets/main.js"></script></body></html>`);
+await copyFile(join(root, 'app/src/main/shared-ui/primary-cta-material.css'), join(output, 'primary-cta-material.css'));
+await copyFile(join(root, 'app/src/main/shared-ui/compact-control-material.css'), join(output, 'compact-control-material.css'));
+await copyFile(join(root, 'app/src/main/shared-ui/navigation-indicator.css'), join(output, 'navigation-indicator.css'));
+await writeFile(join(output, 'index.html'), `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="dark"><title>Meewav — ${title}</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/${surface}/assets/main.css"><link rel="stylesheet" href="/${surface}/profile-chrome.css"><link rel="stylesheet" href="/${surface}/mobile.css"><link rel="stylesheet" href="/${surface}/primary-cta-material.css"><link rel="stylesheet" href="/${surface}/compact-control-material.css"><link rel="stylesheet" href="/${surface}/navigation-indicator.css"></head><body><div id="root">${featureLoadingHtml(`Ouverture de ${title}…`)}</div><script type="module" src="/${surface}/assets/main.js"></script></body></html>`);
 async function list(folder) {
   for (const entry of await readdir(folder, { withFileTypes: true })) {
     const path = join(folder, entry.name);

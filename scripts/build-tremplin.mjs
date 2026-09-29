@@ -62,6 +62,15 @@ const assets = {};
 const copyAsset = async (path, name) => {
   const target = join(output, name); await mkdir(dirname(target), { recursive: true }); await copyFile(path, target);
 };
+// Frozen, selected media from the Windows landing. Regular builds remain standalone.
+async function copyEditorialAssets(folder, prefix = '') {
+  for (const entry of await readdir(folder, { withFileTypes: true })) {
+    const name = prefix ? `${prefix}/${entry.name}` : entry.name;
+    const path = join(folder, entry.name);
+    if (entry.isDirectory()) await copyEditorialAssets(path, name);
+    else await copyAsset(path, name);
+  }
+}
 if (syncAssets) {
   const publicAssets = new Set(syncMediaOnly ? [] : ['images/tremplin', 'images/scene', 'images/profile', 'assets/orbit/founder-puff.png', 'badges', 'ui/images', 'images/preprofile/portraits', 'avatars', 'badges', 'images/grades', 'audio/rooms/wave-test-pack/House_124BPM_A_minor/Loops_8bars',
     // Collab showcase paths are assembled dynamically in profileDemoData.ts.
@@ -101,6 +110,8 @@ if (syncAssets) {
   await writeFile(join(source, 'media-provenance.json'), JSON.stringify({ source: 'Meewav-Web/public (Inter: existing Android asset)', files: publicFiles }, null, 2) + '\n');
 }
 
+await copyEditorialAssets(join(source, 'editorial-assets'));
+
 const packages = new Map();
 for (const input of Object.keys(result.metafile.inputs)) {
   const path = resolve(root, input).replaceAll('\\', '/'), marker = path.lastIndexOf('/node_modules/');
@@ -127,7 +138,10 @@ for (const name of ['dj-turntable.mp4', 'female-guitarist.mp4', 'short-live-puls
   await copyAsset(join(web, `vendor/globe-vinyle/assets/ui/preprofile-demo/${name}`), `media/preprofile-demo/${name}`);
 // CSP is completed by the native interceptor with the configured Supabase
 // origin. No service URL, key or session is written into the shipped document.
-await writeFile(join(output, 'index.html'), `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="dark"><title>Meewav — Tremplin</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/tremplin/assets/main.css"><link rel="stylesheet" href="/tremplin/profile-chrome.css"><link rel="stylesheet" href="/tremplin/mobile.css"></head><body><div id="root">${featureLoadingHtml('Ouverture du Tremplin…')}</div><script type="module" src="/tremplin/assets/main.js"></script></body></html>`);
+await copyFile(join(root, 'app/src/main/shared-ui/primary-cta-material.css'), join(output, 'primary-cta-material.css'));
+await copyFile(join(root, 'app/src/main/shared-ui/compact-control-material.css'), join(output, 'compact-control-material.css'));
+await copyFile(join(root, 'app/src/main/shared-ui/navigation-indicator.css'), join(output, 'navigation-indicator.css'));
+await writeFile(join(output, 'index.html'), `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="dark"><title>Meewav — Tremplin</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/tremplin/assets/main.css"><link rel="stylesheet" href="/tremplin/profile-chrome.css"><link rel="stylesheet" href="/tremplin/mobile.css"><link rel="stylesheet" href="/tremplin/primary-cta-material.css"><link rel="stylesheet" href="/tremplin/compact-control-material.css"><link rel="stylesheet" href="/tremplin/navigation-indicator.css"></head><body><div id="root">${featureLoadingHtml('Ouverture du Tremplin…')}</div><script type="module" src="/tremplin/assets/main.js"></script></body></html>`);
 async function list(folder) {
   for (const entry of await readdir(folder, { withFileTypes: true })) {
     const path = join(folder, entry.name);

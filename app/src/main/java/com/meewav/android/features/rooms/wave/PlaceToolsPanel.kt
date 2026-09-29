@@ -1,5 +1,8 @@
 package com.meewav.android.features.rooms.wave
 
+import com.meewav.android.core.design.polishedControlSurface
+import com.meewav.android.core.design.NavigationTabContent
+
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -24,8 +27,9 @@ import androidx.compose.ui.unit.*
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().height(44.dp)) {
             listOf("Parole","Clash","Défis").forEachIndexed{i,label->Box(Modifier.weight(1f).fillMaxHeight().clickable{state.tab=i},contentAlignment=Alignment.Center){
-                Text(label,color=if(i==state.tab)Color.White else sceneMuted,fontSize=12.sp,fontWeight=FontWeight.SemiBold)
-                if(i==state.tab)Box(Modifier.align(Alignment.BottomCenter).padding(bottom=5.dp).width(34.dp).height(2.dp).background(Brush.horizontalGradient(listOf(Color.Transparent,sceneAccent,Color.Transparent)),CircleShape))
+                NavigationTabContent(i == state.tab) {
+                    Text(label,color=if(i==state.tab)Color.White else sceneMuted,fontSize=12.sp,fontWeight=FontWeight.SemiBold)
+                }
             }}
         }
         state.notice?.let { Row(verticalAlignment=Alignment.CenterVertically){Text(it,Modifier.weight(1f),color=sceneAccent,fontSize=11.sp);SceneIcon(WaveIcons.Close,"Fermer le message"){state.notice=null}} }
@@ -39,7 +43,7 @@ import androidx.compose.ui.unit.*
 @Composable private fun <T> PlaceChoice(label:String,choices:List<Pair<T,String>>,modifier:Modifier=Modifier.fillMaxWidth(),onSelect:(T)->Unit) {
     var open by remember{mutableStateOf(false)}
     Box(modifier){
-        Row(Modifier.fillMaxWidth().height(44.dp).hifiBlackSurface(12.dp).clickable{open=true}.padding(horizontal=12.dp),verticalAlignment=Alignment.CenterVertically){Text(label,Modifier.weight(1f),color=Color(0xFFD1CED8),fontSize=12.sp,maxLines=1,overflow=TextOverflow.Ellipsis);Icon(Icons.Default.ExpandMore,null,Modifier.size(18.dp),tint=sceneAccent)}
+        Row(Modifier.fillMaxWidth().height(44.dp).polishedControlSurface(cornerRadius=12.dp).clickable{open=true}.padding(horizontal=12.dp),verticalAlignment=Alignment.CenterVertically){Text(label,Modifier.weight(1f),color=Color(0xFFD1CED8),fontSize=12.sp,maxLines=1,overflow=TextOverflow.Ellipsis);Icon(Icons.Default.ExpandMore,null,Modifier.size(18.dp),tint=sceneAccent)}
         DropdownMenu(open,{open=false},containerColor=Color(0xFF101114),tonalElevation=0.dp,shape=RoundedCornerShape(12.dp),modifier=Modifier.heightIn(max=300.dp)){choices.forEach{(value,text)->DropdownMenuItem(text={Text(text,color=Color.White,fontSize=12.sp)},onClick={open=false;onSelect(value)})}}
     }
 }

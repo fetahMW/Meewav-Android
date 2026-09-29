@@ -40,10 +40,10 @@ internal class WaveEmojiEditText(context: Context) : EditText(context) {
     init {
         background = null
         setPadding(0, 0, 0, 0)
-        setTextColor(Color.rgb(228, 227, 238))
-        setHintTextColor(Color.rgb(151, 148, 166))
+        setTextColor(Color.rgb(243, 244, 247))
+        setHintTextColor(Color.rgb(180, 184, 195))
         highlightColor = 0x557E44E3
-        textSize = 13f
+        textSize = 16f
         typeface = Typeface.create("sans-serif", Typeface.NORMAL)
         hint = "Écris un message…"
         contentDescription = "Écrire un message"

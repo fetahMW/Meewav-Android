@@ -1,5 +1,8 @@
 package com.meewav.android.features.rooms.wave
 
+import com.meewav.android.core.design.polishedPrimarySurface
+import com.meewav.android.core.design.polishedPrimaryButtonColors
+
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -141,7 +144,7 @@ internal fun ClasseResourcesPanel(state: ClasseToolsState, modifier: Modifier) {
         OutlinedTextField(address, { address = it }, label = { Text("https://…") }, singleLine = true, colors = colors, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(title, { title = it.take(120) }, label = { Text("Titre facultatif") }, singleLine = true, colors = colors, modifier = Modifier.fillMaxWidth())
-        Button(onClick = { uri?.let { onSave(title.trim().ifBlank { it.host ?: "Lien" }, it.toString()) } }, enabled = uri != null, modifier = Modifier.fillMaxWidth().padding(top = 12.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF453677))) { Text("Ajouter") }
+        Button(onClick = { uri?.let { onSave(title.trim().ifBlank { it.host ?: "Lien" }, it.toString()) } }, enabled = uri != null, modifier = Modifier.fillMaxWidth().padding(top = 12.dp).polishedPrimarySurface(enabled = uri != null), colors = polishedPrimaryButtonColors()) { Text("Ajouter") }
     }
 }
 

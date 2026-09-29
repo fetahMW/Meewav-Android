@@ -1,5 +1,8 @@
 package com.meewav.android.features.rooms.wave
 
+import com.meewav.android.core.design.polishedPrimarySurface
+import com.meewav.android.core.design.polishedPrimaryButtonColors
+
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
@@ -101,7 +104,7 @@ internal fun WaveBaseLibrary(state: WaveCompositionState, onImport: () -> Unit, 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(state::cancelDaw, enabled = !state.dawImporting, modifier = Modifier.weight(1f)) { Text("Annuler") }
                     Button({ state.acceptDaw(credits, propose) }, enabled = !state.dawImporting,
-                        colors = ButtonDefaults.buttonColors(containerColor = WaveMixerTheme.primaryCta), modifier = Modifier.weight(1f)) { Text("Valider") }
+                        colors = polishedPrimaryButtonColors(), modifier = Modifier.weight(1f).polishedPrimarySurface(enabled = !state.dawImporting)) { Text("Valider") }
                 }
             }
         }

@@ -122,7 +122,10 @@ await copyFile(join(source, 'mobile.css'), join(output, 'mobile.css'));
 await copyAsset(join(root, 'app/src/main/assets/globe-vinyle/ui/images/earth_specular.jpg'), 'ui/images/earth_specular.jpg');
 // CSP is completed by the native interceptor with the configured Supabase
 // origin. No service URL, key or session is written into the shipped document.
-await writeFile(join(output, 'index.html'), `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="dark"><title>Meewav — Profil</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/profile/assets/main.css"><link rel="stylesheet" href="/profile/mobile.css"></head><body><div id="root">${featureLoadingHtml('Ouverture du profil…')}</div><script type="module" src="/profile/assets/main.js"></script></body></html>`);
+await copyFile(join(root, 'app/src/main/shared-ui/primary-cta-material.css'), join(output, 'primary-cta-material.css'));
+await copyFile(join(root, 'app/src/main/shared-ui/compact-control-material.css'), join(output, 'compact-control-material.css'));
+await copyFile(join(root, 'app/src/main/shared-ui/navigation-indicator.css'), join(output, 'navigation-indicator.css'));
+await writeFile(join(output, 'index.html'), `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="dark"><title>Meewav — Profil</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/profile/assets/main.css"><link rel="stylesheet" href="/profile/mobile.css"><link rel="stylesheet" href="/profile/primary-cta-material.css"><link rel="stylesheet" href="/profile/compact-control-material.css"><link rel="stylesheet" href="/profile/navigation-indicator.css"></head><body><div id="root">${featureLoadingHtml('Ouverture du profil…')}</div><script type="module" src="/profile/assets/main.js"></script></body></html>`);
 async function list(folder) {
   for (const entry of await readdir(folder, { withFileTypes: true })) {
     const path = join(folder, entry.name);

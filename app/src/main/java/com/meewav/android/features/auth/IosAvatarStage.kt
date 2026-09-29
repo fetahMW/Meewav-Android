@@ -487,9 +487,12 @@ internal fun renderIosStageWindow(width: Float, height: Float, margin: Int, illu
     canvas.drawPaint(stagePaint(shader = RadialGradient(222.1f, 465.67f, 184.25f,
         intArrayOf(Color.parseColor("#80372574"), Color.TRANSPARENT), null, Shader.TileMode.CLAMP)))
     canvas.restore()
-    canvas.drawPath(shape, stagePaint(Color.parseColor("#665137A1"), stroke = 3.2f, blur = 5f))
+    canvas.drawPath(shape, stagePaint(Color.parseColor("#76000000"), stroke = 2.6f, blur = 1.2f))
+    canvas.drawPath(shape, stagePaint(Color.parseColor("#1AA98EF0"), stroke = 2.2f, blur = 3f))
     canvas.drawPath(shape, stagePaint(shader = stageGradient(0f, 7.24f, 334.8f, 490.4f,
-        "#BDA3E5", "#7960B2", "#5137A1", "#8162B7"), stroke = 1.1f))
+        "#B8D3C7F5", "#B8A98EF0", "#B8514A62", "#B8292431", "#B8807394", "#B8A98EF0"), stroke = 1f))
+    canvas.drawPath(shape, stagePaint(shader = stageGradient(0f, 7.24f, 334.8f, 490.4f,
+        "#6BF4F0FF", "#10D3C7F5", "#00A98EF0", "#13A98EF0", "#45DED3FC"), stroke = .4f))
     return bitmap
 }
 

@@ -72,7 +72,7 @@ import kotlinx.coroutines.delay
                     if (granted(Manifest.permission.RECORD_AUDIO)) permissionRevision++
                     else permission.launch(arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA))
                 }
-            }) { Text(if (status.active || status.busy) "Déconnecter" else if (permissionError) "Autoriser" else "Reconnecter", color = WaveMixerTheme.violetSoft, fontSize = 11.sp) }
+            }) { Text(if (status.active || status.busy) "Déconnecter" else if (permissionError) "Autoriser" else "Reconnecter", color = WaveMixerTheme.capsuleAccentSoft, fontSize = 11.sp) }
             if (permissionError) TextButton(onClick = {
                 context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${context.packageName}")))
             }) { Text("Réglages", fontSize = 11.sp) }

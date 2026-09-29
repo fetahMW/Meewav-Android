@@ -1,5 +1,10 @@
 package com.meewav.android.features.rooms.wave
 
+import com.meewav.android.core.design.polishedControlSurface
+import com.meewav.android.core.design.NavigationTabContent
+
+import com.meewav.android.core.design.polishedPrimarySurface
+
 import kotlinx.coroutines.launch
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.*
@@ -51,9 +56,9 @@ internal fun CageToolsPanel(state: CageToolsState, programScope: String) {
         Row(Modifier.fillMaxWidth().height(44.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             listOf("Compétition", "Direct", "Participants").forEachIndexed { index, label ->
                 Box(Modifier.weight(1f).height(44.dp).clip(RoundedCornerShape(8.dp)).clickable { state.page = index }, contentAlignment = Alignment.Center) {
-                    Text(label, color = Color.White.copy(alpha = if (state.page == index) .95f else .5f), fontSize = 11.sp, fontWeight = if (state.page == index) FontWeight.SemiBold else FontWeight.Normal)
-                    if (state.page == index) Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 5.dp).width(32.dp).height(2.dp)
-                        .background(Brush.horizontalGradient(listOf(Color.Transparent, WaveMixerTheme.capsuleAccentSoft, Color.Transparent)), RoundedCornerShape(50)))
+                    NavigationTabContent(state.page == index) {
+                        Text(label, color = Color.White.copy(alpha = if (state.page == index) .95f else .5f), fontSize = 11.sp, fontWeight = if (state.page == index) FontWeight.SemiBold else FontWeight.Normal)
+                    }
                 }
             }
         }
@@ -226,7 +231,7 @@ internal fun CageToolsPanel(state: CageToolsState, programScope: String) {
 internal fun CageSettingSelect(label: String, value: String, options: Map<String, String>, enabled: Boolean, onSelect: (String) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     Box {
-        Row(Modifier.fillMaxWidth().hifiBlackSurface(10.dp).clickable(enabled = enabled) { expanded = true }.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().polishedControlSurface(cornerRadius=10.dp, enabled=enabled).clickable(enabled = enabled) { expanded = true }.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(label, color = cageMuted, fontSize = 10.sp)
                 Text(options[value].orEmpty(), color = cageInk.copy(alpha = if (enabled) 1f else .5f), fontSize = 12.sp)
@@ -244,8 +249,8 @@ private fun CageCard(content: @Composable ColumnScope.() -> Unit) {
 }
 @Composable
 internal fun CageAction(label: String, modifier: Modifier = Modifier.fillMaxWidth(), enabled: Boolean = true, primary: Boolean = false, onClick: () -> Unit) {
-    Box(modifier.heightIn(min = 42.dp).hifiBlackSurface(9.dp).then(if (primary) Modifier.background(WaveMixerTheme.primaryCta.copy(alpha = .28f), RoundedCornerShape(9.dp)) else Modifier)
+    Box(modifier.heightIn(min = 42.dp).polishedControlSurface(selected=primary, cornerRadius=9.dp, enabled=enabled)
         .clickable(enabled = enabled, onClick = onClick).padding(horizontal = 8.dp, vertical = 9.dp), contentAlignment = Alignment.Center) {
-        Text(label, color = (if (primary) WaveMixerTheme.capsuleAccentSoft else cageInk).copy(alpha = if (enabled) 1f else .35f), fontSize = 11.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        Text(label, color = (if (primary) Color.White else cageInk).copy(alpha = if (enabled || primary) 1f else .35f), fontSize = 11.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
     }
 }

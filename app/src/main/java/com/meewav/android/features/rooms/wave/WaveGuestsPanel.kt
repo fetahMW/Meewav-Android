@@ -1,4 +1,8 @@
 package com.meewav.android.features.rooms.wave
+import com.meewav.android.core.design.NavigationTabContent
+
+import com.meewav.android.core.design.polishedPrimarySurface
+import com.meewav.android.core.design.polishedPrimaryButtonColors
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
@@ -180,15 +184,13 @@ internal fun WaveGuestsPanel(state: WaveGuestState, modifier: Modifier = Modifie
                 } }
                 Box(Modifier.weight(1f).height(44.dp).clip(RoundedCornerShape(8.dp))
                     .clickable { page = index; state.selected = emptySet(); multiSelect = false }, contentAlignment = Alignment.Center) {
+                    NavigationTabContent(page == index) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                         Text(title, fontSize = 11.sp, fontWeight = if (page == index) FontWeight.SemiBold else FontWeight.Normal,
                             color = Color.White.copy(alpha = if (page == index) .95f else .5f))
                         Text(count.toString(), fontSize = 9.sp, color = if (page == index) WaveMixerTheme.capsuleAccentSoft else Color.White.copy(alpha = .35f))
                     }
-                    if (page == index) Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 5.dp)
-                        .width(32.dp).height(2.dp).background(
-                            androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(Color.Transparent, WaveMixerTheme.capsuleAccentSoft, Color.Transparent)),
-                            RoundedCornerShape(50)))
+                    }
                 }
             }
         }
@@ -406,10 +408,11 @@ internal fun GuestPreviewContent(state: WaveGuestState, guest: WaveGuest) {
                 WaveGuestLocation.INVITED, WaveGuestLocation.STAGE, WaveGuestLocation.JURY -> WaveGuestLocation.BACKSTAGE
                 WaveGuestLocation.BACKSTAGE -> WaveGuestLocation.STAGE
             }
+            val canMove = guest.canParticipate && (target != WaveGuestLocation.STAGE || (state.onStage.size < 3 && guest.connected))
             Button(onClick = { state.move(setOf(guest.id), target); if (state.guests.find { it.id == guest.id }?.location == target) state.previewId = null },
-                enabled = guest.canParticipate && (target != WaveGuestLocation.STAGE || (state.onStage.size < 3 && guest.connected)),
-                modifier = Modifier.fillMaxWidth().height(44.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = WaveMixerTheme.primaryCta, contentColor = Color.White)) {
+                enabled = canMove,
+                modifier = Modifier.fillMaxWidth().height(44.dp).polishedPrimarySurface(enabled = canMove),
+                colors = polishedPrimaryButtonColors()) {
                 Text(when (guest.location) {
                     WaveGuestLocation.REQUESTED -> "Passer en coulisses"
                     WaveGuestLocation.INVITED -> "Passer en coulisses"

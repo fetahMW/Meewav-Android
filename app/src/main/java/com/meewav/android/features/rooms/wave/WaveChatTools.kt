@@ -1,5 +1,8 @@
 package com.meewav.android.features.rooms.wave
 
+import com.meewav.android.core.design.polishedPrimarySurface
+import com.meewav.android.core.design.polishedPrimaryButtonColors
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -192,8 +195,6 @@ private fun ToolTextField(label: String, value: String, placeholder: String, onC
 
 @Composable
 private fun ToolPrimaryButton(label: String, enabled: Boolean, onClick: () -> Unit) {
-    Button(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-        shape = RoundedCornerShape(14.dp), colors = ButtonDefaults.buttonColors(
-            containerColor = WaveMixerTheme.capsuleAccent, contentColor = Color.White,
-            disabledContainerColor = Color(0xFF29252F), disabledContentColor = Color.White.copy(alpha = .4f))) { Text(label) }
+    Button(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).polishedPrimarySurface(14.dp, enabled),
+        shape = RoundedCornerShape(14.dp), colors = polishedPrimaryButtonColors()) { Text(label) }
 }

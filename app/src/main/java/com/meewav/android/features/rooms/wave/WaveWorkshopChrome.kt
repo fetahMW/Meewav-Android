@@ -1,5 +1,7 @@
 package com.meewav.android.features.rooms.wave
 
+import com.meewav.android.core.design.polishedControlSurface
+
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
@@ -251,7 +253,7 @@ internal fun WaveLoopCard(clip: WaveCompositionClip, state: WaveCompositionState
 
 @Composable
 private fun QuarantineCommand(icon: ImageVector, label: String, enabled: Boolean, modifier: Modifier, onClick: () -> Unit) {
-    Row(modifier.height(38.dp).hifiBlackSurface(8.dp).clickable(enabled = enabled, onClick = onClick).padding(horizontal = 4.dp),
+    Row(modifier.height(38.dp).polishedControlSurface(cornerRadius=8.dp,enabled=enabled).clickable(enabled = enabled, onClick = onClick).padding(horizontal = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
         Icon(icon, null, tint = accent.copy(alpha = if (enabled) 1f else .4f), modifier = Modifier.size(15.dp))
         Text(label, color = ink.copy(alpha = if (enabled) 1f else .4f), fontSize = 10.sp, maxLines = 1)

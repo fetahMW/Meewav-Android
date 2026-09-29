@@ -1,5 +1,8 @@
 package com.meewav.android.features.rooms.wave
 
+import com.meewav.android.core.design.polishedPrimarySurface
+import com.meewav.android.core.design.polishedPrimaryButtonColors
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -118,8 +121,8 @@ internal fun WaveGuestFilterSheet(state: WaveGuestState, participants: List<Wave
             }
             Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TextButton(onClick = { draft = WaveGuestFilters(); firstCount = 0 }) { Text("Tout effacer", color = Color.White.copy(alpha = .7f)) }
-                Button(onClick = { state.filters = draft; state.selected = if (isRequests && firstCount > 0) participants.filter { it.location == WaveGuestLocation.REQUESTED && draft.matches(it) }.take(firstCount).map { it.id }.toSet() else emptySet(); onDismiss() }, modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = guestFilterViolet, contentColor = Color(0xFFE8E2F5))) {
+                Button(onClick = { state.filters = draft; state.selected = if (isRequests && firstCount > 0) participants.filter { it.location == WaveGuestLocation.REQUESTED && draft.matches(it) }.take(firstCount).map { it.id }.toSet() else emptySet(); onDismiss() }, modifier = Modifier.weight(1f).polishedPrimarySurface(),
+                    colors = polishedPrimaryButtonColors()) {
                     Text("Afficher $resultCount profils", fontSize = 12.sp)
                 }
             }

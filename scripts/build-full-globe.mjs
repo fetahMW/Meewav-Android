@@ -45,14 +45,17 @@ const result = await build({
 });
 await copyFile(join(source, 'vendor/globe-vinyle/shared/src/style.css'), join(output, 'style.css'));
 await copyFile(join(source, 'full-globe-mobile.css'), join(output, 'mobile.css'));
+await copyFile(join(root, 'app/src/main/shared-ui/primary-cta-material.css'), join(output, 'primary-cta-material.css'));
+await copyFile(join(root, 'app/src/main/shared-ui/compact-control-material.css'), join(output, 'compact-control-material.css'));
+await copyFile(join(root, 'app/src/main/shared-ui/navigation-indicator.css'), join(output, 'navigation-indicator.css'));
 await writeFile(join(output, 'index.html'), `<!doctype html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self' blob:; media-src 'self' blob:; font-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="color-scheme" content="dark"><title>Meewav — Globe</title><link rel="icon" href="data:,">
-<link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./assets/main.css"><link rel="stylesheet" href="./mobile.css"></head>
+<link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./assets/main.css"><link rel="stylesheet" href="./mobile.css"><link rel="stylesheet" href="./primary-cta-material.css"><link rel="stylesheet" href="./compact-control-material.css"><link rel="stylesheet" href="./navigation-indicator.css"></head>
 <body><div id="root"></div><script type="module" src="./assets/main.js"></script></body></html>\n`);
 
-await writeFile(join(output, 'guest-preprofile.html'), '<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="./assets/guest-preprofile.css"><div id="root"></div><script type="module" src="./assets/guest-preprofile.js"></script></html>');
+await writeFile(join(output, 'guest-preprofile.html'), '<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="./assets/guest-preprofile.css"><link rel="stylesheet" href="./primary-cta-material.css"><link rel="stylesheet" href="./compact-control-material.css"><link rel="stylesheet" href="./navigation-indicator.css"><div id="root"></div><script type="module" src="./assets/guest-preprofile.js"></script></html>');
 
 // Preserve the complete license text for every third-party package in the bundle.
 const packages = new Map();

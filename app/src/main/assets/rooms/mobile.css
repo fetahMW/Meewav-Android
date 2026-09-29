@@ -7,7 +7,7 @@
 .mobile-feature-menu { position: fixed; z-index: 51010; top: 46px; left: 8px; display: grid; min-width: 226px; padding: 6px; border: 1px solid #c8b8f02e; border-radius: 16px; background: linear-gradient(160deg,#1b1828f4,#0d0c14f7); box-shadow: 0 18px 48px #000000b0, inset 0 1px #ffffff0a; backdrop-filter: blur(18px) saturate(1.15); -webkit-backdrop-filter: blur(18px) saturate(1.15); }
 .mobile-feature-menu > button { display: flex; align-items: center; gap: 11px; min-height: 42px; padding: 8px 12px; border: 0; border-radius: 11px; background: none; color: #e9e5f3; font-size: 13px; font-weight: 550; text-align: left; }
 .mobile-feature-menu > button:active { background: #8d6fe02e; }
-.mobile-feature-menu > button svg { width: 17px; height: 17px; flex: none; color: #c9b8ea; }
+.mobile-feature-menu > button svg { width: 17px; height: 17px; flex: none; color: var(--mw-accent-secondary); }
 .mobile-feature-menu .mobile-feature-menu__back { margin-top: 4px; padding-top: 12px; border-top: 1px solid #ffffff12; border-radius: 0 0 11px 11px; color: #b6b0c4; }
 #root .mobile-feature > .mobile-profile-close { z-index: 51000; }
 #root .mobile-feature :is(.market-primary-rail,.shorts-primary-rail,.meewav-rail-edge) { display: none; }
@@ -427,7 +427,7 @@ body:has(.rooms-launch-page) > .feature-dock-host { display:none!important; }
 #root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__title { font-size: .82rem; }
 #root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__host { margin-top: 0; font-size: .66rem; }
 #root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__avatar { width: 1.15rem; height: 1.15rem; font-size: .44rem; }
-#root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__room-type { font-size: .54rem; padding: .18rem .42rem .16rem; }
+#root .mobile-rooms .rooms-home-card--vertical-media .rooms-home-card__room-type { min-height: 22px; font-size: .6rem; padding: 3px 7px; }
 /* Bandeau optimisé — le chip room et la ville remontent sur l'image
    (haut-gauche / haut-droite), le titre tient sur une ligne, le corps se
    réduit au portrait + nom. Valable pour miniatures et grandes cartes. */
@@ -951,7 +951,7 @@ body:has(.wv-room) .feature-dock-host { display: none !important; }
 
 /* Android reuses the exact Compose host mixer and composer; keep the web models mounted. */
 .android-native-viewer-controls .android-room-viewer .place-mixer { visibility:hidden;pointer-events:none; }
-.android-native-viewer-controls #root .android-room-viewer .place-chat__composer { opacity:0;pointer-events:none;min-height:52px!important;flex-shrink:0; }
+.android-native-viewer-controls #root .android-room-viewer .place-chat__composer { opacity:0;pointer-events:none;height:56px!important;min-height:56px!important;box-sizing:border-box;flex-shrink:0; }
 
 /* Same open studio layout as the native Host: no legacy modal chassis. */
 #root .android-room-viewer__header { flex-basis:44px; }
@@ -1245,3 +1245,136 @@ body:has(.wv-room) .feature-dock-host { display: none !important; }
 #root .rooms-page__end-dialog button {min-height:44px;padding:8px;border:1px solid #aaa4b933;border-radius:12px;background:linear-gradient(#29292e,#111115);color:#eeeaf3;font-size:12px;font-weight:600;}
 #root .rooms-page__end-dialog button:last-child {border-color:#b4768066;background:linear-gradient(#55343c,#26171d);color:#ffe2e6;}
 #root .rooms-page__end-dialog button:disabled {opacity:.55;}
+
+/* One graphite console, four clearly ordered steps. No decorative image/frame nesting. */
+.rooms-home-launch-dialog.rooms-launch-page { background:#101114; }
+.rooms-launch-page .launch-room-sheet {
+  --launch-accent:#a98ef0;
+  display:flex;flex-direction:column;isolation:isolate;color:#f4f2f8;
+  background:linear-gradient(115deg,#ffffff04,transparent 45%),#101114;
+  box-shadow:inset 0 1px #ffffff18;
+}
+.rooms-launch-page .launch-room-sheet::before,
+.rooms-launch-page .launch-room-sheet::after { content:none; }
+.rooms-launch-page .launch-room-sheet__header {
+  padding:8px 16px;min-height:60px;background:linear-gradient(#222329,#121317);
+  border-bottom:1px solid #ffffff12;box-shadow:inset 0 1px #ffffff17;
+}
+.rooms-launch-page .launch-room-sheet__header strong {font-size:16px;font-weight:650;}
+.rooms-launch-page .launch-room-sheet__badge {width:6px;height:6px;box-shadow:none;}
+.rooms-launch-page .launch-tabs {padding:10px 16px;gap:6px;background:none;border:0;}
+.rooms-launch-page .launch-tabs > button {min-height:34px;padding:7px 13px;letter-spacing:.03em;}
+.rooms-launch-page .launch-progress {
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;flex:none;
+  list-style:none;margin:0;padding:10px 16px 15px;border-bottom:1px solid #ffffff0e;
+}
+.rooms-launch-page .launch-progress li {position:relative;display:grid;justify-items:center;gap:7px;color:#96919f;min-width:0;}
+.rooms-launch-page .launch-progress li::after {content:"";position:absolute;left:calc(50% + 17px);right:calc(-50% + 17px);top:13px;height:1px;background:#ffffff14;}
+.rooms-launch-page .launch-progress li:last-child::after {display:none;}
+.rooms-launch-page .launch-progress li > span {display:grid;place-items:center;width:27px;height:27px;border-radius:50%;border:1px solid #ffffff1c;font-size:11px;font-weight:650;background:#19191f;}
+.rooms-launch-page .launch-progress li small {font-size:10px;line-height:1.3;font-weight:550;text-align:center;}
+.rooms-launch-page .launch-progress .is-current {color:#fff;}
+.rooms-launch-page .launch-progress .is-current > span {border-color:#a98ef077;background:var(--mw-primary-face);box-shadow:var(--mw-primary-shadow);}
+.rooms-launch-page .launch-progress .is-done {color:#bda7ef;}
+.rooms-launch-page .launch-progress .is-done::after {background:#a98ef055;}
+.rooms-launch-page .launch-room-sheet__body {flex:1;min-height:0;width:100%;max-width:900px;align-self:center;box-sizing:border-box;padding:22px 20px 28px;overflow-y:auto;overflow-x:hidden;background:none;border:0;box-shadow:none;scrollbar-width:thin;scrollbar-color:#4a414f transparent;}
+.rooms-launch-page .launch-step-intro {display:block;margin:0 0 23px;padding:0;border:0;background:none;}
+.rooms-launch-page .launch-step-intro > small {color:#b7a0e9;font-size:10px;letter-spacing:.12em;font-weight:650;}
+.rooms-launch-page .launch-step-intro h2 {margin:7px 0;font-size:clamp(22px,5.5vw,30px);line-height:1.13;font-weight:650;letter-spacing:-.035em;}
+.rooms-launch-page .launch-step-intro h2:focus {outline:none;}
+.rooms-launch-page .launch-step-intro p {margin:0;color:#a8a3b1;font-size:12px;line-height:1.5;}
+.rooms-launch-page .launch-identity {max-width:640px;margin-inline:auto;}
+.rooms-launch-page .launch-field__label {font-size:12px;font-weight:550;gap:9px;margin:18px 0 9px;}
+.rooms-launch-page .launch-field__label:first-child {margin-top:0;}
+.rooms-launch-page :is(.launch-input,.launch-select--picker,.launch-select--static) {
+  min-height:45px;background:linear-gradient(#090a0d,#141519)!important;border:1px solid #ffffff1c!important;
+  box-shadow:inset 0 2px 5px #0005!important;border-radius:10px;color:#f1eef6;
+}
+.rooms-launch-page .launch-input {padding:12px;font-size:14px;}
+.rooms-launch-page .launch-input::placeholder {color:#77727f;}
+.rooms-launch-page .launch-input:focus-visible {outline:2px solid #a98ef0;outline-offset:2px;}
+.rooms-launch-page .launch-selectors {gap:8px;}
+.rooms-launch-page .launch-selectors .launch-select {padding:10px;}
+.rooms-launch-page .launch-select__menu {background:#1a1920;border:1px solid #766c884f;backdrop-filter:none;}
+.rooms-launch-page .launch-select__option {min-height:40px;margin-bottom:3px;}
+.rooms-launch-page .launch-separator {margin:22px 0 5px;border:0;border-top:1px solid #ffffff0e;}
+.rooms-launch-page .launch-module {
+  min-height:62px;padding:12px 0!important;border:0!important;border-bottom:1px solid #ffffff12!important;
+  border-radius:0!important;background:none!important;box-shadow:none!important;gap:12px;
+}
+.rooms-launch-page .launch-module__icon {width:24px;flex:0 0 24px;background:none;border:0;box-shadow:none;}
+.rooms-launch-page .launch-module__copy strong {font-size:13px;font-weight:550;line-height:1.4;}
+.rooms-launch-page .launch-module__copy small {font-size:11px;color:#a29cae;line-height:1.45;}
+.rooms-launch-page .launch-module__children {padding:10px 0;margin:0;background:none;border:0;}
+.rooms-launch-page .launch-toggle-row {padding:4px 0;}
+.rooms-launch-page .launch-toggle-row__copy > span {font-size:13px;}
+.rooms-launch-page .launch-format {padding:12px;min-height:72px;border-radius:12px;background:var(--mw-control-face)!important;box-shadow:var(--mw-control-shadow)!important;}
+.rooms-launch-page .launch-format.is-active {background:var(--mw-primary-face)!important;border-color:#a98ef055!important;}
+.rooms-launch-page .launch-format__icon {background:none;border:0;box-shadow:none;width:25px;flex-basis:25px;}
+.rooms-launch-page .launch-format__copy strong {font-size:12px;}
+.rooms-launch-page .launch-format__copy small {line-height:1.45;}
+.rooms-launch-page .launch-studio {display:grid;grid-template-columns:minmax(0,1fr);gap:24px;}
+.rooms-launch-page .launch-studio__preview,.rooms-launch-page .launch-studio__settings {display:flex;flex-direction:column;gap:12px;min-width:0;}
+.rooms-launch-page .launch-studio__canvas {box-shadow:none;border:1px solid #ffffff20;border-radius:12px;background:#08090b;transition:none;}
+.rooms-launch-page .launch-studio__canvas--portrait {width:min(50vw,210px);}
+.rooms-launch-page .launch-studio__canvas--landscape {width:100%;max-width:560px;}
+.rooms-launch-page .launch-studio__source {color:#80768f;background:linear-gradient(140deg,#212026,#0d0e12);}
+.rooms-launch-page .launch-studio__source--secondary {background:#18161e;box-shadow:none;border-color:#ffffff25;}
+.rooms-launch-page .launch-studio__source > span {font-size:8px;padding:4px 6px;color:#ddd6e9;background:#101014cc;}
+.rooms-launch-page .launch-studio__private {font-size:9px;background:#111115dd;color:#c7b5e8;}
+.rooms-launch-page .launch-studio__section {margin:0;padding-top:3px;flex-wrap:wrap;}
+.rooms-launch-page .launch-studio__section strong {font-size:13px;color:#e9e4f1;}
+.rooms-launch-page .launch-studio__section span {font-size:10px;}
+.rooms-launch-page .launch-studio__presets {gap:8px;}
+.rooms-launch-page .launch-studio__presets button {height:auto;min-height:72px;padding:10px 22px 10px 10px;background:var(--mw-control-face);border:1px solid transparent;box-shadow:var(--mw-control-shadow);}
+.rooms-launch-page .launch-studio__presets button.is-active {background:var(--mw-primary-face);box-shadow:var(--mw-primary-shadow);border-color:transparent;}
+.rooms-launch-page .launch-studio__presets strong {font-size:11px;white-space:normal;line-height:1.25;}
+.rooms-launch-page .launch-studio__presets small {font-size:10px;white-space:normal;line-height:1.3;}
+.rooms-launch-page .launch-studio__diagram {width:28px;flex-basis:28px;height:23px;}
+.rooms-launch-page .launch-studio__diagram b {background:#a98ef0aa;}
+.rooms-launch-page .launch-studio__tools {gap:8px;}
+.rooms-launch-page .launch-studio__tools button {font-size:11px;min-height:44px;line-height:1.35;padding:8px;}
+.rooms-launch-page :is(.launch-studio__camera,.launch-studio__second) {padding:12px 0;border:0;border-radius:0;border-top:1px solid #ffffff12;background:none;}
+.rooms-launch-page .launch-studio__camera > div {background:none;padding:0;gap:5px;}
+.rooms-launch-page .launch-studio__camera button {min-height:36px;border:1px solid transparent;}
+.rooms-launch-page .launch-studio__notice {font-size:11px;line-height:1.5;border:0;border-left:2px solid #a98ef077;border-radius:0;background:#1a1720;color:#bcb2cc;}
+.rooms-launch-page .launch-preflight {display:grid;gap:16px;max-width:640px;margin:auto;}
+.rooms-launch-page .launch-preflight .launch-section-title {margin:2px 0 -7px;}
+.rooms-launch-page .launch-checkup-status {padding:14px 0;border:0;border-radius:0;background:none;gap:12px;}
+.rooms-launch-page .launch-checkup-status__copy strong {font-size:14px;}
+.rooms-launch-page .launch-mic {padding:18px;border:1px solid #ffffff1c;border-radius:14px;background:linear-gradient(140deg,#24252b,#111216);box-shadow:inset 0 1px #ffffff0d;}
+.rooms-launch-page .launch-mic__meter {height:9px;margin:16px 0 18px;border-radius:8px;background:#07080a;overflow:hidden;}
+.rooms-launch-page .launch-mic__meter > span {border-radius:8px;}
+.rooms-launch-page .launch-checklist {display:grid;gap:12px;margin:0;padding:16px 0 0;border-top:1px solid #ffffff12;list-style:none;}
+.rooms-launch-page .launch-checklist li {font-size:12px;color:#aaa4b4;}
+.rooms-launch-page .launch-checklist .is-ok {color:#bdace0;}
+.rooms-launch-page .launch-golive {padding:0;max-width:640px;margin:auto;}
+.rooms-launch-page .launch-golive__hero {display:flex;flex-direction:row;gap:12px;align-items:center;margin:0 0 24px;padding:0;border:0;background:none;}
+.rooms-launch-page .launch-golive__hero > svg {width:28px;height:28px;flex:none;}
+.rooms-launch-page .launch-golive__hero > strong {font-size:16px;}
+.rooms-launch-page .launch-golive__hero > span {margin-left:auto;font-size:11px;}
+.rooms-launch-page .launch-summary {padding:0;margin:0;border:0!important;border-radius:0;background:none!important;box-shadow:none!important;}
+.rooms-launch-page .launch-summary > span {display:none;}
+.rooms-launch-page .launch-summary dl {gap:0;}
+.rooms-launch-page .launch-summary dl > div {display:grid;grid-template-columns:minmax(85px,1fr) minmax(0,1.6fr);gap:15px;padding:14px 0;border-bottom:1px solid #ffffff12;}
+.rooms-launch-page .launch-summary dt {font-size:12px;color:#a6a0af;}
+.rooms-launch-page .launch-summary dd {font-size:13px;text-align:right;line-height:1.45;overflow-wrap:anywhere;}
+.rooms-launch-page .launch-workflow-nav {margin:0;padding:6px 18px max(6px,env(safe-area-inset-bottom));border:0;border-top:1px solid #ffffff19;border-radius:0;background:linear-gradient(#1d1e24,#111216);box-shadow:inset 0 1px #ffffff08;backdrop-filter:none;gap:12px;grid-template-columns:44px minmax(0,1fr);align-items:center;}
+.rooms-launch-page .launch-workflow-nav__next {height:44px;max-width:none;width:auto;justify-self:end;min-width:148px;font-size:12px;}
+.rooms-launch-page .launch-workflow-nav__back {height:44px;width:44px;border-radius:12px;}
+.rooms-launch-page .launch-workflow-nav__progress {font-size:11px;color:#cbc4d6;}
+.rooms-launch-page :is(button,input,textarea):focus-visible {outline:2px solid #c5b3ee;outline-offset:3px;}
+.rooms-launch-page .launch-jury {background:#121317;backdrop-filter:none;}
+@media(min-width:700px) {
+  .rooms-launch-page .launch-studio {grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:28px;align-items:start;}
+  .rooms-launch-page .launch-studio__preview {position:sticky;top:0;}
+  .rooms-launch-page .launch-progress {padding-inline:max(24px,calc((100% - 720px)/2));}
+  .rooms-launch-page .launch-tabs {justify-content:center;}
+  .rooms-launch-page .launch-workflow-nav {padding-inline:max(24px,calc((100% - 860px)/2));}
+}
+@media(prefers-reduced-motion:reduce) {
+  .rooms-launch-page *, .rooms-launch-page *::after {animation:none!important;transition:none!important;scroll-behavior:auto!important;}
+}
+
+/* A single source fills the preview; preset diagrams explain optional layouts. */
+.rooms-launch-page .launch-studio__canvas[data-multi-source="false"] .launch-studio__source--primary {inset:0;}

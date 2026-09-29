@@ -1,5 +1,8 @@
 package com.meewav.android.features.rooms.wave
 
+import com.meewav.android.core.design.polishedControlSurface
+import com.meewav.android.core.design.NavigationTabContent
+
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -28,8 +31,9 @@ internal val logeRed=Color(0xFFD6949A)
         Row(Modifier.fillMaxWidth().height(44.dp)) {
             listOf("VIP","Questions","Invitations").forEachIndexed { i,label ->
                 Box(Modifier.weight(1f).fillMaxHeight().clickable { state.tab=i },contentAlignment=Alignment.Center) {
-                    Text(label,color=if(state.tab==i)Color.White else sceneMuted,fontSize=12.sp,fontWeight=FontWeight.SemiBold)
-                    if(state.tab==i)Box(Modifier.align(Alignment.BottomCenter).padding(bottom=5.dp).width(34.dp).height(2.dp).background(Brush.horizontalGradient(listOf(Color.Transparent,sceneAccent,Color.Transparent)),CircleShape))
+                    NavigationTabContent(state.tab == i) {
+                        Text(label,color=if(state.tab==i)Color.White else sceneMuted,fontSize=12.sp,fontWeight=FontWeight.SemiBold)
+                    }
                 }
             }
         }
@@ -66,7 +70,7 @@ internal val logeRed=Color(0xFFD6949A)
     }
     Column(Modifier.fillMaxSize()) {
         Box {
-            Row(Modifier.fillMaxWidth().height(44.dp).hifiBlackSurface(12.dp).clickable(role=Role.Button){sourceMenu=true}.padding(horizontal=12.dp),verticalAlignment=Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().height(44.dp).polishedControlSurface(cornerRadius=12.dp).clickable(role=Role.Button){sourceMenu=true}.padding(horizontal=12.dp),verticalAlignment=Alignment.CenterVertically) {
                 Text(if(history)"Historique VIP"else when(source){"queue"->"Demandes";"vip"->"Membres VIP";else->"Tous les membres"},Modifier.weight(1f),color=Color(0xFFD1CED8),fontSize=12.sp)
                 Icon(Icons.Default.ExpandMore,null,Modifier.size(18.dp),tint=WaveMixerTheme.capsuleAccentSoft)
             }

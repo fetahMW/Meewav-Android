@@ -1,7 +1,11 @@
 package com.meewav.android.features.auth
 
+import com.meewav.android.core.design.SecondaryAccent
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.AlternateEmail
@@ -10,6 +14,8 @@ import androidx.compose.material.icons.outlined.PersonOutline
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,16 +27,20 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.meewav.android.R
 import com.meewav.android.core.design.Violet
+import com.meewav.android.core.design.Muted
 
 /** Comme Bienvenue : le clavier déplace la vitre, sans en recalculer le dessin. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun AccountEntryLayout(state: AuthUiState, actions: AuthActions, submit: () -> Unit) {
+internal fun RegistrationEntryLayout(state: AuthUiState, actions: AuthActions, submit: () -> Unit) {
     val density = LocalDensity.current
     val hostView = LocalView.current
     SideEffect {
@@ -45,8 +55,14 @@ internal fun AccountEntryLayout(state: AuthUiState, actions: AuthActions, submit
     val target = WindowInsets.imeAnimationTarget.getBottom(density)
     val extent = (maxOf(source, target, ime) - safeBottom).coerceAtLeast(0)
     val overlap = (ime - safeBottom).coerceAtLeast(0)
-    val progress = if (extent > 0) (overlap.toFloat() / extent).coerceIn(0f, 1f) else 0f
-    val typing = ime > 0 || target > 0
+    val isAvatar = state.page == AuthPage.Avatar
+    val progress = if (!isAvatar && extent > 0) (overlap.toFloat() / extent).coerceIn(0f, 1f) else 0f
+    val typing = !isAvatar && (ime > 0 || target > 0)
+    val step = when (state.page) {
+        AuthPage.Avatar -> 0
+        AuthPage.Register -> 1
+        else -> 2
+    }
 
     // Les insets IME ne réduisent jamais les contraintes servant à dimensionner la vitre.
     BoxWithConstraints(Modifier.fillMaxSize().windowInsetsPadding(safeInsets)) {
@@ -73,22 +89,58 @@ internal fun AccountEntryLayout(state: AuthUiState, actions: AuthActions, submit
             }
             Spacer(Modifier.height(12.dp))
             Box(Modifier.fillMaxWidth().height(38.dp), contentAlignment = Alignment.TopCenter) {
-                RegistrationSteps(1)
+                RegistrationSteps(step)
             }
         }
+        if (isAvatar && !state.initializing) {
+            val avatarHeight = panelHeight + AuthWindowLowerExtension
+            val avatarViewport = (maxHeight - restPanelTop - 12.dp).coerceIn(0.dp, avatarHeight)
+            // Keep the header fixed even on a short viewport; scroll the stage instead of crushing it.
+            Box(Modifier.align(Alignment.TopCenter).padding(horizontal = 22.dp)
+                .widthIn(max = 440.dp).fillMaxWidth().offset(y = restPanelTop)
+                .height(avatarViewport)
+                .then(if (avatarViewport < avatarHeight) Modifier.verticalScroll(rememberScrollState()) else Modifier)) {
+                AvatarSelection(state, actions.profile, submit, panelHeight = avatarHeight,
+                    modifier = Modifier.fillMaxWidth())
+            }
+            return@BoxWithConstraints
+        }
+        val constrainedViewport = if (typing) viewport
+            else (maxHeight - panelTop - 12.dp).coerceIn(0.dp, panelHeight)
+        val needsScroll = typing || constrainedViewport < panelHeight
         AuthWindowPanel(Modifier.align(Alignment.TopCenter).padding(horizontal = 22.dp)
             .widthIn(max = 440.dp).fillMaxWidth().offset(y = panelTop),
             panelHeight = panelHeight, compact = true, scrollKey = state.page,
-            allowScroll = typing, contentViewportHeight = if (typing) viewport else null,
+            allowScroll = needsScroll, contentViewportHeight = if (needsScroll) constrainedViewport else null,
             contentBottomPadding = if (typing) 8.dp else null,
-            footer = if (state.initializing) null else { { PrimaryAction("Suivant", state.busy, submit) } }) {
+            footer = if (state.initializing) null else { {
+                PrimaryAction(if (state.page == AuthPage.Location) "Terminer" else "Suivant", state.busy, submit)
+            } }) {
             if (state.initializing) {
-                CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally).padding(28.dp), color = Violet)
+                CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally).padding(28.dp), color = SecondaryAccent)
+            } else if (state.page == AuthPage.Location) {
+                LocationRegistrationForm(state, actions)
             } else {
                 AccountRegistrationForm(state, actions, submit)
             }
         }
     }
+}
+
+@Composable
+private fun ColumnScope.LocationRegistrationForm(state: AuthUiState, actions: AuthActions) {
+    WaveMark()
+    Spacer(Modifier.height(4.dp))
+    Text("Choisis ta scène", style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth().semantics { heading() })
+    Spacer(Modifier.height(4.dp))
+    Text("Rejoins un quartier musical. Ton adresse reste privée.", color = Muted,
+        style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth())
+    SubtitleDivider(compact = true)
+    state.error?.let { Message(it, true); Spacer(Modifier.height(14.dp)) }
+    state.notice?.let { Message(it, false); Spacer(Modifier.height(14.dp)) }
+    LocationRegistration(state, actions.profile)
 }
 
 @Composable
