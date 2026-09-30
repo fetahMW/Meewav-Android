@@ -107,50 +107,6 @@ function selectedSpriteMetrics(item) {
   };
 }
 
-function createPinLayer(host) {
-  const layer = document.createElement('div');
-  layer.className = 'ground-avatar-pin-layer';
-  layer.setAttribute('aria-hidden', 'true');
-  host.append(layer);
-  const nodes = new Map();
-  return {
-    sync(items) {
-      const seen = new Set();
-      for (const item of items) {
-        const color = item.avatar.pinColor;
-        if (!color) continue;
-        seen.add(item.avatar.id);
-        let node = nodes.get(item.avatar.id);
-        if (!node) {
-          node = document.createElement('div');
-          node.className = 'profile-pin-repere profile-pin-repere--ground';
-          const ground = document.createElement('div');
-          ground.className = 'profile-pin-repere__ground';
-          node.append(ground);
-          layer.append(node);
-          nodes.set(item.avatar.id, node);
-        }
-        node.classList.toggle('is-current-user', Boolean(item.avatar.isHost));
-        node.style.setProperty('--profile-pin-color', color);
-        node.style.setProperty('--profile-pin-x', `${item.x}px`);
-        node.style.setProperty('--profile-pin-y', `${item.y}px`);
-        node.style.setProperty('--profile-pin-scale', String(zoomFromSize(item.size, item.avatar) * (item.avatar.isHost ? PIN_HOST_SCALE : 1)));
-      }
-      for (const [id, node] of nodes) {
-        if (seen.has(id)) continue;
-        node.remove();
-        nodes.delete(id);
-      }
-    },
-    hide() { this.sync([]); },
-    dispose() {
-      for (const node of nodes.values()) node.remove();
-      nodes.clear();
-      layer.remove();
-    },
-  };
-}
-
 function createSelectedOverlay(host) {
   const layer = document.createElement('div');
   layer.className = 'profile-icon-hover-overlay is-hover';
@@ -255,7 +211,6 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
     ? { total: () => liveMarkers.length, quota: () => 0, cityTotal: () => 0, ensureQuartier: () => {} }
     : createParisAvatarPopulation(sectors, communes, { eager: false });
   const availableIcons = new Set();
-  const pinLayer = createPinLayer(host);
   const sprites = createGroundAvatarSprites();
   const selectedOverlay = createSelectedOverlay(host);
   const hoverCard = createHoverCard(host);
@@ -400,7 +355,6 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
     sprites.hide();
     drawn.length = 0;
     paintState = null;
-    pinLayer.hide();
     selectedOverlay.hide();
   }
 
@@ -456,18 +410,19 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
       width, height, lon: view.lon, lat: view.lat, distance: view.height, pitch: view.pitch, bearing: view.bearing };
     sprites.begin(width, height, items.length);
     drawn.length = 0;
-    const pinItems = [];
     let hostItem = null;
     let selectedItem = null;
     for (const item of items) {
       drawn.push(item);
-      if (item.avatar.pinColor && !item.avatar.isHost) pinItems.push(item);
       if (item.avatar.isHost) hostItem = item;
-      if (item.avatar.id === selectedId) { selectedItem = item; continue; }
+      if (item.avatar.id === selectedId) selectedItem = item;
       if (item.avatar.isHost) continue;
       const hovered = item.avatar.id === hoveredId;
       const gray = consulted.has(item.avatar.id) && !item.avatar.pinColor;
-      sprites.add(item, item.size * (hovered ? 1.08 : 1), gray ? 0.55 : 1, gray ? 0 : 1);
+      const pinRadius = item.avatar.pinColor ? 32 * zoomFromSize(item.size, item.avatar) : 0;
+      // Selection replaces the portrait, while its marker remains at the feet.
+      sprites.add(item, item.size * (hovered ? 1.08 : 1), item === selectedItem ? 0 : gray ? 0.55 : 1,
+        gray ? 0 : 1, pinRadius, 6);
     }
     if (hostItem) {
       const hovered = hostItem.avatar.id === hoveredId;
@@ -477,7 +432,6 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
       sprites.add(hostItem, hostItem.size * (hovered ? 1.06 : 1), hostItem === selectedItem ? 0 : 1, 1, pinRadius);
     }
     sprites.finish();
-    pinLayer.sync(pinItems);
     selectedOverlay.show(selectedItem, selectedRestore && !selectedItem?.avatar.pinColor, { width, height });
     if (requestRender) invalidate();
   }
@@ -691,7 +645,6 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
           activeZoneId = '';
           hoverCard.hide();
           selectedOverlay.hide();
-          pinLayer.hide();
           clearOverlay();
           return;
         }
@@ -702,7 +655,6 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
       if (options.hold) {
         hoverCard.hide();
         selectedOverlay.hide();
-        pinLayer.hide();
         clearOverlay();
         return;
       }
@@ -719,7 +671,6 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
       window.removeEventListener('meewav:ground-avatar-restore', onRestore);
       hoverCard.dispose();
       selectedOverlay.dispose();
-      pinLayer.dispose();
       sprites.dispose();
     },
   };

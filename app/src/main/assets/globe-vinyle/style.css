@@ -70,12 +70,6 @@ canvas:focus-visible {
 .globe-stage canvas.dragging {
   cursor: grabbing !important;
 }
-.ground-avatar-pin-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  pointer-events: none;
-}
 .globe-stage > .profile-icon-hover-overlay[hidden] {
   display: none;
 }

@@ -803,8 +803,9 @@ internal fun MixerBody(
             androidx.compose.animation.core.spring(dampingRatio = .9f, stiffness = 320f), label = "Déploiement du deck")
         val channelHeight = (maxHeight - deckHeight).coerceAtLeast(0.dp)
         val stripHeight = (channelHeight - 54.dp).coerceIn(0.dp, 244.dp)
-        // Mute buttons are 24dp high; the 32dp FX actions share their centre line.
-        val fxHeight = (stripHeight + 44.dp).coerceAtMost((channelHeight - 10.dp).coerceAtLeast(0.dp))
+        val stripTop = 40.dp
+        // The FX actions and both mute buttons share the same bottom edge.
+        val fxHeight = (stripTop + stripHeight).coerceAtMost((channelHeight - 10.dp).coerceAtLeast(0.dp))
         Column(Modifier.fillMaxSize()) {
         // Région haute : strips + diviseur + FX.
         BoxWithConstraints(Modifier.fillMaxWidth().height(channelHeight).then(Modifier.clipToBounds()).padding(top = 10.dp)) {
@@ -830,14 +831,14 @@ internal fun MixerBody(
                 showHeader = false,
                 gain = micGain, muted = micMuted, isMic = true,
                 onGainChange = onMicGain, onToggleMute = onMicMute,
-                modifier = Modifier.offset(x = 3.dp, y = 40.dp).width(slot).height(stripHeight)
+                modifier = Modifier.offset(x = 3.dp, y = stripTop).width(slot).height(stripHeight)
             )
             WaveChannelStrip(
                 label = "Audio", icon = WaveIcons.MusicNote,
                 showHeader = false,
                 gain = audioGain, muted = audioMuted, isMic = false,
                 onGainChange = onAudioGain, onToggleMute = onAudioMute,
-                modifier = Modifier.offset(x = 3.dp + slot, y = 40.dp).width(slot).height(stripHeight)
+                modifier = Modifier.offset(x = 3.dp + slot, y = stripTop).width(slot).height(stripHeight)
             )
             // Séparateur vertical centré, blanc 0.07, marges v6.
             Box(
@@ -897,12 +898,37 @@ private fun FxColumn(
     modifier: Modifier = Modifier,
 ) {
     BoxWithConstraints(modifier) {
-    val cardHeight = ((maxHeight - 78.dp) / 2f).coerceAtLeast(0.dp)
+    val headerHeight = 28.dp
+    val actionsHeight = 32.dp
+    val baseGap = 6.dp
+    val originalCardHeight = ((maxHeight - headerHeight - actionsHeight - baseGap * 3f) / 2f)
+        .coerceAtLeast(0.dp)
+    // Redistribute spare card height without hiding labels or shrinking controls.
+    val minimumCardHeight = when {
+        originalCardHeight >= 102.dp -> 102.dp
+        originalCardHeight >= 84.dp -> 84.dp
+        else -> 76.dp // Header, inner padding and the 30dp control in compact mode.
+    }
+    val nextDisplayThreshold = when {
+        originalCardHeight < 84.dp -> 84.dp
+        originalCardHeight < 102.dp -> 102.dp
+        else -> null
+    }
+    val spareCardHeight = (originalCardHeight - minimumCardHeight).coerceIn(0.dp, 8.dp)
+    // Fade the extra gaps before a label/power mode change to avoid layout jumps.
+    val releasedCardHeight = if (nextDisplayThreshold != null) {
+        minOf(spareCardHeight, (nextDisplayThreshold - originalCardHeight).coerceAtLeast(0.dp))
+    } else spareCardHeight
+    val redistributedHeight = releasedCardHeight * 2f
+    val moduleGap = baseGap + redistributedHeight / 4f
+    val actionsGap = baseGap + redistributedHeight / 2f
+    val cardHeight = ((maxHeight - headerHeight - actionsHeight - moduleGap * 2f - actionsGap) / 2f)
+        .coerceAtLeast(0.dp)
     val showLabels = cardHeight >= 102.dp
-    Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(moduleGap)) {
         // Deux touches alignées au bord des cartes FX.
         Row(
-            Modifier.fillMaxWidth().height(28.dp),
+            Modifier.fillMaxWidth().height(headerHeight),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -951,9 +977,9 @@ private fun FxColumn(
                 modifier = Modifier.fillMaxWidth().weight(1f)
             )
         }
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            WavePluginEntry(onPlugins, Modifier.weight(1f).height(32.dp))
-            WavePadsEntry(onPads, Modifier.weight(1f).height(32.dp))
+        Row(Modifier.fillMaxWidth().padding(top = actionsGap - moduleGap), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            WavePluginEntry(onPlugins, Modifier.weight(1f).height(actionsHeight))
+            WavePadsEntry(onPads, Modifier.weight(1f).height(actionsHeight))
         }
     }
     }

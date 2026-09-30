@@ -13,6 +13,28 @@
   padding-bottom: 20px;
   background: transparent;
 }
+/* Size the stamp lettering against its own circle, including narrow phones. */
+#root .mobile-tremplin .tremplin-home__stamp {
+  container-type: inline-size;
+  gap: 4px;
+}
+#root .mobile-tremplin .tremplin-home__stamp small {
+  max-inline-size: 84%;
+  font-size: 7px;
+  font-size: clamp(7px, 7.5cqi, 8px);
+  line-height: 1.2;
+  letter-spacing: .06em;
+  white-space: nowrap;
+  text-align: center;
+}
+#root .mobile-tremplin .tremplin-home__stamp em {
+  max-inline-size: 84%;
+  font-size: 16px;
+  font-size: clamp(12px, 19cqi, 21px);
+  line-height: 1.05;
+  white-space: nowrap;
+  text-align: center;
+}
 .mobile-tremplin-back { position: fixed; z-index: 50; top: 0; left: 4px; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; color: #d6d8e0; }
 .mobile-tremplin:has([role="dialog"]:not([aria-hidden="true"])) > .mobile-tremplin-back { visibility: hidden; }
 .mobile-tremplin-menu-overlay { position: fixed; z-index: 55; inset: 0; padding: 0; border: 0; background: transparent; }

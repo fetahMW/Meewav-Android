@@ -1,10 +1,8 @@
 import { Search, SmilePlus, X } from "lucide-react";
 import {
   Fragment,
-  type CSSProperties,
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
-  useEffect,
   useId,
   useLayoutEffect,
   useMemo,
@@ -77,6 +75,11 @@ export const MEEWAV_EMOTICONS = catalog as readonly MeeWavEmoticon[];
 
 export function meewavEmoticonToken(name: MeeWavEmoticonName) {
   return `[[mw:${name}]]`;
+}
+
+export function meewavEmoticonLabel(value: string) {
+  const match = /^\[\[mw:([a-z0-9-]+)\]\]$/u.exec(value);
+  return match ? itemsByName.get(match[1])?.label ?? "Émoticône MeeWav" : value;
 }
 
 export function appendMeeWavEmoticon(
@@ -311,133 +314,158 @@ const CATEGORY_LABELS: Record<string, string> = {
   performance: "Performance",
 };
 
+const CLASSIC_EMOJIS = [
+  ["❤️", "Cœur amour"], ["🔥", "Feu incroyable"], ["👏", "Bravo applaudissements"],
+  ["🎧", "Casque écoute"], ["👍", "Pouce oui"], ["✨", "Étincelles"],
+  ["😍", "Admiration"], ["😂", "Rire"], ["🥹", "Émotion"], ["🙌", "Célébration"],
+  ["💯", "Cent parfait"], ["🙏", "Merci"], ["😎", "Cool"], ["🤩", "Émerveillé"],
+  ["🥰", "Affection"], ["😊", "Sourire"], ["😁", "Heureux"], ["🤔", "Réflexion"],
+  ["👀", "Regard"], ["💪", "Force"], ["🤝", "Accord"], ["✅", "Validé"],
+  ["🎵", "Note musique"], ["🎶", "Notes musique"], ["🎤", "Micro chant"],
+  ["🎸", "Guitare"], ["🥁", "Batterie"], ["🎹", "Piano clavier"],
+  ["🎺", "Trompette"], ["🎷", "Saxophone"], ["🎻", "Violon"], ["🎚️", "Mixage fader"],
+  ["💜", "Cœur violet"], ["🚀", "Décollage"], ["🏆", "Trophée"], ["⭐", "Étoile"],
+  ["💎", "Diamant"], ["🎉", "Fête"], ["🤟", "Rock"], ["🫶", "Cœur mains"],
+] as const;
+const searchText = (value: string) => value.toLocaleLowerCase("fr-FR").normalize("NFD").replace(/\p{Diacritic}/gu, "");
+
+/** One Android sheet, shared by message reactions and composer insertion. */
+export function MeeWavEmoticonSheet({
+  title = "Émoticônes", label, preview, onSelectValue, onClose, restoreFocusTo,
+  selectedValues = [], includeClassics = true, children, hideLibrary = false,
+}: {
+  title?: string;
+  label?: string;
+  preview?: { author: string; body: string };
+  onSelectValue: (value: string) => void;
+  onClose: () => void;
+  restoreFocusTo?: HTMLElement | null;
+  selectedValues?: readonly string[];
+  includeClassics?: boolean;
+  children?: ReactNode;
+  hideLibrary?: boolean;
+}) {
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("all");
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+  const titleId = useId();
+  const categories = useMemo(() => ["all", ...(includeClassics ? ["classic"] : []),
+    ...Array.from(new Set(MEEWAV_EMOTICONS.map(item => item.category))),
+  ], [includeClassics]);
+  const entries = useMemo(() => {
+    const normalized = searchText(query.trim());
+    const custom = category === "classic" ? [] : MEEWAV_EMOTICONS
+      .filter(item => (category === "all" || item.category === category)
+        && (!normalized || searchText(item.label + " " + item.name + " " + (item.keywords ?? []).join(" ")).includes(normalized)))
+      .map(item => ({ value: meewavEmoticonToken(item.name), label: item.label, name: item.name }));
+    const classic = includeClassics && (category === "all" || category === "classic")
+      ? CLASSIC_EMOJIS.filter(([emoji, text]) => !normalized || searchText(text + " " + emoji).includes(normalized))
+        .map(([value, text]) => ({ value, label: text, name: null })) : [];
+    return [...custom, ...classic];
+  }, [category, query, includeClassics]);
+
+  useLayoutEffect(() => {
+    const root = document.getElementById("root");
+    const previousInert = root?.inert ?? false;
+    const previousOverflow = document.body.style.overflow;
+    if (root) root.inert = true;
+    document.body.style.overflow = "hidden";
+    closeRef.current?.focus({ preventScroll: true });
+    const fitViewport = () => {
+      const viewport = window.visualViewport;
+      const height = viewport?.height ?? window.innerHeight;
+      sheetRef.current?.parentElement?.style.setProperty("--mw-sheet-height", height + "px");
+      sheetRef.current?.parentElement?.style.setProperty("--mw-sheet-top", (viewport?.offsetTop ?? 0) + "px");
+      sheetRef.current?.classList.toggle("is-compact", height < 500);
+    };
+    fitViewport();
+    window.visualViewport?.addEventListener("resize", fitViewport);
+    window.visualViewport?.addEventListener("scroll", fitViewport);
+    window.addEventListener("resize", fitViewport);
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        onCloseRef.current();
+      } else if (event.key === "Tab") {
+        const controls = Array.from(sheetRef.current?.querySelectorAll<HTMLElement>("*") ?? [])
+          .filter(element => element.tabIndex >= 0 && !element.matches(":disabled"));
+        const first = controls[0];
+        const last = controls[controls.length - 1];
+        if (event.shiftKey && (document.activeElement === first || !sheetRef.current?.contains(document.activeElement))) {
+          event.preventDefault(); last?.focus();
+        } else if (!event.shiftKey && (document.activeElement === last || !sheetRef.current?.contains(document.activeElement))) {
+          event.preventDefault(); first?.focus();
+        }
+      }
+    };
+    document.addEventListener("keydown", onKeyDown, true);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown, true);
+      window.visualViewport?.removeEventListener("resize", fitViewport);
+      window.visualViewport?.removeEventListener("scroll", fitViewport);
+      window.removeEventListener("resize", fitViewport);
+      if (root) root.inert = previousInert;
+      document.body.style.overflow = previousOverflow;
+      if (restoreFocusTo?.isConnected) restoreFocusTo.focus({ preventScroll: true });
+    };
+  }, [restoreFocusTo]);
+
+  if (typeof document === "undefined") return null;
+  return createPortal(
+    <div className="mw-emoji-sheet-backdrop" onClick={event => event.stopPropagation()} onPointerDown={event => {
+      event.stopPropagation();
+      // Dismiss only a deliberate tap on the scrim, never a drag in the catalogue.
+      if (event.target === event.currentTarget) onCloseRef.current();
+    }}>
+      <div ref={sheetRef} className={"mw-emoji-sheet" + (hideLibrary ? " is-actions-only" : "")} role="dialog" aria-modal="true" aria-label={label} aria-labelledby={label ? undefined : titleId}>
+        <div className="mw-emoji-sheet__handle" aria-hidden="true" />
+        <header className="mw-emoji-sheet__header">
+          <span className="mw-emoji-sheet__mark"><MeewavEmoticonImage name="coeur-casque" size={40} decorative /></span>
+          <span><strong id={titleId}>{title}</strong><small>{hideLibrary ? "Actions du message" : preview ? "Plusieurs réactions possibles" : "Tes créations musicales et tes émojis"}</small></span>
+          <button ref={closeRef} type="button" onClick={onClose} aria-label="Fermer les émoticônes"><X aria-hidden="true" /></button>
+        </header>
+        {preview && <aside className="mw-emoji-sheet__preview"><small>{preview.author}</small><p><MeeWavRichText emoticonSize={22}>{preview.body}</MeeWavRichText></p></aside>}
+        {!hideLibrary && <>
+          <label className="mw-emoji-sheet__search"><Search aria-hidden="true" /><input aria-label="Rechercher une émoticône" value={query} onChange={event => setQuery(event.currentTarget.value)} placeholder="Rechercher une vibe…" /></label>
+          <nav className="mw-emoji-sheet__categories" aria-label="Catégories d’émoticônes">
+            {categories.map(id => <button key={id} type="button" aria-pressed={category === id} onClick={() => setCategory(id)}>{id === "classic" ? "Classiques" : id === "all" ? "Tout" : CATEGORY_LABELS[id] ?? id}</button>)}
+          </nav>
+          <div className="mw-emoji-sheet__grid" role="group" aria-label="Émoticônes">
+            {entries.map(item => <button type="button" key={item.value} title={item.label} aria-label={item.label} aria-pressed={preview ? selectedValues.includes(item.value) : undefined} onClick={() => onSelectValue(item.value)}>
+              {item.name ? <MeewavEmoticonImage name={item.name} size={60} decorative /> : <span className="mw-emoji-sheet__unicode" aria-hidden="true">{item.value}</span>}
+              <span className="mw-emoji-sheet__caption">{item.label}</span>
+            </button>)}
+            {!entries.length && <p>Aucune émoticône trouvée.</p>}
+          </div>
+        </>}
+        {children && <footer className="mw-emoji-sheet__footer">{children}</footer>}
+      </div>
+    </div>, document.body,
+  );
+}
+
 export function MeeWavEmoticonPicker({
-  onSelect,
-  disabled = false,
-  label = "Ajouter une émoticône MeeWav",
-  className,
-  panelClassName,
-  triggerIcon,
+  onSelect, onSelectUnicode, disabled = false, label = "Ajouter une émoticône MeeWav", className, triggerIcon,
 }: {
   onSelect: (emoticon: MeeWavEmoticon) => void;
+  onSelectUnicode?: (emoji: string) => void;
   disabled?: boolean;
   label?: string;
   className?: string;
-  panelClassName?: string;
   triggerIcon?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const [category, setCategory] = useState("all");
-  const [position, setPosition] = useState<CSSProperties>({});
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
-  const titleId = useId();
-  const categories = useMemo(() => [
-    "all",
-    ...Array.from(new Set(MEEWAV_EMOTICONS.map((item) => item.category))),
-  ], []);
-  const filtered = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase("fr-FR");
-    return MEEWAV_EMOTICONS.filter((item) => (
-      (category === "all" || item.category === category)
-      && (!normalizedQuery || `${item.label} ${item.name} ${(item.keywords ?? []).join(" ")}`.toLocaleLowerCase("fr-FR").includes(normalizedQuery))
-    ));
-  }, [category, query]);
-
-  useEffect(() => {
-    if (!open) return undefined;
-    const place = () => {
-      const rect = triggerRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      const width = Math.min(368, window.innerWidth - 24);
-      const height = Math.min(418, window.innerHeight - 24);
-      const left = Math.max(12, Math.min(window.innerWidth - width - 12, rect.right - width));
-      const top = rect.top >= height + 12
-        ? rect.top - height - 8
-        : Math.min(window.innerHeight - height - 12, rect.bottom + 8);
-      setPosition({ left, top, width, maxHeight: height });
-    };
-    const closeOnOutside = (event: PointerEvent) => {
-      const target = event.target as Node | null;
-      if (panelRef.current?.contains(target) || triggerRef.current?.contains(target)) return;
-      setOpen(false);
-    };
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      setOpen(false);
-      triggerRef.current?.focus();
-    };
-    place();
-    window.addEventListener("resize", place);
-    window.addEventListener("scroll", place, true);
-    document.addEventListener("pointerdown", closeOnOutside, true);
-    document.addEventListener("keydown", closeOnEscape, true);
-    return () => {
-      window.removeEventListener("resize", place);
-      window.removeEventListener("scroll", place, true);
-      document.removeEventListener("pointerdown", closeOnOutside, true);
-      document.removeEventListener("keydown", closeOnEscape, true);
-    };
-  }, [open]);
-
-  return (
-    <span className={`mw-emoticon-picker${className ? ` ${className}` : ""}`}>
-      <button
-        ref={triggerRef}
-        type="button"
-        className="mw-emoticon-picker__trigger"
-        aria-label={label}
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        disabled={disabled}
-        onClick={() => setOpen((current) => !current)}
-      >
-        {triggerIcon ?? <SmilePlus aria-hidden="true" />}
-      </button>
-      {open && typeof document !== "undefined" ? createPortal(
-        <div
-          ref={panelRef}
-          className={`mw-emoticon-wall${panelClassName ? ` ${panelClassName}` : ""}`}
-          role="dialog"
-          aria-modal="false"
-          aria-labelledby={titleId}
-          style={position}
-        >
-          <header className="mw-emoticon-wall__header">
-            <span className="mw-emoticon-wall__mark"><MeewavEmoticonImage name="coeur-casque" size={42} decorative /></span>
-            <span><small>PACKS OFFICIELS</small><strong id={titleId}>Mur d’émoticônes</strong><em>{MEEWAV_EMOTICONS.length} vibes musicales MeeWav</em></span>
-            <button type="button" onClick={() => { setOpen(false); triggerRef.current?.focus(); }} aria-label="Fermer le mur d’émoticônes"><X aria-hidden="true" /></button>
-          </header>
-          <label className="mw-emoticon-wall__search">
-            <Search aria-hidden="true" />
-            <span className="sr-only">Rechercher une émoticône</span>
-            <input value={query} onChange={(event) => setQuery(event.currentTarget.value)} placeholder="Rechercher une vibe…" />
-          </label>
-          <nav className="mw-emoticon-wall__categories" aria-label="Catégories d’émoticônes">
-            {categories.map((id) => <button type="button" key={id} className={category === id ? "is-active" : ""} aria-pressed={category === id} onClick={() => setCategory(id)}>{CATEGORY_LABELS[id] ?? id}</button>)}
-          </nav>
-          <div className="mw-emoticon-wall__grid" role="list" aria-label={`${filtered.length} émoticônes`}>
-            {filtered.map((item) => (
-              <button
-                type="button"
-                role="listitem"
-                key={item.name}
-                title={item.label}
-                aria-label={item.label}
-                onClick={() => {
-                  onSelect(item);
-                }}
-              >
-                <MeewavEmoticonImage name={item.name} size={54} decorative />
-                <span>{item.label}</span>
-              </button>
-            ))}
-            {filtered.length === 0 ? <p>Aucune vibe ne correspond.</p> : null}
-          </div>
-        </div>,
-        document.body,
-      ) : null}
-    </span>
-  );
+  return <span className={"mw-emoticon-picker" + (className ? " " + className : "")}>
+    <button ref={triggerRef} type="button" className="mw-emoticon-picker__trigger" aria-label={label} aria-haspopup="dialog" aria-expanded={open} disabled={disabled} onClick={() => setOpen(current => !current)}>{triggerIcon ?? <SmilePlus aria-hidden="true" />}</button>
+    {open && <MeeWavEmoticonSheet onClose={() => setOpen(false)} restoreFocusTo={triggerRef.current} includeClassics={Boolean(onSelectUnicode)} onSelectValue={value => {
+      const match = /^\[\[mw:([a-z0-9-]+)\]\]$/u.exec(value);
+      if (match) { const item = itemsByName.get(match[1]); if (item) onSelect(item); }
+      else onSelectUnicode?.(value);
+    }} />}
+  </span>;
 }

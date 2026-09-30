@@ -109,6 +109,12 @@ if (syncAssets) {
   await writeFile(join(source, 'media-provenance.json'), JSON.stringify({ source: 'Meewav-Web/public (Inter: existing Android asset)', files: publicFiles }, null, 2) + '\n');
 }
 
+// These user-supplied messaging stems are owned by Android, not the Wave pack.
+const localTrackPack = join(source, 'audio/trackpack');
+for (const name of await readdir(localTrackPack)) {
+  if (extname(name) === '.mp3') await copyAsset(join(localTrackPack, name), 'audio/messaging/trackpack/' + name);
+}
+
 const packages = new Map();
 for (const input of Object.keys(result.metafile.inputs)) {
   const path = resolve(root, input).replaceAll('\\', '/'), marker = path.lastIndexOf('/node_modules/');
@@ -130,13 +136,14 @@ await copyFile(join(source, 'mobile.css'), join(output, 'mobile.css'));
 await copyFile(join(source, 'messaging-wallpaper-preview.css'), join(output, 'messaging-wallpaper-preview.css'));
 await copyFile(join(source, 'messaging-console-material.css'), join(output, 'messaging-console-material.css'));
 await copyFile(join(source, 'mobile-chat-polish.css'), join(output, 'mobile-chat-polish.css'));
+await copyFile(join(source, 'messaging-emoticon-panel.css'), join(output, 'messaging-emoticon-panel.css'));
 await copyAsset(join(root, 'app/src/main/assets/globe-vinyle/ui/images/earth_specular.jpg'), 'ui/images/earth_specular.jpg');
 // CSP is completed by the native interceptor with the configured Supabase
 // origin. No service URL, key or session is written into the shipped document.
 await copyFile(join(root, 'app/src/main/shared-ui/primary-cta-material.css'), join(output, 'primary-cta-material.css'));
 await copyFile(join(root, 'app/src/main/shared-ui/compact-control-material.css'), join(output, 'compact-control-material.css'));
 await copyFile(join(root, 'app/src/main/shared-ui/navigation-indicator.css'), join(output, 'navigation-indicator.css'));
-await writeFile(join(output, 'index.html'), `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="dark"><title>Meewav — Messagerie</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/messaging/assets/main.css"><link rel="stylesheet" href="/messaging/mobile.css"><link rel="stylesheet" href="/messaging/primary-cta-material.css"><link rel="stylesheet" href="/messaging/compact-control-material.css"><link rel="stylesheet" href="/messaging/navigation-indicator.css"><link rel="stylesheet" href="/messaging/messaging-console-material.css"><link rel="stylesheet" href="/messaging/mobile-chat-polish.css"></head><body><div id="root">${featureLoadingHtml('Ouverture de la messagerie…')}</div><script type="module" src="/messaging/assets/main.js"></script></body></html>`);
+await writeFile(join(output, 'index.html'), `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="dark"><title>Meewav — Messagerie</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/messaging/assets/main.css"><link rel="stylesheet" href="/messaging/mobile.css"><link rel="stylesheet" href="/messaging/primary-cta-material.css"><link rel="stylesheet" href="/messaging/compact-control-material.css"><link rel="stylesheet" href="/messaging/navigation-indicator.css"><link rel="stylesheet" href="/messaging/messaging-console-material.css"><link rel="stylesheet" href="/messaging/mobile-chat-polish.css"><link rel="stylesheet" href="/messaging/messaging-emoticon-panel.css"></head><body><div id="root">${featureLoadingHtml('Ouverture de la messagerie…')}</div><script type="module" src="/messaging/assets/main.js"></script></body></html>`);
 async function list(folder) {
   for (const entry of await readdir(folder, { withFileTypes: true })) {
     const path = join(folder, entry.name);

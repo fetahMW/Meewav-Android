@@ -327,6 +327,25 @@
   .mw-track-studio .mw-stem-row__actions { grid-area: actions !important; gap: 6px !important; }
   .mw-track-studio .mw-stem-row__actions button { min-height: 34px !important; font-size: 10px !important; }
   .mw-track-studio .mw-stem-row.is-dimmed :is(.mw-waveform, .mw-stem-row__name) { opacity: .45 !important; }
+  /* The Nova enclosure shares the large room console's brushed black
+     aluminium. Keep the instrument keys and transport materials separate. */
+  :is(.messaging-page, .mobile-messaging) .mw-track-capsule,
+  .mw-track-studio .mw-track-studio__window {
+    background:
+      radial-gradient(130% 34% at 50% 0%, rgba(214, 224, 242, .07), transparent 72%),
+      radial-gradient(120% 30% at 50% 100%, rgba(150, 166, 196, .045), transparent 70%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='300'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.0035 .95' numOctaves='3' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .075 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23b)'/%3E%3C/svg%3E"),
+      linear-gradient(180deg, #131417 0%, #0b0c0e 22%, #070809 64%, #0d0e11 100%) !important;
+    box-shadow: 0 0 0 1px #000, 0 2px 0 1px #0009, 0 10px 22px #000b,
+      0 28px 56px #0009, inset 0 0 18px #0009 !important;
+  }
+  /* The whole excluded channel goes dark, including its artwork and keys.
+     Brightness keeps the enclosure opaque and every control interactive. */
+  .mw-track-studio .mw-stem-row { transition: filter 140ms ease; }
+  .mw-track-studio .mw-stem-row.is-dimmed { filter: brightness(.34) !important; }
+  .mw-track-studio .mw-stem-row.is-dimmed :is(.mw-waveform, .mw-stem-row__name) { opacity: 1 !important; }
+  .mw-track-studio .mw-stem-row.is-dimmed:focus-within { filter: brightness(.55) !important; }
+  @media (prefers-reduced-motion: reduce) { .mw-track-studio .mw-stem-row { transition: none; } }
   :is(.messaging-page, .mobile-messaging) .mw-track-capsule .mw-waveform__base,
   .mw-track-studio .mw-waveform__base { stroke: #716d7e !important; }
   :is(.messaging-page, .mobile-messaging) .mw-track-capsule .mw-waveform__played,

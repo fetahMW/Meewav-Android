@@ -105,6 +105,7 @@ export type ArtistGroup = {
   nextSessionTime?: string;
   confirmedCount?: number;
   waitingCount?: number;
+  sessionAttendance?: Record<string, "confirmed" | "pending">;
   pendingDecisionTitle?: string;
   messages: GroupChatMessage[];
   members: ArtistGroupMember[];
@@ -226,6 +227,7 @@ const initialGroups: ArtistGroup[] = [
     nextSessionTime: "Ce soir 21h30",
     confirmedCount: 3,
     waitingCount: 1,
+    sessionAttendance: { m1: "confirmed", m2: "confirmed", m3: "confirmed", m4: "pending" },
     relatedProjectIds: ["project_1", "project_2"],
     members: [
       { id: "m1", name: "Alex", role: "Beatmaker", online: true, avatar: avatar(1) },
@@ -348,6 +350,7 @@ let artistGroupSessionItems: ArtistGroup[] | null = null;
 function cloneArtistGroups(groups: ArtistGroup[]) {
   return groups.map((group) => ({
     ...group,
+    sessionAttendance: group.sessionAttendance ? { ...group.sessionAttendance } : undefined,
     relatedProjectIds: [...group.relatedProjectIds],
     messages: group.messages.map((message) => ({ ...message })),
     members: group.members.map((member) => ({ ...member })),
@@ -1096,6 +1099,9 @@ export default function ArtistGroupsWorkspace({
       ...group,
       nextSessionTitle: sessionTitle.trim(),
       nextSessionTime: `${sessionDate || "Date à définir"}${sessionPlace ? ` • ${sessionPlace}` : ""}`,
+      sessionAttendance: Object.fromEntries(group.members.map((member) => [member.id, "pending" as const])),
+      confirmedCount: 0,
+      waitingCount: group.members.length,
     }));
     setSessionTitle("");
     setSessionDate("");
@@ -1275,12 +1281,21 @@ export default function ArtistGroupsWorkspace({
             <h3>Prochaine session</h3>
             <p className="agw-next-session__time"><Clock3 size={19} /> <span>{group.nextSessionTime ?? "Ce soir 21h30"}</span><span className="agw-session-status"><i /> À venir</span></p>
             <div className="agw-next-session__actions">
-              <button type="button" className="agw-primary-button is-small" onClick={() => {
-                updateGroup(group.id, (current) => ({
-                  ...current,
-                  confirmedCount: Math.min(current.members.length, (current.confirmedCount ?? 0) + 1),
-                  waitingCount: Math.max(0, (current.waitingCount ?? 0) - 1),
-                }));
+              <button type="button" className="agw-primary-button is-small" disabled={Boolean(group.sessionAttendance) && !group.members.some((member) => group.sessionAttendance?.[member.id] === "pending")} onClick={() => {
+                updateGroup(group.id, (current) => {
+                  const awaitingMember = current.sessionAttendance
+                    ? current.members.find((member) => current.sessionAttendance?.[member.id] === "pending")
+                    : undefined;
+                  if (current.sessionAttendance && !awaitingMember) return current;
+                  return {
+                    ...current,
+                    sessionAttendance: awaitingMember
+                      ? { ...current.sessionAttendance, [awaitingMember.id]: "confirmed" }
+                      : current.sessionAttendance,
+                    confirmedCount: Math.min(current.members.length, (current.confirmedCount ?? 0) + 1),
+                    waitingCount: Math.max(0, (current.waitingCount ?? 0) - 1),
+                  };
+                });
                 notify("Session confirmée !");
               }}><Check size={18} /> Confirmer</button>
               <button type="button" className="agw-secondary-button is-small" aria-expanded={detailsOpen} aria-controls="agw-planning-session-details" onClick={() => setDetailsOpen((value) => !value)}><Info size={18} /> Détails</button>
@@ -1293,9 +1308,15 @@ export default function ArtistGroupsWorkspace({
               <p>Préparation du set et validation des transitions.</p>
             </div>
             <div className="agw-next-session__attendance">
-              <span className="agw-participant-stack" aria-label={`${group.confirmedCount ?? 0} membres confirmés`}>
-                {group.members.slice(0, 3).map((member) => <span key={member.id} title={member.name}><UserRound size={19} /></span>)}
-                <span className="is-waiting" title="En attente"><UserRound size={18} /></span>
+              <span className="agw-participant-stack" aria-label={`${group.confirmedCount ?? 0} confirmés, ${group.waitingCount ?? 0} en attente`}>
+                {group.members.filter((member) => !group.sessionAttendance || group.sessionAttendance[member.id]).map((member) => {
+                  const response = group.sessionAttendance?.[member.id];
+                  const attendance = response === "pending" ? "En attente" : response === "confirmed" ? "Présence confirmée" : undefined;
+                  const label = attendance ? `${member.name} — ${attendance}` : member.name;
+                  return <span key={member.id} className={response === "pending" ? "is-waiting" : response === "confirmed" ? "is-confirmed" : undefined} title={label} {...portraitProps({ id: member.id, name: member.name, avatarUrl: member.avatar, role: member.role })}>
+                    <img src={member.avatar} alt={label} loading="lazy" />
+                  </span>;
+                })}
               </span>
               <span><strong>{group.confirmedCount ?? 0}</strong> confirmés</span><i />
               <span><strong>{group.waitingCount ?? 0}</strong> en attente</span>

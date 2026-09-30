@@ -42,7 +42,6 @@ import {
   Search,
   Send,
   Smile,
-  SmilePlus,
   SlidersHorizontal,
   Sparkles,
   Store,
@@ -71,7 +70,8 @@ import MeewavPillarBrand from "../../components/navigation/MeewavPillarBrand";
 import MeewavPillarTabs, { type MeewavPillarTabItem } from "../../components/navigation/MeewavPillarTabs";
 import {
   appendMeeWavEmoticon,
-  meewavEmoticonToken,
+  MeeWavEmoticonSheet,
+  meewavEmoticonLabel,
   MeeWavEmoticonComposer,
   MeeWavEmoticonPicker,
   MeeWavRichText,
@@ -345,26 +345,7 @@ function tracksFromMessage(message: DemoMessage): Track[] {
 }
 
 function viewerTracksFromMessage(message: DemoMessage): Track[] {
-  if (message.body !== "Track Pack" || !demoTrackPackIds.has(message.id)) return tracksFromMessage(message);
-  const showcase: Array<{ instrument: TrackPackInstrument; label: string; duration: string }> = [
-    { instrument: "drums", label: "batterie.wav", duration: "02:38" },
-    { instrument: "bass", label: "basse.wav", duration: "02:41" },
-    { instrument: "piano", label: "piano.wav", duration: "02:48" },
-    { instrument: "guitar", label: "guitare.wav", duration: "02:36" },
-    { instrument: "synth", label: "synthe.wav", duration: "02:55" },
-  ];
-  return showcase.map((track, index) => ({
-    id: `${message.id}-${track.instrument}`,
-    label: track.label,
-    color: trackColors[index % trackColors.length],
-    duration: !message.trackMediaUrls?.[index] ? formatDuration(demoTrackPackAudio(track.label).durationSeconds) : message.trackDurations?.[index] ?? track.duration,
-    muted: false,
-    solo: false,
-    mediaUrl: message.trackMediaUrls?.[index] || (demoTrackPackIds.has(message.id) ? demoTrackPackAudio(track.label).mediaUrl : undefined),
-    instrument: track.instrument,
-    displayName: TRACK_PACK_INSTRUMENTS[track.instrument].name,
-    description: TRACK_PACK_INSTRUMENTS[track.instrument].description,
-  }));
+  return tracksFromMessage(message);
 }
 
 const attachmentActions: Array<{ id: Exclude<DemoMessageKind, "text" | "track-pack" | "brief">; label: string; accept: string; icon: typeof Image }> = [
@@ -910,9 +891,7 @@ export function TrackPackViewer({ message, onClose, embedded = false }: { messag
 
 export function TrackPackCard({ message, onOpen }: { message: DemoMessage; onOpen: () => void }) {
   const isShowcaseTrackPack = message.body === "Track Pack";
-  const displayTracks = isShowcaseTrackPack
-    ? ["batterie.wav", "basse.wav", "piano.wav", "guitare.wav", "synthe.wav"]
-    : (message.tracks ?? trackTemplate.map((track) => track.label));
+  const displayTracks = message.tracks ?? trackTemplate.map((track) => track.label);
   const compactTracks = displayTracks.slice(0, 3);
   const totalTrackCount = displayTracks.length;
   const [activeTracks, setActiveTracks] = useState(() => new Set(displayTracks));
@@ -953,7 +932,7 @@ export function TrackPackCard({ message, onOpen }: { message: DemoMessage; onOpe
           return (
             <button key={track} type="button" className={activeTracks.has(track) ? "is-on" : ""} onClick={() => toggleTrack(track)}>
               <InstrumentArtwork instrument={presentation.instrument} compact />
-              <span>{isShowcaseTrackPack ? TRACK_PACK_INSTRUMENTS[presentation.instrument].name : presentation.name}</span>
+              <span>{presentation.name}</span>
             </button>
           );
         })}
@@ -1075,7 +1054,10 @@ function ServerAttachmentMessage({
   );
 }
 
-const MESSAGE_REACTION_EMOJIS = ["❤️", "🔥", "👏", "🎧", "👍", "✨"] as const;
+function parseMessageReaction(value: string) {
+  const match = /^(.*?)(?:\s+(\d+))?$/u.exec(value.trim());
+  return { emoji: match?.[1] ?? value, count: Number(match?.[2] ?? 1) };
+}
 
 async function copyMessageToClipboard(message: MessagingWorkspaceMessage) {
   const text = message.fileName ?? message.body;
@@ -1101,20 +1083,12 @@ async function copyMessageToClipboard(message: MessagingWorkspaceMessage) {
 }
 
 function MessageActionPopover({
-  anchor,
-  message,
-  conversationName,
-  onClose,
-  onReply,
-  onCopy,
-  onForward,
-  onPin,
-  onDelete,
-  onReact,
+  anchor, message, conversationName, selectedReactions, onClose, onReply, onCopy, onForward, onPin, onDelete, onReact,
 }: {
   anchor: HTMLDivElement | null;
   message: MessagingWorkspaceMessage;
   conversationName: string;
+  selectedReactions: string[];
   onClose: () => void;
   onReply: () => void;
   onCopy: () => void;
@@ -1123,144 +1097,30 @@ function MessageActionPopover({
   onDelete?: () => void;
   onReact: (emoji: string) => void;
 }) {
-  const menuRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState<{ top: number; left: number; arrowLeft: number; placement: "above" | "below" } | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
-
-  useLayoutEffect(() => {
-    const menu = menuRef.current;
-    if (!anchor || !menu) return undefined;
-
-    const updatePosition = () => {
-      const anchorRect = anchor.getBoundingClientRect();
-      const menuRect = menu.getBoundingClientRect();
-      const menuWidth = menuRect.width || 324;
-      const menuHeight = menuRect.height || 252;
-      const gutter = 12;
-      const gap = 8;
-      const hasRoomBelow = window.innerHeight - anchorRect.bottom >= menuHeight + gap + gutter;
-      const placement = hasRoomBelow || anchorRect.top < menuHeight + gap + gutter ? "below" : "above";
-      const preferredLeft = message.author === "me" ? anchorRect.right - menuWidth : anchorRect.left;
-      const left = Math.max(gutter, Math.min(preferredLeft, window.innerWidth - menuWidth - gutter));
-      const arrowLeft = Math.max(18, Math.min(anchorRect.left + anchorRect.width / 2 - left - 6, menuWidth - 30));
-      const preferredTop = placement === "below" ? anchorRect.bottom + gap : anchorRect.top - menuHeight - gap;
-      const top = Math.max(gutter, Math.min(preferredTop, window.innerHeight - menuHeight - gutter));
-      setPosition((current) => current?.top === top && current.left === left && current.arrowLeft === arrowLeft && current.placement === placement
-        ? current
-        : { top, left, arrowLeft, placement });
-    };
-
-    updatePosition();
-    window.addEventListener("resize", updatePosition);
-    document.addEventListener("scroll", updatePosition, true);
-    return () => {
-      window.removeEventListener("resize", updatePosition);
-      document.removeEventListener("scroll", updatePosition, true);
-    };
-  }, [anchor, confirmDelete, message.author]);
-
-  useLayoutEffect(() => {
-    const selector = confirmDelete
-      ? ".mw-message-actions__delete-confirm button.is-danger"
-      : "button:not(:disabled)";
-    menuRef.current?.querySelector<HTMLButtonElement>(selector)?.focus({ preventScroll: true });
-  }, [confirmDelete]);
-
-  useEffect(() => {
-    const closeFromOutside = (event: globalThis.PointerEvent) => {
-      const target = event.target;
-      if (!(target instanceof Node)) return;
-      if (menuRef.current?.contains(target) || anchor?.contains(target) || (target instanceof Element && target.closest(".mw-message-reaction-wall"))) return;
-      onClose();
-    };
-    const closeFromKeyboard = (event: globalThis.KeyboardEvent) => {
-      if (event.key !== "Escape" || document.querySelector(".mw-message-reaction-wall")) return;
-      event.preventDefault();
-      onClose();
-      anchor?.focus({ preventScroll: true });
-    };
-    document.addEventListener("pointerdown", closeFromOutside, true);
-    window.addEventListener("keydown", closeFromKeyboard);
-    return () => {
-      document.removeEventListener("pointerdown", closeFromOutside, true);
-      window.removeEventListener("keydown", closeFromKeyboard);
-    };
-  }, [anchor, onClose]);
-
-  const runAndClose = (action: () => void) => {
-    onClose();
-    action();
-  };
-
-  const handleMenuKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (!menuRef.current?.contains(event.target as Node)) return;
-    if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
-    const buttons = Array.from(menuRef.current?.querySelectorAll<HTMLButtonElement>("button:not(:disabled)") ?? []);
-    if (buttons.length === 0) return;
-    event.preventDefault();
-    const currentIndex = Math.max(0, buttons.indexOf(document.activeElement as HTMLButtonElement));
-    const nextIndex = event.key === "Home"
-      ? 0
-      : event.key === "End"
-        ? buttons.length - 1
-        : event.key === "ArrowDown"
-          ? (currentIndex + 1) % buttons.length
-          : (currentIndex - 1 + buttons.length) % buttons.length;
-    buttons[nextIndex]?.focus({ preventScroll: true });
-  };
-
-  if (typeof document === "undefined") return null;
-  const authorLabel = message.author === "me" ? "Vous" : conversationName;
-  return createPortal(
-    <div
-      ref={menuRef}
-      className="mw-message-actions"
-      data-placement={position?.placement ?? "below"}
-      role="menu"
-      aria-label={`Actions du message de ${authorLabel}`}
-      style={{
-        top: position?.top ?? -10_000,
-        left: position?.left ?? -10_000,
-        "--mw-message-action-arrow-left": `${position?.arrowLeft ?? 24}px`,
-        visibility: position ? "visible" : "hidden",
-      } as CSSProperties}
-      onKeyDown={handleMenuKeyDown}
-    >
-      <header>
-        <span>{authorLabel}</span>
-        <p>{message.deleted ? "Message supprimé" : message.fileName ?? message.body}</p>
-      </header>
-      {!message.deleted && (
-        <div className="mw-message-actions__emojis" role="group" aria-label="Ajouter une réaction">
-          {MESSAGE_REACTION_EMOJIS.map((emoji) => (
-            <button key={emoji} type="button" onClick={() => runAndClose(() => onReact(emoji))} aria-label={`Réagir avec ${emoji}`}>{emoji}</button>
-          ))}
-          <MeeWavEmoticonPicker panelClassName="mw-message-reaction-wall" label="Ouvrir le mur d’émoticônes" onSelect={(emoticon) => runAndClose(() => onReact(meewavEmoticonToken(emoticon.name)))} />
-        </div>
-      )}
-      {!message.deleted && (
-        <div className="mw-message-actions__commands">
-          <button type="button" role="menuitem" onClick={() => runAndClose(onReply)}><CornerUpLeft /><span>Répondre</span></button>
-          <button type="button" role="menuitem" onClick={() => runAndClose(onCopy)}><Copy /><span>Copier</span></button>
-          <button type="button" role="menuitem" onClick={() => runAndClose(onForward)}><Forward /><span>Transférer</span></button>
-        </div>
-      )}
-      <div className="mw-message-actions__commands is-secondary">
-        <button type="button" role="menuitem" onClick={() => runAndClose(onPin)}>{message.pinned ? <PinOff /> : <Pin />}<span>{message.pinned ? "Désépingler" : "Épingler"}</span></button>
-        {onDelete && !confirmDelete && <button type="button" role="menuitem" className="is-danger" onClick={() => setConfirmDelete(true)}><Trash2 /><span>Supprimer</span></button>}
+  const confirmRef = useRef<HTMLButtonElement>(null);
+  const deleteRef = useRef<HTMLButtonElement>(null);
+  useLayoutEffect(() => { if (confirmDelete) confirmRef.current?.focus({ preventScroll: true }); }, [confirmDelete]);
+  const runAndClose = (action: () => void) => { onClose(); action(); };
+  const author = message.author === "me" ? "Vous" : conversationName;
+  return <MeeWavEmoticonSheet title={message.deleted ? "Message supprimé" : "Réagir au message"}
+    label={"Actions du message de " + author} preview={{ author, body: message.deleted ? "Message supprimé" : message.fileName ?? message.body }}
+    restoreFocusTo={anchor} onClose={onClose} onSelectValue={onReact} selectedValues={selectedReactions} hideLibrary={Boolean(message.deleted) || confirmDelete}>
+    {confirmDelete ? <div className="mw-emoji-sheet__delete-confirm" role="group" aria-label="Confirmer la suppression du message">
+      <p>Supprimer ce message ?</p><div>
+        <button type="button" onClick={() => { setConfirmDelete(false); requestAnimationFrame(() => deleteRef.current?.focus()); }}>Annuler</button>
+        <button ref={confirmRef} type="button" className="is-danger" onClick={() => runAndClose(onDelete!)}>Supprimer</button>
       </div>
-      {confirmDelete && (
-        <div className="mw-message-actions__delete-confirm" role="alertdialog" aria-label="Confirmer la suppression du message">
-          <span>Supprimer ce message&nbsp;?</span>
-          <div>
-            <button type="button" onClick={() => setConfirmDelete(false)}>Annuler</button>
-            <button type="button" className="is-danger" onClick={() => runAndClose(onDelete!)}>Supprimer</button>
-          </div>
-        </div>
-      )}
-    </div>,
-    document.body,
-  );
+    </div> : <div className="mw-emoji-sheet__commands" aria-label="Actions du message">
+      {!message.deleted && <>
+        <button type="button" onClick={() => runAndClose(onReply)}><CornerUpLeft aria-hidden="true" /><span>Répondre</span></button>
+        <button type="button" onClick={() => runAndClose(onCopy)}><Copy aria-hidden="true" /><span>Copier</span></button>
+        <button type="button" onClick={() => runAndClose(onForward)}><Forward aria-hidden="true" /><span>Transférer</span></button>
+      </>}
+      <button type="button" onClick={() => runAndClose(onPin)}>{message.pinned ? <PinOff aria-hidden="true" /> : <Pin aria-hidden="true" />}<span>{message.pinned ? "Désépingler" : "Épingler"}</span></button>
+      {onDelete && <button ref={deleteRef} type="button" className="is-danger" onClick={() => setConfirmDelete(true)}><Trash2 aria-hidden="true" /><span>Supprimer</span></button>}
+    </div>}
+  </MeeWavEmoticonSheet>;
 }
 
 function MessageForwardDialog({
@@ -1339,6 +1199,7 @@ function MessageItem({
   conversationName,
   onOpenTrackPack,
   onToggleReaction,
+  isReactionActive,
   onReply,
   onCopy,
   onForward,
@@ -1353,6 +1214,7 @@ function MessageItem({
   conversationName: string;
   onOpenTrackPack: (message: DemoMessage) => void;
   onToggleReaction: (messageId: string, reaction: string) => void;
+  isReactionActive?: (emoji: string) => boolean;
   onReply: (message: MessagingWorkspaceMessage) => void;
   onCopy: (message: MessagingWorkspaceMessage) => void;
   onForward: (message: MessagingWorkspaceMessage) => void;
@@ -1361,6 +1223,9 @@ function MessageItem({
   onRetry?: (clientMessageId: string) => void;
   resolveAttachmentUrl?: (attachment: MessagingAttachmentViewModel) => Promise<string>;
 }) {
+  const reactionEntries = (message.reactions ?? []).map(parseMessageReaction);
+  const reactionActive = (emoji: string) => isReactionActive ? isReactionActive(emoji) : reactionEntries.some(item => item.emoji === emoji);
+  const selectedReactions = reactionEntries.filter(item => reactionActive(item.emoji)).map(item => item.emoji);
   const mine = message.author === "me";
   const family = message.kind === "track-pack" || message.kind === "brief"
     ? "meewav"
@@ -1381,8 +1246,8 @@ function MessageItem({
     <div className="mw-message__meta">
       {message.reactions && message.reactions.length > 0 && (
         <div className="mw-message__reactions" aria-label="Réactions au message">
-          {message.reactions.map((reaction) => (
-            <button type="button" key={reaction} onClick={() => onToggleReaction(message.id, reaction)} aria-label={`Retirer la réaction ${reaction}`}><MeeWavRichText emoticonSize={26}>{reaction}</MeeWavRichText></button>
+          {reactionEntries.map(({ emoji, count }) => (
+            <button type="button" key={emoji} onClick={() => onToggleReaction(message.id, emoji)} aria-pressed={reactionActive(emoji)} aria-label={(reactionActive(emoji) ? "Retirer la réaction " : "Réagir avec ") + meewavEmoticonLabel(emoji) + (count > 1 ? ", " + count + " réactions" : "")}><MeeWavRichText emoticonSize={31}>{emoji}</MeeWavRichText>{count > 1 && <small>{count}</small>}</button>
           ))}
         </div>
       )}
@@ -1443,7 +1308,7 @@ function MessageItem({
       className={wrapperClass}
       data-message-id={message.id}
       tabIndex={0}
-      aria-haspopup="menu"
+      aria-haspopup="dialog"
       aria-label={`Message de ${mine ? "vous" : conversationName}. Cliquer pour les actions.`}
       onClick={(event) => {
         if (isInteractiveTarget(event.target)) return;
@@ -1469,6 +1334,7 @@ function MessageItem({
           anchor={wrapperRef.current}
           message={message}
           conversationName={conversationName}
+          selectedReactions={selectedReactions}
           onClose={() => setActionMenuOpen(false)}
           onReply={() => onReply(message)}
           onCopy={() => onCopy(message)}
@@ -3232,7 +3098,7 @@ export default function MessageWorkspace({
             {visibleMessages.map((message, index) => {
               const next = visibleMessages[index + 1];
               const showTail = !next || next.author !== message.author;
-              return <Fragment key={message.id}>{message.dayLabel && <div className="mw-day-marker"><span>{message.dayLabel}</span></div>}<MessageItem message={message} showTail={showTail} replyTarget={message.replyToId ? messagesById.get(message.replyToId) : undefined} conversationName={selectedConversation.name} onOpenTrackPack={setViewerMessage} onToggleReaction={toggleReaction} onReply={setReplyingTo} onCopy={(item) => { void copyMessage(item); }} onForward={setForwardingMessage} onPin={(item) => { void pinMessage(item); }} onDelete={message.author === "me" ? (item) => { void deleteMessage(item); } : undefined} onRetry={liveController ? (clientMessageId) => { void liveController.retryMessage(clientMessageId); } : undefined} resolveAttachmentUrl={attachmentController?.resolveUrl} /></Fragment>;
+              return <Fragment key={message.id}>{message.dayLabel && <div className="mw-day-marker"><span>{message.dayLabel}</span></div>}<MessageItem message={message} showTail={showTail} replyTarget={message.replyToId ? messagesById.get(message.replyToId) : undefined} conversationName={selectedConversation.name} onOpenTrackPack={setViewerMessage} onToggleReaction={toggleReaction} isReactionActive={liveController?.isReactionActiveByMe ? (emoji) => liveController.isReactionActiveByMe!(message.id, emoji) : undefined} onReply={setReplyingTo} onCopy={(item) => { void copyMessage(item); }} onForward={setForwardingMessage} onPin={(item) => { void pinMessage(item); }} onDelete={message.author === "me" ? (item) => { void deleteMessage(item); } : undefined} onRetry={liveController ? (clientMessageId) => { void liveController.retryMessage(clientMessageId); } : undefined} resolveAttachmentUrl={attachmentController?.resolveUrl} /></Fragment>;
             })}
             {visibleMessages.length === 0 && liveController?.messagesStatus !== "loading" && liveController?.messagesStatus !== "error" && <div className="mw-search-empty"><Search /><span>{messageSearch ? `Aucun message ne correspond à « ${messageSearch} ».` : "Aucun message dans cette conversation."}</span></div>}
           </div>
@@ -3297,6 +3163,7 @@ export default function MessageWorkspace({
                     triggerIcon={<Smile aria-hidden="true" />}
                     disabled={Boolean(selectedConversation.readOnlyReason)}
                     onSelect={(emoticon) => setComposer((value) => appendMeeWavEmoticon(value, emoticon.name, 4_000))}
+                    onSelectUnicode={(emoji) => setComposer(value => value.length + emoji.length <= 4_000 ? value + emoji : value)}
                   />
                 </div>
                 <button type="button" disabled={Boolean(selectedConversation.readOnlyReason)} onClick={() => liveController && !attachmentController ? setNotice("Le stockage sécurisé n’est pas disponible dans cette session.") : setShowAttachments((value) => !value)} aria-label="Ajouter un contenu musical"><Music /></button>

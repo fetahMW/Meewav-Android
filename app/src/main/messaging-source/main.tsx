@@ -6,6 +6,7 @@ import { ChevronLeft, MessageCircle, Plus, X } from 'lucide-react';
 import { configure, previewEnabled, updateToken, type MobileConfig } from './runtime';
 import { useFloatingComposer } from './useFloatingComposer';
 import { useChatHeaderScroll } from './useChatHeaderScroll';
+import './workspace-header-scroll.css';
 import VideoCalls from './calls/VideoCalls';
 import FeatureDock from '../shared-ui/FeatureDock';
 
