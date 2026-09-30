@@ -38,6 +38,7 @@ import { createOrbitCameraUpdater, createOrbitGesture, createOrbitViewport, isOr
 
 import { createMotionMetrics } from "./motion-metrics.mjs";
 import { createCadenceProbe } from "./cadence-probe.mjs";
+import { resolveVinylQuality } from "../../../../globe-render-policy.mjs";
 
 const clamp = T.MathUtils.clamp;
 const landColor = new T.Color(FOREIGN_LAND_COLOR);
@@ -167,7 +168,7 @@ export async function createThree(
   globeRoot.add(earth);
   const orbitOptions = new URLSearchParams(location.search);
   const saturnRing = createSaturnRing(scene, {
-    quality: orbitOptions.get("orbitQuality") || undefined,
+    quality: resolveVinylQuality(orbitOptions.get("orbitQuality")),
     animated: orbitOptions.has("orbitMotion") ? orbitOptions.get("orbitMotion") !== "off" : undefined,
   });
   const ringPortraits = createRingPortraits(scene, saturnRing, camera, canvas, () => { sceneDirty = true; }, renderer.getPixelRatio(), liveMarkers === null);

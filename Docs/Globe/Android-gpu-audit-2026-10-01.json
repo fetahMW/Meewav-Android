@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-01",
+  "scope": "Android Globe only",
+  "baselineCommit": "463b3a9ee469e77d9c662a6e028a8781abb902bd",
+  "changes": [
+    {
+      "area": "Vinyl mesh",
+      "before": { "angularSegments": 1024, "bevelSegments": 8, "triangles": 73728 },
+      "after": { "angularSegments": 512, "bevelSegments": 8, "triangles": 36864 },
+      "preserved": "Full edge profile, thickness, material, UV mapping, analytic navigation surface and automatic rotation",
+      "verification": "Every retained position/normal/UV sample equals its high-quality counterpart; silhouette chord error <0.04 px at a 2000 px projected radius. orbitQuality=high remains available."
+    },
+    {
+      "area": "Native visibility",
+      "change": "Page visibility cannot restart rendering when the native host has paused the Globe or disposed it.",
+      "preserved": "Resume when both native host and page are visible; standalone page visibility fallback; first-frame initialization"
+    },
+    {
+      "area": "Ground portraits",
+      "change": "Skip unchanged icon-layer, saturation, pin-color/radius and pin-drop buffer uploads.",
+      "preserved": "Per-frame positions/depths, all portraits, color/radius updates, culling, sorting and pending uploads across hidden/count-changing frames"
+    },
+    {
+      "area": "Geographic labels",
+      "change": "Upload atlas UVs only when a label changes packed slot; transfer only active position/opacity vertices.",
+      "preserved": "All label content, priorities, focus colors, camera layout, occlusion and slot changes"
+    }
+  ],
+  "inspectedAndRetained": [
+    "DPR cap 2 and antialiasing",
+    "Ocean, atmosphere and star geometry",
+    "All avatar atlases, marker information and geographic data",
+    "One-finger rotation, two-finger tilt/pinch/twist, inertia and flights",
+    "Automatic vinyl rotation and existing spin-only fast render path",
+    "Geographic frustum/height culling, bounded upload budget and tile eviction",
+    "Existing resource disposal on unmount",
+    "Bloom factory is already a no-op; no active bloom pass removed"
+  ],
+  "tests": {
+    "gpu": { "command": "node scripts/test-globe-gpu.mjs", "passed": 5 },
+    "navigation": { "command": "node scripts/test-globe-navigation.mjs", "passed": 16 },
+    "liveMarkers": { "command": "node --test scripts/globe-live-markers.test.mjs", "passed": 3 },
+    "build": "node scripts/build-full-globe.mjs; gradlew.bat :app:assembleDebug"
+  },
+  "measurement": {
+    "kind": "Android gfxinfo app-level composition counters, not isolated WebGL GPU timings",
+    "device": "Samsung SM-S908B (S22)",
+    "protocol": "Demo Globe overview, no gestures, 5 s warmup, two 10 s samples with gfxinfo reset; no screenshots or visual QA",
+    "baseline": {
+      "viewport": "1080x2316 portrait, density 450, 60 Hz",
+      "thermalStatus": 0,
+      "skinTemperatureC": 35.9,
+      "samples": [
+        { "frames": 618, "jankyFrames": 1, "frameP50Ms": 18, "frameP95Ms": 23, "frameP99Ms": 26, "gpuP50Ms": 10, "gpuP95Ms": 13, "gpuP99Ms": 16 },
+        { "frames": 621, "jankyFrames": 0, "frameP50Ms": 19, "frameP95Ms": 21, "frameP99Ms": 23, "gpuP50Ms": 10, "gpuP95Ms": 11, "gpuP99Ms": 12 }
+      ]
+    },
+    "after": {
+      "apkSha256": "4E4A7709A054ED16C213FE7830160C676F5B4372F9F3412B633E33E9CC242D21",
+      "installedOnS22": "2026-10-01 01:37:56 Europe/Paris",
+      "viewport": "1080x2316 portrait, density 450, 60 Hz",
+      "thermalStatus": 0,
+      "samples": [
+        { "frames": 613, "jankyFrames": 0, "frameP50Ms": 19, "frameP95Ms": 23, "frameP99Ms": 25, "gpuP50Ms": 10, "gpuP95Ms": 12, "gpuP99Ms": 13, "skinTemperatureC": 37.5 },
+        { "frames": 615, "jankyFrames": 0, "frameP50Ms": 19, "frameP95Ms": 23, "frameP99Ms": 25, "gpuP50Ms": 10, "gpuP95Ms": 12, "gpuP99Ms": 12, "skinTemperatureC": 37.4 }
+      ],
+      "redmi": "Not installed: no Redmi entry in ADB devices or mDNS; last known endpoint refused the connection. No security settings changed."
+    },
+    "limitation": "No FPS or device GPU-time improvement is established by these small app-level samples; the final run was warmer. The directly verified reduction is 50% fewer vinyl triangles and skipped identical buffer transfers. No visual QA was performed."
+  },
+  "rollback": "All GPU changes and their generated assets are grouped in one separate commit. Revert that commit to restore the baseline Globe while retaining the Track Pack and messaging changes."
+}

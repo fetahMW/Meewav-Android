@@ -16,9 +16,10 @@ for (const [name, version] of [['three', '0.185.1'], ['react', '19.2.6'], ['reac
 const { build } = require('esbuild');
 await mkdir(join(output, 'assets'), { recursive: true });
 
-// Preserve the Web rendering quality: original pixel ratio, antialiasing,
-// geometry, materials and portrait atlases. Touch/camera adaptations are listed
-// in Docs/Globe/Navigation-tactile.md; the source provenance stays historical.
+// Preserve pixel ratio, antialiasing, materials, portrait atlases and the full
+// vinyl edge profile. Android defaults to 512 angular subdivisions; explicit
+// orbitQuality=high keeps 1024. Touch/camera adaptations are documented in
+// Docs/Globe/Navigation-tactile.md; the source provenance stays historical.
 const result = await build({
   absWorkingDir: root,
   entryPoints: {

@@ -13,6 +13,7 @@ export function createGroundAvatarSprites() {
   const slots = new Map();
   let texture = null, capacity = 0, rectangles, layers, depths, saturations, pins, pinDrops, count = 0;
   const pinColor = new T.Color();
+  let layersDirty = false, saturationsDirty = false, pinsDirty = false, pinDropsDirty = false;
   const material = new T.ShaderMaterial({
     glslVersion: T.GLSL3,
     uniforms: { icons: { value: null }, viewport: { value: new T.Vector2(1, 1) } },
@@ -152,19 +153,26 @@ export function createGroundAvatarSprites() {
       reserve(maximum);
       material.uniforms.viewport.value.set(width, height);
       count = 0;
+      layersDirty = saturationsDirty = pinsDirty = pinDropsDirty = false;
     },
     add(item, size = item.size, opacity = 1, saturation = 1, pinRadius = 0, pinDrop = 2) {
       const slot = slots.get(item.avatar.icon) ?? slots.get('avatar_4');
       if (slot === undefined || size <= 0) return;
       rectangles.setXYZW(count, item.x, item.y, size, opacity);
-      layers.setX(count, slot);
+      if (layers.getX(count) !== slot) { layers.setX(count, slot); layersDirty = true; }
       depths.setX(count, item.depth);
-      saturations.setX(count, saturation);
+      const nextSaturation = Math.fround(saturation);
+      if (saturations.getX(count) !== nextSaturation) { saturations.setX(count, nextSaturation); saturationsDirty = true; }
       if (pinRadius > 0) {
         pinColor.set(item.avatar.pinColor).convertLinearToSRGB();
-        pins.setXYZW(count, pinColor.r, pinColor.g, pinColor.b, pinRadius);
-      } else pins.setXYZW(count, 0, 0, 0, 0);
-      pinDrops.setX(count, pinDrop);
+      } else pinColor.setRGB(0, 0, 0);
+      const r = Math.fround(pinColor.r), g = Math.fround(pinColor.g), b = Math.fround(pinColor.b);
+      const radius = pinRadius > 0 ? Math.fround(pinRadius) : 0;
+      if (pins.getX(count) !== r || pins.getY(count) !== g || pins.getZ(count) !== b || pins.getW(count) !== radius) {
+        pins.setXYZW(count, r, g, b, radius); pinsDirty = true;
+      }
+      const drop = Math.fround(pinDrop);
+      if (pinDrops.getX(count) !== drop) { pinDrops.setX(count, drop); pinDropsDirty = true; }
       count++;
     },
     finish() {
@@ -172,11 +180,13 @@ export function createGroundAvatarSprites() {
       mesh.visible = count > 0 && texture !== null;
       if (!count) return;
       rectangles.clearUpdateRanges(); rectangles.addUpdateRange(0, count * 4); rectangles.needsUpdate = true;
-      layers.clearUpdateRanges(); layers.addUpdateRange(0, count); layers.needsUpdate = true;
+      if (layersDirty) { layers.addUpdateRange(0, count); layers.needsUpdate = true; }
       depths.clearUpdateRanges(); depths.addUpdateRange(0, count); depths.needsUpdate = true;
-      saturations.clearUpdateRanges(); saturations.addUpdateRange(0, count); saturations.needsUpdate = true;
-      pins.clearUpdateRanges(); pins.addUpdateRange(0, count * 4); pins.needsUpdate = true;
-      pinDrops.clearUpdateRanges(); pinDrops.addUpdateRange(0, count); pinDrops.needsUpdate = true;
+      // Do not clear pending ranges: a hidden batch may not have uploaded its
+      // previous changes yet. The renderer clears them after the actual upload.
+      if (saturationsDirty) { saturations.addUpdateRange(0, count); saturations.needsUpdate = true; }
+      if (pinsDirty) { pins.addUpdateRange(0, count * 4); pins.needsUpdate = true; }
+      if (pinDropsDirty) { pinDrops.addUpdateRange(0, count); pinDrops.needsUpdate = true; }
     },
     hide() { mesh.visible = false; geometry.instanceCount = 0; },
     render(renderer) {

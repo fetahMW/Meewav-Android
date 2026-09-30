@@ -73,7 +73,7 @@ export function createSaturnRingGeometry(quality = 'high') {
 }
 
 export function createSaturnRing(scene, options = {}) {
-  const quality = options.quality === 'low' ? 'low' : 'high';
+  const quality = options.quality === 'low' ? 'low' : options.quality === 'mobile' ? 'mobile' : 'high';
   const layout = vinylRecordLayout(quality);
   const intensity = Number.isFinite(options.intensity) ? T.MathUtils.clamp(options.intensity, 0.1, 2) : 1;
   const root = new T.Group(); root.name = SATURN_RING.id;

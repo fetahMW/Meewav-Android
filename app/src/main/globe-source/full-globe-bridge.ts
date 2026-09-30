@@ -43,6 +43,7 @@ window.addEventListener('meewav:navigate', (event: Event) => {
 });
 (window as any).meewavFullGlobe = Object.freeze({
   get status() { return status; },
+  get active() { return active && !document.hidden && !disposed; },
   setActive(value: boolean) { active = value === true; updateActivity(); },
   setInteractive() { /* The full scene always uses the Web gesture handlers. */ },
   setHomeScene(value: unknown) {

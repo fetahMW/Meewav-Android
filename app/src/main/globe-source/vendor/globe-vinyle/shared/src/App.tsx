@@ -10,6 +10,7 @@ import { notifyHost } from './host-bridge';
 import GlobeLoading from '../../../meewav-vinyl/src/GlobeLoading';
 import { cityArrivalTarget, countryArrivalTarget, quarterArrivalTarget } from "./navigation-presets.mjs";
 import { parseLiveMarkers } from "./live-markers";
+import { resolveGlobeActivity } from "../../../../globe-render-policy.mjs";
 
 const world = GLOBE_OVERVIEW;
 const realMode = new URLSearchParams(location.search).get("mode") === "real";
@@ -194,7 +195,7 @@ export default function App() {
   }
   useEffect(() => {
     boot();
-    const activity = () => engine.current?.setActive(!document.hidden),
+    const activity = () => engine.current?.setActive(resolveGlobeActivity((window as any).meewavFullGlobe?.active, document.hidden)),
       native = (e: any) => engine.current?.setActive(e.detail.active);
     const sceneArrival = (event: Event) => {
       const scene = (event as CustomEvent).detail;

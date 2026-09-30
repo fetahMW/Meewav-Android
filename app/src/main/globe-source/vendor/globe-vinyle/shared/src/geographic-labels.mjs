@@ -84,6 +84,7 @@ export function createGeographicLabels(data, regions = [], focus = null, occlude
   mesh.visible = false;
   const projected = new T.Vector3(), direction = new T.Vector3(), anchor = new T.Vector3();
   let previous = new Set();
+  const uvLabels = [];
   return {
     mesh,
     update(camera, height, width, viewportHeight) {
@@ -104,21 +105,32 @@ export function createGeographicLabels(data, regions = [], focus = null, occlude
         return { x: projected.x, y: projected.y, z: projected.z, facing };
       }, height, width, viewportHeight, previous);
       previous = new Set(visible.map(item => item.label.id));
-      let vertex = 0;
+      let vertex = 0, labelIndex = 0, uvChanged = false;
       for (const { label, x, y, opacity } of visible) {
+        // Packing can change with visibility/occlusion. Update UVs exactly
+        // when a label changes slots, never merely because the camera moved.
+        const slotChanged = uvLabels[labelIndex] !== label;
+        uvLabels[labelIndex++] = label;
+        uvChanged ||= slotChanged;
         const emphasis = focus ? 1 - 0.7 * focus.strength * (1 - focus.brightness({ id: label.id,
           properties: { kind: label.kind, cityCode: label.cityCode } })) : 1;
         for (const [cx, cy] of corners) {
           positions.setXYZ(vertex, (x + (cx - 0.5) * label.width) / width * 2 - 1,
             1 - (y + (cy - 0.5) * label.height) / viewportHeight * 2, 0);
-          uvs.setXY(vertex, (label.atlasX + cx * label.atlasWidth) / atlas.width,
+          if (slotChanged) uvs.setXY(vertex, (label.atlasX + cx * label.atlasWidth) / atlas.width,
             1 - (label.atlasY + cy * label.atlasHeight) / atlas.height);
           opacities.setX(vertex++, opacity * emphasis);
         }
       }
       geometry.setDrawRange(0, vertex);
       mesh.visible = vertex > 0;
-      positions.needsUpdate = uvs.needsUpdate = opacities.needsUpdate = true;
+      if (vertex) {
+        // Keep pending ranges until Three uploads them, including hidden
+        // frames. Only the drawn vertices need transfers, not full capacity.
+        positions.addUpdateRange(0, vertex * 3); positions.needsUpdate = true;
+        opacities.addUpdateRange(0, vertex); opacities.needsUpdate = true;
+        if (uvChanged) { uvs.addUpdateRange(0, vertex * 2); uvs.needsUpdate = true; }
+      }
       return visible.length;
     },
     dispose() { texture.dispose(); geometry.dispose(); material.dispose(); },

@@ -13,7 +13,7 @@ export const VINYL_RECORD = Object.freeze({
 });
 
 export function vinylRecordLayout(quality = 'high') {
-  return { ...VINYL_RECORD, angularSegments: quality === 'low' ? 512 : 1024,
+  return { ...VINYL_RECORD, angularSegments: quality === 'low' || quality === 'mobile' ? 512 : 1024,
     bevelSegments: quality === 'low' ? 4 : 8,
     bands: [{ id: 0, inner: VINYL_RECORD.innerRadius, outer: VINYL_RECORD.outerRadius,
       height: 0, crown: 0, thickness: VINYL_RECORD.thickness }],
