@@ -298,3 +298,9 @@ body:has(.mobile-scene) .scene-card-menu { max-width: calc(100vw - 24px); backgr
 #root .mobile-scene .shorts-contentbar.is-explore :is(.scene-explore__media-tabs,.scene-explore__editorial-tabs) { display: flex; gap: 8px; background: none; border: 0; padding: 0; box-shadow: none; }
 #root .mobile-scene .shorts-contentbar.is-explore button { min-height: 32px; height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: #2b2c30; color: #f1f1f3; box-shadow: none; font-size: 13px; white-space: nowrap; }
 #root .mobile-scene .shorts-contentbar.is-explore button:is([aria-pressed=true],[aria-selected=true],.is-active) { background: #f1f1f1; color: #111214; }
+
+/* The format/category rail is shared by Home and Explore. Secondary sorting
+   and applied filters stay in the content instead of covering that rail. */
+#root .mobile-scene .shorts-contentbar.is-explore { position: static; display: flex; flex-wrap: wrap; height: auto; overflow: visible; padding: 0 0 10px; background: transparent; }
+#root .mobile-scene .shorts-contentbar.is-explore .scene-explore__compact-controls { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 8px; }
+#root .mobile-scene .shorts-contentbar.is-explore .artist-filter-active-chips { display: flex; flex-wrap: wrap; }

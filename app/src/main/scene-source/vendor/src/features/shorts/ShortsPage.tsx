@@ -748,11 +748,6 @@ const SCENE_EXPLORE_BATCH_SIZE = 24;
 const SCENE_DAY_MS = 24 * 60 * 60 * 1_000;
 const SCENE_DEFAULT_PLAYLIST_TITLE = "Ma playlist";
 
-const SCENE_EXPLORE_QUICK_CONTENT_TYPES: readonly SceneContentType[] = [
-  "room-replay",
-  "meewav-original",
-];
-
 type SceneFollowingFilter = "all" | "unseen" | "today" | "week";
 type SceneExploreView = "grid" | "compact";
 type SceneExploreMediaMode = "landscape" | "vertical";
@@ -2924,15 +2919,19 @@ function SceneWorkspace() {
     setActiveWall(null);
     setActiveTab("explore");
     setShowHistoryOnly(false);
-    writeSceneRouteState(nextFilters, { feed: null, view: "explore", artist: null, liked: null }, true);
-  }, [writeSceneRouteState]);
+    setShowSavedOnly(false);
+    setVerticalQuickFilter("all");
+    writeSceneRouteState(nextFilters, {
+      feed: null, view: "explore", artist: null, liked: null,
+      media: exploreMediaMode === "vertical" ? "vertical" : null,
+      verticalType: null,
+    }, true);
+  }, [exploreMediaMode, writeSceneRouteState]);
 
   const selectExploreMediaMode = useCallback((mode: SceneExploreMediaMode) => {
     const nextFilters = mode === "vertical"
       ? {
           ...filters,
-          contentTypes: [],
-          durations: [],
           sort: filters.sort === "for-you" ? "relevance" as const : filters.sort,
         }
       : filters;
@@ -2947,36 +2946,13 @@ function SceneWorkspace() {
     setDraftFilters(nextFilters);
     setActiveWall(null);
     setActiveTab("explore");
+    setShowHistoryOnly(false);
+    setShowSavedOnly(false);
     writeSceneRouteState(nextFilters, {
       feed: null,
       view: "explore",
       artist: null,
       media: mode === "vertical" ? "vertical" : null,
-      verticalType: null,
-      verticalDuration: null,
-      followed: null,
-    }, true);
-  }, [filters, writeSceneRouteState]);
-
-  const toggleExploreEditorialType = useCallback((contentType: SceneContentType) => {
-    const active = filters.contentTypes.length === 1 && filters.contentTypes[0] === contentType;
-    const nextFilters = { ...filters, contentTypes: active ? [] : [contentType] };
-    setExploreMediaMode("landscape");
-    setExploreView("grid");
-    setVerticalQuickFilter("all");
-    setVerticalDurationFilter("all");
-    setDraftVerticalDurationFilter("all");
-    setVerticalFollowedOnly(false);
-    setDraftVerticalFollowedOnly(false);
-    setFilters(nextFilters);
-    setDraftFilters(nextFilters);
-    setActiveWall(null);
-    setActiveTab("explore");
-    writeSceneRouteState(nextFilters, {
-      feed: null,
-      view: "explore",
-      artist: null,
-      media: null,
       verticalType: null,
       verticalDuration: null,
       followed: null,
@@ -3624,6 +3600,28 @@ function SceneWorkspace() {
   }, [location.pathname]);
 
   const showBrowseNavigation = activeTab !== "tv" && !watchRoute && !isCreatorStudioRoute;
+  // Android has one stable rail for formats and categories. A category refines
+  // the chosen format instead of silently sending Shorts back to landscape.
+  const browseCategoryChips = (
+    <SceneBrowseChips>
+      <button type="button" aria-pressed={activeTab === "home" && activeFilterCount === 0 && !profileArtistReference && !showHistoryOnly && !showSavedOnly} onClick={() => showTab("home")}>Tout</button>
+      <button type="button" aria-pressed={activeTab === "explore" && exploreMediaMode === "vertical"} aria-label="Shorts, vidéos verticales" onClick={() => selectExploreMediaMode("vertical")}>Shorts</button>
+      <button type="button" aria-pressed={activeTab === "explore" && exploreMediaMode === "landscape"} aria-label="Vidéos, format horizontal" onClick={() => selectExploreMediaMode("landscape")}>Vidéos</button>
+      {[
+        ...SCENE_CONTENT_TYPE_OPTIONS.filter(({ id }) => id === "performance" || id === "session"),
+        ...SCENE_CONTENT_TYPE_OPTIONS.filter(({ id }) => id !== "performance" && id !== "session"),
+      ].map((option) => {
+        const active = filters.contentTypes.length === 1 && filters.contentTypes[0] === option.id;
+        return <button key={option.id} type="button" aria-pressed={active} onClick={() => commitSceneFilters({ ...filters, contentTypes: active ? [] : [option.id] })}>{option.label}</button>;
+      })}
+      {SCENE_STYLE_OPTIONS.filter(({ id }) => ["rap", "rnb", "jazz", "pop", "rock", "electro", "soul"].includes(id)).map((option) => {
+        const active = filters.styles.length === 1 && filters.styles[0] === option.id;
+        return <button key={option.id} type="button" aria-pressed={active} onClick={() => commitSceneFilters({ ...filters, styles: active ? [] : [option.id] })}>{option.label}</button>;
+      })}
+      <button type="button" aria-pressed={filters.sort === "recent"} onClick={() => commitSceneFilters({ ...filters, sort: filters.sort === "recent" ? "relevance" : "recent" })}>Publiées récemment</button>
+      <button type="button" aria-pressed={showHistoryOnly} onClick={openWatchHistory}>Regardées</button>
+    </SceneBrowseChips>
+  );
   const subscriptions = Array.from(new Map(allVideos.filter((item) => followedArtistIds.has(item.artistId)).map((item) => [item.artistId, item])).values());
   const browseActive = searchParams.get("liked") === "1" ? "liked"
     : selectedPlaylistRouteId === SCENE_WATCH_LATER_PLAYLIST_ID ? "watch-later"
@@ -3786,15 +3784,7 @@ function SceneWorkspace() {
         </SceneWatchMenu>}
         {showBrowseNavigation && <>
           <SceneBrowseNavigation active={browseActive} subscriptions={subscriptions} canPublish={canPublish} onNavigate={() => { if (window.innerWidth <= 1100) setBrowseMenuOpen(false); }} />
-          {activeTab !== "explore" && (
-            <SceneBrowseChips>
-              <button aria-pressed={activeTab === "home" && activeFilterCount === 0 && !profileArtistReference && !showHistoryOnly && !showSavedOnly} onClick={() => showTab("home")}>Tous</button>
-              {SCENE_CONTENT_TYPE_OPTIONS.map((option) => <button key={option.id} aria-pressed={filters.contentTypes.length === 1 && filters.contentTypes[0] === option.id} onClick={() => commitSceneFilters({ ...getSceneDefaultFilters(false), contentTypes: [option.id] })}>{option.label}</button>)}
-              {SCENE_STYLE_OPTIONS.filter(({ id }) => ["rap", "rnb", "jazz", "pop", "rock", "electro", "soul"].includes(id)).map((option) => <button key={option.id} aria-pressed={filters.styles.length === 1 && filters.styles[0] === option.id} onClick={() => commitSceneFilters({ ...getSceneDefaultFilters(false), styles: [option.id] })}>{option.label}</button>)}
-              <button aria-pressed={filters.sort === "recent"} onClick={() => commitSceneFilters({ ...getSceneDefaultFilters(false), sort: "recent" })}>Publiées récemment</button>
-              <button aria-pressed={showHistoryOnly} onClick={openWatchHistory}>Regardées</button>
-            </SceneBrowseChips>
-          )}
+          {browseCategoryChips}
         </>}
 
         {watchRoute && !selectedVideo && <section className="scene-watch-unavailable" aria-live="polite"><h1>{catalogLoading ? "Chargement de la vidéo…" : "Cette vidéo n’est pas disponible."}</h1>{!catalogLoading && <><p>Elle est inaccessible ou absente du catalogue public.</p><button onClick={() => setCatalogAttempt((value) => value + 1)}>Réessayer</button><a href={SCENE_ROUTE}>Retour à La Scène</a></>}</section>}
@@ -3818,41 +3808,6 @@ function SceneWorkspace() {
                   {activeTab === "explore" ? (
                     <>
                     <div className="scene-explore__compact-controls">
-                      <div className="scene-explore__media-tabs" role="group" aria-label="Format des créations">
-                        <button
-                          type="button"
-                          aria-pressed={exploreMediaMode === "landscape"}
-                          onClick={() => selectExploreMediaMode("landscape")}
-                        >
-                          Vidéos
-                        </button>
-                        <button
-                          type="button"
-                          aria-pressed={exploreMediaMode === "vertical"}
-                          onClick={() => selectExploreMediaMode("vertical")}
-                        >
-                          Short
-                        </button>
-                      </div>
-                      {exploreMediaMode === "landscape" ? (
-                        <nav className="scene-explore__editorial-tabs" aria-label="Sélections éditoriales">
-                          {SCENE_EXPLORE_QUICK_CONTENT_TYPES.map((contentType) => {
-                            const option = SCENE_CONTENT_TYPE_OPTIONS.find(({ id }) => id === contentType);
-                            if (!option) return null;
-                            const active = filters.contentTypes.length === 1 && filters.contentTypes[0] === option.id;
-                            return (
-                              <button
-                                key={option.id}
-                                type="button"
-                                aria-pressed={active}
-                                onClick={() => toggleExploreEditorialType(option.id)}
-                              >
-                                {contentType === "room-replay" ? "Replay" : "Originals"}
-                              </button>
-                            );
-                          })}
-                        </nav>
-                      ) : null}
                       <span className="scene-explore__result-count">
                         {normalizedQuery
                           ? (exploreMediaMode === "vertical" ? verticalSearchResults.length : visibleSearchResults.length)
@@ -3876,33 +3831,9 @@ function SceneWorkspace() {
                         </select>
                       </label>
                     </div>
-                    <SceneBrowseChips>
-                      <button aria-pressed={activeTab === "home" && activeFilterCount === 0 && !profileArtistReference && !showHistoryOnly && !showSavedOnly} onClick={() => showTab("home")}>Tous</button>
-                      {SCENE_CONTENT_TYPE_OPTIONS.map((option) => <button key={option.id} aria-pressed={filters.contentTypes.length === 1 && filters.contentTypes[0] === option.id} onClick={() => commitSceneFilters({ ...getSceneDefaultFilters(false), contentTypes: [option.id] })}>{option.label}</button>)}
-                      {SCENE_STYLE_OPTIONS.filter(({ id }) => ["rap", "rnb", "jazz", "pop", "rock", "electro", "soul"].includes(id)).map((option) => <button key={option.id} aria-pressed={filters.styles.length === 1 && filters.styles[0] === option.id} onClick={() => commitSceneFilters({ ...getSceneDefaultFilters(false), styles: [option.id] })}>{option.label}</button>)}
-                      <button aria-pressed={filters.sort === "recent"} onClick={() => commitSceneFilters({ ...getSceneDefaultFilters(false), sort: "recent" })}>Publiées récemment</button>
-                      <button aria-pressed={showHistoryOnly} onClick={openWatchHistory}>Regardées</button>
-                    </SceneBrowseChips>
                     </>
                   ) : null}
                   <MeewavActiveFilterChips filters={activeSceneFilterChips} onClear={clearFilters} />
-                  {exploreMediaMode === "vertical" ? (
-                    <nav className="scene-vertical-collection__filters" aria-label="Filtrer les Shorts">
-                      {SCENE_VERTICAL_QUICK_FILTERS.map((option) => (
-                        <button
-                          key={option.id}
-                          type="button"
-                          aria-pressed={verticalQuickFilter === option.id}
-                          onClick={() => {
-                            setVerticalQuickFilter(option.id);
-                            writeRouteState({ verticalType: option.id === "all" ? null : option.id }, true);
-                          }}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </nav>
-                  ) : null}
                 </section>
               </>
             ) : null}
