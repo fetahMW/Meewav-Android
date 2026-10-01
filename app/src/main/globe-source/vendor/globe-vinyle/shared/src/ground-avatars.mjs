@@ -3,6 +3,7 @@ import { xyz, RADIUS } from './geo.mjs';
 import { METRES_TO_WORLD, quartierHeight } from './territory-style.mjs';
 import { createGroundAvatarSprites } from './ground-avatar-sprites.mjs';
 import { mobileArtistPanel } from '../../../../mobile-artist-panel';
+import { createArtistAnchorPublisher } from '../../../../artist-popup-anchor';
 import { CHARONNE_ID } from './navigation-presets.mjs';
 import { PROFILE_ICON_FILES, getProfileIconImageUrl } from './reference/components/shared/avatar/profileIconAssets.ts';
 import {
@@ -118,7 +119,7 @@ function createSelectedOverlay(host) {
   const origin = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
   origin.setAttribute('r', '5');
   connection.append(line, origin);
-  let layoutWidth = 0, layoutHeight = 0, mobile = null;
+  let layoutWidth = 0, layoutHeight = 0, layoutOrientation = '', mobile = null;
   const glow = document.createElement('div');
   glow.className = 'profile-icon-hover-overlay__glow';
   const sprite = document.createElement('img');
@@ -136,19 +137,21 @@ function createSelectedOverlay(host) {
   return {
     show(item, consulted = false, viewport) {
       if (!item) { layer.hidden = true; return; }
-      if (viewport.width !== layoutWidth || viewport.height !== layoutHeight) {
+      const orientation = document.documentElement.dataset.globeOrientation;
+      if (viewport.width !== layoutWidth || viewport.height !== layoutHeight || orientation !== layoutOrientation) {
         layoutWidth = viewport.width; layoutHeight = viewport.height;
+        layoutOrientation = orientation;
         mobile = mobileArtistPanel(viewport);
       }
       const hostUser = Boolean(item.avatar.isHost);
       const metrics = selectedSpriteMetrics(item);
       let x = item.x, feetY = item.y + metrics.lift;
       let scale = metrics.spriteScale, drop = metrics.spriteDrop;
-      const leftGuard = document.documentElement.dataset.globeOrientation === 'landscape' ? 104 : 12;
+      const leftGuard = orientation === 'landscape' ? 104 : 12;
       const available = mobile ? mobile.left - leftGuard - 12 : 0;
-      // A narrow portrait profile has no room for a second enlarged figure.
-      // Keep the selected marker at its real map location in that case.
-      const enlarged = available >= 72;
+      // Portrait cards sit above/below the real marker. Lateral enlargement
+      // belongs exclusively to the historical landscape presentation.
+      const enlarged = orientation === 'landscape' && available >= 72;
       if (mobile && enlarged) {
         // Only the enlarged presentation moves. The map location stays marked.
         const size = Math.min(Math.max(112, metrics.spriteBaseSize * scale),
@@ -237,6 +240,20 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
   let disposed = false;
   let paintState = null;
   let contentGeneration = 0;
+  const onOrientation = () => { paintState = null; invalidate(); };
+  window.addEventListener('meewav:globe-orientation', onOrientation);
+  const publishAnchor = createArtistAnchorPublisher(host, 'meewav:ground-avatar-anchor', 'id');
+  let anchorViewport = null;
+  function selectedAnchor(item) {
+    if (!anchorViewport || anchorViewport.width !== window.innerWidth || anchorViewport.height !== window.innerHeight) {
+      anchorViewport = { width: window.innerWidth, height: window.innerHeight, rect: host.getBoundingClientRect() };
+    }
+    const metrics = selectedSpriteMetrics(item);
+    return { x: anchorViewport.rect.left + item.x,
+      y: anchorViewport.rect.top + item.y + metrics.lift + metrics.spriteDrop - metrics.halfSpriteSize,
+      clearance: metrics.halfSpriteSize,
+      viewportWidth: anchorViewport.width, viewportHeight: anchorViewport.height };
+  }
   const populationWorker = realMode ? null : new Worker(new URL('./avatar-population-worker.js', import.meta.url), { type: 'module' });
   const pendingZones = new Set(), failedZones = new Set();
   let searchId = 0, pendingSearch = null, workerFailed = false;
@@ -438,6 +455,7 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
     }
     sprites.finish();
     selectedOverlay.show(selectedItem, selectedRestore && !selectedItem?.avatar.pinColor, { width, height });
+    if (selectedItem) publishAnchor(selectedItem.avatar.id, selectedAnchor(selectedItem));
     if (requestRender) invalidate();
   }
 
@@ -674,6 +692,7 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
       window.removeEventListener('meewav:filters-change', onFilters);
       window.removeEventListener('meewav:ground-avatar-pin', onPin);
       window.removeEventListener('meewav:ground-avatar-restore', onRestore);
+      window.removeEventListener('meewav:globe-orientation', onOrientation);
       hoverCard.dispose();
       selectedOverlay.dispose();
       sprites.dispose();

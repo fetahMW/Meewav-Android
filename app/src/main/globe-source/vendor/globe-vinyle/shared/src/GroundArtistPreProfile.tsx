@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { PreProfileFrame } from "./reference/features/globe/components/PreProfileFrame";
@@ -8,7 +8,7 @@ import { getPreProfileArtistForSeed } from "./reference/features/globe/component
 import { getGradeBadgeMeta } from "./reference/features/grades/gradeBadges";
 import { getProfileIconImageUrl } from "./reference/components/shared/avatar/profileIconAssets";
 import "./ring-artist-preprofile.css";
-import { mobileArtistPanel } from '../../../../mobile-artist-panel';
+import { useArtistPopupPosition } from '../../../../use-artist-popup-position';
 
 export type GroundAvatarSelection = {
   id: string;
@@ -48,7 +48,7 @@ export default function GroundArtistPreProfile({
   const closeButton = useRef<HTMLButtonElement>(null);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
-  const [viewport, setViewport] = useState(() => ({ width: window.innerWidth, height: window.innerHeight }));
+  useArtistPopupPosition(panel, selection.id, selection.anchor, 'meewav:ground-avatar-anchor');
   const [notice, setNotice] = useState("");
   const [restored, setRestored] = useState(false);
   const [pinnedColor, setPinnedColor] = useState(() => readPinnedColor(selection.id));
@@ -80,23 +80,6 @@ export default function GroundArtistPreProfile({
     };
   }, [selection, grade.level, grade.mainColor]);
 
-  const margin = 16, leftGuard = viewport.width > 760 ? 112 : 88;
-  const mobile = mobileArtistPanel(viewport);
-  const scale = mobile?.scale ?? Math.min(1, (viewport.width - leftGuard - margin * 2) / 413, (viewport.height - 104) / 588);
-  const width = 413 * scale, height = 588 * scale;
-  const gapFromAvatar = -20;
-  const arrowSize = 8;
-  const anchor = selection.anchor;
-  const x = anchor.x * viewport.width / anchor.viewportWidth;
-  const y = anchor.y * viewport.height / anchor.viewportHeight;
-  const clearance = anchor.clearance * viewport.width / anchor.viewportWidth;
-  const right = x + clearance + gapFromAvatar + arrowSize;
-  const left = x - clearance - gapFromAvatar - arrowSize - width;
-  const placement = right + width <= viewport.width - margin ? "right"
-    : left >= leftGuard ? "left" : viewport.width - x >= x - leftGuard ? "right" : "left";
-  const popupLeft = Math.max(leftGuard, Math.min(viewport.width - margin - width, placement === "right" ? right : left));
-  const popupTop = Math.max(88, Math.min(viewport.height - margin - height, y - height / 2));
-
   useLayoutEffect(() => {
     const trigger = document.activeElement as HTMLElement | null;
     closeButton.current?.focus({ preventScroll: true });
@@ -107,7 +90,6 @@ export default function GroundArtistPreProfile({
     };
   }, []);
   useEffect(() => {
-    const resize = () => setViewport({ width: window.innerWidth, height: window.innerHeight });
     const outside = (event: Event) => {
       if (event.target instanceof Node && !panel.current?.contains(event.target)) closeRef.current();
     };
@@ -115,12 +97,10 @@ export default function GroundArtistPreProfile({
       if (event.key !== "Escape") return;
       event.preventDefault(); event.stopPropagation(); closeRef.current();
     };
-    window.addEventListener("resize", resize);
     document.addEventListener("pointerdown", outside, true);
     document.addEventListener("wheel", outside, { capture: true, passive: true });
     document.addEventListener("keydown", escape, true);
     return () => {
-      window.removeEventListener("resize", resize);
       document.removeEventListener("pointerdown", outside, true);
       document.removeEventListener("wheel", outside, true);
       document.removeEventListener("keydown", escape, true);
@@ -137,11 +117,7 @@ export default function GroundArtistPreProfile({
   }, [notice]);
 
   return createPortal(<div ref={panel} className="ring-artist-preprofile" role="dialog" aria-modal="false"
-    aria-label={`Pré-profil de ${selection.name}`} data-placement={placement}
-    style={{ left: mobile?.left ?? popupLeft, top: mobile?.top ?? popupTop, transform: `scale(${scale})`,
-      ...(mobile ? { width: mobile.width, height: mobile.height,
-        '--mw-bubble-w': `${mobile.width}px`, '--mw-bubble-h': `${mobile.height}px` } : {}),
-      "--mw-arrow-y": `${Math.max(40, Math.min(548, (y - popupTop) / scale))}px` } as CSSProperties}
+    aria-label={`Pré-profil de ${selection.name}`}
     onPointerDown={event => event.stopPropagation()} onClick={event => event.stopPropagation()}>
     <PreProfileFrame arrow>
       <HoverPreProfileContent artist={artist} demoFollow={!selection.live} showMapPin={!selection.isHost}

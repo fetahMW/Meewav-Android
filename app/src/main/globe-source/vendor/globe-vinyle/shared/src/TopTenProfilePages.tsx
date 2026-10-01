@@ -36,6 +36,10 @@ export function TopTenProfilePages({ index, total, onChange, renderPage }: {
   return <div ref={viewport} className="top-ten-profile-pages"
     onPointerDownCapture={event => {
       suppressClick.current = false;
+      // Compact portrait cards have their own native scrolling body. Leave
+      // its gestures to the browser; the page viewport still snaps between
+      // artists when swiped outside that body, and the rank rail stays usable.
+      if (event.currentTarget.closest('[data-orientation="portrait"]')) return;
       if (event.button !== 0 || !event.isPrimary ||
         (event.target as Element).closest('input, select, textarea, audio, video, [role="slider"]')) return;
       const node = event.currentTarget;

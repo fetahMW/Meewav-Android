@@ -3,6 +3,7 @@ import { SCENE_DEMO_ARTISTS } from './reference/features/shorts/sceneArtistPortr
 import { RING_PORTRAIT_LANES } from './saturn-ring.mjs';
 import { RADIUS } from './geo.mjs';
 import { createPortraitTextureArray } from './portrait-texture-array.mjs';
+import { createArtistAnchorPublisher } from '../../../../artist-popup-anchor';
 
 // Existing La Scène demo identities and their Tremplin photographic portraits.
 const ARTISTS = SCENE_DEMO_ARTISTS.map(artist => [artist.portrait.split('/').pop().replace(/\.webp$/, ''), artist.name]);
@@ -211,25 +212,38 @@ export function createRingPortraits(scene, ring, camera, canvas, invalidate, pix
   }
   const popupCenter = new T.Vector3(), popupEdge = new T.Vector3();
   const popupUp = new T.Vector3(), popupRight = new T.Vector3();
+  const publishAnchor = createArtistAnchorPublisher(canvas, 'meewav:ring-portrait-anchor', 'instanceId');
+  let anchorViewport = null;
+  function selectedAnchor(id) {
+    syncBases();
+    if (!anchorViewport || anchorViewport.width !== window.innerWidth || anchorViewport.height !== window.innerHeight) {
+      anchorViewport = { width: window.innerWidth, height: window.innerHeight, rect: canvas.getBoundingClientRect() };
+    }
+    const rect = anchorViewport.rect;
+    // Match the selected disc's actual shader scale, in overview and on the
+    // ring. Its centre rises by its radius along the current camera-up axis.
+    const radius = SIZE * .5 * material.uniforms.displayScale.value * 1.12;
+    popupUp.setFromMatrixColumn(camera.matrixWorld, 1);
+    popupRight.setFromMatrixColumn(camera.matrixWorld, 0);
+    popupCenter.copy(bases[id]).addScaledVector(popupUp, radius);
+    popupEdge.copy(popupCenter).addScaledVector(popupRight, radius).project(camera);
+    popupCenter.project(camera);
+    return { x: rect.left + (popupCenter.x + 1) * rect.width / 2,
+      y: rect.top + (1 - popupCenter.y) * rect.height / 2,
+      clearance: Math.abs(popupEdge.x - popupCenter.x) * rect.width / 2,
+      viewportWidth: anchorViewport.width, viewportHeight: anchorViewport.height };
+  }
+  function updateSelectedAnchor() {
+    if (selected >= 0) publishAnchor(selected, selectedAnchor(selected));
+  }
   function select(id) {
     if (selected === id) return;
     selected = id; material.uniforms.selected.value = id;
     let detail = null;
     if (id >= 0) {
-      syncBases();
       const artistIndex = artistIndices[id], artist = ARTISTS[artistIndex];
-      const rect = canvas.getBoundingClientRect();
-      const radius = SIZE * 0.56;
-      popupUp.setFromMatrixColumn(camera.matrixWorld, 1);
-      popupRight.setFromMatrixColumn(camera.matrixWorld, 0);
-      popupCenter.copy(bases[id]).addScaledVector(popupUp, radius);
-      popupEdge.copy(popupCenter).addScaledVector(popupRight, radius).project(camera);
-      popupCenter.project(camera);
       detail = { instanceId: id, slug: artist[0], name: artist[1], portraitUrl: urlFor(artistIndex),
-        anchor: { x: rect.left + (popupCenter.x + 1) * rect.width / 2,
-          y: rect.top + (1 - popupCenter.y) * rect.height / 2,
-          clearance: Math.abs(popupEdge.x - popupCenter.x) * rect.width / 2,
-          viewportWidth: window.innerWidth, viewportHeight: window.innerHeight } };
+        anchor: selectedAnchor(id) };
     }
     canvas.dispatchEvent(new CustomEvent('meewav:ring-portrait-select', { bubbles: true, detail }));
     invalidate();
@@ -377,6 +391,7 @@ export function createRingPortraits(scene, ring, camera, canvas, invalidate, pix
       material.uniforms.rimVisibility.value = 0;
       material.uniforms.portraitVisibility.value = opacity;
       material.uniforms.distanceFade.value = 0;
+      updateSelectedAnchor();
       if (visible) load();
       return changed;
     },
@@ -398,7 +413,10 @@ export function createRingPortraits(scene, ring, camera, canvas, invalidate, pix
       if (tap) select(pick(pointer.x,pointer.y)); invalidate();
     },
     cancel() { down = pointer = null; select(-1); if (setHover(-1)) invalidate(); },
-    update() { return active && !entering && setHover(pointer && !down ? pick(pointer.x,pointer.y) : -1); },
+    update() {
+      updateSelectedAnchor();
+      return active && !entering && setHover(pointer && !down ? pick(pointer.x,pointer.y) : -1);
+    },
     dispose() {
       disposed = true; images.forEach(image => { if (image) image.onload = image.onerror = null; });
       images.length = 0;

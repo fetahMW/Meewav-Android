@@ -1,4 +1,4 @@
-import { type CSSProperties, type RefObject, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { type RefObject, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { PreProfileFrame } from "./reference/features/globe/components/PreProfileFrame";
@@ -7,7 +7,7 @@ import { getPreProfileArtistForSeed, type PreProfileDemoArtist } from "./referen
 import { sceneDemoArtist } from "./reference/features/shorts/sceneArtistPortraits";
 import { getGradeBadgeMeta } from "./reference/features/grades/gradeBadges";
 import "./ring-artist-preprofile.css";
-import { mobileArtistPanel } from '../../../../mobile-artist-panel';
+import { useArtistPopupPosition } from '../../../../use-artist-popup-position';
 import { TopTenProfileNavigator, type ProfileNavigation } from './TopTenProfileNavigator';
 import { TopTenProfilePages } from './TopTenProfilePages';
 import { openArtistMessaging } from '../../../../messaging-navigation';
@@ -30,22 +30,8 @@ export default function RingArtistPreProfile({ selection, onClose, navigation, p
   const closeButton = useRef<HTMLButtonElement>(null);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
-  const [viewport, setViewport] = useState(() => ({ width: window.innerWidth, height: window.innerHeight }));
-
-  // Keep the original 413 x 588 Rooms composition, fitting it only when needed.
-  const margin = 16, leftGuard = viewport.width > 760 ? 112 : 88;
-  const mobile = mobileArtistPanel(viewport);
-  const scale = mobile?.scale ?? Math.min(1, (viewport.width - leftGuard - margin * 2) / 413, (viewport.height - 104) / 588);
-  const width = 413 * scale, height = 588 * scale;
-  const anchor = selection.anchor;
-  const x = anchor.x * viewport.width / anchor.viewportWidth;
-  const y = anchor.y * viewport.height / anchor.viewportHeight;
-  const clearance = anchor.clearance * viewport.width / anchor.viewportWidth + 22;
-  const right = x + clearance, left = x - clearance - width;
-  const placement = right + width <= viewport.width - margin ? "right"
-    : left >= leftGuard ? "left" : viewport.width - x >= x - leftGuard ? "right" : "left";
-  const popupLeft = Math.max(leftGuard, Math.min(viewport.width - margin - width, placement === "right" ? right : left));
-  const popupTop = Math.max(88, Math.min(viewport.height - margin - height, y - height * 0.45));
+  useArtistPopupPosition(panel, selection.instanceId, selection.anchor,
+    navigation ? null : 'meewav:ring-portrait-anchor');
 
   useLayoutEffect(() => {
     const trigger = document.activeElement as HTMLElement | null;
@@ -57,7 +43,6 @@ export default function RingArtistPreProfile({ selection, onClose, navigation, p
     };
   }, []);
   useEffect(() => {
-    const resize = () => setViewport({ width: window.innerWidth, height: window.innerHeight });
     const outside = (event: Event) => {
       if (event.target instanceof Node && !panel.current?.contains(event.target)) closeRef.current();
     };
@@ -65,12 +50,10 @@ export default function RingArtistPreProfile({ selection, onClose, navigation, p
       if (event.key !== "Escape") return;
       event.preventDefault(); event.stopPropagation(); closeRef.current();
     };
-    window.addEventListener("resize", resize);
     document.addEventListener("pointerdown", outside, true);
     document.addEventListener("wheel", outside, { capture: true, passive: true });
     document.addEventListener("keydown", escape, true);
     return () => {
-      window.removeEventListener("resize", resize);
       document.removeEventListener("pointerdown", outside, true);
       document.removeEventListener("wheel", outside, true);
       document.removeEventListener("keydown", escape, true);
@@ -78,11 +61,7 @@ export default function RingArtistPreProfile({ selection, onClose, navigation, p
   }, []);
 
   return createPortal(<div ref={panel} className="ring-artist-preprofile" role="dialog" aria-modal="false"
-    aria-label={`Pré-profil de ${selection.name}`} data-placement={placement}
-    style={{ left: mobile?.left ?? popupLeft, top: mobile?.top ?? popupTop, transform: `scale(${scale})`,
-      ...(mobile ? { width: mobile.width, height: mobile.height,
-        '--mw-bubble-w': `${mobile.width}px`, '--mw-bubble-h': `${mobile.height}px` } : {}),
-      "--mw-arrow-y": `${Math.max(40, Math.min(548, (y - popupTop) / scale))}px` } as CSSProperties}
+    aria-label={`Pré-profil de ${selection.name}`} data-navigable={Boolean(navigation)}
     onPointerDown={event => event.stopPropagation()} onClick={event => event.stopPropagation()}>
     {navigation && profiles ? <TopTenProfilePages index={navigation.index} total={profiles.length}
       onChange={navigation.onChange} renderPage={(index, active) =>

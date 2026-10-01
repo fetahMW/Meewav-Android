@@ -1,5 +1,6 @@
-// Shared with the Top 10 geometry in full-globe-mobile.css. Portalled profiles
-// use the same screen rectangle, independent of the portrait's 3D position.
+// Shared with the Top 10 geometry in full-globe-mobile.css. Landscape profiles
+// retain this screen rectangle; portrait marker popups use their own compact,
+// vertically anchored geometry in portrait-artist-popup.ts.
 export function mobileArtistPanel(viewport: { width: number; height: number }) {
   const root = document.documentElement;
   const style = getComputedStyle(root);
