@@ -2,13 +2,13 @@ import * as T from 'three';
 import { SCENE_DEMO_ARTISTS } from './reference/features/shorts/sceneArtistPortraits';
 import { RING_PORTRAIT_LANES } from './saturn-ring.mjs';
 import { RADIUS } from './geo.mjs';
+import { createPortraitTextureArray } from './portrait-texture-array.mjs';
 
 // Existing La Scène demo identities and their Tremplin photographic portraits.
 const ARTISTS = SCENE_DEMO_ARTISTS.map(artist => [artist.portrait.split('/').pop().replace(/\.webp$/, ''), artist.name]);
 const urlFor = index => new URL(`ui/ring-portraits/${ARTISTS[index][0]}.webp`, document.baseURI).href;
 const LANES = RING_PORTRAIT_LANES.centers.length, COUNT = 96, COLUMNS = COUNT / LANES, SIZE = 1.5, FAR = 95;
-const ATLAS_COLUMNS = 2 ** Math.ceil(Math.log2(Math.sqrt(ARTISTS.length)));
-const TILE_SIZE = 512, ATLAS_SIZE = ATLAS_COLUMNS * TILE_SIZE;
+const TILE_SIZE = 512;
 const OVERVIEW_SCALE = 3;
 // Retire the overview portraits before local map views, even when a steep
 // camera tilt brings a distant part of the ring back into the frame.
@@ -51,17 +51,13 @@ function arrangeArtists() {
 // Repeated reference portraits for exploration only, not real legendary accounts.
 // One atlas and one instanced draw; no per-portrait DOM or animation loop.
 export function createRingPortraits(scene, ring, camera, canvas, invalidate, pixelRatio = 1, demoPortraits = true) {
-  const atlas = document.createElement('canvas'); atlas.width = atlas.height = ATLAS_SIZE;
-  const ctx = atlas.getContext('2d');
-  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-  ctx.fillStyle = '#756B9D'; ctx.fillRect(0, 0, ATLAS_SIZE, ATLAS_SIZE);
-  const texture = new T.CanvasTexture(atlas); texture.colorSpace = T.SRGBColorSpace;
-  texture.minFilter = T.LinearMipmapLinearFilter; texture.magFilter = T.LinearFilter;
+  const atlas = createPortraitTextureArray(ARTISTS.length, TILE_SIZE);
   const geometry = new T.PlaneGeometry(SIZE, SIZE);
   const ids = new Float32Array(COUNT);
   const artistIndices = arrangeArtists();
   const material = new T.ShaderMaterial({
-    uniforms: { atlas: { value: texture }, hovered: { value: -1 }, selected: { value: -1 },
+    glslVersion: T.GLSL3,
+    uniforms: { atlas: { value: atlas.texture }, hovered: { value: -1 }, selected: { value: -1 },
       portraitRadius: { value: SIZE * 0.5 }, displayScale: { value: 1 }, maxDistance: { value: FAR },
       portraitVisibility: { value: 1 }, distanceFade: { value: 0 },
       pixelRatio: { value: pixelRatio }, rimVisibility: ring.explorationVisibility },
@@ -70,15 +66,14 @@ export function createRingPortraits(scene, ring, camera, canvas, invalidate, pix
       attribute float portraitId, artistTile;
       uniform float hovered, selected;
       uniform float portraitRadius, displayScale;
-      varying vec2 vUv, vAtlasCell, vEmphasis; varying float vDistance;
+      varying vec2 vUv, vEmphasis; varying float vDistance;
+      flat out float artistLayer;
       void main() {
         // Leave room for edge coverage outside the mathematical circle without
         // enlarging the visible portrait or moving its contact with the floor.
         vUv = (uv - 0.5) * 1.2 + 0.5;
-        // Resolve the atlas cell from the exact instance attribute, BEFORE
-        // interpolation. floor/mod on an interpolated ID can cross an integer
-        // boundary and sample unrelated portraits on alternating pixels.
-        vAtlasCell = vec2(mod(artistTile, ${ATLAS_COLUMNS}.0), ${ATLAS_COLUMNS - 1}.0-floor(artistTile/${ATLAS_COLUMNS}.0));
+        // The identity is constant per instance, including every mip level.
+        artistLayer = artistTile;
         vEmphasis = vec2(1.0-step(0.1, abs(portraitId-hovered)), 1.0-step(0.1, abs(portraitId-selected)));
         float emphasis = max(vEmphasis.x, vEmphasis.y);
         float scale = displayScale * (1.0 + emphasis * 0.12);
@@ -92,9 +87,12 @@ export function createRingPortraits(scene, ring, camera, canvas, invalidate, pix
         gl_Position = projectionMatrix * center;
       }`,
     fragmentShader: `
-      uniform sampler2D atlas;
+      uniform highp sampler2DArray atlas;
       uniform float maxDistance, pixelRatio, rimVisibility, portraitVisibility, distanceFade;
-      varying vec2 vUv, vAtlasCell, vEmphasis; varying float vDistance;
+      varying vec2 vUv, vEmphasis; varying float vDistance;
+      flat in float artistLayer;
+      out vec4 portraitColor;
+      #define gl_FragColor portraitColor
       void main() {
         float r = length(vUv-0.5);
         // Measure a physical screen pixel before discarding fragments. The
@@ -114,7 +112,9 @@ export function createRingPortraits(scene, ring, camera, canvas, invalidate, pix
         float h = vEmphasis.x;
         float s = vEmphasis.y;
         vec2 photoUv = clamp((vUv-0.5)/mix(1.0,0.976,rimVisibility)+0.5,0.008,0.992);
-        vec3 photo = texture2D(atlas,(vAtlasCell+photoUv)/${ATLAS_COLUMNS}.0).rgb;
+        // Typed pixels are stored top-to-bottom; match CanvasTexture's former
+        // flipY without changing the crop, circle, rim or 512px photograph.
+        vec3 photo = texture(atlas,vec3(photoUv.x,1.0-photoUv.y,artistLayer)).rgb;
         vec3 rim = mix(vec3(0.35,0.24,0.57),vec3(0.8,0.71,1.0),max(h,s));
         rim = mix(rim,vec3(0.42,0.72,1.0),s);
         vec3 color = mix(photo*(1.0+h*0.1),rim,rimVisibility*smoothstep(innerRadius-feather,innerRadius+feather,r));
@@ -190,21 +190,22 @@ export function createRingPortraits(scene, ring, camera, canvas, invalidate, pix
   const images = [];
   function load() {
     if (loaded) return; loaded = true;
+    atlas.prepare();
     let remaining = ARTISTS.length;
     const settled = () => {
       // Upload the atlas once after loading, not once for each of the 60 photos.
-      if (--remaining === 0 && !disposed) { texture.needsUpdate = true; invalidate(); }
+      if (--remaining === 0 && !disposed) { material.uniforms.atlas.value = atlas.commit(); invalidate(); }
     };
     ARTISTS.forEach((_, index) => {
-      const image = new Image(); images.push(image);
+      const image = new Image(); images[index] = image;
+      const release = () => { image.onload = image.onerror = null; images[index] = null; };
       image.onload = () => {
         if (disposed) return;
-        const side = Math.min(image.naturalWidth, image.naturalHeight);
-        ctx.drawImage(image, (image.naturalWidth-side)/2, (image.naturalHeight-side)/2, side, side,
-          index%ATLAS_COLUMNS*TILE_SIZE, Math.floor(index/ATLAS_COLUMNS)*TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        atlas.setPortrait(index, image);
+        release();
         settled();
       };
-      image.onerror = settled;
+      image.onerror = () => { if (!disposed) atlas.setFallback(index); release(); settled(); };
       image.src = urlFor(index);
     });
   }
@@ -272,6 +273,7 @@ export function createRingPortraits(scene, ring, camera, canvas, invalidate, pix
     count: COUNT,
     createBloomOccluder() {
       const proxyMaterial = new T.ShaderMaterial({
+        glslVersion: material.glslVersion,
         uniforms: material.uniforms,
         vertexShader: material.vertexShader,
         fragmentShader: material.fragmentShader,
@@ -398,9 +400,10 @@ export function createRingPortraits(scene, ring, camera, canvas, invalidate, pix
     cancel() { down = pointer = null; select(-1); if (setHover(-1)) invalidate(); },
     update() { return active && !entering && setHover(pointer && !down ? pick(pointer.x,pointer.y) : -1); },
     dispose() {
-      disposed = true; images.forEach(image => { image.onload = image.onerror = null; });
+      disposed = true; images.forEach(image => { if (image) image.onload = image.onerror = null; });
+      images.length = 0;
       canvas.removeEventListener('pointerleave', leave); select(-1); mesh.removeFromParent();
-      mesh.dispose(); geometry.dispose(); material.dispose(); texture.dispose();
+      mesh.dispose(); geometry.dispose(); material.dispose(); atlas.dispose();
     },
   };
 }

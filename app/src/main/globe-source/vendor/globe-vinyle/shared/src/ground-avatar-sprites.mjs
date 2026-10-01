@@ -4,8 +4,8 @@ const ICON_SIZE = 256;
 
 // One GPU batch in the globe's existing context. Each icon has its own texture
 // array layer, so distant mip levels cannot blend with a neighbouring avatar.
-export function createGroundAvatarSprites() {
-  const scene = new T.Scene(), camera = new T.Camera();
+export function createGroundAvatarSprites(sharedScene = null) {
+  const scene = sharedScene || new T.Scene(), camera = new T.Camera();
   const geometry = new T.InstancedBufferGeometry();
   geometry.setAttribute('position', new T.Float32BufferAttribute([0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0], 3));
   geometry.setIndex([0, 1, 2, 2, 1, 3]);
@@ -95,6 +95,9 @@ export function createGroundAvatarSprites() {
   mesh.frustumCulled = false;
   mesh.matrixAutoUpdate = false;
   mesh.visible = false;
+  // Clip-space shader ignores the main camera matrices. Last transparent draw
+  // preserves the former overlay order and reuses exactly the same depth buffer.
+  mesh.renderOrder = 101;
   scene.add(mesh);
 
   function reserve(size) {
@@ -157,7 +160,10 @@ export function createGroundAvatarSprites() {
     },
     add(item, size = item.size, opacity = 1, saturation = 1, pinRadius = 0, pinDrop = 2) {
       const slot = slots.get(item.avatar.icon) ?? slots.get('avatar_4');
-      if (slot === undefined || size <= 0) return;
+      // A selected portrait is already represented by its enlarged overlay.
+      // Keep its ground ring when present; otherwise this quad produces no
+      // pixels. Picking/population remain owned by the unchanged layout.
+      if (slot === undefined || size <= 0 || (opacity === 0 && pinRadius <= 0)) return;
       rectangles.setXYZW(count, item.x, item.y, size, opacity);
       if (layers.getX(count) !== slot) { layers.setX(count, slot); layersDirty = true; }
       depths.setX(count, item.depth);
@@ -190,7 +196,7 @@ export function createGroundAvatarSprites() {
     },
     hide() { mesh.visible = false; geometry.instanceCount = 0; },
     render(renderer) {
-      if (!mesh.visible) return;
+      if (sharedScene || !mesh.visible) return;
       const autoClear = renderer.autoClear;
       renderer.autoClear = false;
       try { renderer.render(scene, camera); }

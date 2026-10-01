@@ -177,6 +177,9 @@ private class AuthGlobeController(private val fullScene: Boolean, private val ho
     @SuppressLint("SetJavaScriptEnabled")
     @Suppress("DEPRECATION")
     fun create(context: Context, interactive: Boolean): AuthGlobeWebView {
+        // Local ADB diagnostics for debug APKs only; release builds expose no
+        // inspection endpoint. This does not enable any device-wide setting.
+        WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG)
         this.interactive = interactive
         ready = false
         lastActive = null

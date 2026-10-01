@@ -1,6 +1,7 @@
 import { ShapeUtils, Vector2, Color } from "three";
 import { polygons, xyz } from "./geo.mjs";
 import { territoryStyle, METRES_TO_WORLD } from "./territory-style.mjs";
+import { indexTriangleAttributes } from "./indexed-territory-attributes.mjs";
 
 // Runs in the existing geographic Worker. Caps follow the globe, with holes
 // preserved by earcut; walls follow every original ring, including islands.
@@ -69,6 +70,6 @@ export function prepareTerritories(features, kind, { outlines = true } = {}) {
       }
     });
     const pack = buffer => Object.fromEntries(Object.entries(buffer).map(([name, values]) => [name, new Float32Array(values)]));
-    return { kind, origin, features: group.map(f => ({ id: f.id || f.properties.id, properties: f.properties })), top: pack(top), edge: pack(edge) };
+    return { kind, origin, features: group.map(f => ({ id: f.id || f.properties.id, properties: f.properties })), top: indexTriangleAttributes(pack(top)), edge: pack(edge) };
   });
 }

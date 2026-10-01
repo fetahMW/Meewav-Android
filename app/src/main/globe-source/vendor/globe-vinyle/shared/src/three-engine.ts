@@ -39,6 +39,7 @@ import { createOrbitCameraUpdater, createOrbitGesture, createOrbitViewport, isOr
 import { createMotionMetrics } from "./motion-metrics.mjs";
 import { createCadenceProbe } from "./cadence-probe.mjs";
 import { resolveVinylQuality } from "../../../../globe-render-policy.mjs";
+import { createRenderAudit } from "./render-audit.mjs";
 
 const clamp = T.MathUtils.clamp;
 const landColor = new T.Color(FOREIGN_LAND_COLOR);
@@ -114,6 +115,7 @@ export async function createThree(
   const metrics = createMotionMetrics();
   const cadenceProbe = createCadenceProbe();
   const gl = renderer.getContext() as WebGL2RenderingContext;
+  const renderAudit = createRenderAudit(gl, renderer);
   const timer = gl.getExtension("EXT_disjoint_timer_query_webgl2");
   const gpuQueries: { query: WebGLQuery; moving: boolean }[] = [];
   function beginGpu(moving: boolean) {
@@ -174,7 +176,8 @@ export async function createThree(
   const ringPortraits = createRingPortraits(scene, saturnRing, camera, canvas, () => { sceneDirty = true; }, renderer.getPixelRatio(), liveMarkers === null);
   const orbitBloom = createOrbitBloom(renderer, saturnRing, earth,
     orbitOptions.has("orbitBloom") ? orbitOptions.get("orbitBloom") !== "off" : undefined, ringPortraits);
-  function renderScene(dt: number) {
+  function renderScene(dt: number, frameStart: number, activity: string) {
+    const auditToken = renderAudit.begin(activity, frameStart);
     const autoReset = renderer.info.autoReset;
     renderer.info.autoReset = false;
     renderer.info.reset();
@@ -184,7 +187,7 @@ export async function createThree(
       groundAvatars?.render(renderer);
       finishFirstFrame?.();
       finishFirstFrame = undefined;
-    } finally { renderer.info.autoReset = autoReset; }
+    } finally { renderAudit.end(auditToken); renderer.info.autoReset = autoReset; }
   }
   const landGeometry = new T.BufferGeometry();
   const header = new Uint32Array(land, 0, 2),
@@ -436,7 +439,7 @@ export async function createThree(
     host.dispatchEvent(new CustomEvent("meewav:city-select", { bubbles: true, detail: { id: city.id } }));
   }, () => { sceneDirty = true; }, territoryFocus, saturnRing.occludesLabel, (city: any) => groundAvatars?.countForCity(city.id) || 0, GLOBE_ALIGN);
   groundAvatars = createGroundAvatars(host, sectors, communes, () => { sceneDirty = true; }, camera, GLOBE_ALIGN,
-    parisLandmarks.depthAt, liveMarkers);
+    parisLandmarks.depthAt, liveMarkers, saturnRing.bloomEnabled ? null : scene);
   let alive = true,
     active = true,
     raf = 0,
@@ -1145,7 +1148,7 @@ export async function createThree(
       // follow the same turntable transform without uploading instance data.
       const portraitsChanged = (navigationChanged || vinylChanged) && ringPortraits.update();
       if (navigationChanged || vinylChanged || portraitsChanged) {
-        renderScene(dt);
+        renderScene(dt, frameStart, 'ring');
       }
       raf = requestAnimationFrame(frame);
       return;
@@ -1202,7 +1205,7 @@ export async function createThree(
     if (!poseChanged && !sceneDirty && !cadenceProbe.active) {
       if (pendingHover && pointerIsIdle()) syncPointerHover();
       if (!sceneDirty) {
-        if (vinylChanged || portraitsChanged) renderScene(dt);
+        if (vinylChanged || portraitsChanged) renderScene(dt, frameStart, 'overview-spin');
         raf = requestAnimationFrame(frame);
         return;
       }
@@ -1249,7 +1252,7 @@ export async function createThree(
     cityMarkers.update(camera, view.height, width, height, geographicViewport || viewportBounds(view, width, height, 1.3), mosaicDepartments, surfaceHoveredId);
     const gpuQuery = beginGpu(moving);
     updateLand();
-    renderScene(dt);
+    renderScene(dt, frameStart, motion.isFlying() ? 'flight' : moving ? 'camera' : 'steady');
     renderTimes.push(performance.now());
     while (renderTimes.length && renderTimes[0] < performance.now() - 1000) renderTimes.shift();
     Object.assign(renderedView, view);
@@ -1440,6 +1443,7 @@ export async function createThree(
       };
     },
     startMeasurement() {
+      renderAudit.stop();
       metrics.start();
     },
     stopMeasurement() {
@@ -1450,6 +1454,64 @@ export async function createThree(
     },
     getMotionPerformance() {
       return metrics.report();
+    },
+    startRenderAudit() {
+      metrics.stop();
+      for (const pending of gpuQueries) gl.deleteQuery(pending.query);
+      gpuQueries.length = 0;
+      renderAudit.start();
+    },
+    stopRenderAudit() { return renderAudit.stop(); },
+    getRenderAudit() { return renderAudit.report(); },
+    getRenderResources() {
+      const geometries = new Set(), textures = new Set();
+      const objects: any[] = [];
+      const instanceAttributes: any[] = [];
+      scene.traverse((object: any) => {
+        if (object.geometry) geometries.add(object.geometry);
+        if (object.instanceMatrix) instanceAttributes.push(object.instanceMatrix);
+        if (object.instanceColor) instanceAttributes.push(object.instanceColor);
+        const materials = object.material ? Array.isArray(object.material) ? object.material : [object.material] : [];
+        for (const material of materials) {
+          for (const value of Object.values(material)) if ((value as any)?.isTexture) textures.add(value);
+          for (const uniform of Object.values(material.uniforms || {})) if ((uniform as any)?.value?.isTexture) textures.add((uniform as any).value);
+        }
+        if (object.geometry) objects.push({ name: object.name, visible: object.visible, order: object.renderOrder,
+          vertices: object.geometry.attributes.position?.count || 0,
+          indices: object.geometry.index?.count || 0, instances: object.isInstancedMesh ? object.count : object.geometry.instanceCount || 1 });
+      });
+      const buffers = new Set<ArrayBuffer>();
+      const remember = (attr: any, target = buffers) => {
+        const array = attr?.isInterleavedBufferAttribute ? attr.data.array : attr?.array;
+        if (array?.buffer) target.add(array.buffer);
+      };
+      for (const geometry of geometries as Set<T.BufferGeometry>) {
+        for (const attr of [...Object.values(geometry.attributes), geometry.index]) remember(attr);
+      }
+      for (const attr of instanceAttributes) remember(attr);
+      const cacheBuffers = new Set<ArrayBuffer>(), rawBorderBuffers = new Set<ArrayBuffer>();
+      let borderCachedGeometries = 0;
+      for (const layer of [countryLayer, communeLayer, ...[...loadedDepartments.values()].map(c => c.layer)]) {
+        for (const tile of layer.tiles) {
+          for (const level of tile.levels || []) {
+            if (ArrayBuffer.isView(level)) rawBorderBuffers.add(level.buffer);
+          }
+          for (const geometry of tile.geometries?.values() || []) {
+            borderCachedGeometries++;
+            for (const attr of [...Object.values(geometry.attributes), geometry.index]) remember(attr, cacheBuffers);
+          }
+        }
+      }
+      const bytes = (values: Set<ArrayBuffer>) => [...values].reduce((sum, buffer) => sum + buffer.byteLength, 0);
+      const dormant = new Set([...cacheBuffers].filter(buffer => !buffers.has(buffer)));
+      return { geometryBufferBytes: bytes(buffers), dormantBorderGeometryBytes: bytes(dormant),
+        borderCachedGeometries, rawBorderLevelBytes: bytes(rawBorderBuffers),
+        accounting: 'Unique retained CPU ArrayBuffers, including interleaved and instance attributes; dormant caches counted separately. GPU memory/resource count is driver-owned and not inferred from these values.',
+        textures: [...textures].map((texture: any) => ({ name: texture.name,
+          width: texture.image?.width || 0, height: texture.image?.height || 0, depth: texture.image?.depth || 1,
+          format: texture.format, mipmaps: texture.generateMipmaps, sourceBytes: texture.image?.data?.byteLength || null })),
+        objects, submitted: { ...renderer.info.render }, allocated: { ...renderer.info.memory },
+        view: { ...view }, active, liveMode: liveMarkers !== null };
     },
     setSelection(feature: any) {
       quarterStream.setSelected(feature?.id || null);
@@ -1478,7 +1540,7 @@ export async function createThree(
       return motion.isMoving() || wheelZoom.isMoving() || orbit.isMoving() || touchNavigation.isMoving();
     },
     setActive(value: boolean) {
-      if (active === value) return;
+      if (!alive || active === value) return;
       if (!value) ringPlayback.suspend();
       cancelTouch();
       ringNavigation.cancel();
@@ -1500,6 +1562,7 @@ export async function createThree(
       if (active) raf = requestAnimationFrame(frame);
     },
     destroy() {
+      renderAudit.stop();
       ringPlayback.dispose();
       cancelTouch();
       // Stop rendering immediately, but retain materials until an in-progress

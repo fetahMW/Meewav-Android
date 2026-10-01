@@ -5,7 +5,9 @@ import { createVinylMicrorelief } from './vinyl-microrelief.mjs';
 // The new source is the CSS/SVG signature record in meewav-react-vite.zip.
 // It replaces the previous Vinyl V2 optical shader, including its coloured rig.
 export function createVinylRecordMaterial(layout, lightRotationDegrees = 0, exposure = 1) {
-  const profiles = createRecordFinishProfiles(layout.angularSegments <= 512 ? 4096 : 8192, { trackHalfWidth: 1.10 });
+  // Mesh subdivisions and optical detail are independent on Android. Mobile
+  // keeps the complete high-quality engraving/tooling profiles.
+  const profiles = createRecordFinishProfiles(layout.materialProfileSize ?? (layout.angularSegments <= 512 ? 4096 : 8192), { trackHalfWidth: 1.10 });
   const textures = [];
   function texture(data, width, repeat = false, height = 1, format = T.RGBAFormat) {
     const result = new T.DataTexture(data, width, height, format, T.UnsignedByteType);
@@ -214,16 +216,22 @@ export function createVinylRecordMaterial(layout, lightRotationDegrees = 0, expo
         // Complement the white studio fans in their unlit sectors. These
         // fixed sources reflect through the same grooves as the white lights;
         // camera movement reveals the colour instead of tinting the black PVC.
-        vec3 violetLight = studioLight(vec3(0.15, 0.50, -0.98));
-        vec3 blueLight = studioLight(vec3(-0.20, 0.45, 0.98));
+        vec3 violetLight = vec3(0.0), blueLight = vec3(0.0);
         float whiteEnergy = dot(reflection, vec3(0.2126, 0.7152, 0.0722));
         float shadowFill = uExplorationVisibility * (1.0 - smoothstep(0.08, 0.42, whiteEnergy));
+        // This condition is uniform for the whole draw, so texture derivatives
+        // remain defined. Preserve the full coloured finish during exploration;
+        // skip its two texture reads only when its contribution is exactly zero.
+        if (uExplorationVisibility > 0.0) {
+        violetLight = studioLight(vec3(0.15, 0.50, -0.98));
+        blueLight = studioLight(vec3(-0.20, 0.45, 0.98));
         vec3 colouredReflection =
           grooveReflection(V, radial, tangent, violetLight, 228.0, 2.30 * grooveRoughness)
             * vec3(0.46, 0.12, 0.85) * 0.65
           + grooveReflection(V, radial, tangent, blueLight, 47.0, 2.48 * grooveRoughness)
             * vec3(0.08, 0.30, 0.90) * 0.65;
         reflection += colouredReflection * shadowFill;
+        }
         vec3 unmaskedReflection = reflection;
         float reflectionMask = smoothstep(0.002, 0.02, across)
           * (1.0 - smoothstep(0.978, 0.998, across));
@@ -296,7 +304,7 @@ export function createVinylRecordMaterial(layout, lightRotationDegrees = 0, expo
         float edgeFresnel = pow(1.0 - abs(dot(N, V)), 3.0);
         vec3 edge = vec3(0.006, 0.005, 0.0045)
           + vec3(0.85, 0.82, 0.76) * edgeLight + unmaskedReflection * 0.18 + vec3(0.008) * edgeFresnel;
-        edge += shadowFill * 0.30 * (
+        if (uExplorationVisibility > 0.0) edge += shadowFill * 0.30 * (
           vec3(0.46, 0.12, 0.85) * pow(max(dot(N, normalize(V + violetLight)), 0.0), 64.0)
           + vec3(0.08, 0.30, 0.90) * pow(max(dot(N, normalize(V + blueLight)), 0.0), 64.0));
         float outerLip = 1.0 - smoothstep(uBevel * 0.5, uBevel * 2.0, uDimensions.y - radius);

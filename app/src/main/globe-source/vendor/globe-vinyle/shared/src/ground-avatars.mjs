@@ -205,13 +205,13 @@ function createHoverCard(host) {
   };
 }
 
-export function createGroundAvatars(host, sectors, communes, invalidate, camera, align = null, landmarkDepthAt = null, liveMarkers = null) {
+export function createGroundAvatars(host, sectors, communes, invalidate, camera, align = null, landmarkDepthAt = null, liveMarkers = null, renderScene = null) {
   const realMode = liveMarkers !== null;
   const population = realMode
     ? { total: () => liveMarkers.length, quota: () => 0, cityTotal: () => 0, ensureQuartier: () => {} }
     : createParisAvatarPopulation(sectors, communes, { eager: false });
   const availableIcons = new Set();
-  const sprites = createGroundAvatarSprites();
+  const sprites = createGroundAvatarSprites(renderScene);
   const selectedOverlay = createSelectedOverlay(host);
   const hoverCard = createHoverCard(host);
   const byZone = new Map();

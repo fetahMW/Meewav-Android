@@ -115,6 +115,9 @@ class MainActivity : ComponentActivity() {
         }
         // The debug workshop can open a feature without an existing globe activity.
         if (intent?.getBooleanExtra(EXTRA_OPEN_GLOBE, false) == true) {
+            if (BuildConfig.DEBUG && intent.getBooleanExtra("com.meewav.android.GPU_AUDIT", false)) {
+                authViewModel.startPreview()
+            }
             authViewModel.navigate(AuthPage.Globe)
             intent.removeExtra(EXTRA_OPEN_GLOBE)
             return

@@ -18,8 +18,10 @@ export function createTerritoryPlates(scene, packets, features, groundColor = FR
       flightId: { value: -1 }, flightWholePacket: { value: 0 }, flightHighlight: { value: 0 } };
     function geometry(attributes) {
       const g = new T.BufferGeometry();
-      for (const [name, array] of Object.entries(attributes)) g.setAttribute(name,
-        new T.BufferAttribute(array, ["lift", "territoryId"].includes(name) ? 1 : 3));
+      for (const [name, array] of Object.entries(attributes)) {
+        if (name === 'index') g.setIndex(new T.BufferAttribute(array, 1));
+        else g.setAttribute(name, new T.BufferAttribute(array, ["lift", "territoryId"].includes(name) ? 1 : 3));
+      }
       const count = g.getAttribute('position').count;
       g.setAttribute('focusFrom', new T.BufferAttribute(new Float32Array(count).fill(1), 1));
       g.setAttribute('focusTo', new T.BufferAttribute(new Float32Array(count).fill(1), 1));
