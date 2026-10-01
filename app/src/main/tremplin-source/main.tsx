@@ -1,9 +1,10 @@
 import PortraitPreProfileHost from "../shared-ui/PortraitPreProfileHost";
-import React, { Component, useEffect, useState } from 'react';
+import React, { Component, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
 import { CirclePlus, Coins, Menu, ReceiptText, Wallet, X } from 'lucide-react';
 import FeatureDock, { featureItems } from '../shared-ui/FeatureDock';
+import { useFeatureHeaderScroll } from '../shared-ui/useFeatureHeaderScroll';
 import { configure, updateToken, type MobileConfig } from './runtime';
 import './home-mobile.css';
 import './discover-mobile.css';
@@ -13,6 +14,8 @@ import './artists-mobile.css';
 const native = (destination: string, route?: string) => location.assign(`https://appassets.androidplatform.net/native/${destination}${route ? `?route=${encodeURIComponent(route)}` : ''}`);
 function Shell({ Page }: { Page: React.ComponentType }) {
   const route = useLocation(), navigate = useNavigate();
+  const surfaceRef = useRef<HTMLDivElement | null>(null);
+  useFeatureHeaderScroll(surfaceRef, 'tremplin', route.key);
   const [notice, setNotice] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const select = (id: string) => {
@@ -48,7 +51,7 @@ function Shell({ Page }: { Page: React.ComponentType }) {
     { label: 'Portefeuille', icon: Wallet, path: '/tremplin/mes-artistes?tab=tokens' },
     { label: 'Dernières opérations', icon: ReceiptText, path: '/tremplin/mes-artistes?tab=tokens&section=history' },
   ];
-  return <div className="mobile-profile mobile-tremplin">
+  return <div ref={surfaceRef} className="mobile-profile mobile-tremplin">
     <button className="mobile-tremplin-back" aria-label="Menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(open => !open)}><Menu /></button>
     {menuOpen && <>
       <button className="mobile-tremplin-menu-overlay" aria-label="Fermer le menu" onClick={() => setMenuOpen(false)} />

@@ -6,6 +6,7 @@ import { ChevronLeft, MessageCircle, Plus, X } from 'lucide-react';
 import { configure, previewEnabled, updateToken, type MobileConfig } from './runtime';
 import { useFloatingComposer } from './useFloatingComposer';
 import { useChatHeaderScroll } from './useChatHeaderScroll';
+import { useFeatureHeaderScroll } from '../shared-ui/useFeatureHeaderScroll';
 import './workspace-header-scroll.css';
 import VideoCalls from './calls/VideoCalls';
 import FeatureDock from '../shared-ui/FeatureDock';
@@ -39,6 +40,7 @@ function MobileShell({ Page }: { Page: React.ComponentType }) {
   const [downloadError, setDownloadError] = useState(false);
   const [navigationNotice, setNavigationNotice] = useState(false);
   useChatHeaderScroll(surfaceRef, detail, current.key);
+  useFeatureHeaderScroll(surfaceRef, 'messages', current.key, !detail);
   useEffect(() => {
     const failed = () => setDownloadError(true);
     window.addEventListener('meewav:download-error', failed);

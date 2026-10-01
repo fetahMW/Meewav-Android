@@ -1,0 +1,50 @@
+/* Android trial only. Full scrollports and permanent initial padding avoid
+   jumps at the moment the two rows hide/reappear. Bottom navigation stays fixed. */
+#root [data-auto-feature-chrome] { --feature-visible-chrome: var(--feature-collapse-distance); }
+#root [data-auto-feature-chrome][data-feature-header-hidden] { --feature-visible-chrome: 0px; }
+#root [data-auto-feature-chrome] :is(.market-topbar,.rooms-topbar,.rooms-home__controls,.tremplin-topbar,.profile-command-bar,.profile-viewer-command-bar,.mobile-messaging-header,.mw-chat-header),
+#root [data-auto-feature-chrome] > :is(.mobile-feature-back,.mobile-tremplin-back) {
+  transform: translateY(0); transition: transform 180ms ease-out;
+}
+#root [data-auto-feature-chrome][data-feature-header-hidden] :is(.market-topbar,.rooms-topbar,.rooms-home__controls,.tremplin-topbar,.profile-command-bar,.profile-viewer-command-bar,.mobile-messaging-header,.mw-chat-header),
+#root [data-auto-feature-chrome][data-feature-header-hidden] > :is(.mobile-feature-back,.mobile-tremplin-back) {
+  transform: translateY(calc(-1 * var(--feature-collapse-distance))); pointer-events: none;
+}
+#root .mobile-market[data-auto-feature-chrome] .market-scroll {
+  inset: 0; padding-top: 108px; scroll-padding-top: calc(var(--feature-visible-chrome) + 12px);
+}
+#root .mobile-tremplin[data-auto-feature-chrome] .tremplin-scroll {
+  inset: var(--native-top-inset,0px) 0 0; padding-top: 112px;
+  scroll-padding-top: calc(var(--feature-visible-chrome) + 12px);
+}
+#root .mobile-tremplin[data-auto-feature-chrome] .tremplin-scroll:has(> .tremplin-home) { padding-top: 100px; }
+#root .mobile-profile[data-auto-feature-chrome="profile"] .profile-main {
+  top: 0; padding-top: 112px; scroll-padding-top: calc(var(--feature-visible-chrome) + 12px);
+}
+/* Public profiles use a bounded Android scrollport instead of the document
+   scroll that the native feature shell deliberately locks. Modals are excluded. */
+#root .mobile-profile[data-auto-feature-chrome="profile"] .profile-viewer-page.is-page {
+  position: absolute; inset: 0; height: 100%; min-height: 0; overflow-x: hidden; overflow-y: auto;
+  overscroll-behavior-y: contain; scroll-padding-top: calc(var(--feature-visible-chrome) + 12px);
+}
+/* Internal media/private selectors remain in the content, below visible chrome. */
+#root .mobile-profile[data-auto-feature-chrome="profile"] .profile-main :is(.profile-private-module-rail,.profile-media-shell-header) {
+  top: var(--feature-visible-chrome);
+}
+#root .mobile-rooms[data-auto-feature-chrome] .rooms-page__home { inset: 0; }
+#root .mobile-rooms[data-auto-feature-chrome] .rooms-home {
+  box-sizing: border-box; padding-top: 56px; scroll-padding-top: calc(var(--feature-visible-chrome) + 12px);
+}
+#root .mobile-rooms[data-auto-feature-chrome] .rooms-home__controls { top: 56px; }
+#root .mobile-messaging:not(.is-detail)[data-auto-feature-chrome] .messaging-page { top: 0; }
+#root .mobile-messaging:not(.is-detail)[data-auto-feature-chrome] .mw-chat-header { top: 62px; }
+#root .mobile-messaging:not(.is-detail)[data-auto-feature-chrome] .mw-conversation-list {
+  padding-top: 126px; scroll-padding-top: calc(var(--feature-visible-chrome) + 6px);
+}
+#root .mobile-messaging.is-collab-wall:not(.is-detail)[data-auto-feature-chrome] .mw-context-pane[data-content-space="collabs"] {
+  position: absolute; inset: 0; padding-top: 128px; scroll-padding-top: calc(var(--feature-visible-chrome) + 8px);
+}
+@media (prefers-reduced-motion: reduce) {
+  #root [data-auto-feature-chrome] :is(.market-topbar,.rooms-topbar,.rooms-home__controls,.tremplin-topbar,.profile-command-bar,.profile-viewer-command-bar,.mobile-messaging-header,.mw-chat-header),
+  #root [data-auto-feature-chrome] > :is(.mobile-feature-back,.mobile-tremplin-back) { transition: none; }
+}

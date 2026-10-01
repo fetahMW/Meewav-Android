@@ -10,9 +10,9 @@ export function useSceneHeaderScroll(surfaceRef: RefObject<HTMLElement | null>, 
   useLayoutEffect(() => {
     const scroller = surfaceRef.current;
     if (!scroller) return;
-    const chrome = [...scroller.querySelectorAll<HTMLElement>('.shorts-topbar, .mobile-scene-tools')]
+    if (scroller.querySelectorAll('.shorts-topbar, .mobile-scene-tools').length !== 2) return;
+    const chrome = [...scroller.querySelectorAll<HTMLElement>('.shorts-topbar, .mobile-scene-tools, .scene-browse-chips-shell')]
       .map(element => ({ element, inert: element.inert, ariaHidden: element.getAttribute('aria-hidden') }));
-    if (chrome.length !== 2) return;
     const detector = createChatHeaderScroll();
     let hidden = false;
     let intentUntil = 0;

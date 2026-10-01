@@ -1,16 +1,19 @@
 import PortraitPreProfileHost from "../shared-ui/PortraitPreProfileHost";
-import React, { Component, lazy, Suspense, useEffect, useState } from 'react';
+import React, { Component, lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { configure, updateToken, type MobileConfig } from './runtime';
 import FeatureDock, { featureItems } from '../shared-ui/FeatureDock';
+import { useFeatureHeaderScroll } from '../shared-ui/useFeatureHeaderScroll';
 
 const native = (destination: string, route?: string) => location.assign(`https://appassets.androidplatform.net/native/${destination}${route ? `?route=${encodeURIComponent(route)}` : ""}`);
 const ProfileViewer=lazy(()=>import('./vendor/src/features/profile/ProfileViewerPage'));
 function Shell({ Page }: { Page: React.ComponentType }) {
   const route = useLocation();
   const navigate = useNavigate();
+  const surfaceRef = useRef<HTMLDivElement | null>(null);
+  useFeatureHeaderScroll(surfaceRef, 'profile', route.key);
   const [notice, setNotice] = useState('');
   useEffect(() => {
     if (route.pathname.startsWith('/profile')) return;
@@ -27,7 +30,7 @@ function Shell({ Page }: { Page: React.ComponentType }) {
       else native('back');
     };
   }, [route, navigate]);
-  return <div className="mobile-profile">
+  return <div ref={surfaceRef} className="mobile-profile">
     <PortraitPreProfileHost />
     <Routes>
       <Route path="/profile/view/:profileId" element={<Suspense fallback={<p role="status">Ouverture du profil…</p>}><ProfileViewer /></Suspense>} />
