@@ -1,12 +1,26 @@
 /** Device orientation remains stable when the on-screen keyboard reduces the
  * WebView height. Only layout changes; the renderer and camera stay mounted. */
+const orientationEvent = 'meewav:globe-orientation';
+
+export function getGlobeOrientation(): 'portrait' | 'landscape' {
+  return document.documentElement.dataset.globeOrientation === 'landscape' ? 'landscape' : 'portrait';
+}
+
+export function subscribeGlobeOrientation(update: () => void) {
+  window.addEventListener(orientationEvent, update);
+  return () => window.removeEventListener(orientationEvent, update);
+}
+
 export function installGlobeLayout() {
   const orientation = window.screen.orientation;
   const update = () => {
     const type = orientation?.type;
-    document.documentElement.dataset.globeOrientation = type?.startsWith('portrait') ? 'portrait'
+    const next = type?.startsWith('portrait') ? 'portrait'
       : type?.startsWith('landscape') ? 'landscape'
       : window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+    if (document.documentElement.dataset.globeOrientation === next) return;
+    document.documentElement.dataset.globeOrientation = next;
+    window.dispatchEvent(new Event(orientationEvent));
   };
   update();
   orientation?.addEventListener('change', update);

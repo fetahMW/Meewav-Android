@@ -86,16 +86,6 @@ html, body, #root { width: 100%; height: 100%; margin: 0; overflow: hidden; }
   .reference-search-dock .search-submit-button { width: 28px; height: 28px; }
   .reference-search-dock .meewav-search-filter-bar__shortcut { display: none; }
   .reference-search-results.france-search-dropdown { top: 52px; left: 76px; width: min(264px, calc(100% - var(--mobile-artist-panel-width) - var(--mobile-artist-panel-right) - 100px)); max-height: calc(100dvh - 66px); overflow-y: auto; }
-  .reference-rail .globe-navigation-pole { top: 10px; left: 10px; bottom: 10px; width: 52px; height: auto; padding: 8px 4px; justify-content: space-between; gap: 0; border-radius: 16px; clip-path: none; mask: none; }
-  .reference-rail .globe-navigation-pole > .meewav-primary-nav__item.is-map { width: 42px; height: 36px; flex-basis: 36px; margin-top: 0; border-radius: 10px; background: none; box-shadow: none; }
-  .reference-rail .globe-navigation-pole > .meewav-primary-nav__item.is-map::before,
-  .reference-rail .globe-navigation-pole > .meewav-primary-nav__item.is-map::after { display: none; content: none; }
-  .reference-rail .globe-navigation-pole .meewav-primary-nav__item:not(.is-map) { width: 42px; height: 36px; min-height: 36px; flex-basis: 36px; }
-  /* Une seule distribution : les groupes sémantiques ne créent plus de grands intervalles. */
-  .reference-rail .globe-navigation-pole .meewav-primary-nav__pillars,
-  .reference-rail .globe-navigation-pole .meewav-primary-nav__account { display: contents; margin: 0; padding: 0; }
-  .reference-rail .globe-navigation-pole .meewav-primary-nav__account::before { display: none; content: none; }
-  .reference-rail .globe-navigation-pole.is-glass-chassis .meewav-primary-nav__globe { width: 31px; height: 31px; box-shadow: none; }
   .globe-honors-dock { --honors-top: 10px; top: 10px; right: var(--mobile-artist-panel-right); width: var(--mobile-artist-panel-width); gap: 8px; }
   .immersive-globe .national-top-ten__toggle { min-height: 42px; padding: 8px 10px; gap: 7px; font-size: 11px; }
   .national-top-ten__heading small { font-size: 9px; }
@@ -392,6 +382,19 @@ html, body, #root { width: 100%; height: 100%; margin: 0; overflow: hidden; }
   @media (prefers-reduced-motion: reduce) { .meewav-filter-below-header #artist-filter-drawer { transition: none; } }
 }
 
+/* The original landscape navbar retains its original mobile breakpoint. */
+@media (orientation: landscape) and (max-height: 600px) {
+  .reference-rail .globe-navigation-pole { top: 10px; left: 10px; bottom: 10px; width: 52px; height: auto; padding: 8px 4px; justify-content: space-between; gap: 0; border-radius: 16px; clip-path: none; mask: none; }
+  .reference-rail .globe-navigation-pole > .meewav-primary-nav__item.is-map { width: 42px; height: 36px; flex-basis: 36px; margin-top: 0; border-radius: 10px; background: none; box-shadow: none; }
+  .reference-rail .globe-navigation-pole > .meewav-primary-nav__item.is-map::before,
+  .reference-rail .globe-navigation-pole > .meewav-primary-nav__item.is-map::after { display: none; content: none; }
+  .reference-rail .globe-navigation-pole .meewav-primary-nav__item:not(.is-map) { width: 42px; height: 36px; min-height: 36px; flex-basis: 36px; }
+  .reference-rail .globe-navigation-pole .meewav-primary-nav__pillars,
+  .reference-rail .globe-navigation-pole .meewav-primary-nav__account { display: contents; margin: 0; padding: 0; }
+  .reference-rail .globe-navigation-pole .meewav-primary-nav__account::before { display: none; content: none; }
+  .reference-rail .globe-navigation-pole.is-glass-chassis .meewav-primary-nav__globe { width: 31px; height: 31px; box-shadow: none; }
+}
+
 /* Device orientation is independent of the keyboard's reduced viewport.
    Safe drawing/cutout insets are reserved by the native WebView container. */
 :root {
@@ -410,7 +413,7 @@ html[data-globe-orientation="landscape"] {
   --mobile-artist-panel-width: min(288px,calc(100vw - 184px));
   --mobile-artist-panel-right: 76px;
 }
-.reference-rail { display: none; }
+html[data-globe-orientation="portrait"] .reference-rail { display: none; }
 /* Zoom and tilt remain touch gestures; no legacy +/- or 3D button is shown. */
 .immersive-globe :is(.reference-controls.map-control-stack,.map-control-button--perspective,.reference-city-strip) { display: none; }
 .reference-search-dock {
@@ -472,29 +475,6 @@ html[data-globe-orientation="portrait"]:has(.immersive-globe[data-navigation-mod
 html[data-globe-orientation="portrait"] .ring-visit-panel { top: 124px; max-width: calc(100vw - 24px); }
 html[data-globe-orientation="portrait"] .ring-player[data-profile-open="true"] .ring-track-info { display: flex; }
 .feature-dock-host.is-globe { z-index: 16020; }
-html[data-globe-orientation="landscape"] .feature-dock-host.is-globe {
-  top: 8px; bottom: 8px; left: 8px; right: auto; width: 88px; height: auto;
-}
-html[data-globe-orientation="landscape"] .feature-dock-host.is-globe.is-collapsed { transform: translateX(-60px); }
-html[data-globe-orientation="landscape"] .feature-dock-host.is-globe .feature-dock-toggle {
-  top: 50%; left: auto; right: 0; transform: translateY(-50%); width: 28px; height: 64px;
-}
-html[data-globe-orientation="landscape"] .feature-dock-host.is-globe .feature-dock-toggle svg { transform: rotate(90deg); }
-html[data-globe-orientation="landscape"] .feature-dock-host.is-globe .profile-bottom-dock {
-  inset: 0 28px 0 0; width: auto; height: 100%; display: flex; flex-direction: column;
-  align-items: center; gap: 4px; padding: 6px 0; box-sizing: border-box;
-  overflow-y: auto; scrollbar-width: none; overscroll-behavior: contain; touch-action: pan-y;
-}
-html[data-globe-orientation="landscape"] .feature-dock-host.is-globe .profile-bottom-dock::-webkit-scrollbar { display: none; }
-html[data-globe-orientation="landscape"] .feature-dock-host.is-globe .profile-bottom-dock__surface {
-  inset: 0; border-radius: 18px; border-bottom: 1px solid transparent;
-  mask-image: none; -webkit-mask-image: none;
-}
-html[data-globe-orientation="landscape"] .feature-dock-host.is-globe .profile-bottom-dock__side {
-  flex: 1 0 132px; height: auto; display: flex; flex-direction: column; justify-content: space-between; padding: 0;
-}
-html[data-globe-orientation="landscape"] .feature-dock-host.is-globe .profile-bottom-dock__side button { width: 48px; height: 44px; min-height: 44px; padding: 6px; }
-html[data-globe-orientation="landscape"] .feature-dock-host.is-globe .profile-bottom-dock__globe { flex: 0 0 56px; align-self: center; }
 @media (prefers-reduced-transparency: reduce) {
   .reference-search-dock .search-bar { background: #14151a; backdrop-filter: none; -webkit-backdrop-filter: none; }
 }

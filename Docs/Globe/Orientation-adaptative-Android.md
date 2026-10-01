@@ -7,9 +7,13 @@ Le globe interactif suit les quatre orientations du téléphone avec
 l'aperçu d'arrivée reste en paysage. Le changement de configuration conserve
 la WebView, le moteur et la caméra ; le moteur existant adapte son viewport.
 
-En portrait, la navigation est placée en bas. En paysage, elle est à gauche.
-Elle utilise `shared-ui/FeatureDock`, avec les mêmes destinations, icônes,
-globe et matière de CTA violet poli que les autres features Android.
+En portrait, la navigation est placée en bas. Elle utilise
+`shared-ui/FeatureDock`, avec les mêmes destinations, icônes, globe et
+matière de CTA violet poli que les autres features Android.
+En paysage, la navbar historique `GlobeNavigationPole` est conservée,
+avec son ordre, ses dimensions, ses espacements et sa matière d'origine.
+Son breakpoint compact reste limité aux paysages de 600 pixels de hauteur
+au maximum, comme avant cette adaptation.
 Les marges système et les découpes du téléphone sont déjà réservées par
 `safeDrawingPadding()` dans le conteneur natif.
 
@@ -27,7 +31,9 @@ tactile sans fond visible, sur le même axe que les trois raccourcis.
   dimensions si l'API est absente. L'ouverture du clavier ne change donc pas
   une navigation portrait en rail latéral.
 - `full-globe-navigation.tsx` relie le dock aux callbacks de navigation déjà
-  utilisés par le globe ; le routeur est local à ce composant.
+  utilisés par le globe ; le routeur est local au dock portrait. Un abonnement
+  à l'orientation remplace uniquement la navigation par le composant historique
+  en paysage, sans remonter l'application ni son moteur.
 - La compilation utilise une seule instance de React et ReactDOM, issue de
   la toolchain du globe, y compris pour le dock et le routeur.
 - Les pré-profils portallés suivent le rectangle disponible dans les deux
@@ -39,7 +45,7 @@ tactile sans fond visible, sur le même axe que les trois raccourcis.
 - Le dock détecte aussi les fenêtres portallées hors de `#root`. Son petit
   globe animé est suspendu lorsque la WebView native devient inactive.
 
-## Vérification
+## Vérification initiale
 
 La compilation des sept bundles et `:app:assembleDebug` réussit. La
 vérification des six features valide 4 852 assets et 193 imports. Le manifeste
@@ -54,7 +60,8 @@ La vérification sur téléphone utilise le DOM et les états natifs sans captur
 d'écran. Une émulation Chromium de taille de viewport prouve l'adaptation
 de l'interface ; elle ne constitue pas une rotation physique du téléphone.
 
-Sur le Redmi, le portrait réel mesure 406 × 863 pixels CSS. Les sept
+Lors de la vérification initiale sur le Redmi, le portrait réel mesure
+406 × 863 pixels CSS. Les sept
 destinations du dock, les trois contrôles de carte, la transparence de la
 recherche, le Top 10 et son pré-profil actif sont vérifiés dans le DOM.
 Les actions Pays, Ville, Ma position et le retour au globe déclenchent les
@@ -73,13 +80,35 @@ même SHA-256 que l'APK local. Ses dimensions sont confirmées en portrait
 réel et paysage émulé : Top 10 de 236 pixels, CTA de 212 pixels, trois carrés
 de 44 pixels en bas à droite. Le texte du CTA reste entier et le filtre
 occupe exactement son conteneur dans les deux orientations. Les émulations
-et les forwards ADB sont retirés après vérification ; les téléphones restent
-sur le globe prêt.
+et les forwards ADB sont retirés après cette vérification.
+
+## Vérification de la restauration de la navbar paysage
+
+Le bundle du globe et `:app:assembleDebug` réussissent. Le test d'orientation
+confirme que seuls les changements portrait/paysage notifient la navigation,
+sans remplacement lors d'un simple resize ou de l'ouverture du clavier.
+
+Sur le S22 au premier plan, le portrait de 384 × 796 pixels affiche le dock.
+En paysage émulé à 796 × 384 pixels, la navbar historique mesure 52 × 364
+pixels et se place à 10 pixels du haut et de la gauche. Ses boutons mesurent
+42 × 36 pixels, dans l'ordre Globe, Messagerie, Rooms, La Scène, Marketplace,
+Tremplin, Profil ; aucun `FeatureDock` n'est présent en paysage.
+Le retour en portrait rétablit le dock avec le même canvas et le même objet
+moteur. Longitude, latitude, pitch et bearing sont conservés ; la distance
+s'ajuste au cadrage. Le bouton Messagerie ouvre bien `MessagingActivity`.
+
+L'APK corrigé est installé sur les deux téléphones et leurs SHA-256
+correspondent au fichier local. Sur le Redmi, le volet de notifications
+masquait l'application et le globe chargeait encore : cette vérification
+ne confirme donc pas l'interface de cette version sur cet appareil.
+Aucune action n'a été forcée pour relever le volet. Les métriques de viewport
+ont été rétablies et les forwards ADB retirés sur les deux appareils.
 
 ## Annulation
 
-La modification est isolée dans un commit, avec les assets Android générés
-correspondants. Son annulation consiste à revert ce commit, reconstruire
+L'essai est isolé dans le commit d'adaptation et le commit de restauration
+de la navbar paysage, avec leurs assets Android générés. Pour annuler tout
+l'essai, revert d'abord la restauration puis l'adaptation, reconstruire
 l'APK et réinstaller la version obtenue. Le point de départ est `4b12a51`.
 La procédure et l'identifiant exact sont aussi enregistrés localement dans
 le dossier d'annulation `android-globe-responsive-20261001-369df39`.
