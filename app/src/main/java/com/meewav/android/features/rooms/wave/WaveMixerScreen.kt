@@ -613,6 +613,7 @@ private fun HeaderCounter(value: String, tint: Color? = null, icon: ImageVector?
 
 @Composable
 private fun WaveVideo(cameraOff: Boolean, modifier: Modifier = Modifier, roomLabel: String = "La Wave", roomAccent: Color = Color(0xFF27C2D1)) {
+    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
     // Chronomètre fictif qui défile depuis l'ouverture de l'écran.
     var elapsed by remember { mutableStateOf(12L * 60L + 47L) }
     LaunchedEffect(Unit) {
@@ -645,7 +646,8 @@ private fun WaveVideo(cameraOff: Boolean, modifier: Modifier = Modifier, roomLab
         val mediaWidth = minOf(maxWidth, maxHeight * (16f / 9f))
         AndroidView(
             factory = { ctx ->
-                android.widget.VideoView(ctx).apply {
+                com.meewav.android.core.media.PresentationVideoView(ctx, lifecycle).apply {
+                    presentationEnabled = !cameraOff
                     setVideoURI(android.net.Uri.parse("android.resource://" + ctx.packageName + "/" + R.raw.wave_live_loop))
                     setOnPreparedListener { mp ->
                         mp.isLooping = true
@@ -654,7 +656,8 @@ private fun WaveVideo(cameraOff: Boolean, modifier: Modifier = Modifier, roomLab
                     }
                 }
             },
-            onRelease = { it.stopPlayback() },
+            update = { it.presentationEnabled = !cameraOff },
+            onRelease = { it.release() },
             modifier = Modifier.width(mediaWidth).height(mediaWidth * 9f / 16f)
         )
         }

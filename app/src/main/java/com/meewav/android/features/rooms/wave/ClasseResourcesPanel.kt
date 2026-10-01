@@ -169,6 +169,7 @@ internal fun ClasseResourcesPanel(state: ClasseToolsState, modifier: Modifier) {
 }
 
 @Composable private fun ClasseResourcePreview(resource: ClasseResource, onClose: () -> Unit) {
+    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
     var error by remember { mutableStateOf<String?>(null) }
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Column(Modifier.fillMaxSize().background(Color(0xFF09090C)).systemBarsPadding()) {
@@ -187,7 +188,7 @@ internal fun ClasseResourcesPanel(state: ClasseToolsState, modifier: Modifier) {
                         }
                     }
                 }
-                resource.mime.startsWith("video/") -> AndroidView(factory = { context -> VideoView(context).apply { setMediaController(MediaController(context).also { it.setAnchorView(this) }); setVideoURI(Uri.parse(resource.uri)); setOnPreparedListener { start() }; setOnErrorListener { _, _, _ -> error = "Vidéo indisponible"; true } } }, modifier = Modifier.fillMaxWidth().weight(1f), onRelease = { it.stopPlayback() })
+                resource.mime.startsWith("video/") -> AndroidView(factory = { context -> com.meewav.android.core.media.PresentationVideoView(context, lifecycle).apply { setMediaController(MediaController(context).also { it.setAnchorView(this) }); setVideoURI(Uri.parse(resource.uri)); setOnPreparedListener { start() }; setOnErrorListener { _, _, _ -> error = "Vidéo indisponible"; true } } }, modifier = Modifier.fillMaxWidth().weight(1f), onRelease = { it.release() })
                 resource.mime == "application/pdf" -> ClassePdf(resource.uri, Modifier.weight(1f))
             }
             error?.let { Text(it, color = Color(0xFFE99A9E), modifier = Modifier.padding(16.dp)) }

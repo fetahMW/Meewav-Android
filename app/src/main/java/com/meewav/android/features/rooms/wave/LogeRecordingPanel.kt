@@ -123,10 +123,11 @@ internal class LogeCapture(private val context:Context) {
     var playing by remember{mutableStateOf(false)}
     var error by remember{mutableStateOf<String?>(null)}
     var video by remember{mutableStateOf<VideoView?>(null)}
+    // Preserve Loge's explicit pause on leaving; returning must not replay a private clip.
     DisposableEffect(path,lifecycle){val observer=LifecycleEventObserver{_,event->if(event==Lifecycle.Event.ON_STOP){audio?.pause();video?.pause();playing=false}};lifecycle.addObserver(observer);onDispose{lifecycle.removeObserver(observer);audio?.release();video?.stopPlayback()}}
     Dialog(onDismissRequest=onClose){Column(Modifier.fillMaxWidth().hifiBlackSurface(18.dp).padding(12.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
         Row(verticalAlignment=Alignment.CenterVertically){Text("Dédicace privée",color=Color.White,fontSize=16.sp,modifier=Modifier.weight(1f));SceneIcon(WaveIcons.Close,"Fermer",onClick=onClose)}
-        if(format=="video")AndroidView(factory={context->VideoView(context).also{view->video=view;view.setMediaController(MediaController(context).apply{setAnchorView(view)});view.setVideoURI(Uri.fromFile(File(path)));view.setOnPreparedListener{view.start()};view.setOnErrorListener{_,_,_->error="Impossible de lire cette vidéo.";true}}},modifier=Modifier.fillMaxWidth().height(250.dp))
+        if(format=="video")AndroidView(factory={context->com.meewav.android.core.media.PresentationVideoView(context,lifecycle).also{view->video=view;view.setMediaController(MediaController(context).apply{setAnchorView(view)});view.setVideoURI(Uri.fromFile(File(path)));view.setOnPreparedListener{view.start()};view.setOnErrorListener{_,_,_->error="Impossible de lire cette vidéo.";true}}},modifier=Modifier.fillMaxWidth().height(250.dp),onRelease={it.release()})
         else SceneButton(if(playing)"Pause"else"Écouter",Modifier.fillMaxWidth(),primary=true,icon=if(playing)Icons.Default.Pause else WaveIcons.Play){
             try{if(playing){audio?.pause();playing=false}else if(audio!=null){audio?.start();playing=true}else{val p=MediaPlayer();audio=p;p.setDataSource(path);p.setOnPreparedListener{it.start();playing=true};p.setOnCompletionListener{playing=false};p.setOnErrorListener{_,_,_->error="Impossible de lire cette dédicace.";playing=false;true};p.prepareAsync()}}catch(_:Exception){error="Le fichier n’est plus disponible."}
         }
