@@ -474,13 +474,33 @@ html[data-globe-orientation="portrait"] .immersive-globe .ring-player.ring-key-s
 html[data-globe-orientation="portrait"]:has(.immersive-globe[data-navigation-mode="ring"]) { --mobile-artist-panel-top: 126px; }
 html[data-globe-orientation="portrait"] .ring-visit-panel { top: 124px; max-width: calc(100vw - 24px); }
 html[data-globe-orientation="portrait"] .ring-player[data-profile-open="true"] .ring-track-info { display: flex; }
+/* A portrait profile owns the space below search. Keep the ring's playback
+   controls and track details together beside the avatar, above navigation. */
+html[data-globe-orientation="portrait"] .immersive-globe .ring-player.ring-key-surface[data-profile-open="true"] {
+  top: auto; right: auto; left: 12px; bottom: var(--globe-ui-bottom);
+  display: grid; grid-template-columns: 44px 44px; grid-template-rows: auto 44px;
+  justify-content: center; gap: 6px; width: 110px; height: auto; padding: 5px;
+}
+html[data-globe-orientation="portrait"] .ring-player[data-profile-open="true"] .ring-track-info {
+  grid-column: 1 / -1; grid-row: 1; gap: 5px;
+}
+html[data-globe-orientation="portrait"] .ring-player[data-profile-open="true"] .ring-track-info img {
+  width: 26px; height: 26px; border-radius: 8px;
+}
+html[data-globe-orientation="portrait"] .ring-player[data-profile-open="true"] .ring-track-info__copy { gap: 3px; }
+html[data-globe-orientation="portrait"] .ring-player[data-profile-open="true"] .ring-track-info__song {
+  flex-direction: column; align-items: stretch; gap: 0;
+}
+html[data-globe-orientation="portrait"] .ring-player[data-profile-open="true"] .ring-track-info__artist { max-width: 100%; }
+html[data-globe-orientation="portrait"] .ring-player[data-profile-open="true"] .ring-track-info__separator { display: none; }
+html[data-globe-orientation="portrait"] .ring-player[data-profile-open="true"] :is(.ring-playback-button,.ring-mute-button) { grid-row: 2; }
 .feature-dock-host.is-globe { z-index: 16020; }
 @media (prefers-reduced-transparency: reduce) {
   .reference-search-dock .search-bar { background: #14151a; backdrop-filter: none; -webkit-backdrop-filter: none; }
 }
 
-/* A portrait pre-profile is a small anchored card, not the landscape panel.
-   The bounded body scrolls; closing/contact/collaboration stay reachable. */
+/* Portrait profiles stay below search with room for their complete content.
+   The globe moves the avatar below the card; landscape keeps its own layout. */
 .ring-artist-preprofile[data-orientation="portrait"] .mw-hover-preprofile-bubble__surface:has(.mw-preprofile) {
   padding: 10px;
 }
@@ -492,10 +512,6 @@ html[data-globe-orientation="portrait"] .ring-player[data-profile-open="true"] .
   top: auto; bottom: -6px; border: 0;
   border-right: 1px solid #404853; border-bottom: 1px solid #b4c0d25c;
 }
-.ring-artist-preprofile[data-orientation="portrait"][data-placement="below"] .mw-hover-preprofile-bubble__arrow {
-  top: -6px; bottom: auto; border: 0;
-  border-top: 1px solid #b4c0d25c; border-left: 1px solid #404853;
-}
 .ring-artist-preprofile[data-orientation="portrait"] .ring-artist-preprofile__close {
   width: 40px; height: 40px; top: 6px; right: 6px;
 }
@@ -504,11 +520,11 @@ html[data-globe-orientation="portrait"] .ring-player[data-profile-open="true"] .
   font-size: 15px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .ring-artist-preprofile[data-orientation="portrait"] .mw-preprofile .mw-preprofile__lower-stage,
-.ring-artist-preprofile[data-orientation="portrait"] .mw-preprofile .mw-preprofile__owner-lower-stage { min-height: 118px; }
+.ring-artist-preprofile[data-orientation="portrait"] .mw-preprofile .mw-preprofile__owner-lower-stage { min-height: 134px; }
 .ring-artist-preprofile[data-orientation="portrait"] .mw-preprofile .mw-preprofile__preview {
-  flex-basis: 78px; height: 78px; min-height: 78px; max-height: 78px;
+  flex-basis: 94px; height: 94px; min-height: 94px; max-height: 94px;
 }
-.ring-artist-preprofile[data-orientation="portrait"] .mw-preprofile .mw-preprofile__overview-card { height: 70px; max-height: 70px; }
+.ring-artist-preprofile[data-orientation="portrait"] .mw-preprofile .mw-preprofile__overview-card { height: 84px; max-height: 84px; }
 .ring-artist-preprofile[data-orientation="portrait"] .top-ten-profile-pages,
 .ring-artist-preprofile[data-orientation="portrait"] .top-ten-profile-page .mw-preprofile__scroll-body { touch-action: pan-y; }
 .ring-artist-preprofile[data-orientation="portrait"][data-navigable="true"] .mw-hover-preprofile-bubble__surface:has(.mw-preprofile) {

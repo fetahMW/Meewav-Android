@@ -1,6 +1,6 @@
 // Shared with the Top 10 geometry in full-globe-mobile.css. Landscape profiles
-// retain this screen rectangle; portrait marker popups use their own compact,
-// vertically anchored geometry in portrait-artist-popup.ts.
+// retain this screen rectangle; portrait profiles stay below search and use
+// temporary camera framing from portrait-artist-popup.ts.
 export function mobileArtistPanel(viewport: { width: number; height: number }) {
   const root = document.documentElement;
   const style = getComputedStyle(root);

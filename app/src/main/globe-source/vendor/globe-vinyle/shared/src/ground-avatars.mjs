@@ -387,7 +387,8 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
       && paintState.hoveredId === hoveredId && paintState.selectedId === selectedId && paintState.selectedRestore === selectedRestore
       && paintState.width === width && paintState.height === height
       && paintState.lon === view.lon && paintState.lat === view.lat && paintState.distance === view.height
-      && paintState.pitch === view.pitch && paintState.bearing === view.bearing;
+      && paintState.pitch === view.pitch && paintState.bearing === view.bearing
+      && paintState.projectionVersion === (camera.userData.meewavProjectionVersion || 0);
   }
 
   function collectScreen(view, width, height, preferredId) {
@@ -429,7 +430,8 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
     if (paintIsCurrent()) return;
     const items = collectScreen(view, width, height, preferredId);
     paintState = { generation: contentGeneration, preferredId, hoveredId, selectedId, selectedRestore,
-      width, height, lon: view.lon, lat: view.lat, distance: view.height, pitch: view.pitch, bearing: view.bearing };
+      width, height, lon: view.lon, lat: view.lat, distance: view.height, pitch: view.pitch, bearing: view.bearing,
+      projectionVersion: camera.userData.meewavProjectionVersion || 0 };
     sprites.begin(width, height, items.length);
     drawn.length = 0;
     let hostItem = null;

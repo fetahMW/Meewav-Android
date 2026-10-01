@@ -1,5 +1,6 @@
 import { solveScreenAnchor } from "./screen-anchor.mjs";
 import { createGlobeTouchRotation } from '../../../../globe-touch-rotation.mjs';
+import { createArtistPopupFraming } from '../../../../artist-popup-framing';
 import { createTouchNavigation } from "../../../../touch-navigation.mjs";
 import { createTouchCamera } from "../../../../touch-camera.mjs";
 import { createRingPlayback } from "../../../../ring-playback";
@@ -451,9 +452,18 @@ export async function createThree(
     hitPoint = new T.Vector3();
   const updateGlobeCamera = createOrbitCameraUpdater(camera, view, GLOBE_ALIGN);
   const ringNavigation = createRingNavigation(camera, saturnRing, reducedMotion);
+  const artistPopupFraming = createArtistPopupFraming({ camera, reducedMotion,
+    viewport: () => ({ width, height }),
+    invalidate: () => { sceneDirty = true; viewportNeedsUpdate = true; },
+  });
   const ringPlayback = createRingPlayback(() => alive && active && !document.hidden &&
     ringNavigation.active && !ringNavigation.returning && ringNavigation.entryProgress >= 1);
-  const updateCamera = () => ringNavigation.active ? ringNavigation.tick(0, true) : updateGlobeCamera();
+  const updateCamera = () => {
+    artistPopupFraming.restoreBaseProjection();
+    if (ringNavigation.active) ringNavigation.tick(0, true);
+    else updateGlobeCamera();
+    artistPopupFraming.applyProjection();
+  };
   const applyGlobeDrag = createGlobeDrag({ motion, axis: saturnRing.state().normal, updateCamera, align: GLOBE_ALIGN });
   let brandOverviewHeight = view.height;
   const ctaGlobeCenter = new T.Vector3();
@@ -1095,7 +1105,7 @@ export async function createThree(
     cpuSamples: number[] = [],
     renderTimes: number[] = [];
   function pointerIsIdle() {
-    return !motion.isMoving() && !wheelZoom.isMoving() && !orbit.isMoving() && !touchNavigation.isMoving() && !pointers.size;
+    return !motion.isMoving() && !wheelZoom.isMoving() && !orbit.isMoving() && !touchNavigation.isMoving() && !artistPopupFraming.moving && !pointers.size;
   }
   function syncPointerHover() {
     if (!pendingHover || !pointerIsIdle()) return;
@@ -1131,8 +1141,11 @@ export async function createThree(
     const dt = lastTime ? (now - lastTime) / 1000 : 0;
     lastTime = now;
     touchNavigation.tick(now);
+    artistPopupFraming.tick(now);
     if (ringNavigation.active) {
+      artistPopupFraming.restoreBaseProjection();
       const navigationChanged = ringNavigation.tick(dt, sceneDirty);
+      const popupProjectionChanged = artistPopupFraming.applyProjection();
       ringPlayback.refresh();
       // Rotation physique du disque et des portraits, caméra manuelle inchangée.
       // Un tour en quatre minutes ; aucune remise à zéro lors des pauses.
@@ -1148,8 +1161,8 @@ export async function createThree(
       }
       // Portraits can now pass under a stationary pointer. Their picking bases
       // follow the same turntable transform without uploading instance data.
-      const portraitsChanged = (navigationChanged || vinylChanged) && ringPortraits.update();
-      if (navigationChanged || vinylChanged || portraitsChanged) {
+      const portraitsChanged = (navigationChanged || vinylChanged || popupProjectionChanged) && ringPortraits.update();
+      if (navigationChanged || vinylChanged || portraitsChanged || popupProjectionChanged) {
         renderScene(dt, frameStart, 'ring');
       }
       raf = requestAnimationFrame(frame);
@@ -1186,7 +1199,7 @@ export async function createThree(
       view.pitch !== renderedView.pitch || view.bearing !== renderedView.bearing;
     if (poseChanged || viewportNeedsUpdate) {
       updateCamera();
-      geographicViewport = view.pitch || view.bearing ? orbitViewport() : null;
+      geographicViewport = view.pitch || view.bearing || artistPopupFraming.active ? orbitViewport() : null;
       viewportNeedsUpdate = false;
     }
     if (poseChanged || sceneDirty) parisLandmarks.update(view);
@@ -1565,6 +1578,7 @@ export async function createThree(
     },
     destroy() {
       renderAudit.stop();
+      artistPopupFraming.dispose();
       ringPlayback.dispose();
       cancelTouch();
       // Stop rendering immediately, but retain materials until an in-progress
