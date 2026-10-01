@@ -188,7 +188,7 @@ internal fun ClasseResourcesPanel(state: ClasseToolsState, modifier: Modifier) {
                         }
                     }
                 }
-                resource.mime.startsWith("video/") -> AndroidView(factory = { context -> com.meewav.android.core.media.PresentationVideoView(context, lifecycle).apply { setMediaController(MediaController(context).also { it.setAnchorView(this) }); setVideoURI(Uri.parse(resource.uri)); setOnPreparedListener { start() }; setOnErrorListener { _, _, _ -> error = "Vidéo indisponible"; true } } }, modifier = Modifier.fillMaxWidth().weight(1f), onRelease = { it.release() })
+                resource.mime.startsWith("video/") -> AndroidView(factory = { context -> com.meewav.android.core.media.PresentationVideoView(context, lifecycle).apply { setMediaController(MediaController(context).also { it.setAnchorView(this) }); setVideoURI(Uri.parse(resource.uri)); setOnPreparedListener { onMediaPrepared() }; setOnErrorListener { _, _, _ -> error = "Vidéo indisponible"; true }; start() } }, modifier = Modifier.fillMaxWidth().weight(1f), onRelease = { it.release() })
                 resource.mime == "application/pdf" -> ClassePdf(resource.uri, Modifier.weight(1f))
             }
             error?.let { Text(it, color = Color(0xFFE99A9E), modifier = Modifier.padding(16.dp)) }

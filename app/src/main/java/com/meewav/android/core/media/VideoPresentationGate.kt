@@ -18,6 +18,9 @@ internal class VideoPresentationGate(private val play: () -> Unit, private val p
         pause()
     }
 
+    /** Readiness must not overwrite a pause made while the file was loading. */
+    fun prepared() { if (!closed && active && requested) play() }
+
     fun setActive(value: Boolean) {
         if (closed || active == value) return
         active = value

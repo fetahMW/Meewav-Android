@@ -7,12 +7,21 @@ class VideoPresentationGateTest {
     @Test fun preparationAfterBackgroundDoesNotStartDecoding() {
         val events = mutableListOf<String>()
         val gate = VideoPresentationGate({ events += "play" }, { events += "pause" })
+        gate.requestPlay() // autoplay requested when the file was opened
         gate.setActive(true)
         gate.setActive(false)
-        gate.requestPlay() // asynchronous onPrepared after the activity was paused
-        assertEquals(listOf("pause"), events)
+        gate.prepared() // readiness after the activity was paused is not a new play request
+        assertEquals(listOf("play", "pause"), events)
         gate.setActive(true)
-        assertEquals(listOf("pause", "play"), events)
+        assertEquals(listOf("play", "pause", "play"), events)
+    }
+
+    @Test fun aLatePreparationCannotUndoAnExplicitPause() {
+        val events = mutableListOf<String>()
+        val gate = VideoPresentationGate({ events += "play" }, { events += "pause" })
+        gate.requestPlay(); gate.requestPause(); gate.prepared()
+        gate.setActive(true); gate.prepared()
+        assertEquals(listOf("pause"), events)
     }
 
     @Test fun manualPauseSurvivesHideAndReturn() {
@@ -34,7 +43,7 @@ class VideoPresentationGateTest {
     @Test fun releaseRejectsLatePreparationAndLifecycleEvents() {
         val events = mutableListOf<String>()
         val gate = VideoPresentationGate({ events += "play" }, { events += "pause" })
-        gate.setActive(true); gate.close(); gate.requestPlay(); gate.setActive(false); gate.setActive(true)
+        gate.setActive(true); gate.close(); gate.requestPlay(); gate.prepared(); gate.setActive(false); gate.setActive(true)
         assertEquals(emptyList<String>(), events)
     }
 

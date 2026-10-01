@@ -34,6 +34,8 @@ internal class PresentationVideoView(context: Context, private val lifecycle: Li
 
     override fun stopPlayback() { gate?.reset(); super.stopPlayback() }
 
+    fun onMediaPrepared() { updatePresentation(); gate?.prepared() }
+
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         if (!released) lifecycle.addObserver(observer)

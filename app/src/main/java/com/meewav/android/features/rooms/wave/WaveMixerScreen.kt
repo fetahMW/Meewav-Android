@@ -652,8 +652,9 @@ private fun WaveVideo(cameraOff: Boolean, modifier: Modifier = Modifier, roomLab
                     setOnPreparedListener { mp ->
                         mp.isLooping = true
                         mp.setVolume(0f, 0f)
-                        start()
+                        onMediaPrepared()
                     }
+                    start()
                 }
             },
             update = { it.presentationEnabled = !cameraOff },
