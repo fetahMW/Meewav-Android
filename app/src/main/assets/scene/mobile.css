@@ -40,11 +40,14 @@
 #root .mobile-feature .profile-bottom-dock { z-index: 450; }
 @media (prefers-reduced-motion: reduce) { #root .mobile-feature * { scroll-behavior: auto !important; } }
 
-#root .mobile-scene .scene-page { position: absolute; inset: 100px 0 0; width: 100%; height: auto; min-height: 0; overflow-x: hidden; overflow-y: auto; scrollbar-width: none; overscroll-behavior-y: contain; --shorts-nav-space: 0px; --shorts-topbar-height: 100px; --scene-browse-width: 0px; --scene-content-top-gap: 0px; background: #090a0e; }
+#root .mobile-scene { --scene-mobile-header: 110px; }
+#root .mobile-scene .scene-page { position: absolute; inset: var(--scene-mobile-header) 0 0; width: 100%; height: auto; min-height: 0; overflow-x: hidden; overflow-y: auto; scrollbar-width: none; overscroll-behavior-y: contain; --shorts-nav-space: 0px; --shorts-topbar-height: var(--scene-mobile-header); --scene-browse-width: 0px; --scene-content-top-gap: 0px; background: #090a0e; }
 #root .mobile-scene .shorts-shell { position: static; width: 100%; height: auto; min-height: 0; display: block; padding: 0; }
-#root .mobile-scene .shorts-page__background { position: fixed; inset: 100px 0 0; opacity: .4; }
+#root .mobile-scene .shorts-page__background { position: fixed; inset: var(--scene-mobile-header) 0 0; opacity: .4; }
 #root .mobile-scene .scene-context-back { display: none; }
-#root .mobile-scene .mobile-scene-tools { position: fixed; z-index: 490; top: 100px; left: 0; right: 0; height: 54px; padding: 5px 8px; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid #c7b8df14; background: var(--profile-selector-glass); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+#root .mobile-scene .shorts-topbar { grid-template-rows: 54px 56px; height: var(--scene-mobile-header); }
+#root .mobile-scene .shorts-topbar__brand { display: none; }
+#root .mobile-scene .mobile-scene-tools { position: fixed; z-index: 501; top: 0; left: 0; right: 0; height: 54px; padding: 5px 8px; display: flex; align-items: center; gap: 4px; border: 1px solid transparent; background: var(--mw-primary-face); box-shadow: var(--mw-primary-shadow); backdrop-filter: none; -webkit-backdrop-filter: none; }
 #root .mobile-scene .scene-browse-toggle { display: grid; place-items: center; flex: 0 0 36px; width: 36px; height: 44px; padding: 0; background: none; border: 0; color: #d6d0e1; }
 #root .mobile-scene .scene-browse-toggle svg { width: 20px; height: 20px; }
 #root .mobile-scene .mobile-scene-tools .scene-context-search { flex: 1; min-width: 0; width: auto; margin: 0; }
@@ -67,12 +70,12 @@
 #root .mobile-scene .shorts-topbar__actions .scene-topbar-studio span { display: inline; font-size: 12px; font-weight: 700; letter-spacing: .01em; color: inherit; }
 #root .mobile-scene .shorts-topbar__actions .scene-topbar-studio > b { position: static; display: grid; place-items: center; min-width: 16px; width: auto; height: 16px; padding: 0 4px; margin: 0; border-radius: 8px; background: #ffffff38; color: #fff; font-size: 9px; font-weight: 800; line-height: 1; }
 #root .mobile-scene .shorts-topbar__actions svg { width: 18px; height: 18px; }
-#root .mobile-scene .scene-browse-chips-shell { position: fixed; top: 154px; left: 0; right: 0; z-index: 480; }
+#root .mobile-scene .scene-browse-chips-shell { position: fixed; top: var(--scene-mobile-header); left: 0; right: 0; z-index: 480; }
 #root .mobile-scene .scene-browse-chips { height: 48px; padding: 6px 12px; gap: 8px; background: var(--profile-selector-glass); backdrop-filter: blur(24px); scrollbar-width: none; }
 #root .mobile-scene .scene-browse-chips button { min-height: 34px; padding: 7px 12px; font-size: 12px; border-radius: 9px; color: #d2cedc; background: #24242c; border-color: #ffffff08; }
 #root .mobile-scene .scene-browse-chips button[aria-pressed=true] { background: #ded9e8; color: #17131f; }
-#root .mobile-scene .shorts-home { position: relative; display: block; inset: auto; width: 100%; height: auto; min-height: 0; margin: 0; padding: 62px 0 0; overflow: visible; }
-#root .mobile-scene .scene-page.has-browse-nav .shorts-home { padding-top: 108px; }
+#root .mobile-scene .shorts-home { position: relative; display: block; inset: auto; width: 100%; height: auto; min-height: 0; margin: 0; padding: 8px 0 0; overflow: visible; }
+#root .mobile-scene .scene-page.has-browse-nav .shorts-home { padding-top: 54px; }
 #root .mobile-scene .scene-page.has-watch-page .shorts-home { display: none; }
 #root .mobile-scene .shorts-home__content { width: 100%; max-width: none; margin: 0; padding: 0 12px 108px; }
 #root .mobile-scene .scene-home-feed__grid { display: grid; grid-template-columns: minmax(0,1fr); gap: 24px; }
@@ -125,7 +128,7 @@
 #root .mobile-scene .shorts-contentbar { padding: 8px 0 12px; margin: 0; min-height: 0; background: transparent; border: 0; }
 /* Explorer : une seule ligne de chips — le contentbar devient le scroller
    horizontal et ses groupes internes sont aplatis dedans. */
-#root .mobile-scene .shorts-contentbar.is-explore { position: fixed; top: 154px; left: 0; right: 0; z-index: 480; display: flex; flex-wrap: nowrap; align-items: center; gap: 6px; height: 48px; padding: 6px 12px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; background: var(--profile-selector-glass); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-bottom: 1px solid #c7b8df14; }
+#root .mobile-scene .shorts-contentbar.is-explore { position: fixed; top: var(--scene-mobile-header); left: 0; right: 0; z-index: 480; display: flex; flex-wrap: nowrap; align-items: center; gap: 6px; height: 48px; padding: 6px 12px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; background: var(--profile-selector-glass); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-bottom: 1px solid #c7b8df14; }
 #root .mobile-scene .shorts-contentbar.is-explore :is(.scene-explore__compact-controls,.scene-vertical-collection__filters,.scene-browse-chips-shell,.scene-browse-chips,.artist-filter-active-chips) { display: contents; }
 #root .mobile-scene .shorts-contentbar.is-explore :is(.scene-explore__media-tabs,.scene-explore__editorial-tabs,.scene-explore__result-count,.scene-explore__sort-control,.scene-vertical-collection__filters button,.scene-explore__media-tabs button,.scene-browse-chips button,.artist-filter-active-chips > *) { flex: 0 0 auto; }
 #root .mobile-scene .shorts-contentbar.is-explore .meewav-rail-edges { display: none; }
@@ -137,15 +140,15 @@
 #root .mobile-scene .scene-explore__sort-control { display: none; }
 #root .mobile-scene .scene-explore__compact-controls button { min-height: 40px; padding: 8px 10px; font-size: 12px; }
 #root .mobile-scene .scene-explore__result-count { font-size: 11px; white-space: nowrap; }
-#root .mobile-scene .scene-browse-nav { position: fixed; z-index: 51001; top: 154px; bottom: 88px; left: 0; width: min(300px,85vw); padding: 12px; border: 1px solid #c1add72a; border-radius: 0 18px 18px 0; background: #0f1018ed; backdrop-filter: blur(26px); overflow-y: auto; scrollbar-width: none; }
+#root .mobile-scene .scene-browse-nav { position: fixed; z-index: 51001; top: 54px; bottom: 88px; left: 0; width: min(300px,85vw); padding: 12px; border: 1px solid #c1add72a; border-radius: 0 18px 18px 0; background: #0f1018ed; backdrop-filter: blur(26px); overflow-y: auto; scrollbar-width: none; }
 #root .mobile-scene .is-browse-collapsed .shorts-shell > .scene-browse-nav { display: none; }
-#root .mobile-scene .scene-watch-menu { position: fixed; z-index: 51002; inset: 154px 0 88px; }
+#root .mobile-scene .scene-watch-menu { position: fixed; z-index: 51002; inset: 54px 0 88px; }
 #root .mobile-scene .scene-watch-menu .scene-browse-nav { top: 0; bottom: 0; position: absolute; }
 #root .mobile-scene .scene-watch-menu-space { display: none; }
-#root .mobile-scene .shorts-notification-panel { position: fixed; top: 154px; right: 10px; left: 10px; width: auto; max-height: calc(100dvh - 250px); overflow-y: auto; border-radius: 18px; background: #111219f5; }
+#root .mobile-scene .shorts-notification-panel { position: fixed; top: 54px; right: 10px; left: 10px; width: auto; max-height: calc(100dvh - 150px); overflow-y: auto; border-radius: 18px; background: #111219f5; }
 #root .mobile-scene .scene-search-suggestions { min-width: 0; max-height: 45dvh; overflow-y: auto; background: #13131df5; }
 /* Watch follows the familiar mobile flow: picture, identity/actions, comments, next videos. */
-#root .mobile-scene .shorts-player-layer.is-watch:not(.is-miniplayer) { position: relative; inset: auto; display: flex; flex-direction: column; align-items: stretch; gap: 20px; margin: 0; width: 100%; padding: 54px 0 108px; overflow: visible; min-height: 0; }
+#root .mobile-scene .shorts-player-layer.is-watch:not(.is-miniplayer) { position: relative; inset: auto; display: flex; flex-direction: column; align-items: stretch; gap: 20px; margin: 0; width: 100%; padding: 0 0 108px; overflow: visible; min-height: 0; }
 #root .mobile-scene .shorts-player-layer.is-watch .shorts-player-surface { width: 100%; max-width: none; min-width: 0; height: auto; max-height: none; display: block; overflow: visible; border: 0; border-radius: 0; box-shadow: none; background: transparent; }
 #root .mobile-scene .shorts-player-layer.is-watch:not(.is-miniplayer) .shorts-player-frame { width: 100%; height: auto; min-height: 0; aspect-ratio: 16/9; margin: 0; border-radius: 0; background: #000; }
 #root .mobile-scene .shorts-player-video { object-fit: contain; }
@@ -203,8 +206,8 @@
 /* WebView bug: backdrop-filter inside an overflow:hidden container paints the
    clipped region black — strip it from the feed chrome (backgrounds stay opaque). */
 #root .mobile-scene .shorts-player-layer.is-vertical-feed .shorts-player-surface :is(.scene-vertical-player__navigation > button,.shorts-player-settings__menu,.scene-short-toast,[class*="__badge"]) { -webkit-backdrop-filter: none; backdrop-filter: none; }
-#root .mobile-scene .scene-watch-unavailable { margin: 0; padding: 78px 16px 108px; }
-#root .mobile-scene .scene-navigation-progress { top: 98px; left: 0; z-index: 510; }
+#root .mobile-scene .scene-watch-unavailable { margin: 0; padding: 24px 16px 108px; }
+#root .mobile-scene .scene-navigation-progress { top: calc(var(--scene-mobile-header) - 2px); left: 0; z-index: 510; }
 #root .mobile-scene :is(.shorts-filter-panel,.shorts-create-dialog,.shorts-creator-drawer,.scene-comments-drawer) { max-width: 100%; width: 100%; min-width: 0; max-height: calc(100dvh - 12px); border-radius: 22px 22px 0 0; background: #111218f5; }
 #root .mobile-scene :is(.scene-tv-page,.scene-studio,.scene-playlists-view,.scene-recommendation-settings) { width: 100%; min-width: 0; margin: 0; }
 #root .mobile-scene :is(.scene-tv-schedule__grid,.scene-studio__grid,.scene-playlists-grid) { grid-template-columns: minmax(0,1fr); }
@@ -286,9 +289,8 @@ body:has(.mobile-scene) .scene-card-menu { max-width: calc(100vw - 24px); backgr
 #root .mobile-scene .scene-home-feed__shorts .scene-vertical-card__media { border-color: rgba(255,255,255,.07); box-shadow: 0 10px 26px rgba(0,0,0,.32); }
 #root .mobile-scene .scene-vertical-card__progress { display: none; }
 
-/* === Bandeau transparent + degrade violet en dessous === */
+/* Toolbar occupies the former title row; navigation stays directly below. */
 #root .mobile-scene .shorts-topbar { background: transparent !important; border-bottom: 0 !important; box-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
-#root .mobile-scene .mobile-scene-tools { background: linear-gradient(180deg, rgba(109,79,208,.34), rgba(76,47,169,.10) 62%, rgba(76,47,169,0)); border-bottom-color: transparent; }
 
 /* === Un seul burger : celui de La Scene === */
 #root .mobile-scene > .mobile-feature-back { display: none; }
@@ -308,9 +310,9 @@ body:has(.mobile-scene) .scene-card-menu { max-width: calc(100vw - 24px); backgr
 
 #root .mobile-scene .scene-tv__masthead { display: none; }
 #root .mobile-scene .scene-tv__broadcast { width: 100%; margin: 0; padding: 0; }
-/* TV mobile: full-width video immediately below the fixed 54px toolbar.
+/* TV mobile: full-width video immediately below the navigation tabs.
    Reset the web sticky offset, which left a gap and covered the programme. */
-#root .mobile-scene .scene-page:has(.scene-tv-page) .shorts-home { padding-top: 54px; }
+#root .mobile-scene .scene-page:has(.scene-tv-page) .shorts-home { padding-top: 0; }
 #root .mobile-scene .shorts-home__content:has(.scene-tv-page) { padding-inline: 0; }
 #root .mobile-scene .scene-tv-page .scene-tv { gap: 16px; }
 #root .mobile-scene .scene-tv-page .scene-tv__broadcast { display: grid; grid-template-columns: minmax(0,1fr); gap: 16px; align-items: start; }
@@ -325,7 +327,7 @@ body:has(.mobile-scene) .scene-card-menu { max-width: calc(100vw - 24px); backgr
 #root .mobile-scene .scene-browse-chips { display: flex; flex-wrap: nowrap; align-items: center; overflow-x: auto; height: 44px; gap: 8px; padding: 6px 12px; background: transparent; border: 0; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; mask-image: none; }
 #root .mobile-scene :is(.scene-browse-chips,.shorts-contentbar.is-explore .scene-browse-chips) button { flex: 0 0 auto; height: 32px; min-height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: #2b2c30; color: #f1f1f3; font-size: 13px; font-weight: 600; white-space: nowrap; box-shadow: none; }
 #root .mobile-scene :is(.scene-browse-chips,.shorts-contentbar.is-explore .scene-browse-chips) button[aria-pressed=true] { background: #f1f1f1; color: #111214; }
-#root .mobile-scene .scene-page.has-browse-nav .shorts-home { padding-top: 100px; }
+#root .mobile-scene .scene-page.has-browse-nav .shorts-home { padding-top: 46px; }
 /* Explorer uses the same compact rail, without the purple glass strip. */
 #root .mobile-scene .shorts-contentbar.is-explore { height: 44px; min-height: 0; padding: 6px 12px; background: #101114; background-image: none; border: 0; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
 #root .mobile-scene .shorts-contentbar.is-explore::before,

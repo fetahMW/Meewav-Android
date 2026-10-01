@@ -1,16 +1,30 @@
-/* Rooms : même châssis que Marketplace — topbar fixe (marque + onglets scrollables)
+/* Rooms : une rangée compacte, burger et onglets scrollables.
    et même fond que la page d'accueil Market (image acoustique sur #000, sans voile).
    Les icônes restent neutres au repos et s'alimentent de la couleur de leur room
    quand leur onglet est actif (Accueil blanc, chaque pièce sa teinte). */
 #root .mobile-rooms .rooms-page { position: absolute; inset: 0; overflow: hidden; }
 #root .mobile-rooms .rooms-page__background { position: absolute; z-index: -1; inset: 0; background: #000 center / cover no-repeat; }
+#root .mobile-rooms .rooms-topbar { height: 56px; grid-template-rows: 56px; padding: 0 8px 0 48px; }
+#root .mobile-rooms > .mobile-feature-back { top: 6px; }
+#root .mobile-rooms > .mobile-feature-menu { top: 54px; }
+#root .mobile-rooms .rooms-pillar-tabs { grid-area: 1 / 1; }
 #root .mobile-rooms .rooms-pillar-tabs > button { flex: 0 0 25%; min-width: 0; max-width: 25%; }
+#root .mobile-rooms .rooms-pillar-tabs button strong { font-family: inherit; font-size: 11px; font-weight: 550; line-height: 1.2; }
 #root .mobile-rooms .rooms-pillar-tabs::-webkit-scrollbar { display: none; }
 #root .mobile-rooms .rooms-pillar-tabs > button.is-active .meewav-pillar-tabs__icon { color: var(--meewav-pillar-tab-accent); }
-#root .mobile-rooms .rooms-pillar-tabs > button.is-active::after { left: 50%; right: auto; width: 44px; transform: translateX(-50%); }
+#root .mobile-rooms .rooms-pillar-tabs > button.is-active::after { left: 50%; right: auto; width: min(44px, 80%); margin: 0; transform: translateX(-50%); }
+.rooms-menu-filter-count { position: absolute; top: 2px; right: 1px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 8px; background: #8762d5; color: #fff; font-size: 9px; font-weight: 700; }
+
+/* The filter drawer starts just below its single hamburger trigger. */
+#rooms-home-filter-panel.is-trigger-anchored { width: min(460px, calc(100vw - 16px)); margin: 0; border-radius: 0 18px 18px 18px; }
+.meewav-filter-panel__backdrop.is-trigger-anchored { inset: 0; }
+.rooms-filter-menu { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 0 0 12px; margin-bottom: 12px; border-bottom: 1px solid #ffffff14; }
+.rooms-filter-menu button { display: flex; align-items: center; gap: 10px; min-height: 42px; padding: 8px 10px; border: 0; border-radius: 10px; background: transparent; color: #e8e4ef; font: inherit; font-size: 13px; text-align: left; }
+.rooms-filter-menu button:active { background: #ffffff0b; }
+.rooms-filter-menu svg { width: 18px; height: 18px; flex: none; color: var(--mw-accent-secondary); }
 
 /* ── Accueil Netflix : la home occupe tout l'espace sous la topbar ── */
-#root .mobile-rooms .rooms-page__home { position: absolute; z-index: 1; inset: 100px 0 0; min-height: 0; }
+#root .mobile-rooms .rooms-page__home { position: absolute; z-index: 1; inset: 56px 0 0; min-height: 0; }
 #root .mobile-rooms .rooms-home { scrollbar-width: none; }
 #root .mobile-rooms .rooms-home::-webkit-scrollbar { display: none; }
 #root .mobile-rooms .rooms-home__ambient { display: none; }
@@ -36,12 +50,6 @@
 #root .mobile-rooms .rooms-home__search-close svg { width: 16px; height: 16px; }
 #root .mobile-rooms .rooms-home__control-actions { position: absolute; left: 50%; top: 50%; display: flex; flex-direction: row; gap: 6px; align-items: center; justify-content: center; transform: translate(-50%, -50%); transition: opacity .26s ease, transform .32s cubic-bezier(.22,.9,.28,1); }
 #root .mobile-rooms .rooms-home__controls.is-search-open .rooms-home__control-actions { opacity: 0; pointer-events: none; transform: translate(-36%, -50%); }
-/* Bouton filtres carré à droite, miroir de la loupe ; il s'estompe quand la recherche s'étend. */
-#root .mobile-rooms .rooms-home__filters-toggle { position: absolute; z-index: 2; top: 50%; right: 14px; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border: 1px solid #b9a6d52b; border-radius: 13px; background: #0c0d15a6; color: #cfc9de; transform: translateY(-50%); transition: opacity .26s ease, transform .3s ease; }
-#root .mobile-rooms .rooms-home__filters-toggle svg { width: 18px; height: 18px; }
-#root .mobile-rooms .rooms-home__filters-toggle.is-active { color: #e8ddff; border-color: #8d5cff66; }
-#root .mobile-rooms .rooms-home__filters-count { position: absolute; top: -5px; right: -5px; min-width: 17px; height: 17px; padding: 0 4px; display: grid; place-items: center; border-radius: 9px; background: #8d5cff; color: #fff; font-size: 10px; font-weight: 750; box-shadow: 0 2px 8px #8d5cff66; }
-#root .mobile-rooms .rooms-home__controls.is-search-open .rooms-home__filters-toggle { opacity: 0; pointer-events: none; transform: translateY(-50%) translateX(24%); }
 #root .mobile-rooms .rooms-home__format { display: flex; gap: 5px; padding: 0; border: 0; background: none; box-shadow: none; flex: 0 0 auto; }
 #root .mobile-rooms .rooms-home__format > button { min-height: 34px; padding: 7px 9px; font-size: 11px; font-weight: 650; border-radius: 9px; color: #d2cedc; background: #24242c; border: 1px solid #ffffff08; box-shadow: none; letter-spacing: 0; white-space: nowrap; }
 #root .mobile-rooms .rooms-home__format > button.is-active { background: #ded9e8; color: #17131f; border-color: transparent; transform: none; box-shadow: none; }

@@ -7,7 +7,8 @@ import {
   useState,
   type MouseEvent,
 } from "react";
-import { ArrowLeft, Heart, History, Plus, Search, SlidersHorizontal, X } from "lucide-react";
+import { ArrowLeft, Heart, History, Plus, Search, X } from "lucide-react";
+import type { RoomsMenuRequest } from "../../../../../../shared-ui/MobileFeatureShell";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
@@ -194,6 +195,7 @@ export function RoomsHome({ catalog = ROOMS_HOME_CATALOG, collectionSlug = null,
   const [launchDialogOpen, setLaunchDialogOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
+  const [menuRequest, setMenuRequest] = useState<RoomsMenuRequest | null>(null);
   const [filters, setFilters] = useState<RoomsHomeFilters>(EMPTY_FILTERS);
   const [draftFilters, setDraftFilters] = useState<RoomsHomeFilters>(EMPTY_FILTERS);
   const [feedScope, setFeedScope] = useState<RoomsFeedScope>("all");
@@ -348,7 +350,7 @@ export function RoomsHome({ catalog = ROOMS_HOME_CATALOG, collectionSlug = null,
     if (searchOpen) searchInputRef.current?.focus();
   }, [searchOpen]);
 
-  const openFiltersPanel = () => {
+  const openFiltersPanel = useCallback(() => {
     setDraftFilters({
       ...filters,
       roomTypes: [...filters.roomTypes],
@@ -356,7 +358,29 @@ export function RoomsHome({ catalog = ROOMS_HOME_CATALOG, collectionSlug = null,
       gradeLevels: [...filters.gradeLevels],
     });
     setFilterOpen(true);
-  };
+  }, [filters]);
+
+  useEffect(() => {
+    const onMenu = (event: Event) => {
+      if (isCollectionView) return; // Collections retain their navigation menu.
+      const request = (event as CustomEvent<RoomsMenuRequest>).detail;
+      event.preventDefault();
+      filterTriggerRef.current = request.trigger;
+      setMenuRequest(request);
+      if (filterOpen) setFilterOpen(false);
+      else openFiltersPanel();
+    };
+    window.addEventListener("meewav:rooms-menu", onMenu);
+    return () => window.removeEventListener("meewav:rooms-menu", onMenu);
+  }, [filterOpen, openFiltersPanel, isCollectionView]);
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("meewav:rooms-filter-state", { detail: { open: filterOpen, count: activeFilterCount, available: !isCollectionView } }));
+  }, [filterOpen, activeFilterCount, isCollectionView]);
+  useEffect(() => { if (isCollectionView) setFilterOpen(false); }, [isCollectionView]);
+  useEffect(() => () => {
+    window.dispatchEvent(new CustomEvent("meewav:rooms-filter-state", { detail: { open: false, count: 0, available: false } }));
+  }, []);
 
   const resetAllFilters = () => {
     setFilters(EMPTY_FILTERS);
@@ -472,22 +496,6 @@ export function RoomsHome({ catalog = ROOMS_HOME_CATALOG, collectionSlug = null,
           ) : null}
         </div>
 
-        {!isCollectionView ? (
-          <button
-            ref={filterTriggerRef}
-            type="button"
-            className={`rooms-home__filters-toggle${filterOpen || activeFilterCount > 0 ? " is-active" : ""}`}
-            aria-label={filterOpen ? "Fermer les filtres" : "Filtrer les Rooms"}
-            aria-expanded={filterOpen}
-            aria-controls="rooms-home-filter-panel"
-            onClick={openFiltersPanel}
-          >
-            <SlidersHorizontal aria-hidden="true" />
-            {activeFilterCount > 0 ? (
-              <span className="rooms-home__filters-count">{activeFilterCount}</span>
-            ) : null}
-          </button>
-        ) : null}
       </header>
 
       {!isCollectionView && feedScope !== "all" ? (
@@ -592,8 +600,15 @@ export function RoomsHome({ catalog = ROOMS_HOME_CATALOG, collectionSlug = null,
         applyLabel={`Afficher ${draftResultCount} Room${draftResultCount > 1 ? "s" : ""}`}
         selectionHint={`${draftFilterCount} filtre${draftFilterCount > 1 ? "s" : ""} actif${draftFilterCount > 1 ? "s" : ""}`}
         triggerRef={filterTriggerRef}
-        boundarySelector=".rooms-page__future-surface"
+        anchorToTrigger
       >
+        {menuRequest && <nav className="rooms-filter-menu" aria-label="Menu rapide">
+          {menuRequest.items.map(({ action, label, icon: Icon }) => <button key={action} type="button" onClick={() => {
+            setFilterOpen(false);
+            // Commit the drawer closure before Retour checks for open dialogs.
+            window.requestAnimationFrame(() => menuRequest.onSelect(action));
+          }}><Icon aria-hidden="true" /><span>{label}</span></button>)}
+        </nav>}
         <MeewavFilterSection
           label="Styles d’avatar"
           summary={draftFilters.avatarStyles.length > 0 ? `${draftFilters.avatarStyles.length} choisis` : "Tous"}

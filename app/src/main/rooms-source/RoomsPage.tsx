@@ -5,7 +5,6 @@ import type { CageProgram } from '../shared-ui/cagePrograms';
 import { lazy, Suspense, useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { DoorOpen, GraduationCap, Home, MapPin, Mic, Play, Plus, Waves, X } from 'lucide-react';
-import MeewavPillarBrand from '../market-source/vendor/src/components/navigation/MeewavPillarBrand';
 import MeewavPillarTabs, { type MeewavPillarTabItem } from '../market-source/vendor/src/components/navigation/MeewavPillarTabs';
 import RoomsHome from './vendor/src/features/rooms/home/RoomsHome';
 import LaunchRoomSheet from './vendor/src/features/rooms/launch/LaunchRoomSheet';
@@ -112,7 +111,6 @@ export default function RoomsPage() {
     <div className="rooms-page__background" aria-hidden="true"
       style={{ backgroundImage: `url('/images/meewav-acoustic-violet-background.png')` }} />
     <header className="rooms-topbar">
-      <div className="rooms-brand"><MeewavPillarBrand pillar="Rooms" /></div>
       <MeewavPillarTabs className="rooms-pillar-tabs" items={items} activeId={tab}
         ariaLabel="Pièces de la maison MeeWav" visibleCount={4}
         onSelect={(id) => setTab(id)} />

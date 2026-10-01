@@ -175,6 +175,7 @@ type MeewavFilterPanelProps = {
   boundarySelector?: string;
   dockRight?: boolean;
   belowHeader?: boolean;
+  anchorToTrigger?: boolean;
   leftBoundarySelector?: string;
 };
 
@@ -198,6 +199,7 @@ export function MeewavFilterPanel({
   boundarySelector,
   dockRight = false,
   belowHeader = false,
+  anchorToTrigger = false,
   leftBoundarySelector,
 }: MeewavFilterPanelProps) {
   const generatedTitleId = useId().replace(/:/g, "");
@@ -213,13 +215,20 @@ export function MeewavFilterPanel({
   onCloseRef.current = onClose;
 
   useLayoutEffect(() => {
-    if ((!boundarySelector && !belowHeader) || !triggerRef?.current) {
+    if ((!boundarySelector && !belowHeader && !anchorToTrigger) || !triggerRef?.current) {
       setBoundaryInsets(null);
       return undefined;
     }
 
     const updateBoundary = () => {
       const trigger = triggerRef.current;
+      if (anchorToTrigger && trigger) {
+        const bounds = trigger.getBoundingClientRect();
+        const width = Math.min(460, window.innerWidth - 16);
+        const left = Math.max(8, Math.min(bounds.left, window.innerWidth - width - 8));
+        setBoundaryInsets({ top: bounds.bottom + 4, left, right: window.innerWidth - left - width, bottom: 88 });
+        return;
+      }
       if (belowHeader && trigger) {
         const header = trigger.closest("header");
         const form = trigger.closest("form");
@@ -249,17 +258,17 @@ export function MeewavFilterPanel({
 
     updateBoundary();
     if (!open) return undefined;
-    const boundary = triggerRef.current?.closest(belowHeader ? "header" : boundarySelector!);
-    const observer = (dockRight || belowHeader) && boundary && typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateBoundary) : null;
+    const boundary = anchorToTrigger ? triggerRef.current : triggerRef.current?.closest(belowHeader ? "header" : boundarySelector!);
+    const observer = (dockRight || belowHeader || anchorToTrigger) && boundary && typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateBoundary) : null;
     if (boundary) observer?.observe(boundary);
     window.addEventListener("resize", updateBoundary);
-    if (dockRight || belowHeader) window.addEventListener("scroll", updateBoundary, true);
+    if (dockRight || belowHeader || anchorToTrigger) window.addEventListener("scroll", updateBoundary, true);
     return () => {
       observer?.disconnect();
       window.removeEventListener("resize", updateBoundary);
-      if (dockRight || belowHeader) window.removeEventListener("scroll", updateBoundary, true);
+      if (dockRight || belowHeader || anchorToTrigger) window.removeEventListener("scroll", updateBoundary, true);
     };
-  }, [boundarySelector, open, triggerRef, dockRight, belowHeader, leftBoundarySelector]);
+  }, [boundarySelector, open, triggerRef, dockRight, belowHeader, anchorToTrigger, leftBoundarySelector]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -312,7 +321,7 @@ export function MeewavFilterPanel({
     };
   }, [open, triggerRef, dockRight]);
 
-  const boundaryClass = boundaryInsets ? " is-bounded" : "";
+  const boundaryClass = `${boundaryInsets ? " is-bounded" : ""}${anchorToTrigger ? " is-trigger-anchored" : ""}`;
   const boundaryStyle = boundaryInsets ? {
     "--meewav-filter-panel-top": `${boundaryInsets.top}px`,
     "--meewav-filter-panel-right": `${boundaryInsets.right}px`,

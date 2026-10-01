@@ -1,10 +1,17 @@
 import PortraitPreProfileHost from "./PortraitPreProfileHost";
-import React, { Component, useEffect, useState } from 'react';
+import React, { Component, useEffect, useLayoutEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
 import { ClipboardList, Crown, Heart, History, Menu, Package, Settings, ShoppingCart, Undo2, X } from 'lucide-react';
 import FeatureDock from './FeatureDock';
 import { configure, updateToken, type MobileConfig } from '../profile-source/runtime';
+import type { LucideIcon } from 'lucide-react';
+
+export type RoomsMenuRequest = {
+  trigger: HTMLButtonElement;
+  items: readonly { action: string; label: string; icon: LucideIcon }[];
+  onSelect: (action: string) => void;
+};
 
 const native = (destination: string, route?: string) => location.assign(`https://appassets.androidplatform.net/native/${destination}${route ? `?route=${encodeURIComponent(route)}` : ''}`);
 const FEATURE_MENU_ITEMS = {
@@ -34,6 +41,13 @@ export function mountFeature(id: 'market' | 'scene' | 'rooms', title: string, lo
     const roomLaunch = id === 'rooms' && (route.pathname === '/rooms/create' || new URLSearchParams(route.search).get('launch') === 'cage');
     const [notice, setNotice] = useState('');
     const [menuOpen, setMenuOpen] = useState(false);
+    const [roomsFilter, setRoomsFilter] = useState({ open: false, count: 0, available: true });
+    useLayoutEffect(() => {
+      if (id !== 'rooms') return;
+      const update = (event: Event) => setRoomsFilter((event as CustomEvent<typeof roomsFilter>).detail);
+      window.addEventListener('meewav:rooms-filter-state', update);
+      return () => window.removeEventListener('meewav:rooms-filter-state', update);
+    }, []);
     useEffect(() => { if (roomLaunch) setMenuOpen(false); }, [roomLaunch]);
     const back = () => {
       if (document.fullscreenElement) { void document.exitFullscreen(); return; }
@@ -51,6 +65,13 @@ export function mountFeature(id: 'market' | 'scene' | 'rooms', title: string, lo
       if (window.dispatchEvent(new CustomEvent('meewav:feature-menu', { detail: action, cancelable: true }))) {
         setNotice('Cette section sera disponible dans une prochaine étape.');
       }
+    };
+    const openMenu = (trigger: HTMLButtonElement) => {
+      if (id === 'rooms' && !window.dispatchEvent(new CustomEvent<RoomsMenuRequest>('meewav:rooms-menu', {
+        cancelable: true,
+        detail: { trigger, items: [...FEATURE_MENU_ITEMS.rooms, { action: 'back', label: 'Retour', icon: Undo2 }], onSelect: menuAction },
+      }))) return;
+      setMenuOpen(open => !open);
     };
     useEffect(() => {
       if (!menuOpen) return;
@@ -73,7 +94,7 @@ export function mountFeature(id: 'market' | 'scene' | 'rooms', title: string, lo
       return () => window.clearTimeout(timer);
     }, [notice]);
     return <div className={`mobile-profile mobile-feature mobile-${id}`}>
-      {!roomLaunch && <button className="mobile-feature-back" aria-label="Menu" aria-haspopup="menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(open => !open)}><Menu /></button>}
+      {!roomLaunch && <button className="mobile-feature-back" aria-label={id === 'rooms' && roomsFilter.available ? 'Menu et filtres' : 'Menu'} aria-haspopup={id === 'rooms' && roomsFilter.available ? 'dialog' : 'menu'} aria-expanded={menuOpen || (id === 'rooms' && roomsFilter.open)} aria-controls={id === 'rooms' && roomsFilter.available ? 'rooms-home-filter-panel' : undefined} onClick={event => openMenu(event.currentTarget)}><Menu />{id === 'rooms' && roomsFilter.available && roomsFilter.count > 0 && <span className="rooms-menu-filter-count">{roomsFilter.count}</span>}</button>}
       {menuOpen && !roomLaunch && <>
         <button className="mobile-feature-menu-backdrop" aria-hidden="true" tabIndex={-1} onClick={() => setMenuOpen(false)} />
         <nav className="mobile-feature-menu" aria-label="Menu rapide">
