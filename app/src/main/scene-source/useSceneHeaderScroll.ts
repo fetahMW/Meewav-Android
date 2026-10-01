@@ -13,9 +13,10 @@ export function useSceneHeaderScroll(surfaceRef: RefObject<HTMLElement | null>, 
     if (scroller.querySelectorAll('.shorts-topbar, .mobile-scene-tools').length !== 2) return;
     const chrome = [...scroller.querySelectorAll<HTMLElement>('.shorts-topbar, .mobile-scene-tools, .scene-browse-chips-shell')]
       .map(element => ({ element, inert: element.inert, ariaHidden: element.getAttribute('aria-hidden') }));
-    const detector = createChatHeaderScroll();
+    const detector = createChatHeaderScroll({ stableContent: true, revealDistance: 24, matchGestureDirection: true });
     let hidden = false;
     let intentUntil = 0;
+    let gestureDirection = 0;
     let pointer: { id: number; y: number; moved: boolean } | null = null;
 
     const setHidden = (next: boolean) => {
@@ -36,11 +37,13 @@ export function useSceneHeaderScroll(surfaceRef: RefObject<HTMLElement | null>, 
       maximum: Math.max(0, scroller.scrollHeight - scroller.clientHeight),
       viewport: scroller.clientHeight,
       userIntent,
-      forceVisible,
+      forceVisible: forceVisible || scroller.classList.contains('has-watch-page'),
+      gestureDirection,
     }));
     const reveal = () => {
       pointer = null;
       intentUntil = 0;
+      gestureDirection = 0;
       detector.reset();
       sample(false, true);
     };
@@ -56,11 +59,14 @@ export function useSceneHeaderScroll(surfaceRef: RefObject<HTMLElement | null>, 
     };
     const onDown = (event: PointerEvent) => {
       if (!isContentGesture(event.target)) return;
+      intentUntil = 0; gestureDirection = 0;
       sample();
       pointer = { id: event.pointerId, y: event.clientY, moved: false };
     };
     const onMove = (event: PointerEvent) => {
       if (pointer?.id === event.pointerId && Math.abs(event.clientY - pointer.y) > 4) {
+        gestureDirection = Math.sign(pointer.y - event.clientY);
+        pointer.y = event.clientY;
         pointer.moved = true;
         intentUntil = performance.now() + 700;
       }
@@ -74,6 +80,7 @@ export function useSceneHeaderScroll(surfaceRef: RefObject<HTMLElement | null>, 
       if (!event.deltaY || !isContentGesture(event.target)) return;
       const now = performance.now();
       if (intentUntil <= now) sample();
+      gestureDirection = Math.sign(event.deltaY);
       intentUntil = now + 700;
     };
     const onFocus = (event: FocusEvent) => {

@@ -33,11 +33,15 @@
 }
 #root .mobile-rooms[data-auto-feature-chrome] .rooms-page__home { inset: 0; }
 #root .mobile-rooms[data-auto-feature-chrome] .rooms-home {
-  box-sizing: border-box; padding-top: 56px; scroll-padding-top: calc(var(--feature-visible-chrome) + 12px);
+  box-sizing: border-box; padding-top: var(--feature-collapse-distance,117px); scroll-padding-top: calc(var(--feature-visible-chrome) + 12px);
 }
-#root .mobile-rooms[data-auto-feature-chrome] .rooms-home__controls { top: 56px; }
+#root .mobile-rooms[data-auto-feature-chrome] .rooms-home__controls { position: fixed; top: 56px; left: 0; right: 0; }
 #root .mobile-messaging:not(.is-detail)[data-auto-feature-chrome] .messaging-page { top: 0; }
 #root .mobile-messaging:not(.is-detail)[data-auto-feature-chrome] .mw-chat-header { top: 62px; }
+/* Late Android GPU hints use translateZ(0) on this header. Both states must
+   outrank that hint, so the tabs travel with the external row. */
+#root .mobile-messaging:not(.is-detail)[data-auto-feature-chrome] .mw-chat-header { transform: translateY(0); }
+#root .mobile-messaging:not(.is-detail)[data-auto-feature-chrome][data-feature-header-hidden] .mw-chat-header { transform: translateY(calc(-1 * var(--feature-collapse-distance))); }
 #root .mobile-messaging:not(.is-detail)[data-auto-feature-chrome] .mw-conversation-list {
   padding-top: 126px; scroll-padding-top: calc(var(--feature-visible-chrome) + 6px);
 }

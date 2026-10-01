@@ -12,6 +12,7 @@ const features: Record<Feature, { bands: string[]; controls?: string; scrollers:
 };
 const editable = 'input, textarea, select, [contenteditable="true"]';
 const overlays = '[role="dialog"], [role="menu"], .mobile-feature-menu, .mobile-tremplin-menu, .android-room-viewer, .shorts-player-layer';
+const persistentReturn = '[data-feature-return], .profile-viewer-page.is-page';
 
 /** Android browsing chrome follows the same direction/hysteresis as chat.
  * Permanent content padding keeps the viewport stable during every animation. */
@@ -23,13 +24,14 @@ export function useFeatureHeaderScroll(
     if (!surface || !enabled) return;
     const config = features[feature];
     const chromeSelector = [...config.bands, config.controls].filter(Boolean).join(', ');
-    const structuralSelector = `${chromeSelector}, ${config.scrollers}, ${overlays}`;
-    const detector = createChatHeaderScroll();
+    const structuralSelector = `${chromeSelector}, ${config.scrollers}, ${overlays}, ${persistentReturn}`;
+    const detector = createChatHeaderScroll({ stableContent: true, revealDistance: 24, matchGestureDirection: true });
     let chrome: { element: HTMLElement; inert: boolean }[] = [];
     let bands: HTMLElement[] = [];
     let activeScroller: HTMLElement | null = null;
     let hidden = false;
     let intentUntil = 0;
+    let gestureDirection = 0;
     let pointer: { id: number; y: number; moved: boolean } | null = null;
     const originalDistance = surface.style.getPropertyValue('--feature-collapse-distance');
 
@@ -49,6 +51,7 @@ export function useFeatureHeaderScroll(
     const reveal = () => {
       pointer = null;
       intentUntil = 0;
+      gestureDirection = 0;
       detector.reset();
       setHidden(false);
     };
@@ -82,6 +85,7 @@ export function useFeatureHeaderScroll(
       activeScroller = null;
     };
     const blocked = () => Boolean(document.activeElement?.matches(editable))
+      || Boolean(surface.querySelector(persistentReturn))
       || bands.some(element => Boolean(element.querySelector('[aria-expanded="true"]')))
       || [...document.querySelectorAll<HTMLElement>(overlays)].some(element => element.getClientRects().length > 0 && !element.closest('[hidden], [aria-hidden="true"]'))
       || Boolean(surface.querySelector(`${config.controls ?? '[data-no-controls]'}[aria-expanded="true"]`));
@@ -95,7 +99,7 @@ export function useFeatureHeaderScroll(
       if (activeScroller !== scroller) { reveal(); activeScroller = scroller; }
       setHidden(detector.update({
         top: scroller.scrollTop, maximum: Math.max(0, scroller.scrollHeight - scroller.clientHeight),
-        viewport: scroller.clientHeight, userIntent, forceVisible: blocked(),
+        viewport: scroller.clientHeight, userIntent, forceVisible: blocked(), gestureDirection,
       }));
     };
     const gestureScroller = (target: EventTarget | null) => {
@@ -114,11 +118,14 @@ export function useFeatureHeaderScroll(
       connect();
       const scroller = gestureScroller(event.target);
       if (!scroller) { reveal(); return; }
+      intentUntil = 0; gestureDirection = 0;
       sample(scroller);
       pointer = { id: event.pointerId, y: event.clientY, moved: false };
     };
     const onMove = (event: PointerEvent) => {
       if (pointer?.id === event.pointerId && Math.abs(event.clientY - pointer.y) > 4) {
+        gestureDirection = Math.sign(pointer.y - event.clientY);
+        pointer.y = event.clientY;
         pointer.moved = true; intentUntil = performance.now() + 700;
       }
     };
@@ -131,6 +138,7 @@ export function useFeatureHeaderScroll(
       const scroller = gestureScroller(event.target);
       if (!event.deltaY || !scroller) return;
       if (intentUntil <= performance.now()) sample(scroller);
+      gestureDirection = Math.sign(event.deltaY);
       intentUntil = performance.now() + 700;
     };
     const onFocus = (event: FocusEvent) => {
@@ -139,10 +147,11 @@ export function useFeatureHeaderScroll(
     // Lazy pages can mount after their shell. Observe only structural replacements,
     // never our attributes or individual card updates; no polling or frame loop.
     const structure = new MutationObserver(records => {
+      if (records.some(record => record.type === 'attributes')) reveal();
       if (records.some(record => [...record.addedNodes, ...record.removedNodes].some(node =>
         node instanceof Element && (node.matches(structuralSelector) || node.querySelector(structuralSelector))))) { reveal(); connect(); }
     });
-    structure.observe(surface, { childList: true, subtree: true });
+    structure.observe(surface, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-feature-return'] });
     connect();
     surface.addEventListener('scroll', onScroll, { capture: true, passive: true });
     surface.addEventListener('pointerdown', onDown, { passive: true });
