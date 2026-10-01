@@ -16,8 +16,8 @@
   grid-template-columns: minmax(0,1fr); grid-template-rows: 44px 56px;
   width: 100%; height: 100px; min-height: 0; gap: 0; margin: 0; padding: 0 10px;
   border: 0; border-radius: 0; border-bottom: 1px solid #d3d9e01f;
-  background: var(--profile-header-glass); backdrop-filter: blur(24px) saturate(1.15); -webkit-backdrop-filter: blur(24px) saturate(1.15);
-  box-shadow: inset 0 -1px #ffffff06,0 4px 16px #0002;
+  background: var(--mw-feature-header-face); backdrop-filter: var(--mw-feature-header-filter); -webkit-backdrop-filter: var(--mw-feature-header-filter);
+  box-shadow: var(--mw-feature-header-shadow);
 }
 #root .mobile-feature :is(.market-brand,.shorts-topbar__brand,.rooms-brand) { grid-area: 1 / 1; display: flex; justify-content: center; justify-self: center; align-items: center; padding: 0 44px; width: 100%; min-width: 0; height: 44px; }
 #root .mobile-feature :is(.meewav-pillar-brand__app,.meewav-pillar-brand__separator,.meewav-pillar-brand__eyebrow) { display: none; }
@@ -25,7 +25,7 @@
 #root .mobile-feature .market-contextbar__toolbar { grid-area: 2 / 1; width: 100%; height: 56px; padding: 0; margin: 0; }
 #root .mobile-feature :is(.market-pillar-tabs,.shorts-pillar-tabs,.rooms-pillar-tabs) { grid-area: 2 / 1; display: flex; width: 100%; min-width: 0; height: 56px; gap: 0; padding: 0; border: 0; background: transparent; overflow-x: auto; scrollbar-width: none; }
 #root .mobile-feature :is(.market-pillar-tabs,.shorts-pillar-tabs,.rooms-pillar-tabs) > button { display: flex; flex: 1 0 0; flex-direction: column; justify-content: center; align-items: center; position: relative; min-width: 50px; min-height: 48px; height: 56px; padding: 6px 2px; gap: 4px; border: 0; border-radius: 0; background: transparent; color: #b7bac3; box-shadow: none; }
-#root .mobile-feature :is(.market-pillar-tabs,.shorts-pillar-tabs,.rooms-pillar-tabs) button strong { display: block; font-size: 10px; font-weight: 550; line-height: 1.2; white-space: nowrap; }
+#root .mobile-feature :is(.market-pillar-tabs,.shorts-pillar-tabs,.rooms-pillar-tabs) button strong { display: block; font-family: var(--mw-feature-tab-font-family); font-size: var(--mw-feature-tab-size); font-weight: 550; line-height: 1.2; white-space: nowrap; }
 #root .mobile-feature :is(.market-pillar-tabs,.shorts-pillar-tabs,.rooms-pillar-tabs) button svg { width: 18px; height: 18px; }
 #root .mobile-feature .meewav-pillar-tabs__icon { width: 18px; height: 18px; flex: 0 0 18px; color: inherit; border: 0; background: none; box-shadow: none; }
 #root .mobile-feature :is(.market-pillar-tabs,.shorts-pillar-tabs,.rooms-pillar-tabs) button.is-active { color: #fff; }
@@ -43,11 +43,11 @@
 #root .mobile-scene { --scene-mobile-header: 110px; }
 #root .mobile-scene .scene-page { position: absolute; inset: var(--scene-mobile-header) 0 0; width: 100%; height: auto; min-height: 0; overflow-x: hidden; overflow-y: auto; scrollbar-width: none; overscroll-behavior-y: contain; --shorts-nav-space: 0px; --shorts-topbar-height: var(--scene-mobile-header); --scene-browse-width: 0px; --scene-content-top-gap: 0px; background: #090a0e; }
 #root .mobile-scene .shorts-shell { position: static; width: 100%; height: auto; min-height: 0; display: block; padding: 0; }
-#root .mobile-scene .shorts-page__background { position: fixed; inset: var(--scene-mobile-header) 0 0; opacity: .4; }
+#root .mobile-scene .shorts-page__background { position: fixed; inset: 0; opacity: .4; }
 #root .mobile-scene .scene-context-back { display: none; }
 #root .mobile-scene .shorts-topbar { grid-template-rows: 54px 56px; height: var(--scene-mobile-header); }
 #root .mobile-scene .shorts-topbar__brand { display: none; }
-#root .mobile-scene .mobile-scene-tools { position: fixed; z-index: 501; top: 0; left: 0; right: 0; height: 54px; padding: 5px 8px; display: flex; align-items: center; gap: 4px; border: 1px solid transparent; background: var(--mw-primary-face); box-shadow: var(--mw-primary-shadow); backdrop-filter: none; -webkit-backdrop-filter: none; }
+#root .mobile-scene .mobile-scene-tools { position: fixed; z-index: 501; top: 0; left: 0; right: 0; height: 54px; padding: 5px 8px; display: flex; align-items: center; gap: 4px; border: 1px solid transparent; background: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
 #root .mobile-scene .scene-browse-toggle { display: grid; place-items: center; flex: 0 0 36px; width: 36px; height: 44px; padding: 0; background: none; border: 0; color: #d6d0e1; }
 #root .mobile-scene .scene-browse-toggle svg { width: 20px; height: 20px; }
 #root .mobile-scene .mobile-scene-tools .scene-context-search { flex: 1; min-width: 0; width: auto; margin: 0; }
@@ -289,8 +289,13 @@ body:has(.mobile-scene) .scene-card-menu { max-width: calc(100vw - 24px); backgr
 #root .mobile-scene .scene-home-feed__shorts .scene-vertical-card__media { border-color: rgba(255,255,255,.07); box-shadow: 0 10px 26px rgba(0,0,0,.32); }
 #root .mobile-scene .scene-vertical-card__progress { display: none; }
 
-/* Toolbar occupies the former title row; navigation stays directly below. */
-#root .mobile-scene .shorts-topbar { background: transparent !important; border-bottom: 0 !important; box-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+/* One continuous Rooms glass face behind both rows: the tools do not add a
+   second blur or an opaque CTA surface over the navigation header. */
+#root .mobile-scene .shorts-topbar {
+  background: var(--mw-feature-header-face);
+  backdrop-filter: var(--mw-feature-header-filter); -webkit-backdrop-filter: var(--mw-feature-header-filter);
+  box-shadow: var(--mw-feature-header-shadow);
+}
 
 /* === Un seul burger : celui de La Scene === */
 #root .mobile-scene > .mobile-feature-back { display: none; }

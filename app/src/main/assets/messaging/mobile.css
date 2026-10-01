@@ -1215,7 +1215,33 @@ button:disabled { opacity: .4; cursor: default; }
 #root .mobile-messaging.is-detail .messaging-page { background:#090a0b; backdrop-filter:none; -webkit-backdrop-filter:none; }
 #root .mobile-messaging-header,
 #root .mobile-messaging :is(.mw-chat-header,.mw-mobile-workspace-header) {
-  background:linear-gradient(125deg,#ffffff09,transparent 50%),linear-gradient(#191a1dee,#101113f5);
-  backdrop-filter:blur(20px) saturate(0); -webkit-backdrop-filter:blur(20px) saturate(0);
+  background:var(--mw-feature-header-face);
+  backdrop-filter:var(--mw-feature-header-filter); -webkit-backdrop-filter:var(--mw-feature-header-filter);
 }
 #root .mobile-messaging .mw-chat-scene::before { display:none; }
+
+/* Rooms chrome on the inbox, contact, project and group header surfaces.
+   Geometry and the existing measured scroll-collapse ownership stay intact. */
+#root .mobile-messaging:not(.is-detail) :is(.mobile-messaging-header,.mw-chat-header),
+#root .mobile-messaging .mw-mobile-workspace-header.mw-hub-chipbar {
+  background: var(--mw-feature-header-face);
+  backdrop-filter: var(--mw-feature-header-filter); -webkit-backdrop-filter: var(--mw-feature-header-filter);
+  border-bottom: 1px solid #d3d9e01f;
+  box-shadow: var(--mw-feature-header-shadow);
+}
+#root .mobile-messaging .mw-rail-controls {
+  background: var(--mw-feature-selector-face);
+  backdrop-filter: var(--mw-feature-header-filter); -webkit-backdrop-filter: var(--mw-feature-header-filter);
+}
+#root .mobile-messaging .messaging-pillar-tabs button {
+  font-size: var(--mw-feature-tab-size); color: var(--mw-feature-tab-muted);
+}
+#root .mobile-messaging .messaging-pillar-tabs button strong {
+  font-family: var(--mw-feature-tab-font-family); font-size: var(--mw-feature-tab-size); line-height: 14px;
+}
+#root .mobile-messaging .messaging-pillar-tabs button:is(.is-active,[aria-selected=true]) { color: var(--mw-feature-tab-active); }
+#root .mobile-messaging .mw-mobile-workspace-header.mw-hub-chipbar .mw-hub-chips button,
+#root .mobile-messaging .agw-panel > .mw-mobile-workspace-header.mw-hub-chipbar .mw-hub-chips button {
+  font-family: var(--mw-feature-tab-font-family); font-size: var(--mw-feature-tab-size); color: var(--mw-feature-tab-muted);
+}
+#root .mobile-messaging .mw-mobile-workspace-header.mw-hub-chipbar .mw-hub-chips button.is-active { color: var(--mw-feature-tab-active); }

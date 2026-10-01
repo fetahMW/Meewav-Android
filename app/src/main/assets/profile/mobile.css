@@ -1,10 +1,10 @@
 @font-face { font-family: Inter; src: url('/fonts/inter.ttf') format('truetype'); font-display: swap; }
 :root { color-scheme: dark; font-family: Inter,system-ui,sans-serif; --mobile-violet-cta: linear-gradient(135deg,rgba(79,53,158,.96),rgba(76,47,169,.94)); --mobile-cta-rim: rgba(98,67,192,.34); --profile-mobile-menu: 100px;
   --profile-dock-glass: linear-gradient(125deg,#ffffff08,#ffffff02 48%,#ffffff05),#281a4a47;
-  --profile-selector-glass: linear-gradient(125deg,#ffffff05,transparent 60%),#130c2473;
+  --profile-selector-glass: var(--mw-feature-selector-face);
   /* Exact surface of the delivered messaging composer. */
   --profile-mobile-glass: linear-gradient(125deg,#ffffff15,#ffffff05 48%,#ffffff0b),#17191faa;
-  --profile-header-glass: linear-gradient(125deg,#ffffff08,#ffffff02 48%,#ffffff05),#17191f40;
+  --profile-header-glass: var(--mw-feature-header-face);
   --profile-mobile-glass-edge: inset 0 1px 0 #ffffff12,inset 0 -1px 0 #0003,0 6px 20px #0004;
   /* Content only: smoked black with a quiet reflection of the urban-violet CTA. */
   --profile-content-surface: radial-gradient(ellipse at 100% 0%,#4f359e18,transparent 64%),linear-gradient(150deg,#181920f2,#0a0b10f5);
@@ -23,8 +23,8 @@ button { touch-action: manipulation; }
   width: 100%; margin: 0; padding: 0 10px; gap: 0; border-radius: 0;
   border: 0; border-bottom: 1px solid #d3d9e01f;
   background: var(--profile-header-glass);
-  backdrop-filter: blur(24px) saturate(1.15); -webkit-backdrop-filter: blur(24px) saturate(1.15);
-  box-shadow: inset 0 -1px #ffffff06,0 4px 16px #0002;
+  backdrop-filter: var(--mw-feature-header-filter); -webkit-backdrop-filter: var(--mw-feature-header-filter);
+  box-shadow: var(--mw-feature-header-shadow);
 }
 #root .profile-command-bar__actions, #root .profile-command-brand :is(.meewav-pillar-brand__app,.meewav-pillar-brand__separator) { display: none; }
 #root .profile-command-brand { display: flex; grid-area: 1 / 1; justify-self: center; align-items: center; padding: 0 44px; }
@@ -34,7 +34,7 @@ button { touch-action: manipulation; }
 #root .profile-command-bar .meewav-pillar-tabs button svg { width: 18px; height: 18px; }
 #root .profile-command-bar .meewav-pillar-tabs button.is-active { color: #fff; }
 #root .profile-command-bar .meewav-pillar-tabs__icon { width: 18px; height: 18px; flex: 0 0 18px; color: inherit; background: transparent; border: 0; box-shadow: none; }
-#root .profile-command-bar .meewav-pillar-tabs button strong { font-size: 10px; font-weight: 550; }
+#root .profile-command-bar .meewav-pillar-tabs button strong { font-size: var(--mw-feature-tab-size); font-weight: 550; }
 #root .profile-command-bar .meewav-pillar-tabs__indicator { display: none; }
 #root .profile-main { position: absolute; top: var(--profile-mobile-menu); left: 0; right: 0; bottom: 0; width: 100%; height: auto; max-height: none; min-width: 0; max-width: none; margin: 0; padding: 12px 12px 96px; overflow-x: hidden; overflow-y: auto; overscroll-behavior-y: contain; scrollbar-width: none; scroll-padding-top: 12px; scroll-padding-bottom: 96px; }
 #root .profile-main::-webkit-scrollbar { display: none; }
@@ -443,7 +443,7 @@ html { scroll-padding-top: 120px; scroll-padding-bottom: 116px; }
 
 /* Accueil mobile: compact editorial hierarchy, using the existing Web cards. */
 #root .profile-command-bar .meewav-pillar-tabs button { display: flex; align-items: center; justify-content: center; }
-#root .profile-command-bar .meewav-pillar-tabs button strong { display: block; font-size: 10px; line-height: 14px; letter-spacing: 0; }
+#root .profile-command-bar .meewav-pillar-tabs button strong { display: block; font-family: var(--mw-feature-tab-font-family); font-size: var(--mw-feature-tab-size); line-height: 1.2; letter-spacing: 0; }
 #root .profile-main.is-profile-home { --home-card: var(--profile-content-surface); }
 #root .is-profile-home :is(.profile-hero,.profile-panel) {
   min-height: 0; padding: 16px; border: 1px solid #c5cbd324; border-top-color: #dce1eb30;

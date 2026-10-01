@@ -5,6 +5,7 @@ import { Mail, UserRound, Box, Play, Store, Rocket, ChevronDown, ChevronUp } fro
 import NavGlobeTexture from '../globe-source/full-globe-nav-texture';
 import { NAVBAR_GLOBE_PALETTE } from '../globe-source/vendor/globe-vinyle/shared/src/globe-palette.mjs';
 import './feature-dock.css';
+import './feature-header-material.css';
 
 export const featureItems = [
   { id: 'messages', label: 'Messagerie', Icon: Mail },

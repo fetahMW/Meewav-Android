@@ -1,0 +1,26 @@
+/* Android feature chrome: the two glass surfaces approved in Rooms.
+   Only the existing header strips blur their backdrop; no full-screen layer. */
+:root {
+  --mw-feature-header-face: linear-gradient(125deg,#ffffff08,#ffffff02 48%,#ffffff05),#17191f40;
+  --mw-feature-selector-face: linear-gradient(125deg,#ffffff05,transparent 60%),#130c2473;
+  --mw-feature-header-filter: blur(24px) saturate(1.12);
+  --mw-feature-header-shadow: inset 0 -1px #ffffff06,0 4px 16px #0002;
+  --mw-feature-tab-size: 12px;
+  --mw-feature-tab-font-family: Inter,system-ui,sans-serif;
+  --mw-feature-tab-muted: #b7bac3;
+  --mw-feature-tab-active: #fff;
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --mw-feature-header-face: #17191f;
+    --mw-feature-selector-face: #13151b;
+    --mw-feature-header-filter: none;
+  }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root {
+    --mw-feature-header-face: #17191f;
+    --mw-feature-selector-face: #13151b;
+    --mw-feature-header-filter: none;
+  }
+}

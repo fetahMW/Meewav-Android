@@ -10,7 +10,7 @@
 #root .mobile-market .market-contextbar__toolbar { min-width: 0; overflow: hidden; }
 #root .mobile-market .market-pillar-tabs { overflow-x: auto; overflow-y: hidden; overscroll-behavior-inline: contain; scroll-snap-type: none; scroll-behavior: auto; }
 #root .mobile-market .market-pillar-tabs > button { flex: 0 0 25%; min-width: 0; max-width: 25%; height: 56px; margin: 0; scroll-snap-align: none; }
-#root .mobile-market .market-pillar-tabs button strong { font-size: 11px; }
+#root .mobile-market .market-pillar-tabs button strong { font-size: var(--mw-feature-tab-size); }
 #root .mobile-market .market-pillar-tabs button svg { width: 20px; height: 20px; }
 #root .mobile-market .market-pillar-tabs::-webkit-scrollbar { display: none; }
 #root .mobile-market .market-mobile-utility { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 0 14px 8px; }
