@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
@@ -39,6 +40,7 @@ import com.meewav.android.BuildConfig
 import com.meewav.android.app.MeewavApplication
 import com.meewav.android.app.MainActivity
 import com.meewav.android.core.auth.CanonicalAvatar
+import com.meewav.android.core.design.StatusBarMaterialBackground
 import com.meewav.android.features.auth.AvatarCatalog
 import com.meewav.android.features.auth.localMediaAsset
 import io.github.jan.supabase.auth.status.SessionStatus
@@ -55,6 +57,8 @@ import java.io.ByteArrayInputStream
 open class MessagingActivity : ComponentActivity() {
     protected open val assetSurface = "messaging"
     protected open val defaultRoute = "/messages?space=messages"
+    /** Optional native material, painted only behind the top system inset. */
+    protected open fun createStatusBarBackground(): Drawable? = null
     private val PAGE get() = "$ORIGIN/$assetSurface/index.html"
     protected lateinit var web: WebView
     protected lateinit var container: FrameLayout
@@ -140,13 +144,22 @@ open class MessagingActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(Color.rgb(8, 8, 16)),
+        val statusBarBackground = createStatusBarBackground()
+        enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(
+            if (statusBarBackground == null) Color.rgb(8, 8, 16) else Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(Color.rgb(8, 8, 16)))
-        container = FrameLayout(this).apply { setBackgroundColor(Color.rgb(8, 8, 16)) }
+        val statusBarLayers = statusBarBackground?.let { material ->
+            StatusBarMaterialBackground(material, Color.rgb(8, 8, 16))
+        }
+        container = FrameLayout(this).apply {
+            if (statusBarLayers == null) setBackgroundColor(Color.rgb(8, 8, 16))
+            else background = statusBarLayers
+        }
         setContentView(container)
         ViewCompat.setOnApplyWindowInsetsListener(container) { view, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
             val keyboard = insets.getInsets(WindowInsetsCompat.Type.ime())
+            statusBarLayers?.updateTopInset(insets.getInsets(WindowInsetsCompat.Type.statusBars()).top)
             view.setPadding(bars.left, bars.top, bars.right, maxOf(bars.bottom, keyboard.bottom))
             insets
         }
