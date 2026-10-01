@@ -12,7 +12,8 @@ export function useSceneDocumentScroll(entryKey: string, enabled: boolean) {
   const previous = history.scrollRestoration; history.scrollRestoration = "manual";
   const save = (event?: Event) => {
    const cards = [...document.querySelectorAll<HTMLAnchorElement>('.scene-video-card__media-hit, .scene-featured-card')];
-   const top = document.querySelector('.mobile-scene-tools')?.getBoundingClientRect().bottom ?? 0;
+   const top = Math.max(0, document.querySelector('.scene-browse-chips-shell')?.getBoundingClientRect().bottom
+    ?? document.querySelector('.shorts-topbar')?.getBoundingClientRect().bottom ?? 0);
    const anchor = cards.find((card) => card.getBoundingClientRect().bottom > top);
    const trigger = event?.target instanceof Element ? event.target.closest("a[href]") : null;
    const active = trigger?.getAttribute("href") ?? (document.activeElement instanceof HTMLAnchorElement ? document.activeElement.getAttribute("href") ?? undefined : undefined);

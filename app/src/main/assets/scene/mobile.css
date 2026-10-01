@@ -346,3 +346,15 @@ body:has(.mobile-scene) .scene-card-menu { max-width: calc(100vw - 24px); backgr
 #root .mobile-scene .shorts-contentbar.is-explore { position: static; display: flex; flex-wrap: wrap; height: auto; overflow: visible; padding: 0 0 10px; background: transparent; }
 #root .mobile-scene .shorts-contentbar.is-explore .scene-explore__compact-controls { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 8px; }
 #root .mobile-scene .shorts-contentbar.is-explore .artist-filter-active-chips { display: flex; flex-wrap: wrap; }
+
+/* Trial: both header rows follow the existing chat scroll detector. The
+   full-size scroller keeps permanent initial padding, never a changing inset. */
+#root .mobile-scene .scene-page[data-auto-scene-chrome] { inset: 0; box-sizing: border-box; padding-top: var(--scene-mobile-header); --scene-visible-chrome: var(--scene-mobile-header); scroll-padding-top: calc(var(--scene-visible-chrome) + 12px); }
+#root .mobile-scene .scene-page.has-browse-nav[data-auto-scene-chrome] { scroll-padding-top: calc(var(--scene-visible-chrome) + 56px); }
+#root .mobile-scene .scene-page[data-scene-header-hidden] { --scene-visible-chrome: 0px; }
+#root .mobile-scene .scene-page[data-auto-scene-chrome] :is(.shorts-topbar,.mobile-scene-tools,.scene-browse-chips-shell,.scene-navigation-progress) { transform: translateY(0); transition: transform 180ms ease-out; }
+#root .mobile-scene .scene-page[data-auto-scene-chrome][data-scene-header-hidden] :is(.shorts-topbar,.mobile-scene-tools,.scene-browse-chips-shell,.scene-navigation-progress) { transform: translateY(calc(-1 * var(--scene-mobile-header))); }
+#root .mobile-scene .scene-page[data-scene-header-hidden] :is(.shorts-topbar,.mobile-scene-tools) { pointer-events: none; }
+@media (prefers-reduced-motion: reduce) {
+  #root .mobile-scene .scene-page[data-auto-scene-chrome] :is(.shorts-topbar,.mobile-scene-tools,.scene-browse-chips-shell,.scene-navigation-progress) { transition: none; }
+}
