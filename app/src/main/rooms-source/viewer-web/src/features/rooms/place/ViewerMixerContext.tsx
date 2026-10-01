@@ -21,6 +21,7 @@ import {
   markMeeWavCaptureSurface,
 } from "./viewerSystemCapture";
 import type { PlaceMixerProgramAudioTransport } from "./PlaceMixerAudioPlayer";
+import { watchFeatureActivity } from "../../../../../../shared-ui/feature-activity.mjs";
 
 export function useViewerSendMixer(
   accountId: string | undefined,
@@ -87,8 +88,12 @@ export function useViewerSendMixer(
   }, [engine, levels, storageKey]);
   useEffect(() => {
     if (!enabled) return;
-    const timer = setInterval(() => setMeters(engine.sample()), 80);
-    return () => clearInterval(timer);
+    let timer = 0;
+    const stopWatching = watchFeatureActivity(active => {
+      clearInterval(timer); timer = 0;
+      if (active) timer = window.setInterval(() => setMeters(engine.sample()), 80);
+    });
+    return () => { stopWatching(); clearInterval(timer); };
   }, [enabled, engine]);
   const setGain = useCallback(
     (id: ViewerFader, gain: number) =>
