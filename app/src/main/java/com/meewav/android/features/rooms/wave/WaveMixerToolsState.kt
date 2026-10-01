@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.SystemClock
 import androidx.compose.runtime.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.collectLatest
 
 internal data class WavePad(val title: String, val source: String, val color: Long)
 
@@ -46,17 +47,20 @@ internal class WaveMixerToolsState(private val context: Context, private val onT
 
     init {
         scope.launch {
-            while (isActive) {
-                val media = player
-                if (pendingStart && media != null && !padPaused && !padLoading) {
-                    // Match web: use actual media time, with a one-second overlap before the beat.
-                    if (runCatching { media.isPlaying && media.duration - media.currentPosition <= 1000 }.getOrDefault(false)) releaseStart()
+            snapshotFlow { timerRunning || (pendingStart && !padPaused && !padLoading) }.collectLatest { needsClock ->
+                if (!needsClock) return@collectLatest
+                while (isActive) {
+                    val media = player
+                    if (pendingStart && media != null && !padPaused && !padLoading) {
+                        // Match web: use actual media time, with a one-second overlap before the beat.
+                        if (runCatching { media.isPlaying && media.duration - media.currentPosition <= 1000 }.getOrDefault(false)) releaseStart()
+                    }
+                    if (timerRunning) {
+                        remainingMs = (deadline - SystemClock.elapsedRealtime()).coerceAtLeast(0)
+                        if (remainingMs == 0L) finish(true)
+                    }
+                    delay(25)
                 }
-                if (timerRunning) {
-                    remainingMs = (deadline - SystemClock.elapsedRealtime()).coerceAtLeast(0)
-                    if (remainingMs == 0L) finish(true)
-                }
-                delay(25)
             }
         }
     }

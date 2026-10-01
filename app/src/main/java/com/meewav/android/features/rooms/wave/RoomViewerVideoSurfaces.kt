@@ -11,6 +11,8 @@ import kotlin.math.roundToInt
 internal class RoomViewerVideoSurfaces(private val web: WebView, private val parent: FrameLayout) : AutoCloseable {
     private val views = mutableMapOf<String, TextureView>()
     private var session: RoomsAudioSession? = null
+    private var presentationActive = true
+    private var lastGeometry: JSONObject? = null
     fun attach(value: RoomsAudioSession?) {
         views.forEach { (id, _) -> session?.bindRemoteVideo(id, null) }
         session = value
@@ -18,10 +20,21 @@ internal class RoomViewerVideoSurfaces(private val web: WebView, private val par
     }
     fun update(data: JSONObject) {
         val viewport = data.optDouble("viewport", 0.0)
+        if (!viewport.isFinite() || viewport <= 0 || web.width == 0 || data.optJSONArray("tiles") == null) return
+        lastGeometry = data
+        session?.setPlaybackGain(data.optDouble("volume", 0.0).takeIf { it.isFinite() }?.toFloat() ?: 0f)
+        if (presentationActive) positionVideos(data)
+    }
+    fun setPresentationActive(active: Boolean) {
+        if (presentationActive == active) return
+        presentationActive = active
+        if (active) lastGeometry?.let(::positionVideos) else clearViews()
+    }
+    private fun positionVideos(data: JSONObject) {
+        val viewport = data.optDouble("viewport", 0.0)
         if (!viewport.isFinite() || viewport <= 0 || web.width == 0) return
         val scale = web.width / viewport
         val tiles = data.optJSONArray("tiles") ?: return
-        session?.setPlaybackGain(data.optDouble("volume", 0.0).takeIf { it.isFinite() }?.toFloat() ?: 0f)
         val visible = mutableSetOf<String>()
         for (index in 0 until minOf(tiles.length(), 12)) {
             val tile = tiles.optJSONObject(index) ?: continue
@@ -51,7 +64,11 @@ internal class RoomViewerVideoSurfaces(private val web: WebView, private val par
     }
     override fun close() {
         attach(null)
-        views.values.forEach(parent::removeView)
+        clearViews()
+        lastGeometry = null
+    }
+    private fun clearViews() {
+        views.forEach { (id, view) -> session?.bindRemoteVideo(id, null); parent.removeView(view) }
         views.clear()
     }
 }

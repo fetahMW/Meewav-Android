@@ -37,7 +37,14 @@ internal class RoomViewerNativeControls(
     }
     private val videos = RoomViewerVideoSurfaces(web, parent)
     private var viewerDeck: WaveMixerDeckState? = null
-    private val audioLifecycle = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_STOP && viewerDeck?.documentPicker?.isOpen != true) liveAudio?.stop() }
+    private val audioLifecycle = LifecycleEventObserver { _, event ->
+        when (event) {
+            Lifecycle.Event.ON_PAUSE -> videos.setPresentationActive(false)
+            Lifecycle.Event.ON_RESUME -> videos.setPresentationActive(true)
+            Lifecycle.Event.ON_STOP -> if (viewerDeck?.documentPicker?.isOpen != true) liveAudio?.stop()
+            else -> Unit
+        }
+    }
     private var room by mutableStateOf("")
     private var mode by mutableStateOf("none")
     private var draft by mutableStateOf("")
