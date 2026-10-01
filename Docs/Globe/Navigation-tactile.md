@@ -10,7 +10,9 @@ reste fixe. Aucun moteur ni gestionnaire de gestes tiers n’est ajouté.
 
 | Interaction | Comportement |
 | --- | --- |
-| Un doigt | Déplacement direct du point sous le doigt, puis inertie selon la vitesse des 80 dernières millisecondes. Une pause avant le relâchement supprime l’inertie. |
+| Un doigt — globe d’ensemble | Rotation continue selon les axes de l’écran, indépendamment de l’axe du disque et du point où commence le geste. Même calcul sur la terre, la silhouette et le fond. L’orientation complète de la caméra est transportée au passage des pôles. |
+| Un doigt — carte rapprochée | Déplacement direct du point sous le doigt. |
+| Relâchement | Inertie selon la vitesse des 80 dernières millisecondes. Une pause avant le relâchement supprime l’inertie. |
 | Deux doigts | Intention reconnue depuis la position initiale des deux doigts. Le mode choisi reste verrouillé jusqu’à un changement du nombre de doigts. Les mouvements sont regroupés par image. |
 | Pincement / déplacement | Une fois ce geste reconnu, zoom selon le rapport des distances et déplacement du centre, y compris pour un pincement asymétrique. Pour incliner ensuite, relâcher puis recommencer le geste vertical. |
 | Rotation | Rotation volontaire au-delà de 10°, puis mouvement continu dans le sens des doigts ; les petites différences de vitesse des pouces ne déclenchent plus ce geste. |
@@ -31,7 +33,10 @@ effectivement. Un nouvel appui sur le globe et la mise en arrière-plan conserve
 leur interruption explicite.
 
 Les limites géographiques nominales sont : hauteur 0,003–400 unités du moteur,
-latitude −85° à +85°, inclinaison 0°–75°. Une résistance autorise un léger
+latitude −85° à +85° en carte rapprochée, inclinaison 0°–75°. La rotation du
+globe d’ensemble peut traverser les pôles sans retour forcé à ±85° ; longitude
+et bearing peuvent alors changer de représentation tout en gardant la caméra
+continue. Une résistance autorise un léger
 dépassement pendant le geste, puis un retour amorti de moins de 450 ms. Ces unités
 de hauteur ne sont pas des mètres. La longitude et l’orientation bouclent.
 
@@ -42,7 +47,7 @@ Interrompre une arrivée ou un retour conserve d’abord la position et le rouli
 affichés ; si cette position est hors des bandes, elle élargit la plage de cette
 visite pour éviter une téléportation au premier toucher.
 
-Si le rayon ne rencontre pas la surface (ciel, horizon ou silhouette du globe),
+En carte rapprochée, si le rayon ne rencontre pas la surface (ciel, horizon),
 un déplacement de repli prend le relais. L’accroche géographique est donc une
 contrainte résolue au mieux, et non une garantie impossible hors surface ou au-delà
 des limites. Les safe areas et gestes système Android restent inchangés.
@@ -58,6 +63,11 @@ Sous `app/src/main/globe-source/` :
   point sous le nouveau centre pour les pincements/déplacements. En mode
   `pitchOnly`, il change uniquement l’inclinaison, sans résoudre d’ancrage sous
   les doigts. Il délègue au mode anneau quand celui-ci est actif.
+- `globe-touch-rotation.mjs` transporte la position et l’orientation de la caméra
+  autour du globe selon le déplacement en pixels CSS. Il utilise le seuil
+  existant de vue d’ensemble (hauteur 70) et le rayon projeté pour la sensibilité.
+  Aucun ancrage géographique ni axe du disque ne contraint ce geste. Les vecteurs
+  et quaternions de travail sont réutilisés dans la boucle existante du moteur.
 - `touch-elastic.mjs` définit résistance et retour amorti.
 
 Les événements de déplacement ne déclenchent pas de `setState`. Les positions
@@ -84,6 +94,36 @@ de l’anneau. Le bouton 3D existant conserve sa fonction avec une transition de
 350 ms. Aucune nouvelle boussole ni nouvelle interface n’est ajoutée.
 
 ## Vérifications de ce lot
+
+### Correction du 1er octobre 2026 — direction de la rotation du globe
+
+Avant correction, cinq régressions avec une vraie caméra Three.js reproduisent
+les défauts de la vue d’ensemble : mouvement de travers hors surface à bearing
+43° (erreur de direction normalisée 0,202), mouvement différent entre centre et
+fond, retour inexact autour des pôles, latitude 89° ramenée à 85° au relâchement,
+et dépendance à la cadence des événements. Les 16 tests existants restent verts.
+
+La vue d’ensemble employait l’accroche géographique prévue pour les cartes
+rapprochées. Près de la silhouette, elle passait à un calcul de repli ; près des
+pôles, ses limites et son ancrage empêchaient un retour continu. L’anneau était
+inactif sur ce parcours : sa présence visuelle ne déclenchait pas sa navigation.
+
+Le correctif utilise une rotation selon les directions de l’écran sur le globe
+d’ensemble, en conservant inclinaison et hauteur. Il garde l’accroche locale,
+le pincement, la rotation volontaire à deux doigts, l’inclinaison verrouillée,
+les sélections de portraits et la promenade sur le vinyle. Les tests couvrent
+portrait et paysage, bearings différents, l’alignement réel du disque, les pôles,
+le passage de la longitude ±180°, les limites élastiques et les changements de
+taille et de cadence. Une caméra mathématique ne valide pas le ressenti sur
+un téléphone physique.
+
+Après correction, `node scripts/test-globe-navigation.mjs` réussit : **22 tests
+réussis, aucun échec**, dont les six nouvelles régressions de rotation et de
+limites élastiques. Le bundle Globe (2 135 assets) et `:app:assembleDebug`
+réussissent. L'annulation de ce lot consiste à revert son commit, qui contient
+aussi les assets générés, puis reconstruire et réinstaller l'APK. Elle conserve
+la restauration précédente de la navbar paysage. Les identifiants exacts sont
+enregistrés localement dans `android-globe-touch-rotation-20261001`.
 
 ### Correction du 29 septembre 2026 — inclinaison verrouillée
 

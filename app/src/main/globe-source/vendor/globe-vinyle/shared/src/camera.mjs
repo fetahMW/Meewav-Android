@@ -114,11 +114,11 @@ export function createCamera(initial, reducedMotion = false) {
       view.lat = clamp(view.lat + deltaLat, -MAX_LATITUDE, MAX_LATITUDE);
     },
 
-    rotateTo(pose) {
+    rotateTo(pose, elastic = false) {
       if (![pose.lon, pose.lat, pose.bearing].every(Number.isFinite)) return;
       interrupt();
       dragging = true;
-      Object.assign(view, sanitizeView({ ...view, ...pose }, view));
+      Object.assign(view, sanitizeView({ ...view, ...pose }, view, elastic));
     },
 
     release() {

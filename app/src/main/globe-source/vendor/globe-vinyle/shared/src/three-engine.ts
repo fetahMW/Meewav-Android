@@ -1,4 +1,5 @@
 import { solveScreenAnchor } from "./screen-anchor.mjs";
+import { createGlobeTouchRotation } from '../../../../globe-touch-rotation.mjs';
 import { createTouchNavigation } from "../../../../touch-navigation.mjs";
 import { createTouchCamera } from "../../../../touch-camera.mjs";
 import { createRingPlayback } from "../../../../ring-playback";
@@ -687,6 +688,7 @@ export async function createThree(
     }
   }
   const touchCamera = createTouchCamera({ view, motion, pickPoint, keepPoint, updateCamera,
+    globeRotation: createGlobeTouchRotation({ camera, motion, updateCamera, height: () => height, align: GLOBE_ALIGN }),
     ring: ringNavigation, width: () => width, height: () => height,
     rect: () => canvas.getBoundingClientRect() });
   const touchNavigation = createTouchNavigation({

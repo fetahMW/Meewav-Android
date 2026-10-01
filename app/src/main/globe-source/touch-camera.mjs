@@ -7,7 +7,7 @@ const minLog = Math.log(CAMERA_LIMITS.minHeight), maxLog = Math.log(CAMERA_LIMIT
 const logExtent = Math.log(1.18);
 
 // Gesture transforms write the existing camera view; no second pose or React state.
-export function createTouchCamera({ view, motion, pickPoint, keepPoint, updateCamera, ring, width, height, rect = () => ({ left: 0, top: 0 }) }) {
+export function createTouchCamera({ view, motion, pickPoint, keepPoint, updateCamera, ring, globeRotation, width, height, rect = () => ({ left: 0, top: 0 }) }) {
   let spring = null, lastAnchor = null;
   const dragMotion = { drag(lon, lat) {
     view.lon = wrapLongitude(view.lon + lon);
@@ -24,6 +24,10 @@ export function createTouchCamera({ view, motion, pickPoint, keepPoint, updateCa
     pan(from, to, dragState) {
       if (ring.active) { const r = rect(); ring.panTouch({ x: from.x - r.left, y: from.y - r.top },
         { x: to.x - r.left, y: to.y - r.top }, width(), height()); return; }
+      if (globeRotation?.pan(from, to)) {
+        dragState.anchor = null; lastAnchor = null;
+        return;
+      }
       applyDirectDrag({ view, motion: dragMotion, dragState, from, to, pickPoint,
         keepPoint: anchored, updateCamera, maxSteps: 12 });
       lastAnchor = dragState.anchor ? { x: to.x, y: to.y, point: dragState.anchor } : null;
@@ -55,9 +59,10 @@ export function createTouchCamera({ view, motion, pickPoint, keepPoint, updateCa
       if (ring.active) return ring.settleTouch(seconds);
       if (!spring) {
         const log = Math.log(view.height), targetLog = clamp(log, minLog, maxLog);
-        const pitch = clamp(view.pitch, 0, 75), lat = clamp(view.lat, -85, 85);
+        const latitudeLimit = globeRotation?.active ? 90 : 85;
+        const pitch = clamp(view.pitch, 0, 75), lat = clamp(view.lat, -latitudeLimit, latitudeLimit);
         if (Math.abs(log - targetLog) < 1e-10 && pitch === view.pitch && lat === view.lat) return false;
-        spring = { log, targetLog, pitch: view.pitch, targetPitch: pitch, lat: view.lat, targetLat: lat };
+        spring = { log, targetLog, pitch: view.pitch, targetPitch: pitch, lat: view.lat, targetLat: lat, latitudeLimit };
       }
       const k = springRemaining(seconds), s = spring;
       view.height = Math.exp(s.targetLog + (s.log - s.targetLog) * k);
@@ -65,7 +70,7 @@ export function createTouchCamera({ view, motion, pickPoint, keepPoint, updateCa
       view.lat = s.targetLat + (s.lat - s.targetLat) * k;
       updateCamera();
       if (lastAnchor && s.lat === s.targetLat) { anchored(lastAnchor); updateCamera(); }
-      if (k === 0) { view.lat = clamp(view.lat, -85, 85); updateCamera(); spring = null; }
+      if (k === 0) { view.lat = clamp(view.lat, -s.latitudeLimit, s.latitudeLimit); updateCamera(); spring = null; }
       return k !== 0;
     },
   };

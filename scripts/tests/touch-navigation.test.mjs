@@ -3,12 +3,14 @@ import assert from 'node:assert/strict';
 import * as T from 'three';
 import { createTouchNavigation, pairTransform } from '../../app/src/main/globe-source/touch-navigation.mjs';
 import { createTouchCamera } from '../../app/src/main/globe-source/touch-camera.mjs';
+import { createGlobeTouchRotation } from '../../app/src/main/globe-source/globe-touch-rotation.mjs';
 import { elasticDelta } from '../../app/src/main/globe-source/touch-elastic.mjs';
 import { createCamera } from '../../app/src/main/globe-source/vendor/globe-vinyle/shared/src/camera.mjs';
 import { createOrbitCameraUpdater } from '../../app/src/main/globe-source/vendor/globe-vinyle/shared/src/orbit-camera.mjs';
 import { solveScreenAnchor } from '../../app/src/main/globe-source/vendor/globe-vinyle/shared/src/screen-anchor.mjs';
 import { RADIUS, xyz, lonlat } from '../../app/src/main/globe-source/vendor/globe-vinyle/shared/src/geo.mjs';
 import { createRingNavigation } from '../../app/src/main/globe-source/vendor/globe-vinyle/shared/src/ring-navigation.mjs';
+import { GLOBE_ALIGN } from '../../app/src/main/globe-source/vendor/globe-vinyle/shared/src/saturn-ring.mjs';
 
 const near = (a,b,e=1e-8) => assert.ok(Math.abs(a-b)<e, `${a} != ${b} (tolerance ${e})`);
 const event = (id,x,y,t) => ({ pointerType:'touch', pointerId:id,clientX:x,clientY:y,timeStamp:t });
@@ -126,21 +128,94 @@ test('reduced motion skips inertia and double-tap animation',()=>{
   assert.equal(nav.isMoving(),false);
 });
 
-function geometry(initial={}) {
+function geometry(initial={},viewport={}) {
+  let width=viewport.width||800,height=viewport.height||400;
+  const align=viewport.align||null,unalign=align?.clone().invert();
   const motion=createCamera({lon:2.35,lat:48.86,height:2,pitch:30,bearing:0,...initial},false),view=motion.view;
-  const camera=new T.PerspectiveCamera(38,800/400,.001,1000);
-  const updateCamera=createOrbitCameraUpdater(camera,view);updateCamera();
+  const camera=new T.PerspectiveCamera(38,width/height,.001,1000);
+  const updateCamera=createOrbitCameraUpdater(camera,view,align);
+  function resize(w,h){width=w;height=h;camera.aspect=w/h;
+    camera.fov=T.MathUtils.radToDeg(2*Math.atan(Math.tan(T.MathUtils.degToRad(19))/Math.min(1,camera.aspect)));
+    camera.updateProjectionMatrix();updateCamera();}
+  resize(width,height);
   const ray=new T.Raycaster(),sphere=new T.Sphere(new T.Vector3(),RADIUS);
-  function pickPoint(x,y){ray.setFromCamera(new T.Vector2(x/400-1,1-y/200),camera);
-    const hit=ray.ray.intersectSphere(sphere,new T.Vector3());return hit?lonlat(hit.x,hit.y,hit.z):null;}
-  function project(point){const p=new T.Vector3(...xyz(point[0],point[1],RADIUS)).project(camera);return {x:(p.x+1)*400,y:(1-p.y)*200};}
-  const keepPoint=(a,latitudeLimit)=>solveScreenAnchor({view,camera,point:a.point,x:a.x,y:a.y,width:800,height:400,updateCamera,latitudeLimit});
-  const api=createTouchCamera({view,motion,pickPoint,keepPoint,updateCamera,ring:{active:false,releaseTouch(){}},width:()=>800,height:()=>400});
-  return {api,view,motion,camera,pickPoint,project,updateCamera};
+  function pickPoint(x,y){ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),camera);
+    const hit=ray.ray.intersectSphere(sphere,new T.Vector3());if(hit&&unalign)hit.applyQuaternion(unalign);
+    return hit?lonlat(hit.x,hit.y,hit.z):null;}
+  function project(point){const p=new T.Vector3(...xyz(point[0],point[1],RADIUS));if(align)p.applyQuaternion(align);
+    p.project(camera);return {x:(p.x+1)*width/2,y:(1-p.y)*height/2};}
+  const keepPoint=(a,latitudeLimit)=>solveScreenAnchor({view,camera,point:a.point,x:a.x,y:a.y,width,height,updateCamera,latitudeLimit,align});
+  const api=createTouchCamera({view,motion,pickPoint,keepPoint,updateCamera,ring:{active:false,releaseTouch(){}},
+    globeRotation:createGlobeTouchRotation({camera,motion,updateCamera,height:()=>height,align}),width:()=>width,height:()=>height});
+  return {api,view,motion,camera,pickPoint,project,updateCamera,resize};
 }
 
+test('overview follows screen directions outside the globe at any bearing and orientation',()=>{
+  for(const viewport of [{width:384,height:796},{width:796,height:384}])
+    for(const initial of [{lon:2.35,lat:48.86,bearing:43},{lon:179.9,lat:80,bearing:-70},{lon:-32,lat:-78,bearing:160}])
+      for(const [dx,dy] of [[8,0],[0,8],[-8,-5]]){
+        const g=geometry({...initial,height:220,pitch:0},{...viewport,align:GLOBE_ALIGN});
+        const probe=[g.view.lon,g.view.lat],start=g.project(probe),from={x:viewport.width+30,y:viewport.height/2};
+        assert.equal(g.pickPoint(from.x,from.y),null);
+        g.api.pan(from,{x:from.x+dx,y:from.y+dy},{anchor:null});
+        const end=g.project(probe),sx=end.x-start.x,sy=end.y-start.y;
+        assert.ok(sx*dx+sy*dy>0,'the land must follow the finger');
+        const angleError=Math.abs(sx*dy-sy*dx)/(Math.hypot(sx,sy)*Math.hypot(dx,dy));
+        assert.ok(angleError<.02,`off-axis motion ${angleError} at bearing ${initial.bearing}`);
+        near(g.view.height,220);near(g.view.pitch,0);
+      }
+});
+test('overview has no change of direction or speed between land, silhouette and empty space',()=>{
+  const cameras=[];
+  for(const from of [{x:400,y:200},{x:565,y:200},{x:790,y:350}]){
+    const g=geometry({height:220,pitch:0,bearing:43},{align:GLOBE_ALIGN});
+    const drag={anchor:g.pickPoint(from.x,from.y)};
+    for(let i=1;i<=12;i++)g.api.pan({x:from.x+(i-1)*6,y:from.y+(i-1)*3},
+      {x:from.x+i*6,y:from.y+i*3},drag);
+    cameras.push(g.camera.quaternion.clone());
+  }
+  for(const camera of cameras)near(camera.angleTo(cameras[0]),0,1e-6);
+});
+test('overview reversals retrace the camera frame across poles and the date line',()=>{
+  for(const initial of [{lon:2,lat:89,bearing:0},{lon:179.9,lat:10,bearing:170},{lon:0,lat:-89,bearing:-180}]){
+    const g=geometry({...initial,height:220,pitch:0},{align:GLOBE_ALIGN});
+    const position=g.camera.position.clone(),rotation=g.camera.quaternion.clone();
+    const from={x:400,y:200},to={x:430,y:280},drag={anchor:g.pickPoint(from.x,from.y)};
+    g.api.pan(from,to,drag);g.api.pan(to,from,drag);
+    near(g.camera.position.distanceTo(position),0,1e-6);near(g.camera.quaternion.angleTo(rotation),0,1e-6);
+  }
+});
+test('releasing an overview near a pole never snaps its latitude to the local map limit',()=>{
+  for(const lat of [89,-89]){
+    const g=geometry({lat,height:220,pitch:0},{align:GLOBE_ALIGN});
+    const pose={...g.view};g.api.release();g.api.settle(.5);
+    assert.deepEqual(g.view,pose);
+  }
+});
+test('overview rotation consumes the same distance at different event rates and after viewport resize',()=>{
+  const rotations=[];
+  for(const count of [1,6,60]){
+    const g=geometry({height:220,pitch:30,bearing:43},{width:384,height:796,align:GLOBE_ALIGN});
+    const drag={anchor:null};
+    for(let i=1;i<=count;i++)g.api.pan({x:500+(i-1)*90/count,y:200+(i-1)*40/count},
+      {x:500+i*90/count,y:200+i*40/count},drag);
+    rotations.push(g.camera.quaternion.clone());
+    g.resize(796,384);const probe=[g.view.lon,g.view.lat],start=g.project(probe);
+    g.api.pan({x:850,y:200},{x:856,y:200},drag);const end=g.project(probe);
+    assert.ok(end.x>start.x);near(end.y,start.y,.3);
+  }
+  for(const rotation of rotations)near(rotation.angleTo(rotations[0]),0,1e-6);
+});
+test('overview drag preserves elastic altitude and tilt until their normal release',()=>{
+  const g=geometry({height:400,pitch:75});
+  g.view.height=430;g.view.pitch=77;g.updateCamera();
+  const from={x:900,y:220};g.api.interrupt();g.api.pan(from,{x:906,y:222},{anchor:null});
+  near(g.view.height,430);near(g.view.pitch,77);
+  g.api.release();g.api.settle(.5);near(g.view.height,400);near(g.view.pitch,75);
+});
+
 test('locked tilt changes only real camera pitch, including off-centre and distant views',()=>{
-  for(const initial of [{},{height:.01,pitch:60,bearing:43},{height:220,pitch:0},{lon:179.9,height:1}]){
+  for(const initial of [{},{height:.01,pitch:60,bearing:43},{height:220,pitch:0},{height:220,lat:89,pitch:0,bearing:43},{lon:179.9,height:1}]){
     const g=geometry(initial),pose={...g.view},nav=createTouchNavigation(g.api);
     nav.down(event(1,120,200,1));nav.down(event(2,650,245,2));
     for(let i=1;i<=6;i++){
