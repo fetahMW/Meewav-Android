@@ -16,7 +16,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageShader
-import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shader
 import androidx.compose.ui.graphics.ShaderBrush
@@ -47,19 +46,20 @@ private fun softlightOrSrcOver(): BlendMode =
     if (Build.VERSION.SDK_INT >= 29) BlendMode.Softlight else BlendMode.SrcOver
 
 /** Ombre douce portée — BlurMaskFilter via le canvas natif. */
+private fun softShadowPaint(blur: Float, color: Color): android.graphics.Paint =
+    android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+        this.color = color.toArgb()
+        maskFilter = android.graphics.BlurMaskFilter(blur, android.graphics.BlurMaskFilter.Blur.NORMAL)
+    }
+
 private fun DrawScope.softShadow(
     topLeft: Offset,
     size: Size,
     corner: Float,
-    blur: Float,
-    color: Color,
+    paint: android.graphics.Paint,
     dy: Float = 0f,
 ) {
-    if (blur <= 0f || size.width <= 0f || size.height <= 0f) return
-    val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-        this.color = color.toArgb()
-        maskFilter = android.graphics.BlurMaskFilter(blur, android.graphics.BlurMaskFilter.Blur.NORMAL)
-    }
+    if (size.width <= 0f || size.height <= 0f) return
     drawContext.canvas.nativeCanvas.drawRoundRect(
         topLeft.x, topLeft.y + dy, topLeft.x + size.width, topLeft.y + dy + size.height,
         corner, corner, paint)
@@ -120,57 +120,59 @@ internal fun Modifier.consoleTabSurface(selected: Boolean, focused: Boolean = fa
 /* A. Fond d'écran `ClasseWebMixerSurfaceBackground`                          */
 /* ------------------------------------------------------------------------- */
 
-fun Modifier.mixerSurfaceBackground(): Modifier = drawBehind {
+fun Modifier.mixerSurfaceBackground(): Modifier = drawWithCache {
     val w = size.width; val h = size.height
     // 1. Dégradé diagonal topStart → bottomEnd.
-    drawRect(
-        Brush.linearGradient(
-            0f to WaveMixerTheme.bg0, 0.28f to WaveMixerTheme.bg1,
-            0.68f to WaveMixerTheme.bg2, 1f to WaveMixerTheme.bg3,
-            start = Offset(0f, 0f), end = Offset(w, h)
-        )
+    val face = Brush.linearGradient(
+        0f to WaveMixerTheme.bg0, 0.28f to WaveMixerTheme.bg1,
+        0.68f to WaveMixerTheme.bg2, 1f to WaveMixerTheme.bg3,
+        start = Offset(0f, 0f), end = Offset(w, h)
     )
     // 2. Reflet rasant horizontal.
-    drawRect(
-        Brush.linearGradient(
-            0f to white(0.032f), 0.018f to white(0.009f), 0.07f to Color.Transparent,
-            0.93f to Color.Transparent, 0.985f to white(0.005f), 1f to white(0.016f),
-            start = Offset(0f, 0f), end = Offset(w, 0f)
-        )
+    val reflection = Brush.linearGradient(
+        0f to white(0.032f), 0.018f to white(0.009f), 0.07f to Color.Transparent,
+        0.93f to Color.Transparent, 0.985f to white(0.005f), 1f to white(0.016f),
+        start = Offset(0f, 0f), end = Offset(w, 0f)
     )
     // 3. Bruit tuilé ~1,6 %.
-    drawRect(noiseBrush(), alpha = 0.016f, blendMode = softlightOrSrcOver())
+    val noise = noiseBrush()
+    val noiseBlend = softlightOrSrcOver()
     // 4. Liseré haut 1 px physique.
-    drawRect(
-        Brush.horizontalGradient(0f to white(0.065f), 0.5f to white(0.018f), 1f to Color.Transparent),
-        topLeft = Offset(0f, 0f), size = Size(w, 1f)
-    )
+    val rim = Brush.horizontalGradient(0f to white(0.065f), 0.5f to white(0.018f), 1f to Color.Transparent)
+    onDrawBehind {
+        drawRect(face)
+        drawRect(reflection)
+        drawRect(noise, alpha = 0.016f, blendMode = noiseBlend)
+        drawRect(rim, topLeft = Offset.Zero, size = Size(w, 1f))
+    }
 }
 
 /* ------------------------------------------------------------------------- */
 /* A-bis. Fond de la zone mixeur — variante « gris foncé » (demande utilisateur) */
 /* ------------------------------------------------------------------------- */
 
-fun Modifier.mixerBodyBackground(): Modifier = drawBehind {
+fun Modifier.mixerBodyBackground(): Modifier = drawWithCache {
     val w = size.width; val h = size.height
     // 1. Dégradé diagonal gris foncé (plus clair que le fond principal).
-    drawRect(
-        Brush.linearGradient(
-            0f to WaveMixerTheme.bodyBg0, 0.28f to WaveMixerTheme.bodyBg1,
-            0.68f to WaveMixerTheme.bodyBg2, 1f to WaveMixerTheme.bodyBg3,
-            start = Offset(0f, 0f), end = Offset(w, h)
-        )
+    val face = Brush.linearGradient(
+        0f to WaveMixerTheme.bodyBg0, 0.28f to WaveMixerTheme.bodyBg1,
+        0.68f to WaveMixerTheme.bodyBg2, 1f to WaveMixerTheme.bodyBg3,
+        start = Offset(0f, 0f), end = Offset(w, h)
     )
     // 2. Reflet rasant horizontal.
-    drawRect(
-        Brush.linearGradient(
-            0f to white(0.05f), 0.018f to white(0.014f), 0.07f to Color.Transparent,
-            0.93f to Color.Transparent, 0.985f to white(0.008f), 1f to white(0.02f),
-            start = Offset(0f, 0f), end = Offset(w, 0f)
-        )
+    val reflection = Brush.linearGradient(
+        0f to white(0.05f), 0.018f to white(0.014f), 0.07f to Color.Transparent,
+        0.93f to Color.Transparent, 0.985f to white(0.008f), 1f to white(0.02f),
+        start = Offset(0f, 0f), end = Offset(w, 0f)
     )
     // 3. Bruit tuilé ~1,6 %.
-    drawRect(noiseBrush(), alpha = 0.016f, blendMode = softlightOrSrcOver())
+    val noise = noiseBrush()
+    val noiseBlend = softlightOrSrcOver()
+    onDrawBehind {
+        drawRect(face)
+        drawRect(reflection)
+        drawRect(noise, alpha = 0.016f, blendMode = noiseBlend)
+    }
 }
 
 /* ------------------------------------------------------------------------- */
@@ -198,49 +200,40 @@ fun Modifier.hardwareSurface(
     shadowOpacity: Float = 1f,
     tint: Color? = null,
     rimFadeHeight: Dp? = null,
-): Modifier = drawBehind {
+): Modifier = drawWithCache {
     val w = size.width; val h = size.height
-    if (w <= 0f || h <= 0f) return@drawBehind
+    if (w <= 0f || h <= 0f) return@drawWithCache onDrawBehind {}
     val r = cornerRadius.toPx().coerceAtMost(minOf(w, h) / 2f)
     val px = 1f // ~1 px physique (density>=1 sur la cible).
 
     // Ombres : noir 0.40 r0.5 y0.5 + noir 0.30 r(raised?3:4) y2.
-    softShadow(Offset.Zero, size, r, 1f, Color.Black.copy(alpha = 0.40f * shadowOpacity), dy = 0.5f * density)
-    softShadow(Offset.Zero, size, r, (if (raised) 3f else 4f) * density, Color.Black.copy(alpha = 0.30f * shadowOpacity), dy = 2f * density)
+    val nearShadow = softShadowPaint(1f, Color.Black.copy(alpha = 0.40f * shadowOpacity))
+    val farShadow = softShadowPaint((if (raised) 3f else 4f) * density, Color.Black.copy(alpha = 0.30f * shadowOpacity))
 
     // Face : dégradé vertical.
-    drawRoundRect(
-        Brush.verticalGradient(
-            0f to (if (raised) Color(0xFF111315) else Color(0xFF0B0D0F)),
-            0.53f to (if (raised) Color(0xFF080A0C) else Color(0xFF060708)),
-            1f to Color(0xFF040506)
-        ),
-        cornerRadius = CornerRadius(r)
+    val face = Brush.verticalGradient(
+        0f to (if (raised) Color(0xFF111315) else Color(0xFF0B0D0F)),
+        0.53f to (if (raised) Color(0xFF080A0C) else Color(0xFF060708)),
+        1f to Color(0xFF040506)
     )
-    if (tint != null) drawRoundRect(tint.copy(alpha = 0.14f), cornerRadius = CornerRadius(r))
+    val faceTint = tint?.copy(alpha = 0.14f)
 
     // Reflet elliptique clipé.
-    drawRoundRect(hardwareReflectionBrush(reflection, w, h), cornerRadius = CornerRadius(r))
-
-    clipPath(roundRectPath(size, r)) {
-        // Specularité haute 16dp si silhouette.
-        if (silhouette) {
-            drawRect(
-                Brush.verticalGradient(
-                    0f to white(0.055f), 0.25f to white(0.023f), 0.65f to white(0.007f), 1f to Color.Transparent
-                ),
-                topLeft = Offset.Zero, size = Size(w, 16f * density)
-            )
-        }
-        // Sheen vertical.
-        drawRect(
-            Brush.verticalGradient(
-                0f to white(if (raised) 0.035f else 0.022f), 0.18f to white(0.008f), 0.38f to Color.Transparent
-            )
+    val reflectionBrush = hardwareReflectionBrush(reflection, w, h)
+    val clip = roundRectPath(size, r)
+    // Specularité haute 16dp si silhouette.
+    val silhouetteBrush = if (silhouette) {
+        Brush.verticalGradient(
+            0f to white(0.055f), 0.25f to white(0.023f), 0.65f to white(0.007f), 1f to Color.Transparent
         )
-        // Bruit.
-        drawRect(noiseBrush(), alpha = 0.009f, blendMode = softlightOrSrcOver())
-    }
+    } else null
+    // Sheen vertical.
+    val sheen = Brush.verticalGradient(
+        0f to white(if (raised) 0.035f else 0.022f), 0.18f to white(0.008f), 0.38f to Color.Transparent
+    )
+    // Bruit.
+    val noise = noiseBrush()
+    val noiseBlend = softlightOrSrcOver()
 
     // Rim : (a) liseré externe 1.5px diagonal.
     val rimBrush = if (silhouette) {
@@ -258,28 +251,35 @@ fun Modifier.hardwareSurface(
         )
     }
     val rimModifier = if (rimFadeHeight != null) rimOpacity else rimOpacity
-    drawRoundRect(rimBrush, cornerRadius = CornerRadius(r), style = Stroke(width = px * 1.5f), alpha = rimModifier)
+    val rimStroke = Stroke(width = px * 1.5f)
+    val thinStroke = Stroke(width = px)
     // (b) groove noir à inset 1.5px.
     val gInset = px * 1.5f
-    drawRoundRect(
-        Color.Black.copy(alpha = 0.70f),
-        topLeft = Offset(gInset, gInset), size = Size(w - gInset * 2, h - gInset * 2),
-        cornerRadius = CornerRadius((r - gInset).coerceAtLeast(0f)),
-        style = Stroke(width = px)
-    )
+    val grooveColor = Color.Black.copy(alpha = 0.70f)
     // (c) biseau interne à inset 2.5px.
     val bInset = px * 2.5f
-    drawRoundRect(
-        Brush.verticalGradient(
-            0f to white(if (raised) 0.18f else 0.12f), 0.32f to white(0.035f),
-            0.60f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.75f)
-        ),
-        topLeft = Offset(bInset, bInset), size = Size(w - bInset * 2, h - bInset * 2),
-        cornerRadius = CornerRadius((r - bInset).coerceAtLeast(0f)),
-        style = Stroke(width = px)
+    val bevel = Brush.verticalGradient(
+        0f to white(if (raised) 0.18f else 0.12f), 0.32f to white(0.035f),
+        0.60f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.75f)
     )
-    if (tint != null) {
-        drawRoundRect(tint.copy(alpha = 0.60f), cornerRadius = CornerRadius(r), style = Stroke(width = px * 1.5f))
+    val rimTint = tint?.copy(alpha = 0.60f)
+    onDrawBehind {
+        softShadow(Offset.Zero, size, r, nearShadow, dy = 0.5f * density)
+        softShadow(Offset.Zero, size, r, farShadow, dy = 2f * density)
+        drawRoundRect(face, cornerRadius = CornerRadius(r))
+        if (faceTint != null) drawRoundRect(faceTint, cornerRadius = CornerRadius(r))
+        drawRoundRect(reflectionBrush, cornerRadius = CornerRadius(r))
+        clipPath(clip) {
+            if (silhouetteBrush != null) drawRect(silhouetteBrush, topLeft = Offset.Zero, size = Size(w, 16f * density))
+            drawRect(sheen)
+            drawRect(noise, alpha = 0.009f, blendMode = noiseBlend)
+        }
+        drawRoundRect(rimBrush, cornerRadius = CornerRadius(r), style = rimStroke, alpha = rimModifier)
+        drawRoundRect(grooveColor, topLeft = Offset(gInset, gInset), size = Size(w - gInset * 2, h - gInset * 2),
+            cornerRadius = CornerRadius((r - gInset).coerceAtLeast(0f)), style = thinStroke)
+        drawRoundRect(bevel, topLeft = Offset(bInset, bInset), size = Size(w - bInset * 2, h - bInset * 2),
+            cornerRadius = CornerRadius((r - bInset).coerceAtLeast(0f)), style = thinStroke)
+        if (rimTint != null) drawRoundRect(rimTint, cornerRadius = CornerRadius(r), style = rimStroke)
     }
 }
 
@@ -296,22 +296,17 @@ fun Modifier.satinControl(
     cornerRadius: Dp,
     selected: Boolean = false,
     isPlay: Boolean = false,
-): Modifier = drawBehind {
+): Modifier = drawWithCache {
     val w = size.width; val h = size.height
-    if (w <= 0f || h <= 0f) return@drawBehind
+    if (w <= 0f || h <= 0f) return@drawWithCache onDrawBehind {}
     val r = cornerRadius.toPx().coerceAtMost(minOf(w, h) / 2f)
     val px = 1f
 
     // Ombre : noir 0.52 r4 y3.
-    softShadow(Offset.Zero, size, r, 4f * density, Color.Black.copy(alpha = 0.52f), dy = 3f * density)
+    val shadowPaint = softShadowPaint(4f * density, Color.Black.copy(alpha = 0.52f))
     // Liseré externe noir à −0.6.
-    drawRoundRect(
-        Color.Black.copy(alpha = 0.92f),
-        topLeft = Offset(-0.6f * density, -0.6f * density),
-        size = Size(w + 1.2f * density, h + 1.2f * density),
-        cornerRadius = CornerRadius(r + 0.6f * density),
-        style = Stroke(width = 0.6f * density)
-    )
+    val outerRim = Color.Black.copy(alpha = 0.92f)
+    val outerRimStroke = Stroke(width = 0.6f * density)
     // Fill vertical.
     val fillBrush = if (isPlay) {
         Brush.verticalGradient(
@@ -321,44 +316,41 @@ fun Modifier.satinControl(
     } else {
         Brush.verticalGradient(0f to Color(0xFF1A1C1F), 0.53f to Color(0xFF090A0B), 1f to Color(0xFF020202))
     }
-    drawRoundRect(fillBrush, cornerRadius = CornerRadius(r))
-    if (selected) drawRoundRect(WaveMixerTheme.violetSoft.copy(alpha = 0.12f), cornerRadius = CornerRadius(r))
-
-    clipPath(roundRectPath(size, r)) {
-        // Inner shadow haut : blanc 0.28 y1.
-        drawRect(
-            Brush.verticalGradient(0f to white(0.28f), 0.10f to Color.Transparent),
-            topLeft = Offset.Zero, size = Size(w, h * 0.22f)
-        )
-        // Inner shadow bas : noir 0.96 y−2.
-        drawRect(
-            Brush.verticalGradient(0f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.96f)),
-            topLeft = Offset(0f, h * 0.72f), size = Size(w, h * 0.28f)
-        )
-        // Sheen diagonal.
-        drawRect(
-            Brush.linearGradient(
-                0f to white(0.065f), 0.36f to white(0.014f), 0.51f to Color.Transparent,
-                start = Offset(0f, 0f), end = Offset(w, h)
-            )
-        )
-    }
-    // Stroke 1dp diagonal.
-    drawRoundRect(
-        Brush.linearGradient(
-            0f to Color(0xFFF8F9FB).copy(alpha = 0.44f),
-            0.44f to Color(0xFF8B919A).copy(alpha = 0.18f),
-            0.70f to Color(0xFF3E4147).copy(alpha = 0.07f),
-            1f to Color(0xFFB7BBC2).copy(alpha = 0.22f),
-            start = Offset(0f, 0f), end = Offset(w, h)
-        ),
-        cornerRadius = CornerRadius(r), style = Stroke(width = px)
+    val selectionFill = WaveMixerTheme.violetSoft.copy(alpha = 0.12f)
+    val clip = roundRectPath(size, r)
+    // Inner shadow haut : blanc 0.28 y1.
+    val topSheen = Brush.verticalGradient(0f to white(0.28f), 0.10f to Color.Transparent)
+    // Inner shadow bas : noir 0.96 y−2.
+    val bottomShadow = Brush.verticalGradient(0f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.96f))
+    // Sheen diagonal.
+    val sheen = Brush.linearGradient(
+        0f to white(0.065f), 0.36f to white(0.014f), 0.51f to Color.Transparent,
+        start = Offset(0f, 0f), end = Offset(w, h)
     )
-    if (selected) {
-        drawRoundRect(
-            WaveMixerTheme.violetSoft.copy(alpha = 0.40f),
-            cornerRadius = CornerRadius(r), style = Stroke(width = 0.8f * density)
-        )
+    // Stroke 1dp diagonal.
+    val rim = Brush.linearGradient(
+        0f to Color(0xFFF8F9FB).copy(alpha = 0.44f),
+        0.44f to Color(0xFF8B919A).copy(alpha = 0.18f),
+        0.70f to Color(0xFF3E4147).copy(alpha = 0.07f),
+        1f to Color(0xFFB7BBC2).copy(alpha = 0.22f),
+        start = Offset(0f, 0f), end = Offset(w, h)
+    )
+    val rimStroke = Stroke(width = px)
+    val selectionRim = WaveMixerTheme.violetSoft.copy(alpha = 0.40f)
+    val selectionStroke = Stroke(width = 0.8f * density)
+    onDrawBehind {
+        softShadow(Offset.Zero, size, r, shadowPaint, dy = 3f * density)
+        drawRoundRect(outerRim, topLeft = Offset(-0.6f * density, -0.6f * density),
+            size = Size(w + 1.2f * density, h + 1.2f * density), cornerRadius = CornerRadius(r + 0.6f * density), style = outerRimStroke)
+        drawRoundRect(fillBrush, cornerRadius = CornerRadius(r))
+        if (selected) drawRoundRect(selectionFill, cornerRadius = CornerRadius(r))
+        clipPath(clip) {
+            drawRect(topSheen, topLeft = Offset.Zero, size = Size(w, h * 0.22f))
+            drawRect(bottomShadow, topLeft = Offset(0f, h * 0.72f), size = Size(w, h * 0.28f))
+            drawRect(sheen)
+        }
+        drawRoundRect(rim, cornerRadius = CornerRadius(r), style = rimStroke)
+        if (selected) drawRoundRect(selectionRim, cornerRadius = CornerRadius(r), style = selectionStroke)
     }
 }
 
