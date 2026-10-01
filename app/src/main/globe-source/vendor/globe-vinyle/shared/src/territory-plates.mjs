@@ -3,6 +3,22 @@ import { territoryReveal, territoryStyle, METRES_TO_WORLD, localGroundBlend, FRA
 import { contains, lonlat, RADIUS } from "./geo.mjs";
 import { createQuarterHoverOutline } from './quarter-hover-outline.mjs';
 
+// Bound exactly the displacement performed by begin_vertex. A blanket 20km
+// pad kept metre-high municipal/quarter batches in the frustum off-screen.
+// Use the stored Float32 normals/lifts and keep a conservative world precision
+// allowance; focus/hover/selection alter colours, never the vertex position.
+export function boundTerritoryGeometry(geometry, bias = 0) {
+  geometry.computeBoundingSphere();
+  const normals = geometry.getAttribute('surfaceNormal'), lifts = geometry.getAttribute('lift');
+  let displacement = 0;
+  for (let index = 0; index < lifts.count; index++) {
+    const x = normals.getX(index), y = normals.getY(index), z = normals.getZ(index);
+    displacement = Math.max(displacement, Math.sqrt(x * x + y * y + z * z) * (Math.abs(lifts.getX(index)) + Math.abs(bias)));
+  }
+  geometry.boundingSphere.radius += displacement + RADIUS * 2e-6;
+  return geometry;
+}
+
 export function createTerritoryPlates(scene, packets, features, groundColor = FRANCE_LOCAL_GROUND, focus = null, toGeo = lonlat) {
   let selected = null, hovered = null;
   const hoverOutline = createQuarterHoverOutline(scene, features);
@@ -25,10 +41,7 @@ export function createTerritoryPlates(scene, packets, features, groundColor = FR
       const count = g.getAttribute('position').count;
       g.setAttribute('focusFrom', new T.BufferAttribute(new Float32Array(count).fill(1), 1));
       g.setAttribute('focusTo', new T.BufferAttribute(new Float32Array(count).fill(1), 1));
-      g.computeBoundingSphere();
-      // Shader displacement must be included in CPU frustum culling.
-      g.boundingSphere.radius += 20000 * METRES_TO_WORLD;
-      return g;
+      return boundTerritoryGeometry(g, packet.kind === 'quartier' ? 0.000003 : 0);
     }
     function decorate(material) {
       material.onBeforeCompile = shader => {

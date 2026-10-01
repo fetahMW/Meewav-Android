@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as T from 'three';
 import { indexTriangleAttributes } from '../../app/src/main/globe-source/vendor/globe-vinyle/shared/src/indexed-territory-attributes.mjs';
 import { prepareTerritories } from '../../app/src/main/globe-source/vendor/globe-vinyle/shared/src/territory-geometry.mjs';
-import { createTerritoryPlates } from '../../app/src/main/globe-source/vendor/globe-vinyle/shared/src/territory-plates.mjs';
+import { createTerritoryPlates, boundTerritoryGeometry } from '../../app/src/main/globe-source/vendor/globe-vinyle/shared/src/territory-plates.mjs';
 import { vinylRecordLayout, createVinylRecordGeometry } from '../../app/src/main/globe-source/vendor/globe-vinyle/shared/src/vinyl-record-geometry.mjs';
 import { createVinylRecordMaterial } from '../../app/src/main/globe-source/vendor/globe-vinyle/shared/src/vinyl-record-material.mjs';
 import { createPortraitTextureArray } from '../../app/src/main/globe-source/vendor/globe-vinyle/shared/src/portrait-texture-array.mjs';
@@ -50,6 +50,45 @@ test('indexed real territory packets retain triangle count, feature IDs, selecti
   for (let i = 0; i < 8; i++) assert.ok(Math.abs(geometry.attributes.focusTo.getX(i) - .8) < 1e-7);
   assert.equal(geometry.attributes.index, undefined);
   plates.dispose();
+});
+
+test('large indexed packets use Uint32 without truncating vertex IDs or the WebGL2 restart sentinel', () => {
+  const unique=66000, positions=new Float32Array(unique*2*3), ids=new Float32Array(unique*2);
+  for(let v=0;v<unique*2;v++){const id=v%unique;positions.set([id,id*.5,0],v*3);ids[v]=id;}
+  const indexed=indexTriangleAttributes({position:positions,territoryId:ids});
+  assert.equal(indexed.index instanceof Uint32Array,true);
+  assert.equal(indexed.position.length/3,unique);
+  for(const v of [0,65534,65535,65999,66000,131999]){
+    assert.equal(indexed.index[v],v%unique);
+    assert.equal(indexed.territoryId[indexed.index[v]],ids[v]);
+  }
+});
+
+test('territory culling bounds contain every displaced vertex but reject truly off-screen low-relief batches', () => {
+  const geometry=new T.BufferGeometry();
+  geometry.setAttribute('position',new T.Float32BufferAttribute([.01,0,-.05,.01001,0,-.05,.01,.00001,-.05],3));
+  geometry.setAttribute('surfaceNormal',new T.Float32BufferAttribute([0,0,1,0,0,2,0,0,.5],3));
+  geometry.setAttribute('lift',new T.Float32BufferAttribute([.000001,-.000002,.000003],1));
+  const original=geometry.attributes.position.array.slice();
+  boundTerritoryGeometry(geometry,.000003);
+  const point=new T.Vector3(), normal=new T.Vector3();
+  for(const reveal of [0,.25,.5,1]) for(let i=0;i<3;i++){
+    point.fromBufferAttribute(geometry.attributes.position,i);
+    normal.fromBufferAttribute(geometry.attributes.surfaceNormal,i);
+    point.addScaledVector(normal,geometry.attributes.lift.getX(i)*reveal+.000003);
+    assert.ok(geometry.boundingSphere.containsPoint(point));
+  }
+  assert.deepEqual(geometry.attributes.position.array,original);
+  const camera=new T.OrthographicCamera(-.001,.001,.001,-.001,.0001,1), matrix=new T.Matrix4(), frustum=new T.Frustum();
+  camera.updateMatrixWorld();matrix.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);frustum.setFromProjectionMatrix(matrix);
+  const mesh=new T.Mesh(geometry);mesh.updateMatrixWorld();
+  assert.equal(frustum.intersectsObject(mesh),false);
+  const tight=geometry.boundingSphere.clone();geometry.boundingSphere.radius+=20000*(100/6371008.8);
+  assert.equal(frustum.intersectsObject(mesh),true);
+  geometry.boundingSphere.copy(tight);camera.position.x=.01;camera.updateMatrixWorld();
+  matrix.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);frustum.setFromProjectionMatrix(matrix);
+  assert.equal(frustum.intersectsObject(mesh),true);
+  geometry.dispose();
 });
 
 test('mobile geometry retains exactly the high-quality optical engraving and tooling profiles', () => {
