@@ -1,4 +1,4 @@
-import { useLayoutEffect } from 'react';
+import { useLayoutEffect, type RefObject } from 'react';
 import { createChatHeaderScroll } from '../messaging-source/chatHeaderScroll';
 
 const editable = 'input, textarea, select, [contenteditable="true"]';
@@ -6,9 +6,9 @@ const fixedControls = '.shorts-topbar, .mobile-scene-tools, .scene-browse-chips-
 
 /** The chat detector drives both Scene rows. The viewport and its initial
  * content padding stay fixed, so chrome animation never changes scrollTop. */
-export function useSceneHeaderScroll(routeKey: string) {
+export function useSceneHeaderScroll(surfaceRef: RefObject<HTMLElement | null>, routeKey: string) {
   useLayoutEffect(() => {
-    const scroller = document.querySelector<HTMLElement>('.mobile-scene .scene-page');
+    const scroller = surfaceRef.current;
     if (!scroller) return;
     const chrome = [...scroller.querySelectorAll<HTMLElement>('.shorts-topbar, .mobile-scene-tools')]
       .map(element => ({ element, inert: element.inert, ariaHidden: element.getAttribute('aria-hidden') }));
@@ -108,5 +108,5 @@ export function useSceneHeaderScroll(routeKey: string) {
       setHidden(false);
       scroller.removeAttribute('data-auto-scene-chrome');
     };
-  }, [routeKey]);
+  }, [surfaceRef, routeKey]);
 }

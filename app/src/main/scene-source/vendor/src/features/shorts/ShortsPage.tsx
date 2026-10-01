@@ -17,6 +17,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useSceneHeaderScroll } from "../../../../useSceneHeaderScroll";
 import {
   Bell,
   BellRing,
@@ -2008,6 +2009,8 @@ export default function ShortsPage() {
 function SceneWorkspace() {
   const navigate = useNavigate();
   const location = useLocation();
+  const sceneSurfaceRef = useRef<HTMLElement | null>(null);
+  useSceneHeaderScroll(sceneSurfaceRef, `${location.key}:${location.pathname}${location.search}`);
   const demoScene = isLocalAuthPreviewEnabled();
   const sceneNow = useMemo(() => demoScene ? SCENE_FIXTURE_NOW : Date.now(), [demoScene]);
   const isCreatorStudioRoute = location.pathname === SCENE_STUDIO_ROUTE
@@ -3652,7 +3655,7 @@ function SceneWorkspace() {
   });
 
   return (
-    <main className={`shorts-page scene-page has-unified-header${activeTab !== "tv" || watchRoute ? " is-document" : ""}${watchRoute ? " has-watch-page" : ""}${isCreatorStudioRoute ? " is-creator-studio" : ""}${showBrowseNavigation ? ` has-browse-nav${browseMenuOpen ? "" : " is-browse-collapsed"}` : ""}`} aria-label={SCENE_NAME}>
+    <main ref={sceneSurfaceRef} className={`shorts-page scene-page has-unified-header${activeTab !== "tv" || watchRoute ? " is-document" : ""}${watchRoute ? " has-watch-page" : ""}${isCreatorStudioRoute ? " is-creator-studio" : ""}${showBrowseNavigation ? ` has-browse-nav${browseMenuOpen ? "" : " is-browse-collapsed"}` : ""}`} aria-label={SCENE_NAME}>
       <SceneNavigationProgress navigationKey={location.key} pending={catalogLoading} />
       {catalogError && <div role="alert">{catalogError}<button onClick={()=>setCatalogAttempt(v=>v+1)}>Réessayer</button></div>}
       <div className="shorts-page__background" aria-hidden="true" />
