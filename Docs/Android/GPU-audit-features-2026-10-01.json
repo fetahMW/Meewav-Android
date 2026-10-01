@@ -1,0 +1,547 @@
+{
+  "title": "Audit approfondi des ressources graphiques et médias des features Android",
+  "date": "2026-10-01",
+  "scope": {
+    "platform": "Android, y compris ses modules WebView locaux",
+    "features": [
+      "Authentification",
+      "Messagerie et Track Packs",
+      "Rooms et mixeur natif",
+      "La Scène",
+      "Profil",
+      "Marketplace",
+      "Tremplin"
+    ],
+    "baseline": "50bde3e489c28dd8a69c068bdddaa570f1653b37",
+    "globe": "Les optimisations du globe sont déjà incluses dans la baseline et restent conservées. Rapport séparé : Docs/Globe/Android-gpu-audit-complet-2026-10-01.json.",
+    "preserved": [
+      "Informations et contenus",
+      "Direction artistique et matériaux visibles",
+      "Gestes et navigation",
+      "Audio, DSP et mécaniques du direct",
+      "Données de l'application"
+    ],
+    "sourceBoundary": "Sources Android figées utilisées par les builders locaux. Aucun import de nouvelles sources Web/Windows, aucune modification des dépôts frères.",
+    "method": "Exploration et relectures factuelles confiées à des agents Luna low; conception, modifications, compilation, tests et Git effectués par l'agent principal. Interactions appareils confiées à Luna, sans captures d'écran."
+  },
+  "conclusion": {
+    "corrected": [
+      "Réutilisation des Brushes, Paths, Paints et paramètres d'ombres du mixeur natif au lieu de leur recréation à chaque dessin",
+      "Protection des lectures VideoView contre les préparations tardives et les présentations masquées",
+      "Détachement des rendus et abonnements vidéo RTC lorsque l'activité est masquée, restauration de leur géométrie au retour",
+      "Suspension du poller de 25 ms des outils du mixeur lorsqu'aucun timer ni départ prêt n'en a besoin",
+      "Pause des animations CSS des six WebViews inactives et du vinyle WAAPI du Tremplin selon son intention de lecture",
+      "Suspension du scanner de géométrie RTC à 80 ms, des jauges démo à 140 ms et des jauges du viewer à 80 ms en inactivité",
+      "Analyse des formes d'onde seulement près de l'écran et dans une feature active, concurrence bornée à deux",
+      "Cache audio compact limité aux enveloppes et durées : les tableaux PCM complets ne sont plus retenus",
+      "Annulation des fetchs et travaux en attente uniquement après le départ de leur dernier consommateur",
+      "Fermeture des aperçus caméra et du check-up micro/caméra, y compris leurs flux de permission reçus tardivement",
+      "Chargement différé et décodage asynchrone des couvertures de la médiathèque Profil",
+      "Protection des imports asynchrones des shells contre un rendu après leur démontage"
+    ],
+    "performanceClaim": "Les suppressions de travail et de rétention sont établies par le code, les tests et les relectures. Aucun pourcentage de gain GPU, FPS ou autonomie n'est annoncé : les relevés disponibles ne mesurent pas le temps GPU et ne constituent pas un benchmark avant/après isolé.",
+    "visualClaim": "Les paramètres de rendu visibles ont été conservés dans le code. Aucune validation visuelle par screenshot n'a été effectuée."
+  },
+  "coverage": [
+    {
+      "area": "Authentification : rasterisation et portraits",
+      "decision": "Conserver",
+      "evidence": "Auth Window et AvatarStage utilisent déjà drawWithCache pour les bitmaps. Les portraits du pager sont bornés aux voisins et à une petite rail; aucun nouveau bitmap par frame identifié.",
+      "preserved": "Portraits, effets, parcours d'authentification et matériaux."
+    },
+    {
+      "area": "Compose : transitions infinies et cycle de vie",
+      "decision": "Conserver le mécanisme du framework",
+      "evidence": "Source locale Compose 1.9.3, WindowRecomposer.android.kt : PausableMonotonicFrameClock est suspendu à ON_STOP et repris à ON_START. InfiniteTransition attend ce clock.",
+      "limit": "ON_PAUSE seul ne suspend pas ce frame clock. Aucun verrou supplémentaire arbitraire sur les animations visibles."
+    },
+    {
+      "area": "Authentification : effets cachés par le clavier",
+      "decision": "Conserver",
+      "evidence": "Les transitions de décoration restent déclarées quand leur alpha devient nul, mais les lecteurs UI du décor ne sont alors plus affichés. Une charge GPU inutile persistante n'est pas établie.",
+      "preserved": "Phase, levitation et apparition du décor."
+    },
+    {
+      "area": "Indicateurs, verre, flous et ombres visibles",
+      "decision": "Conserver",
+      "evidence": "Les petits indicateurs et les surfaces matérielles participent à la DA. Leurs paramètres de flou, reflets, gradients, radii et textures n'ont pas été réduits.",
+      "limit": "Les ombres natives restent rasterisées lors du dessin. Le cache de dessin réduit la construction des objets, pas leur coût de rasterisation à zéro."
+    },
+    {
+      "area": "Mixeur natif : ressources de dessin",
+      "decision": "Corrigé",
+      "source": "app/src/main/java/com/meewav/android/features/rooms/wave/WaveMixerMaterials.kt",
+      "evidence": "mixerSurfaceBackground, mixerBodyBackground, hardwareSurface et satinControl utilisent drawWithCache. Brushes, ImageShader, Paths, Stroke, Paint et BlurMaskFilter sont construits dans le cache; les mêmes commandes de dessin restent dans le même ordre.",
+      "preserved": "Couleurs, alphas, stops, modes de fusion, clipping, ombres et offsets. Les petites capsules et les surfaces déjà en cache sont conservées."
+    },
+    {
+      "area": "Mixeur : horloge des pads et départ différé",
+      "decision": "Corrigé",
+      "source": "app/src/main/java/com/meewav/android/features/rooms/wave/WaveMixerToolsState.kt",
+      "evidence": "snapshotFlow observe timerRunning ou un pendingStart prêt et non pausé. collectLatest attend sans poller au repos; la boucle utile conserve son délai de 25 ms.",
+      "preserved": "Position MediaPlayer réelle, chevauchement d'une seconde avant le beat, voie onCompletion, deadline elapsedRealtime, cancellation et fin du timer.",
+      "limit": "Compilation et revue des chemins validées; aucun test temporel direct de cette classe MediaPlayer/Context."
+    },
+    {
+      "area": "Mixeur : deck, composition et clocks de lecture",
+      "decision": "Conserver",
+      "sources": [
+        "WaveMixerDeckState.kt",
+        "WaveCompositionState.kt",
+        "WaveMixerScreen.kt"
+      ],
+      "evidence": "Les pollers de lecture/composition servent aussi aux fins audio, départs sur grille et votes. Les suspendre arbitrairement modifierait la mécanique. Les suspensions ON_STOP existantes, avec exception du document picker, sont conservées."
+    },
+    {
+      "area": "DSP, autotune, reverb et performance audio",
+      "decision": "Conserver",
+      "evidence": "L'audit graphique ne retire aucun traitement audio, canal, qualité, effet ni règle de performance. Le service de direct conserve son ownership et sa politique existante."
+    },
+    {
+      "area": "VideoView : préparation, visibilité et intention",
+      "decision": "Corrigé",
+      "sources": [
+        "core/media/VideoPresentationGate.kt",
+        "core/media/PresentationVideoView.kt",
+        "WaveMixerScreen.kt",
+        "ClasseResourcesPanel.kt",
+        "LogeRecordingPanel.kt"
+      ],
+      "evidence": "La présentation requiert lifecycle RESUMED, attachement et visibilité de fenêtre/vue. Une préparation hors écran mémorise l'intention sans démarrer. release ferme le gate et le lecteur; pause manuelle annule la reprise. L’intention est armée à l’ouverture, avant préparation; le callback de préparation ne la réarme plus et ne peut donc annuler une pause faite pendant le chargement.",
+      "preserved": "Boucle/mute de WaveVideo, MediaController des ressources. La Loge garde sa pause explicite ON_STOP : un clip privé ne se relance pas automatiquement au retour."
+    },
+    {
+      "area": "Caméras et vidéos natives invitées",
+      "decision": "Conserver les nettoyages existants",
+      "evidence": "RoomCameraPreview ferme ses ressources à ON_PAUSE/release. Les GuestVideo gèrent visibilité de fenêtre, destruction de surface et release. Aucun contournement des permissions caméra ou microphone."
+    },
+    {
+      "area": "Viewer : couches et abonnements vidéo RTC",
+      "decision": "Corrigé",
+      "sources": [
+        "RoomViewerNativeControls.kt",
+        "RoomViewerVideoSurfaces.kt"
+      ],
+      "evidence": "ON_PAUSE détache les TextureViews et leurs canvases vidéo; bindRemoteVideo(null) suspend l'abonnement vidéo correspondant. ON_RESUME recrée les vues depuis la dernière géométrie. La borne de douze tiles et leurs identités restent conservées.",
+      "preserved": "Le gain de playback reste traité comme avant. L'audio n'est pas arrêté par cette nouvelle présentation; son ON_STOP et son exception document picker restent inchangés."
+    },
+    {
+      "area": "Viewer : politique audio RTC",
+      "decision": "Conserver",
+      "source": "RoomViewerNativeControls.kt / RoomsAudioSession.kt",
+      "evidence": "Le stop audio ON_STOP existant est terminal. Ajouter une réadmission audio automatique au retour aurait modifié le transport et la prise de parole; aucune nouvelle réadmission ni publication n'a été introduite."
+    },
+    {
+      "area": "WebViews : lifecycle partagé",
+      "decision": "Corrigé",
+      "source": "app/src/main/shared-ui/feature-activity.mjs",
+      "evidence": "L'inactivité native data-profile-inactive prime même si document.hidden reste false dans WebView. Un seul MutationObserver et un listener visibilitychange sont partagés; les derniers désabonnements les ferment.",
+      "preserved": "API native setActive et pause DOM existantes, navigation et contenu monté."
+    },
+    {
+      "area": "WebViews : animations CSS masquées",
+      "decision": "Corrigé",
+      "source": "app/src/main/shared-ui/feature-dock.css",
+      "evidence": "animation-play-state paused sur les éléments et pseudo-éléments lorsque la feature native est inactive; cette CSS partagée est empaquetée dans les six modules.",
+      "preserved": "Les animations, timings, textures et effets visibles restent identiques. Le réglage n'éteint pas WebAudio ni les transports live."
+    },
+    {
+      "area": "WebViews : imports reçus après pagehide",
+      "decision": "Corrigé",
+      "sources": [
+        "shared-ui/MobileFeatureShell.tsx",
+        "profile-source/main.tsx",
+        "tremplin-source/main.tsx"
+      ],
+      "evidence": "Guard disposed avant configure, après await et dans catch; pagehide marque le shell démonté avant unmount. La Messagerie possédait déjà ce garde."
+    },
+    {
+      "area": "WebViews : pile de navigation et mémoire retenue",
+      "decision": "Conserver la navigation et documenter",
+      "evidence": "Le parcours de référence chaud a ajouté des WebViews : 7 au début, 13 après les six ouvertures. HOME ne les détruit pas dans la fenêtre de dix secondes.",
+      "limit": "Ce nombre décrit la pile de test conservée, pas une fuite démontrée. Détruire les pages ou effacer la pile risquerait de perdre formulaires, brouillons et navigation retour; aucun clear, force-stop ou reset de données."
+    },
+    {
+      "area": "Messagerie : fetch et décodage des waveforms",
+      "decision": "Corrigé",
+      "sources": [
+        "messaging-source/vendor/src/features/messaging/StemWaveform.tsx",
+        "shared-ui/async-resource-cache.mjs"
+      ],
+      "evidence": "IntersectionObserver avec marge de préparation de 400 px et feature active avant acquisition; fallback eager si l'API manque. Deux charges/décodages maximum, dédoublonnage par URL, leases partagés et releases idempotents.",
+      "preserved": "4096 bins, amplitudes signées/transitoires, merge du master, couleurs, SVG, progression et libellés. Le décodeur PCM n'a pas changé."
+    },
+    {
+      "area": "Messagerie : cache et annulation des analyses",
+      "decision": "Corrigé",
+      "evidence": "Cache ne conserve que peaks et durationSeconds. LRU de 32 résultats libres; résultats encore consommés ou in-flight ne sont pas évincés pour respecter les leases. Dernier consommateur : abort fetch, suppression des tâches en attente. Un decodeAudioData non annulable garde son slot jusqu'à sa fin puis son résultat abandonné est jeté.",
+      "limit": "La limite de cache peut être dépassée temporairement par des entrées utilisées. Une erreur reste affichée jusqu'à changement de source/remontage, comme auparavant."
+    },
+    {
+      "area": "Messagerie : lecture Track Pack et audio hors DOM",
+      "decision": "Conserver",
+      "source": "messaging-source/vendor/src/features/messaging/MessageWorkspace.tsx",
+      "evidence": "Les new Audio des pistes sont hors DOM. Une coupure générale aurait changé la lecture de fond et la logique solo/mute. Les corrections concernent l'analyse et la rétention des signaux, pas le transport, les fichiers, ni la qualité audio."
+    },
+    {
+      "area": "Messagerie : conversation, réactions et listes",
+      "decision": "Conserver les informations et interactions",
+      "evidence": "La conversation est rendue sans virtualisation complète. Une réécriture de cette structure n'est pas nécessaire pour différer le décodage des waveforms; aucun message, réponse, réaction, contact, tâche ou information n'a été supprimé.",
+      "limit": "Une très longue conversation conserve sa charge DOM. Aucun chiffre de coût GPU de cette charge n'a été établi sur appareil."
+    },
+    {
+      "area": "Rooms : scanner de placement des vidéos",
+      "decision": "Corrigé",
+      "source": "rooms-source/NativeViewerVideo.tsx",
+      "evidence": "Le scanner DOM/rectangles de 80 ms s'arrête en inactivité et recalcule immédiatement à la reprise. MutationObserver et debounce de NativeViewerSurfaces étaient déjà nettoyés. Le protocole de géométrie reste identique."
+    },
+    {
+      "area": "Rooms : jauges démo et viewer",
+      "decision": "Corrigé",
+      "sources": [
+        "rooms-source/viewer-web/src/features/rooms/place/usePlaceRoom.ts",
+        "rooms-source/viewer-web/src/features/rooms/place/ViewerMixerContext.tsx"
+      ],
+      "evidence": "Jauges démo 140 ms et sample UI du viewer 80 ms arrêtés quand la feature est inactive. sample lit les AnalyserNode et ne commande pas le transport. Les intervalles visibles, gains, canaux et l'audio restent conservés."
+    },
+    {
+      "area": "Rooms : aperçus caméra avant le direct",
+      "decision": "Corrigé",
+      "source": "rooms-source/vendor/src/features/rooms/launch/LaunchStudio.tsx",
+      "evidence": "Gate de génération autour des deux getUserMedia : sortie, masquage, reconfiguration et démontage invalident les résultats tardifs et stoppent leurs tracks. Le doublon de même caméra est stoppé avant le fallback. srcObject est détaché lors de l'arrêt.",
+      "preserved": "Formats, layouts, sélection des caméras, essai à deux sources et aperçu local opt-in. Au retour d'une inactivité, l'utilisateur peut relancer son aperçu."
+    },
+    {
+      "area": "Rooms : check-up micro/caméra",
+      "decision": "Corrigé",
+      "sources": [
+        "rooms-source/vendor/src/features/rooms/launch/LaunchRoomSheet.tsx",
+        "shared-ui/media-request-gate.mjs"
+      ],
+      "evidence": "Arrêt des tracks, annulation RAF de niveau et fermeture AudioContext à l'inactivité. Requête de permission tardive invalidée. Une erreur après acquisition ferme aussi le flux.",
+      "preserved": "Test et autorisation explicites avant le lancement. Ces flux locaux n'alimentent pas la room live et ne modifient pas son service natif."
+    },
+    {
+      "area": "Rooms : distinction code embarqué / réellement monté",
+      "decision": "Documenter sans modifier le code inactif",
+      "evidence": "Le WaveMixer.tsx React ancien contient une jauge de 90 ms, mais WaveRoom n'est pas monté par les routes Android courantes. RoomsPage charge RoomViewer/PlaceRoomExperience; /native/room-session ouvre WaveMixerActivity/Compose. Modifier ce sampler ancien ne réduirait pas le coût du mixeur Android actuel."
+    },
+    {
+      "area": "La Scène : vidéos, deuxième caméra et aperçus",
+      "decision": "Conserver les lectures et nettoyages existants",
+      "sources": [
+        "ShortsVideoPlayer.tsx",
+        "VerticalMediaCard.tsx"
+      ],
+      "evidence": "Lecture secondaire synchronisée et arrêtée avec le lecteur. Aperçus de carte temporisés, désactivés sur pointeur tactile, arrêtés au scroll/sortie/unmount. Images lazy. Aucun flux, angle de caméra ni information supprimé.",
+      "correctionInherited": "Le visualiseur CSS et les effets de page sont suspendus via la CSS commune quand la feature est inactive."
+    },
+    {
+      "area": "Profil : médiathèque et vidéos",
+      "decision": "Chargement des couvertures corrigé; metadata conservée",
+      "source": "profile-source/vendor/src/features/profile/views/ProfileMediaView.tsx",
+      "evidence": "Les couvertures img reçoivent loading lazy et decoding async. Les lecteurs DOM sont déjà pausés par le shell. Le preload metadata des vidéos est conservé pour leurs durées et les contrôles existants.",
+      "preserved": "Liste complète, fichiers, durées, cadeaux, badges, sélection et DA. Les auroras/effets CSS cachés sont suspendus via la règle commune."
+    },
+    {
+      "area": "Marketplace : catalogues, cartes et images",
+      "decision": "Conserver les protections existantes",
+      "evidence": "Images produits déjà lazy/async; aucun GL, canvas ou RAF continu significatif identifié. Les grandes listes restent complètes, sans virtualisation qui affecterait filtres, scroll et interactions.",
+      "correctionInherited": "Animations CSS suspendues quand la WebView native est inactive. Aucun changement de la DA des cartes."
+    },
+    {
+      "area": "Tremplin : mur d'artistes et vinyle",
+      "decision": "Vinyle corrigé; pagination conservée",
+      "sources": [
+        "TremplinPage.tsx",
+        "tremplin-source/vendor/vendor/meewav-vinyl/src/components/Vinyl.jsx"
+      ],
+      "evidence": "Mur par pages de 24 avec IntersectionObserver, premières images eager puis lazy. Le vinyle WAAPI respecte maintenant l'activité native en plus de playing et reducedMotion; conserve currentTime, rpm et intention de lecture.",
+      "preserved": "Audio et son listener d'activité Tremplin, rotation visible voulue, cartes, artistes et gestes. Le décompte de devis à 1 s conserve sa deadline."
+    },
+    {
+      "area": "URLs temporaires, observers et nettoyages médias",
+      "decision": "Conserver les nettoyages existants et fermer les nouvelles subscriptions",
+      "evidence": "URLs temporaires repérées révoquées au remplacement/démontage dans Scene, Messages et Collabs. Les nouveaux watchers, IntersectionObservers et leases ont chacun un cleanup; les streams reçus après cleanup sont stoppés."
+    },
+    {
+      "area": "Assets et packaging Android",
+      "decision": "Reconstruire et vérifier",
+      "evidence": "Six builders locaux sans --import-web/--import-viewer/--sync-assets. 4851 ressources vérifiées pour existence et taille, 193 imports de modules réellement atteignables vérifiés. Aucun fichier audio/image de contenu modifié.",
+      "limit": "Quelques anciens chunks empaquetés non référencés restent présents; ils ne sont pas chargés par le graphe courant et n'ont pas un coût GPU démontré. Ils ne sont pas supprimés au titre de cet audit. Les copies de la CSS CTA reprennent la source DA déjà approuvée, y compris Top 10."
+    }
+  ],
+  "verification": {
+    "native": {
+      "command": "gradlew.bat :app:testDebugUnitTest",
+      "suites": 15,
+      "tests": 102,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "newNativeTests": "Six tests du VideoPresentationGate : préparation masquée, pause explicite pendant chargement, pause manuelle, reprise voulue, release et reset.",
+    "javascript": {
+      "command": "node --test scripts/test-feature-activity.mjs scripts/test-async-resource-cache.mjs scripts/test-media-request-gate.mjs",
+      "tests": 23,
+      "failures": 0,
+      "activity": 6,
+      "cache": 11,
+      "mediaRequests": 6
+    },
+    "assets": {
+      "command": "node scripts/verify-android-feature-assets.mjs",
+      "assets": 4851,
+      "bundledImports": 193,
+      "missing": 0,
+      "sizeMismatches": 0
+    },
+    "build": "Les six modules esbuild et assembleDebug ont réussi. Les avertissements AGP/Gradle existants concernent des options dépréciées et la configuration du projet.",
+    "independentReviews": [
+      "Rendu mixeur et caches",
+      "Lifecycle VideoView et framework Compose",
+      "Concurrence/leases et PCM des waveforms",
+      "Activité native des WebViews et vinyle",
+      "Préviews asynchrones et nettoyage",
+      "Canvases RTC, gain et politique audio",
+      "Horloge des pads et deadlines",
+      "Reachability des modules Android"
+    ],
+    "limits": [
+      "Tests de gate isolés : pas de simulation complète des permissions caméra Android ou de l'erreur AudioContext dans React",
+      "Pas de test temporel direct du WaveMixerToolsState",
+      "Pas de capture visuelle",
+      "Pas de mesure GPU timestamp ou FPS décodés sur les téléphones"
+    ]
+  },
+  "devices": {
+    "method": "Routes publiques de MainActivity en preview; dumpsys de l'activité resumed, mémoire, gfxinfo et thermique, puis intent HOME public. Relevés courts avec pile chaude conservée. Aucun écran non-exported lancé directement; aucune injection refusée contournée.",
+    "baselineApkSha256": "02DD740B2313BEEA35B1CC0C4682009C9DC64593AF813AFAD87D4A50DDF21A5A",
+    "redmiBaseline": {
+      "model": "23090RA98G",
+      "thermalStatus": 0,
+      "log": ".local/android-feature-gpu-audit-20261001/measure-adb-ZD5PXOUO5HPFQSU8-NMoLcm._adb-tls-connect._tcp-20261001-042210.txt",
+      "visibleSeconds": 15,
+      "homeSeconds": 10,
+      "samplesKB": [
+        {
+          "feature": "Wave",
+          "visiblePss": 378957,
+          "homePss": 340459,
+          "visibleGraphics": 55468,
+          "homeGraphics": 21144,
+          "webViews": 8
+        },
+        {
+          "feature": "Messages",
+          "visiblePss": 340765,
+          "homePss": 337539,
+          "visibleGraphics": 22500,
+          "homeGraphics": 22500,
+          "webViews": 9
+        },
+        {
+          "feature": "Scene",
+          "visiblePss": 334113,
+          "homePss": 334108,
+          "visibleGraphics": 18324,
+          "homeGraphics": 18824,
+          "webViews": 10
+        },
+        {
+          "feature": "Tremplin",
+          "visiblePss": 334993,
+          "homePss": 333398,
+          "visibleGraphics": 17400,
+          "homeGraphics": 17400,
+          "webViews": 11
+        },
+        {
+          "feature": "Profil",
+          "visiblePss": 339268,
+          "homePss": 338125,
+          "visibleGraphics": 20664,
+          "homeGraphics": 20664,
+          "webViews": 12
+        },
+        {
+          "feature": "Market",
+          "visiblePss": 338543,
+          "homePss": 338852,
+          "visibleGraphics": 18716,
+          "homeGraphics": 20072,
+          "webViews": 13
+        }
+      ],
+      "interpretation": "PSS/Graphics couvrent tout le processus et sa pile/cache. La baisse de mémoire Wave au HOME existait déjà avant ces corrections. gfxinfo compte les frames UI agrégées, pas les FPS vidéo ni le GPU du module. Les fenêtres HOME ont produit très peu de frames UI."
+    },
+    "s22": {
+      "model": "SM-S908B",
+      "benchmark": "Non exploitable : status thermique initial 4 puis 3, AP/peau proches de 45°C. App laissée au HOME sans stress supplémentaire.",
+      "dataReset": false,
+      "finalThermalStatus": 1
+    },
+    "postInstallIntermediate": "L'APK intermédiaire 5958010D8C22989351932ACA9DADDE1ABF0F20954853B3D70AAA9006559F39D7 a été installé avec succès par Wi-Fi sur les deux téléphones; updates 04:34:30 S22 / 04:34:23 Redmi. Seul Wave a été mesuré correctement ensuite; le parcours a été arrêté quand l'intent Messages a ramené Wave au premier plan, sans inventer de mesure Messages.",
+    "finalDelivery": {
+      "status": "Installation Wi-Fi -r confirmée sur les deux appareils, données conservées",
+      "apkBytes": 1534119445,
+      "apkSha256": "4727CAB57679F921509C2012D1E06A24B2887F1703DD31F4F11A58402CE73EBB",
+      "package": "com.meewav.android.debug",
+      "version": "0.1.0-auth-preview",
+      "installedBaseApkHashesMatch": {
+        "s22": true,
+        "redmi": true
+      },
+      "lastUpdateTimesLocal": {
+        "s22": "2026-10-01 04:52:43",
+        "redmi": "2026-10-01 04:53:02"
+      },
+      "thermalStatus": {
+        "s22": 1,
+        "redmi": 0
+      },
+      "redmiSmoke": {
+        "log": ".local/android-feature-gpu-audit-20261001/smoke-wave-4727cab-20261001.txt",
+        "activity": "WaveMixerActivity resumed puis Launcher resumed, chacun vérifié",
+        "visibleSeconds": 15,
+        "homeSeconds": 10,
+        "visiblePssKB": 293632,
+        "homePssKB": 265744,
+        "visibleGraphicsKB": 53282,
+        "homeGraphicsKB": 17928,
+        "visibleGfx": {
+          "totalFrames": 81,
+          "janky": 16
+        },
+        "homeGfx": {
+          "totalFrames": 83,
+          "janky": 17
+        },
+        "interpretation": "Relevé agrégé processus chaud. Ouverture et retour HOME validés. Pas de lecture vidéo lancée explicitement; ce smoke ne valide pas les FPS ni un playback VideoView.",
+        "protocolNote": "Une collision PowerShell avec la variable système home a été corrigée par un relevé HOME de remplacement; Launcher et log final vérifiés. Aucun réglage système changé."
+      },
+      "s22Smoke": "Installation et hash uniquement; le scénario n’a pas été relancé après la température élevée constatée durant la référence.",
+      "finalState": "Téléphones au HOME pour le repos. Aucun effacement, permissions ou volume système modifiés."
+    },
+    "postInstallFeatures": {
+      "apkSha256": "625D4B6F5148300D78C54706E7E35CE4A6DD52A61341EB4B8EB0D88A85FFF5EB",
+      "installedHashesVerifiedOnBothPhones": true,
+      "lastUpdateTimesLocal": {
+        "s22": "2026-10-01 04:42:52",
+        "redmi": "2026-10-01 04:42:21"
+      },
+      "log": ".local/android-feature-gpu-audit-20261001/measure-adb-ZD5PXOUO5HPFQSU8-NMoLcm._adb-tls-connect._tcp-20261001-044424.txt",
+      "publicRoute": "MainActivity, action com.meewav.android.FEATURE_AUDIT, category LAUNCHER, flags 0x14000000, extra OPEN_FEATURE=true; chaque activité resumed vérifiée",
+      "redmiThermalStatus": 0,
+      "s22ThermalStatus": 2,
+      "visibleSeconds": 15,
+      "homeSeconds": 10,
+      "samplesKB": [
+        {
+          "feature": "Wave",
+          "visiblePss": 325528,
+          "homePss": 289020,
+          "visibleGraphics": 53547,
+          "homeGraphics": 18824,
+          "webViews": 2
+        },
+        {
+          "feature": "Messages",
+          "visiblePss": 294561,
+          "homePss": 291828,
+          "visibleGraphics": 21344,
+          "homeGraphics": 20180,
+          "webViews": 3
+        },
+        {
+          "feature": "Scene",
+          "visiblePss": 295414,
+          "homePss": 294245,
+          "visibleGraphics": 21592,
+          "homeGraphics": 21592,
+          "webViews": 4
+        },
+        {
+          "feature": "Tremplin",
+          "visiblePss": 290517,
+          "homePss": 288517,
+          "visibleGraphics": 15996,
+          "homeGraphics": 15996,
+          "webViews": 5
+        },
+        {
+          "feature": "Profil",
+          "visiblePss": 294054,
+          "homePss": 292024,
+          "visibleGraphics": 19120,
+          "homeGraphics": 18348,
+          "webViews": 6
+        },
+        {
+          "feature": "Market",
+          "visiblePss": 293482,
+          "homePss": 293988,
+          "visibleGraphics": 17568,
+          "homeGraphics": 18924,
+          "webViews": 7
+        }
+      ],
+      "interpretation": "Toutes les routes ont été vérifiées sur cet APK; pas un benchmark comparatif : processus/pile différents de la référence. gfxinfo passe de 3/1 à 102/25 frames UI/janky agrégées; les périodes HOME restent généralement sans nouvelles frames. Ces compteurs ne sont pas des FPS GPU ou vidéo.",
+      "cdp": "Socket WebView présent mais /json/list vide après forward et activité visible. Aucun target observable; les tests navigateur/getUserMedia simulés n’ont pas été exécutés.",
+      "finalCodeDifference": "Le dernier APK ajoute seulement la protection native de la pause pendant préparation. Les six modules WebView sont identiques à ceux de ce parcours vérifié."
+    }
+  },
+  "gitAndRollback": {
+    "branch": "codex/ui-parity-chat-composer",
+    "remote": "https://github.com/fetahMW/Meewav-Android.git",
+    "codeCommits": [
+      {
+        "commit": "6215fe134dd4032437e4be828d1efa79944df7f0",
+        "area": "Matériaux du mixeur"
+      },
+      {
+        "commit": "19a490db80fb32c44dd9de399223c97cf2532eb1",
+        "area": "Présentation des vidéos natives"
+      },
+      {
+        "commit": "87076b28e182614898bd429ab8e0a3ca9f5c3c83",
+        "area": "Canvases RTC et horloge inactive"
+      },
+      {
+        "commit": "7664c48000dd5895bb00eea0b0e5a61be32df710",
+        "area": "Ressources et lifecycle des features WebView"
+      },
+      {
+        "commit": "6f9e03dcd02c921a080f73334aef299abe5a38b5",
+        "area": "Jauges viewer masquées"
+      },
+      {
+        "commit": "3e5cb061a34de611df340842f1ae45eb6ea9cb1c",
+        "area": "Pause vidéo explicite conservée pendant préparation tardive"
+      }
+    ],
+    "rollbackDirectory": "C:/Users/linkw/.codex/rollback/android-features-gpu-20261001",
+    "rollbackScript": "C:/Users/linkw/.codex/rollback/android-features-gpu-20261001/undo.ps1",
+    "procedure": "Si l'utilisateur dit annule pour cet audit, revert des commits enregistrés, dans l'ordre inverse, sans reset destructif. Rebuild de l'APK puis réinstallation -r via Luna. Les modifications du globe incluses dans la baseline restent conservées; pour annuler aussi le globe, utiliser son rollback séparé explicitement.",
+    "verification": "Chaque patch inverse est appliqué dans un index Git séparé et le write-tree est comparé à la baseline. Preuve finale conservée à côté du script dans verification.json; le working tree et les données des appareils ne sont pas touchés par cette vérification.",
+    "expectedBaselineTree": "9d30bcda020d4cfec5ff3cdaf20d83159469b7cd"
+  },
+  "evidenceFiles": [
+    {
+      "path": ".local/android-feature-gpu-audit-20261001/measure-adb-ZD5PXOUO5HPFQSU8-NMoLcm._adb-tls-connect._tcp-20261001-042210.txt",
+      "sha256": "da46378da405428c14fa7b7d14139d504436fbb0bdf0af951b0953832f867d91",
+      "bytes": 97825
+    },
+    {
+      "path": ".local/android-feature-gpu-audit-20261001/measure-adb-ZD5PXOUO5HPFQSU8-NMoLcm._adb-tls-connect._tcp-20261001-044424.txt",
+      "sha256": "337b2cc383af1485736ea5e7a7b979880018b1475f1a05913a7e904cecb3444f",
+      "bytes": 76109
+    },
+    {
+      "path": ".local/android-feature-gpu-audit-20261001/smoke-wave-4727cab-20261001.txt",
+      "sha256": "b463b628e9c1eb4ccc6bb51bf7e749f27c4242bbd241f8cab9f8493be92554c2",
+      "bytes": 11858
+    }
+  ],
+  "status": "Audit et corrections terminés; tests, compilation, push des corrections et installations confirmés. Annulation vérifiée sur les sources et vérification finale du commit documentaire enregistrée séparément."
+}
