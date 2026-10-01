@@ -1,0 +1,7 @@
+/* Public profile pages need their own scrollport in the native shell even if
+   the optional browsing-header animation is later reverted. Modals excluded. */
+#root .mobile-profile .profile-viewer-page.is-page {
+  position: absolute; inset: 0; height: 100%; min-height: 0;
+  overflow-x: hidden; overflow-y: auto; overscroll-behavior-y: contain;
+  scroll-padding-top: 76px;
+}

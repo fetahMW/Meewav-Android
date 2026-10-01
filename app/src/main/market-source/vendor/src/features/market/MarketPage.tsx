@@ -734,7 +734,13 @@ export default function MarketPage() {
         closeProductDetail();
         return;
       }
-      if (viewHistory.current.length < 2) return;
+      if (viewHistory.current.length < 2) {
+        if (sellerDraftsOpen || showFavoritesOnly) {
+          event.preventDefault();
+          setSellerDraftsOpen(false); setShowFavoritesOnly(false);
+        }
+        return;
+      }
       event.preventDefault();
       viewHistory.current.pop();
       const previous = viewHistory.current.at(-1)!;
@@ -748,7 +754,7 @@ export default function MarketPage() {
     scroller?.addEventListener('scroll', rememberScroll, { passive: true });
     window.addEventListener('meewav:feature-back', back);
     return () => { scroller?.removeEventListener('scroll', rememberScroll); window.removeEventListener('meewav:feature-back', back); };
-  }, [mediaZoomed, selectedProduct]);
+  }, [mediaZoomed, selectedProduct, sellerDraftsOpen, showFavoritesOnly]);
   const marketCenterTriggerRef = useRef<HTMLButtonElement>(null);
   const notificationsTriggerRef = useRef<HTMLButtonElement>(null);
   const marketCenterPopoverRef = useRef<HTMLElement>(null);
@@ -1605,6 +1611,7 @@ export default function MarketPage() {
   return (
     <main
       className="market-page"
+      data-feature-return={sellerDraftsOpen || showFavoritesOnly ? '' : undefined}
       data-market-pillar={activePillar}
       data-market-navigation={marketNavigationId}
     >
@@ -2049,6 +2056,10 @@ export default function MarketPage() {
           aria-modal="true"
           aria-label={`Annonce ${selectedProduct.title}`}
         >
+          <button type="button" className="market-product-modal__close"
+            aria-label="Fermer l’annonce et revenir au Marketplace" onClick={closeProductDetail}>
+            <ChevronLeft aria-hidden="true" />
+          </button>
           <button
             type="button"
             className="market-product-modal__nav market-product-modal__nav--previous"

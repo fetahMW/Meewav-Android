@@ -6,6 +6,7 @@ import { X } from 'lucide-react';
 import { configure, updateToken, type MobileConfig } from './runtime';
 import FeatureDock, { featureItems } from '../shared-ui/FeatureDock';
 import { useFeatureHeaderScroll } from '../shared-ui/useFeatureHeaderScroll';
+import '../shared-ui/feature-return.css';
 
 const native = (destination: string, route?: string) => location.assign(`https://appassets.androidplatform.net/native/${destination}${route ? `?route=${encodeURIComponent(route)}` : ""}`);
 const ProfileViewer=lazy(()=>import('./vendor/src/features/profile/ProfileViewerPage'));

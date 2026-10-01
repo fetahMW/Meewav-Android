@@ -2,9 +2,10 @@ import PortraitPreProfileHost from "./PortraitPreProfileHost";
 import React, { Component, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
-import { ClipboardList, Crown, Heart, History, Menu, Package, Settings, ShoppingCart, Undo2, X } from 'lucide-react';
+import { ChevronLeft, ClipboardList, Crown, Heart, History, Menu, Package, Settings, ShoppingCart, Undo2, X } from 'lucide-react';
 import FeatureDock from './FeatureDock';
 import { useFeatureHeaderScroll } from './useFeatureHeaderScroll';
+import { useFeatureReturnState } from './useFeatureReturnState';
 import { configure, updateToken, type MobileConfig } from '../profile-source/runtime';
 import type { LucideIcon } from 'lucide-react';
 
@@ -42,6 +43,7 @@ export function mountFeature(id: 'market' | 'scene' | 'rooms', title: string, lo
     const roomLaunch = id === 'rooms' && (route.pathname === '/rooms/create' || new URLSearchParams(route.search).get('launch') === 'cage');
     const surfaceRef = useRef<HTMLDivElement | null>(null);
     useFeatureHeaderScroll(surfaceRef, id === 'rooms' ? 'rooms' : 'market', route.key, id !== 'scene' && !roomLaunch);
+    const hasReturn = useFeatureReturnState(surfaceRef);
     const [notice, setNotice] = useState('');
     const [menuOpen, setMenuOpen] = useState(false);
     const [roomsFilter, setRoomsFilter] = useState({ open: false, count: 0, available: true });
@@ -97,7 +99,7 @@ export function mountFeature(id: 'market' | 'scene' | 'rooms', title: string, lo
       return () => window.clearTimeout(timer);
     }, [notice]);
     return <div ref={surfaceRef} className={`mobile-profile mobile-feature mobile-${id}`}>
-      {!roomLaunch && <button className="mobile-feature-back" aria-label={id === 'rooms' && roomsFilter.available ? 'Menu et filtres' : 'Menu'} aria-haspopup={id === 'rooms' && roomsFilter.available ? 'dialog' : 'menu'} aria-expanded={menuOpen || (id === 'rooms' && roomsFilter.open)} aria-controls={id === 'rooms' && roomsFilter.available ? 'rooms-home-filter-panel' : undefined} onClick={event => openMenu(event.currentTarget)}><Menu />{id === 'rooms' && roomsFilter.available && roomsFilter.count > 0 && <span className="rooms-menu-filter-count">{roomsFilter.count}</span>}</button>}
+      {!roomLaunch && <button type="button" className="mobile-feature-back" aria-label={hasReturn ? 'Retour' : id === 'rooms' && roomsFilter.available ? 'Menu et filtres' : 'Menu'} aria-haspopup={hasReturn ? undefined : id === 'rooms' && roomsFilter.available ? 'dialog' : 'menu'} aria-expanded={hasReturn ? undefined : menuOpen || (id === 'rooms' && roomsFilter.open)} aria-controls={!hasReturn && id === 'rooms' && roomsFilter.available ? 'rooms-home-filter-panel' : undefined} onClick={event => hasReturn ? back() : openMenu(event.currentTarget)}>{hasReturn ? <ChevronLeft /> : <Menu />}{!hasReturn && id === 'rooms' && roomsFilter.available && roomsFilter.count > 0 && <span className="rooms-menu-filter-count">{roomsFilter.count}</span>}</button>}
       {menuOpen && !roomLaunch && <>
         <button className="mobile-feature-menu-backdrop" aria-hidden="true" tabIndex={-1} onClick={() => setMenuOpen(false)} />
         <nav className="mobile-feature-menu" aria-label="Menu rapide">

@@ -2,9 +2,10 @@ import PortraitPreProfileHost from "../shared-ui/PortraitPreProfileHost";
 import React, { Component, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
-import { CirclePlus, Coins, Menu, ReceiptText, Wallet, X } from 'lucide-react';
+import { ChevronLeft, CirclePlus, Coins, Menu, ReceiptText, Wallet, X } from 'lucide-react';
 import FeatureDock, { featureItems } from '../shared-ui/FeatureDock';
 import { useFeatureHeaderScroll } from '../shared-ui/useFeatureHeaderScroll';
+import { useFeatureReturnState } from '../shared-ui/useFeatureReturnState';
 import { configure, updateToken, type MobileConfig } from './runtime';
 import './home-mobile.css';
 import './discover-mobile.css';
@@ -16,6 +17,7 @@ function Shell({ Page }: { Page: React.ComponentType }) {
   const route = useLocation(), navigate = useNavigate();
   const surfaceRef = useRef<HTMLDivElement | null>(null);
   useFeatureHeaderScroll(surfaceRef, 'tremplin', route.key);
+  const hasReturn = useFeatureReturnState(surfaceRef);
   const [notice, setNotice] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const select = (id: string) => {
@@ -32,9 +34,11 @@ function Shell({ Page }: { Page: React.ComponentType }) {
     navigate(-1);
   }, [route.pathname, route.search, navigate]);
   const back = () => {
-    const close = document.querySelector<HTMLButtonElement>('[role="dialog"] button[aria-label^="Fermer"]');
-    if (close) close.click();
-    else if (route.pathname !== '/tremplin' || route.search) {
+    const close = [...document.querySelectorAll<HTMLButtonElement>('[role="dialog"]:not([aria-hidden="true"]) button[aria-label^="Fermer"]')]
+      .find(button => button.getClientRects().length > 0 && getComputedStyle(button).visibility !== 'hidden');
+    if (close) { close.click(); return; }
+    if (!window.dispatchEvent(new Event('meewav:feature-back', { cancelable: true }))) return;
+    if (route.pathname !== '/tremplin' || route.search) {
       if (route.key === 'default') navigate('/tremplin', { replace: true }); else navigate(-1);
     } else if (route.key !== 'default') navigate(-1);
     else native('back');
@@ -52,7 +56,7 @@ function Shell({ Page }: { Page: React.ComponentType }) {
     { label: 'Dernières opérations', icon: ReceiptText, path: '/tremplin/mes-artistes?tab=tokens&section=history' },
   ];
   return <div ref={surfaceRef} className="mobile-profile mobile-tremplin">
-    <button className="mobile-tremplin-back" aria-label="Menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(open => !open)}><Menu /></button>
+    <button type="button" className="mobile-tremplin-back" aria-label={hasReturn ? 'Retour' : 'Menu'} aria-expanded={hasReturn ? undefined : menuOpen} onClick={() => hasReturn ? back() : setMenuOpen(open => !open)}>{hasReturn ? <ChevronLeft /> : <Menu />}</button>
     {menuOpen && <>
       <button className="mobile-tremplin-menu-overlay" aria-label="Fermer le menu" onClick={() => setMenuOpen(false)} />
       <nav className="mobile-tremplin-menu" aria-label="Menu Tremplin">

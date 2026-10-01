@@ -1391,6 +1391,16 @@ export default function TremplinPage() {
     if (returnTo) navigate(returnTo, { replace: true });
     else navigate(TREMPLIN_VIEW_ROUTES.home, { replace: true });
   };
+  useEffect(() => {
+    const back = (event: Event) => {
+      if (flow) { event.preventDefault(); closeFlow(); }
+      else if (isArtistRoutePath(location.pathname)) { event.preventDefault(); closeArtist(); }
+      else if (activeView === "discover" && homeWallRailId !== null) { event.preventDefault(); changeHomeWallRail(null); }
+      else if (activeView === "application" || activeView === "dashboard") { event.preventDefault(); closeWorkspace(); }
+    };
+    window.addEventListener('meewav:feature-back', back);
+    return () => window.removeEventListener('meewav:feature-back', back);
+  }, [flow, location.key, location.pathname, activeView, homeWallRailId]);
   const openRoom = (artist: TremplinArtist) => {
     const token = getTremplinArtistToken(artist.id);
     const profileReturnTo = getTremplinReturnTo(location.state);
@@ -1500,7 +1510,7 @@ export default function TremplinPage() {
   const audioProgressPercent = audioProgress.duration > 0 ? Math.min(100, Math.max(0, audioProgress.currentTime / audioProgress.duration * 100)) : 0;
 
   return (
-    <main className="tremplin-page" data-tremplin-view={activeToolbarId} data-tremplin-focus={isFocusedFlow ? "true" : "false"}>
+    <main className="tremplin-page" data-tremplin-view={activeToolbarId} data-tremplin-focus={isFocusedFlow ? "true" : "false"} data-feature-return={isArtistRoutePath(location.pathname) || location.pathname.startsWith(`${TREMPLIN_FLOW_ROUTE_PREFIX}/`) || isFocusedFlow || (activeView === "discover" && homeWallRailId !== null) ? '' : undefined}>
       <div className="tremplin-page__background" aria-hidden="true" />
       <aside className="tremplin-primary-rail">
         <MeewavPrimaryNav
