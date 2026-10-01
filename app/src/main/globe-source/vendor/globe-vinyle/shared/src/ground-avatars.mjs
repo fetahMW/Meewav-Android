@@ -144,10 +144,15 @@ function createSelectedOverlay(host) {
       const metrics = selectedSpriteMetrics(item);
       let x = item.x, feetY = item.y + metrics.lift;
       let scale = metrics.spriteScale, drop = metrics.spriteDrop;
-      if (mobile) {
+      const leftGuard = document.documentElement.dataset.globeOrientation === 'landscape' ? 104 : 12;
+      const available = mobile ? mobile.left - leftGuard - 12 : 0;
+      // A narrow portrait profile has no room for a second enlarged figure.
+      // Keep the selected marker at its real map location in that case.
+      const enlarged = available >= 72;
+      if (mobile && enlarged) {
         // Only the enlarged presentation moves. The map location stays marked.
         const size = Math.min(Math.max(112, metrics.spriteBaseSize * scale),
-          208, Math.max(64, viewport.height - 110), viewport.height * 0.64, Math.max(72, mobile.left - 100));
+          208, Math.max(64, viewport.height - 110), viewport.height * 0.64, available);
         x = mobile.left - 12 - size / 2;
         feetY = Math.max(66 + size, Math.min(viewport.height - 34, feetY));
         scale = size / metrics.spriteBaseSize; drop = 0;
@@ -155,14 +160,14 @@ function createSelectedOverlay(host) {
         line.setAttribute('x2', String(x)); line.setAttribute('y2', String(feetY));
         origin.setAttribute('cx', String(item.x)); origin.setAttribute('cy', String(item.y));
       }
-      layer.classList.toggle('is-mobile-profile', Boolean(mobile));
+      layer.classList.toggle('is-mobile-profile', enlarged);
       layer.classList.toggle('is-current-user', hostUser);
       layer.classList.toggle('is-consulted', Boolean(consulted) && !hostUser);
       layer.style.setProperty('--profile-hover-x', `${x}px`);
       layer.style.setProperty('--profile-hover-y', `${feetY}px`);
       layer.style.setProperty('--profile-hover-scale', String(scale));
       layer.style.setProperty('--profile-hover-drop', `${drop}px`);
-      layer.style.setProperty('--profile-hover-name-drop', mobile ? '6px' : `${(hostUser ? -4 : -3) * zoomFromSize(item.size, item.avatar)}px`);
+      layer.style.setProperty('--profile-hover-name-drop', enlarged ? '6px' : `${(hostUser ? -4 : -3) * zoomFromSize(item.size, item.avatar)}px`);
       const src = iconSrc(item.avatar.icon);
       if (sprite.getAttribute('src') !== src) sprite.src = src;
       if (name.textContent !== item.avatar.name) name.textContent = item.avatar.name;

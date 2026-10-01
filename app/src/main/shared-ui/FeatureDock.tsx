@@ -17,7 +17,7 @@ export const featureItems = [
 ] as const;
 
 /** Shared Profile/Tremplin geometry and material, sourced from profile mobile.css. */
-export default function FeatureDock({ active, onSelect, compact = false }: { active: string; onSelect: (id: string) => void; compact?: boolean }) {
+export default function FeatureDock({ active, onSelect, compact = false, layout = 'bottom' }: { active: string; onSelect: (id: string) => void; compact?: boolean; layout?: 'bottom' | 'globe' }) {
   const [collapsed, setCollapsed] = useState(compact);
   const [editing, setEditing] = useState(false);
   const [covered, setCovered] = useState(false);
@@ -39,10 +39,12 @@ export default function FeatureDock({ active, onSelect, compact = false }: { act
     };
     const schedule = () => { if (!frame) frame = requestAnimationFrame(check); };
     const observer = new MutationObserver(schedule);
-    observer.observe(document.getElementById('root')!, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'hidden', 'aria-hidden', 'open'] });
+    // Globe pre-profiles are portalled beside the root, just like this dock.
+    const observed = layout === 'globe' ? document.body : document.getElementById('root')!;
+    observer.observe(observed, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'hidden', 'aria-hidden', 'open'] });
     check();
     return () => { observer.disconnect(); cancelAnimationFrame(frame); };
-  }, []);
+  }, [layout]);
   useEffect(() => {
     const editable = () => document.activeElement instanceof HTMLElement
       && document.activeElement.matches('input:not([type=checkbox]):not([type=radio]):not([type=range]),textarea,[contenteditable=true]');
@@ -83,7 +85,7 @@ export default function FeatureDock({ active, onSelect, compact = false }: { act
     aria-label={label} aria-current={id === active ? 'page' : undefined} onClick={() => onSelect(id)}>
     <Icon /><span>{label}</span>
   </button>;
-  return createPortal(<div className={`feature-dock-host${collapsed ? ' is-collapsed' : ''}${editing || covered ? ' is-editing' : ''}`}>
+  return createPortal(<div className={`feature-dock-host${layout === 'globe' ? ' is-globe' : ''}${collapsed ? ' is-collapsed' : ''}${editing || covered ? ' is-editing' : ''}`}>
     <button type="button" className="feature-dock-toggle" aria-label={collapsed ? 'Afficher la navigation' : 'Replier la navigation'}
       aria-expanded={!collapsed} aria-controls="feature-dock-navigation" onClick={() => {
         manualUntil.current = performance.now() + 1600;
@@ -92,7 +94,7 @@ export default function FeatureDock({ active, onSelect, compact = false }: { act
     <nav id="feature-dock-navigation" className="profile-bottom-dock" aria-label="Navigation principale Meewav" inert={collapsed || editing}>
     <div className="profile-bottom-dock__surface" />
     <div className="profile-bottom-dock__side">{featureItems.slice(0, 3).map(item)}</div>
-    <button type="button" className="profile-bottom-dock__globe" aria-label="Retour au globe" onClick={() => onSelect('globe')}
+    <button type="button" className="profile-bottom-dock__globe" aria-label={active === 'globe' ? 'Globe / Carte' : 'Retour au globe'} aria-current={active === 'globe' ? 'page' : undefined} onClick={() => onSelect('globe')}
       style={{ '--nav-globe-ocean': NAVBAR_GLOBE_PALETTE.ocean } as React.CSSProperties}>
       <NavGlobeTexture landColor={NAVBAR_GLOBE_PALETTE.land} size={56} rotationSeconds={40} />
       <span className="profile-bottom-dock__globe-light" />

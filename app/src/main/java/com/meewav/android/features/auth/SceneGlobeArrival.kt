@@ -2,9 +2,7 @@ package com.meewav.android.features.auth
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.Close
@@ -19,7 +17,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -42,9 +39,7 @@ internal fun SceneGlobeArrival(state: AuthUiState, onBack: () -> Unit, onEnter: 
                 homeScene = state.homeScene)
             // Reserved right strip in mobile.css keeps this outside Web panels.
             if (!globeLoading) IconButton(onClick = onClose, modifier = Modifier.align(Alignment.TopEnd)
-                .padding(end = 6.dp, top = 10.dp).size(44.dp)
-                .background(Brush.verticalGradient(listOf(Color(0xC01C1628), Color(0xD008070D))), RoundedCornerShape(16.dp))
-                .border(0.75.dp, Color(0x457E6A99), RoundedCornerShape(16.dp))) {
+                .padding(end = 12.dp, top = 12.dp).size(44.dp)) {
                 Icon(Icons.Outlined.Close, "Fermer l’application", Modifier.size(18.dp), tint = Color.White)
             }
         }

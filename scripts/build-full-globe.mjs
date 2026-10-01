@@ -28,7 +28,9 @@ const result = await build({
     'border-worker': join(source, 'vendor/globe-vinyle/shared/src/border-worker.mjs'),
     'avatar-population-worker': join(source, 'vendor/globe-vinyle/shared/src/avatar-population-worker.mjs'),
   },
-  nodePaths: [join(toolchain, 'node_modules')],
+  nodePaths: [join(toolchain, 'node_modules'), join(web, 'node_modules')],
+  // The shared dock/router must use the scene's pinned React instance too.
+  alias: { react: join(toolchain, 'node_modules/react'), 'react-dom': join(toolchain, 'node_modules/react-dom') },
   bundle: true, splitting: true, format: 'esm', jsx: 'automatic',
   outdir: join(output, 'assets'), entryNames: '[name]', chunkNames: '[name]-[hash]',
   target: ['chrome110'], minify: true, metafile: true, legalComments: 'linked',
@@ -36,6 +38,7 @@ const result = await build({
   external: ['/globe-vinyle/ui/*'],
   plugins: [{ name: 'android-local-host', setup(context) {
     context.onResolve({ filter: /^\.\/host-bridge$/ }, () => ({ path: join(source, 'full-globe-bridge.ts') }));
+    context.onResolve({ filter: /^\.\/GlobeNavigationPole$/ }, () => ({ path: join(source, 'full-globe-navigation.tsx') }));
     context.onResolve({ filter: /^\.\/reference\/features\/globe\/components\/NavGlobeTexture$/ }, () => ({
       path: join(source, 'full-globe-nav-texture.tsx'),
     }));

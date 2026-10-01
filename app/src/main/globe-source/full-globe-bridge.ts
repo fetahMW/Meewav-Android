@@ -8,8 +8,11 @@ let homeScene: { lon: number; lat: number; cityCode: string; zoneId: string; lab
 const engine = () => (window as any).__meewavEngine;
 
 function updateActivity() {
+  const visible = active && !document.hidden && !disposed;
+  // The reused feature dock pauses its CSS globe when the native scene sleeps.
+  document.documentElement.toggleAttribute('data-profile-inactive', !visible);
   document.dispatchEvent(new CustomEvent('globelab-lifecycle', {
-    detail: { active: active && !document.hidden && !disposed },
+    detail: { active: visible },
   }));
 }
 
