@@ -97,15 +97,17 @@ export function mountFeature(id: 'market' | 'scene' | 'rooms', title: string, lo
   }
   const root = createRoot(document.getElementById('root')!);
   let started = false;
+  let disposed = false;
   (window as any).meewavMessaging = {
     back: () => native('back'),
     async configure(config: MobileConfig) {
-      if (started) return;
+      if (started || disposed) return;
       started = true; configure(config);
       try {
         const {default: Page} = await load();
+        if (disposed) return;
         root.render(<Boundary><MemoryRouter initialEntries={[config.route || `/${id}`]}><Shell Page={Page} /></MemoryRouter></Boundary>);
-      } catch { root.render(<div className="mobile-profile-error"><p>{title} indisponible.</p><button onClick={() => location.reload()}>Réessayer</button><button onClick={() => native('globe')}>Retour au globe</button></div>); }
+      } catch { if (!disposed) root.render(<div className="mobile-profile-error"><p>{title} indisponible.</p><button onClick={() => location.reload()}>Réessayer</button><button onClick={() => native('globe')}>Retour au globe</button></div>); }
     },
     updateToken,
     setActive(active: boolean) {
@@ -113,5 +115,5 @@ export function mountFeature(id: 'market' | 'scene' | 'rooms', title: string, lo
       if (!active) document.querySelectorAll('audio,video').forEach(media => (media as HTMLMediaElement).pause());
     },
   };
-  window.addEventListener('pagehide', () => { root.unmount(); updateToken(null); });
+  window.addEventListener('pagehide', () => { disposed = true; root.unmount(); updateToken(null); });
 }

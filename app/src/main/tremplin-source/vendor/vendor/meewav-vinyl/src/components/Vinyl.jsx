@@ -2,6 +2,7 @@ import React, { PureComponent, createRef } from 'react';
 import { MW_PATH } from './BrandMark.jsx';
 import './vinyl.css';
 import { BASE_RPM, GROOVES, REVOLUTION_MS, playbackRate, pointerTilt } from '../record-utils.js';
+import { isFeatureActive, watchFeatureActivity } from '../../../../../../shared-ui/feature-activity.mjs';
 
 let instanceNumber = 0;
 
@@ -46,7 +47,7 @@ export default class Vinyl extends PureComponent {
 
   componentDidMount() {
     this.setupAnimation();
-    document.addEventListener('visibilitychange', this.syncAnimation);
+    this.stopWatchingActivity = watchFeatureActivity(this.syncAnimation);
   }
 
   componentDidUpdate(previous) {
@@ -65,7 +66,7 @@ export default class Vinyl extends PureComponent {
   componentWillUnmount() {
     this.animation?.cancel();
     if (this.frame !== null) cancelAnimationFrame(this.frame);
-    document.removeEventListener('visibilitychange', this.syncAnimation);
+    this.stopWatchingActivity?.();
   }
 
   syncAnimation = () => {
@@ -73,7 +74,7 @@ export default class Vinyl extends PureComponent {
     const rate = playbackRate(this.props.rpm);
     // updatePlaybackRate conserve l'angle courant lors d'un changement de vitesse.
     if (this.animation.playbackRate !== rate) this.animation.updatePlaybackRate(rate);
-    const active = this.props.playing && !this.props.reducedMotion && !document.hidden;
+    const active = this.props.playing && !this.props.reducedMotion && isFeatureActive();
     if (active && this.animation.playState !== 'running') this.animation.play();
     if (!active && this.animation.playState !== 'paused') this.animation.pause();
   };

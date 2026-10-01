@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Camera, CameraOff, Check, Copy, FlipHorizontal2, LayoutTemplate, RefreshCw, Smartphone, Monitor, Video } from "lucide-react";
+import { isFeatureActive, watchFeatureActivity } from "../../../../../../shared-ui/feature-activity.mjs";
+import { createMediaRequestGate } from "../../../../../../shared-ui/media-request-gate.mjs";
 
 export type LaunchFormat = "portrait" | "landscape";
 export type LaunchLayout = "safe" | "immersive" | "split" | "pip" | "duo" | "interview" | "presentation" | "focus";
@@ -31,6 +33,7 @@ export default function LaunchStudio({ value, onChange }: Props) {
   const secondaryRef = useRef<HTMLVideoElement>(null);
   const primaryStream = useRef<MediaStream | null>(null);
   const secondaryStream = useRef<MediaStream | null>(null);
+  const [requests] = useState(() => createMediaRequestGate({ isActive: isFeatureActive }));
   const [preview, setPreview] = useState(false);
   const [busy, setBusy] = useState(false);
   const [secondReady, setSecondReady] = useState(false);
@@ -38,16 +41,25 @@ export default function LaunchStudio({ value, onChange }: Props) {
   const layout = value.format === "portrait" ? value.portraitLayout : value.landscapeLayout;
   const update = (patch: Partial<LaunchStudioConfig>) => onChange({ ...value, ...patch });
   const stop = () => {
+    requests.invalidate();
     primaryStream.current?.getTracks().forEach(track => track.stop());
     secondaryStream.current?.getTracks().forEach(track => track.stop());
     primaryStream.current = null;
     secondaryStream.current = null;
+    if (primaryRef.current) primaryRef.current.srcObject = null;
+    if (secondaryRef.current) secondaryRef.current.srcObject = null;
+    setBusy(false);
     setPreview(false);
     setSecondReady(false);
   };
-  useEffect(() => () => {
-    primaryStream.current?.getTracks().forEach(track => track.stop());
-    secondaryStream.current?.getTracks().forEach(track => track.stop());
+  useEffect(() => {
+    requests.reopen();
+    const stopWatching = watchFeatureActivity(active => { if (!active) stop(); });
+    return () => {
+      stopWatching(); requests.close();
+      primaryStream.current?.getTracks().forEach(track => track.stop());
+      secondaryStream.current?.getTracks().forEach(track => track.stop());
+    };
   }, []);
   useEffect(() => {
     if (primaryRef.current) primaryRef.current.srcObject = primaryStream.current;
@@ -56,21 +68,29 @@ export default function LaunchStudio({ value, onChange }: Props) {
 
   const start = async (camera = value.camera, second = value.secondCamera) => {
     stop();
+    if (!isFeatureActive()) return;
+    const request = requests.begin();
     setBusy(true);
     setNotice("");
     try {
       const first = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: camera === "front" ? "user" : "environment" } }, audio: false });
+      if (!requests.accept(request, first)) return;
       primaryStream.current = first;
       setPreview(true);
       if (second) {
         try {
           const other = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: camera === "front" ? "environment" : "user" } }, audio: false });
+          if (!requests.accept(request, other)) return;
           const firstId = first.getVideoTracks()[0]?.getSettings().deviceId;
           const otherId = other.getVideoTracks()[0]?.getSettings().deviceId;
-          if (firstId && otherId && firstId === otherId) throw new Error("Même caméra");
+          if (firstId && otherId && firstId === otherId) {
+            other.getTracks().forEach(track => track.stop());
+            throw new Error("Même caméra");
+          }
           secondaryStream.current = other;
           setSecondReady(true);
         } catch {
+          if (!requests.isCurrent(request)) return;
           secondaryStream.current?.getTracks().forEach(track => track.stop());
           secondaryStream.current = null;
           setSecondReady(false);
@@ -79,9 +99,9 @@ export default function LaunchStudio({ value, onChange }: Props) {
         }
       }
     } catch {
-      setNotice("Caméra indisponible. Autorise son accès dans les réglages du téléphone.");
+      if (requests.isCurrent(request)) setNotice("Caméra indisponible. Autorise son accès dans les réglages du téléphone.");
     } finally {
-      setBusy(false);
+      if (requests.isCurrent(request)) setBusy(false);
     }
   };
   const changeCamera = (camera: LaunchCamera) => {

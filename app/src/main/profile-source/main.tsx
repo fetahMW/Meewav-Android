@@ -48,15 +48,17 @@ class Boundary extends Component<{children: React.ReactNode}, {failed: boolean}>
 }
 const root = createRoot(document.getElementById('root')!);
 let started = false;
+let disposed = false;
 (window as any).meewavMessaging = {
   back: () => native('back'),
   async configure(config: MobileConfig) {
-    if (started) return;
+    if (started || disposed) return;
     started = true; configure(config);
     try {
       const { default: Page } = await import('./vendor/src/features/profile/ProfilePage');
+      if (disposed) return;
       root.render(<Boundary><MemoryRouter initialEntries={[config.route || '/profile']}><Shell Page={Page}/></MemoryRouter></Boundary>);
-    } catch { root.render(<div className="mobile-profile-error">Profil indisponible.<button onClick={() => native('globe')}>Retour au globe</button></div>); }
+    } catch { if (!disposed) root.render(<div className="mobile-profile-error">Profil indisponible.<button onClick={() => native('globe')}>Retour au globe</button></div>); }
   },
   updateToken,
   setActive(active: boolean) {
@@ -64,4 +66,4 @@ let started = false;
     if (!active) document.querySelectorAll('audio,video').forEach(media => (media as HTMLMediaElement).pause());
   },
 };
-window.addEventListener('pagehide', () => { root.unmount(); updateToken(null); });
+window.addEventListener('pagehide', () => { disposed = true; root.unmount(); updateToken(null); });

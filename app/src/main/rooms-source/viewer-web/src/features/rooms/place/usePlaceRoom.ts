@@ -7,6 +7,7 @@ import { liveRoomToolsRepository } from "../tools/roomTools.supabase";
 import { stageCageOpenMicGuest } from "../tools/stageCageOpenMicGuest";
 import { projectCageDemoGuests } from "../tools/cageGuestProjection";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { watchFeatureActivity } from "../../../../../../shared-ui/feature-activity.mjs";
 import type { RoomPresentation } from "../roomPresentation";
 import { createPlaceDemoState, PLACE_DEMO_POLL_VOTE_COUNTS, PLACE_DEMO_PROFILES } from "./place.fixtures";
 import { placeRepository, type PlaceRepository } from "./place.service";
@@ -477,7 +478,7 @@ export function usePlaceRoom({
     demoMeterProfiles.current.clear();
     if (room.source !== "demo") return;
 
-    const meterTimer = window.setInterval(() => {
+    const updateMeters = () => {
       setRoom((current) => {
         // Live levels must come from the media plane. Synthetic meters are
         // deliberately restricted to the investor/demo fixture.
@@ -518,8 +519,13 @@ export function usePlaceRoom({
           }),
         };
       });
-    }, 140);
-    return () => window.clearInterval(meterTimer);
+    };
+    let meterTimer = 0;
+    const stopWatching = watchFeatureActivity(active => {
+      window.clearInterval(meterTimer); meterTimer = 0;
+      if (active) meterTimer = window.setInterval(updateMeters, 140);
+    });
+    return () => { stopWatching(); window.clearInterval(meterTimer); };
   }, [room.id, room.source]);
 
   useEffect(() => {

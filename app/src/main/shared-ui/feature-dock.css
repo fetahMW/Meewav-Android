@@ -48,6 +48,10 @@
 .feature-dock-host .profile-bottom-dock__globe-light { position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(circle at 30% 25%,#ffffff15,transparent 52%),linear-gradient(120deg,transparent 35%,#0009); pointer-events: none; }
 .feature-dock-host button:focus-visible { outline: 2px solid #bca5e6; outline-offset: -3px; }
 html[data-profile-inactive] .feature-dock-host .is-rotating { animation-play-state: paused; }
+/* Keep the exact visible design; freeze CSS motion when its native feature is hidden. */
+html[data-profile-inactive] *,
+html[data-profile-inactive] *::before,
+html[data-profile-inactive] *::after { animation-play-state: paused !important; }
 body:has(video:fullscreen) .feature-dock-host { display: none; }
 @keyframes feature-dock-globe-turn { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .feature-dock-host,.feature-dock-host .profile-bottom-dock { transition: none; } .feature-dock-host .is-rotating { animation: none; } }

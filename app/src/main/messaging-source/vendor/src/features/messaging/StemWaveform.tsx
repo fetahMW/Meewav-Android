@@ -1,21 +1,19 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { decodeAudioWaveform, type DecodedWaveform, type WaveformPeak } from "../rooms/tools/audio/previewWaveform";
+import { createAsyncResourceCache } from "../../../../../shared-ui/async-resource-cache.mjs";
+import { isFeatureActive, watchFeatureActivity } from "../../../../../shared-ui/feature-activity.mjs";
 
 const resolutions = 4096;
-const cache = new Map<string, Promise<DecodedWaveform>>();
-
-function loadPeaks(url: string) {
-  const existing = cache.get(url);
-  if (existing) return existing;
-  const pending = fetch(url).then(async (response) => {
-    if (!response.ok) throw new Error("Audio indisponible");
-    return decodeAudioWaveform(await response.arrayBuffer(), resolutions);
-  });
-  cache.set(url, pending);
-  if (cache.size > 32) cache.delete(cache.keys().next().value!);
-  void pending.catch(() => { if (cache.get(url) === pending) cache.delete(url); });
-  return pending;
-}
+type WaveformSummary = Pick<DecodedWaveform, "durationSeconds" | "peaks">;
+const cache = createAsyncResourceCache(async (url: string, { signal }: { signal: AbortSignal }): Promise<WaveformSummary> => {
+  const response = await fetch(url, { signal });
+  if (!response.ok) throw new Error("Audio indisponible");
+  const data = await response.arrayBuffer();
+  if (signal.aborted) throw new DOMException("Analyse annulée", "AbortError");
+  const decoded = await decodeAudioWaveform(data, resolutions);
+  // Retain the exact envelope, not every PCM sample of every cached stem.
+  return { durationSeconds: decoded.durationSeconds, peaks: decoded.peaks };
+});
 
 /** Preserve real transients and signed amplitudes when fitting the signal to the screen. */
 export function stemWaveformPath(peaks: readonly WaveformPeak[], width: number) {
@@ -36,7 +34,18 @@ export function StemWaveform({ mediaUrls, progress = 0 }: { mediaUrls: readonly 
   const [width, setWidth] = useState(640);
   const playedWidth = width * Math.max(0, Math.min(100, progress)) / 100;
   const [result, setResult] = useState<{ key: string; peaks: readonly WaveformPeak[]; error?: boolean } | null>(null);
+  const [nearViewport, setNearViewport] = useState(() => typeof IntersectionObserver === "undefined");
+  const [featureActive, setFeatureActive] = useState(isFeatureActive);
   const sourceKey = JSON.stringify([...new Set(mediaUrls.filter((url): url is string => Boolean(url)))]);
+  useEffect(() => watchFeatureActivity(setFeatureActive), []);
+  useEffect(() => {
+    const node = element.current;
+    if (!node || typeof IntersectionObserver === "undefined") return;
+    // Prepare the envelope shortly before it enters the scrolled conversation.
+    const observer = new IntersectionObserver(([entry]) => setNearViewport(entry.isIntersecting), { rootMargin: "400px" });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
   useEffect(() => {
     const node = element.current;
     if (!node || typeof ResizeObserver === "undefined") return;
@@ -45,10 +54,13 @@ export function StemWaveform({ mediaUrls, progress = 0 }: { mediaUrls: readonly 
     return () => observer.disconnect();
   }, []);
   useEffect(() => {
+    if (!featureActive || !nearViewport || result?.key === sourceKey) return;
     let active = true;
     const urls = JSON.parse(sourceKey) as string[];
     if (!urls.length) return;
-    void Promise.all(urls.map(loadPeaks)).then((signals) => {
+    const leases = urls.map((url) => cache.acquire(url));
+    void Promise.all(leases.map((lease) => lease.promise)).then((signals: WaveformSummary[]) => {
+      if (!active) return;
       // The master shows the combined peak envelope; each stem shows its own PCM signal.
       const duration = Math.max(...signals.map((signal) => signal.durationSeconds));
       const peaks = signals.length === 1 ? signals[0].peaks : Array.from({ length: resolutions }, (_, index) => {
@@ -63,9 +75,10 @@ export function StemWaveform({ mediaUrls, progress = 0 }: { mediaUrls: readonly 
         return Number.isFinite(min) ? { min, max } : { min: 0, max: 0 };
       });
       if (active) setResult({ key: sourceKey, peaks });
-    }).catch(() => { if (active) setResult({ key: sourceKey, peaks: [], error: true }); });
-    return () => { active = false; };
-  }, [sourceKey]);
+    }).catch(() => { if (active) setResult({ key: sourceKey, peaks: [], error: true }); })
+      .finally(() => leases.forEach((lease) => lease.release()));
+    return () => { active = false; leases.forEach((lease) => lease.release()); };
+  }, [sourceKey, featureActive, nearViewport]);
   const peaks = result?.key === sourceKey ? result.peaks : [];
   const path = useMemo(() => stemWaveformPath(peaks, width), [peaks, width]);
   const status = sourceKey === "[]" ? "Fichier audio manquant" : result?.key === sourceKey && result.error ? "Analyse audio indisponible" : "Analyse audio…";

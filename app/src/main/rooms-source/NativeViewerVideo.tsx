@@ -1,5 +1,6 @@
 import {useEffect} from 'react';
 import {nativeViewerEnabled} from './NativeViewerSurfaces';
+import {watchFeatureActivity} from '../shared-ui/feature-activity.mjs';
 
 /** Keep RTC video under the web controls, using the same participant identity as the server. */
 export default function NativeViewerVideo({roomId}:{roomId:string}) {
@@ -24,9 +25,12 @@ export default function NativeViewerVideo({roomId}:{roomId:string}) {
    if(data!==previous){previous=data;location.assign('/native/viewer-video?data='+encodeURIComponent(data))}
   };
   // Geometry is independent of React rendering, scrolling and animated collapse.
-  timer=window.setInterval(update,80);update();
+  const stopWatching=watchFeatureActivity(active=>{
+   clearInterval(timer);timer=0;
+   if(active){update();timer=window.setInterval(update,80)}
+  });
   return()=>{
-   clearInterval(timer);style.remove();paths.forEach(el=>el.classList.remove('android-rtc-path'));
+   stopWatching();clearInterval(timer);style.remove();paths.forEach(el=>el.classList.remove('android-rtc-path'));
    document.querySelectorAll('.android-rtc-tile').forEach(el=>el.classList.remove('android-rtc-tile'));
    location.assign('/native/viewer-video?data='+encodeURIComponent(JSON.stringify({viewport:innerWidth,tiles:[]})));
   };

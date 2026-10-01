@@ -1,4 +1,6 @@
 import { readCagePrograms, saveCageProgram, type CageProgram, type SavedCageProgram } from "../../../../../../shared-ui/cagePrograms";
+import { isFeatureActive, watchFeatureActivity } from "../../../../../../shared-ui/feature-activity.mjs";
+import { createMediaRequestGate } from "../../../../../../shared-ui/media-request-gate.mjs";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from "react";
 import {
   ArrowLeft,
@@ -284,6 +286,7 @@ export default function LaunchRoomSheet({ initialType, allowSkipCheckup = false,
     return () => { window.removeEventListener("online", sync); window.removeEventListener("offline", sync); };
   }, []);
 
+  const [micRequests] = useState(() => createMediaRequestGate({ isActive: isFeatureActive }));
   const micStreamRef = useRef<MediaStream | null>(null);
   const micRafRef = useRef(0);
   const micContextRef = useRef<AudioContext | null>(null);
@@ -294,6 +297,7 @@ export default function LaunchRoomSheet({ initialType, allowSkipCheckup = false,
   const isReady = micState === "granted" && networkOk;
 
   const stopMic = useCallback(() => {
+    micRequests.invalidate();
     if (micRafRef.current) window.cancelAnimationFrame(micRafRef.current);
     micRafRef.current = 0;
     micStreamRef.current?.getTracks().forEach((track) => track.stop());
@@ -302,12 +306,20 @@ export default function LaunchRoomSheet({ initialType, allowSkipCheckup = false,
     micContextRef.current = null;
     setMicTesting(false);
     setMicLevel(0);
-  }, []);
+    setMicState(current => current === "requesting" ? "idle" : current);
+  }, [micRequests]);
 
-  useEffect(() => () => stopMic(), [stopMic]);
+  useEffect(() => {
+    micRequests.reopen();
+    const stopWatching = watchFeatureActivity(active => { if (!active) stopMic(); });
+    return () => { stopWatching(); micRequests.close(); stopMic(); };
+  }, [micRequests, stopMic]);
 
   const startMicTest = useCallback(async () => {
     if (micTesting) { stopMic(); return; }
+    if (!isFeatureActive()) return;
+    stopMic();
+    const request = micRequests.begin();
     setMicState("requesting");
     try {
       // The single check-up must authorize both tracks before the native room takes over.
@@ -315,6 +327,7 @@ export default function LaunchRoomSheet({ initialType, allowSkipCheckup = false,
         audio: true,
         video: { facingMode: { ideal: studio.camera === "front" ? "user" : "environment" } },
       });
+      if (!micRequests.accept(request, stream)) return;
       micStreamRef.current = stream;
       const context = new AudioContext();
       micContextRef.current = context;
@@ -325,6 +338,7 @@ export default function LaunchRoomSheet({ initialType, allowSkipCheckup = false,
       setMicState("granted");
       setMicTesting(true);
       const tick = () => {
+        if (!micRequests.isCurrent(request)) return;
         analyser.getByteTimeDomainData(buffer);
         let peak = 0;
         for (let index = 0; index < buffer.length; index += 1) {
@@ -336,10 +350,9 @@ export default function LaunchRoomSheet({ initialType, allowSkipCheckup = false,
       };
       tick();
     } catch {
-      setMicState("denied");
-      setMicTesting(false);
+      if (micRequests.isCurrent(request)) { stopMic(); setMicState("denied"); }
     }
-  }, [micTesting, stopMic, studio.camera]);
+  }, [micTesting, stopMic, studio.camera, micRequests]);
 
   const selectTab = (index: number) => {
     setSelectedTab(index);

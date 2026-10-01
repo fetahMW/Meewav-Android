@@ -617,7 +617,7 @@ export default function ProfileMediaView({
                         onEnded={() => { setPlaybackProgress((current) => ({ ...current, [item.id]: 100 })); setPlayingId(null); }}
                       />
                     ) : item.cover ? (
-                      <img src={item.cover} alt="" />
+                    <img src={item.cover} alt="" loading="lazy" decoding="async" />
                     ) : item.kind === "document" && item.previewLines ? (
                       <span className="profile-media-card__document-preview">
                         <i><FileText size={18} /> Note de production</i>
