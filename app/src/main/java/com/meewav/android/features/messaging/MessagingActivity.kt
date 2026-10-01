@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
@@ -40,7 +39,6 @@ import com.meewav.android.BuildConfig
 import com.meewav.android.app.MeewavApplication
 import com.meewav.android.app.MainActivity
 import com.meewav.android.core.auth.CanonicalAvatar
-import com.meewav.android.core.design.StatusBarMaterialBackground
 import com.meewav.android.features.auth.AvatarCatalog
 import com.meewav.android.features.auth.localMediaAsset
 import io.github.jan.supabase.auth.status.SessionStatus
@@ -57,8 +55,8 @@ import java.io.ByteArrayInputStream
 open class MessagingActivity : ComponentActivity() {
     protected open val assetSurface = "messaging"
     protected open val defaultRoute = "/messages?space=messages"
-    /** Optional native material, painted only behind the top system inset. */
-    protected open fun createStatusBarBackground(): Drawable? = null
+    /** Opt-in surfaces paint their own backdrop behind the transparent status bar. */
+    protected open val drawBehindStatusBar = false
     private val PAGE get() = "$ORIGIN/$assetSurface/index.html"
     protected lateinit var web: WebView
     protected lateinit var container: FrameLayout
@@ -66,6 +64,8 @@ open class MessagingActivity : ComponentActivity() {
     private var fullscreenCallback: WebChromeClient.CustomViewCallback? = null
     private var orientationBeforeVideo = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
     private var pageReady = false
+    private var contentTopInset = 0
+    private var statusBarTopInset = 0
     private var started = false
     private var resumed = false
     private var accessToken: String? = null
@@ -142,25 +142,37 @@ open class MessagingActivity : ComponentActivity() {
 
     protected open fun onNativeRoomControl(uri: Uri): Boolean = false
 
+    private fun sendSystemInsets() {
+        if (!drawBehindStatusBar || !::web.isInitialized || isDestroyed || web.url != PAGE) return
+        val density = resources.displayMetrics.density
+        web.evaluateJavascript("""
+            (() => {
+                const style = document.documentElement.style;
+                style.setProperty('--native-top-inset', '${contentTopInset / density}px');
+                style.setProperty('--native-status-bar-inset', '${statusBarTopInset / density}px');
+            })();
+        """.trimIndent(), null)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val statusBarBackground = createStatusBarBackground()
         enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(
-            if (statusBarBackground == null) Color.rgb(8, 8, 16) else Color.TRANSPARENT),
+            if (drawBehindStatusBar) Color.TRANSPARENT else Color.rgb(8, 8, 16)),
             navigationBarStyle = SystemBarStyle.dark(Color.rgb(8, 8, 16)))
-        val statusBarLayers = statusBarBackground?.let { material ->
-            StatusBarMaterialBackground(material, Color.rgb(8, 8, 16))
-        }
         container = FrameLayout(this).apply {
-            if (statusBarLayers == null) setBackgroundColor(Color.rgb(8, 8, 16))
-            else background = statusBarLayers
+            setBackgroundColor(Color.rgb(8, 8, 16))
         }
         setContentView(container)
         ViewCompat.setOnApplyWindowInsetsListener(container) { view, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
             val keyboard = insets.getInsets(WindowInsetsCompat.Type.ime())
-            statusBarLayers?.updateTopInset(insets.getInsets(WindowInsetsCompat.Type.statusBars()).top)
-            view.setPadding(bars.left, bars.top, bars.right, maxOf(bars.bottom, keyboard.bottom))
+            val statusTop = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
+            val changed = contentTopInset != bars.top || statusBarTopInset != statusTop
+            contentTopInset = bars.top
+            statusBarTopInset = statusTop
+            view.setPadding(bars.left, if (drawBehindStatusBar) 0 else bars.top, bars.right,
+                maxOf(bars.bottom, keyboard.bottom))
+            if (changed) sendSystemInsets()
             insets
         }
         web = WebView(this).apply {
@@ -336,6 +348,7 @@ open class MessagingActivity : ComponentActivity() {
             }
             override fun onPageFinished(view: WebView, url: String) {
                 if (url != PAGE) return
+                sendSystemInsets()
                 pageReady = true; sendConfiguration()
             }
             override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {

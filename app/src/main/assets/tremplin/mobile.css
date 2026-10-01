@@ -1,6 +1,16 @@
 /* Android adaptation only. Web components, backgrounds, artwork and flows stay
    in vendor; Profile is the source of the glass materials and bottom dock. */
-:root { --tremplin-mobile-header: 100px; }
+:root { --tremplin-mobile-header: 100px; --native-top-inset: 0px; --native-status-bar-inset: 0px; }
+/* The real page wallpaper extends behind Android's status icons. Limit the
+   backdrop blur to the system strip and keep every control below the cutout. */
+#root .mobile-tremplin .tremplin-page::before {
+  content: ''; position: absolute; z-index: 40; inset: 0 0 auto;
+  height: var(--native-status-bar-inset); pointer-events: none;
+  background: #08090b24;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+.mobile-tremplin .mobile-tremplin-back { top: var(--native-top-inset); }
+.mobile-tremplin .mobile-tremplin-menu { top: calc(var(--native-top-inset) + 46px); }
 /* Windows editorial home: one backdrop and one bottom-dock inset. */
 #root .mobile-tremplin .tremplin-scroll:has(> .tremplin-home) {
   padding-top: 0;
@@ -47,7 +57,7 @@
 #root .mobile-tremplin .tremplin-primary-rail { display: none; }
 #root .mobile-tremplin .tremplin-shell { inset: 0; display: block; padding: 0; }
 #root .mobile-tremplin .tremplin-topbar {
-  position: absolute; z-index: 30; inset: 0 0 auto; display: grid;
+  position: absolute; z-index: 30; inset: var(--native-top-inset) 0 auto; display: grid;
   grid-template-columns: minmax(0,1fr); grid-template-rows: 44px 56px;
   width: 100%; height: var(--tremplin-mobile-header); min-height: 0; gap: 0; margin: 0; padding: 0 10px;
   border: 0; border-radius: 0; border-bottom: 1px solid #d3d9e01f;
@@ -72,7 +82,7 @@
 #root .mobile-tremplin .tremplin-pillar-tabs button.is-active::after { content: ''; position: absolute; bottom: 1px; left: 50%; right: auto; width: 56px; margin: 0; height: 2px; border-radius: 100%; transform: translateX(-50%); background: linear-gradient(90deg,transparent,#fff,transparent); box-shadow: 0 0 7px #ffffff59; }
 #root .mobile-tremplin .tremplin-pillar-tabs .meewav-pillar-tabs__indicator { display: none; }
 #root .mobile-tremplin .tremplin-scroll {
-  position: absolute; inset: var(--tremplin-mobile-header) 0 0; width: 100%; height: auto; min-height: 0; max-height: none;
+  position: absolute; inset: calc(var(--native-top-inset) + var(--tremplin-mobile-header)) 0 0; width: 100%; height: auto; min-height: 0; max-height: none;
   margin: 0; padding: 12px 12px 108px; overflow-y: auto; overflow-x: hidden;
   scrollbar-width: none; overscroll-behavior-y: contain; scroll-padding: 12px 0 110px;
 }
