@@ -1,7 +1,6 @@
 /* A body portal keeps the shared dock out of page clipping and stacking contexts.
-   Defaults are the exact Profile/Messaging glass, including in the inbox bundle. */
+   The main navigation uses the same polished violet glass as primary actions. */
 .feature-dock-host {
-  --profile-dock-glass: linear-gradient(125deg,#ffffff08,#ffffff02 48%,#ffffff05),#281a4a47;
   position: fixed; z-index: 490; inset: auto 0 0; height: 104px;
   pointer-events: none; transform: translateY(0);
   transition: transform 260ms cubic-bezier(.22,.75,.25,1);
@@ -25,15 +24,15 @@
 .feature-dock-host.is-collapsed .profile-bottom-dock { opacity: 0; pointer-events: none; }
 .feature-dock-host .profile-bottom-dock__surface {
   position: absolute; z-index: 0; inset: 18px 0 0; border-radius: 22px 22px 0 0;
-  background: var(--profile-dock-glass); border: 1px solid #a99bbb1c;
-  border-top-color: #b19bc42b; border-bottom: 0;
-  backdrop-filter: blur(22px) saturate(1.15); -webkit-backdrop-filter: blur(22px) saturate(1.15);
+  background: var(--mw-primary-face); border: 1px solid transparent; border-bottom: 0;
+  /* The opaque CTA face carries its own reflections; no live background blur. */
+  backdrop-filter: none; -webkit-backdrop-filter: none;
   -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 2000 200'%3E%3Cpath d='M0 0L956 0A10 10 0 0 1 966 10A34 34 0 0 0 1034 10A10 10 0 0 1 1044 0L2000 0L2000 200L0 200Z' fill='%23000'/%3E%3C/svg%3E");
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 2000 200'%3E%3Cpath d='M0 0L956 0A10 10 0 0 1 966 10A34 34 0 0 0 1034 10A10 10 0 0 1 1044 0L2000 0L2000 200L0 200Z' fill='%23000'/%3E%3C/svg%3E");
   -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
   -webkit-mask-position: center top; mask-position: center top;
   -webkit-mask-size: 2000px 200px; mask-size: 2000px 200px;
-  box-shadow: inset 0 1px 1px #b7a0ce08,inset 0 -1px #0003,0 -3px 14px #08061124;
+  box-shadow: var(--mw-primary-shadow);
   pointer-events: none;
 }
 .feature-dock-host .profile-bottom-dock__side { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); height: 58px; align-items: center; padding: 0 5px; }

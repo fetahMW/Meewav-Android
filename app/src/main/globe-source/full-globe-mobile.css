@@ -1,6 +1,16 @@
 /* Android landscape viewport. Rendering and materials stay in the Web engine. */
 html, body, #root { width: 100%; height: 100%; margin: 0; overflow: hidden; }
 .immersive-globe { position: fixed; inset: 0; width: 100%; height: 100%; }
+/* Android main navigation: the primary CTA's polished violet face and rim.
+   Destination buttons retain their own states and geometry. */
+.reference-rail .globe-navigation-pole.is-glass-chassis {
+  background: var(--mw-primary-face);
+  border: 1px solid transparent;
+  box-shadow: var(--mw-primary-shadow);
+  /* The opaque face already includes its reflections. */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
 .globe-stage canvas { position: absolute; inset: 0; }
 .mobile-artist-filter-tabs { display: none; }
 .profile-icon-hover-overlay__connection { display: none; }
