@@ -5,7 +5,7 @@
 - Branche : `codex/android-native-globe-test`.
 - Base complète avant portage : `6961acb086c449b0fb798ef0ac4ac71c3a29357e`.
 - Cette base copie aussi les modifications locales de gestes, de portraits et les assets générés présents le 2 octobre. Le checkout de travail d'origine reste sur `codex/ui-parity-chat-composer`.
-- Application de test indépendante : `com.meewav.android.globetest`, nom **Meewav Globe Test**. L'application habituelle `com.meewav.android.debug` et ses données restent disponibles, sur Redmi comme sur S22.
+- Application de test indépendante : `com.meewav.android.globetest`, nom **Meewav Globe Test**, avec un logo Meewav distinct marqué **TEST**. L'application habituelle `com.meewav.android.debug` et ses données restent disponibles, sur Redmi comme sur S22.
 - Revenir immédiatement à l'ancien rendu : fermer l'application de test et ouvrir Meewav habituel. Aucun remplacement de l'APK habituel n'est requis.
 - Revenir au code initial : utiliser la base ci-dessus dans un autre worktree. Ne pas réinitialiser le checkout d'origine ni retirer ses modifications locales.
 
@@ -52,6 +52,10 @@ Après la reprise « go redmi », le Redmi était réveillé et interactif. Une 
 L'audit du démarrage a corrigé le nettoyage EGL partiel (échec avant création du contexte), la propriété de la SurfaceTexture à la fermeture et la destruction C++ si la création des framebuffers échoue. Ces chemins ont été relus ; sans injection d'échec sur un appareil, leur exécution réelle reste à vérifier.
 
 APK recompilé après ces corrections : SHA-256 `2656F40D60B5318F9CB6DC84446BEDD80C4B99B49B77F2E67FA9508A11B38609`.
+
+Après la demande explicite d'une deuxième application et d'un deuxième logo, l'icône de test est définie uniquement dans `app/src/globeTest/res/drawable/ic_launcher.xml`. Le logo normal de `src/main` reste intact. Le dernier APK séparé, compilé avec ce logo, porte le SHA-256 `B3AD73CAD8B9D64065E3BC83A840BBB31D639C3F4069AB16B8D06F17C4BAE001`. Aucune mise à jour de l'application habituelle n'a été installée.
+
+Une tentative normale d'installation de ce dernier APK a encore été annulée par Android, alors que le Redmi était interactif. Le fichier a ensuite été transféré sans ouvrir l'installateur dans `/sdcard/Download/Meewav-Globe-Test.apk` (1 535 259 323 octets). Son SHA-256 calculé sur le Redmi correspond à celui de l'APK ci-dessus. L'installation peut être acceptée manuellement depuis **Fichiers → Téléchargements → Meewav-Globe-Test.apk**. Le dernier relevé confirme que le package de test n'est pas encore présent ; aucun test d'exécution n'a donc été effectué.
 
 La compilation et le contrat de transfert sont vérifiés, mais le fonctionnement du pilote GLES, la parité visuelle et les performances sur appareil restent **non vérifiés**. La prochaine étape est une installation acceptée sur le Redmi réveillé, puis la vérification des frames réellement présentées, des erreurs GLES et des parcours disque/territoires/avatars/pré-profils/fly avant de laisser le test ouvert pour comparaison.
 

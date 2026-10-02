@@ -1,0 +1,34 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="16" android:startY="0" android:endX="82" android:endY="108">
+                <item android:offset="0" android:color="#292331" />
+                <item android:offset="0.45" android:color="#100E16" />
+                <item android:offset="1" android:color="#08090C" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:fillColor="@android:color/transparent" android:strokeColor="#59436F"
+        android:strokeWidth="1" android:pathData="M15,28Q15,15 28,15H80Q93,15 93,28V80Q93,93 80,93H28Q15,93 15,80Z" />
+    <group android:translateY="-8">
+        <path android:fillColor="@android:color/transparent" android:strokeColor="#B99AFF"
+            android:strokeWidth="5" android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M25,70L37,37L40,65L51,30L57,70L67,40L72,62L83,32" />
+    </group>
+    <path android:strokeColor="#C0A8EE" android:strokeWidth="0.8"
+        android:pathData="M34,73H74Q83,73 83,82V87Q83,96 74,96H34Q25,96 25,87V82Q25,73 34,73Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="54" android:startY="73" android:endX="54" android:endY="96">
+                <item android:offset="0" android:color="#9174C5" />
+                <item android:offset="0.45" android:color="#5C3D92" />
+                <item android:offset="1" android:color="#36205E" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:fillColor="@android:color/transparent" android:strokeColor="#F4EDFF"
+        android:strokeWidth="2" android:strokeLineCap="round" android:strokeLineJoin="round"
+        android:pathData="M32,80H41M36.5,80V90 M52,80H45V90H52M45,85H51 M64,80H57V85H64V90H57 M68,80H77M72.5,80V90" />
+</vector>
