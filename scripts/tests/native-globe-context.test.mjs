@@ -94,3 +94,40 @@ test('large portrait arrays cross the bridge in bounded batches without losing a
   assert.deepEqual(restored,source);
   assert.ok(h.batches.every(batch=>batch.bytes.length<=4*1024*1024+64));
 });
+
+test('typed uniforms preserve offsets and snapshot bytes without intermediate JS arrays', () => {
+  const h=harness(),gl=h.gl;
+  const matrix=new Float32Array([999,...Array.from({length:16},(_,i)=>i+.25),999]);
+  gl.uniformMatrix4fv(0,false,matrix,1,16);
+  matrix.fill(0);
+  const unsigned=new Uint32Array([999,0xffffffff,17,999]);
+  gl.uniform2uiv(3,unsigned,1,2);unsigned.fill(0);gl.flush();
+  const uniforms=h.packets().filter(packet=>packet.op===19);
+  assert.equal(uniforms[0].data.readUInt32LE(8),1);
+  assert.deepEqual(Array.from({length:16},(_,i)=>uniforms[0].data.readFloatLE(12+i*4)),Array.from({length:16},(_,i)=>i+.25));
+  assert.deepEqual([uniforms[1].data.readUInt32LE(12),uniforms[1].data.readUInt32LE(16)],[0xffffffff,17]);
+});
+
+test('direct base64 encoder uses only the populated view and matches legacy packet bytes', () => {
+  const previous=Object.getOwnPropertyDescriptor(Uint8Array.prototype,'toBase64');
+  let calls=0;
+  try {
+    delete Uint8Array.prototype.toBase64;
+    const fallback=harness();
+    fallback.gl.clearColor(.125,.5,.75,1);fallback.gl.clear(fallback.gl.COLOR_BUFFER_BIT);fallback.gl.flush();
+    Object.defineProperty(Uint8Array.prototype,'toBase64',{configurable:true,value:function(){
+      calls++;return Buffer.from(this.buffer,this.byteOffset,this.byteLength).toString('base64');
+    }});
+    const h=harness(),gl=h.gl;
+    gl.clearColor(.125,.5,.75,1);gl.clear(gl.COLOR_BUFFER_BIT);gl.flush();
+    assert.equal(calls,1);
+    const packets=h.packets();
+    assert.deepEqual(packets.map(packet=>packet.op),[46,49,71]);
+    assert.equal(packets[0].data.readFloatLE(0),.125);
+    assert.equal(h.batches[0].bytes.length,44);
+    assert.deepEqual(h.batches[0].bytes,fallback.batches[0].bytes);
+  } finally {
+    if(previous)Object.defineProperty(Uint8Array.prototype,'toBase64',previous);
+    else delete Uint8Array.prototype.toBase64;
+  }
+});

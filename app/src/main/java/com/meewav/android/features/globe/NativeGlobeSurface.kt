@@ -9,6 +9,7 @@ import android.opengl.EGLDisplay
 import android.opengl.EGLSurface
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.SystemClock
 import android.util.Base64
 import android.util.Log
 import android.view.TextureView
@@ -41,6 +42,10 @@ internal class NativeGlobeSurface(context: Context) : TextureView(context), Text
     private var nativeHandle = 0L
     private var bufferWidth = 0
     private var bufferHeight = 0
+    @Volatile private var surfaceWidth = 0
+    @Volatile private var surfaceHeight = 0
+    @Volatile private var measuredWidth = 0
+    @Volatile private var measuredHeight = 0
     @Volatile private var requestedWidth = 1
     @Volatile private var requestedHeight = 1
     @Volatile private var active = true
@@ -51,6 +56,7 @@ internal class NativeGlobeSurface(context: Context) : TextureView(context), Text
     @Volatile private var layoutGeneration = 0L
     @Volatile private var appliedLayoutGeneration = 0L
     private var web: WebView? = null
+    private val frameTimings = FrameTimings()
 
     init {
         System.loadLibrary("meewav_globe")
@@ -112,11 +118,13 @@ internal class NativeGlobeSurface(context: Context) : TextureView(context), Text
             window = EGL14.EGL_NO_SURFACE; pbuffer = EGL14.EGL_NO_SURFACE
             eglContext = EGL14.EGL_NO_CONTEXT; display = EGL14.EGL_NO_DISPLAY
             displayInitialized = false; config = null; bufferWidth = 0; bufferHeight = 0
+            surfaceWidth = 0; surfaceHeight = 0
         }
     }
     private fun prepareWindow(): Boolean {
         val currentTexture = texture ?: return false
-        if (window == EGL14.EGL_NO_SURFACE || bufferWidth != requestedWidth || bufferHeight != requestedHeight) {
+        val rebuilt = window == EGL14.EGL_NO_SURFACE || bufferWidth != requestedWidth || bufferHeight != requestedHeight
+        if (rebuilt) {
             EGL14.eglMakeCurrent(display,pbuffer,pbuffer,eglContext)
             if (window != EGL14.EGL_NO_SURFACE) EGL14.eglDestroySurface(display,window)
             currentTexture.setDefaultBufferSize(requestedWidth,requestedHeight)
@@ -125,6 +133,13 @@ internal class NativeGlobeSurface(context: Context) : TextureView(context), Text
             bufferWidth=requestedWidth; bufferHeight=requestedHeight
         }
         check(EGL14.eglMakeCurrent(display,window,window,eglContext)) { "EGL window binding failed" }
+        if (rebuilt) {
+            val actual = IntArray(1)
+            check(EGL14.eglQuerySurface(display,window,EGL14.EGL_WIDTH,actual,0)) { "EGL window width unavailable" }
+            surfaceWidth = actual[0]
+            check(EGL14.eglQuerySurface(display,window,EGL14.EGL_HEIGHT,actual,0)) { "EGL window height unavailable" }
+            surfaceHeight = actual[0]
+        }
         return true
     }
     private fun <T> onGpu(ignoreFailure: Boolean = false, block: () -> T): T {
@@ -146,9 +161,25 @@ internal class NativeGlobeSurface(context: Context) : TextureView(context), Text
     }
     override fun onSurfaceTextureAvailable(surface: SurfaceTexture,width: Int,height: Int) {
         if (closed.get()) return
-        gpu.post { if (!closed.get()) { texture=surface; if (nativeHandle!=0L) prepareWindow() } }
+        measuredWidth=width; measuredHeight=height
+        gpu.post {
+            if (!closed.get()) try { texture=surface; if (nativeHandle!=0L) prepareWindow() }
+            catch (error: Throwable) { reject(error) }
+        }
     }
-    override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture,width: Int,height: Int) = Unit
+    override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture,width: Int,height: Int) {
+        measuredWidth=width; measuredHeight=height
+        // TextureView resets the producer's buffer size to the physical View
+        // size in onSizeChanged. Retire that EGL window and restore the canvas
+        // raster size, independently of whether its DPR-capped size changed.
+        gpu.post {
+            if (!closed.get() && texture===surface) {
+                bufferWidth=0; bufferHeight=0
+                if (nativeHandle!=0L) try { prepareWindow() }
+                catch (error: Throwable) { reject(error) }
+            }
+        }
+    }
     override fun onSurfaceTextureUpdated(surface: SurfaceTexture) = Unit
     override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean {
         val accepted = gpu.post {
@@ -170,20 +201,31 @@ internal class NativeGlobeSurface(context: Context) : TextureView(context), Text
             try {
                 check(!closed.get()) { "Native globe released" }; failure?.let { error(it) }
                 check(encoded.length<=96*1024*1024) { "GPU batch exceeds limit" }
+                val decodingStarted=SystemClock.elapsedRealtimeNanos()
                 val bytes=Base64.decode(encoded,Base64.NO_WRAP)
+                val decodeMs=(SystemClock.elapsedRealtimeNanos()-decodingStarted)/1e6
                 if (!frame) onGpu { nativeExecute(nativeHandle,bytes,false) }
                 else {
+                    val queueStarted=SystemClock.elapsedRealtimeNanos()
                     check(frameSlots.tryAcquire(5,TimeUnit.SECONDS)) { "GPU frame queue stalled" }
+                    val queueMs=(SystemClock.elapsedRealtimeNanos()-queueStarted)/1e6
                     val sequence=++submitted
                     gpu.post {
                         try {
                             if (!closed.get()) {
                                 val visible=active && prepareWindow()
+                                val executingStarted=SystemClock.elapsedRealtimeNanos()
                                 nativeExecute(nativeHandle,bytes,false); rendered=sequence
+                                val executeMs=(SystemClock.elapsedRealtimeNanos()-executingStarted)/1e6
                                 if (visible) {
-                                    nativeExecute(nativeHandle,ByteArray(0),true)
+                                    val presentationStarted=SystemClock.elapsedRealtimeNanos()
+                                    nativePresent(nativeHandle,surfaceWidth,surfaceHeight)
+                                    val presentMs=(SystemClock.elapsedRealtimeNanos()-presentationStarted)/1e6
+                                    val swapStarted=SystemClock.elapsedRealtimeNanos()
                                     check(EGL14.eglSwapBuffers(display,window)) { "Native frame swap failed: ${EGL14.eglGetError()}" }
+                                    val swapMs=(SystemClock.elapsedRealtimeNanos()-swapStarted)/1e6
                                     presented=sequence
+                                    frameTimings.add(decodeMs,queueMs,executeMs,presentMs,swapMs)
                                 }
                             }
                         } catch (error: Throwable) { reject(error) }
@@ -216,7 +258,11 @@ internal class NativeGlobeSurface(context: Context) : TextureView(context), Text
         @JavascriptInterface fun status(): String = JSONObject().put("backend","native-gles3")
             .put("submitted",submitted).put("rendered",rendered).put("presented",presented)
             .put("layout",layoutGeneration).put("appliedLayout",appliedLayoutGeneration)
+            .put("rasterWidth",requestedWidth).put("rasterHeight",requestedHeight)
+            .put("surfaceWidth",surfaceWidth).put("surfaceHeight",surfaceHeight)
+            .put("viewWidth",measuredWidth).put("viewHeight",measuredHeight)
             .put("error",failure ?: JSONObject.NULL).toString()
+        @JavascriptInterface fun metrics(): String = frameTimings.snapshot().toString()
         @JavascriptInterface fun reset() {
             onGpu(ignoreFailure = true) {
                 check(eglContext!=EGL14.EGL_NO_CONTEXT) { "GLES3 context unavailable" }
@@ -244,5 +290,28 @@ internal class NativeGlobeSurface(context: Context) : TextureView(context), Text
     private external fun nativeCreate(): Long
     private external fun nativeDestroy(handle: Long)
     private external fun nativeExecute(handle: Long,bytes: ByteArray,present: Boolean)
+    private external fun nativePresent(handle: Long,width: Int,height: Int)
     private external fun nativeQuery(handle: Long,kind: Int,id: Int,argument: Int,name: String): String
+}
+
+/** Recent CPU/queue wall times only; these are not GPU timer measurements. */
+private class FrameTimings {
+    private val samples=Array(120) { DoubleArray(5) }
+    private var next=0
+    private var count=0
+    @Synchronized fun add(decode: Double,queue: Double,execute: Double,present: Double,swap: Double) {
+        val sample=samples[next]
+        sample[0]=decode;sample[1]=queue;sample[2]=execute;sample[3]=present;sample[4]=swap
+        next=(next+1)%samples.size;count=(count+1).coerceAtMost(samples.size)
+    }
+    @Synchronized fun snapshot(): JSONObject {
+        val result=JSONObject().put("samples",count)
+        val names=arrayOf("decodeCpuMs","queueWaitMs","executeCpuMs","presentCpuMs","swapWaitMs")
+        for (column in names.indices) {
+            val ordered=DoubleArray(count) { samples[it][column] }.sorted()
+            result.put(names[column],JSONObject().put("mean",if(count==0) 0.0 else ordered.average())
+                .put("p95",if(count==0) 0.0 else ordered[((count-1)*.95).toInt()]))
+        }
+        return result
+    }
 }

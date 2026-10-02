@@ -21,6 +21,7 @@ struct Globe {
     GLuint draw = 0, resolved = 0, color = 0, depth = 0, resolveColor = 0;
     GLuint readBinding = 0, drawBinding = 0;
     GLuint presentation = 0, presentationVao = 0;
+    GLint presentationImage = -1;
     bool failed = false;
     uint64_t frames = 0, batches = 0, bytes = 0;
     GLuint object(int id) { return id ? objects.at(id) : 0; }
@@ -71,7 +72,7 @@ struct Globe {
             glBindFramebuffer(GL_DRAW_FRAMEBUFFER, drawBinding ? object(drawBinding) : draw); }
     }
     void restoreRead() { glBindFramebuffer(GL_READ_FRAMEBUFFER, readBinding ? object(readBinding) : draw); }
-    void present() {
+    void present(int outputWidth = 0, int outputHeight = 0) {
         const GLenum tests[]={GL_SCISSOR_TEST,GL_DEPTH_TEST,GL_STENCIL_TEST,GL_BLEND,GL_CULL_FACE};GLboolean enabled[5];
         for(int i=0;i<5;i++){enabled[i]=glIsEnabled(tests[i]);glDisable(tests[i]);}
         GLint program=0,vao=0,active=0,texture=0,viewport[4];GLboolean mask[4];
@@ -84,10 +85,13 @@ struct Globe {
             GLuint v=glCreateShader(GL_VERTEX_SHADER),f=glCreateShader(GL_FRAGMENT_SHADER);glShaderSource(v,1,&vs,nullptr);glShaderSource(f,1,&fs,nullptr);glCompileShader(v);glCompileShader(f);
             presentation=glCreateProgram();glAttachShader(presentation,v);glAttachShader(presentation,f);glLinkProgram(presentation);glDeleteShader(v);glDeleteShader(f);
             GLint linked=0;glGetProgramiv(presentation,GL_LINK_STATUS,&linked);if(!linked)throw std::runtime_error("Native presentation shader failed");
+            presentationImage=glGetUniformLocation(presentation,"image");
             glGenVertexArrays(1,&presentationVao);
         }
-        glViewport(0,0,width,height);glColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE);glUseProgram(presentation);glBindVertexArray(presentationVao);
-        glBindTexture(GL_TEXTURE_2D,resolveColor);glUniform1i(glGetUniformLocation(presentation,"image"),0);glDrawArrays(GL_TRIANGLES,0,3);
+        // Raster and EGL output may have different sizes during a View resize.
+        // The presentation always covers the whole current Android surface.
+        glViewport(0,0,outputWidth>0?outputWidth:width,outputHeight>0?outputHeight:height);glColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE);glUseProgram(presentation);glBindVertexArray(presentationVao);
+        glBindTexture(GL_TEXTURE_2D,resolveColor);glUniform1i(presentationImage,0);glDrawArrays(GL_TRIANGLES,0,3);
         glBindTexture(GL_TEXTURE_2D,texture);glActiveTexture(active);glUseProgram(program);glBindVertexArray(vao);
         glViewport(viewport[0],viewport[1],viewport[2],viewport[3]);glColorMask(mask[0],mask[1],mask[2],mask[3]);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, readBinding ? object(readBinding) : draw);
@@ -283,4 +287,9 @@ extern "C" JNIEXPORT jstring JNICALL Java_com_meewav_android_features_globe_Nati
     if(!handle)return env->NewStringUTF("null");const char* p=env->GetStringUTFChars(name,nullptr);std::string n(p);env->ReleaseStringUTFChars(name,p);
     try { return env->NewStringUTF(query(*reinterpret_cast<Globe*>(handle),kind,id,argument,n).c_str()); }
     catch(const std::exception& e){fail(env,e.what());return nullptr;}
+}
+extern "C" JNIEXPORT void JNICALL Java_com_meewav_android_features_globe_NativeGlobeSurface_nativePresent(JNIEnv* env,jobject,jlong handle,jint width,jint height) {
+    if(!handle)return;auto* g=reinterpret_cast<Globe*>(handle);
+    try {g->present(width,height);const GLenum error=glGetError();if(error!=GL_NO_ERROR)throw std::runtime_error("Native presentation GLES error "+std::to_string(error));}
+    catch(const std::exception& e){g->failed=true;fail(env,e.what());}
 }

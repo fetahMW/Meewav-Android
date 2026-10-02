@@ -13,6 +13,8 @@ export function createNativeGlobeContext(canvas, bridge = globalThis.MeewavNativ
   const parameters = new Map(), shaderSources = new Map(), pixelStore = new Map();
   const supported = new Set(JSON.parse(bridge.query(11, 0, 0, '')));
   const extensions = new Map();
+  const recentTransfers = [];
+  let transferNext = 0, queryCount = 0;
   const reserve = count => {
     if (used + count <= memory.byteLength) return;
     let capacity = memory.byteLength;
@@ -39,17 +41,25 @@ export function createNativeGlobeContext(canvas, bridge = globalThis.MeewavNativ
   };
   const encode = () => {
     const bytes = new Uint8Array(memory, 0, used);
+    // Modern WebView can encode the exact view directly in native code. Avoid
+    // spreading every byte into JS arguments and building an intermediate string.
+    if (typeof bytes.toBase64 === 'function') return bytes.toBase64();
     let binary = '';
     for (let offset = 0; offset < used; offset += 16384) binary += String.fromCharCode(...bytes.subarray(offset, Math.min(used, offset + 16384)));
     return btoa(binary);
   };
   const flush = frame => {
     if (!used && !frame) return;
-    const error = bridge.send(encode(), !!frame);
+    const bytes = used, started = performance.now();
+    const encoded = encode(), encodedAt = performance.now();
+    const error = bridge.send(encoded, !!frame), finished = performance.now();
+    recentTransfers[transferNext] = { bytes, encodeCpuMs: encodedAt-started, bridgeWaitMs: finished-encodedAt };
+    transferNext = (transferNext+1)%120;
     used = 0;
     if (error) throw new Error(error);
   };
   const query = (kind, id = 0, argument = 0, name = '') => {
+    queryCount++;
     flush(false);
     const result = JSON.parse(bridge.query(kind, id, argument, name));
     if (result?.error) throw new Error(result.error);
@@ -66,8 +76,13 @@ export function createNativeGlobeContext(canvas, bridge = globalThis.MeewavNativ
   };
   const uniform = (location, kind, size, values, integer = false, unsigned = false) => {
     if (location == null) return;
-    const array = unsigned ? new Uint32Array(values) : integer ? new Int32Array(values) : new Float32Array(values);
+    const Type = unsigned ? Uint32Array : integer ? Int32Array : Float32Array;
+    const array = values instanceof Type ? values : new Type(values);
     record(19, [location, kind, array.length / size], false, array);
+  };
+  const uniformSlice = (values, offset, length) => {
+    const end = length === undefined ? undefined : offset + length;
+    return typeof values.subarray === 'function' ? values.subarray(offset, end) : values.slice(offset, end);
   };
   const pixels = (image, format, type) => {
     const width = image.videoWidth || image.naturalWidth || image.width;
@@ -234,6 +249,14 @@ export function createNativeGlobeContext(canvas, bridge = globalThis.MeewavNativ
       flush(true); canvas.dataset.nativeGlobeFrame = String(++frames); return frames;
     },
     _status: () => ({ ...JSON.parse(bridge.status()), javascriptFrames: frames, backend: 'native-gles3' }),
+    _performance: () => {
+      const transfers = { samples: recentTransfers.length, queries: queryCount };
+      for (const name of ['bytes','encodeCpuMs','bridgeWaitMs']) {
+        const values = recentTransfers.map(sample => sample[name]).sort((a,b) => a-b);
+        transfers[name] = { mean: values.reduce((total,value) => total+value,0)/(values.length || 1), p95: values[Math.floor((values.length-1)*.95)] || 0 };
+      }
+      return { nativeCpu: JSON.parse(bridge.metrics()), transfers };
+    },
     _gpuInfo: () => ({ vendor: query(1,0,GLES.VENDOR), renderer: query(1,0,GLES.RENDERER), ...query(14) }),
     async _whenPresented(frame) {
       const deadline = performance.now() + 10000;
@@ -251,16 +274,16 @@ export function createNativeGlobeContext(canvas, bridge = globalThis.MeewavNativ
   Object.defineProperties(gl, { drawingBufferWidth: { get: () => canvas.width }, drawingBufferHeight: { get: () => canvas.height } });
   for (let size = 1; size <= 4; size++) {
     gl[`uniform${size}f`] = (location, ...values) => uniform(location, size, size, values);
-    gl[`uniform${size}fv`] = (location, values, offset = 0, length) => uniform(location, size, size, Array.from(values).slice(offset, length === undefined ? undefined : offset + length));
+    gl[`uniform${size}fv`] = (location, values, offset = 0, length) => uniform(location, size, size, uniformSlice(values, offset, length));
     gl[`uniform${size}i`] = (location, ...values) => uniform(location, size + 4, size, values, true);
-    gl[`uniform${size}iv`] = (location, values, offset = 0, length) => uniform(location, size + 4, size, Array.from(values).slice(offset, length === undefined ? undefined : offset + length), true);
+    gl[`uniform${size}iv`] = (location, values, offset = 0, length) => uniform(location, size + 4, size, uniformSlice(values, offset, length), true);
     gl[`uniform${size}ui`] = (location, ...values) => uniform(location, size + 11, size, values, false, true);
-    gl[`uniform${size}uiv`] = (location, values, offset = 0, length) => uniform(location, size + 11, size, Array.from(values).slice(offset, length === undefined ? undefined : offset + length), false, true);
+    gl[`uniform${size}uiv`] = (location, values, offset = 0, length) => uniform(location, size + 11, size, uniformSlice(values, offset, length), false, true);
     gl[`vertexAttrib${size}fv`] = (index, values) => record(18, [index, values[0], size > 1 ? values[1] : 0, size > 2 ? values[2] : 0, size > 3 ? values[3] : 1], [1,2,3,4]);
   }
   for (let size = 2; size <= 4; size++) gl[`uniformMatrix${size}fv`] = (location, transpose, values, offset = 0, length) => {
     if (transpose) throw new Error('GLSL matrices require transpose=false');
-    uniform(location, size + 7, size * size, Array.from(values).slice(offset, length === undefined ? undefined : offset + length));
+    uniform(location, size + 7, size * size, uniformSlice(values, offset, length));
   };
   return gl;
 }

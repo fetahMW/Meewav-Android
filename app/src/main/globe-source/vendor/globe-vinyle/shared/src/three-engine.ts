@@ -131,6 +131,7 @@ export async function createThree(
     };
     (window as any).meewavNativeGlobeStatus = () => nativeContext._status();
     (window as any).meewavNativeGlobeGpuInfo = () => nativeContext._gpuInfo();
+    (window as any).meewavNativeGlobePerformance = () => nativeContext._performance();
   }
   scene.add(createStarSky(renderer.getPixelRatio()));
   const metrics = createMotionMetrics();
