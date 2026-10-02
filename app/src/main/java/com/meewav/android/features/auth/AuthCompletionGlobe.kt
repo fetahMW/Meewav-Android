@@ -65,6 +65,7 @@ import com.meewav.android.BuildConfig
 import com.meewav.android.app.MeewavApplication
 import com.meewav.android.features.messaging.MessagingActivity
 import com.meewav.android.features.profile.ProfileActivity
+import com.meewav.android.core.navigation.NativeNavigationDock
 
 /** Only the globe is rendered in the local WebView; navigation and CTA remain native. */
 @Composable
@@ -238,6 +239,7 @@ private class AuthGlobeController(private val fullScene: Boolean, private val ho
                 .bufferedReader().use { it.readText() }) else null
             globeView.webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                    if (fullScene && NativeNavigationDock.consume(context, view, request, "/globe-vinyle/index.html")) return true
                     if (fullScene && request.isForMainFrame && request.method == "GET"
                         && request.url.scheme == "https" && request.url.host == "appassets.androidplatform.net"
                         && request.url.path in setOf("/native/messages", "/native/profile", "/native/tremplin", "/native/market", "/native/scene", "/native/rooms")) {
@@ -352,6 +354,7 @@ private class AuthGlobeController(private val fullScene: Boolean, private val ho
 
     fun setLifecycleActive(active: Boolean) {
         resumed = active
+        if (active && fullScene && ready) view?.let { it.evaluateJavascript(NativeNavigationDock.javascript(it.context), null) }
         refreshActivity()
     }
 
@@ -473,6 +476,13 @@ internal fun fullGlobeAsset(context: Context, request: WebResourceRequest, manif
         if (mime.startsWith("audio/") || mime.startsWith("video/")) {
             return localMediaAsset(context, "globe-vinyle/$asset", mime, record.getLong("bytes"),
                 request.requestHeaders.entries.firstOrNull { it.key.equals("Range", ignoreCase = true) }?.value)
+        }
+        if (asset == "index.html" && request.isForMainFrame) {
+            val source = context.assets.open("globe-vinyle/$asset").bufferedReader().use { it.readText() }
+            val bytes = NativeNavigationDock.html(context, source)
+            return WebResourceResponse(mime, "utf-8", 200, "OK",
+                mapOf("Cache-Control" to "no-store", "X-Content-Type-Options" to "nosniff",
+                    "Content-Length" to bytes.size.toString()), ByteArrayInputStream(bytes))
         }
         WebResourceResponse(mime,
             if (mime.startsWith("text/") || mime in setOf("application/javascript", "application/json", "image/svg+xml")) "utf-8" else null,

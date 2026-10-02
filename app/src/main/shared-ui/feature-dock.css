@@ -6,6 +6,13 @@
   transition: transform 260ms cubic-bezier(.22,.75,.25,1);
 }
 .feature-dock-host.is-collapsed { transform: translateY(76px); }
+/* The native toggle exchanges our dock for the fixed Android navigation bar.
+   Its restore handle stays above the system inset with a 44px touch target. */
+.feature-dock-host[data-navigation-owner="system"] { transform: translateY(60px); }
+.feature-dock-host[data-navigation-owner] .feature-dock-toggle {
+  top: -16px; height: 44px; padding: 16px 0 0; box-sizing: border-box;
+}
+.feature-dock-host[data-navigation-owner="system"] .feature-dock-toggle { top: 0; padding: 0; }
 .feature-dock-host.is-editing { visibility: hidden; pointer-events: none; }
 .feature-dock-host .feature-dock-toggle {
   position: absolute; top: 0; left: 50%; transform: translateX(-50%);

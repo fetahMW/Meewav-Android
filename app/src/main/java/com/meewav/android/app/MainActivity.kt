@@ -23,8 +23,10 @@ import com.meewav.android.features.auth.AuthPage
 import com.meewav.android.features.messaging.MessagingActivity
 import com.meewav.android.features.profile.ProfileActivity
 import com.meewav.android.BuildConfig
+import com.meewav.android.core.navigation.NativeNavigationDock
+import com.meewav.android.core.navigation.NavigationDockOwner
 
-class MainActivity : ComponentActivity() {
+class MainActivity : ComponentActivity(), NavigationDockOwner {
     companion object {
         const val EXTRA_OPEN_GLOBE = "com.meewav.android.OPEN_GLOBE"
         const val EXTRA_OPEN_MESSAGES = "com.meewav.android.OPEN_MESSAGES"
@@ -36,6 +38,8 @@ class MainActivity : ComponentActivity() {
         const val EXTRA_LIVE_AUTH = "com.meewav.android.LIVE_AUTH"
     }
     private lateinit var authViewModel: AuthViewModel
+    private var navigationDockAvailable = true
+    private var stopObservingNavigation: (() -> Unit)? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // The system launch window uses the shared vinyl; normal content keeps its usual theme.
@@ -75,15 +79,42 @@ class MainActivity : ComponentActivity() {
             rotationAnimation = if (page == AuthPage.Globe) WindowManager.LayoutParams.ROTATION_ANIMATION_SEAMLESS
                 else WindowManager.LayoutParams.ROTATION_ANIMATION_ROTATE
         }
-        WindowCompat.getInsetsController(window, window.decorView).apply {
-            if (immersive) {
+        if (page == AuthPage.Preview) {
+            WindowCompat.getInsetsController(window, window.decorView).apply {
                 systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                 hide(WindowInsetsCompat.Type.systemBars())
-            } else {
-                systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
-                show(WindowInsetsCompat.Type.systemBars())
             }
+        } else {
+            NativeNavigationDock.apply(this, page == AuthPage.Globe && navigationDockAvailable, immersive)
         }
+    }
+
+    override fun onNavigationDockAvailabilityChanged(available: Boolean) {
+        navigationDockAvailable = available
+        if (::authViewModel.isInitialized) applyDisplayMode(authViewModel.state.value.page)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        stopObservingNavigation = NativeNavigationDock.observe(this) {
+            if (::authViewModel.isInitialized) applyDisplayMode(authViewModel.state.value.page)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (::authViewModel.isInitialized) applyDisplayMode(authViewModel.state.value.page)
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus && ::authViewModel.isInitialized) applyDisplayMode(authViewModel.state.value.page)
+    }
+
+    override fun onStop() {
+        stopObservingNavigation?.invoke()
+        stopObservingNavigation = null
+        super.onStop()
     }
 
     override fun onNewIntent(intent: Intent) {

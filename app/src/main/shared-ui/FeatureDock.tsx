@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { Mail, UserRound, Box, Play, Store, Rocket, ChevronDown, ChevronUp } from 'lucide-react';
@@ -6,6 +6,7 @@ import NavGlobeTexture from '../globe-source/full-globe-nav-texture';
 import { NAVBAR_GLOBE_PALETTE } from '../globe-source/vendor/globe-vinyle/shared/src/globe-palette.mjs';
 import './feature-dock.css';
 import './feature-header-material.css';
+import { navigationDockMode } from './navigation-dock-mode.mjs';
 
 export const featureItems = [
   { id: 'messages', label: 'Messagerie', Icon: Mail },
@@ -18,16 +19,25 @@ export const featureItems = [
 
 /** Shared Profile/Tremplin geometry and material, sourced from profile mobile.css. */
 export default function FeatureDock({ active, onSelect, compact = false, layout = 'bottom', deviceFixed = false }: { active: string; onSelect: (id: string) => void; compact?: boolean; layout?: 'bottom' | 'globe'; deviceFixed?: boolean }) {
-  const [collapsed, setCollapsed] = useState(compact);
+  const nativeNavigation = useSyncExternalStore(navigationDockMode.subscribe, navigationDockMode.getSnapshot);
+  const nativeManaged = nativeNavigation.mode !== null;
+  const [legacyCollapsed, setCollapsed] = useState(compact);
   const [editing, setEditing] = useState(false);
   const [covered, setCovered] = useState(false);
+  const collapsed = nativeManaged ? nativeNavigation.mode === 'system' || editing : legacyCollapsed;
   const manualUntil = useRef(0);
   const route = useLocation();
-  useEffect(() => { setCollapsed(compact); }, [compact, route.key]);
+  useEffect(() => { if (!nativeManaged) setCollapsed(compact); }, [compact, route.key, nativeManaged]);
+  // Keyboard and modal content hide the dock: Android back/home must remain
+  // available during that interval, without changing the chosen owner.
+  useEffect(() => nativeManaged && !editing && !covered ? navigationDockMode.retainDock() : undefined,
+    [nativeManaged, editing, covered]);
   useLayoutEffect(() => {
-    document.documentElement.style.setProperty('--feature-dock-inset', editing ? '0px' : collapsed ? '28px' : '104px');
+    document.documentElement.style.setProperty('--feature-dock-inset', nativeManaged
+      ? covered ? '0px' : collapsed ? '44px' : '104px'
+      : editing ? '0px' : collapsed ? '28px' : '104px');
     return () => document.documentElement.style.removeProperty('--feature-dock-inset');
-  }, [collapsed, editing]);
+  }, [collapsed, editing, covered, nativeManaged]);
   useEffect(() => {
     // Sheets belong above the dock even when their feature creates an isolated
     // stacking context. Do not cover a sheet's footer with navigation controls.
@@ -55,7 +65,7 @@ export default function FeatureDock({ active, onSelect, compact = false, layout 
     return () => { document.removeEventListener('focusin', focus); document.removeEventListener('focusout', blur); };
   }, []);
   useEffect(() => {
-    if (compact || deviceFixed) return; // The globe dock folds only on its own control.
+    if (compact || deviceFixed || nativeManaged) return; // Native ownership changes only on the chevron.
     let gestureAt = 0, distance = 0, previousTarget: HTMLElement | null = null, previousY = 0;
     const gesture = () => { gestureAt = performance.now(); };
     const scroll = (event: Event) => {
@@ -80,18 +90,26 @@ export default function FeatureDock({ active, onSelect, compact = false, layout 
       document.removeEventListener('wheel', gesture);
       document.removeEventListener('scroll', scroll, true);
     };
-  }, [compact, deviceFixed]);
+  }, [compact, deviceFixed, nativeManaged]);
   const item = ({ id, label, Icon }: typeof featureItems[number]) => <button key={id} type="button"
     aria-label={label} aria-current={id === active ? 'page' : undefined} onClick={() => onSelect(id)}>
     {deviceFixed ? <div className="feature-dock-rotor"><Icon /></div> : <Icon />}<span>{label}</span>
   </button>;
   const globe = <><NavGlobeTexture landColor={NAVBAR_GLOBE_PALETTE.land} size={56} rotationSeconds={40} />
     <span className="profile-bottom-dock__globe-light" /></>;
-  const dock = <div className={`feature-dock-host${layout === 'globe' ? ' is-globe' : ''}${collapsed ? ' is-collapsed' : ''}${editing || covered ? ' is-editing' : ''}`}>
-    <button type="button" className="feature-dock-toggle" aria-label={collapsed ? 'Afficher la navigation' : 'Replier la navigation'}
+  const dock = <div data-navigation-owner={nativeManaged ? (collapsed ? 'system' : 'app') : undefined}
+    className={`feature-dock-host${layout === 'globe' ? ' is-globe' : ''}${collapsed ? ' is-collapsed' : ''}${covered || (!nativeManaged && editing) ? ' is-editing' : ''}`}>
+    <button type="button" className="feature-dock-toggle" disabled={nativeNavigation.pending}
+      aria-label={nativeManaged ? (collapsed ? 'Afficher la navigation Meewav' : 'Afficher la barre de navigation du téléphone') : (collapsed ? 'Afficher la navigation' : 'Replier la navigation')}
       aria-expanded={!collapsed} aria-controls="feature-dock-navigation" onClick={() => {
         manualUntil.current = performance.now() + 1600;
-        setCollapsed(value => !value);
+        if (nativeManaged && editing) {
+          // Keep the restore handle usable above the keyboard, including after
+          // Android Back closes the IME while leaving the input focused.
+          if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+          if (nativeNavigation.mode === 'system') navigationDockMode.toggle();
+        } else if (nativeManaged) navigationDockMode.toggle();
+        else setCollapsed(value => !value);
       }}>{collapsed ? <ChevronUp /> : <ChevronDown />}</button>
     <nav id="feature-dock-navigation" className="profile-bottom-dock" aria-label="Navigation principale Meewav" inert={collapsed || editing}>
     <div className="profile-bottom-dock__surface" />

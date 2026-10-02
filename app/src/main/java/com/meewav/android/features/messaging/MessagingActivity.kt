@@ -32,13 +32,13 @@ import androidx.activity.SystemBarStyle
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.meewav.android.BuildConfig
 import com.meewav.android.app.MeewavApplication
 import com.meewav.android.app.MainActivity
 import com.meewav.android.core.auth.CanonicalAvatar
+import com.meewav.android.core.navigation.NativeNavigationDock
+import com.meewav.android.core.navigation.NavigationDockOwner
 import com.meewav.android.features.auth.AvatarCatalog
 import com.meewav.android.features.auth.localMediaAsset
 import io.github.jan.supabase.auth.status.SessionStatus
@@ -52,7 +52,7 @@ import org.json.JSONArray
 import java.io.ByteArrayInputStream
 
 /** Bundled messaging UI; only the configured Supabase origin can receive API traffic. */
-open class MessagingActivity : ComponentActivity() {
+open class MessagingActivity : ComponentActivity(), NavigationDockOwner {
     protected open val assetSurface = "messaging"
     protected open val defaultRoute = "/messages?space=messages"
     /** Opt-in surfaces paint their own backdrop behind the transparent status bar. */
@@ -68,6 +68,8 @@ open class MessagingActivity : ComponentActivity() {
     private var statusBarTopInset = 0
     private var started = false
     private var resumed = false
+    private var navigationDockAvailable = true
+    private var stopObservingNavigation: (() -> Unit)? = null
     private var accessToken: String? = null
     private var profileId: String? = null
     private var fileResult: ValueCallback<Array<Uri>>? = null
@@ -159,6 +161,10 @@ open class MessagingActivity : ComponentActivity() {
         enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(
             if (drawBehindStatusBar) Color.TRANSPARENT else Color.rgb(8, 8, 16)),
             navigationBarStyle = SystemBarStyle.dark(Color.rgb(8, 8, 16)))
+        val entry = Uri.parse(intent.getStringExtra("route") ?: defaultRoute)
+        navigationDockAvailable = !(assetSurface == "rooms" &&
+            (entry.path == "/rooms/create" || entry.getQueryParameter("launch") == "cage"))
+        applyNavigationDisplayMode()
         container = FrameLayout(this).apply {
             setBackgroundColor(Color.rgb(8, 8, 16))
         }
@@ -206,10 +212,7 @@ open class MessagingActivity : ComponentActivity() {
                     else ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
                 web.visibility = View.GONE
                 container.addView(view, FrameLayout.LayoutParams(-1, -1))
-                WindowCompat.getInsetsController(window, container).apply {
-                    systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                    hide(WindowInsetsCompat.Type.systemBars())
-                }
+                applyNavigationDisplayMode()
             }
             override fun onHideCustomView() { closeFullscreenVideo() }
             override fun onShowFileChooser(view: WebView, callback: ValueCallback<Array<Uri>>, params: FileChooserParams): Boolean {
@@ -244,6 +247,7 @@ open class MessagingActivity : ComponentActivity() {
         }
         web.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                if (NativeNavigationDock.consume(this@MessagingActivity, view, request, "/$assetSurface/index.html")) return true
                 if (assetSurface == "messaging" && view.url == PAGE && request.isForMainFrame
                     && request.url.scheme == "https" && request.url.host == "appassets.androidplatform.net"
                     && request.url.path == "/native/call-audio") {
@@ -479,7 +483,7 @@ open class MessagingActivity : ComponentActivity() {
         container.removeView(view)
         web.visibility = View.VISIBLE
         requestedOrientation = orientationBeforeVideo
-        WindowCompat.getInsetsController(window, container).show(WindowInsetsCompat.Type.systemBars())
+        applyNavigationDisplayMode()
         val callback = fullscreenCallback
         fullscreenCallback = null
         callback?.onCustomViewHidden()
@@ -497,7 +501,8 @@ open class MessagingActivity : ComponentActivity() {
             .put("route", route).put("nativeVoice", assetSurface == "messaging")
         // Evaluate only into the fixed, local document. No JavaScript interface,
         // refresh token, URL credential, log or WebView persistence is used.
-        if (web.url == PAGE) web.evaluateJavascript("window.meewavMessaging.configure($payload);", null)
+        if (web.url == PAGE) web.evaluateJavascript(NativeNavigationDock.javascript(this) +
+            "window.meewavMessaging.configure($payload);", null)
     }
     private fun csp(): String {
         val remote = if (!preview && service.scheme == "https" && !service.host.isNullOrBlank()) "https://${service.authority} wss://${service.authority}" else ""
@@ -529,6 +534,8 @@ open class MessagingActivity : ComponentActivity() {
     }
     private fun showUnavailable(message: String) {
         if (isFinishing) return
+        navigationDockAvailable = false
+        applyNavigationDisplayMode()
         val content = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = android.view.Gravity.CENTER; setPadding(40, 40, 40, 40); setBackgroundColor(Color.rgb(8, 8, 16)) }
         content.addView(TextView(this).apply { text = message; textSize = 17f; setTextColor(Color.WHITE); gravity = android.view.Gravity.CENTER })
         content.addView(Button(this).apply { text = "Retour au globe"; setOnClickListener { finish() } })
@@ -543,7 +550,38 @@ open class MessagingActivity : ComponentActivity() {
         callAudio.stop()
         if (::web.isInitialized) { web.evaluateJavascript("window.meewavMessaging?.setActive(false);", null); web.onPause() }
     }
-    override fun onResume() { super.onResume(); stopped = false; resumed = true; if (::web.isInitialized) { web.onResume(); web.evaluateJavascript("window.meewavMessaging?.setActive(true); window.dispatchEvent(new Event('meewav:resume'));", null) } }
+    private fun applyNavigationDisplayMode() {
+        NativeNavigationDock.apply(this, navigationDockAvailable && fullscreenView == null, fullscreenView != null)
+    }
+
+    override fun onNavigationDockAvailabilityChanged(available: Boolean) {
+        navigationDockAvailable = available
+        applyNavigationDisplayMode()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        stopObservingNavigation = NativeNavigationDock.observe(this) {
+            applyNavigationDisplayMode()
+            if (::web.isInitialized && web.url == PAGE) web.evaluateJavascript(NativeNavigationDock.javascript(this), null)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        stopped = false; resumed = true
+        applyNavigationDisplayMode()
+        if (::web.isInitialized) {
+            web.onResume()
+            web.evaluateJavascript(NativeNavigationDock.javascript(this) +
+                "window.meewavMessaging?.setActive(true); window.dispatchEvent(new Event('meewav:resume'));", null)
+        }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) applyNavigationDisplayMode()
+    }
     override fun onPause() {
         resumed = false
         // Android's permission sheet pauses this Activity. Cancelling the JS
@@ -552,6 +590,8 @@ open class MessagingActivity : ComponentActivity() {
         super.onPause()
     }
     override fun onStop() {
+        stopObservingNavigation?.invoke()
+        stopObservingNavigation = null
         closeFullscreenVideo()
         stopped = true
         voicePermissionId = null; voice.abort()
