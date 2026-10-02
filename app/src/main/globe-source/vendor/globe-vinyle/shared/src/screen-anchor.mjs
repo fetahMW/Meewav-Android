@@ -14,7 +14,7 @@ export function createScreenAnchorSolver() {
   const latDerivative = new T.Vector2(), candidate = new T.Vector2();
   const weights = [1, .5, .25];
   return function solve({ view, camera, point, x, y, width, height, updateCamera, align = null, latitudeLimit = 85,
-    radius = RADIUS, screenOffset = null }) {
+    radius = RADIUS, screenOffset = null, maxIterations = 5 }) {
   const entry = { lon: view.lon, lat: view.lat };
   const rollback = () => {
     view.lon = entry.lon;
@@ -33,7 +33,8 @@ export function createScreenAnchorSolver() {
     return out;
   };
   // Solve in screen space, which stays continuous when an anchor passes over a pole.
-  for (let i = 0; i < 5; i++) {
+  const iterations = Number.isFinite(maxIterations) ? clamp(Math.floor(maxIterations), 1, 24) : 5;
+  for (let i = 0; i < iterations; i++) {
     project(current); error.copy(target).sub(current);
     if (error.length() < 0.15) return true;
     const original = { lon: view.lon, lat: view.lat },

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { PerspectiveCamera, Vector3, Matrix4, Quaternion, Euler } from 'three';
 import { groundArtistPopup } from '../../app/src/main/globe-source/ground-artist-popup';
-import { createGroundAvatarEmphasis } from '../../app/src/main/globe-source/ground-avatar-selection.mjs';
+import { createGroundAvatarEmphasis, groundAvatarSelectionMetrics } from '../../app/src/main/globe-source/ground-avatar-selection.mjs';
 import { createGroundArtistDestination, createGroundArtistFlight } from '../../app/src/main/globe-source/ground-artist-flight.mjs';
 import { createCamera } from '../../app/src/main/globe-source/vendor/globe-vinyle/shared/src/camera.mjs';
 import { createOrbitCameraUpdater } from '../../app/src/main/globe-source/vendor/globe-vinyle/shared/src/orbit-camera.mjs';
@@ -12,9 +12,9 @@ const metresToWorld = RADIUS / 6371000;
 const near = (actual, expected, tolerance = 1e-8) => assert.ok(Math.abs(actual - expected) <= tolerance,
   `Expected ${actual} within ${tolerance} of ${expected}`);
 
-function geographicFixture({ landscape = false, roll = 0, pitch = 45, height = .015, host = false } = {}) {
+function geographicFixture({ landscape = false, roll = 0, pitch = 45, height = .015, host = false, bearing = 32, artistOffset = null } = {}) {
   const size = landscape ? { width: 863, height: 412 } : { width: 412, height: 863 };
-  const motion = createCamera({ lon: 2.365, lat: 48.855, height, pitch, bearing: 32 });
+  const motion = createCamera({ lon: 2.365, lat: 48.855, height, pitch, bearing });
   const initial = { ...motion.view };
   const camera = new PerspectiveCamera(38, size.width / size.height, .00002, 500);
   const align = new Quaternion().setFromEuler(new Euler(.24, .15, -.38));
@@ -31,7 +31,8 @@ function geographicFixture({ landscape = false, roll = 0, pitch = 45, height = .
     ['artist-1', { lon: 2.366, lat: 48.856 }],
     ['artist-2', { lon: 2.3645, lat: 48.8555 }],
   ].map(([id, point]) => [id, { ...point, id, radius: RADIUS + 10 * metresToWorld,
-    halfSizeWorld: 53.3 * (host ? 2.5 * 4 : 3.65) * .003 / 2 }]));
+    halfSizeWorld: groundAvatarSelectionMetrics({ size: 53.3 * (host ? 2.5 : 1), avatar: { isHost: host } }).halfSpriteSize * .003 }]));
+  if (artistOffset) Object.assign(artists.get('artist-1'), { lon: initial.lon + artistOffset.lon, lat: initial.lat + artistOffset.lat });
   const events = new EventTarget(), flights = [];
   let enabled = true, currentFlightId = null, invalidations = 0;
   const project = (identity = 'artist-1') => {
@@ -66,7 +67,7 @@ function geographicFixture({ landscape = false, roll = 0, pitch = 45, height = .
     detail: { source: 'ground', identity },
   }));
   const step = (dt = 1 / 60) => { controller.flush(); motion.tick(dt); update(); };
-  const finish = () => { for (let i = 0; i < 90; i++) step(); };
+  const finish = () => { for (let i = 0; i < 180; i++) step(); };
   return { camera, motion, initial, artists, flights, controller, target, solve, project, request, dismiss, step, finish,
     set enabled(value) { enabled = value; }, get invalidations() { return invalidations; } };
 }
@@ -164,6 +165,33 @@ test('physical centring works in both phone orientations, rolled projections and
 test('a centred artist can reopen without an unnecessary second fly', () => {
   const f = geographicFixture(); f.request(); f.finish(); f.dismiss();
   f.request(); f.finish(); assert.equal(f.flights.length, 1); f.controller.dispose();
+});
+
+test('a visible distant horizon artist always starts a real fly and arrives under the card', () => {
+  const f = geographicFixture({ height: .1, pitch: 75, bearing: 0, artistOffset: { lon: 0, lat: .12 } });
+  const initialPoint = f.project();
+  assert.ok(initialPoint.x >= 0 && initialPoint.x <= 412 && initialPoint.y >= 0 && initialPoint.y <= 863);
+  f.request(); f.controller.flush();
+  assert.equal(f.flights.length, 1);
+  assert.ok(f.flights[0].duration > 1000);
+  f.finish();
+  near(f.project().x, f.target.x, 1); near(f.project().y, f.target.y, 1);
+  assert.ok(f.motion.view.lat > f.initial.lat + .1);
+  f.controller.dispose();
+});
+
+test('arrival remains reachable for far, close and side avatars at steep tilts in both orientations', () => {
+  for (const landscape of [false, true]) for (const pitch of [45, 60, 75]) for (const height of [.003, .008, .015, .1]) {
+    for (const host of [false, true]) for (const artistOffset of [{ lon: .005, lat: 0 }, { lon: -.04, lat: 0 }, { lon: .04, lat: .01 }, { lon: 0, lat: .12 }]) {
+      const f = geographicFixture({ landscape, pitch, height, host, artistOffset });
+      f.request(); f.finish();
+      assert.equal(f.flights.length, 1, `landscape=${landscape} pitch=${pitch} height=${height} host=${host} offset=${JSON.stringify(artistOffset)}`);
+      near(f.project().x, f.target.x, 1); near(f.project().y, f.target.y, 1);
+      assert.ok(f.motion.view.height >= height && f.motion.view.height <= height * 2);
+      near(f.motion.view.pitch, pitch); near(f.motion.view.bearing, 32);
+      f.controller.dispose();
+    }
+  }
 });
 
 test('nearby camera movement stays flat while a farther flight only has a bounded small hop', () => {

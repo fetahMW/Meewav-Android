@@ -37,13 +37,40 @@ export function createGroundArtistDestination({ camera, view, align = null, roll
     const pixelDistance = Math.hypot((projected.x + 1) * width / 2 - target.x,
       (1 - projected.y) * height / 2 - halfSize - target.y);
     if (pixelDistance < 1) return { pose: { ...view }, duration: 0 };
-    const solved = solve({ view: scratchView, camera: scratch, point: [artist.lon, artist.lat],
+    // Resolve the destination around the artist, then apply the card's pixel
+    // offset. Newton from a distant horizon point can be singular or diverge;
+    // this geographic seed has the same local frame as hand navigation.
+    const options = { view: scratchView, camera: scratch, point: [artist.lon, artist.lat],
       radius: artist.radius, x: target.x, y: target.y, width, height, align, updateCamera: update,
+      maxIterations: 12,
       screenOffset: (workCamera, world) => {
         offset.y = -artist.halfSizeWorld / Math.max(workCamera.near, workCamera.position.distanceTo(world));
         return offset;
       },
-    });
+    };
+    const attempt = seed => {
+      Object.assign(scratchView, seed); update();
+      if (!solve(options)) return false;
+      projected.copy(point).project(scratch);
+      origin.copy(scratch.position).sub(point);
+      const facing = point.dot(origin) / (artist.radius * origin.length());
+      return Number.isFinite(projected.z) && projected.z >= -1 && projected.z <= 1 && facing >= .08;
+    };
+    let solved = attempt({ ...view, lon: artist.lon, lat: artist.lat });
+    if (!solved) {
+      // A very close, large host at a steep tilt can have another local
+      // solution. Continue from the displayed hand-navigation frame instead.
+      solved = attempt(view);
+    }
+    if (!solved) {
+      // At minimum altitude and a steep tilt, a large host can make this
+      // screen offset unreachable. Back off modestly instead of losing the fly
+      // or magnifying the portrait; keep its bearing and tilt unchanged.
+      for (const scale of [1.25, 1.5, 2]) {
+        solved = attempt({ ...view, lon: artist.lon, lat: artist.lat, height: view.height * scale });
+        if (solved) break;
+      }
+    }
     if (!solved) return null;
     origin.fromArray(xyz(view.lon, view.lat));
     destination.fromArray(xyz(scratchView.lon, scratchView.lat));
@@ -52,7 +79,8 @@ export function createGroundArtistDestination({ camera, view, align = null, roll
     // keeping the same altitude, heading and tilt at arrival.
     const hop = metres > 60 ? Math.min(12, (metres - 60) * .08, view.height / metresToWorld * .06) : 0;
     return { pose: { ...scratchView, localFlight: true, groundHopHeight: hop * metresToWorld },
-      duration: Math.round(Math.max(280, Math.min(780, 240 + pixelDistance * .9))) };
+      duration: Math.round(Math.max(280, Math.min(1800, 280 + 240 * Math.log1p(metres / 120)
+        + 180 * Math.abs(Math.log(scratchView.height / view.height))))) };
   };
 }
 

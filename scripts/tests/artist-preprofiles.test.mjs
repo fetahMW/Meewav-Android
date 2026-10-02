@@ -334,7 +334,7 @@ test('large nearby portraits cannot drive the camera target beyond the bottom ed
 test('selection restores enlarged portraits while keeping their feet in place', () => {
   for (const isHost of [false, true]) for (const size of [8, 24, 53.3, 133]) {
     const selected = groundAvatarSelectionMetrics({ size, avatar: { isHost } });
-    const expected = size * (isHost ? 4 : 3.65);
+    const expected = size * (isHost ? 1.15 : 1.25);
     near(selected.spriteBaseSize * selected.spriteScale, expected);
     assert.equal(selected.lift, 0);
     assert.equal(selected.spriteDrop, 0);

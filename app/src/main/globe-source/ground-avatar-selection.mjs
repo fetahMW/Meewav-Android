@@ -2,7 +2,8 @@
 export function groundAvatarSelectionMetrics(item, emphasis = 1) {
   const spriteBaseSize = item?.avatar?.isHost ? 60 : 56;
   const normalSize = Math.max(0, Number.isFinite(item?.size) ? item.size : spriteBaseSize);
-  const multiplier = 1 + (item?.avatar?.isHost ? 3 : 2.65) * Math.max(0, Math.min(1, emphasis));
+  // A selection cue stays secondary to the profile. Hosts are already larger.
+  const multiplier = 1 + (item?.avatar?.isHost ? .15 : .25) * Math.max(0, Math.min(1, emphasis));
   const size = normalSize * multiplier;
   return { spriteBaseSize, spriteScale: size / spriteBaseSize,
     spriteDrop: 0, lift: 0, halfSpriteSize: size / 2, size, multiplier };
