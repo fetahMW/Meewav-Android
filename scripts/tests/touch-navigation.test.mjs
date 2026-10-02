@@ -4,6 +4,7 @@ import * as T from 'three';
 import { createTouchNavigation, pairTransform } from '../../app/src/main/globe-source/touch-navigation.mjs';
 import { createTouchCamera } from '../../app/src/main/globe-source/touch-camera.mjs';
 import { createGlobeTouchRotation } from '../../app/src/main/globe-source/globe-touch-rotation.mjs';
+import { createGlobeSceneOrientation } from '../../app/src/main/globe-source/globe-scene-orientation.mjs';
 import { elasticDelta } from '../../app/src/main/globe-source/touch-elastic.mjs';
 import { createCamera } from '../../app/src/main/globe-source/vendor/globe-vinyle/shared/src/camera.mjs';
 import { createOrbitCameraUpdater } from '../../app/src/main/globe-source/vendor/globe-vinyle/shared/src/orbit-camera.mjs';
@@ -133,11 +134,14 @@ function geometry(initial={},viewport={}) {
   const align=viewport.align||null,unalign=align?.clone().invert();
   const motion=createCamera({lon:2.35,lat:48.86,height:2,pitch:30,bearing:0,...initial},false),view=motion.view;
   const camera=new T.PerspectiveCamera(38,width/height,.001,1000);
-  const updateCamera=createOrbitCameraUpdater(camera,view,align);
+  const updatePose=createOrbitCameraUpdater(camera,view,align);
+  const orientation=createGlobeSceneOrientation(camera);
+  const updateCamera=()=>{updatePose();orientation.apply();};
   function resize(w,h){width=w;height=h;camera.aspect=w/h;
     camera.fov=T.MathUtils.radToDeg(2*Math.atan(Math.tan(T.MathUtils.degToRad(19))/Math.min(1,camera.aspect)));
     camera.updateProjectionMatrix();updateCamera();}
   resize(width,height);
+  if(Number.isFinite(viewport.roll)){orientation.set(viewport.roll,0,0,height,true);orientation.apply();}
   const ray=new T.Raycaster(),sphere=new T.Sphere(new T.Vector3(),RADIUS);
   function pickPoint(x,y){ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),camera);
     const hit=ray.ray.intersectSphere(sphere,new T.Vector3());if(hit&&unalign)hit.applyQuaternion(unalign);
@@ -165,6 +169,21 @@ test('overview follows screen directions outside the globe at any bearing and or
         near(g.view.height,220);near(g.view.pitch,0);
       }
 });
+test('overview still follows the finger while the phone and scene roll between orientations',()=>{
+  for(const viewport of [{width:384,height:796},{width:796,height:384}])
+    for(const roll of [-90,-62,-24,24,62,90,180])
+      for(const [dx,dy] of [[8,0],[0,8],[-8,-5]]){
+        const g=geometry({height:220,pitch:0,bearing:43},{...viewport,roll,align:GLOBE_ALIGN});
+        const probe=[g.view.lon,g.view.lat],start=g.project(probe),from={x:viewport.width+30,y:viewport.height/2};
+        g.api.pan(from,{x:from.x+dx,y:from.y+dy},{anchor:null});
+        const end=g.project(probe),sx=end.x-start.x,sy=end.y-start.y;
+        assert.ok(sx*dx+sy*dy>0,`land moves against the finger at roll ${roll}`);
+        const angleError=Math.abs(sx*dy-sy*dx)/(Math.hypot(sx,sy)*Math.hypot(dx,dy));
+        assert.ok(angleError<.02,`off-axis motion ${angleError} at roll ${roll}`);
+        near(g.view.height,220);near(g.view.pitch,0);
+      }
+});
+
 test('overview has no change of direction or speed between land, silhouette and empty space',()=>{
   const cameras=[];
   for(const from of [{x:400,y:200},{x:565,y:200},{x:790,y:350}]){

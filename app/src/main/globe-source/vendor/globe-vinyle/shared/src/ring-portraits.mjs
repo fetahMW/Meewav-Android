@@ -230,7 +230,8 @@ export function createRingPortraits(scene, ring, camera, canvas, invalidate, pix
     popupCenter.project(camera);
     return { x: rect.left + (popupCenter.x + 1) * rect.width / 2,
       y: rect.top + (1 - popupCenter.y) * rect.height / 2,
-      clearance: Math.abs(popupEdge.x - popupCenter.x) * rect.width / 2,
+      clearance: Math.hypot((popupEdge.x - popupCenter.x) * rect.width / 2,
+        (popupEdge.y - popupCenter.y) * rect.height / 2),
       viewportWidth: anchorViewport.width, viewportHeight: anchorViewport.height };
   }
   function updateSelectedAnchor() {

@@ -10,7 +10,7 @@ const radians = Math.PI / 180;
 export function createGlobeTouchRotation({ camera, motion, updateCamera, height, align = null }) {
   const radial = new T.Vector3(), heading = new T.Vector3();
   const east = new T.Vector3(), north = new T.Vector3();
-  const right = new T.Vector3(), up = new T.Vector3(), axis = new T.Vector3();
+  const right = new T.Vector3(), up = new T.Vector3(), axis = new T.Vector3(), screenCenter = new T.Vector3();
   const rotation = new T.Quaternion(), unalign = align?.clone().invert();
   function basis(lon, lat) {
     east.set(Math.cos(lon), 0, -Math.sin(lon));
@@ -29,8 +29,11 @@ export function createGlobeTouchRotation({ camera, motion, updateCamera, height,
       heading.copy(north).multiplyScalar(Math.cos(bearing)).addScaledVector(east, Math.sin(bearing));
       if (align) { radial.applyQuaternion(align); heading.applyQuaternion(align); }
 
-      right.set(1, 0, 0).applyQuaternion(camera.quaternion);
-      up.set(0, 1, 0).applyQuaternion(camera.quaternion);
+      // The phone can roll the projection while the geographic camera stays
+      // unchanged. Use its visible screen axes so dragging follows the finger.
+      screenCenter.set(0, 0, 0).unproject(camera);
+      right.set(1, 0, 0).unproject(camera).sub(screenCenter).normalize();
+      up.set(0, 1, 0).unproject(camera).sub(screenCenter).normalize();
       axis.copy(up).multiplyScalar(dx).addScaledVector(right, dy).normalize();
       rotation.setFromAxisAngle(axis, -Math.hypot(dx, dy) * globeDragSpeed(camera, height()) * radians);
       radial.applyQuaternion(rotation); heading.applyQuaternion(rotation);
