@@ -1,10 +1,13 @@
 /* Mobile artist space: one summary, quiet cards, readable metrics and touch targets. */
-#root .mobile-tremplin .tremplin-my-dashboard { padding: 0; display: grid; gap: 16px; }
+#root .mobile-tremplin .tremplin-my-dashboard { width: 100%; min-width: 0; padding: 0; display: grid; gap: 16px; }
 #root .mobile-tremplin .tremplin-my-dashboard__header { padding: 4px 2px 0; gap: 8px; }
 #root .mobile-tremplin .tremplin-my-dashboard__header .tremplin-kicker { display: none; }
 #root .mobile-tremplin .tremplin-my-dashboard__header h1 { font-size: 25px; line-height: 1.15; margin: 0; }
 #root .mobile-tremplin .tremplin-my-dashboard__header p { font-size: 12px; line-height: 1.5; margin: 8px 0 0; color: #bab4c6; }
-#root .mobile-tremplin .tremplin-my-dashboard .mobile-tremplin-section { margin: 0; border-radius: 12px; }
+#root .mobile-tremplin .tremplin-my-dashboard__navigation { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 4px; min-width: 0; padding: 0; margin: 0; background: none; border: 0; }
+#root .mobile-tremplin .tremplin-my-dashboard__navigation > button { display: grid; place-items: center; min-width: 0; min-height: 44px; padding: 6px 3px; border: 1px solid #b0b5c02b; border-radius: 11px; background: linear-gradient(180deg,#24262b,#111215); color: #bfc2cc; box-shadow: inset 0 1px #ffffff13,inset 0 -1px #0008; font: inherit; font-size: clamp(10.5px,3vw,12px); font-weight: 600; line-height: 1.25; }
+#root .mobile-tremplin .tremplin-my-dashboard__navigation > button[aria-current="page"] { background: var(--mobile-violet-cta); border-color: var(--mobile-cta-rim); color: #fff; box-shadow: inset 0 1px #ffffff25,inset 0 -1px #a887ff38,0 3px 9px #0005; }
+#root .mobile-tremplin .tremplin-my-dashboard__navigation > button:focus-visible { outline: 2px solid #c6b4ef; outline-offset: 2px; }
 #root .mobile-tremplin .tremplin-my-artists-summary { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0; padding: 0 14px 6px; border: 1px solid #c8bcdf30; border-radius: 18px; background: linear-gradient(135deg,#191720ee,#0c0c14f5); box-shadow: inset 0 1px #ffffff0d; }
 #root .mobile-tremplin .tremplin-my-artists-summary > article { min-height: 64px; padding: 10px 0; border: 0; border-radius: 0; border-top: 1px solid #c8bcdf18; gap: 5px; background: none; box-shadow: none; }
 #root .mobile-tremplin .tremplin-my-artists-summary > article:nth-child(2n+3) { padding-left: 12px; }
@@ -25,13 +28,13 @@
 #root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-grid { display: grid; grid-template-columns: minmax(0,1fr); gap: 12px; }
 #root .mobile-tremplin .tremplin-my-dashboard__overview .tremplin-my-token-grid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding-bottom: 3px; }
 #root .mobile-tremplin .tremplin-my-dashboard__overview .tremplin-my-token-card { flex: 0 0 91%; scroll-snap-align: start; }
-#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card { display: flex; flex-direction: column; gap: 0; min-height: 0; padding: 14px; border-radius: 18px; border: 1px solid #c8bcdf30; background: linear-gradient(140deg,#191820f2,#0b0b11f5 70%); box-shadow: inset 0 1px #ffffff0d; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card { display: flex; flex-direction: column; gap: 0; min-height: 0; height: auto; overflow: visible; padding: 14px; border-radius: 18px; border: 1px solid #b0b5c02b; background: var(--my-card-surface); box-shadow: var(--my-surface-edge); }
 #root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card::before { display: none; }
 #root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card__header { grid-template-columns: 50px minmax(0,1fr) 32px; gap: 10px; padding-bottom: 12px; }
 #root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card__header > img { width: 50px; height: 58px; border-radius: 11px; border: 1px solid #c8bcdf30; }
 #root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card__header h3 { font-size: 17px; margin: 3px 0; }
 #root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card__header small { font-size: 9px; letter-spacing: .12em; color: #bda6df; }
-#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card__header p { font-size: 10px; margin-top: 3px; color: #b2aabb; }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card__header p { display: block; overflow: visible; -webkit-line-clamp: unset; font-size: 11px; line-height: 1.45; margin-top: 3px; color: #aeb1bc; }
 #root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card__header .mw-grade-badge { --mw-grade-size: 32px !important; width: 32px; height: 32px; }
 #root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card__market { padding: 10px 0; }
 #root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-token-card__market > div > span { font-size: 10px; }
@@ -53,26 +56,35 @@
 #root .mobile-tremplin .tremplin-my-token-card__transaction-actions { display: grid; grid-template-columns: 1fr 1fr; grid-column: 1 / -1; gap: 6px; }
 #root .mobile-tremplin .tremplin-my-token-card__transaction-actions button { min-height: 44px; padding: 8px; border-radius: 12px; font-size: 11px; white-space: normal; }
 #root .mobile-tremplin .tremplin-my-token-card__transaction-actions .is-token-action { background: var(--mobile-violet-cta); }
-#root .mobile-tremplin .tremplin-my-dashboard__watch article { grid-template-columns: 44px minmax(0,1fr); padding: 12px; gap: 8px 10px; border-radius: 14px; background: #101017e0; }
+#root .mobile-tremplin .tremplin-my-dashboard__watch article { grid-template-columns: 44px minmax(0,1fr); min-width: 0; height: auto; padding: 14px; gap: 8px 10px; border-radius: 18px; background: var(--my-card-surface); border: 1px solid #b0b5c02b; }
 #root .mobile-tremplin .tremplin-my-dashboard__watch article > img { width: 44px; height: 50px; grid-row: 1 / 3; }
 #root .mobile-tremplin .tremplin-my-dashboard__watch article > button { grid-column: 2; justify-content: flex-start; text-align: left; min-height: 44px; max-width: none; font-size: 11px; }
-#root .mobile-tremplin .tremplin-my-dashboard :is(.tremplin-my-dashboard__activity,.tremplin-my-dashboard__rooms,.tremplin-my-dashboard__operations) { min-width: 0; padding: 14px; border-radius: 18px; background: linear-gradient(140deg,#181720e8,#0b0b12f2); border: 1px solid #c8bcdf28; box-shadow: inset 0 1px #ffffff09; }
+#root .mobile-tremplin .tremplin-my-dashboard :is(.tremplin-my-dashboard__activity,.tremplin-my-dashboard__rooms) { min-width: 0; padding: 0; gap: 14px; border: 0; background: none; box-shadow: none; }
+#root .mobile-tremplin .tremplin-my-dashboard :is(.tremplin-my-dashboard__activity,.tremplin-my-dashboard__rooms) > header { display: grid; min-width: 0; gap: 0; padding: 0 2px; }
+#root .mobile-tremplin .tremplin-my-dashboard :is(.tremplin-my-dashboard__activity,.tremplin-my-dashboard__rooms) > div { min-width: 0; gap: 12px; }
+#root .mobile-tremplin .tremplin-my-dashboard__operations { min-width: 0; padding: 14px; border-radius: 18px; background: var(--my-panel-surface); border: 1px solid #b0b5c02b; box-shadow: var(--my-surface-edge); }
 #root .mobile-tremplin .tremplin-my-dashboard__feed-filters { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; width: 100%; margin-top: 12px; }
 #root .mobile-tremplin .tremplin-my-dashboard__feed-filters label { min-width: 0; width: 100%; font-size: 10px; }
-#root .mobile-tremplin .tremplin-my-dashboard__feed-filters select { width: 100%; min-width: 0; font-size: 12px; padding: 8px; background: #13111c; color: #e6dfef; border: 1px solid #c8bcdf30; border-radius: 10px; }
+#root .mobile-tremplin .tremplin-my-dashboard__feed-filters select { width: 100%; min-width: 0; min-height: 44px; font-size: 13px; padding: 8px 10px; background: linear-gradient(180deg,#24262b,#111215); color: #e7e8ee; border: 1px solid #b0b5c030; border-radius: 11px; }
 #root .mobile-tremplin .tremplin-my-dashboard__feed-filters .is-checkbox { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; min-height: 44px; font-size: 12px; }
 #root .mobile-tremplin .tremplin-my-dashboard__feed-filters input[type=checkbox] { min-height: 20px; width: 20px; height: 20px; accent-color: #5137a1; }
-#root .mobile-tremplin .tremplin-my-dashboard__feed-filters > button { grid-column: 1 / -1; min-height: 44px; color: #c4afe3; border: 1px solid #c8bcdf25; border-radius: 12px; background: #15131d; font-size: 12px; }
-#root .mobile-tremplin .tremplin-my-dashboard__activity article { grid-template-columns: 36px minmax(0,1fr); padding: 10px 0; border: 0; border-top: 1px solid #c8bcdf1c; background: none; border-radius: 0; }
-#root .mobile-tremplin .tremplin-my-dashboard__activity article > img { width: 36px; height: 40px; }
-#root .mobile-tremplin .tremplin-my-dashboard__activity article > button { grid-column: 2; justify-self: start; padding: 0; color: #c4afe3; }
-#root .mobile-tremplin .tremplin-my-dashboard__activity article h3 { font-size: 13px; line-height: 1.4; }
-#root .mobile-tremplin .tremplin-my-dashboard__activity article p { font-size: 11px; line-height: 1.5; }
-#root .mobile-tremplin .tremplin-my-dashboard__rooms article { padding: 12px 0; border: 0; border-top: 1px solid #c8bcdf1c; border-radius: 0; background: none; }
+#root .mobile-tremplin .tremplin-my-dashboard__feed-filters > button { grid-column: 1 / -1; min-height: 44px; padding: 8px 12px; white-space: normal; color: #d6d8df; border: 1px solid #b0b5c030; border-radius: 11px; background: linear-gradient(180deg,#24262b,#111215); font-size: 12px; }
+#root .mobile-tremplin .tremplin-my-dashboard__activity article { grid-template-columns: 44px minmax(0,1fr); align-items: start; min-width: 0; height: auto; padding: 14px; gap: 8px 12px; border: 1px solid #b0b5c02b; background: var(--my-card-surface); border-radius: 18px; }
+#root .mobile-tremplin .tremplin-my-dashboard__activity article > img { width: 44px; height: 44px; border-radius: 50%; border: 1px solid #b0b5c030; object-fit: cover; }
+#root .mobile-tremplin .tremplin-my-dashboard__activity article > div { min-width: 0; }
+#root .mobile-tremplin .tremplin-my-dashboard__activity article > button { grid-column: 2; justify-self: start; min-height: 44px; padding: 0 8px 0 0; color: #c9b7ef; font-size: 12px; }
+#root .mobile-tremplin .tremplin-my-dashboard__activity article > button svg { width: 15px; height: 15px; }
+#root .mobile-tremplin .tremplin-my-dashboard__activity article h3 { font-size: 14px; line-height: 1.45; }
+#root .mobile-tremplin .tremplin-my-dashboard__activity article small { font-size: 11px; line-height: 1.45; color: #b7b9c3; }
+#root .mobile-tremplin .tremplin-my-dashboard__activity article p { font-size: 12px; line-height: 1.55; }
+#root .mobile-tremplin .tremplin-my-dashboard__activity article.is-unread { border-color: #b5a1ea46; }
+#root .mobile-tremplin .tremplin-my-dashboard__rooms article { grid-template-columns: 44px minmax(0,1fr); min-width: 0; height: auto; padding: 14px; gap: 12px; border: 1px solid #b0b5c02b; border-radius: 18px; background: var(--my-card-surface); }
+#root .mobile-tremplin .tremplin-my-dashboard__rooms article > img { width: 44px; height: 44px; border-radius: 50%; }
+#root .mobile-tremplin .tremplin-my-dashboard__rooms article > div { min-width: 0; }
 #root .mobile-tremplin .tremplin-my-dashboard__rooms article footer button { white-space: normal; font-size: 11px; padding: 8px; font-weight: 550; border-color: #c8bcdf30; background: #15131d; }
 #root .mobile-tremplin .tremplin-my-dashboard__rooms article footer button:first-child { background: var(--mobile-violet-cta); color: white; }
 #root .mobile-tremplin .tremplin-my-dashboard__followed > div { grid-template-columns: minmax(0,1fr); }
-#root .mobile-tremplin .tremplin-my-dashboard__followed article { grid-template-columns: 50px minmax(0,1fr) 32px; gap: 10px; padding: 14px; background: linear-gradient(140deg,#191820ee,#0b0b11f2); border-color: #c8bcdf30; }
+#root .mobile-tremplin .tremplin-my-dashboard__followed article { grid-template-columns: 50px minmax(0,1fr) 32px; gap: 10px; min-width: 0; height: auto; padding: 14px; background: var(--my-card-surface); border-color: #b0b5c02b; border-radius: 18px; }
 #root .mobile-tremplin .tremplin-my-dashboard__followed article > img { width: 50px; height: 60px; }
 #root .mobile-tremplin .tremplin-my-dashboard__followed article h3 { font-size: 16px; }
 #root .mobile-tremplin .tremplin-my-dashboard__followed article p { font-size: 11px; line-height: 1.4; }
@@ -86,14 +98,18 @@
 #root .mobile-tremplin .tremplin-my-dashboard__empty p { font-size: 13px; line-height: 1.5; }
 #root .mobile-tremplin .tremplin-my-dashboard__empty button { min-height: 44px; background: var(--mobile-violet-cta); border-radius: 12px; }
 #root .mobile-tremplin .tremplin-my-dashboard__rooms article footer { grid-template-columns: repeat(2,minmax(0,1fr)); }
-#root .mobile-tremplin .tremplin-my-dashboard__rooms article { box-shadow: none; }
+#root .mobile-tremplin .tremplin-my-dashboard__rooms article { box-shadow: var(--my-surface-edge); }
 #root .mobile-tremplin .tremplin-my-dashboard__followed article > .mw-grade-badge { --mw-grade-size: 32px !important; width: 32px; height: 32px; }
 #root .mobile-tremplin .tremplin-my-dashboard__feed-filters .is-checkbox { background: none; box-shadow: none; border: 0; padding: 0; }
 #root .mobile-tremplin .tremplin-my-dashboard__operations article { min-width: 0; width: 100%; }
 #root .mobile-tremplin .tremplin-my-dashboard__operations { overflow: visible; }
-#root .mobile-tremplin .tremplin-my-dashboard__activity article::before { display: none; }
+#root .mobile-tremplin .tremplin-my-dashboard__activity article.is-unread::before { display: block; width: 3px; height: 18px; left: -1px; top: 24px; border-radius: 0 3px 3px 0; }
 
 /* Private content stays legible over the acoustic background. */
 #root .mobile-tremplin :is(.ttw-workspace,.ttw-creator-shell,.ttw-creator-workspace,.tremplin-token-workspace,.tremplin-token-flow) { background: #111218; --ttw-surface: #191a22; --ttw-surface-soft: #20212b; --ttw-surface-quiet: #16171e; }
 #root .mobile-tremplin :is(.ttw-topbar,.ttw-creator-topbar,.ttw-dashboard-tabs,.mobile-tremplin-section) { background: #191823; }
-#root .mobile-tremplin .tremplin-my-dashboard :is(.tremplin-my-token-card,.tremplin-my-artists-summary,section > div > article) { background: linear-gradient(145deg,#24252b,#101116); }
+#root .mobile-tremplin .tremplin-my-dashboard .tremplin-my-artists-summary { background: var(--my-panel-surface); }
+/* Keep the last card clear of either dock owner, including a 180° turn. */
+#root .mobile-tremplin .tremplin-scroll:has(.tremplin-my-dashboard) { padding-bottom: calc(var(--feature-dock-inset,104px) + 20px); scroll-padding-bottom: calc(var(--feature-dock-inset,104px) + 20px); }
+#root .mobile-tremplin .tremplin-scroll:has(.tremplin-my-dashboard):has(~ .tremplin-now-playing),
+#root .mobile-tremplin .tremplin-page:has(.tremplin-now-playing) .tremplin-scroll:has(.tremplin-my-dashboard) { padding-bottom: calc(var(--feature-dock-inset,104px) + 84px); scroll-padding-bottom: calc(var(--feature-dock-inset,104px) + 84px); }

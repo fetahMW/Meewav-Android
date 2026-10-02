@@ -1026,8 +1026,13 @@ function MyArtistsView({
       {import.meta.env.DEV ? <small className="tremplin-demo-indicator">Données de démonstration</small> : null}
     </header>
 
-    <TremplinMobileSectionSelect value={tab} onChange={changeTab}
-      options={[['overview', 'Aperçu'], ['tokens', 'Mes jetons'], ['followed', 'Artistes suivis'], ['rooms', 'Rooms'], ['activity', 'Activité']] as const} />
+    <nav className="tremplin-my-dashboard__navigation" aria-label="Sections de Mes artistes">
+      {([['overview', 'Aperçu', 'Aperçu'], ['tokens', 'Jetons', 'Mes jetons'],
+        ['followed', 'Artistes', 'Artistes suivis'], ['rooms', 'Rooms', 'Rooms à venir'],
+        ['activity', 'Activité', 'Activité des artistes']] as const).map(([id, label, description]) =>
+        <button key={id} type="button" aria-label={description} aria-current={tab === id ? 'page' : undefined}
+          onClick={() => changeTab(id)}>{label}</button>)}
+    </nav>
 
     {tab === "overview" && <>
     {fixture.id === "populated" ? <section className="tremplin-my-artists-summary" aria-label="Résumé de tes jetons et artistes">
