@@ -4,6 +4,7 @@ import { createArtistPopupFraming } from '../../../../artist-popup-framing';
 import { createGroundArtistDestination, createGroundArtistFlight } from '../../../../ground-artist-flight.mjs';
 import { createGlobeSceneOrientation } from '../../../../globe-scene-orientation.mjs';
 import { createGlobeSurfaceFrame } from '../../../../globe-surface-frame.mjs';
+import { createNativeGlobeContext } from '../../../../native-gles-context.mjs';
 import { createTouchNavigation } from "../../../../touch-navigation.mjs";
 import { createTouchCamera } from "../../../../touch-camera.mjs";
 import { createRingPlayback } from "../../../../ring-playback";
@@ -103,10 +104,16 @@ export async function createThree(
   };
   let sceneDirty = true;
   let finishFirstFrame: (() => void) | undefined;
-  const firstFrame = new Promise<void>((resolve) => { finishFirstFrame = resolve; });
+  let failFirstFrame: ((error: unknown) => void) | undefined;
+  const firstFrame = new Promise<void>((resolve, reject) => { finishFirstFrame = resolve; failFirstFrame = reject; });
   const territoryFocus = createTerritoryFocus(matchMedia("(prefers-reduced-motion: reduce)").matches);
   const camera = new T.PerspectiveCamera(38, 1, 0.00002, 2000);
+  const useNativeGlobe = new URLSearchParams(location.search).get('renderer') === 'native';
+  const nativeCanvas = useNativeGlobe ? document.createElement('canvas') : undefined;
+  const nativeContext = nativeCanvas ? createNativeGlobeContext(nativeCanvas) : undefined;
+  if (useNativeGlobe) document.documentElement.dataset.nativeGlobe = 'gles3';
   const renderer = new T.WebGLRenderer({
+    ...(nativeCanvas ? { canvas: nativeCanvas, context: nativeContext as any } : {}),
     antialias: true,
     alpha: true,
     powerPreference: "high-performance",
@@ -116,6 +123,15 @@ export async function createThree(
   renderer.outputColorSpace = T.SRGBColorSpace;
   renderer.toneMapping = T.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.1;
+  if (nativeContext) {
+    const setSize = renderer.setSize.bind(renderer);
+    renderer.setSize = (width, height, updateStyle) => {
+      setSize(width, height, updateStyle);
+      nativeContext._resize(nativeCanvas!.width, nativeCanvas!.height);
+    };
+    (window as any).meewavNativeGlobeStatus = () => nativeContext._status();
+    (window as any).meewavNativeGlobeGpuInfo = () => nativeContext._gpuInfo();
+  }
   scene.add(createStarSky(renderer.getPixelRatio()));
   const metrics = createMotionMetrics();
   const cadenceProbe = createCadenceProbe();
@@ -196,8 +212,18 @@ export async function createThree(
           : Number(document.documentElement.dataset.globeDisplayRotation || 0))) {
         window.dispatchEvent(new Event('meewav:globe-surface'));
       }
-      finishFirstFrame?.();
-      finishFirstFrame = undefined;
+      if (nativeContext) {
+        const token = nativeContext._present();
+        if (finishFirstFrame) {
+          const finish = finishFirstFrame; finishFirstFrame = undefined;
+          nativeContext._whenPresented(token).then(() => { finish(); failFirstFrame = undefined; }, error => {
+            failFirstFrame?.(error); failFirstFrame = undefined;
+          });
+        }
+      } else { finishFirstFrame?.(); finishFirstFrame = undefined; }
+    } catch (error) {
+      failFirstFrame?.(error); failFirstFrame = undefined;
+      throw error;
     } finally { renderAudit.end(auditToken); renderer.info.autoReset = autoReset; }
   }
   const landGeometry = new T.BufferGeometry();
@@ -1699,6 +1725,11 @@ export async function createThree(
       });
       for (const pending of gpuQueries) gl.deleteQuery(pending.query);
       renderer.dispose();
+      nativeContext?._dispose();
+      if (nativeContext) {
+        delete (window as any).meewavNativeGlobeStatus;
+        delete (window as any).meewavNativeGlobeGpuInfo;
+      }
       canvas.remove();
       });
     },

@@ -13,6 +13,8 @@ import android.os.Looper
 import android.view.View
 import android.view.MotionEvent
 import android.view.ViewGroup
+import android.widget.FrameLayout
+import com.meewav.android.features.globe.NativeGlobeSurface
 import android.webkit.PermissionRequest
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -164,12 +166,15 @@ private val GlobeAssets = mapOf(
 )
 
 private class AuthGlobeController(private val fullScene: Boolean, private val homeScene: GlobeHomeScene?) {
+    private val useNative get() = fullScene && BuildConfig.NATIVE_GLOBE
     var previewMessages = false
     var onDockRotationChange: (Int) -> Unit = {}
     var onGlobeTurningChange: (Boolean) -> Unit = {}
-    private val page get() = if (fullScene) "$GlobeOrigin/globe-vinyle/index.html?mode=${if (previewMessages) "demo" else "real"}" else GlobePage
+    private val page get() = if (fullScene) "$GlobeOrigin/globe-vinyle/index.html?mode=${if (previewMessages) "demo" else "real"}${if (useNative) "&renderer=native" else ""}" else GlobePage
     private val api = if (fullScene) "meewavFullGlobe" else "meewavAuthGlobe"
     private var view: AuthGlobeWebView? = null
+    private var rootView: View? = null
+    private var nativeSurface: NativeGlobeSurface? = null
     private var dockOrientation: GlobeDockOrientation? = null
     private var resumed = false
     private var inViewport = false
@@ -184,7 +189,7 @@ private class AuthGlobeController(private val fullScene: Boolean, private val ho
 
     @SuppressLint("SetJavaScriptEnabled")
     @Suppress("DEPRECATION")
-    fun create(context: Context, interactive: Boolean): AuthGlobeWebView {
+    fun create(context: Context, interactive: Boolean): View {
         // Local ADB diagnostics for debug APKs only; release builds expose no
         // inspection endpoint. This does not enable any device-wide setting.
         WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG)
@@ -203,7 +208,8 @@ private class AuthGlobeController(private val fullScene: Boolean, private val ho
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT,
             )
             globeView.alpha = if (fullScene) 1f else 0f
-            globeView.setBackgroundColor(if (fullScene) AndroidColor.rgb(8, 9, 13) else AndroidColor.TRANSPARENT)
+            globeView.setBackgroundColor(if (fullScene && !useNative) AndroidColor.rgb(8, 9, 13) else AndroidColor.TRANSPARENT)
+            if (useNative) nativeSurface = NativeGlobeSurface(context).also { it.attach(globeView) }
             globeView.importantForAccessibility = if (fullScene) View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
                 else View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
             globeView.isVerticalScrollBarEnabled = false
@@ -299,7 +305,13 @@ private class AuthGlobeController(private val fullScene: Boolean, private val ho
             // A real asset URL, handled above from the APK before any network access.
             // loadDataWithBaseURL generated a data: request that our filter rejected.
             reload()
-        }
+        }.let { globeView ->
+            if (useNative) FrameLayout(context).apply {
+                layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                addView(nativeSurface, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+                addView(globeView, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+            } else globeView
+        }.also { rootView = it }
     }
 
     fun reload() {
@@ -312,6 +324,8 @@ private class AuthGlobeController(private val fullScene: Boolean, private val ho
         lastActive = null
         globeView.alpha = if (fullScene) 1f else 0f
         globeView.onResume()
+        nativeSurface?.setActive(true)
+        nativeSurface?.visibility = View.VISIBLE
         globeView.loadUrl(page)
     }
 
@@ -349,6 +363,8 @@ private class AuthGlobeController(private val fullScene: Boolean, private val ho
         ready = false
         unavailable = true
         webView.alpha = 0f
+        nativeSurface?.visibility = View.INVISIBLE
+        nativeSurface?.setActive(false)
         webView.evaluateJavascript("window.$api?.setActive(false);", null)
     }
 
@@ -384,14 +400,16 @@ private class AuthGlobeController(private val fullScene: Boolean, private val ho
             globeView.getGlobalVisibleRect(Rect())
         if (lastActive == active) return
         lastActive = active
-        if (active) globeView.onResume()
-        globeView.evaluateJavascript("window.$api.setActive($active);", null)
+        if (active) { nativeSurface?.setActive(true); globeView.onResume() }
+        globeView.evaluateJavascript("window.$api.setActive($active);") { nativeSurface?.setActive(active) }
         dockOrientation?.setActive(active)
         if (!active) globeView.onPause()
     }
 
-    fun release(globeView: AuthGlobeWebView) {
-        if (view !== globeView) return
+    fun release(releasedView: View) {
+        if (rootView !== releasedView) return
+        val globeView = view ?: return
+        rootView = null
         dockOrientation?.close()
         dockOrientation = null
         view = null
@@ -409,6 +427,8 @@ private class AuthGlobeController(private val fullScene: Boolean, private val ho
         val destroy = Runnable {
             if (!destroyed) {
                 destroyed = true
+                nativeSurface?.close()
+                nativeSurface = null
                 globeView.onPause()
                 globeView.removeAllViews()
                 globeView.destroy()

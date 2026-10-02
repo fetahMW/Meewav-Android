@@ -44,9 +44,13 @@ internal class GlobeRotationSurface(private val web: WebView) : AutoCloseable {
         web.evaluateJavascript("""
             (() => {
               const c = document.querySelector('.globe-stage canvas');
+              const native = window.meewavNativeGlobeStatus?.();
+              const nativeReady = !native || (!native.error
+                && native.presented >= Number(c?.dataset.nativeGlobeFrame || 1)
+                && native.appliedLayout >= native.layout);
               return !!c && c.dataset.globeDisplayRotation === '$rotation'
                 && c.clientWidth === c.parentElement.clientWidth
-                && c.clientHeight === c.parentElement.clientHeight;
+                && c.clientHeight === c.parentElement.clientHeight && nativeReady;
             })()
         """.trimIndent()) { ready ->
             if (!holding || request != generation) return@evaluateJavascript

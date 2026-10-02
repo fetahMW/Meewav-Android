@@ -533,3 +533,8 @@ html[data-globe-orientation="portrait"] .ring-player[data-profile-open="true"] :
 .ring-artist-preprofile[data-orientation="portrait"] .top-ten-profile-navigation {
   top: 52px; bottom: 60px; right: 2px; width: 28px;
 }
+/* Only the experimental native variant exposes the GLES surface underneath.
+   The same radial backdrop is composed by its native presentation shader. */
+html[data-native-globe], html[data-native-globe] body,
+html[data-native-globe] #root, html[data-native-globe] .immersive-globe,
+html[data-native-globe] .globe-stage { background: transparent !important; }

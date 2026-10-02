@@ -20,7 +20,7 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:usesCleartextTraffic="false"
         android:icon="@drawable/ic_launcher"
-        android:label="Meewav"
+        android:label="${meewavAppLabel}"
         android:supportsRtl="true"
         android:theme="@style/Theme.Meewav">
         <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.loge-media" android:exported="false" android:grantUriPermissions="true">

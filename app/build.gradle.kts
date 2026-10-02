@@ -30,13 +30,23 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
+        manifestPlaceholders["meewavAppLabel"] = "Meewav"
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64") }
         externalNativeBuild { cmake { arguments += "-DANDROID_STL=c++_shared" } }
         buildConfigField("String", "SUPABASE_URL", quoted(publicSetting("SUPABASE_URL")))
         buildConfigField("String", "SUPABASE_PUBLISHABLE_KEY", quoted(publicKey))
+        buildConfigField("boolean", "NATIVE_GLOBE", "false")
     }
     buildTypes {
         debug { applicationIdSuffix = ".debug"; versionNameSuffix = "-auth-preview" }
+        create("globeTest") {
+            initWith(getByName("debug"))
+            applicationIdSuffix = ".globetest"
+            versionNameSuffix = "-native-globe-test"
+            matchingFallbacks += "debug"
+            buildConfigField("boolean", "NATIVE_GLOBE", "true")
+            manifestPlaceholders["meewavAppLabel"] = "Meewav Globe Test"
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true

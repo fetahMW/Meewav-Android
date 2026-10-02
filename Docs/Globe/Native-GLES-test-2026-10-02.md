@@ -1,0 +1,52 @@
+# Globe Android — branche de test native
+
+## Copie et annulation
+
+- Branche : `codex/android-native-globe-test`.
+- Base complète avant portage : `6961acb086c449b0fb798ef0ac4ac71c3a29357e`.
+- Cette base copie aussi les modifications locales de gestes, de portraits et les assets générés présents le 2 octobre. Le checkout de travail d'origine reste sur `codex/ui-parity-chat-composer`.
+- Application de test indépendante : `com.meewav.android.globetest`, nom **Meewav Globe Test**. L'application habituelle `com.meewav.android.debug` et ses données restent disponibles, sur Redmi comme sur S22.
+- Revenir immédiatement à l'ancien rendu : fermer l'application de test et ouvrir Meewav habituel. Aucun remplacement de l'APK habituel n'est requis.
+- Revenir au code initial : utiliser la base ci-dessus dans un autre worktree. Ne pas réinitialiser le checkout d'origine ni retirer ses modifications locales.
+
+## Architecture du portage
+
+Les appels GPU de la scène principale s'exécutent en C++ avec OpenGL ES 3 dans un contexte EGL Android. Le renderer natif est présenté par une `TextureView` sous les contrôles. Le contexte WebGL2 de Chromium n'est pas créé pour ce globe.
+
+Three.js reste le graphe de scène CPU et produit ses shaders GLSL, matrices, uniforms et commandes. Un contexte compatible encode les commandes en lots binaires ; la passerelle Java/JNI les exécute sur un thread EGL dédié. Les géométries et textures sont conservées dans des buffers GPU persistants. Les introspections de programmes et les capacités GPU passent par des requêtes synchrones au démarrage ou à la compilation d'une nouvelle matière.
+
+Ce choix reprend les shaders exacts, y compris clearcoat et reflets personnalisés, plutôt que remplacer leur aspect par une approximation. Il conserve aussi les algorithmes et données existants : globe et territoires streamés, labels, étoiles, atmosphère, monuments GLB/DRACO, disque et bord profilé, bloom HDR, portraits instanciés, avatars terrestres, picking, fly, inertie, recherche, profils et pré-pop-ups. Les panneaux HTML et les contrôles Android restent les mêmes.
+
+Le framebuffer principal natif utilise le même budget de pixels (DPR plafonné à 2), RGBA8 et MSAA jusqu'à quatre échantillons. Sa résolution est explicite avant les copies du bloom. Le fond radial original est composé à la présentation. Chaque frame est acquittée après `eglSwapBuffers`; l'écran de chargement et le verrou de rotation attendent aussi le layout correspondant. Le thread EGL conserve un pbuffer pour permettre nettoyage et introspection même lorsque la fenêtre est en arrière-plan.
+
+Il s'agit du portage du **rendu GPU complet** ; la logique CPU Three/JavaScript et l'interface WebView sont conservées. Ce n'est pas une réécriture de toute l'application en C++.
+
+## Construction et lancement
+
+```powershell
+node scripts/build-full-globe.mjs C:/Users/linkw/Desktop/Meewav-Web
+.\gradlew.bat :app:assembleGlobeTest
+```
+
+APK : `app/build/outputs/apk/globeTest/app-globeTest.apk`.
+
+Le build `debug` habituel garde `NATIVE_GLOBE=false`. Seul `globeTest` active le backend natif. Le raccourci de démo existant `OPEN_GLOBE` + `GPU_AUDIT` permet de comparer sans compte, avec tous les avatars de démonstration. Installation et lancement du test réservés au Redmi ; le S22 conserve l'ancien APK.
+
+## Vérification et limites des mesures
+
+- Les 59 tests de pré-profils/fly et les 23 tests de navigation existants passent sur la copie.
+- Les six tests du transfert natif vérifient les slices de buffers, floats, offsets d'indices, instancing, tableaux de textures half-float, adresse uniforme zéro, capacités et texte GLSL UTF-8. Le test d'un atlas de 48 couches reconstruit et compare tous les octets après transfert par lots de quatre MiB.
+- 2 055 fichiers de données, images, modèles et médias de la base sont présents avec les mêmes tailles. Le port ne réduit ni les informations ni les mécaniques.
+- `window.meewavNativeGlobeStatus()` expose le backend, les numéros de frames soumises/rendues/swapées et les erreurs. `window.meewavNativeGlobeGpuInfo()` fournit le GPU natif et les nombres de buffers/textures/programmes.
+- Le gain GPU n'est pas présumé. Le coût du transfert JNI/Base64, des nouvelles matières et de la composition doit être mesuré sur Redmi. Une comparaison S22/Redmi est utile pour le ressenti et le visuel, mais ne suffit pas à isoler un gain du moteur : les deux GPU sont différents.
+- Les captures et gestes automatiques sur écran ne font pas partie du protocole autorisé. La parité visuelle finale et les gestes physiques sont à confirmer sur téléphone.
+
+## État de l'essai sur Redmi
+
+Le 2 octobre, le build complet `assembleGlobeTest` et les 88 tests ci-dessus ont réussi. SHA-256 de l'APK préparé : `CDC1BAFE9F2B936F84C272DC61C0A26DEFC453F08CC1D407ADF8C6DF3B3B9503`.
+
+Le Redmi était connecté par ADB Wi-Fi, mais en veille (`Dozing`, non interactif). Les deux tentatives d'installation normales ont été refusées avec `INSTALL_FAILED_USER_RESTRICTED: Install canceled by user`. Le package de test n'est pas installé. Aucun contournement, réveil automatique ou lancement n'a été effectué ; le S22 n'a pas été modifié.
+
+La compilation et le contrat de transfert sont vérifiés, mais le fonctionnement du pilote GLES, la parité visuelle et les performances sur appareil restent **non vérifiés**. La prochaine étape est une installation acceptée sur le Redmi réveillé, puis la vérification des frames réellement présentées, des erreurs GLES et des parcours disque/territoires/avatars/pré-profils/fly avant de laisser le test ouvert pour comparaison.
+
+Références Android : [TextureView](https://developer.android.com/reference/android/view/TextureView), [SurfaceTexture et redimensionnement EGL](https://developer.android.com/reference/android/graphics/SurfaceTexture#setDefaultBufferSize(int,int)), [EGL14](https://developer.android.com/reference/android/opengl/EGL14).
