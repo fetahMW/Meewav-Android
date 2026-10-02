@@ -17,7 +17,7 @@ export const featureItems = [
 ] as const;
 
 /** Shared Profile/Tremplin geometry and material, sourced from profile mobile.css. */
-export default function FeatureDock({ active, onSelect, compact = false, layout = 'bottom' }: { active: string; onSelect: (id: string) => void; compact?: boolean; layout?: 'bottom' | 'globe' }) {
+export default function FeatureDock({ active, onSelect, compact = false, layout = 'bottom', deviceFixed = false }: { active: string; onSelect: (id: string) => void; compact?: boolean; layout?: 'bottom' | 'globe'; deviceFixed?: boolean }) {
   const [collapsed, setCollapsed] = useState(compact);
   const [editing, setEditing] = useState(false);
   const [covered, setCovered] = useState(false);
@@ -55,7 +55,7 @@ export default function FeatureDock({ active, onSelect, compact = false, layout 
     return () => { document.removeEventListener('focusin', focus); document.removeEventListener('focusout', blur); };
   }, []);
   useEffect(() => {
-    if (compact) return; // Reading a conversation must not move its composer.
+    if (compact || deviceFixed) return; // The globe dock folds only on its own control.
     let gestureAt = 0, distance = 0, previousTarget: HTMLElement | null = null, previousY = 0;
     const gesture = () => { gestureAt = performance.now(); };
     const scroll = (event: Event) => {
@@ -80,12 +80,14 @@ export default function FeatureDock({ active, onSelect, compact = false, layout 
       document.removeEventListener('wheel', gesture);
       document.removeEventListener('scroll', scroll, true);
     };
-  }, [compact]);
+  }, [compact, deviceFixed]);
   const item = ({ id, label, Icon }: typeof featureItems[number]) => <button key={id} type="button"
     aria-label={label} aria-current={id === active ? 'page' : undefined} onClick={() => onSelect(id)}>
-    <Icon /><span>{label}</span>
+    {deviceFixed ? <div className="feature-dock-rotor"><Icon /></div> : <Icon />}<span>{label}</span>
   </button>;
-  return createPortal(<div className={`feature-dock-host${layout === 'globe' ? ' is-globe' : ''}${collapsed ? ' is-collapsed' : ''}${editing || covered ? ' is-editing' : ''}`}>
+  const globe = <><NavGlobeTexture landColor={NAVBAR_GLOBE_PALETTE.land} size={56} rotationSeconds={40} />
+    <span className="profile-bottom-dock__globe-light" /></>;
+  const dock = <div className={`feature-dock-host${layout === 'globe' ? ' is-globe' : ''}${collapsed ? ' is-collapsed' : ''}${editing || covered ? ' is-editing' : ''}`}>
     <button type="button" className="feature-dock-toggle" aria-label={collapsed ? 'Afficher la navigation' : 'Replier la navigation'}
       aria-expanded={!collapsed} aria-controls="feature-dock-navigation" onClick={() => {
         manualUntil.current = performance.now() + 1600;
@@ -96,10 +98,10 @@ export default function FeatureDock({ active, onSelect, compact = false, layout 
     <div className="profile-bottom-dock__side">{featureItems.slice(0, 3).map(item)}</div>
     <button type="button" className="profile-bottom-dock__globe" aria-label={active === 'globe' ? 'Globe / Carte' : 'Retour au globe'} aria-current={active === 'globe' ? 'page' : undefined} onClick={() => onSelect('globe')}
       style={{ '--nav-globe-ocean': NAVBAR_GLOBE_PALETTE.ocean } as React.CSSProperties}>
-      <NavGlobeTexture landColor={NAVBAR_GLOBE_PALETTE.land} size={56} rotationSeconds={40} />
-      <span className="profile-bottom-dock__globe-light" />
+      {deviceFixed ? <div className="feature-dock-rotor">{globe}</div> : globe}
     </button>
     <div className="profile-bottom-dock__side">{featureItems.slice(3).map(item)}</div>
     </nav>
-  </div>, document.body);
+  </div>;
+  return createPortal(deviceFixed ? <div className="globe-device-dock">{dock}</div> : dock, document.body);
 }

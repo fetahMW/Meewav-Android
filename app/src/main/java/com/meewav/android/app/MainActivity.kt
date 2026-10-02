@@ -3,6 +3,7 @@ package com.meewav.android.app
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -68,6 +69,12 @@ class MainActivity : ComponentActivity() {
             else -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
         if (requestedOrientation != orientation) requestedOrientation = orientation
+        // Retain the live surface during a globe turn. The scene and dock
+        // compensate orientation themselves, without a dimmed system snapshot.
+        window.attributes = window.attributes.apply {
+            rotationAnimation = if (page == AuthPage.Globe) WindowManager.LayoutParams.ROTATION_ANIMATION_SEAMLESS
+                else WindowManager.LayoutParams.ROTATION_ANIMATION_ROTATE
+        }
         WindowCompat.getInsetsController(window, window.decorView).apply {
             if (immersive) {
                 systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE

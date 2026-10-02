@@ -15,7 +15,10 @@ export function installGlobeLayout() {
   const orientation = window.screen.orientation;
   const update = () => {
     const type = orientation?.type;
-    const next = type?.startsWith('portrait') ? 'portrait'
+    const root = document.documentElement;
+    const display = root.dataset.globeDeviceDock ? Number(root.dataset.globeDisplayRotation) : NaN;
+    const next = Number.isFinite(display) ? (display % 180 === 0 ? 'portrait' : 'landscape')
+      : type?.startsWith('portrait') ? 'portrait'
       : type?.startsWith('landscape') ? 'landscape'
       : window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
     if (document.documentElement.dataset.globeOrientation === next) return;
@@ -25,9 +28,11 @@ export function installGlobeLayout() {
   update();
   orientation?.addEventListener('change', update);
   window.addEventListener('resize', update, { passive: true });
+  window.addEventListener('meewav:globe-display', update);
   const dispose = () => {
     orientation?.removeEventListener('change', update);
     window.removeEventListener('resize', update);
+    window.removeEventListener('meewav:globe-display', update);
     window.removeEventListener('pagehide', dispose);
   };
   window.addEventListener('pagehide', dispose);

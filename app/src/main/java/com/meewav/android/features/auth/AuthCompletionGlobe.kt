@@ -75,9 +75,13 @@ internal fun AuthCompletionGlobe(
     onLoadingChange: (Boolean) -> Unit = {},
     previewMessages: Boolean = false,
     homeScene: GlobeHomeScene? = null,
+    onDockRotationChange: (Int) -> Unit = {},
+    onGlobeTurningChange: (Boolean) -> Unit = {},
 ) {
     val controller = remember(interactive, homeScene) { AuthGlobeController(interactive, homeScene) }
     controller.previewMessages = previewMessages
+    controller.onDockRotationChange = onDockRotationChange
+    controller.onGlobeTurningChange = onGlobeTurningChange
     LaunchedEffect(controller.ready, controller.unavailable) {
         onLoadingChange(!controller.ready && !controller.unavailable)
     }
@@ -160,9 +164,12 @@ private val GlobeAssets = mapOf(
 
 private class AuthGlobeController(private val fullScene: Boolean, private val homeScene: GlobeHomeScene?) {
     var previewMessages = false
+    var onDockRotationChange: (Int) -> Unit = {}
+    var onGlobeTurningChange: (Boolean) -> Unit = {}
     private val page get() = if (fullScene) "$GlobeOrigin/globe-vinyle/index.html?mode=${if (previewMessages) "demo" else "real"}" else GlobePage
     private val api = if (fullScene) "meewavFullGlobe" else "meewavAuthGlobe"
     private var view: AuthGlobeWebView? = null
+    private var dockOrientation: GlobeDockOrientation? = null
     private var resumed = false
     private var inViewport = false
     private var interactive = false
@@ -186,6 +193,9 @@ private class AuthGlobeController(private val fullScene: Boolean, private val ho
         unavailable = false
         return AuthGlobeWebView(context).also { globeView ->
             view = globeView
+            if (fullScene) dockOrientation = GlobeDockOrientation(globeView,
+                onDisplayRotation = { onDockRotationChange(it) },
+                onTurningChanged = { onGlobeTurningChange(it) })
             // WebView must use the Compose viewport, not wrap its HTML content.
             // WRAP_CONTENT collapses percentage/vh heights even when the native view is measured.
             globeView.layoutParams = ViewGroup.LayoutParams(
@@ -292,6 +302,7 @@ private class AuthGlobeController(private val fullScene: Boolean, private val ho
 
     fun reload() {
         val globeView = view ?: return
+        dockOrientation?.setActive(false)
         readinessHandler.removeCallbacksAndMessages(null)
         loadGeneration++
         ready = false
@@ -331,6 +342,7 @@ private class AuthGlobeController(private val fullScene: Boolean, private val ho
     }
 
     private fun showLoadFailure(webView: WebView) {
+        dockOrientation?.setActive(false)
         readinessHandler.removeCallbacksAndMessages(null)
         ready = false
         unavailable = true
@@ -371,11 +383,14 @@ private class AuthGlobeController(private val fullScene: Boolean, private val ho
         lastActive = active
         if (active) globeView.onResume()
         globeView.evaluateJavascript("window.$api.setActive($active);", null)
+        dockOrientation?.setActive(active)
         if (!active) globeView.onPause()
     }
 
     fun release(globeView: AuthGlobeWebView) {
         if (view !== globeView) return
+        dockOrientation?.close()
+        dockOrientation = null
         view = null
         ready = false
         loadGeneration++

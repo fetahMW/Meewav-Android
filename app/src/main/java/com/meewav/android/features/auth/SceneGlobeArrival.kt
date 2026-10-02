@@ -1,5 +1,7 @@
 package com.meewav.android.features.auth
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -10,6 +12,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -17,6 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -33,13 +37,26 @@ internal fun SceneGlobeArrival(state: AuthUiState, onBack: () -> Unit, onEnter: 
         .distinct().joinToString(" · ")
     if (interactive) {
         var globeLoading by remember { mutableStateOf(true) }
+        var dockRotation by remember { mutableStateOf(0) }
+        var pendingRotation by remember { mutableStateOf(0) }
+        var globeTurning by remember { mutableStateOf(false) }
+        val closeAlpha by animateFloatAsState(if (globeTurning) 0f else 1f,
+            animationSpec = tween(durationMillis = if (globeTurning) 90 else 180,
+                delayMillis = if (globeTurning) 0 else 120), label = "globeCloseFade")
+        LaunchedEffect(pendingRotation, closeAlpha, globeLoading) {
+            // Reposition only after the close control is invisible.
+            if (globeLoading || closeAlpha < .01f) dockRotation = pendingRotation
+        }
         Box(Modifier.fillMaxSize().background(Color(0xFF08090D)).safeDrawingPadding()) {
             AuthCompletionGlobe(Modifier.fillMaxSize(), interactive = true, onClick = onEnter,
                 onLoadingChange = { globeLoading = it }, previewMessages = state.localPreview,
-                homeScene = state.homeScene)
+                homeScene = state.homeScene, onDockRotationChange = { pendingRotation = it },
+                onGlobeTurningChange = { globeTurning = it })
             // Reserved right strip in mobile.css keeps this outside Web panels.
-            if (!globeLoading) IconButton(onClick = onClose, modifier = Modifier.align(Alignment.TopEnd)
-                .padding(end = 12.dp, top = 12.dp).size(44.dp)) {
+            if (!globeLoading) IconButton(onClick = onClose, enabled = !globeTurning && closeAlpha > .9f,
+                modifier = Modifier.graphicsLayer { alpha = closeAlpha }.align(if (dockRotation == 90) Alignment.TopStart else Alignment.TopEnd)
+                .padding(start = if (dockRotation == 90) 12.dp else 0.dp, end = if (dockRotation == 90) 0.dp else 12.dp,
+                    top = if (dockRotation == 180) 116.dp else 12.dp).size(44.dp)) {
                 Icon(Icons.Outlined.Close, "Fermer l’application", Modifier.size(18.dp), tint = Color.White)
             }
         }

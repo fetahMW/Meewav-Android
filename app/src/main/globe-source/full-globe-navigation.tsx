@@ -1,21 +1,20 @@
-import React, { useSyncExternalStore } from 'react';
+import React, { useLayoutEffect } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import FeatureDock from '../shared-ui/FeatureDock';
-import GlobeNavigationPole from './vendor/globe-vinyle/shared/src/GlobeNavigationPole';
-import { getGlobeOrientation, subscribeGlobeOrientation } from './globe-layout';
+import { installGlobeDockMotion } from './globe-dock-motion';
+import './globe-dock.css';
 
 const routes: Record<string, string> = {
   messages: '/messages', profile: '/profile', rooms: '/rooms/home',
   scene: '/scene', market: '/market', tremplin: '/tremplin',
 };
 
-/** Portrait uses the shared feature dock; landscape keeps its original pole. */
+/** One physical chassis survives every orientation, including its folded state. */
 export default function AndroidGlobeNavigation({ onGlobe, onNavigate }: {
   onGlobe: () => void; onNavigate: (path: string) => void;
 }) {
-  const orientation = useSyncExternalStore(subscribeGlobeOrientation, getGlobeOrientation);
-  if (orientation === 'landscape') return <GlobeNavigationPole onGlobe={onGlobe} onNavigate={onNavigate} />;
-  return <MemoryRouter><FeatureDock active="globe" layout="globe" onSelect={id => {
+  useLayoutEffect(installGlobeDockMotion, []);
+  return <MemoryRouter><FeatureDock active="globe" layout="globe" deviceFixed onSelect={id => {
     if (id === 'globe') onGlobe();
     else if (routes[id]) onNavigate(routes[id]);
   }} /></MemoryRouter>;

@@ -1,6 +1,8 @@
 import { solveScreenAnchor } from "./screen-anchor.mjs";
 import { createGlobeTouchRotation } from '../../../../globe-touch-rotation.mjs';
 import { createArtistPopupFraming } from '../../../../artist-popup-framing';
+import { createGlobeSceneOrientation } from '../../../../globe-scene-orientation.mjs';
+import { createGlobeSurfaceFrame } from '../../../../globe-surface-frame.mjs';
 import { createTouchNavigation } from "../../../../touch-navigation.mjs";
 import { createTouchCamera } from "../../../../touch-camera.mjs";
 import { createRingPlayback } from "../../../../ring-playback";
@@ -137,6 +139,7 @@ export async function createThree(
     return query;
   }
   const canvas = renderer.domElement;
+  const surfaceFrame = createGlobeSurfaceFrame(canvas);
   canvas.tabIndex = 0;
   canvas.setAttribute(
     "aria-label",
@@ -187,6 +190,11 @@ export async function createThree(
       renderer.render(scene, camera);
       orbitBloom.render(camera, dt);
       groundAvatars?.render(renderer);
+      if (document.documentElement.dataset.globeDeviceDock && surfaceFrame.commit(width, height,
+        sceneOrientation.enabled ? sceneOrientation.displayRotation
+          : Number(document.documentElement.dataset.globeDisplayRotation || 0))) {
+        window.dispatchEvent(new Event('meewav:globe-surface'));
+      }
       finishFirstFrame?.();
       finishFirstFrame = undefined;
     } finally { renderAudit.end(auditToken); renderer.info.autoReset = autoReset; }
@@ -456,12 +464,15 @@ export async function createThree(
     viewport: () => ({ width, height }),
     invalidate: () => { sceneDirty = true; viewportNeedsUpdate = true; },
   });
+  const sceneOrientation = createGlobeSceneOrientation(camera, 260);
+  let pendingDeviceOrientation: { roll: number | null; rotation: number; instant: boolean } | null = null;
   const ringPlayback = createRingPlayback(() => alive && active && !document.hidden &&
     ringNavigation.active && !ringNavigation.returning && ringNavigation.entryProgress >= 1);
   const updateCamera = () => {
     artistPopupFraming.restoreBaseProjection();
     if (ringNavigation.active) ringNavigation.tick(0, true);
     else updateGlobeCamera();
+    sceneOrientation.apply();
     artistPopupFraming.applyProjection();
   };
   const applyGlobeDrag = createGlobeDrag({ motion, axis: saturnRing.state().normal, updateCamera, align: GLOBE_ALIGN });
@@ -537,7 +548,7 @@ export async function createThree(
     const nextWidth = Math.max(1, host.clientWidth), nextHeight = Math.max(1, host.clientHeight);
     if (viewportSized && nextWidth === width && nextHeight === height) return;
     viewportSized = true;
-    const keepOverviewFit = !ringNavigation.active && !motion.isMoving() && !wheelZoom.isMoving()
+    const keepOverviewFit = !sceneOrientation.enabled && !ringNavigation.active && !motion.isMoving() && !wheelZoom.isMoving()
       && !orbit.isMoving() && Math.abs(view.height - brandOverviewHeight) < 0.000001;
     wheelZoom.cancel();
     orbit.cancel();
@@ -547,14 +558,14 @@ export async function createThree(
     if (gesture) gesture.anchor = null;
     width = nextWidth;
     height = nextHeight;
-    brandOverviewHeight = overviewTarget("globe", width, height).height;
+    if (!sceneOrientation.enabled) brandOverviewHeight = overviewTarget("globe", width, height).height;
     if (keepOverviewFit) view.height = brandOverviewHeight;
-    // CSS sizes the canvas; only resize its drawing buffer here, immediately
-    // before the frame redraws it, never between rendering and composition.
+    // Retain the old CSS frame until renderScene commits its replacement.
+    // Resize the drawing buffer and redraw in the same animation frame.
     renderer.setSize(width, height, false);
     orbitBloom.resize();
     camera.aspect = width / height;
-    camera.fov = T.MathUtils.radToDeg(
+    camera.fov = sceneOrientation.enabled ? sceneOrientation.fovForHeight(height) : T.MathUtils.radToDeg(
       2 * Math.atan(Math.tan(T.MathUtils.degToRad(19)) / Math.min(1, camera.aspect)),
     );
     camera.updateProjectionMatrix();
@@ -1105,7 +1116,7 @@ export async function createThree(
     cpuSamples: number[] = [],
     renderTimes: number[] = [];
   function pointerIsIdle() {
-    return !motion.isMoving() && !wheelZoom.isMoving() && !orbit.isMoving() && !touchNavigation.isMoving() && !artistPopupFraming.moving && !pointers.size;
+    return !motion.isMoving() && !wheelZoom.isMoving() && !orbit.isMoving() && !touchNavigation.isMoving() && !artistPopupFraming.moving && !sceneOrientation.moving && !pointers.size;
   }
   function syncPointerHover() {
     if (!pendingHover || !pointerIsIdle()) return;
@@ -1135,16 +1146,32 @@ export async function createThree(
   function frame(now: number) {
     if (!alive || !active) return;
     const frameStart = performance.now();
-    // Keyboard insets may trigger several layouts. Coalesce them and repaint
-    // in this same frame so a cleared drawing buffer cannot flash on screen.
-    if (viewportResizePending) { viewportResizePending = false; resizeViewport(); }
+    // Display/resize events run before RAF, but ResizeObserver can run after
+    // it. Commit the new viewport BEFORE its orientation: otherwise one frame
+    // removes the CSS compensation while still using the old, clipped buffer.
+    if (pendingDeviceOrientation) {
+      const orientation = pendingDeviceOrientation;
+      pendingDeviceOrientation = null;
+      if (!sceneOrientation.enabled)
+        sceneOrientation.set(orientation.roll, orientation.rotation, performance.now(), height, true);
+      viewportResizePending = false;
+      resizeViewport();
+      // Buffer allocation can take several frames on mobile. Start the visual
+      // tween only when it is ready, so this work cannot skip half the motion.
+      sceneOrientation.set(orientation.roll, orientation.rotation, performance.now(), height, orientation.instant);
+      sceneDirty = true;
+      viewportNeedsUpdate = true;
+    } else if (viewportResizePending) { viewportResizePending = false; resizeViewport(); }
     const dt = lastTime ? (now - lastTime) / 1000 : 0;
     lastTime = now;
+    const orientationChanged = sceneOrientation.tick(performance.now());
+    if (orientationChanged) { sceneDirty = true; viewportNeedsUpdate = true; }
     touchNavigation.tick(now);
     artistPopupFraming.tick(now);
     if (ringNavigation.active) {
       artistPopupFraming.restoreBaseProjection();
       const navigationChanged = ringNavigation.tick(dt, sceneDirty);
+      const projectionChanged = sceneOrientation.apply();
       const popupProjectionChanged = artistPopupFraming.applyProjection();
       ringPlayback.refresh();
       // Rotation physique du disque et des portraits, caméra manuelle inchangée.
@@ -1161,8 +1188,8 @@ export async function createThree(
       }
       // Portraits can now pass under a stationary pointer. Their picking bases
       // follow the same turntable transform without uploading instance data.
-      const portraitsChanged = (navigationChanged || vinylChanged || popupProjectionChanged) && ringPortraits.update();
-      if (navigationChanged || vinylChanged || portraitsChanged || popupProjectionChanged) {
+      const portraitsChanged = (navigationChanged || vinylChanged || projectionChanged || popupProjectionChanged) && ringPortraits.update();
+      if (navigationChanged || vinylChanged || portraitsChanged || projectionChanged || popupProjectionChanged) {
         renderScene(dt, frameStart, 'ring');
       }
       raf = requestAnimationFrame(frame);
@@ -1199,7 +1226,7 @@ export async function createThree(
       view.pitch !== renderedView.pitch || view.bearing !== renderedView.bearing;
     if (poseChanged || viewportNeedsUpdate) {
       updateCamera();
-      geographicViewport = view.pitch || view.bearing || artistPopupFraming.active ? orbitViewport() : null;
+      geographicViewport = view.pitch || view.bearing || sceneOrientation.angle || artistPopupFraming.active ? orbitViewport() : null;
       viewportNeedsUpdate = false;
     }
     if (poseChanged || sceneDirty) parisLandmarks.update(view);
@@ -1336,7 +1363,7 @@ export async function createThree(
       motion.flyTo(destination, 0);
       ringPortraits.setActive(false);
       geographicLabels.mesh.visible = true;
-      updateGlobeCamera(); ringPortraits.setOverview(view.height); sceneDirty = true;
+      updateCamera(); ringPortraits.setOverview(view.height); sceneDirty = true;
       notifyRingMode(false);
       afterReturn?.();
     });
@@ -1371,6 +1398,10 @@ export async function createThree(
   }
   return {
     firstFrame,
+    setDeviceOrientation(roll: number | null, rotation: number, instant = reducedMotion) {
+      if (!Number.isFinite(rotation) || rotation % 90 !== 0 || (roll != null && !Number.isFinite(roll))) return;
+      pendingDeviceOrientation = { roll, rotation, instant };
+    },
     flyTo,
     enterRing,
     exitRing,
@@ -1386,7 +1417,7 @@ export async function createThree(
       motion.flyTo(snapshot.view, 0);
       territoryFocus.set(snapshot.focus, true);
       focusExitHeight = snapshot.focusExitHeight;
-      updateGlobeCamera();
+      updateCamera();
       if (snapshot.ring?.active) {
         enterRing();
         ringNavigation.restore(snapshot.ring);

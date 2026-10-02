@@ -1,0 +1,79 @@
+/* Chassis coordinates are attached to the phone, never to gravity. It changes
+   screen coordinates only to cancel Android's own display rotation. */
+.globe-device-dock {
+  position: fixed; z-index: 16020;
+  left: var(--globe-dock-center-x,50vw); top: var(--globe-dock-center-y,calc(100dvh - 52px));
+  width: var(--globe-dock-width,100vw); height: 104px;
+  transform: translate(-50%,-50%) rotate(var(--globe-dock-frame-angle,0deg));
+  transform-origin: 50% 50%; pointer-events: none;
+  /* A chassis transition would let it travel across the globe during rotation. */
+  transition: none;
+}
+.globe-device-dock .feature-dock-host { position: absolute; inset: auto 0 0; }
+.globe-device-dock .feature-dock-rotor {
+  position: relative; display: grid; place-items: center; width: 100%; height: 100%;
+  transform: rotate(var(--globe-dock-icon-angle,0deg)); transform-origin: 50% 50%;
+  transition: transform 260ms linear; pointer-events: none;
+}
+.globe-device-dock .profile-bottom-dock__globe .feature-dock-rotor { border-radius: 50%; overflow: hidden; }
+
+/* Do not stretch yesterday's buffer to the new aspect while a resize frame is
+   pending. Compensate only the discrete display turn, then commit after draw. */
+html[data-globe-device-dock] .globe-stage canvas {
+  inset: auto; left: 50%; top: 50%;
+  transform-origin: 50% 50%;
+  transform: translate(-50%,-50%) rotate(calc(var(--globe-rendered-display-angle,0deg) - var(--globe-display-angle,0deg)));
+  transition: none;
+}
+
+/* Only overlays fade. The scene, chassis and turning icons remain visible. */
+html[data-globe-device-dock] :is(.reference-search-dock,.reference-search-results,.globe-honors-dock,
+  .reference-view-switch,.ring-explore-button,.ring-return-button,.ring-visit-panel,.ring-player,
+  .reference-selection,.reference-destination,.reference-notice,.meewav-filter-below-header) {
+  transition: opacity 180ms ease-out, transform 140ms ease, filter 140ms ease, box-shadow 140ms ease;
+}
+html[data-globe-device-dock][data-globe-turning] :is(.reference-search-dock,.reference-search-results,.globe-honors-dock,
+  .reference-view-switch,.ring-explore-button,.ring-return-button,.ring-visit-panel,.ring-player,
+  .reference-selection,.reference-destination,.reference-notice,.meewav-filter-below-header) {
+  opacity: 0 !important; transition-duration: 90ms;
+}
+html[data-globe-device-dock][data-globe-turning] :is(.reference-search-dock,.reference-search-results,.globe-honors-dock,
+  .reference-view-switch,.ring-explore-button,.ring-return-button,.ring-visit-panel,.ring-player,
+  .reference-selection,.reference-destination,.reference-notice,.meewav-filter-below-header),
+html[data-globe-device-dock][data-globe-turning] :is(.reference-search-dock,.reference-search-results,.globe-honors-dock,
+  .reference-view-switch,.ring-explore-button,.ring-return-button,.ring-visit-panel,.ring-player,
+  .reference-selection,.reference-destination,.reference-notice,.meewav-filter-below-header) * {
+  pointer-events: none !important;
+}
+
+/* Leave room for the same chassis on either physical edge. The controls stay
+   in the free column; no camera or artist layout is replaced. */
+html[data-globe-device-dock] :is(.reference-search-dock,.reference-search-results) {
+  /* Same 12px + 64px portrait margins, including in landscape. Only shrink
+     if an unusually small viewport cannot fit the portrait width safely. */
+  width: min(calc(var(--globe-portrait-width,100svmin) - 76px),
+    calc(100vw - var(--globe-ui-left) - var(--globe-search-right,64px)));
+  right: auto;
+}
+html[data-globe-device-dock][data-globe-dock-side="left"] { --globe-ui-left: calc(var(--feature-dock-inset,104px) + 12px); }
+html[data-globe-device-dock][data-globe-dock-side="right"] {
+  --globe-ui-left: 76px;
+  --globe-search-right: calc(var(--feature-dock-inset,104px) + 12px);
+  --mobile-artist-panel-right: calc(var(--feature-dock-inset,104px) + 12px);
+}
+html[data-globe-device-dock][data-globe-dock-side="right"] .globe-honors-dock {
+  right: calc(var(--feature-dock-inset,104px) + 12px);
+}
+html[data-globe-device-dock][data-globe-dock-side="right"] .reference-view-switch.map-mode-switch { right: auto; left: 12px; }
+html[data-globe-device-dock][data-globe-dock-side="right"] .meewav-filter-below-header { right: calc(var(--feature-dock-inset,104px) + 12px); }
+html[data-globe-device-dock][data-globe-dock-side="top"] {
+  --globe-ui-top: calc(var(--feature-dock-inset,104px) + 12px);
+  --globe-ui-bottom: 12px;
+}
+html[data-globe-device-dock][data-globe-dock-side="top"] .globe-honors-dock { top: calc(var(--globe-ui-top) + 60px); }
+@media (prefers-reduced-motion: reduce) {
+  .globe-device-dock .feature-dock-rotor,
+  html[data-globe-device-dock] :is(.reference-search-dock,.reference-search-results,.globe-honors-dock,
+    .reference-view-switch,.ring-explore-button,.ring-return-button,.ring-visit-panel,.ring-player,
+    .reference-selection,.reference-destination,.reference-notice,.meewav-filter-below-header) { transition: none; }
+}
