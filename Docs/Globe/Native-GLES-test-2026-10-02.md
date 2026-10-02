@@ -69,7 +69,44 @@ Le transfert utilise `Uint8Array.toBase64()` lorsqu'il existe, avec le chemin pr
 
 `window.meewavNativeGlobePerformance()` expose des échantillons récents d'encodage/transfert JS et de décodage/exécution/présentation/swap natifs. Ces temps sont des durées CPU ou d'attente ; ce ne sont pas des mesures GPU. `queueWaitMs` mesure uniquement l'attente du sémaphore de soumission. Cette lecture est séparée du status et du polling de première frame. Comparer les deux moteurs sur le même Redmi, dans la même vue, après chargement, avant de conclure sur un gain.
 
-Le nouvel APK (`678135014299DA1526684CE17DE2282A1CC16014BE08A008FDF2677D389092DF`) a été compilé et installé normalement dans l'application de test. Le Redmi était ensuite en veille ; cette version n'a pas été lancée. **Le plein écran et la fluidité de ce dernier build restent à valider sur appareil réveillé.** Les parcours disque/territoires/avatars/pré-profils/fly et les gestes physiques restent aussi à confirmer. Le S22 et les applications habituelles n'ont pas été mis à jour.
+Le nouvel APK (`678135014299DA1526684CE17DE2282A1CC16014BE08A008FDF2677D389092DF`) a été compilé et installé normalement dans l'application de test. Après la reprise « Vas-y pour le Redmi » et vérification que le téléphone était réveillé, cette version a été lancée et comparée au chemin WebGL dans la même application de test. Le S22 et les applications habituelles n'ont pas été mis à jour.
+
+### Validation du redimensionnement
+
+Le globe natif atteint `ready`, sans erreur. En paysage, raster et surface EGL mesurent tous deux 1726 × 814, pour une TextureView de 2589 × 1221 et un viewport CSS d'environ 863 × 407. En portrait, raster et surface mesurent 814 × 1726, pour une TextureView de 1223 × 2593 et un viewport CSS de 406 × 863. Le canvas et les conteneurs couvrent le viewport. Le DPR physique vaut 3, le raster reste plafonné à 2 dans les deux moteurs.
+
+Ces relevés valident la cohérence des tailles après changement d'orientation ; ils ne remplacent pas une validation visuelle. Aucune capture d'écran ni geste physique automatisé n'a été effectué. Les parcours complets et les gestes restent à confirmer sur téléphone.
+
+### Comparaison sur le même Redmi — 2 octobre 2026
+
+Matériel : Xiaomi 23090RA98G, Android 16, Mali-G610 MC4. Même APK de test, mêmes données, même orientation portrait, même raster 814 × 1726. Le contexte WebGL rapporte effectivement quatre échantillons MSAA ; le backend natif demande jusqu'à quatre échantillons.
+
+Pour chaque passage : retour immédiat à la vue d'ensemble, stabilisation, puis vol de 3 secondes vers `{lon: 2.4, lat: 46.6, height: 23, pitch: 0, bearing: 0}` et mesure d'environ 3,6 secondes. Trois passages natifs, puis trois WebGL : ce premier protocole n'est pas alterné ni randomisé et ne contrôle pas la température. Il indique la régularité dans ce scénario, pas une consommation GPU ou énergétique générale.
+
+| Mesure | Natif, passages 1 / 2 / 3 | WebGL, passages 1 / 2 / 3 |
+| --- | --- | --- |
+| Intervalles RAF, p50 (ms) | 16,6 / 16,6 / 16,5 | 16,6 / 16,5 / 16,6 |
+| Intervalles RAF, p95 (ms) | 33,3 / 41,5 / 41,5 | 25,0 / 25,1 / 25,0 |
+| Intervalles RAF, p99 (ms) | 41,6 / 49,9 / 49,9 | 33,3 / 33,3 / 33,3 |
+| CPU de la phase de rendu, p95 (ms) | 14,0 / 16,4 / 16,0 | 6,2 / 5,9 / 6,2 |
+
+**Le prototype natif est moins régulier que WebGL sur ce scénario, sur le même téléphone. Aucun gain GPU n'est démontré.** Les intervalles RAF ne mesurent pas directement les images effectivement affichées. Les timers GPU n'ont fourni aucune mesure exploitable.
+
+Un échantillon natif rapporte des p95 de 7,06 ms pour l'attente du sémaphore, 9,3 ms pour l'appel de passerelle JS et 14,01 ms pour l'attente du swap. Ces durées peuvent se recouvrir et leurs percentiles proviennent de séries distinctes : ne pas les additionner. Elles motivent un examen de la synchronisation, sans prouver à elles seules que le GPU est le goulot.
+
+Données détaillées locales : `app/build/reports/native-globe-redmi-test/ab-fluency.json`. À la fin, le chemin natif a été rétabli et laissé ouvert, `ready`, `error=null`, avec 675 images présentées sur 677 soumises à la dernière lecture.
+
+### Décision et suite technique
+
+Conserver cet essai comme prototype séparé ; ne pas présenter le portage comme une amélioration acquise. Three.js utilisait déjà le GPU. La traduction et le transport de ses commandes peuvent ajouter du travail CPU et des attentes.
+
+Avant de retenir une correction, profiler une trace corrélée CPU / thread EGL / affichage pendant les mêmes interactions, puis répéter les mesures avec moteurs alternés et conditions thermiques comparables. Cibler le coût démontré et vérifier aussi la latence d'entrée, les rotations, le premier affichage, les changements de surface et la parité des parcours.
+
+Une piste est de réguler les soumissions sans bloquer le fil JavaScript. Elle exige un état « image encore à soumettre » distinct des recalculs de scène, pour préserver les invalidations statiques, la première image et l'ordre des commandes de ressources. Aucun garde-fou de ce type n'est ajouté à ce stade : ignorer arbitrairement une frame pourrait perdre un redraw ou bloquer le chargement.
+
+Si le transport reste dominant, évaluer un moteur où le graphe de scène, les ressources et les mises à jour de rendu résident côté natif, avec des échanges sémantiques compacts (caméra, sélection, données modifiées). C'est une autre architecture, à valider sur un parcours représentatif avant une migration complète ; ce n'est pas une garantie de gain.
+
+Ces choix s'appuient sur les recommandations publiques de [Google sur le frame pacing](https://developer.android.com/games/sdk/frame-pacing) et sur la [réduction des échanges et du marshalling JNI](https://developer.android.com/ndk/guides/jni-tips). Les recommandations d'[Apple sur les command buffers Metal](https://developer.apple.com/library/archive/documentation/3DDrawing/Conceptual/MTLBestPracticesGuide/CommandBuffers.html) illustrent aussi l'importance de la soumission et des synchronisations ; elles ne constituent pas une mesure de ce backend Android.
 
 Références du contrat de taille : [TextureView.onSizeChanged](https://android.googlesource.com/platform/frameworks/base/+/540e22284684/core/java/android/view/TextureView.java#403), [SurfaceTexture.setDefaultBufferSize](https://android.googlesource.com/platform/frameworks/base/+/cdf0088/graphics/java/android/graphics/SurfaceTexture.java#135). Encodage direct : [spécification TC39](https://tc39.es/proposal-arraybuffer-base64/spec/), [Chrome 140](https://developer.chrome.com/release-notes/140).
 
