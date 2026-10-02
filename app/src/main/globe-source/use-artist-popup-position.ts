@@ -36,7 +36,7 @@ export function useArtistPopupPosition(
     };
     const apply = () => {
       const layout = source === 'ground'
-        ? groundArtistPopup(viewport, anchor, { top: topInset, bottom: 12,
+        ? groundArtistPopup(viewport, initialAnchor, { top: topInset, bottom: 12,
           left: portrait ? 0 : 104, right: portrait ? 0 : 60 }, !portrait)
         : portrait
         ? portraitArtistPopup(viewport, anchor, { top: topInset, bottom: 12 }, preferredHeight)
@@ -85,6 +85,9 @@ export function useArtistPopupPosition(
       fitContent();
     };
     const updateAnchor = (event: Event) => {
+      // The neighbourhood flight has one destination. Moving sprites must not
+      // relaunch it or move its fixed card while the camera travels.
+      if (source === 'ground') return;
       const detail = (event as CustomEvent).detail;
       if ((detail?.id ?? detail?.instanceId) !== identity || !detail.anchor) return;
       anchor = detail.anchor;

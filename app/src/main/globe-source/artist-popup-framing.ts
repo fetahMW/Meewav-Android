@@ -10,7 +10,7 @@ export type ArtistPopupFrameRequest = {
   viewportHeight: number;
 };
 
-/** Temporary screen framing, independent of geographic motion and lens zoom.
+/** Temporary ring framing, independent of geographic motion and lens zoom.
  * Apply it AFTER scene roll: the portrait's target is always in screen pixels.
  * Ray picking shares the resulting inverse projection. No second RAF loop. */
 export function createArtistPopupFraming({
@@ -28,44 +28,31 @@ export function createArtistPopupFraming({
   const shift = new Matrix4(), base = new Matrix4(), applied = new Matrix4();
   let owner: { identity: string | number; source: 'ground' | 'ring' } | null = null;
   let x = 0, y = 0, fromX = 0, fromY = 0, targetX = 0, targetY = 0, started = 0;
-  let softHop = false, velocityX = 0, velocityY = 0, launchVelocityX = 0, launchVelocityY = 0;
   let moving = false, appliedValid = false, appliedX = 0, appliedY = 0;
   let appliedWidth = 1, appliedHeight = 1, appliedNdcX = 0, appliedNdcY = 0;
   let disposed = false;
   const sample = (time: number) => {
     if (!moving) return;
     const progress = reducedMotion || duration <= 0 ? 1 : Math.max(0, Math.min(1, (time - started) / duration));
-    // Ground hops launch and land without the instantaneous velocity of the
-    // legacy ease-out. A same-direction retarget carries the displayed speed.
-    const ease = softHop ? progress ** 3 * (10 + progress * (-15 + 6 * progress))
-      : 1 - (1 - progress) ** 3;
-    const carry = softHop ? progress * (1 - progress) ** 3 * (1 + 3 * progress) : 0;
-    x = fromX + (targetX - fromX) * ease + launchVelocityX * duration * carry;
-    y = fromY + (targetY - fromY) * ease + launchVelocityY * duration * carry;
-    const easeSpeed = softHop ? 30 * progress ** 2 * (1 - progress) ** 2 : 3 * (1 - progress) ** 2;
-    const carrySpeed = softHop ? 1 - 18 * progress ** 2 + 32 * progress ** 3 - 15 * progress ** 4 : 0;
-    velocityX = (targetX - fromX) * easeSpeed / duration + launchVelocityX * carrySpeed;
-    velocityY = (targetY - fromY) * easeSpeed / duration + launchVelocityY * carrySpeed;
-    if (progress === 1) { x = targetX; y = targetY; moving = false; velocityX = velocityY = 0; }
+    const ease = 1 - (1 - progress) ** 3;
+    x = fromX + (targetX - fromX) * ease;
+    y = fromY + (targetY - fromY) * ease;
+    if (progress === 1) { x = targetX; y = targetY; moving = false; }
   };
   const retarget = (nextX: number, nextY: number, restart = false, immediate = false) => {
     if (Math.abs(nextX - targetX) < .5 && Math.abs(nextY - targetY) < .5 && !immediate) return;
     const time = now();
     sample(time);
-    if (!moving || restart || softHop) {
+    if (!moving || restart) {
       fromX = x; fromY = y; started = time;
-      const carry = (speed: number, delta: number) => softHop && speed * delta > 0
-        ? Math.sign(delta) * Math.min(Math.abs(speed), 2 * Math.abs(delta) / Math.max(1, duration)) : 0;
-      launchVelocityX = carry(velocityX, nextX - x);
-      launchVelocityY = carry(velocityY, nextY - y);
     }
     targetX = nextX; targetY = nextY; moving = true;
-    if (immediate || reducedMotion || duration <= 0) { x = targetX; y = targetY; moving = false; velocityX = velocityY = 0; }
+    if (immediate || reducedMotion || duration <= 0) { x = targetX; y = targetY; moving = false; }
     invalidate();
   };
   const request = (event: Event) => {
     const detail = (event as CustomEvent<ArtistPopupFrameRequest>).detail;
-    if (!detail || !['ground', 'ring'].includes(detail.source) || detail.identity == null || !detail.anchor || !detail.target) return;
+    if (!detail || detail.source !== 'ring' || detail.identity == null || !detail.anchor || !detail.target) return;
     const { anchor, target, viewportWidth, viewportHeight } = detail;
     if (![anchor.x, anchor.y, anchor.viewportWidth, anchor.viewportHeight, target.x, target.y,
       viewportWidth, viewportHeight].every(Number.isFinite)
@@ -78,9 +65,6 @@ export function createArtistPopupFraming({
     const nextX = previousX + anchor.x * viewportWidth / anchor.viewportWidth - target.x;
     const nextY = previousY + anchor.y * viewportHeight / anchor.viewportHeight - target.y;
     const newOwner = owner?.identity !== detail.identity || owner?.source !== detail.source;
-    // Sample the current curve before changing its easing for another source.
-    sample(now());
-    softHop = detail.source === 'ground';
     owner = { identity: detail.identity, source: detail.source };
     retarget(nextX, nextY, newOwner);
   };
@@ -140,7 +124,7 @@ export function createArtistPopupFraming({
       disposed = true;
       events.removeEventListener('meewav:artist-popup-frame', request);
       events.removeEventListener('meewav:artist-popup-dismiss', dismiss);
-      owner = null; x = y = targetX = targetY = 0; moving = false; velocityX = velocityY = 0;
+      owner = null; x = y = targetX = targetY = 0; moving = false;
       applyProjection();
     },
   };

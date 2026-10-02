@@ -3,7 +3,7 @@ import { xyz, RADIUS } from './geo.mjs';
 import { METRES_TO_WORLD, quartierHeight } from './territory-style.mjs';
 import { createGroundAvatarSprites } from './ground-avatar-sprites.mjs';
 import { createArtistAnchorPublisher } from '../../../../artist-popup-anchor';
-import { groundAvatarSelectionMetrics } from '../../../../ground-avatar-selection.mjs';
+import { groundAvatarSelectionMetrics, createGroundAvatarEmphasis } from '../../../../ground-avatar-selection.mjs';
 import { CHARONNE_ID } from './navigation-presets.mjs';
 import { PROFILE_ICON_FILES, getProfileIconImageUrl } from './reference/components/shared/avatar/profileIconAssets.ts';
 import {
@@ -92,8 +92,8 @@ function zoomFromSize(size, avatar) {
   return size / (PIXEL_SIZE * personScale(avatar));
 }
 
-function selectedSpriteMetrics(item) {
-  return groundAvatarSelectionMetrics(item);
+function selectedSpriteMetrics(item, emphasis = 1) {
+  return groundAvatarSelectionMetrics(item, emphasis);
 }
 
 function createSelectedOverlay(host) {
@@ -110,10 +110,10 @@ function createSelectedOverlay(host) {
   layer.append(glow, name);
   host.append(layer);
   return {
-    show(item, consulted = false) {
+    show(item, consulted = false, emphasis = 1) {
       if (!item) { layer.hidden = true; return; }
       const hostUser = Boolean(item.avatar.isHost);
-      const metrics = selectedSpriteMetrics(item);
+      const metrics = selectedSpriteMetrics(item, emphasis);
       layer.classList.toggle('is-current-user', hostUser);
       layer.classList.toggle('is-consulted', Boolean(consulted) && !hostUser);
       layer.style.setProperty('--profile-hover-x', `${item.x}px`);
@@ -182,6 +182,8 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
   let showing = false;
   let hoveredId = '';
   let selectedId = '';
+  let selectedAvatar = null;
+  const emphasis = createGroundAvatarEmphasis(() => performance.now(), matchMedia('(prefers-reduced-motion: reduce)').matches);
   let selectedRestore = false;
   let activeZoneId = '';
   let viewState = null;
@@ -328,11 +330,12 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
     selectedOverlay.hide();
   }
 
-  function paintIsCurrent() {
+  function paintIsCurrent(strength) {
     if (!viewState || !paintState) return false;
     const { view, width, height, preferredId } = viewState;
     return paintState.generation === contentGeneration && paintState.preferredId === preferredId
       && paintState.hoveredId === hoveredId && paintState.selectedId === selectedId && paintState.selectedRestore === selectedRestore
+      && paintState.emphasis === strength
       && paintState.width === width && paintState.height === height
       && paintState.lon === view.lon && paintState.lat === view.lat && paintState.distance === view.height
       && paintState.pitch === view.pitch && paintState.bearing === view.bearing
@@ -375,10 +378,11 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
       return;
     }
     const { view, width, height, preferredId } = viewState;
-    if (paintIsCurrent()) return;
+    const strength = selectedId ? emphasis.value : 0;
+    if (paintIsCurrent(strength)) return;
     const items = collectScreen(view, width, height, preferredId);
     paintState = { generation: contentGeneration, preferredId, hoveredId, selectedId, selectedRestore,
-      width, height, lon: view.lon, lat: view.lat, distance: view.height, pitch: view.pitch, bearing: view.bearing,
+      width, height, lon: view.lon, lat: view.lat, distance: view.height, pitch: view.pitch, bearing: view.bearing, emphasis: strength,
       projectionVersion: camera.userData.meewavProjectionVersion || 0 };
     sprites.begin(width, height, items.length);
     drawn.length = 0;
@@ -392,19 +396,20 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
       const hovered = !selectedId && item.avatar.id === hoveredId;
       const gray = consulted.has(item.avatar.id) && !item.avatar.pinColor;
       const pinRadius = item.avatar.pinColor ? 32 * zoomFromSize(item.size, item.avatar) : 0;
-      // Opening the card changes neither the portrait's position nor its size.
-      sprites.add(item, item.size * (hovered ? 1.08 : 1), gray ? 0.55 : 1,
+      const size = item.avatar.id === selectedId ? selectedSpriteMetrics(item, strength).size : item.size * (hovered ? 1.08 : 1);
+      sprites.add(item, size, gray ? 0.55 : 1,
         gray ? 0 : 1, pinRadius, 6);
     }
     if (hostItem) {
       const hovered = !selectedId && hostItem.avatar.id === hoveredId;
       const pinRadius = 41 * zoomFromSize(hostItem.size, hostItem.avatar) * PIN_HOST_SCALE;
-      sprites.add(hostItem, hostItem.size * (hovered ? 1.06 : 1), 1, 1, pinRadius);
+      const size = hostItem.avatar.id === selectedId ? selectedSpriteMetrics(hostItem, strength).size : hostItem.size * (hovered ? 1.06 : 1);
+      sprites.add(hostItem, size, 1, 1, pinRadius);
     }
     sprites.finish();
-    selectedOverlay.show(selectedItem, selectedRestore && !selectedItem?.avatar.pinColor);
+    selectedOverlay.show(selectedItem, selectedRestore && !selectedItem?.avatar.pinColor, strength);
     if (selectedItem) publishAnchor(selectedItem.avatar.id, selectedAnchor(selectedItem));
-    if (requestRender) invalidate();
+    if (requestRender || (selectedId && emphasis.moving)) invalidate();
   }
 
   function pickScreen(clientX, clientY) {
@@ -417,9 +422,10 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
     let monumentDepth;
     for (const item of drawn) {
       const dx = x - item.x;
-      const dy = y - (item.y - item.size / 2);
+      const size = item.avatar.id === selectedId ? selectedSpriteMetrics(item, emphasis.value).size : item.size;
+      const dy = y - (item.y - size / 2);
       const distance = dx * dx + dy * dy;
-      const radius = Math.max(24, item.size * 0.68);
+      const radius = Math.max(24, size * 0.68);
       if (distance <= radius * radius && distance < bestD) {
         if (monumentDepth === undefined) monumentDepth = landmarkDepthAt?.(x, y, rect.width, rect.height) ?? Infinity;
         if (monumentDepth < item.depth - 0.0000001) continue;
@@ -513,11 +519,13 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
       if (selectedId !== avatar?.id) {
         finishSelectedVisit();
         restoredVisitId = '';
+        emphasis.start();
       }
       selectedRestore = Boolean(
         avatar && !avatar.isHost && !pinned.get(avatar.id) && consulted.has(avatar.id),
       );
       selectedId = avatar?.id || '';
+      selectedAvatar = avatar;
       hoveredId = selectedId;
       // Reapply even for a pinned/self profile: the previous selection loses
       // its temporary exemption as soon as a different profile is opened.
@@ -549,10 +557,17 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
       }));
       return avatar;
     },
+    getSelectedFocus(identity) {
+      if (identity !== selectedId || selectedAvatar?.id !== selectedId) return null;
+      const metrics = selectedSpriteMetrics({ avatar: selectedAvatar, size: PIXEL_SIZE * personScale(selectedAvatar) });
+      return { id: selectedId, lon: selectedAvatar.lon, lat: selectedAvatar.lat, radius: selectedAvatar.radius,
+        halfSizeWorld: metrics.halfSpriteSize * SIZE_LOCK_HEIGHT };
+    },
     clearSelection() {
       if (!selectedId) return;
       finishSelectedVisit();
       selectedId = '';
+      selectedAvatar = null;
       restoredVisitId = '';
       selectedRestore = false;
       if (filters.hideConsulted) rebuildCounts();

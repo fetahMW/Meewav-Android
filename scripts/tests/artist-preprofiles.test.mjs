@@ -1,3 +1,4 @@
+import './ground-artist-flight.test.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { PerspectiveCamera, Vector2, Vector3, Matrix4, Raycaster } from 'three';
@@ -119,7 +120,7 @@ test('rotation republishes anchor dimensions even when its centre is unchanged',
   assert.equal(updates[1].anchor.viewportWidth, 863);
 });
 
-function fixture({ reducedMotion = false, source = 'ground', roll = 0 } = {}) {
+function fixture({ reducedMotion = false, source = 'ring', roll = 0 } = {}) {
   const size = { ...viewport };
   const camera = new PerspectiveCamera(50, size.width / size.height, .1, 100);
   camera.position.set(0, 0, 10);
@@ -310,14 +311,17 @@ test('neighbourhood card stays below search in both orientations regardless of a
     }
   }
 });
-test('a forward artist already clear of the card needs no fly', () => {
+test('neighbourhood fly centres the artist below the fixed card', () => {
   const card = groundArtistPopup(viewport, anchor(220, 675, 20), insets, false);
-  assert.deepEqual(card.avatarTarget, { x: 220, y: 675 });
+  assert.equal(card.avatarTarget.x, card.left + card.width / 2);
+  assert.ok(card.avatarTarget.y - 20 >= card.top + card.height + 12);
 });
-test('distant or side artists move only as far as the clear front lane', () => {
-  const card = groundArtistPopup(viewport, anchor(20, 100, 20), insets, false);
-  assert.deepEqual(card.avatarTarget, { x: 142, y: 580 });
-  assert.ok(card.avatarTarget.x < viewport.width / 2);
+test('projected movement cannot change the neighbourhood camera destination', () => {
+  const first = groundArtistPopup(viewport, anchor(20, 100, 20), insets, false);
+  for (const x of [20, 220, 400]) for (const y of [100, 450, 675]) {
+    const card = groundArtistPopup(viewport, anchor(x, y, 20), insets, false);
+    assert.deepEqual(card.avatarTarget, first.avatarTarget);
+  }
 });
 test('large nearby portraits cannot drive the camera target beyond the bottom edge', () => {
   const size = { width: 863, height: 412 };
@@ -327,39 +331,22 @@ test('large nearby portraits cannot drive the camera target beyond the bottom ed
   assert.ok(card.avatarTarget.y >= card.top + card.height);
   assert.ok(card.avatarTarget.y < size.height - 12);
 });
-test('selection retains the projected ground portrait footprint, including host and distant artists', () => {
+test('selection restores enlarged portraits while keeping their feet in place', () => {
   for (const isHost of [false, true]) for (const size of [8, 24, 53.3, 133]) {
     const selected = groundAvatarSelectionMetrics({ size, avatar: { isHost } });
-    near(selected.spriteBaseSize * selected.spriteScale, size);
+    const expected = size * (isHost ? 4 : 3.65);
+    near(selected.spriteBaseSize * selected.spriteScale, expected);
     assert.equal(selected.lift, 0);
     assert.equal(selected.spriteDrop, 0);
-    assert.equal(selected.halfSpriteSize, size / 2);
+    assert.equal(selected.halfSpriteSize, expected / 2);
   }
 });
-test('neighbourhood fly has a gentle launch rather than an immediate screen jump', () => {
-  const f = fixture(), initial = f.project();
-  f.request(); f.tick(16);
-  assert.ok(Math.abs(f.project().y - initial.y) < Math.abs(f.target.y - initial.y) * .004);
-  assert.equal(f.controller.moving, true);
-  f.tick(360); near(f.project().y, f.target.y);
-  f.controller.dispose();
-});
-test('switching artists mid-fly preserves position and same-direction speed', () => {
-  const f = fixture();
-  f.request(); f.tick(99.9);
-  const previous = f.project(); f.tick(100);
-  const displayed = f.project(), speed = (displayed.y - previous.y) / .1;
-  const nextTarget = { x: f.target.x + 60, y: f.target.y + 60 };
-  f.request({ identity: 'artist-2', target: nextTarget }); f.controller.applyProjection();
-  near(f.project().y, displayed.y);
-  f.tick(100.1);
-  near((f.project().y - displayed.y) / .1, speed, .002);
-  for (const time of [180, 250, 330, 400, 460]) {
-    f.tick(time);
-    assert.ok(f.project().y >= displayed.y - 1e-7 && f.project().y <= nextTarget.y + 1e-7);
-  }
-  near(f.project().y, nextTarget.y);
+test('neighbourhood framing never shifts the camera projection', () => {
+  const f = fixture({ source: 'ground' });
+  f.request(); f.tick(360);
+  assert.ok(f.camera.projectionMatrix.equals(f.original));
   assert.equal(f.controller.moving, false);
+  assert.equal(f.invalidations, 0);
   f.controller.dispose();
 });
 

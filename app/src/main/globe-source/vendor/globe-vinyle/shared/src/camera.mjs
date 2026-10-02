@@ -96,7 +96,8 @@ export function createCamera(initial, reducedMotion = false) {
         const rise = flight.arc ? flight.arcRadius * (Math.cos(angle) - Math.cos(flight.halfArc)) : 0;
         view.height = flight.arc
           ? clamp(flight.from.height + (flight.to.height - flight.from.height) * travel + rise, MIN_HEIGHT, MAX_HEIGHT)
-          : heightFromLog(flight.fromLogHeight + (flight.toLogHeight - flight.fromLogHeight) * a);
+          : heightFromLog(flight.fromLogHeight + (flight.toLogHeight - flight.fromLogHeight) * a)
+            + 4 * a * (1 - a) * flight.groundHopHeight;
         if (progress >= 1 - 1e-12) {
           Object.assign(view, flight.to);
           completedFlightId = flight.id;
@@ -188,6 +189,9 @@ export function createCamera(initial, reducedMotion = false) {
         arc,
         halfArc,
         arcRadius: arc ? chordLength / (2 * Math.sin(halfArc)) : 0,
+        // Only explicit neighbourhood focus flights use this tiny rise.
+        groundHopHeight: target.localFlight ? clamp(finite(target.groundHopHeight, 0), 0,
+          Math.min(from.height, to.height) * .06) : 0,
         deltaLon: shortestLongitudeDelta(from.lon, to.lon),
         deltaBearing: shortestLongitudeDelta(from.bearing, to.bearing),
         elapsed: 0,

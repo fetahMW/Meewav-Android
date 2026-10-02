@@ -13,7 +13,8 @@ export function createScreenAnchorSolver() {
   const current = new T.Vector2(), error = new T.Vector2(), lonDerivative = new T.Vector2();
   const latDerivative = new T.Vector2(), candidate = new T.Vector2();
   const weights = [1, .5, .25];
-  return function solve({ view, camera, point, x, y, width, height, updateCamera, align = null, latitudeLimit = 85 }) {
+  return function solve({ view, camera, point, x, y, width, height, updateCamera, align = null, latitudeLimit = 85,
+    radius = RADIUS, screenOffset = null }) {
   const entry = { lon: view.lon, lat: view.lat };
   const rollback = () => {
     view.lon = entry.lon;
@@ -22,11 +23,14 @@ export function createScreenAnchorSolver() {
     return false;
   };
   target.set(x, y);
-  worldPoint.fromArray(xyz(point[0], point[1], RADIUS));
+  worldPoint.fromArray(xyz(point[0], point[1], radius));
   if (align) worldPoint.applyQuaternion(align);
   const project = out => {
     projected.copy(worldPoint).project(camera);
-    return out.set(((projected.x + 1) * width) / 2, ((1 - projected.y) * height) / 2);
+    out.set(((projected.x + 1) * width) / 2, ((1 - projected.y) * height) / 2);
+    const offset = screenOffset?.(camera, worldPoint);
+    if (offset) { out.x += offset.x; out.y += offset.y; }
+    return out;
   };
   // Solve in screen space, which stays continuous when an anchor passes over a pole.
   for (let i = 0; i < 5; i++) {
