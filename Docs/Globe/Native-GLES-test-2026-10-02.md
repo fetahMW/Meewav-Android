@@ -43,9 +43,15 @@ Le build `debug` habituel garde `NATIVE_GLOBE=false`. Seul `globeTest` active le
 
 ## État de l'essai sur Redmi
 
-Le 2 octobre, le build complet `assembleGlobeTest` et les 88 tests ci-dessus ont réussi. SHA-256 de l'APK préparé : `CDC1BAFE9F2B936F84C272DC61C0A26DEFC453F08CC1D407ADF8C6DF3B3B9503`.
+Le 2 octobre, le build complet `assembleGlobeTest` et les 88 tests ci-dessus ont réussi. SHA-256 du premier APK préparé : `CDC1BAFE9F2B936F84C272DC61C0A26DEFC453F08CC1D407ADF8C6DF3B3B9503`.
 
 Le Redmi était connecté par ADB Wi-Fi, mais en veille (`Dozing`, non interactif). Les deux tentatives d'installation normales ont été refusées avec `INSTALL_FAILED_USER_RESTRICTED: Install canceled by user`. Le package de test n'est pas installé. Aucun contournement, réveil automatique ou lancement n'a été effectué ; le S22 n'a pas été modifié.
+
+Après la reprise « go redmi », le Redmi était réveillé et interactif. Une nouvelle tentative normale du build corrigé (`BAFE49A86FDD2953C258BF6CDF4ED4D624F48B2521FEB554DA6A80900EC56523`) a aussi été refusée avec la même erreur. Le refus ne peut donc pas être attribué uniquement à l'écran en veille.
+
+L'audit du démarrage a corrigé le nettoyage EGL partiel (échec avant création du contexte), la propriété de la SurfaceTexture à la fermeture et la destruction C++ si la création des framebuffers échoue. Ces chemins ont été relus ; sans injection d'échec sur un appareil, leur exécution réelle reste à vérifier.
+
+APK recompilé après ces corrections : SHA-256 `2656F40D60B5318F9CB6DC84446BEDD80C4B99B49B77F2E67FA9508A11B38609`.
 
 La compilation et le contrat de transfert sont vérifiés, mais le fonctionnement du pilote GLES, la parité visuelle et les performances sur appareil restent **non vérifiés**. La prochaine étape est une installation acceptée sur le Redmi réveillé, puis la vérification des frames réellement présentées, des erreurs GLES et des parcours disque/territoires/avatars/pré-profils/fly avant de laisser le test ouvert pour comparaison.
 

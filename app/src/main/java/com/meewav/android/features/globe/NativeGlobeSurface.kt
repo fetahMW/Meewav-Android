@@ -32,6 +32,7 @@ internal class NativeGlobeSurface(context: Context) : TextureView(context), Text
     private val closed = AtomicBoolean(false)
     private val frameSlots = Semaphore(2)
     private var display: EGLDisplay = EGL14.EGL_NO_DISPLAY
+    private var displayInitialized = false
     private var eglContext: EGLContext = EGL14.EGL_NO_CONTEXT
     private var window: EGLSurface = EGL14.EGL_NO_SURFACE
     private var pbuffer: EGLSurface = EGL14.EGL_NO_SURFACE
@@ -62,6 +63,7 @@ internal class NativeGlobeSurface(context: Context) : TextureView(context), Text
                 check(display != EGL14.EGL_NO_DISPLAY)
                 val version = IntArray(2)
                 check(EGL14.eglInitialize(display,version,0,version,1)) { "EGL initialization failed" }
+                displayInitialized = true
                 val attributes = intArrayOf(EGL14.EGL_RED_SIZE,8,EGL14.EGL_GREEN_SIZE,8,EGL14.EGL_BLUE_SIZE,8,EGL14.EGL_ALPHA_SIZE,8,
                     EGL14.EGL_RENDERABLE_TYPE,0x40,EGL14.EGL_SURFACE_TYPE,EGL14.EGL_WINDOW_BIT or EGL14.EGL_PBUFFER_BIT,EGL14.EGL_NONE)
                 val configs = arrayOfNulls<EGLConfig>(1)
@@ -71,9 +73,13 @@ internal class NativeGlobeSurface(context: Context) : TextureView(context), Text
                 eglContext = EGL14.eglCreateContext(display,config,EGL14.EGL_NO_CONTEXT,intArrayOf(EGL14.EGL_CONTEXT_CLIENT_VERSION,3,EGL14.EGL_NONE),0)
                 check(eglContext != EGL14.EGL_NO_CONTEXT) { "GLES3 context unavailable" }
                 pbuffer = EGL14.eglCreatePbufferSurface(display,config,intArrayOf(EGL14.EGL_WIDTH,1,EGL14.EGL_HEIGHT,1,EGL14.EGL_NONE),0)
+                check(pbuffer != EGL14.EGL_NO_SURFACE) { "EGL offscreen surface unavailable" }
                 check(EGL14.eglMakeCurrent(display,pbuffer,pbuffer,eglContext)) { "EGL offscreen binding failed" }
                 nativeHandle = nativeCreate()
-            } catch (error: Throwable) { reject(error) }
+            } catch (error: Throwable) {
+                reject(error)
+                releaseGpu()
+            }
             finally { initialized.countDown() }
         }
     }
@@ -83,6 +89,30 @@ internal class NativeGlobeSurface(context: Context) : TextureView(context), Text
     private fun reject(error: Throwable) {
         failure = error.message ?: error.javaClass.simpleName
         Log.e("MeewavNativeGlobe",failure,error)
+    }
+    private fun releaseGpu() {
+        // Each allocation has its own lifetime. In particular, eglInitialize
+        // can succeed even when config/context/pbuffer creation fails.
+        try {
+            if (eglContext != EGL14.EGL_NO_CONTEXT) {
+                val surface = if (pbuffer != EGL14.EGL_NO_SURFACE) pbuffer else window
+                EGL14.eglMakeCurrent(display,surface,surface,eglContext)
+                if (nativeHandle != 0L) nativeDestroy(nativeHandle)
+            }
+        } finally {
+            nativeHandle = 0
+            if (display != EGL14.EGL_NO_DISPLAY) {
+                if (window != EGL14.EGL_NO_SURFACE) EGL14.eglDestroySurface(display,window)
+                if (pbuffer != EGL14.EGL_NO_SURFACE) EGL14.eglDestroySurface(display,pbuffer)
+                EGL14.eglMakeCurrent(display,EGL14.EGL_NO_SURFACE,EGL14.EGL_NO_SURFACE,EGL14.EGL_NO_CONTEXT)
+                if (eglContext != EGL14.EGL_NO_CONTEXT) EGL14.eglDestroyContext(display,eglContext)
+                if (displayInitialized) EGL14.eglTerminate(display)
+            }
+            EGL14.eglReleaseThread()
+            window = EGL14.EGL_NO_SURFACE; pbuffer = EGL14.EGL_NO_SURFACE
+            eglContext = EGL14.EGL_NO_CONTEXT; display = EGL14.EGL_NO_DISPLAY
+            displayInitialized = false; config = null; bufferWidth = 0; bufferHeight = 0
+        }
     }
     private fun prepareWindow(): Boolean {
         val currentTexture = texture ?: return false
@@ -122,9 +152,11 @@ internal class NativeGlobeSurface(context: Context) : TextureView(context), Text
     override fun onSurfaceTextureUpdated(surface: SurfaceTexture) = Unit
     override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean {
         val accepted = gpu.post {
-            if (texture===surface && eglContext!=EGL14.EGL_NO_CONTEXT) {
-                EGL14.eglMakeCurrent(display,pbuffer,pbuffer,eglContext)
-                if (window!=EGL14.EGL_NO_SURFACE) EGL14.eglDestroySurface(display,window)
+            if (texture===surface) {
+                if (eglContext!=EGL14.EGL_NO_CONTEXT) {
+                    EGL14.eglMakeCurrent(display,pbuffer,pbuffer,eglContext)
+                    if (window!=EGL14.EGL_NO_SURFACE) EGL14.eglDestroySurface(display,window)
+                }
                 window=EGL14.EGL_NO_SURFACE; texture=null; bufferWidth=0; bufferHeight=0
             }
             surface.release()
@@ -199,19 +231,14 @@ internal class NativeGlobeSurface(context: Context) : TextureView(context), Text
         // after the feature or window has been detached.
         gpu.post {
             try {
-                if (eglContext!=EGL14.EGL_NO_CONTEXT) {
-                    EGL14.eglMakeCurrent(display,pbuffer,pbuffer,eglContext)
-                    if (nativeHandle!=0L) nativeDestroy(nativeHandle)
-                    nativeHandle=0
-                    if (window!=EGL14.EGL_NO_SURFACE) EGL14.eglDestroySurface(display,window)
-                    EGL14.eglDestroySurface(display,pbuffer)
-                    EGL14.eglMakeCurrent(display,EGL14.EGL_NO_SURFACE,EGL14.EGL_NO_SURFACE,EGL14.EGL_NO_CONTEXT)
-                    EGL14.eglDestroyContext(display,eglContext); EGL14.eglTerminate(display)
-                    window=EGL14.EGL_NO_SURFACE; pbuffer=EGL14.EGL_NO_SURFACE
-                    eglContext=EGL14.EGL_NO_CONTEXT; display=EGL14.EGL_NO_DISPLAY
-                    texture?.release(); texture=null
-                }
-            } finally { gpuThread.quitSafely() }
+                releaseGpu()
+            } finally {
+                // TextureView owns the texture until its destruction callback.
+                // That callback releases it after EGL retirement; when this
+                // handler has stopped, returning true gives release to Android.
+                texture = null
+                gpuThread.quitSafely()
+            }
         }
     }
     private external fun nativeCreate(): Long

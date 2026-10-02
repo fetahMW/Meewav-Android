@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -267,7 +268,7 @@ std::string query(Globe& g, int kind, int id, int argument, const std::string& n
 }
 }
 extern "C" JNIEXPORT jlong JNICALL Java_com_meewav_android_features_globe_NativeGlobeSurface_nativeCreate(JNIEnv* env,jobject) {
-    try { auto* g=new Globe();g->targets(1,1);return reinterpret_cast<jlong>(g); }catch(const std::exception& e){fail(env,e.what());return 0;}
+    try { auto g=std::make_unique<Globe>();g->targets(1,1);return reinterpret_cast<jlong>(g.release()); }catch(const std::exception& e){fail(env,e.what());return 0;}
 }
 extern "C" JNIEXPORT void JNICALL Java_com_meewav_android_features_globe_NativeGlobeSurface_nativeDestroy(JNIEnv*,jobject,jlong handle) { delete reinterpret_cast<Globe*>(handle); }
 extern "C" JNIEXPORT void JNICALL Java_com_meewav_android_features_globe_NativeGlobeSurface_nativeExecute(JNIEnv* env,jobject,jlong handle,jbyteArray bytes,jboolean present) {
