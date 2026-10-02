@@ -6,6 +6,64 @@
 .ring-artist-preprofile.ground-artist-preprofile[data-orientation] .mw-preprofile__footer {
   flex: 0 0 auto;
 }
+/* Portrait is a compact stack. Intrinsic body sizing lets the positioning hook
+   remove unused height while keeping the contact actions visible on short screens. */
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="portrait"] .mw-hover-preprofile-bubble__surface:has(.mw-preprofile) {
+  padding: 16px 12px;
+}
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="portrait"] .mw-preprofile {
+  gap: 12px;
+  padding: 0;
+}
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="portrait"] .mw-preprofile .mw-preprofile__scroll-body {
+  display: flex;
+  flex: 0 1 auto;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0;
+  overflow-y: auto;
+}
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="portrait"] .mw-preprofile__scroll-body > * {
+  flex-shrink: 0;
+}
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="portrait"] .mw-preprofile .mw-preprofile__header {
+  column-gap: 12px;
+}
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="portrait"] .mw-preprofile .mw-preprofile__identity {
+  gap: 3px;
+}
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="portrait"] .mw-preprofile .mw-preprofile__actions {
+  gap: 8px;
+}
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="portrait"] .mw-preprofile .mw-preprofile__lower-stage,
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="portrait"] .mw-preprofile .mw-preprofile__owner-lower-stage {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  margin: 0;
+  overflow: visible;
+}
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="portrait"] .mw-preprofile .mw-preprofile__media-stage,
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="portrait"] .mw-preprofile .mw-preprofile__owner-media-stage {
+  position: relative;
+  inset: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: auto;
+}
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="portrait"] .mw-preprofile .mw-preprofile__bio {
+  min-height: 0;
+  margin: 0;
+  padding: 0 1px;
+}
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="portrait"] .mw-preprofile .mw-preprofile__footer {
+  gap: 8px;
+  margin: 0;
+}
 .ring-artist-preprofile.ground-artist-preprofile[data-orientation="landscape"] .mw-preprofile__scroll-body {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);

@@ -316,6 +316,29 @@ test('neighbourhood fly centres the artist below the fixed card', () => {
   assert.equal(card.avatarTarget.x, card.left + card.width / 2);
   assert.ok(card.avatarTarget.y - 20 >= card.top + card.height + 12);
 });
+test('neighbourhood portrait fits short and tall content while keeping its home under search', () => {
+  for (const contentHeight of [310, 396, 512]) {
+    const card = groundArtistPopup(viewport, anchor(220, 675, 20), insets, false, contentHeight);
+    assert.equal(card.height, contentHeight);
+    assert.equal(card.top, insets.top);
+    assert.equal(card.width, 320);
+    assert.ok(card.avatarTarget.y - 20 >= card.top + card.height + 12);
+    assert.ok(card.avatarTarget.y + 20 <= viewport.height - insets.bottom - 12);
+  }
+});
+test('oversized neighbourhood content reserves a visible avatar lane on a small phone', () => {
+  const dimensions = { width: 320, height: 568 };
+  const card = groundArtistPopup(dimensions, anchor(20, 100, 20, dimensions), insets, false, 640);
+  assert.equal(card.height, 388);
+  assert.ok(card.avatarTarget.y - 20 >= card.top + card.height + 12);
+  assert.ok(card.avatarTarget.y + 20 <= dimensions.height - insets.bottom - 12);
+});
+test('content fitting leaves the established neighbourhood landscape size intact', () => {
+  const size = { width: 863, height: 412 };
+  const bounds = { top: 68, bottom: 12, left: 104, right: 60 };
+  assert.deepEqual(groundArtistPopup(size, anchor(100, 200, 20, size), bounds, true, 400),
+    groundArtistPopup(size, anchor(100, 200, 20, size), bounds, true));
+});
 test('projected movement cannot change the neighbourhood camera destination', () => {
   const first = groundArtistPopup(viewport, anchor(20, 100, 20), insets, false);
   for (const x of [20, 220, 400]) for (const y of [100, 450, 675]) {

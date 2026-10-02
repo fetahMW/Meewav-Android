@@ -4,8 +4,8 @@ import { mobileArtistPanel } from './mobile-artist-panel';
 import { portraitArtistPopup, type ArtistPopupAnchor } from './portrait-artist-popup';
 import { groundArtistPopup } from './ground-artist-popup';
 
-/** Camera framing follows projected anchors; the portrait card never follows
- * them or reduces its height to fit beside an avatar. */
+/** Camera framing follows projected anchors. The card stays below search;
+ * neighbourhood portrait height follows its content, never the moving avatar. */
 export function useArtistPopupPosition(
   panel: RefObject<HTMLDivElement | null>,
   identity: string | number,
@@ -22,8 +22,11 @@ export function useArtistPopupPosition(
     let portrait = getGlobeOrientation() === 'portrait';
     let landscapePanel = mobileArtistPanel(viewport);
     let preferredHeight = 420;
+    let groundContentHeight: number | undefined;
     let positioned = '';
+    let framedGroundSignature = '';
     let framing = false;
+    let contentFitFrame = 0;
     const search = document.querySelector<HTMLElement>('.reference-search-dock');
     let topInset = search ? search.getBoundingClientRect().bottom + 10 : 72;
 
@@ -34,10 +37,10 @@ export function useArtistPopupPosition(
         detail: { identity, source, immediate },
       }));
     };
-    const apply = () => {
+    const apply = (sendFrame = true) => {
       const layout = source === 'ground'
         ? groundArtistPopup(viewport, initialAnchor, { top: topInset, bottom: 12,
-          left: portrait ? 0 : 104, right: portrait ? 0 : 60 }, !portrait)
+          left: portrait ? 0 : 104, right: portrait ? 0 : 60 }, !portrait, groundContentHeight)
         : portrait
         ? portraitArtistPopup(viewport, anchor, { top: topInset, bottom: 12 }, preferredHeight)
         : { ...landscapePanel, placement: 'right', arrowX: 0 };
@@ -55,7 +58,12 @@ export function useArtistPopupPosition(
         node.style.setProperty('--mw-bubble-h', layout.height + 'px');
         node.style.setProperty('--mw-arrow-x', layout.arrowX + 'px');
       }
+      if (!sendFrame) return;
       if ((portrait || source === 'ground') && source && 'avatarTarget' in layout) {
+        const frameSignature = [signature, viewport.width, viewport.height,
+          layout.avatarTarget.x, layout.avatarTarget.y].join(':');
+        if (source === 'ground' && frameSignature === framedGroundSignature) return;
+        framedGroundSignature = frameSignature;
         framing = true;
         window.dispatchEvent(new CustomEvent('meewav:artist-popup-frame', {
           detail: { identity, source, anchor, target: layout.avatarTarget,
@@ -63,10 +71,38 @@ export function useArtistPopupPosition(
         }));
       } else dismissFraming(true);
     };
-    // A long biography or the restore action may need a little more room.
-    // Grow the card once; never shrink it as the camera moves or tabs change.
     const fitContent = () => {
-      if (!portrait || source === 'ground') return;
+      if (!portrait) return;
+      if (source === 'ground') {
+        const surface = node.querySelector<HTMLElement>('.mw-hover-preprofile-bubble__surface');
+        const profile = surface?.querySelector<HTMLElement>('.mw-preprofile');
+        const body = profile?.querySelector<HTMLElement>(':scope > .mw-preprofile__scroll-body');
+        const footer = profile?.querySelector<HTMLElement>(':scope > .mw-preprofile__footer');
+        if (!surface || !profile || !body || !footer) return;
+        const pixels = (style: CSSStyleDeclaration, property: string) =>
+          Number.parseFloat(style.getPropertyValue(property)) || 0;
+        const edgeHeight = (style: CSSStyleDeclaration) =>
+          pixels(style, 'padding-top') + pixels(style, 'padding-bottom')
+          + pixels(style, 'border-top-width') + pixels(style, 'border-bottom-width');
+        const outerMargin = (style: CSSStyleDeclaration) =>
+          pixels(style, 'margin-top') + pixels(style, 'margin-bottom');
+        const bodyStyle = getComputedStyle(body), footerStyle = getComputedStyle(footer);
+        const profileStyle = getComputedStyle(profile);
+        // The body has intrinsic flex sizing. scrollHeight still measures all
+        // its content when a short screen must constrain its visible height.
+        const measuredHeight = Math.ceil(edgeHeight(getComputedStyle(surface))
+          + edgeHeight(profileStyle) + pixels(profileStyle, 'row-gap')
+          + body.scrollHeight + outerMargin(bodyStyle)
+          + pixels(bodyStyle, 'border-top-width') + pixels(bodyStyle, 'border-bottom-width')
+          + footer.getBoundingClientRect().height + outerMargin(footerStyle));
+        if (groundContentHeight !== measuredHeight) {
+          groundContentHeight = measuredHeight;
+          apply();
+        }
+        return;
+      }
+      // Ring cards retain their established size, with extra room for a long
+      // biography or restore action. Their layout is independent of this fit.
       const bodies = node.querySelectorAll<HTMLElement>('.mw-preprofile__scroll-body');
       let overflow = 0;
       for (const body of bodies) overflow = Math.max(overflow, body.scrollHeight - body.clientHeight);
@@ -76,13 +112,26 @@ export function useArtistPopupPosition(
         if (next > preferredHeight) { preferredHeight = next; apply(); }
       }
     };
+    const queueContentFit = () => {
+      if (contentFitFrame) return;
+      contentFitFrame = requestAnimationFrame(() => {
+        contentFitFrame = 0;
+        fitContent();
+      });
+    };
+    const positionAndFit = () => {
+      // Establish width before measuring text, then send only the final camera
+      // target. Observer notifications with unchanged content cannot replay it.
+      apply(source !== 'ground');
+      fitContent();
+      if (source === 'ground') apply();
+    };
     const resize = () => {
       viewport = { width: window.innerWidth, height: window.innerHeight };
       portrait = getGlobeOrientation() === 'portrait';
       landscapePanel = mobileArtistPanel(viewport);
       topInset = search ? search.getBoundingClientRect().bottom + 10 : 72;
-      apply();
-      fitContent();
+      positionAndFit();
     };
     const updateAnchor = (event: Event) => {
       // The neighbourhood flight has one destination. Moving sprites must not
@@ -93,14 +142,14 @@ export function useArtistPopupPosition(
       anchor = detail.anchor;
       apply();
     };
-    apply();
-    fitContent();
-    const contentResize = new ResizeObserver(fitContent);
+    positionAndFit();
+    const contentResize = new ResizeObserver(source === 'ground' ? queueContentFit : fitContent);
     const observeContent = () => {
       contentResize.disconnect();
       node.querySelectorAll<HTMLElement>('.mw-preprofile__scroll-body, .mw-preprofile__scroll-body > *, .mw-preprofile__footer')
         .forEach(element => contentResize.observe(element));
-      fitContent();
+      if (source === 'ground') queueContentFit();
+      else fitContent();
     };
     observeContent();
     const contentMutation = new MutationObserver(observeContent);
@@ -119,6 +168,7 @@ export function useArtistPopupPosition(
       unsubscribeOrientation();
       if (anchorEvent) window.removeEventListener(anchorEvent, updateAnchor);
       contentResize.disconnect();
+      if (contentFitFrame) cancelAnimationFrame(contentFitFrame);
       contentMutation.disconnect();
       searchResize.disconnect();
       dockSideMutation.disconnect();
