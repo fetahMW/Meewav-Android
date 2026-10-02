@@ -1,0 +1,63 @@
+/* The neighbourhood sheet keeps the established polished material and actions.
+   Only its footprint changes: a stable card below search, wide in landscape. */
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation] .mw-hover-preprofile-bubble__surface:has(.mw-preprofile) {
+  padding: 12px 12px 14px;
+}
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation] .mw-preprofile__footer {
+  flex: 0 0 auto;
+}
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="landscape"] .mw-preprofile__scroll-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  align-content: start;
+  column-gap: 18px;
+  row-gap: 5px;
+  padding-right: 0;
+}
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="landscape"] .mw-preprofile .mw-preprofile__header,
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="landscape"] .mw-preprofile .mw-preprofile__actions,
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="landscape"] .mw-preprofile .mw-preprofile__pin,
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="landscape"] .mw-preprofile .mw-preprofile__restore-avatar,
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="landscape"] .mw-preprofile .mw-preprofile__bio {
+  grid-column: 1;
+}
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="landscape"] .mw-preprofile .mw-preprofile__header {
+  grid-row: 1;
+  min-height: 58px;
+}
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="landscape"] .mw-preprofile .mw-preprofile__actions {
+  grid-row: 2;
+}
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="landscape"] .mw-preprofile .mw-preprofile__pin,
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="landscape"] .mw-preprofile .mw-preprofile__restore-avatar {
+  grid-row: 3;
+}
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="landscape"] .mw-preprofile .mw-preprofile__bio {
+  grid-row: 4;
+  margin: 0;
+}
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="landscape"] .mw-preprofile .mw-preprofile__lower-stage,
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="landscape"] .mw-preprofile .mw-preprofile__owner-lower-stage {
+  display: block;
+  position: relative;
+  grid-column: 2;
+  grid-row: 1 / 5;
+  min-height: 134px;
+  margin: 24px 0 0;
+  overflow: visible;
+}
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="landscape"] .mw-preprofile .mw-preprofile__owner-media-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.ring-artist-preprofile.ground-artist-preprofile[data-orientation="landscape"] .mw-preprofile.is-owner .mw-preprofile__footer {
+  margin-bottom: 0;
+}
+.profile-icon-hover-overlay.is-ground-focus .profile-icon-hover-overlay__name {
+  transition: opacity 120ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .profile-icon-hover-overlay.is-ground-focus .profile-icon-hover-overlay__name { transition: none; }
+}

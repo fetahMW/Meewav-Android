@@ -2,8 +2,8 @@ import * as T from 'three';
 import { xyz, RADIUS } from './geo.mjs';
 import { METRES_TO_WORLD, quartierHeight } from './territory-style.mjs';
 import { createGroundAvatarSprites } from './ground-avatar-sprites.mjs';
-import { mobileArtistPanel } from '../../../../mobile-artist-panel';
 import { createArtistAnchorPublisher } from '../../../../artist-popup-anchor';
+import { groundAvatarSelectionMetrics } from '../../../../ground-avatar-selection.mjs';
 import { CHARONNE_ID } from './navigation-presets.mjs';
 import { PROFILE_ICON_FILES, getProfileIconImageUrl } from './reference/components/shared/avatar/profileIconAssets.ts';
 import {
@@ -26,7 +26,6 @@ const STORAGE_CONSULTED = 'globelab.consultedAvatars.v1';
 const STORAGE_PINS = 'globelab.pinnedAvatars.v1';
 const FALLBACK_ICON = 'avatar_4';
 const HOST_PIN_COLOR = '#22C55E';
-const HOVER_LIFT_PX = 60;
 
 function readJson(key, fallback) {
   try { return JSON.parse(localStorage.getItem(key) || 'null') ?? fallback; } catch { return fallback; }
@@ -94,85 +93,34 @@ function zoomFromSize(size, avatar) {
 }
 
 function selectedSpriteMetrics(item) {
-  const isHost = Boolean(item?.avatar?.isHost);
-  const zoom = item ? zoomFromSize(item.size, item.avatar) : 1;
-  const spriteBaseSize = isHost ? 60 : 56;
-  const spriteScale = (isHost ? 4 : 3.65) * zoom;
-  const spriteDrop = (isHost ? -10 : -8) * zoom;
-  return {
-    spriteBaseSize,
-    spriteScale,
-    spriteDrop,
-    lift: HOVER_LIFT_PX * zoom,
-    halfSpriteSize: (spriteBaseSize * spriteScale) / 2,
-  };
+  return groundAvatarSelectionMetrics(item);
 }
 
 function createSelectedOverlay(host) {
   const layer = document.createElement('div');
-  layer.className = 'profile-icon-hover-overlay is-hover';
+  layer.className = 'profile-icon-hover-overlay is-hover is-ground-focus';
   layer.setAttribute('aria-hidden', 'true');
   layer.hidden = true;
-  const connection = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  connection.classList.add('profile-icon-hover-overlay__connection');
-  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-  const origin = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-  origin.setAttribute('r', '5');
-  connection.append(line, origin);
-  let layoutWidth = 0, layoutHeight = 0, layoutOrientation = '', mobile = null;
   const glow = document.createElement('div');
   glow.className = 'profile-icon-hover-overlay__glow';
-  const sprite = document.createElement('img');
-  sprite.className = 'profile-icon-hover-overlay__sprite';
-  sprite.alt = '';
-  sprite.draggable = false;
-  sprite.addEventListener('error', () => {
-    const fallback = iconSrc(FALLBACK_ICON);
-    if (sprite.getAttribute('src') !== fallback) sprite.src = fallback;
-  });
   const name = document.createElement('div');
   name.className = 'profile-icon-hover-overlay__name';
-  layer.append(connection, glow, sprite, name);
+  // Keep the portrait in its depth-tested GPU batch. This DOM layer only
+  // carries its discreet ground light and label, never a second enlarged image.
+  layer.append(glow, name);
   host.append(layer);
   return {
-    show(item, consulted = false, viewport) {
+    show(item, consulted = false) {
       if (!item) { layer.hidden = true; return; }
-      const orientation = document.documentElement.dataset.globeOrientation;
-      if (viewport.width !== layoutWidth || viewport.height !== layoutHeight || orientation !== layoutOrientation) {
-        layoutWidth = viewport.width; layoutHeight = viewport.height;
-        layoutOrientation = orientation;
-        mobile = mobileArtistPanel(viewport);
-      }
       const hostUser = Boolean(item.avatar.isHost);
       const metrics = selectedSpriteMetrics(item);
-      let x = item.x, feetY = item.y + metrics.lift;
-      let scale = metrics.spriteScale, drop = metrics.spriteDrop;
-      const leftGuard = orientation === 'landscape' ? 104 : 12;
-      const available = mobile ? mobile.left - leftGuard - 12 : 0;
-      // Portrait cards sit above/below the real marker. Lateral enlargement
-      // belongs exclusively to the historical landscape presentation.
-      const enlarged = orientation === 'landscape' && available >= 72;
-      if (mobile && enlarged) {
-        // Only the enlarged presentation moves. The map location stays marked.
-        const size = Math.min(Math.max(112, metrics.spriteBaseSize * scale),
-          208, Math.max(64, viewport.height - 110), viewport.height * 0.64, available);
-        x = mobile.left - 12 - size / 2;
-        feetY = Math.max(66 + size, Math.min(viewport.height - 34, feetY));
-        scale = size / metrics.spriteBaseSize; drop = 0;
-        line.setAttribute('x1', String(item.x)); line.setAttribute('y1', String(item.y));
-        line.setAttribute('x2', String(x)); line.setAttribute('y2', String(feetY));
-        origin.setAttribute('cx', String(item.x)); origin.setAttribute('cy', String(item.y));
-      }
-      layer.classList.toggle('is-mobile-profile', enlarged);
       layer.classList.toggle('is-current-user', hostUser);
       layer.classList.toggle('is-consulted', Boolean(consulted) && !hostUser);
-      layer.style.setProperty('--profile-hover-x', `${x}px`);
-      layer.style.setProperty('--profile-hover-y', `${feetY}px`);
-      layer.style.setProperty('--profile-hover-scale', String(scale));
-      layer.style.setProperty('--profile-hover-drop', `${drop}px`);
-      layer.style.setProperty('--profile-hover-name-drop', enlarged ? '6px' : `${(hostUser ? -4 : -3) * zoomFromSize(item.size, item.avatar)}px`);
-      const src = iconSrc(item.avatar.icon);
-      if (sprite.getAttribute('src') !== src) sprite.src = src;
+      layer.style.setProperty('--profile-hover-x', `${item.x}px`);
+      layer.style.setProperty('--profile-hover-y', `${item.y}px`);
+      layer.style.setProperty('--profile-hover-scale', String(metrics.spriteScale));
+      layer.style.setProperty('--profile-hover-drop', '0px');
+      layer.style.setProperty('--profile-hover-name-drop', '6px');
       if (name.textContent !== item.avatar.name) name.textContent = item.avatar.name;
       layer.hidden = false;
     },
@@ -441,22 +389,20 @@ export function createGroundAvatars(host, sectors, communes, invalidate, camera,
       if (item.avatar.isHost) hostItem = item;
       if (item.avatar.id === selectedId) selectedItem = item;
       if (item.avatar.isHost) continue;
-      const hovered = item.avatar.id === hoveredId;
+      const hovered = !selectedId && item.avatar.id === hoveredId;
       const gray = consulted.has(item.avatar.id) && !item.avatar.pinColor;
       const pinRadius = item.avatar.pinColor ? 32 * zoomFromSize(item.size, item.avatar) : 0;
-      // Selection replaces the portrait, while its marker remains at the feet.
-      sprites.add(item, item.size * (hovered ? 1.08 : 1), item === selectedItem ? 0 : gray ? 0.55 : 1,
+      // Opening the card changes neither the portrait's position nor its size.
+      sprites.add(item, item.size * (hovered ? 1.08 : 1), gray ? 0.55 : 1,
         gray ? 0 : 1, pinRadius, 6);
     }
     if (hostItem) {
-      const hovered = hostItem.avatar.id === hoveredId;
-      // Keep the ground marker when the enlarged profile presentation replaces
-      // the sprite. Its radius and foot anchor stay fixed during hover/selection.
+      const hovered = !selectedId && hostItem.avatar.id === hoveredId;
       const pinRadius = 41 * zoomFromSize(hostItem.size, hostItem.avatar) * PIN_HOST_SCALE;
-      sprites.add(hostItem, hostItem.size * (hovered ? 1.06 : 1), hostItem === selectedItem ? 0 : 1, 1, pinRadius);
+      sprites.add(hostItem, hostItem.size * (hovered ? 1.06 : 1), 1, 1, pinRadius);
     }
     sprites.finish();
-    selectedOverlay.show(selectedItem, selectedRestore && !selectedItem?.avatar.pinColor, { width, height });
+    selectedOverlay.show(selectedItem, selectedRestore && !selectedItem?.avatar.pinColor);
     if (selectedItem) publishAnchor(selectedItem.avatar.id, selectedAnchor(selectedItem));
     if (requestRender) invalidate();
   }

@@ -2,6 +2,7 @@ import { useLayoutEffect, type RefObject } from 'react';
 import { getGlobeOrientation, subscribeGlobeOrientation } from './globe-layout';
 import { mobileArtistPanel } from './mobile-artist-panel';
 import { portraitArtistPopup, type ArtistPopupAnchor } from './portrait-artist-popup';
+import { groundArtistPopup } from './ground-artist-popup';
 
 /** Camera framing follows projected anchors; the portrait card never follows
  * them or reduces its height to fit beside an avatar. */
@@ -34,7 +35,10 @@ export function useArtistPopupPosition(
       }));
     };
     const apply = () => {
-      const layout = portrait
+      const layout = source === 'ground'
+        ? groundArtistPopup(viewport, anchor, { top: topInset, bottom: 12,
+          left: portrait ? 0 : 104, right: portrait ? 0 : 60 }, !portrait)
+        : portrait
         ? portraitArtistPopup(viewport, anchor, { top: topInset, bottom: 12 }, preferredHeight)
         : { ...landscapePanel, placement: 'right', arrowX: 0 };
       const signature = [portrait, layout.left, layout.top, layout.width, layout.height].join(':');
@@ -51,7 +55,7 @@ export function useArtistPopupPosition(
         node.style.setProperty('--mw-bubble-h', layout.height + 'px');
         node.style.setProperty('--mw-arrow-x', layout.arrowX + 'px');
       }
-      if (portrait && source && 'avatarTarget' in layout) {
+      if ((portrait || source === 'ground') && source && 'avatarTarget' in layout) {
         framing = true;
         window.dispatchEvent(new CustomEvent('meewav:artist-popup-frame', {
           detail: { identity, source, anchor, target: layout.avatarTarget,
@@ -62,7 +66,7 @@ export function useArtistPopupPosition(
     // A long biography or the restore action may need a little more room.
     // Grow the card once; never shrink it as the camera moves or tabs change.
     const fitContent = () => {
-      if (!portrait) return;
+      if (!portrait || source === 'ground') return;
       const bodies = node.querySelectorAll<HTMLElement>('.mw-preprofile__scroll-body');
       let overflow = 0;
       for (const body of bodies) overflow = Math.max(overflow, body.scrollHeight - body.clientHeight);

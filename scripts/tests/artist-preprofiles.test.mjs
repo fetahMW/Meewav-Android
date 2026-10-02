@@ -5,6 +5,9 @@ import { portraitArtistPopup } from '../../app/src/main/globe-source/portrait-ar
 import { mobileArtistPanel } from '../../app/src/main/globe-source/mobile-artist-panel';
 import { createArtistAnchorPublisher } from '../../app/src/main/globe-source/artist-popup-anchor';
 import { createArtistPopupFraming } from '../../app/src/main/globe-source/artist-popup-framing';
+import { groundArtistPopup } from '../../app/src/main/globe-source/ground-artist-popup';
+import { groundAvatarSelectionMetrics } from '../../app/src/main/globe-source/ground-avatar-selection.mjs';
+import { createGroundProfileDismissal } from '../../app/src/main/globe-source/ground-profile-dismissal';
 
 const viewport = { width: 412, height: 863 };
 const anchor = (x, y, clearance = 40, dimensions = viewport) => ({ x, y, clearance,
@@ -291,4 +294,126 @@ test('destroy restores the camera and removes all framing listeners', () => {
   f.request();
   assert.equal(f.invalidations, invalidations);
   assert.equal(f.controller.active, false);
+});
+
+test('neighbourhood card stays below search in both orientations regardless of artist position', () => {
+  for (const landscape of [false, true]) {
+    const size = landscape ? { width: 863, height: 412 } : viewport;
+    const bounds = { top: 68, bottom: 12, left: landscape ? 104 : 0, right: landscape ? 60 : 0 };
+    const first = groundArtistPopup(size, anchor(20, 100, 18, size), bounds, landscape);
+    for (const x of [20, size.width / 2, size.width - 20]) for (const y of [100, size.height - 30]) {
+      const card = groundArtistPopup(size, anchor(x, y, 18, size), bounds, landscape);
+      assert.deepEqual([card.left, card.top, card.width, card.height],
+        [first.left, 68, first.width, first.height]);
+      assert.ok(card.avatarTarget.y - 18 >= card.top + card.height + 12);
+      assert.ok(card.avatarTarget.y + 18 <= size.height - bounds.bottom - 12);
+    }
+  }
+});
+test('a forward artist already clear of the card needs no fly', () => {
+  const card = groundArtistPopup(viewport, anchor(220, 675, 20), insets, false);
+  assert.deepEqual(card.avatarTarget, { x: 220, y: 675 });
+});
+test('distant or side artists move only as far as the clear front lane', () => {
+  const card = groundArtistPopup(viewport, anchor(20, 100, 20), insets, false);
+  assert.deepEqual(card.avatarTarget, { x: 142, y: 580 });
+  assert.ok(card.avatarTarget.x < viewport.width / 2);
+});
+test('large nearby portraits cannot drive the camera target beyond the bottom edge', () => {
+  const size = { width: 863, height: 412 };
+  const card = groundArtistPopup(size, anchor(100, 110, 133, size),
+    { top: 68, bottom: 12, left: 104, right: 60 }, true);
+  assert.equal(card.height, 260);
+  assert.ok(card.avatarTarget.y >= card.top + card.height);
+  assert.ok(card.avatarTarget.y < size.height - 12);
+});
+test('selection retains the projected ground portrait footprint, including host and distant artists', () => {
+  for (const isHost of [false, true]) for (const size of [8, 24, 53.3, 133]) {
+    const selected = groundAvatarSelectionMetrics({ size, avatar: { isHost } });
+    near(selected.spriteBaseSize * selected.spriteScale, size);
+    assert.equal(selected.lift, 0);
+    assert.equal(selected.spriteDrop, 0);
+    assert.equal(selected.halfSpriteSize, size / 2);
+  }
+});
+test('neighbourhood fly has a gentle launch rather than an immediate screen jump', () => {
+  const f = fixture(), initial = f.project();
+  f.request(); f.tick(16);
+  assert.ok(Math.abs(f.project().y - initial.y) < Math.abs(f.target.y - initial.y) * .004);
+  assert.equal(f.controller.moving, true);
+  f.tick(360); near(f.project().y, f.target.y);
+  f.controller.dispose();
+});
+test('switching artists mid-fly preserves position and same-direction speed', () => {
+  const f = fixture();
+  f.request(); f.tick(99.9);
+  const previous = f.project(); f.tick(100);
+  const displayed = f.project(), speed = (displayed.y - previous.y) / .1;
+  const nextTarget = { x: f.target.x + 60, y: f.target.y + 60 };
+  f.request({ identity: 'artist-2', target: nextTarget }); f.controller.applyProjection();
+  near(f.project().y, displayed.y);
+  f.tick(100.1);
+  near((f.project().y - displayed.y) / .1, speed, .002);
+  for (const time of [180, 250, 330, 400, 460]) {
+    f.tick(time);
+    assert.ok(f.project().y >= displayed.y - 1e-7 && f.project().y <= nextTarget.y + 1e-7);
+  }
+  near(f.project().y, nextTarget.y);
+  assert.equal(f.controller.moving, false);
+  f.controller.dispose();
+});
+
+function dismissalFixture() {
+  const events = new EventTarget(), canvas = {}, panel = {}, outside = {}, queued = [];
+  let closes = 0;
+  const dispose = createGroundProfileDismissal({ events, inside: target => target === panel,
+    canvas: target => target === canvas, close: () => closes++, defer: callback => queued.push(callback) });
+  const pointer = (type, extra = {}, target = canvas) => {
+    const event = new Event(type);
+    Object.defineProperty(event, 'target', { value: target });
+    Object.assign(event, { pointerId: 1, clientX: 100, clientY: 100, ...extra });
+    events.dispatchEvent(event);
+  };
+  const selected = () => events.dispatchEvent(new CustomEvent('meewav:ground-avatar-select', { detail: { id: 'next' } }));
+  const flush = () => { while (queued.length) queued.shift()(); };
+  return { pointer, selected, flush, dispose, panel, outside, get closes() { return closes; } };
+}
+test('avatar-to-avatar taps keep the current card until the canvas resolves the next pick', () => {
+  const f = dismissalFixture();
+  f.pointer('pointerdown'); assert.equal(f.closes, 0);
+  f.pointer('pointerup'); f.selected(); f.flush();
+  assert.equal(f.closes, 0);
+  f.dispose();
+});
+test('an empty canvas tap dismisses only after the pick dispatch', () => {
+  const f = dismissalFixture();
+  f.pointer('pointerdown'); f.pointer('pointerup');
+  assert.equal(f.closes, 0); f.flush(); assert.equal(f.closes, 1);
+  f.dispose();
+});
+test('releasing pointer capture after a successful pick cannot dismiss the new artist', () => {
+  const f = dismissalFixture();
+  f.pointer('pointerdown'); f.pointer('pointerup'); f.selected();
+  f.pointer('lostpointercapture'); f.flush(); assert.equal(f.closes, 0);
+  f.dispose();
+});
+test('real drags and multi-touch dismiss the profile without stealing the map gesture', () => {
+  const drag = dismissalFixture();
+  drag.pointer('pointerdown'); drag.pointer('pointermove', { clientX: 109 });
+  assert.equal(drag.closes, 1); drag.dispose();
+  const multi = dismissalFixture();
+  multi.pointer('pointerdown'); multi.pointer('pointerdown', { pointerId: 2 });
+  assert.equal(multi.closes, 1); multi.dispose();
+});
+test('profile controls remain interactive and outside controls still dismiss', () => {
+  const f = dismissalFixture();
+  f.pointer('pointerdown', {}, f.panel); f.pointer('pointerup', {}, f.panel); f.flush();
+  assert.equal(f.closes, 0);
+  f.pointer('pointerdown', {}, f.outside); assert.equal(f.closes, 1);
+  f.dispose();
+});
+test('replacement or unmount cancels a pending empty-tap dismissal', () => {
+  const f = dismissalFixture();
+  f.pointer('pointerdown'); f.pointer('pointerup'); f.dispose(); f.flush();
+  assert.equal(f.closes, 0);
 });

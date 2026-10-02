@@ -9,6 +9,8 @@ import { getGradeBadgeMeta } from "./reference/features/grades/gradeBadges";
 import { getProfileIconImageUrl } from "./reference/components/shared/avatar/profileIconAssets";
 import "./ring-artist-preprofile.css";
 import { useArtistPopupPosition } from '../../../../use-artist-popup-position';
+import { createGroundProfileDismissal } from '../../../../ground-profile-dismissal';
+import '../../../../ground-artist-preprofile.css';
 
 export type GroundAvatarSelection = {
   id: string;
@@ -90,21 +92,11 @@ export default function GroundArtistPreProfile({
     };
   }, []);
   useEffect(() => {
-    const outside = (event: Event) => {
-      if (event.target instanceof Node && !panel.current?.contains(event.target)) closeRef.current();
-    };
-    const escape = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      event.preventDefault(); event.stopPropagation(); closeRef.current();
-    };
-    document.addEventListener("pointerdown", outside, true);
-    document.addEventListener("wheel", outside, { capture: true, passive: true });
-    document.addEventListener("keydown", escape, true);
-    return () => {
-      document.removeEventListener("pointerdown", outside, true);
-      document.removeEventListener("wheel", outside, true);
-      document.removeEventListener("keydown", escape, true);
-    };
+    return createGroundProfileDismissal({ events: document,
+      inside: target => target instanceof Node && Boolean(panel.current?.contains(target)),
+      canvas: target => target instanceof HTMLElement && target.matches('.globe-stage canvas'),
+      close: () => closeRef.current(),
+    });
   }, []);
   useEffect(() => {
     setRestored(false);
@@ -116,10 +108,10 @@ export default function GroundArtistPreProfile({
     return () => window.clearTimeout(timeout);
   }, [notice]);
 
-  return createPortal(<div ref={panel} className="ring-artist-preprofile" role="dialog" aria-modal="false"
+  return createPortal(<div ref={panel} className="ring-artist-preprofile ground-artist-preprofile" role="dialog" aria-modal="false"
     aria-label={`Pré-profil de ${selection.name}`}
     onPointerDown={event => event.stopPropagation()} onClick={event => event.stopPropagation()}>
-    <PreProfileFrame arrow>
+    <PreProfileFrame>
       <HoverPreProfileContent artist={artist} demoFollow={!selection.live} showMapPin={!selection.isHost}
         isOwner={Boolean(selection.isHost)}
         pinnedColor={pinnedColor}
