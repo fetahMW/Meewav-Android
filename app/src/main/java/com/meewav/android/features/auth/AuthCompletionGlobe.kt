@@ -482,7 +482,7 @@ private fun liveGlobeMarkers(context: Context): WebResourceResponse {
 internal fun fullGlobeAsset(context: Context, request: WebResourceRequest, manifest: JSONObject): WebResourceResponse {
     val uri = request.url
     val globeEntryMode = uri.path == "/globe-vinyle/index.html" && request.isForMainFrame &&
-        uri.encodedQuery in setOf("mode=real", "mode=demo")
+        isPermittedGlobeEntryQuery(uri.encodedQuery, BuildConfig.NATIVE_GLOBE)
     if (request.method != "GET" || uri.scheme != "https" || uri.host != "appassets.androidplatform.net" ||
         uri.port != -1 || uri.userInfo != null || (uri.encodedQuery != null && !globeEntryMode) ||
         uri.encodedFragment != null) return denied()
